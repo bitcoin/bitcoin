@@ -102,6 +102,23 @@ class WalletDumpTest(BitcoinTestFramework):
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
+        # Create a fake wallet dump with no header.
+        no_header_dump = os.path.join(self.nodes[0].datadir, "wallet.bad.dump")
+        with open(no_header_dump, 'w', encoding='utf8') as f:
+            f.write("# Bad file")
+
+        # Check that opening the bad dump file raises the corresponding RPC error.
+        assert_raises_rpc_error(-4, "No keys or scripts imported", lambda: self.nodes[0].importwallet(no_header_dump))
+
+        # Create a fake wallet dump with no keys/scripts.
+        no_keys_dump = os.path.join(self.nodes[0].datadir, "wallet.nokeys.dump")
+        with open(no_keys_dump, 'w', encoding='utf8') as f:
+            f.write("# Wallet dump created by Bitcoin\n# No txs\n#in here\n")
+
+        # Check that opening the dump file with no keys (but a good header)
+        # raises the correct RPC error.
+        assert_raises_rpc_error(-4, "No keys or scripts imported", lambda: self.nodes[0].importwallet(no_keys_dump))
+
         # generate 30 addresses to compare against the dump
         # - 10 legacy P2PKH
         # - 10 P2SH-segwit

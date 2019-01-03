@@ -565,6 +565,9 @@ UniValue importwallet(const JSONRPCRequest& request)
 
     int64_t nTimeBegin = 0;
     bool fGood = true;
+    bool has_footer = false; // Set to true if "# End of dump" is written in the file.
+    int num_keys_imported = 0;
+    int num_scripts_imported = 0;
     {
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
@@ -582,6 +585,17 @@ UniValue importwallet(const JSONRPCRequest& request)
         int64_t nFilesize = std::max((int64_t)1, (int64_t)file.tellg());
         file.seekg(0, file.beg);
 
+        static const std::string HEADER_STRING = "# Wallet dump created by Bitcoin";
+        if (file.good()) {
+            std::string line;
+            std::getline(file, line);
+
+            // Check that the first line has HEADER_STRING as a prefix.
+            if (line.compare(0, HEADER_STRING.size(), HEADER_STRING) != 0) {
+                pwallet->WalletLogPrintf("Wallet file missing header line. Make sure input file was created using dumpwallet.\n");
+            }
+        }
+
         // Use uiInterface.ShowProgress instead of pwallet.ShowProgress because pwallet.ShowProgress has a cancel button tied to AbortRescan which
         // we don't want for this progress bar showing the import progress. uiInterface.ShowProgress does not have a cancel button.
         pwallet->chain().showProgress(strprintf("%s " + _("Importing...").translated, pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
@@ -591,8 +605,13 @@ UniValue importwallet(const JSONRPCRequest& request)
             pwallet->chain().showProgress("", std::max(1, std::min(50, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
             std::string line;
             std::getline(file, line);
-            if (line.empty() || line[0] == '#')
+            if (line.empty()) continue;
+
+            static const std::string FOOTER_STRING = "# End of dump";
+            if (line[0] == '#') {
+                has_footer |= line == FOOTER_STRING;
                 continue;
+            }
 
             std::vector<std::string> vstr;
             boost::split(vstr, line, boost::is_any_of(" "));
@@ -655,6 +674,7 @@ UniValue importwallet(const JSONRPCRequest& request)
 
             nTimeBegin = std::min(nTimeBegin, time);
             progress++;
+            num_keys_imported++;
         }
         for (const auto& script_pair : scripts) {
             pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
@@ -671,12 +691,23 @@ UniValue importwallet(const JSONRPCRequest& request)
             }
 
             progress++;
+            num_scripts_imported++;
         }
         pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
     }
     pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
     RescanWallet(*pwallet, reserver, nTimeBegin, false /* update */);
     pwallet->MarkDirty();
+
+    if (!has_footer) {
+        pwallet->WalletLogPrintf("Wallet file missing footer line, possibly missing some keys/scripts. Make sure input file was created using dumpwallet.\n");
+    }
+
+    pwallet->WalletLogPrintf("%d keys and %d scripts imported.\n", num_keys_imported, num_scripts_imported);
+
+    if (num_keys_imported + num_scripts_imported == 0) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "No keys or scripts imported.  Input must be file created using dumpwallet.");
+    }
 
     if (!fGood)
         throw JSONRPCError(RPC_WALLET_ERROR, "Error adding some keys/scripts to wallet");
