@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
@@ -51,18 +51,16 @@ Node1 is unused in tests 3-7:
    work on its chain).
 """
 
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
 import time
-from test_framework.blocktools import create_block, create_coinbase, create_transaction
+
+from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
+from test_framework.messages import CBlockHeader, CInv, msg_block, msg_headers, msg_inv
+from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, sync_blocks
+
 
 class AcceptBlockTest(BitcoinTestFramework):
-    def add_options(self, parser):
-        parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to test")
-
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -77,21 +75,15 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.setup_nodes()
 
     def run_test(self):
-        # Setup the p2p connections and start up the network thread.
+        # Setup the p2p connections
         # test_node connects to node0 (not whitelisted)
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
         # min_work_node connects to node1 (whitelisted)
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
-        network_thread_start()
-
-        # Test logic begins here
-        test_node.wait_for_verack()
-        min_work_node.wait_for_verack()
-
         # 1. Have nodes mine a block (leave IBD)
-        [ n.generate(1) for n in self.nodes ]
-        tips = [ int("0x" + n.getbestblockhash(), 0) for n in self.nodes ]
+        [n.generatetoaddress(1, n.get_deterministic_priv_key().address) for n in self.nodes]
+        tips = [int("0x" + n.getbestblockhash(), 0) for n in self.nodes]
 
         # 2. Send one block that builds on each tip.
         # This should be accepted by node0
@@ -166,7 +158,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.log.info("Unrequested more-work block accepted")
 
         # 4c. Now mine 288 more blocks and deliver; all should be processed but
-        # the last (height-too-high) on node (as long as its not missing any headers)
+        # the last (height-too-high) on node (as long as it is not missing any headers)
         tip = block_h3
         all_blocks = []
         for i in range(288):
@@ -208,11 +200,8 @@ class AcceptBlockTest(BitcoinTestFramework):
 
         self.nodes[0].disconnect_p2ps()
         self.nodes[1].disconnect_p2ps()
-        network_thread_join()
 
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
-        network_thread_start()
-        test_node.wait_for_verack()
 
         test_node.send_message(msg_block(block_h1f))
 
@@ -254,7 +243,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         block_290f.solve()
         block_291 = create_block(block_290f.sha256, create_coinbase(291), block_290f.nTime+1)
         # block_291 spends a coinbase below maturity!
-        block_291.vtx.append(create_transaction(block_290f.vtx[0], 0, b"42", 1))
+        block_291.vtx.append(create_tx_with_script(block_290f.vtx[0], 0, script_sig=b"42", amount=1))
         block_291.hashMerkleRoot = block_291.calc_merkle_root()
         block_291.solve()
         block_292 = create_block(block_291.sha256, create_coinbase(292), block_291.nTime+1)
@@ -297,9 +286,6 @@ class AcceptBlockTest(BitcoinTestFramework):
 
             self.nodes[0].disconnect_p2ps()
             test_node = self.nodes[0].add_p2p_connection(P2PInterface())
-
-            network_thread_start()
-            test_node.wait_for_verack()
 
         # We should have failed reorg and switched back to 290 (but have block 291)
         assert_equal(self.nodes[0].getblockcount(), 290)

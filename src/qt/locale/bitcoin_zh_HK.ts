@@ -586,6 +586,10 @@
         <source>Label</source>
         <translation>標記</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>錢包</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>

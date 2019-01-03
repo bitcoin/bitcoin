@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,11 +8,13 @@
 #include <qt/test/paymentrequestdata.h>
 
 #include <amount.h>
+#include <chainparams.h>
+#include <interfaces/node.h>
 #include <random.h>
 #include <script/script.h>
 #include <script/standard.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
@@ -37,8 +39,8 @@ X509 *parse_b64der_cert(const char* cert_data)
 static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsigned char>& data)
 {
     RecipientCatcher sigCatcher;
-    QObject::connect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+    QObject::connect(server, &PaymentServer::receivedPaymentRequest,
+        &sigCatcher, &RecipientCatcher::getRecipient);
 
     // Write data to a temp file:
     QTemporaryFile f;
@@ -55,8 +57,8 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
     // which will lead to a test failure anyway.
     QCoreApplication::sendEvent(&object, &event);
 
-    QObject::disconnect(server, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
-        &sigCatcher, SLOT(getRecipient(SendCoinsRecipient)));
+    QObject::disconnect(server, &PaymentServer::receivedPaymentRequest,
+        &sigCatcher, &RecipientCatcher::getRecipient);
 
     // Return results from sigCatcher
     return sigCatcher.recipient;
@@ -65,7 +67,8 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 void PaymentServerTests::paymentServerTests()
 {
     SelectParams(CBaseChainParams::MAIN);
-    OptionsModel optionsModel;
+    auto node = interfaces::MakeNode();
+    OptionsModel optionsModel(*node);
     PaymentServer* server = new PaymentServer(nullptr, false);
     X509_STORE* caStore = X509_STORE_new();
     X509_STORE_add_cert(caStore, parse_b64der_cert(caCert1_BASE64));
@@ -144,7 +147,7 @@ void PaymentServerTests::paymentServerTests()
     // Ensure the request is initialized, because network "main" is default, even for
     // uninitialized payment requests and that will fail our test here.
     QVERIFY(r.paymentRequest.IsInitialized());
-    QCOMPARE(PaymentServer::verifyNetwork(r.paymentRequest.getDetails()), false);
+    QCOMPARE(PaymentServer::verifyNetwork(*node, r.paymentRequest.getDetails()), false);
 
     // Expired payment request (expires is set to 1 = 1970-01-01 00:00:01):
     data = DecodeBase64(paymentrequest2_cert2_BASE64);

@@ -442,10 +442,6 @@
         <translation>Редактирайте адреса</translation>
     </message>
     <message>
-        <source>New receiving address</source>
-        <translation>Нов адрес за получаване</translation>
-    </message>
-    <message>
         <source>New sending address</source>
         <translation>Нов адрес за изпращане</translation>
     </message>
@@ -677,6 +673,10 @@
     <message>
         <source>Label</source>
         <translation>Етикет</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>портфейл</translation>
     </message>
     </context>
 <context>

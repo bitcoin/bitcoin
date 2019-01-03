@@ -30,6 +30,10 @@
         <translation>Ilako ya ing kasalungsungan makapiling address keng listahan</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Magpalub kang address o label para pantunan</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Ilako</translation>
     </message>
@@ -273,15 +277,7 @@
         <source>Command-line options</source>
         <translation>Pipamilian command-line</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Pamanggamit:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>pipamilian command-line</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -536,6 +532,10 @@
         <source>Copy &amp;Address</source>
         <translation>&amp;Kopyan ing address</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Wallet</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -581,6 +581,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>Ipadala</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Bayad king Transaksion</translation>
     </message>
     </context>
 <context>
@@ -732,40 +736,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Pipamilian:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Pilinan ing data directory</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Kumunekta king note ban ayakua mula reng peer address, at mako king panga konekta</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Sabyan me ing kekang pampublikong address</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Tumanggap command line at JSON-RPC commands</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Gumana king gulut bilang daemon at tumanggap commands</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Kapilubluban ning Bitcoin</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Pipamilian king pamag-gawang block:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -796,32 +768,12 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Maragul yang masiadu ing transaksion</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Username para king JSON-RPC koneksion</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Kapabaluan</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Password para king JSON-RPC koneksion</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>I-execute ing command istung mialilan ya ing best block (%s in cmd is replaced by block hash)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Payagan ing pamaglawe DNS para king -addnode, -seednode and -connect</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

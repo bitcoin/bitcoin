@@ -1,15 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <keystore.h>
 
-#include <util.h>
-
-bool CKeyStore::AddKey(const CKey &key) {
-    return AddKeyPubKey(key, key.GetPubKey());
-}
+#include <util/system.h>
 
 void CBasicKeyStore::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
 {
@@ -131,7 +127,7 @@ static bool ExtractPubKey(const CScript &dest, CPubKey& pubKeyOut)
     CScript::const_iterator pc = dest.begin();
     opcodetype opcode;
     std::vector<unsigned char> vch;
-    if (!dest.GetOp(pc, opcode, vch) || vch.size() < 33 || vch.size() > 65)
+    if (!dest.GetOp(pc, opcode, vch) || !CPubKey::ValidSize(vch))
         return false;
     pubKeyOut = CPubKey(vch);
     if (!pubKeyOut.IsFullyValid())
@@ -198,4 +194,11 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
         }
     }
     return CKeyID();
+}
+
+bool HaveKey(const CKeyStore& store, const CKey& key)
+{
+    CKey key2;
+    key2.Set(key.begin(), key.end(), !key.IsCompressed());
+    return store.HaveKey(key.GetPubKey().GetID()) || store.HaveKey(key2.GetPubKey().GetID());
 }

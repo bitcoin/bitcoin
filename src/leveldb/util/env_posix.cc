@@ -121,6 +121,8 @@ class PosixSequentialFile: public SequentialFile {
     }
     return Status::OK();
   }
+
+  virtual std::string GetName() const { return filename_; }
 };
 
 // pread() based random-access
@@ -172,6 +174,8 @@ class PosixRandomAccessFile: public RandomAccessFile {
     }
     return s;
   }
+
+  virtual std::string GetName() const { return filename_; }
 };
 
 // mmap() based random-access
@@ -206,6 +210,8 @@ class PosixMmapReadableFile: public RandomAccessFile {
     }
     return s;
   }
+
+  virtual std::string GetName() const { return filename_; }
 };
 
 class PosixWritableFile : public WritableFile {
@@ -287,6 +293,8 @@ class PosixWritableFile : public WritableFile {
     }
     return s;
   }
+
+  virtual std::string GetName() const { return filename_; }
 };
 
 static int LockOrUnlock(int fd, bool lock) {
@@ -577,8 +585,8 @@ static int MaxMmaps() {
   if (mmap_limit >= 0) {
     return mmap_limit;
   }
-  // Up to 1000 mmaps for 64-bit binaries; none for smaller pointer sizes.
-  mmap_limit = sizeof(void*) >= 8 ? 1000 : 0;
+  // Up to 4096 mmaps for 64-bit binaries; none for smaller pointer sizes.
+  mmap_limit = sizeof(void*) >= 8 ? 4096 : 0;
   return mmap_limit;
 }
 

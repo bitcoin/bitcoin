@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>नया पता लिखिए !</translation>
+        <translation>एक नया पता बनाएं</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -20,6 +20,14 @@
     <message>
         <source>Delete the currently selected address from the list</source>
         <translation>सूची से वर्तमान में चयनित पता हटाएं</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>ढूँदने के लिए कृपा करके पता या लेबल टाइप करे !</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -48,6 +56,10 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>ये भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। हमेशा सिक्के भेजने से पहले राशि और प्राप्तकर्ता पते की जांच करें।</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>भुगतान प्राप्त करने के लिए ये आपके बीटकोइन पते हैं प्रत्येक लेनदेन के लिए एक नया प्राप्त पता उपयोग करने की सिफारिश की जाती है।</translation>
     </message>
     </context>
 <context>
@@ -218,10 +230,6 @@
         <source>version</source>
         <translation>संस्करण</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>खपत :</translation>
-    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -330,6 +338,10 @@
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;पता कॉपी करे</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>वॉलेट</translation>
     </message>
     </context>
 <context>
@@ -455,21 +467,13 @@
         <source>&amp;Export</source>
         <translation>&amp;निर्यात</translation>
     </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>डेटा को मौजूदा टैब से एक फ़ाइल में निर्यात करें</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
-    <message>
-        <source>Options:</source>
-        <translation>विकल्प:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>डेटा डायरेक्टरी बताएं </translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>बैकग्राउंड में डेमॉन बन कर रन करे तथा कमांड्स स्वीकार करें </translation>
-    </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>ब्लॉक्स जाँचे जा रहा है...</translation>

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     coinbaseTx.vout[0].nValue = 1 * CENT;
     coinbaseTx.vout[0].scriptPubKey = scriptPubKey;
 
-    assert(CTransaction(coinbaseTx).IsCoinBase());
+    BOOST_CHECK(CTransaction(coinbaseTx).IsCoinBase());
 
     CValidationState state;
 

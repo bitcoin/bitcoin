@@ -2,6 +2,7 @@
 
 # Install libdb4.8 (Berkeley DB).
 
+export LC_ALL=C
 set -e
 
 if [ -z "${1}" ]; then
@@ -50,7 +51,7 @@ http_get() {
   if [ -f "${2}" ]; then
     echo "File ${2} already exists; not downloading again"
   elif check_exists curl; then
-    curl --insecure "${1}" -o "${2}"
+    curl --insecure --retry 5 "${1}" -o "${2}"
   else
     wget --no-check-certificate "${1}" -O "${2}"
   fi

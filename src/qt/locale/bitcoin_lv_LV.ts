@@ -26,6 +26,10 @@
         <translation>Izdzēst iezīmētās adreses no saraksta</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
@@ -48,6 +52,10 @@
     <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopēt adresi</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopēt &amp;Marķējumu</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -94,6 +102,10 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Jaunā parole vēlreiz</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Rādīt paroli</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -441,15 +453,7 @@
         <source>Command-line options</source>
         <translation>Komandrindas iespējas</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Lietojums:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>komandrindas izvēles</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -900,6 +904,10 @@
         <source>Label</source>
         <translation>Nosaukums</translation>
     </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Maciņš</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -993,6 +1001,10 @@
     <message>
         <source>S&amp;end</source>
         <translation>&amp;Sūtīt</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Transakcijas maksa</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1192,48 +1204,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Iespējas:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Norādiet datu direktoriju</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Pievienoties mezglam, lai iegūtu citu mezglu adreses, un atvienoties</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Norādiet savu publisko adresi</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Pieņemt komandrindas un JSON-RPC komandas</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; var būt:</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Bloka izveidošanas iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Savienojuma iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Atkļūdošanas/Testēšanas iestatījumi:</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -1252,20 +1224,8 @@
         <translation>Pārbauda blokus...</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Maciņa iespējas:</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informācija</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>RPC servera iestatījumi:</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -1280,24 +1240,8 @@
         <translation>Transakcija ir pārāk liela</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu lietotājvārds</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Brīdinājums</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC savienojumu parole</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Izpildīt komandu, kad labāk atbilstošais bloks izmainās (%s cmd aizvieto ar bloka hešu)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Atļaut DNS uzmeklēšanu priekš -addnode, -seednode un -connect</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

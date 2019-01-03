@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,8 @@
 #include <qt/paymentrequest.pb.h>
 #pragma GCC diagnostic pop
 
-#include <base58.h>
+#include <amount.h>
+#include <script/script.h>
 
 #include <openssl/x509.h>
 

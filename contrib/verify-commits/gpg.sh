@@ -3,6 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+export LC_ALL=C
 INPUT=$(cat /dev/stdin)
 VALID=false
 REVSIG=false
@@ -57,7 +58,7 @@ if ! $VALID; then
 	exit 1
 fi
 if $VALID && $REVSIG; then
-	printf '%s\n' "$INPUT" | gpg --trust-model always "$@" 2>/dev/null | grep "\[GNUPG:\] \(NEWSIG\|SIG_ID\|VALIDSIG\)"
+	printf '%s\n' "$INPUT" | gpg --trust-model always "$@" 2>/dev/null | grep "^\[GNUPG:\] \(NEWSIG\|SIG_ID\|VALIDSIG\)"
 	echo "$GOODREVSIG"
 else
 	printf '%s\n' "$INPUT" | gpg --trust-model always "$@" 2>/dev/null

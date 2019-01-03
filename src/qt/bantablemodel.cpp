@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,9 @@
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
+#include <interfaces/node.h>
 #include <sync.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <QDebug>
 #include <QList>
@@ -45,16 +46,13 @@ public:
     Qt::SortOrder sortOrder;
 
     /** Pull a full list of banned nodes from CNode into our cache */
-    void refreshBanlist()
+    void refreshBanlist(interfaces::Node& node)
     {
         banmap_t banMap;
-        if(g_connman)
-            g_connman->GetBanned(banMap);
+        node.getBanned(banMap);
 
         cachedBanlist.clear();
-#if QT_VERSION >= 0x040700
         cachedBanlist.reserve(banMap.size());
-#endif
         for (const auto& entry : banMap)
         {
             CCombinedBan banEntry;
@@ -82,8 +80,9 @@ public:
     }
 };
 
-BanTableModel::BanTableModel(ClientModel *parent) :
+BanTableModel::BanTableModel(interfaces::Node& node, ClientModel *parent) :
     QAbstractTableModel(parent),
+    m_node(node),
     clientModel(parent)
 {
     columns << tr("IP/Netmask") << tr("Banned Until");
@@ -168,7 +167,7 @@ QModelIndex BanTableModel::index(int row, int column, const QModelIndex &parent)
 void BanTableModel::refresh()
 {
     Q_EMIT layoutAboutToBeChanged();
-    priv->refreshBanlist();
+    priv->refreshBanlist(m_node);
     Q_EMIT layoutChanged();
 }
 

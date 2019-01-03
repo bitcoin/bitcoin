@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2017 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,11 +9,12 @@
 #include <hash.h>
 #include <random.h>
 #include <uint256.h>
-#include <utiltime.h>
+#include <util/time.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
+#include <crypto/siphash.h>
 
 /* Number of bytes to hash per iteration */
 static const uint64_t BUFFER_SIZE = 1000*1000;
@@ -52,6 +53,14 @@ static void SHA256_32b(benchmark::State& state)
     }
 }
 
+static void SHA256D64_1024(benchmark::State& state)
+{
+    std::vector<uint8_t> in(64 * 1024, 0);
+    while (state.KeepRunning()) {
+        SHA256D64(in.data(), in.data(), 1024);
+    }
+}
+
 static void SHA512(benchmark::State& state)
 {
     uint8_t hash[CSHA512::OUTPUT_SIZE];
@@ -72,18 +81,16 @@ static void SipHash_32b(benchmark::State& state)
 static void FastRandom_32bit(benchmark::State& state)
 {
     FastRandomContext rng(true);
-    uint32_t x = 0;
     while (state.KeepRunning()) {
-        x += rng.rand32();
+        rng.rand32();
     }
 }
 
 static void FastRandom_1bit(benchmark::State& state)
 {
     FastRandomContext rng(true);
-    uint32_t x = 0;
     while (state.KeepRunning()) {
-        x += rng.randbool();
+        rng.randbool();
     }
 }
 
@@ -94,5 +101,6 @@ BENCHMARK(SHA512, 330);
 
 BENCHMARK(SHA256_32b, 4700 * 1000);
 BENCHMARK(SipHash_32b, 40 * 1000 * 1000);
+BENCHMARK(SHA256D64_1024, 7400);
 BENCHMARK(FastRandom_32bit, 110 * 1000 * 1000);
 BENCHMARK(FastRandom_1bit, 440 * 1000 * 1000);

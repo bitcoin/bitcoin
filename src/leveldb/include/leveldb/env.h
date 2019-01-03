@@ -191,6 +191,9 @@ class SequentialFile {
   // REQUIRES: External synchronization
   virtual Status Skip(uint64_t n) = 0;
 
+  // Get a name for the file, only for error reporting
+  virtual std::string GetName() const = 0;
+
  private:
   // No copying allowed
   SequentialFile(const SequentialFile&);
@@ -215,6 +218,9 @@ class RandomAccessFile {
   virtual Status Read(uint64_t offset, size_t n, Slice* result,
                       char* scratch) const = 0;
 
+  // Get a name for the file, only for error reporting
+  virtual std::string GetName() const = 0;
+
  private:
   // No copying allowed
   RandomAccessFile(const RandomAccessFile&);
@@ -233,6 +239,9 @@ class WritableFile {
   virtual Status Close() = 0;
   virtual Status Flush() = 0;
   virtual Status Sync() = 0;
+
+  // Get a name for the file, only for error reporting
+  virtual std::string GetName() const = 0;
 
  private:
   // No copying allowed
