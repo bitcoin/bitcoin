@@ -53,7 +53,7 @@ std::map<std::string, BerkeleyEnvironment> g_dbenvs GUARDED_BY(cs_db); //!< Map 
 
 bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 {
-    return memcmp(value, &rhs.value, sizeof(value)) == 0;
+    return memcmp(value, rhs.value, sizeof(value)) == 0;
 }
 
 static void SplitWalletPath(const fs::path& wallet_path, fs::path& env_directory, std::string& database_filename)
