@@ -33,5 +33,7 @@ List the version number/commit ID, and if it is an official binary, self compile
 - Disk size:
 - Disk Type (HD/SDD):
 
+### For the GUI-related issue on Linux provide names and versions of a distro, a desktop environment and a graphical shell (if relevant).
+
 ### Any extra information that might be useful in the debugging process.
 This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred.
