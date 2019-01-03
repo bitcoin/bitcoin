@@ -1230,7 +1230,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
     {
         LOCK2(cs_main, cs_wallet);
         {
-            nFeeRet = MIN_TX_FEE;
+            bool fNewFees = IsProtocolV07(wtxNew.nTime);
+            nFeeRet = fNewFees ? MIN_TX_FEE : PERKB_TX_FEE;
             ploop
             {
                 wtxNew.vin.clear();
@@ -1271,7 +1272,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                 }
 
                 int64 nChange = nValueIn - nValue - nFeeRet;
-                int64 nMinFeeBase = IsProtocolV07(wtxNew.nTime) ? MIN_TX_FEE : MIN_TX_FEE*10;
+                int64 nMinFeeBase = fNewFees ? MIN_TX_FEE : PERKB_TX_FEE;
                 // The following if statement should be removed once enough miners
                 // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
                 // creating free transactions that have change outputs less than
@@ -1284,7 +1285,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
                 }
 
                 // ppcoin: sub-cent change is moved to fee
-                if (nChange > 0 && nChange < MIN_TXOUT_AMOUNT)
+                if (nChange > 0 && nChange < (fNewFees ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT))
                 {
                     nFeeRet += nChange;
                     nChange = 0;
@@ -1357,7 +1358,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64> >& vecSend,
 
                 // Check that enough fee is included
                 int64 nPayFee;
-                if (IsProtocolV07(wtxNew.nTime))
+                if (fNewFees)
                     nPayFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * (nTransactionFee / 1000));
                 else
                     nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);

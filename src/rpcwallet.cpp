@@ -15,6 +15,7 @@
 #include "init.h"
 #include "base58.h"
 #include "checkpointsync.h"
+#include "kernel.h"
 
 #include <boost/assign/list_of.hpp>
 
@@ -278,7 +279,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     // Amount
     int64 nAmount = AmountFromValue(params[1]);
-    if (nAmount < MIN_TXOUT_AMOUNT)
+    if (nAmount < (IsProtocolV07(GetAdjustedTime()) ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT))
         throw JSONRPCError(-101, "Send amount too small");
 
     // Wallet comments
@@ -634,7 +635,7 @@ Value sendfrom(const Array& params, bool fHelp)
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Peercoin address");
     int64 nAmount = AmountFromValue(params[2]);
-    if (nAmount < MIN_TXOUT_AMOUNT)
+    if (nAmount < (IsProtocolV07(GetAdjustedTime()) ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT))
         throw JSONRPCError(-101, "Send amount too small");
     int nMinDepth = 1;
     if (params.size() > 3)
@@ -699,7 +700,7 @@ Value sendmany(const Array& params, bool fHelp)
         CScript scriptPubKey;
         scriptPubKey.SetDestination(address.Get());
         int64 nAmount = AmountFromValue(s.value_);
-        if (nAmount < MIN_TXOUT_AMOUNT)
+        if (nAmount < (IsProtocolV07(GetAdjustedTime()) ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT))
             throw JSONRPCError(-101, "Send amount too small");
         totalAmount += nAmount;
 

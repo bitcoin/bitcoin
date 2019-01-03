@@ -462,7 +462,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
-    nPayFee = MIN_TX_FEE;
+    nPayFee = (fNewFees ? MIN_TX_FEE : PERKB_TX_FEE);
     ploop
     {
         txDummy.vin.clear();
@@ -538,7 +538,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             }
 
             // ppcoin: sub-cent change is moved to fee
-            if (nChange > 0 && nChange < MIN_TXOUT_AMOUNT)
+            if (nChange > 0 && nChange < (fNewFees ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT))
             {
                 nPayFee += nChange;
                 nChange = 0;
