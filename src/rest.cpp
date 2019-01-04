@@ -136,10 +136,12 @@ static bool rest_headers(HTTPRequest* req,
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
 
+    const CBlockIndex* tip = nullptr;
     std::vector<const CBlockIndex *> headers;
     headers.reserve(count);
     {
         LOCK(cs_main);
+        tip = chainActive.Tip();
         const CBlockIndex* pindex = LookupBlockIndex(hash);
         while (pindex != nullptr && chainActive.Contains(pindex)) {
             headers.push_back(pindex);
@@ -175,11 +177,8 @@ static bool rest_headers(HTTPRequest* req,
     }
     case RetFormat::JSON: {
         UniValue jsonHeaders(UniValue::VARR);
-        {
-            LOCK(cs_main);
-            for (const CBlockIndex *pindex : headers) {
-                jsonHeaders.push_back(blockheaderToJSON(pindex));
-            }
+        for (const CBlockIndex *pindex : headers) {
+            jsonHeaders.push_back(blockheaderToJSON(tip, pindex));
         }
         std::string strJSON = jsonHeaders.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -207,8 +206,10 @@ static bool rest_block(HTTPRequest* req,
 
     CBlock block;
     CBlockIndex* pblockindex = nullptr;
+    CBlockIndex* tip = nullptr;
     {
         LOCK(cs_main);
+        tip = chainActive.Tip();
         pblockindex = LookupBlockIndex(hash);
         if (!pblockindex) {
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
@@ -241,11 +242,7 @@ static bool rest_block(HTTPRequest* req,
     }
 
     case RetFormat::JSON: {
-        UniValue objBlock;
-        {
-            LOCK(cs_main);
-            objBlock = blockToJSON(block, pblockindex, showTxDetails);
-        }
+        UniValue objBlock = blockToJSON(block, tip, pblockindex, showTxDetails);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
         req->WriteReply(HTTP_OK, strJSON);
