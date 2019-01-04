@@ -414,7 +414,8 @@ static void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
     script = PushAll(stack);
 }
 
-BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
+BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
+{
     CMutableTransaction mtx;
     mtx.nVersion = 1;
 
@@ -456,9 +457,8 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction) {
     }
 
     CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
-    auto vstream = WithOrVersion(&ssout, 0);
-    vstream << mtx;
-    CTransaction tx(deserialize, vstream);
+    ssout << mtx;
+    CTransaction tx(deserialize, ssout);
 
     // check all inputs concurrently, with the cache
     PrecomputedTransactionData txdata(tx);
