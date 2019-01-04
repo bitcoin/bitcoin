@@ -7,8 +7,8 @@ Developer Notes
 - [Developer Notes](#developer-notes)
     - [Coding Style (General)](#coding-style-general)
     - [Coding Style (C++)](#coding-style-c)
-    - [Doxygen comments](#doxygen-comments)
     - [Coding Style (Python)](#coding-style-python)
+    - [Coding Style (Doxygen-compatible comments)](#coding-style-doxygen-compatible-comments)
     - [Development tips and tricks](#development-tips-and-tricks)
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
@@ -119,10 +119,17 @@ public:
 } // namespace foo
 ```
 
-Doxygen comments
------------------
+Coding Style (Python)
+---------------------
 
-To facilitate the generation of documentation, use doxygen-compatible comment blocks for functions, methods and fields.
+Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+
+Coding Style (Doxygen-compatible comments)
+------------------------------------------
+
+Bitcoin Core uses [Doxygen](http://www.doxygen.nl/) to generate its official documentation.
+
+Use Doxygen-compatible comment blocks for functions, methods, and fields.
 
 For example, to describe a function use:
 ```c++
@@ -155,7 +162,7 @@ int var; //!< Detailed description after the member
 ```
 
 or
-```cpp
+```c++
 //! Description before the member
 int var;
 ```
@@ -175,15 +182,15 @@ Not OK (used plenty in the current source, but not picked up):
 //
 ```
 
-A full list of comment syntaxes picked up by doxygen can be found at http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html,
-but if possible use one of the above styles.
+A full list of comment syntaxes picked up by Doxygen can be found at https://www.stack.nl/~dimitri/doxygen/manual/docblocks.html,
+but the above styles are favored.
 
-Documentation can be generated with `make docs` and cleaned up with `make clean-docs`.
+Documentation can be generated with `make docs` and cleaned up with `make clean-docs`. The resulting files are located in `doc/doxygen/html`; open `index.html` to view the homepage.
 
-Coding Style (Python)
----------------------
-
-Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.md#style-guidelines).
+Before running `make docs`, you will need to install dependencies `doxygen` and `dot`. For example, on MacOS via Homebrew:
+```
+brew install doxygen --with-graphviz
+```
 
 Development tips and tricks
 ---------------------------
