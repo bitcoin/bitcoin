@@ -53,7 +53,7 @@ vector<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const 
                     // Sent to IP, or other non-address transaction like OP_EVAL
                     addrStr = mapValue["to"];
                 }
-                parts.push_back(KernelRecord(hash, nTime, addrStr, txOut.nValue, nOut, false, coinAge));
+                parts.push_back(KernelRecord(hash, nTime, addrStr, txOut.nValue, nOut, wallet->IsSpent(hash, nOut), coinAge));
             }
         }
     }
