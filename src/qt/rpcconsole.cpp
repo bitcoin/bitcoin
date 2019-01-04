@@ -703,7 +703,7 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
         // First wallet added, set to default so long as the window isn't presently visible (and potentially in use)
         ui->WalletSelector->setCurrentIndex(1);
     }
-    if (ui->WalletSelector->count() > 2) {
+    if (ui->WalletSelector->count() > 1) {
         ui->WalletSelector->setVisible(true);
         ui->WalletSelectorLabel->setVisible(true);
     }
@@ -712,7 +712,7 @@ void RPCConsole::addWallet(WalletModel * const walletModel)
 void RPCConsole::removeWallet(WalletModel * const walletModel)
 {
     ui->WalletSelector->removeItem(ui->WalletSelector->findData(QVariant::fromValue(walletModel)));
-    if (ui->WalletSelector->count() == 2) {
+    if (ui->WalletSelector->count() == 1) {
         ui->WalletSelector->setVisible(false);
         ui->WalletSelectorLabel->setVisible(false);
     }
