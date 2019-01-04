@@ -33,6 +33,9 @@
 #endif
 #if defined(HAVE_GETENTROPY_RAND) && defined(MAC_OSX)
 #include <sys/random.h>
+#ifdef HAVE_FUNC_ATTRIBUTE_WEAK_IMPORT
+extern "C" int getentropy(void *buffer, size_t size) __attribute__((weak_import));
+#endif
 #endif
 #ifdef HAVE_SYSCTL_ARND
 #include <util/strencodings.h> // for ARRAYLEN

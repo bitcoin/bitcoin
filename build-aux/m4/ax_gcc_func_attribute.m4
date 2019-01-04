@@ -59,6 +59,7 @@
 #    warning
 #    warn_unused_result
 #    weak
+#    weak_import
 #    weakref
 #
 #   Unsuppored function attributes will be tested with a prototype returning
@@ -194,6 +195,9 @@ AC_DEFUN([AX_GCC_FUNC_ATTRIBUTE], [
                     int foo( void ) __attribute__(($1));
                 ],
                 [weak], [
+                    int foo( void ) __attribute__(($1));
+                ],
+                [weak_import], [
                     int foo( void ) __attribute__(($1));
                 ],
                 [weakref], [
