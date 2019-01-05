@@ -37,6 +37,14 @@ static void ErrorLogCallback(void* arg, int code, const char* msg)
     LogPrintf("SQLite Error. Code: %d. Message: %s\n", code, msg);
 }
 
+// disable -Wzero-as-null-pointer-constant due to SQLITE_STATIC
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
 static bool BindBlobToStatement(sqlite3_stmt* stmt,
                                 int index,
                                 Span<const std::byte> blob,
@@ -471,6 +479,11 @@ bool SQLiteBatch::HasKey(CDataStream&& key)
     sqlite3_reset(m_read_stmt);
     return res == SQLITE_ROW;
 }
+
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+#endif
 
 bool SQLiteBatch::StartCursor()
 {

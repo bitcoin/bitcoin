@@ -2092,10 +2092,23 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     fs::path dirname = m_args.GetDataDirBase() / "lock_dir";
     const std::string lockname = ".lock";
 #ifndef WIN32
+// disable Wzero-as-null-pointer-constant for SIG_DFL
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#endif
+
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
     // it: there is BOOST_TEST_IGNORE_SIGCHLD but that only works when defined
     // at build-time of the boost library
     void (*old_handler)(int) = signal(SIGCHLD, SIG_DFL);
+
+#if defined(HAVE_W_ZERO_AS_NULL_POINTER_CONSTANT)
+#pragma GCC diagnostic pop
+#pragma clang diagnostic pop
+#endif
 
     // Fork another process for testing before creating the lock, so that we
     // won't fork while holding the lock (which might be undefined, and is not
