@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -569,10 +569,9 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
 {
     if(!walletFrame)
         return false;
-    const QString name = walletModel->getWalletName();
-    QString display_name = name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+    const QString display_name = walletModel->getDisplayName();
     setWalletActionsEnabled(true);
-    m_wallet_selector->addItem(display_name, name);
+    m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
     if (m_wallet_selector->count() == 2) {
         m_wallet_selector_label_action->setVisible(true);
         m_wallet_selector_action->setVisible(true);
@@ -584,8 +583,7 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
 bool BitcoinGUI::removeWallet(WalletModel* walletModel)
 {
     if (!walletFrame) return false;
-    QString name = walletModel->getWalletName();
-    int index = m_wallet_selector->findData(name);
+    int index = m_wallet_selector->findData(QVariant::fromValue(walletModel));
     m_wallet_selector->removeItem(index);
     if (m_wallet_selector->count() == 0) {
         setWalletActionsEnabled(false);
@@ -594,20 +592,20 @@ bool BitcoinGUI::removeWallet(WalletModel* walletModel)
         m_wallet_selector_action->setVisible(false);
     }
     rpcConsole->removeWallet(walletModel);
-    return walletFrame->removeWallet(name);
+    return walletFrame->removeWallet(walletModel);
 }
 
-bool BitcoinGUI::setCurrentWallet(const QString& name)
+bool BitcoinGUI::setCurrentWallet(WalletModel* wallet_model)
 {
     if(!walletFrame)
         return false;
-    return walletFrame->setCurrentWallet(name);
+    return walletFrame->setCurrentWallet(wallet_model);
 }
 
 bool BitcoinGUI::setCurrentWalletBySelectorIndex(int index)
 {
-    QString internal_name = m_wallet_selector->itemData(index).toString();
-    return setCurrentWallet(internal_name);
+    WalletModel* wallet_model = m_wallet_selector->itemData(index).value<WalletModel*>();
+    return setCurrentWallet(wallet_model);
 }
 
 void BitcoinGUI::removeAllWallets()
