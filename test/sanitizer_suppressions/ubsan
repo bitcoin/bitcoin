@@ -29,7 +29,6 @@ unsigned-integer-overflow:policy/fees.cpp
 unsigned-integer-overflow:prevector.h
 unsigned-integer-overflow:script/interpreter.cpp
 unsigned-integer-overflow:stl_bvector.h
-unsigned-integer-overflow:streams.h
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
