@@ -2317,14 +2317,6 @@ void CConnman::SetNetworkActive(bool active)
 
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) : nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
-    fNetworkActive = true;
-    setBannedIsDirty = false;
-    fAddressesInitialized = false;
-    nLastNodeId = 0;
-    nPrevNodeCount = 0;
-    nSendBufferMaxSize = 0;
-    nReceiveFloodSize = 0;
-    flagInterruptMsgProc = false;
     SetTryNewOutboundPeer(false);
 
     Options connOptions;
