@@ -143,6 +143,7 @@ static bool rest_headers(HTTPRequest* req,
         LOCK(cs_main);
         tip = chainActive.Tip();
         const CBlockIndex* pindex = LookupBlockIndex(hash);
+        if (!pindex) return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
         while (pindex != nullptr && chainActive.Contains(pindex)) {
             headers.push_back(pindex);
             if (headers.size() == (unsigned long)count)

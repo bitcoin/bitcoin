@@ -201,6 +201,10 @@ class RESTTest (BitcoinTestFramework):
         self.log.info("Test the /block and /headers URIs")
         bb_hash = self.nodes[0].getbestblockhash()
 
+        # Should give 404 if block hash does not exists
+        self.test_rest_request('/block/0000000000000000000000000000000000000000000000000000000000000000', status=404, ret_type=RetType.OBJ)
+        self.test_rest_request('/headers/1/0000000000000000000000000000000000000000000000000000000000000000', status=404, ret_type=RetType.OBJ)
+
         # Check binary format
         response = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_greater_than(int(response.getheader('content-length')), 80)
