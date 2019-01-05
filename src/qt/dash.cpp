@@ -443,7 +443,7 @@ void BitcoinApplication::addWallet(WalletModel* walletModel)
     window->addWallet(walletModel);
 
     if (m_wallet_models.empty()) {
-        window->setCurrentWallet(walletModel->getWalletName());
+        window->setCurrentWallet(walletModel);
     }
 
     connect(walletModel, SIGNAL(coinsSent(WalletModel*, SendCoinsRecipient, QByteArray)),

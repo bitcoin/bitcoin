@@ -42,9 +42,9 @@ public:
     explicit RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags flags);
     ~RPCConsole();
 
-    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr);
-    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const std::string *walletID = nullptr) {
-        return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, walletID);
+    static bool RPCParseCommandLine(interfaces::Node* node, std::string &strResult, const std::string &strCommand, bool fExecute, std::string * const pstrFilteredOut = nullptr, const WalletModel* wallet_model = nullptr);
+    static bool RPCExecuteCommandLine(interfaces::Node& node, std::string &strResult, const std::string &strCommand, std::string * const pstrFilteredOut = nullptr, const WalletModel* wallet_model = nullptr) {
+        return RPCParseCommandLine(&node, strResult, strCommand, true, pstrFilteredOut, wallet_model);
     }
 
     void setClientModel(ClientModel *model);
@@ -144,7 +144,7 @@ public Q_SLOTS:
 Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
-    void cmdRequest(const QString &command, const QString &walletID);
+    void cmdRequest(const QString &command, const WalletModel* wallet_model);
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);
 
@@ -184,7 +184,7 @@ private:
     int consoleFontSize = 0;
     QCompleter *autoCompleter = nullptr;
     QThread thread;
-    QString m_last_wallet_id;
+    WalletModel* m_last_wallet_model{nullptr};
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();

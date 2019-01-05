@@ -604,6 +604,12 @@ QString WalletModel::getWalletName() const
     return QString::fromStdString(m_wallet->getWalletName());
 }
 
+QString WalletModel::getDisplayName() const
+{
+    const QString name = getWalletName();
+    return name.isEmpty() ? "["+tr("default wallet")+"]" : name;
+}
+
 bool WalletModel::isMultiwallet()
 {
     return m_node.getWallets().size() > 1;
