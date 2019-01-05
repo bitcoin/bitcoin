@@ -35,3 +35,8 @@ if [ -z "$NO_DEPENDS" ]; then
   fi
   DOCKER_EXEC $SHELL_OPTS make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
 fi
+if [ "$TEST_PREVIOUS_RELEASES" = "true" ]; then
+  BEGIN_FOLD previous-versions
+  DOCKER_EXEC contrib/devtools/previous_release.sh -b -t "$PREVIOUS_RELEASES_DIR" v0.17.1 v0.18.1
+  END_FOLD
+fi
