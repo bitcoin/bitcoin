@@ -609,7 +609,7 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
             return state.DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
         // ppcoin: enforce minimum output amount
         // v0.5 protocol: zero amount allowed
-        if ((!txout.IsEmpty()) && txout.nValue < (IsProtocolV07(nTime) ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT) &&
+        if ((!txout.IsEmpty()) && txout.nValue < (IsProtocolV07(nTime) ? MIN_TXOUT_AMOUNT : MIN_TXOUT_AMOUNT_PREV7) &&
             !(IsProtocolV05(nTime) && (txout.nValue == 0)))
             return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
         if (txout.nValue > MAX_MONEY)

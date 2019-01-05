@@ -420,7 +420,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         return;
 
     bool fNewFees = IsProtocolV07(GetAdjustedTime());
-    int64 nMinFeeBase = fNewFees ? MIN_TX_FEE : MIN_TX_FEE*10;
+    int64 nMinFeeBase = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
 
     // nPayAmount
     qint64 nPayAmount = 0;
@@ -462,7 +462,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
-    nPayFee = (fNewFees ? MIN_TX_FEE : PERKB_TX_FEE);
+    nPayFee = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
     ploop
     {
         txDummy.vin.clear();
@@ -538,7 +538,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             }
 
             // ppcoin: sub-cent change is moved to fee
-            if (nChange > 0 && nChange < (fNewFees ? MIN_TXOUT_AMOUNT_V7 : MIN_TXOUT_AMOUNT))
+            if (nChange > 0 && nChange < (fNewFees ? MIN_TXOUT_AMOUNT : MIN_TXOUT_AMOUNT_PREV7))
             {
                 nPayFee += nChange;
                 nChange = 0;
