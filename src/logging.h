@@ -132,15 +132,20 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 template <typename... Args>
 static inline void LogPrintf(const char* fmt, const Args&... args)
 {
-    if (g_logger->Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            /* Original format string will have newline so don't add one here */
-            log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
-        }
+    if (g_logger && !g_logger->Enabled()) {
+        return;
+    }
+    std::string log_msg;
+    try {
+        log_msg = tfm::format(fmt, args...);
+    } catch (tinyformat::format_error& fmterr) {
+        /* Original format string will have newline so don't add one here */
+        log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
+    }
+    if (g_logger) {
         g_logger->LogPrintStr(log_msg);
+    } else {
+        fwrite(log_msg.data(), 1, log_msg.size(), stderr);
     }
 }
 
