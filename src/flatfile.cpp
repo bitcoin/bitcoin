@@ -1,4 +1,5 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +18,11 @@ FlatFileSeq::FlatFileSeq(fs::path dir, const char* prefix, size_t chunk_size) :
     if (chunk_size == 0) {
         throw std::invalid_argument("chunk_size must be positive");
     }
+}
+
+std::string CDiskBlockPos::ToString() const
+{
+    return strprintf("CDiskBlockPos(nFile=%i, nPos=%i)", nFile, nPos);
 }
 
 fs::path FlatFileSeq::FileName(const CDiskBlockPos& pos) const
