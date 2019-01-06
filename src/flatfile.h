@@ -34,6 +34,17 @@ public:
 
     /** Open a handle to the file at the given position. */
     FILE* Open(const CDiskBlockPos& pos, bool fReadOnly = false);
+
+    /**
+     * Allocate additional space in a file after the given starting position. The amount allocated
+     * will be the minimum multiple of the sequence chunk size greater than add_size.
+     *
+     * @param[in] pos The starting position that bytes will be allocated after.
+     * @param[in] add_size The minimum number of bytes to be allocated.
+     * @param[out] out_of_space Whether the allocation failed due to insufficient disk space.
+     * @return The number of bytes successfully allocated.
+     */
+    size_t Allocate(const CDiskBlockPos& pos, size_t add_size, bool& out_of_space);
 };
 
 #endif // BITCOIN_FLATFILE_H
