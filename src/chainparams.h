@@ -86,7 +86,8 @@ public:
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
     const ChainTxData& TxData() const { return chainTxData; }
-    int PoolMaxTransactions() const { return nPoolMaxTransactions; }
+    int PoolMinParticipants() const { return nPoolMinParticipants; }
+    int PoolMaxParticipants() const { return nPoolMaxParticipants; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
@@ -116,7 +117,8 @@ protected:
     bool fAllowMultiplePorts;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
-    int nPoolMaxTransactions;
+    int nPoolMinParticipants;
+    int nPoolMaxParticipants;
     int nFulfilledRequestExpireTime;
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;

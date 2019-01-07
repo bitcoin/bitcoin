@@ -403,8 +403,9 @@ public:
 
     static std::string GetMessageByID(PoolMessage nMessageID);
 
-    /// Get the maximum number of transactions for the pool
-    static int GetMaxPoolTransactions() { return Params().PoolMaxTransactions(); }
+    /// Get the minimum/maximum number of participants for the pool
+    static int GetMinPoolParticipants() { return Params().PoolMinParticipants(); }
+    static int GetMaxPoolParticipants() { return Params().PoolMaxParticipants(); }
 
     static CAmount GetMaxPoolAmount() { return vecStandardDenominations.empty() ? 0 : PRIVATESEND_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 

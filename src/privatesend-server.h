@@ -22,6 +22,9 @@ private:
     // to behave honestly. If they don't it takes their money.
     std::vector<CTransactionRef> vecSessionCollaterals;
 
+    // Maximum number of participants in a certain session, random between min and max.
+    int nSessionMaxParticipants;
+
     bool fUnitTest;
 
     /// Add a clients entry to the pool
@@ -45,7 +48,7 @@ private:
     bool CreateNewSession(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman);
     bool AddUserToExistingSession(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet);
     /// Do we have enough users to take entries?
-    bool IsSessionReady() { return (int)vecSessionCollaterals.size() >= CPrivateSend::GetMaxPoolTransactions(); }
+    bool IsSessionReady() { return (int)vecSessionCollaterals.size() >= nSessionMaxParticipants; }
 
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool IsSignaturesComplete();

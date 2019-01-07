@@ -320,14 +320,14 @@ std::string CPrivateSendClientSession::GetStatus(bool fWaitForBlock)
             return _("PrivateSend request complete:") + " " + _("Your transaction was accepted into the pool!");
         } else {
             if (nStatusMessageProgress % 70 <= 40)
-                return strprintf(_("Submitted following entries to masternode: %u / %d"), nEntriesCount, CPrivateSend::GetMaxPoolTransactions());
+                return strprintf(_("Submitted following entries to masternode: %u"), nEntriesCount);
             else if (nStatusMessageProgress % 70 <= 50)
                 strSuffix = ".";
             else if (nStatusMessageProgress % 70 <= 60)
                 strSuffix = "..";
             else if (nStatusMessageProgress % 70 <= 70)
                 strSuffix = "...";
-            return strprintf(_("Submitted to masternode, waiting for more entries ( %u / %d ) %s"), nEntriesCount, CPrivateSend::GetMaxPoolTransactions(), strSuffix);
+            return strprintf(_("Submitted to masternode, waiting for more entries ( %u ) %s"), nEntriesCount, strSuffix);
         }
     case POOL_STATE_SIGNING:
         if (nStatusMessageProgress % 70 <= 40)
