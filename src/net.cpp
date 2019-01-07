@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -112,7 +112,7 @@ static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 50;
 static const uint64_t SELECT_TIMEOUT_MILLISECONDS = 500;
 #endif
 
-const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
+const std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
 constexpr const CConnman::CFullyConnectedOnly CConnman::FullyConnectedOnly;
 constexpr const CConnman::CAllNodes CConnman::AllNodes;
@@ -681,7 +681,6 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         nBytes -= handled;
 
         if (msg.complete()) {
-
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
             mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);

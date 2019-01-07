@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -737,6 +737,8 @@ struct LocalServiceInfo {
 
 extern CCriticalSection cs_mapLocalHost;
 extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost GUARDED_BY(cs_mapLocalHost);
+
+extern const std::string NET_MESSAGE_COMMAND_OTHER;
 typedef std::map<std::string, uint64_t> mapMsgCmdSize; //command, total bytes
 
 class CNodeStats
@@ -920,7 +922,6 @@ public:
     std::atomic_bool fCanSendData;
 
 protected:
-
     mapMsgCmdSize mapSendBytesPerMsgCmd;
     mapMsgCmdSize mapRecvBytesPerMsgCmd GUARDED_BY(cs_vRecv);
 
