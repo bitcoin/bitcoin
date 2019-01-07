@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
     auto locked_chain = chain->lock();
 
-    // Verify ScanForWalletTransactions accomodates a null start block.
+    // Verify ScanForWalletTransactions accommodates a null start block.
     {
         CWallet wallet(*chain, WalletLocation(), WalletDatabase::CreateDummy());
         AddKey(wallet, coinbaseKey);
