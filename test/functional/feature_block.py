@@ -153,12 +153,6 @@ class FullBlockTest(BitcoinTestFramework):
         for TxTemplate in invalid_txs.iter_all_templates():
             template = TxTemplate(spend_tx=attempt_spend_tx)
 
-            # Something about the serialization code for missing inputs creates
-            # a different hash in the test client than on bitcoind, resulting
-            # in a mismatching merkle root during block validation.
-            # Skip until we figure out what's going on.
-            if TxTemplate == invalid_txs.InputMissing:
-                continue
             if template.valid_in_block:
                 continue
 
@@ -166,7 +160,22 @@ class FullBlockTest(BitcoinTestFramework):
             blockname = f"for_invalid.{TxTemplate.__name__}"
             badblock = self.next_block(blockname)
             badtx = template.get_tx()
-            self.sign_tx(badtx, attempt_spend_tx)
+            if TxTemplate != invalid_txs.InputMissing:
+                self.sign_tx(badtx, attempt_spend_tx)
+            else:
+                # To align with bitcoin implementation, so to deserialize a
+                # transaction without any inputs correctly, we set the outputs
+                # to an empty list. This is a hack, as the serialization of an
+                # empty list of outputs is deserialized as flags==0 and thus
+                # deserialization of the outputs is skipped.
+                # A policy check requires "loose" txs to be of a minimum size,
+                # so vtx is not set to be empty in the TxTemplate class and we
+                # only apply the workaround where txs are not "loose", i.e. in
+                # blocks.
+                #
+                # The workaround has the purpose that both sides calculate
+                # the same tx hash in the merkle tree
+                badtx.vout = []
             badtx.rehash()
             badblock = self.update_block(blockname, [badtx])
             self.send_blocks(
