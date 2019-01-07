@@ -348,7 +348,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
         // See if the transaction is valid
         TRY_LOCK(cs_main, lockMain);
         CValidationState validationState;
-        mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1 * COIN);
+        mempool.PrioritiseTransaction(hashTx, 1000, 0.1 * COIN);
         if (!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, false, maxTxFee, true)) {
             LogPrintf("CPrivateSendServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             SetNull();

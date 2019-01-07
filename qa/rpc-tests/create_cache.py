@@ -2,11 +2,12 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Create a blockchain cache.
 
-#
-# Helper script to create the cache
-# (see BitcoinTestFramework.setup_chain)
-#
+Creating a cache of the blockchain speeds up test execution when running
+multiple qa tests. This helper script is executed by rpc-tests when multiple
+tests are being run in parallel.
+"""
 
 from test_framework.test_framework import BitcoinTestFramework
 

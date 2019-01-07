@@ -2,10 +2,7 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#
-# Test multiple rpc user config option rpcauth
-#
+"""Test multiple RPC users."""
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import str_to_b64str, assert_equal

@@ -2017,7 +2017,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             LogPrintf("DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
-            mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
+            mempool.PrioritiseTransaction(hashTx, 1000, 0.1*COIN);
             mmetaman.DisallowMixing(dmn->proTxHash);
         }
 

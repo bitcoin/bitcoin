@@ -2,16 +2,14 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""CompactBlocksTest -- test compact blocks (BIP 152,  without segwit support, version 1)
+"""
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.script import CScript, OP_TRUE
-
-'''
-CompactBlocksTest -- test compact blocks (BIP 152,  without segwit support, version 1)
-'''
 
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
 class TestNode(SingleNodeConnCB):

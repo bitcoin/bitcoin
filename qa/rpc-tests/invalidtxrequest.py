@@ -2,6 +2,10 @@
 # Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+"""Test node responses to invalid transactions.
+
+In this test we connect to one node over p2p, and test tx requests.
+"""
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.comptool import TestManager, TestInstance, RejectResult
@@ -9,9 +13,6 @@ from test_framework.blocktools import *
 from test_framework.util import get_mocktime
 
 
-'''
-In this test we connect to one node over p2p, and test tx requests.
-'''
 
 # Use the ComparisonTestFramework with 1 node: only use --testbinary.
 class InvalidTxRequestTest(ComparisonTestFramework):
