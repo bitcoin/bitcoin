@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <validation.h>
 
 /**
  * CChain implementation
@@ -14,9 +15,16 @@ void CChain::SetTip(CBlockIndex *pindex) {
         return;
     }
     vChain.resize(pindex->nHeight + 1);
-    while (pindex && vChain[pindex->nHeight] != pindex) {
+
+	// compare with the current vector tip after resizing
+	if (vChain.size() >= 2 && pindex->pprev == vChain[vChain.size() - 2]) {
         vChain[pindex->nHeight] = pindex;
-        pindex = pindex->pprev;
+	} 
+	else {
+		while (pindex && vChain[pindex->nHeight] != pindex) {
+			vChain[pindex->nHeight] = pindex;
+            pindex = pindex->pprev;
+        }
     }
 }
 
@@ -89,6 +97,9 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
     const CBlockIndex* pindexWalk = this;
     int heightWalk = nHeight;
     while (heightWalk > height) {
+        if (chainActive.Contains(pindexWalk->pprev))
+            return chainActive[height];
+
         int heightSkip = GetSkipHeight(heightWalk);
         int heightSkipPrev = GetSkipHeight(heightWalk - 1);
         if (pindexWalk->pskip != nullptr &&
