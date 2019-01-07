@@ -280,7 +280,7 @@ void CPrivateSendServer::SetNull()
 {
     // MN side
     vecSessionCollaterals.clear();
-    nSessionMaxParticipants = NULL;
+    nSessionMaxParticipants = 0;
 
     CPrivateSendBaseSession::SetNull();
     CPrivateSendBaseManager::SetNull();
