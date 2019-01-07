@@ -504,6 +504,12 @@ void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote)
     for (auto& payee : vecPayees) {
         if (payee.GetPayee() == vote.payee) {
             payee.AddVoteHash(nVoteHash);
+            // if we have MNPAYMENTS_SIGNATURES_REQUIRED votes on the active masternode start timer by sending a ping
+            if(vote.outpoint == activeMasternode.outpoint && payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED){
+                // send a ping if you are the active masternode adding this payee
+                // first time you add to payees you should start the timer to track when to kick them out (ban policy)
+                activeMasternode.SendMasternodePing(conman);
+            }
             return;
         }
     }
@@ -1007,7 +1013,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
             continue;
         }
         // DEBUG
-        DBG (
+        /*DBG (
             // Let's see why this failed
             for (const auto& payee : mnBlockPayees.second.vecPayees) {
                 CTxDestination address1;
@@ -1015,7 +1021,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
                 printf("payee %s votes %d\n", EncodeDestination(address1).c_str(), payee.GetVoteCount());
             }
             printf("block %d votes total %d\n", nBlockHeight, nTotalVotes);
-        )
+        )*/
         // END DEBUG
         // Low data block found, let's try to sync it
         uint256 hash;
