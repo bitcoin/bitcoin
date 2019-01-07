@@ -15,12 +15,12 @@ class CMasternode;
 class CMasternodeBroadcast;
 class CConnman;
 
-static const int MASTERNODE_CHECK_SECONDS               =   5;
+static const int MASTERNODE_CHECK_SECONDS               =   10;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
-static const int MASTERNODE_MIN_MNP_SECONDS             =  10 * 60;
-static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  60 * 60;
-static const int MASTERNODE_EXPIRATION_SECONDS          = 120 * 60;
-static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
+static const int MASTERNODE_MIN_MNP_SECONDS             =  60;
+static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  10 * 60;
+static const int MASTERNODE_SENTINEL_PING_EXPIRED_ATTEMPTS          = 3;
+static const int MASTERNODE_SENTINEL_PING_EXPIRED_NEW_START_REQUIRED_ATTEMPTS  = 5;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 
@@ -77,8 +77,9 @@ public:
 
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
-
-    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_NEW_START_REQUIRED_SECONDS; }
+    void SetNull() { masternodeOutpoint.SetNull(); }
+    bool IsNull() const { masternodeOutpoint.IsNull(); }
+    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_SENTINEL_PING_MAX_SECONDS && nPingRetries >= MASTERNODE_SENTINEL_PING_EXPIRED_NEW_START_REQUIRED_ATTEMPTS; }
 
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool CheckSignature(const CPubKey& pubKeyMasternode, int &nDos) const;
