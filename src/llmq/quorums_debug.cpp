@@ -9,6 +9,7 @@
 #include "net.h"
 #include "net_processing.h"
 #include "scheduler.h"
+#include "spork.h"
 #include "validation.h"
 
 #include "evo/deterministicmns.h"
@@ -121,6 +122,10 @@ CDKGDebugManager::CDKGDebugManager(CScheduler* scheduler)
 
 void CDKGDebugManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
+    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
+        return;
+    }
+
     if (strCommand == NetMsgType::QDEBUGSTATUS) {
         CDKGDebugStatus status;
         vRecv >> status;
@@ -237,6 +242,11 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
 bool CDKGDebugManager::AlreadyHave(const CInv& inv)
 {
     LOCK(cs);
+
+    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
+        return true;
+    }
+
     return statuses.count(inv.hash) != 0;
 }
 
@@ -318,6 +328,9 @@ void CDKGDebugManager::SendLocalStatus()
         return;
     }
     if (activeMasternodeInfo.proTxHash.IsNull()) {
+        return;
+    }
+    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
         return;
     }
 
