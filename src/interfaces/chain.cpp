@@ -60,6 +60,42 @@ class LockImpl : public Chain::Lock
         assert(block != nullptr);
         return block->GetMedianTimePast();
     }
+    Optional<int> findFirstBlockWithTime(int64_t time, uint256* hash) override
+    {
+        CBlockIndex* block = ::chainActive.FindEarliestAtLeast(time);
+        if (block) {
+            if (hash) *hash = block->GetBlockHash();
+            return block->nHeight;
+        }
+        return nullopt;
+    }
+    Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height) override
+    {
+        // TODO: Could update CChain::FindEarliestAtLeast() to take a height
+        // parameter and use it with std::lower_bound() to make this
+        // implementation more efficient and allow combining
+        // findFirstBlockWithTime and findFirstBlockWithTimeAndHeight into one
+        // method.
+        for (CBlockIndex* block = ::chainActive[height]; block; block = ::chainActive.Next(block)) {
+            if (block->GetBlockTime() >= time) {
+                return block->nHeight;
+            }
+        }
+        return nullopt;
+    }
+    Optional<int> findPruned(int start_height, Optional<int> stop_height) override
+    {
+        if (::fPruneMode) {
+            CBlockIndex* block = stop_height ? ::chainActive[*stop_height] : ::chainActive.Tip();
+            while (block && block->nHeight >= start_height) {
+                if ((block->nStatus & BLOCK_HAVE_DATA) == 0) {
+                    return block->nHeight;
+                }
+                block = block->pprev;
+            }
+        }
+        return nullopt;
+    }
     Optional<int> findFork(const uint256& hash, Optional<int>* height) override
     {
         const CBlockIndex* block = LookupBlockIndex(hash);
@@ -115,6 +151,11 @@ public:
             block->SetNull();
         }
         return true;
+    }
+    double guessVerificationProgress(const uint256& block_hash) override
+    {
+        LOCK(cs_main);
+        return GuessVerificationProgress(Params().TxData(), LookupBlockIndex(block_hash));
     }
 };
 

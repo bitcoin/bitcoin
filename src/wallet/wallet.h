@@ -678,8 +678,8 @@ private:
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected/ScanForWalletTransactions.
-     * Should be called with pindexBlock and posInBlock if this is for a transaction that is included in a block. */
-    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex *pindex = nullptr, int posInBlock = 0, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+     * Should be called with non-zero block_hash and posInBlock if this is for a transaction that is included in a block. */
+    void SyncTransaction(const CTransactionRef& tx, const uint256& block_hash, int posInBlock = 0, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
@@ -909,12 +909,22 @@ public:
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock) override;
     int64_t RescanFromTime(int64_t startTime, const WalletRescanReserver& reserver, bool update);
 
-    enum class ScanResult {
-        SUCCESS,
-        FAILURE,
-        USER_ABORT
+    struct ScanResult {
+        enum { SUCCESS, FAILURE, USER_ABORT } status = SUCCESS;
+
+        //! Hash and height of most recent block that was successfully scanned.
+        //! Unset if no blocks were scanned due to read errors or the chain
+        //! being empty.
+        uint256 stop_block;
+        Optional<int> stop_height;
+
+        //! Height of the most recent block that could not be scanned due to
+        //! read errors or pruning. Will be set if status is FAILURE, unset if
+        //! status is SUCCESS, and may or may not be set if status is
+        //! USER_ABORT.
+        uint256 failed_block;
     };
-    ScanResult ScanForWalletTransactions(const CBlockIndex* const pindexStart, const CBlockIndex* const pindexStop, const WalletRescanReserver& reserver, const CBlockIndex*& failed_block, const CBlockIndex*& stop_block, bool fUpdate = false);
+    ScanResult ScanForWalletTransactions(const uint256& first_block, const uint256& last_block, const WalletRescanReserver& reserver, bool fUpdate);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx) override;
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
