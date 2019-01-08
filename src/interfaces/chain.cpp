@@ -60,6 +60,11 @@ class LockImpl : public Chain::Lock
         assert(block != nullptr);
         return block->GetMedianTimePast();
     }
+    bool haveBlockOnDisk(int height) override
+    {
+        CBlockIndex* block = ::chainActive[height];
+        return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
+    }
     Optional<int> findFirstBlockWithTime(int64_t time, uint256* hash) override
     {
         CBlockIndex* block = ::chainActive.FindEarliestAtLeast(time);
@@ -108,6 +113,21 @@ class LockImpl : public Chain::Lock
             }
         }
         if (fork) {
+            return fork->nHeight;
+        }
+        return nullopt;
+    }
+    bool isPotentialTip(const uint256& hash) override
+    {
+        if (::chainActive.Tip()->GetBlockHash() == hash) return true;
+        CBlockIndex* block = LookupBlockIndex(hash);
+        return block && block->GetAncestor(::chainActive.Height()) == ::chainActive.Tip();
+    }
+    CBlockLocator getLocator() override { return ::chainActive.GetLocator(); }
+    Optional<int> findLocatorFork(const CBlockLocator& locator) override
+    {
+        LockAnnotation lock(::cs_main);
+        if (CBlockIndex* fork = FindForkInGlobalIndex(::chainActive, locator)) {
             return fork->nHeight;
         }
         return nullopt;
