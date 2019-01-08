@@ -83,7 +83,7 @@ desktopdir = $(datadir)/applications
 desktop_in_files = share/qt/org.bitcoin.bitcoin-qt.desktop.in
 desktop_DATA = $(desktop_in_files:.desktop.in=.desktop)
 
-DIST_SHARE += $(BITCOIN_SVG)
+DIST_SHARE += $(BITCOIN_SVG) $(desktop_in_files)
 endif
 
 $(BITCOIN_WIN_INSTALLER): all-recursive
