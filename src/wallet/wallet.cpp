@@ -875,6 +875,22 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     return true;
 }
 
+bool CWallet::RemoveFromWallet(const CTransaction& tx)
+{
+    LOCK(cs_wallet);
+
+    if (!WalletBatch(*database).EraseTx(tx.GetHash())) {
+        return false;
+    }
+
+    WalletLogPrintf("RemoveFromWallet %s\n", tx.GetHash().ToString());
+
+    // Notify UI of removed transaction
+    NotifyTransactionChanged(this, tx.GetHash(), CT_DELETED);
+
+    return true;
+}
+
 void CWallet::LoadToWallet(const CWalletTx& wtxIn)
 {
     uint256 hash = wtxIn.GetHash();
@@ -947,7 +963,10 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
             if (pIndex != nullptr)
                 wtx.SetMerkleBranch(pIndex, posInBlock);
 
-            return AddToWallet(wtx, false);
+            if (IsMine(tx) || IsFromMe(tx))
+                return AddToWallet(wtx, false);
+
+            return RemoveFromWallet(tx);
         }
     }
     return false;
