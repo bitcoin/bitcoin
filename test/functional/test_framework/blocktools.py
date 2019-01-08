@@ -22,9 +22,10 @@ MAX_BLOCK_SIGOPS = 20000
 # Genesis block time (regtest)
 TIME_GENESIS_BLOCK = 1417713337
 
-def create_block(hashprev, coinbase, ntime=None):
+def create_block(hashprev, coinbase, ntime=None, *, version=1):
     """Create a block (with regtest difficulty)."""
     block = CBlock()
+    block.nVersion = version
     if ntime is None:
         import time
         block.nTime = int(time.time() + 600)
