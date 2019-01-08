@@ -875,6 +875,28 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     return true;
 }
 
+bool CWallet::RemoveFromWallet(const CTransaction& tx)
+{
+    if (!WalletBatch(*database).EraseTx(tx.GetHash()))
+        return false;
+
+    WalletLogPrintf("RemoveFromWallet %s\n", tx.GetHash().ToString());
+
+    // Notify UI of new or updated transaction
+    NotifyTransactionChanged(this, tx.GetHash(), CT_DELETED);
+
+    // Notify an external script when a wallet transaction comes in or is updated
+    std::string strCmd = gArgs.GetArg("-walletnotify", "");
+
+    if (!strCmd.empty()) {
+        boost::replace_all(strCmd, "%s", tx.GetHash().GetHex());
+        std::thread t(runCommand, strCmd);
+        t.detach(); // thread runs free
+    }
+
+    return true;
+}
+
 void CWallet::LoadToWallet(const CWalletTx& wtxIn)
 {
     uint256 hash = wtxIn.GetHash();
@@ -947,7 +969,10 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
             if (pIndex != nullptr)
                 wtx.SetMerkleBranch(pIndex, posInBlock);
 
-            return AddToWallet(wtx, false);
+            if (IsMine(tx) || IsFromMe(tx))
+                return AddToWallet(wtx, false);
+
+            return RemoveFromWallet(tx);
         }
     }
     return false;

@@ -4137,6 +4137,7 @@ UniValue dumpwallet(const JSONRPCRequest& request);
 UniValue importwallet(const JSONRPCRequest& request);
 UniValue importprunedfunds(const JSONRPCRequest& request);
 UniValue removeprunedfunds(const JSONRPCRequest& request);
+UniValue removeaddress(const JSONRPCRequest& request);
 UniValue importmulti(const JSONRPCRequest& request);
 
 // clang-format off
@@ -4184,6 +4185,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listwallets",                      &listwallets,                   {} },
     { "wallet",             "loadwallet",                       &loadwallet,                    {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
+    { "wallet",             "removeaddress",                    &removeaddress,                 {"address","rescan"} },
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },

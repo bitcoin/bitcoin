@@ -343,6 +343,89 @@ UniValue importaddress(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+static void RemoveAddress(CWallet*, const CTxDestination& dest);
+static void RemoveScript(CWallet* const pwallet, const CScript& script) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    if (::IsMine(*pwallet, script) == ISMINE_SPENDABLE)
+        throw JSONRPCError(RPC_WALLET_ERROR, "The wallet contains the private key for this address or script");
+    
+    pwallet->MarkDirty();
+
+    if (pwallet->HaveWatchOnly(script) && !pwallet->RemoveWatchOnly(script)) 
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error removing address from wallet");
+    
+    CTxDestination destination;
+    if (ExtractDestination(script, destination))
+        pwallet->DelAddressBook(destination);
+}
+
+static void RemoveAddress(CWallet* const pwallet, const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    CScript script = GetScriptForDestination(dest);
+    RemoveScript(pwallet, script);
+    // remove from address book
+    if (IsValidDestination(dest))
+        pwallet->DelAddressBook(dest);
+}
+
+UniValue removeaddress(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) 
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            RPCHelpMan{"removeaddress",
+                "\nRemoves an address that was being watched as if it were in your wallet but was not being used to spend. Requires a new wallet backup.\n",
+                {
+                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The Bitcoin address"},
+                    {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Rescan the wallet for transactions"},
+                }}
+                .ToString() +
+            "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
+            "may report that the removed address exists but related transactions are still missing, leading to temporarily incorrect/bogus balances and unspent outputs until rescan completes.\n"
+            "\nExamples:\n"
+            "\nRemove an address with rescan\n"
+            + HelpExampleCli("removeaddress", "\"myaddress\"") +
+            "\nRemove an address without rescan\n"
+            + HelpExampleCli("removeaddress", "\"myaddress\" false") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("importaddress", "\"myaddress\", false")
+        );
+
+    // Whether to perform rescan after import
+    bool fRescan = true;
+    if (!request.params[1].isNull())
+        fRescan = request.params[1].get_bool();
+
+    if (fRescan && fPruneMode)
+        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
+
+    WalletRescanReserver reserver(pwallet);
+    if (fRescan && !reserver.reserve()) 
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+
+    {
+        auto locked_chain = pwallet->chain().lock();
+        LOCK(pwallet->cs_wallet);
+
+        CTxDestination dest = DecodeDestination(request.params[0].get_str());
+        if (IsValidDestination(dest)) 
+            RemoveAddress(pwallet, dest);
+        else 
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+        
+    }
+    if (fRescan) {
+        RescanWallet(*pwallet, reserver);
+        pwallet->ReacceptWalletTransactions();
+    }
+
+    return NullUniValue;
+}
+
 UniValue importprunedfunds(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
