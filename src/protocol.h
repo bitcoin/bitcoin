@@ -270,6 +270,7 @@ extern const char *QCOMPLAINT;
 extern const char *QJUSTIFICATION;
 extern const char *QPCOMMITMENT;
 extern const char *QWATCH;
+extern const char *QDEBUGSTATUS;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -369,6 +370,7 @@ enum GetDataMsg {
     MSG_QUORUM_COMPLAINT = 24,
     MSG_QUORUM_JUSTIFICATION = 25,
     MSG_QUORUM_PREMATURE_COMMITMENT = 26,
+    MSG_QUORUM_DEBUG_STATUS = 27,
 };
 
 /** inv message data */

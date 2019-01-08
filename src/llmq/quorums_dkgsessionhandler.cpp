@@ -123,6 +123,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     QuorumPhase newPhase = phase;
     if (quorumStageInt == 0) {
         newPhase = QuorumPhase_Initialized;
+        quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumHash, quorumHeight);
     } else if (quorumStageInt == params.dkgPhaseBlocks * 1) {
         newPhase = QuorumPhase_Contribute;
     } else if (quorumStageInt == params.dkgPhaseBlocks * 2) {
@@ -137,6 +138,17 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
         newPhase = QuorumPhase_Idle;
     }
     phase = newPhase;
+
+    quorumDKGDebugManager->UpdateLocalStatus([&](CDKGDebugStatus& status) {
+        bool changed = status.nHeight != pindexNew->nHeight;
+        status.nHeight = (uint32_t)pindexNew->nHeight;
+        return changed;
+    });
+    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
+        bool changed = status.phase != (uint8_t)phase;
+        status.phase = (uint8_t)phase;
+        return changed;
+    });
 }
 
 void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
@@ -530,6 +542,10 @@ void CDKGSessionHandler::PhaseHandlerThread()
         try {
             HandleDKGRound();
         } catch (AbortPhaseException& e) {
+            quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
+                status.aborted = true;
+                return true;
+            });
             LogPrintf("CDKGSessionHandler::%s -- aborted current DKG session\n", __func__);
         }
     }

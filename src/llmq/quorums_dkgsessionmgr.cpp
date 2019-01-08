@@ -4,6 +4,7 @@
 
 #include "quorums_dkgsessionmgr.h"
 #include "quorums_blockprocessor.h"
+#include "quorums_debug.h"
 #include "quorums_init.h"
 #include "quorums_utils.h"
 

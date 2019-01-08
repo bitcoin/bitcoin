@@ -46,6 +46,7 @@
 #include "evo/simplifiedmns.h"
 #include "llmq/quorums_blockprocessor.h"
 #include "llmq/quorums_commitment.h"
+#include "llmq/quorums_debug.h"
 #include "llmq/quorums_dkgsessionmgr.h"
 #include "llmq/quorums_init.h"
 
@@ -956,6 +957,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_QUORUM_JUSTIFICATION:
     case MSG_QUORUM_PREMATURE_COMMITMENT:
         return llmq::quorumDKGSessionManager->AlreadyHave(inv);
+    case MSG_QUORUM_DEBUG_STATUS:
+        return llmq::quorumDKGDebugManager->AlreadyHave(inv);
     }
 
     // Don't know what it is, just say we already got one
@@ -1250,6 +1253,13 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     llmq::CDKGPrematureCommitment o;
                     if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                        push = true;
+                    }
+                }
+                if (!push && (inv.type == MSG_QUORUM_DEBUG_STATUS)) {
+                    llmq::CDKGDebugStatus o;
+                    if (llmq::quorumDKGDebugManager->GetDebugStatus(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QDEBUGSTATUS, o));
                         push = true;
                     }
                 }
@@ -2911,6 +2921,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumDKGDebugManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {
