@@ -141,6 +141,7 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
+  llmq/quorums.h \
   llmq/quorums_blockprocessor.h \
   llmq/quorums_commitment.h \
   llmq/quorums_debug.h \
@@ -253,6 +254,7 @@ libdash_server_a_SOURCES = \
   governance-validators.cpp \
   governance-vote.cpp \
   governance-votedb.cpp \
+  llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \
   llmq/quorums_debug.cpp \
