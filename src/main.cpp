@@ -2013,7 +2013,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
         // restore inputs
         if (i > 0 && !tx.IsCoinStake()) { // not coinbases
-            const CTxUndo &txundo = blockUndo.vtxundo[i-2];
+            int nOffSet = 1;
+            if (pindex->nHeight >= Params().PoSStartHeight())
+                nOffSet = 2;
+            const CTxUndo &txundo = blockUndo.vtxundo[i-nOffSet];
             if (txundo.vprevout.size() != tx.vin.size())
                 return error("DisconnectBlock() : transaction and undo data inconsistent prevout=%d vin=%d height=%d %s", txundo.vprevout.size(), blockUndo.vtxundo.size(), pindex->nHeight, tx.ToString());
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
@@ -2994,7 +2997,7 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block, bool fProofOfStake)
         return it->second;
 
     // Construct new block index object
-    CBlockIndex* pindexNew = new CBlockIndex(block);
+    CBlockIndex* pindexNew = new CBlockIndex(block, fProofOfStake);
     assert(pindexNew);
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
@@ -3449,6 +3452,13 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         return true;
     }
 
+    pindex->fProofOfStake = block.IsProofOfStake();
+    if (pindex->fProofOfStake) {
+        pindex->stakeSource.first = block.stakePointer.txid;
+        pindex->stakeSource.second = block.stakePointer.nPos;
+        setDirtyBlockIndex.insert(pindex);
+    }
+
     if ((!CheckBlock(block, state)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
@@ -3597,7 +3607,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     assert(pindexPrev == chainActive.Tip());
 
     CCoinsViewCache viewNew(pcoinsTip);
-    CBlockIndex indexDummy(block);
+    CBlockIndex indexDummy(block, block.IsProofOfStake());
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
