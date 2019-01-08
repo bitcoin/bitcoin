@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+class CBlock;
 class CScheduler;
 class uint256;
 
@@ -56,6 +57,13 @@ public:
         //! Get block median time past. Height must be valid or this function
         //! will abort.
         virtual int64_t getBlockMedianTimePast(int height) = 0;
+
+        //! Return height of the highest block on the chain that is an ancestor
+        //! of the specified block, or nullopt if no common ancestor is found.
+        //! Also return the height of the specified block as an optional output
+        //! parameter (to avoid the cost of a second hash lookup in case this
+        //! information is desired).
+        virtual Optional<int> findFork(const uint256& hash, Optional<int>* height) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
@@ -66,6 +74,17 @@ public:
     //! method is temporary and is only used in a few places to avoid changing
     //! behavior while code is transitioned to use the Chain::Lock interface.
     virtual std::unique_ptr<Lock> assumeLocked() = 0;
+
+    //! Return whether node has the block and optionally return block metadata
+    //! or contents.
+    //!
+    //! If a block pointer is provided to retrieve the block contents, and the
+    //! block exists but doesn't have data (for example due to pruning), the
+    //! block will be empty and all fields set to null.
+    virtual bool findBlock(const uint256& hash,
+        CBlock* block = nullptr,
+        int64_t* time = nullptr,
+        int64_t* max_time = nullptr) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
