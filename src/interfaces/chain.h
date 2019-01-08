@@ -8,6 +8,7 @@
 #include <optional.h>
 
 #include <memory>
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -48,6 +49,13 @@ public:
 
         //! Get block hash. Height must be valid or this function will abort.
         virtual uint256 getBlockHash(int height) = 0;
+
+        //! Get block time. Height must be valid or this function will abort.
+        virtual int64_t getBlockTime(int height) = 0;
+
+        //! Get block median time past. Height must be valid or this function
+        //! will abort.
+        virtual int64_t getBlockMedianTimePast(int height) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and

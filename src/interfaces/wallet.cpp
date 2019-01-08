@@ -333,8 +333,13 @@ public:
         if (mi == m_wallet.mapWallet.end()) {
             return false;
         }
-        num_blocks = locked_chain->getHeight().value_or(-1);
-        block_time = ::chainActive.Tip()->GetBlockTime();
+        if (Optional<int> height = locked_chain->getHeight()) {
+            num_blocks = *height;
+            block_time = locked_chain->getBlockTime(*height);
+        } else {
+            num_blocks = -1;
+            block_time = -1;
+        }
         tx_status = MakeWalletTxStatus(*locked_chain, mi->second);
         return true;
     }
