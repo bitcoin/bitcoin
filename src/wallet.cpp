@@ -1947,6 +1947,7 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
         auto pOutpoint = std::make_pair(pointer.txid, pointer.nPos);
         Kernel kernel(pOutpoint, nAmountMN, nStakeModifier, pindex->GetBlockTime(), nTxNewTime);
         uint256 nTarget = ArithToUint256(arith_uint256().SetCompact(nBits));
+        nLastStakeAttempt = GetTime();
 
         if (!SearchTimeSpan(kernel, nTime, nTime + STAKE_SEARCH_INTERVAL, nTarget))
             continue;

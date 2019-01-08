@@ -71,6 +71,7 @@ bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
 size_t nCoinCacheUsage = 5000 * 300;
 bool fAlerts = DEFAULT_ALERTS;
+int nLastStakeAttempt = 0;
 
 /** Fees smaller than this (in cSats) are considered zero fee (for relaying and mining)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
