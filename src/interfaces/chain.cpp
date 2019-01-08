@@ -46,6 +46,18 @@ class LockImpl : public Chain::Lock
         assert(block != nullptr);
         return block->GetBlockHash();
     }
+    int64_t getBlockTime(int height) override
+    {
+        CBlockIndex* block = ::chainActive[height];
+        assert(block != nullptr);
+        return block->GetBlockTime();
+    }
+    int64_t getBlockMedianTimePast(int height) override
+    {
+        CBlockIndex* block = ::chainActive[height];
+        assert(block != nullptr);
+        return block->GetMedianTimePast();
+    }
 };
 
 class LockingStateImpl : public LockImpl, public UniqueLock<CCriticalSection>
