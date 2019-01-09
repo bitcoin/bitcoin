@@ -497,14 +497,13 @@ void BitcoinApplication::initializeResult(bool success)
         }
 #endif
 
-        // If -min option passed, start window minimized.
-        if(gArgs.GetBoolArg("-min", false))
-        {
-            window->showMinimized();
-        }
-        else
-        {
+        // If -min option passed, start window minimized (iconified) or minimized to tray
+        if (!gArgs.GetBoolArg("-min", false)) {
             window->show();
+        } else if (clientModel->getOptionsModel()->getMinimizeToTray() && window->hasTrayIcon()) {
+            // do nothing as the window is managed by the tray icon
+        } else {
+            window->showMinimized();
         }
         Q_EMIT splashFinished(window);
 
