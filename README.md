@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Bitcoin Core integration/staging tree
 =====================================
 
@@ -75,3 +76,8 @@ Translations are periodically pulled from Transifex and merged into the git repo
 pull from Transifex would automatically overwrite them again.
 
 Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+=======
+Ndovucoin
+==========
+Still under development
+>>>>>>> f0d2942d175e7d3a91cf505a66c02dec056368c9
