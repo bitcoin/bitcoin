@@ -1477,16 +1477,10 @@ UniValue combinepsbt(const JSONRPCRequest& request)
         psbtxs.push_back(psbtx);
     }
 
-    PartiallySignedTransaction merged_psbt(psbtxs[0]); // Copy the first one
-
-    // Merge
-    for (auto it = std::next(psbtxs.begin()); it != psbtxs.end(); ++it) {
-        if (!merged_psbt.Merge(*it)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "PSBTs do not refer to the same transactions.");
-        }
-    }
-    if (!merged_psbt.IsSane()) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Merged PSBT is inconsistent");
+    PartiallySignedTransaction merged_psbt;
+    TransactionError error;
+    if (!CombinePSBTs(merged_psbt, error, psbtxs)) {
+        throw JSONRPCTransactionError(error);
     }
 
     UniValue result(UniValue::VOBJ);
@@ -1531,29 +1525,23 @@ UniValue finalizepsbt(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    // Finalize input signatures -- in case we have partial signatures that add up to a complete
-    //   signature, but have not combined them yet (e.g. because the combiner that created this
-    //   PartiallySignedTransaction did not understand them), this will combine them into a final
-    //   script.
-    bool complete = true;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        complete &= SignPSBTInput(DUMMY_SIGNING_PROVIDER, psbtx, i, SIGHASH_ALL);
-    }
+    bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
+
+    CMutableTransaction mtx;
+    bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-    bool extract = request.params[1].isNull() || (!request.params[1].isNull() && request.params[1].get_bool());
+    std::string result_str;
+
     if (complete && extract) {
-        CMutableTransaction mtx(*psbtx.tx);
-        for (unsigned int i = 0; i < mtx.vin.size(); ++i) {
-            mtx.vin[i].scriptSig = psbtx.inputs[i].final_script_sig;
-            mtx.vin[i].scriptWitness = psbtx.inputs[i].final_script_witness;
-        }
         ssTx << mtx;
-        result.pushKV("hex", HexStr(ssTx.str()));
+        result_str = HexStr(ssTx.str());
+        result.pushKV("hex", result_str);
     } else {
         ssTx << psbtx;
-        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+        result_str = EncodeBase64(ssTx.str());
+        result.pushKV("psbt", result_str);
     }
     result.pushKV("complete", complete);
 
