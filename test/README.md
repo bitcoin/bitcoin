@@ -18,7 +18,8 @@ request is opened. All sets of tests can also be run locally.
 
 # Running tests locally
 
-Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+Before tests can be run locally, Bitcoin Core must be built.  See the [building instructions](/doc#building) for help.
+
 
 ### Functional tests
 
