@@ -143,6 +143,20 @@ BITCOIN_CORE_H = \
   masternodeman.h \
   masternodeconfig.h \
   nodeconfig.h \
+  platform/specialtx-common.h \
+  platform/specialtx.h \
+  platform/rpc/rpcagents.h \
+  platform/rpc/rpc-nf-token.h \
+  platform/rpc/specialtx-rpc-utils.h \
+  platform/nf-token/nf-token-multiindex-utils.h \
+  platform/nf-token/nf-tokens-single-protocol-manager.h \
+  platform/nf-token/nf-tokens-manager.h \
+  platform/nf-token/nf-token-tx-mem-pool-handler.h \
+  platform/nf-token/nf-token-reg-tx-builder.h \
+  platform/nf-token/nf-token-reg-tx.h \
+  platform/nf-token/nf-token-protocol-reg-tx.h \
+  platform/nf-token/nf-token-protocol.h \
+  platform/nf-token/nf-token.h \
   systemnode.h \
   systemnode-payments.h \
   systemnode-sync.h \
@@ -229,11 +243,17 @@ libbitcoin_server_a_SOURCES = \
   platform/governance-approval-voting.cpp \
   platform/governance-vote.cpp \
   platform/governance-vote.h \
-  platform/specialtx.h \
   platform/specialtx.cpp \
+  platform/rpc/specialtx-rpc-utils.cpp \
   platform/rpc/rpcagents.cpp \
-  platform/rpc/rpcagents.h \
-  $(JSON_H) \
+  platform/rpc/rpc-nf-token.cpp \
+  platform/nf-token/nf-token-multiindex-utils.cpp \
+  platform/nf-token/nf-tokens-single-protocol-manager.cpp \
+  platform/nf-token/nf-tokens-manager.cpp \
+  platform/nf-token/nf-token-tx-mem-pool-handler.cpp \
+  platform/nf-token/nf-token-reg-tx.cpp \
+  platform/nf-token/nf-token-protocol-reg-tx.cpp \
+    $(JSON_H) \
   $(BITCOIN_CORE_H)
 
 # wallet: shared between crownd and crown-qt, but only linked
