@@ -2889,13 +2889,6 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) :
         addrman(Params().AllowMultiplePorts()),
         nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
-    fNetworkActive = true;
-    fAddressesInitialized = false;
-    nLastNodeId = 0;
-    nPrevNodeCount = 0;
-    nSendBufferMaxSize = 0;
-    nReceiveFloodSize = 0;
-    flagInterruptMsgProc = false;
     SetTryNewOutboundPeer(false);
 
     Options connOptions;

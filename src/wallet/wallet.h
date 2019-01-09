@@ -1341,18 +1341,16 @@ class CReserveKey final : public CReserveScript
 {
 protected:
     CWallet* pwallet;
-    int64_t nIndex;
+    int64_t nIndex{-1};
     CPubKey vchPubKey;
-    bool fInternal;
+    bool fInternal{false};
+
 public:
     explicit CReserveKey(CWallet* pwalletIn)
     {
-        nIndex = -1;
         pwallet = pwalletIn;
-        fInternal = false;
     }
 
-    CReserveKey() = default;
     CReserveKey(const CReserveKey&) = delete;
     CReserveKey& operator=(const CReserveKey&) = delete;
 
