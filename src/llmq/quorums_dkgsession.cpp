@@ -33,15 +33,6 @@ double justifyLieRate = 0;
 double commitOmitRate = 0;
 double commitLieRate = 0;
 
-static bool RandBool(double rate)
-{
-    const uint64_t v = 100000000;
-    uint64_t r = GetRand(v + 1);
-    if (r <= v * rate)
-        return true;
-    return false;
-}
-
 CDKGLogger::CDKGLogger(CDKGSession& _quorumDkg, const std::string& _func) :
     CDKGLogger(_quorumDkg.params.type, _quorumDkg.quorumHash, _quorumDkg.height, _quorumDkg.AreWeMember(), _func)
 {
@@ -142,7 +133,7 @@ void CDKGSession::SendContributions()
 
     logger.Printf("sending contributions\n");
 
-    if (RandBool(contributionOmitRate)) {
+    if (GetRandBool(contributionOmitRate)) {
         logger.Printf("omitting\n");
         return;
     }
@@ -161,7 +152,7 @@ void CDKGSession::SendContributions()
         auto& m = members[i];
         CBLSSecretKey skContrib = skContributions[i];
 
-        if (RandBool(contributionLieRate)) {
+        if (GetRandBool(contributionLieRate)) {
             logger.Printf("lying for %s\n", m->dmn->proTxHash.ToString());
             skContrib.MakeNewKey();
         }
@@ -310,7 +301,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
     if (!qc.contributions->Decrypt(myIdx, *activeMasternodeInfo.blsKeyOperator, skContribution, PROTOCOL_VERSION)) {
         logger.Printf("contribution from %s could not be decrypted\n", member->dmn->proTxHash.ToString());
         complain = true;
-    } else if (RandBool(complainLieRate)) {
+    } else if (GetRandBool(complainLieRate)) {
         logger.Printf("lying/complaining for %s\n", member->dmn->proTxHash.ToString());
         complain = true;
     }
@@ -651,7 +642,7 @@ void CDKGSession::SendJustification(const std::set<uint256>& forMembers)
 
         CBLSSecretKey skContribution = skContributions[i];
 
-        if (RandBool(justifyLieRate)) {
+        if (GetRandBool(justifyLieRate)) {
             logger.Printf("lying for %s\n", m->dmn->proTxHash.ToString());
             skContribution.MakeNewKey();
         }
@@ -659,7 +650,7 @@ void CDKGSession::SendJustification(const std::set<uint256>& forMembers)
         qj.contributions.emplace_back(i, skContribution);
     }
 
-    if (RandBool(justifyOmitRate)) {
+    if (GetRandBool(justifyOmitRate)) {
         logger.Printf("omitting\n");
         return;
     }
@@ -917,7 +908,7 @@ void CDKGSession::SendCommitment()
         return;
     }
 
-    if (RandBool(commitOmitRate)) {
+    if (GetRandBool(commitOmitRate)) {
         logger.Printf("omitting\n");
         return;
     }
@@ -955,7 +946,7 @@ void CDKGSession::SendCommitment()
     qc.quorumVvecHash = ::SerializeHash(*vvec);
 
     int lieType = -1;
-    if (RandBool(commitLieRate)) {
+    if (GetRandBool(commitLieRate)) {
         lieType = GetRandInt(5);
         logger.Printf("lying on commitment. lieType=%d\n", lieType);
     }
