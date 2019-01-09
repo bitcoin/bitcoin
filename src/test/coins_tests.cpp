@@ -98,6 +98,78 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(coins_tests, BasicTestingSetup)
 
+// This trivial contract must be tested, because instances of CCoinsView are used in production code
+BOOST_AUTO_TEST_CASE(coins_CCoinsViewContract)
+{
+    CCoinsView view;
+
+    Coin coin;
+    COutPoint const outPoint;
+    BOOST_CHECK_EQUAL(view.GetCoin(outPoint, coin), false);
+    BOOST_CHECK_EQUAL(view.GetBestBlock(), uint256());
+    BOOST_CHECK_EQUAL(view.GetHeadBlocks().size(), 0);
+
+    CCoinsMap map;
+    uint256 hashBlock;
+    BOOST_CHECK_EQUAL(view.BatchWrite(map, hashBlock), false);
+    BOOST_CHECK(view.Cursor() == nullptr);
+    BOOST_CHECK_EQUAL(view.HaveCoin(outPoint), false);
+    BOOST_CHECK_EQUAL(view.HaveCoin(outPoint), view.GetCoin(outPoint, coin));
+}
+
+// Test the contract in order to detect unintended modifications
+BOOST_AUTO_TEST_CASE(coins_CCoinsViewBackendContract)
+{
+    // CCoinsViewBacked effectively delegates to an instance of CCoinsView.
+    CCoinsView view;
+    CCoinsViewBacked vBacked(&view);
+
+    Coin someCoin;
+    COutPoint outPoint;
+    BOOST_CHECK_EQUAL(vBacked.GetCoin(outPoint, someCoin), false);
+    BOOST_CHECK_EQUAL(vBacked.HaveCoin(outPoint), false);
+    BOOST_CHECK_EQUAL(vBacked.GetBestBlock(), uint256());
+    BOOST_CHECK_EQUAL(vBacked.GetHeadBlocks().size(), 0);
+
+    CCoinsMap map;
+    uint256 someHashBlock;
+    BOOST_CHECK_EQUAL(vBacked.BatchWrite(map, someHashBlock), false);
+    BOOST_CHECK(vBacked.Cursor() == nullptr);
+    BOOST_CHECK_EQUAL(vBacked.EstimateSize(), 0);
+
+    // Provide an alternative implementation of CCoinsView with the opposite behavior
+    // and test that CCoinsViewBackend behaves accordingly
+    class Opposite : public CCoinsView
+    {
+        bool GetCoin(const COutPoint& outpoint, Coin& coin) const override { return true; }
+        bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) override { return true; }
+        CCoinsViewCursor* Cursor() const override { return (CCoinsViewCursor*)this; }
+        size_t EstimateSize() const override { return 1; }
+
+        uint256 GetBestBlock() const override
+        {
+            return uint256S("zero");
+        }
+
+        std::vector<uint256> GetHeadBlocks() const override
+        {
+            std::vector<uint256> vector;
+            vector.push_back(uint256S("one"));
+            return vector;
+        }
+    };
+
+    Opposite opposite;
+    vBacked.SetBackend(opposite);
+    BOOST_CHECK_EQUAL(vBacked.GetCoin(outPoint, someCoin), true);
+    BOOST_CHECK_EQUAL(vBacked.HaveCoin(outPoint), true);
+    BOOST_CHECK_EQUAL(vBacked.GetBestBlock(), uint256S("zero"));
+    BOOST_CHECK_EQUAL(vBacked.GetHeadBlocks().size(), 1);
+    BOOST_CHECK_EQUAL(vBacked.BatchWrite(map, someHashBlock), true);
+    BOOST_CHECK_EQUAL((Opposite*)vBacked.Cursor(), &opposite);
+    BOOST_CHECK_EQUAL(vBacked.EstimateSize(), 1);
+}
+
 static const unsigned int NUM_SIMULATION_ITERATIONS = 40000;
 
 // This is a large randomized insert/remove simulation test on a variable-size
