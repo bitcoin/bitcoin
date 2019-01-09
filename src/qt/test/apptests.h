@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018 The NdovuCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,7 +37,7 @@ private:
         ~HandleCallback();
     };
 
-    //! Bitcoin application.
+    //! NdovuCoin application.
     BitcoinApplication& m_app;
 
     //! Set of pending callback names. Used to track expected callbacks and shut

@@ -29,16 +29,16 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Bitcoin-Qt</string>
+  <string>NdovuCoin-Qt</string>
   
   <key>CFBundleName</key>
-  <string>Bitcoin-Qt</string>
+  <string>NdovuCoin-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.bitcoinfoundation.Bitcoin-Qt</string>
+  <string>org.bitcoinfoundation.NdovuCoin-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -60,7 +60,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.bitcoin.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Bitcoin payment request</string>
+      <string>NdovuCoin payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>

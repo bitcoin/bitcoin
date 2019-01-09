@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The NdovuCoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
@@ -74,7 +74,7 @@ class RESTTest (BitcoinTestFramework):
 
     def run_test(self):
         self.url = urllib.parse.urlparse(self.nodes[0].url)
-        self.log.info("Mine blocks and send Bitcoin to node 1")
+        self.log.info("Mine blocks and send NdovuCoin to node 1")
 
         # Random address so node1's balance doesn't increase
         not_related_address = "2MxqoHEdNQTyYeX1mHcbrrpzgojbosTpCvJ"

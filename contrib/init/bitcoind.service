@@ -8,7 +8,7 @@
 # /etc/bitcoin/bitcoin.conf
 
 [Unit]
-Description=Bitcoin daemon
+Description=NdovuCoin daemon
 After=network.target
 
 [Service]

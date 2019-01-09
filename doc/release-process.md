@@ -40,7 +40,7 @@ Check out the source code in the following directory hierarchy.
     git clone https://github.com/devrandom/gitian-builder.git
     git clone https://github.com/bitcoin/bitcoin.git
 
-### Bitcoin maintainers/release engineers, suggestion for writing release notes
+### NdovuCoin maintainers/release engineers, suggestion for writing release notes
 
 Write release notes. git shortlog helps a lot, for example:
 
@@ -112,7 +112,7 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-### Build and sign Bitcoin Core for Linux, Windows, and macOS:
+### Build and sign NdovuCoin Core for Linux, Windows, and macOS:
 
     pushd ./gitian-builder
     ./bin/gbuild --num-make 2 --memory 3000 --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
@@ -276,14 +276,14 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
 - Update bitcoin.org version
 
-  - First, check to see if the Bitcoin.org maintainers have prepared a
+  - First, check to see if the NdovuCoin.org maintainers have prepared a
     release: https://github.com/bitcoin-dot-org/bitcoin.org/labels/Core
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
-  - If they have not prepared a release, follow the Bitcoin.org release
+  - If they have not prepared a release, follow the NdovuCoin.org release
     instructions: https://github.com/bitcoin-dot-org/bitcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
@@ -293,7 +293,7 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - bitcoin-dev and bitcoin-core-dev mailing list
 
-  - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
+  - NdovuCoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
 
   - bitcoincore.org blog post
 
@@ -301,7 +301,7 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - Update title of #bitcoin on Freenode IRC
 
-  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
+  - Optionally twitter, reddit /r/NdovuCoin, ... but this will usually sort out itself
 
   - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
 

@@ -66,11 +66,11 @@
         <translation>Адреса получения</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your NdovuCoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Это ваши биткойн адреса для отправки платежа. Всегда проверяйте сумму и адрес получателя перед отправкой платежа.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your NdovuCoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>Это ваши биткойн адреса для получения платежей. Настоятельно рекомендуем использовать новые адреса для получения каждой транзакции.</translation>
     </message>
     <message>
@@ -346,7 +346,7 @@
         <translation>Реиндексация блоков на диске...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a NdovuCoin address</source>
         <translation>Послать средства на биткойн адрес</translation>
     </message>
     <message>
@@ -370,8 +370,8 @@
         <translation>&amp;Проверить сообщение...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin Core</translation>
+        <source>NdovuCoin</source>
+        <translation>NdovuCoin Core</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -398,12 +398,12 @@
         <translation>Зашифровать приватные ключи, принадлежащие вашему кошельку</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Подписывайте сообщения Bitcoin адресами чтобы подтвердить что это написали именно Вы</translation>
+        <source>Sign messages with your NdovuCoin addresses to prove you own them</source>
+        <translation>Подписывайте сообщения NdovuCoin адресами чтобы подтвердить что это написали именно Вы</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Проверяйте сообщения чтобы убедиться что они подписаны конкретными Bitcoin адресами</translation>
+        <source>Verify messages to ensure they were signed with specified NdovuCoin addresses</source>
+        <translation>Проверяйте сообщения чтобы убедиться что они подписаны конкретными NdovuCoin адресами</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -534,8 +534,8 @@
         <translation>Кошелек &lt;b&gt;зашифрован&lt;/b&gt; и сейчас &lt;b&gt;заблокирован&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Произошла критическая ошибка. Bitcoin больше не может продолжать безопасную работу и будет закрыт.</translation>
+        <source>A fatal error occurred. NdovuCoin can no longer continue safely and will quit.</source>
+        <translation>Произошла критическая ошибка. NdovuCoin больше не может продолжать безопасную работу и будет закрыт.</translation>
     </message>
 </context>
 <context>
@@ -749,8 +749,8 @@
         <translation>Использовать пользовательскую директорию данных</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin Core</translation>
+        <source>NdovuCoin</source>
+        <translation>NdovuCoin Core</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -918,8 +918,8 @@
         <translation>Разрешить входящие соединения</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
-        <translation>Подключится к сети Bitcoin через SOCKS5 прокси.</translation>
+        <source>Connect to the NdovuCoin network through a SOCKS5 proxy.</source>
+        <translation>Подключится к сети NdovuCoin через SOCKS5 прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1126,7 +1126,7 @@
         <translation>Количество</translation>
     </message>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <source>Enter a NdovuCoin address (e.g. %1)</source>
         <translation>Введите биткоин-адрес (напр. %1)</translation>
     </message>
     <message>
@@ -2152,8 +2152,8 @@
         <translation>Невозможно запустить HTTP-сервер. Для получения более детальной информации необходимо обратиться к журналу отладки.</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Core</translation>
+        <source>NdovuCoin Core</source>
+        <translation>NdovuCoin Core</translation>
     </message>
     <message>
         <source>The %s developers</source>

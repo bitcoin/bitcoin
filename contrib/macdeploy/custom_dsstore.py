@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2013-2018 The Bitcoin Core developers
+# Copyright (c) 2013-2018 The NdovuCoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import biplist
@@ -53,7 +53,7 @@ ds['.']['icvp'] = icvp
 ds['.']['vSrn'] = ('long', 1)
 
 ds['Applications']['Iloc'] = (370, 156)
-ds['Bitcoin-Qt.app']['Iloc'] = (128, 156)
+ds['NdovuCoin-Qt.app']['Iloc'] = (128, 156)
 
 ds.flush()
 ds.close()

@@ -33,7 +33,7 @@ Download the source code:
 git clone https://github.com/bitcoin/bitcoin
 ```
 
-## Building Bitcoin Core
+## Building NdovuCoin Core
 
 **Important**: Use `gmake` (the non-GNU `make` will exit with an error):
 

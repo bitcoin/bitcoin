@@ -1,7 +1,7 @@
 (note: this is a temporary file, to be added-to by anybody, and moved to
 release-notes at release time)
 
-Bitcoin Core version *version* is now available from:
+NdovuCoin Core version *version* is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-*version*/>
 
@@ -21,7 +21,7 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
+installer (on Windows) or just copy over `/Applications/NdovuCoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 The first time you run version 0.15.0, your chainstate database will be converted to a
@@ -47,16 +47,16 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems using
+NdovuCoin Core is supported and extensively tested on operating systems using
 the Linux kernel, macOS 10.10+, and Windows 7 and newer.  It is not recommended
-to use Bitcoin Core on unsupported systems.
+to use NdovuCoin Core on unsupported systems.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+NdovuCoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 From 0.17.0 onwards, macOS <10.10 is no longer supported.  0.17.0 is
 built using Qt 5.9.x, which doesn't support versions of macOS older than
-10.10.  Additionally, Bitcoin Core does not yet change appearance when
+10.10.  Additionally, NdovuCoin Core does not yet change appearance when
 macOS "dark mode" is activated.
 
 In addition to previously-supported CPU platforms, this release's
@@ -89,7 +89,7 @@ Configuration option changes
   documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md#usage)
   for details.
 
-- The `enablebip61` option (introduced in Bitcoin Core 0.17.0) is
+- The `enablebip61` option (introduced in NdovuCoin Core 0.17.0) is
   used to toggle sending of BIP 61 reject messages. Reject messages have no use
   case on the P2P network and are only logged for debugging by most network
   nodes. The option will now by default be off for improved privacy and security
@@ -124,10 +124,10 @@ Documentation
 
 - A new [document](https://github.com/bitcoin/bitcoin/blob/master/doc/bitcoin-conf.md)
   about the `bitcoin.conf` file describes how to use it to configure
-  Bitcoin Core.
+  NdovuCoin Core.
 
-- A new document introduces Bitcoin Core's BIP174
-  [Partially-Signed Bitcoin Transactions (PSBT)](https://github.com/bitcoin/bitcoin/blob/master/doc/psbt.md)
+- A new document introduces NdovuCoin Core's BIP174
+  [Partially-Signed NdovuCoin Transactions (PSBT)](https://github.com/bitcoin/bitcoin/blob/master/doc/psbt.md)
   interface, which is used to allow multiple programs to collaboratively
   work to create, sign, and broadcast new transactions.  This is useful
   for offline (cold storage) wallets, multisig wallets, coinjoin
@@ -146,9 +146,9 @@ Build system changes
 --------------------
 
 - A new `--disable-bip70` option may be passed to `./configure` to
-  prevent Bitcoin-Qt from being built with support for the BIP70 payment
+  prevent NdovuCoin-Qt from being built with support for the BIP70 payment
   protocol or from linking libssl.  As the payment protocol has exposed
-  Bitcoin Core to libssl vulnerabilities in the past, builders who don't
+  NdovuCoin Core to libssl vulnerabilities in the past, builders who don't
   need BIP70 support are encouraged to use this option to reduce their
   exposure to future vulnerabilities.
 
@@ -223,7 +223,7 @@ in the Low-level Changes section below.
   ignored or are inconsistent, if there are any.
 
 - The `getaddressinfo` RPC now returns an additional `solvable` boolean
-  field when Bitcoin Core knows enough about the address's scriptPubKey,
+  field when NdovuCoin Core knows enough about the address's scriptPubKey,
   optional redeemScript, and optional witnessScript in order for the
   wallet to be able to generate an unsigned input spending funds sent to
   that address.
@@ -237,7 +237,7 @@ in the Low-level Changes section below.
 - The `importprivkey` RPC will preserve previously-set labels for
   addresses or public keys corresponding to the private key being
   imported.  For example, if you imported a watch-only address with the
-  label "cold wallet" in earlier releases of Bitcoin Core, subsequently
+  label "cold wallet" in earlier releases of NdovuCoin Core, subsequently
   importing the private key would default to resetting the address's
   label to the default empty-string label ("").  In this release, the
   previous label of "cold wallet" will be retained.  If you optionally
@@ -289,7 +289,7 @@ Configuration
 Changes for particular platforms
 --------------------------------
 
-- On macOS, Bitcoin Core now opts out of application CPU throttling
+- On macOS, NdovuCoin Core now opts out of application CPU throttling
   ("app nap") during initial blockchain download, when catching up from
   over 100 blocks behind the current chain tip, or when reindexing chain
   data.  This helps prevent these operations from taking an excessively

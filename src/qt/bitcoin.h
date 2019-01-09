@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The NdovuCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ class Handler;
 class Node;
 } // namespace interfaces
 
-/** Class encapsulating Bitcoin Core startup and shutdown.
+/** Class encapsulating NdovuCoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class BitcoinCore: public QObject
@@ -51,7 +51,7 @@ private:
     interfaces::Node& m_node;
 };
 
-/** Main Bitcoin application object */
+/** Main NdovuCoin application object */
 class BitcoinApplication: public QApplication
 {
     Q_OBJECT

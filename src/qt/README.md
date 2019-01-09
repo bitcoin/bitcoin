@@ -32,7 +32,7 @@ Tests.
 
 ### bitcoingui.(h/cpp)
 
-Represents the main window of the Bitcoin UI.
+Represents the main window of the NdovuCoin UI.
 
 ### \*model.(h/cpp)
 

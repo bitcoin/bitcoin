@@ -1,4 +1,4 @@
-Fuzz-testing Bitcoin Core
+Fuzz-testing NdovuCoin Core
 ==========================
 
 A special test harness `test_bitcoin_fuzzy` is provided to provide an easy
@@ -20,7 +20,7 @@ export AFLPATH=$PWD
 Instrumentation
 ----------------
 
-To build Bitcoin Core using AFL instrumentation (this assumes that the
+To build NdovuCoin Core using AFL instrumentation (this assumes that the
 `AFLPATH` was set as above):
 ```
 ./configure --disable-ccache --disable-shared --enable-tests CC=${AFLPATH}/afl-gcc CXX=${AFLPATH}/afl-g++

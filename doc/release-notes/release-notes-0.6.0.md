@@ -1,5 +1,5 @@
-Bitcoin version 0.6.0 is now available for download at:
-http://sourceforge.net/projects/bitcoin/files/Bitcoin/bitcoin-0.6.0/test/
+NdovuCoin version 0.6.0 is now available for download at:
+http://sourceforge.net/projects/bitcoin/files/NdovuCoin/bitcoin-0.6.0/test/
 
 This release includes more than 20 language localizations.
 More translations are welcome; join the
@@ -38,7 +38,7 @@ hours).
 
 Backup Wallet menu option.
 
-Bitcoin-Qt can display and save QR codes for sending
+NdovuCoin-Qt can display and save QR codes for sending
 and receiving addresses.
 
 New context menu on addresses to copy/edit/delete them.
@@ -54,14 +54,14 @@ transactions and less traffic on the bitcoin
 network. The shorter keys are already supported
 by the network but wallet.dat files containing
 short keys are not compatible with earlier
-versions of Bitcoin-Qt/bitcoind.
+versions of NdovuCoin-Qt/bitcoind.
 
 New command-line argument -blocknotify=<command>
 that will spawn a shell process to run <command> 
 when a new block is accepted.
 
 New command-line argument -splash=0 to disable
-Bitcoin-Qt's initial splash screen
+NdovuCoin-Qt's initial splash screen
 
 validateaddress JSON-RPC api command output includes
 two new fields for addresses in the wallet:
@@ -105,10 +105,10 @@ attacks were fixed.
 NOT YET IMPLEMENTED FEATURES
 
 Support for clicking on bitcoin: URIs and
-opening/launching Bitcoin-Qt is available only on Linux,
+opening/launching NdovuCoin-Qt is available only on Linux,
 and only if you configure your desktop to launch
-Bitcoin-Qt. All platforms support dragging and dropping
-bitcoin: URIs onto the Bitcoin-Qt window to start
+NdovuCoin-Qt. All platforms support dragging and dropping
+bitcoin: URIs onto the NdovuCoin-Qt window to start
 payment.
 
 
@@ -125,7 +125,7 @@ with this release multisignature transactions are
 considered standard and will start to be relayed
 and accepted into blocks.
 
-It is expected that future releases of Bitcoin-Qt
+It is expected that future releases of NdovuCoin-Qt
 will support the creation of multisignature transactions,
 once enough of the network has upgraded so relaying
 and validating them is robust.

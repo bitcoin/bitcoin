@@ -134,8 +134,8 @@
         <translation>Reindexando bloques no disco...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Enviar moedas a unha dirección Bitcoin</translation>
+        <source>Send coins to a NdovuCoin address</source>
+        <translation>Enviar moedas a unha dirección NdovuCoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -158,8 +158,8 @@
         <translation>&amp;Verificar mensaxe...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>NdovuCoin</source>
+        <translation>NdovuCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -186,12 +186,12 @@
         <translation>Encriptar as claves privadas que pertencen ao teu moedeiro</translation>
     </message>
     <message>
-        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Asina mensaxes coas túas direccións Bitcoin para probar que te pertencen</translation>
+        <source>Sign messages with your NdovuCoin addresses to prove you own them</source>
+        <translation>Asina mensaxes coas túas direccións NdovuCoin para probar que te pertencen</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Verificar mensaxes para asegurar que foron asinados con direccións Bitcoin dadas.</translation>
+        <source>Verify messages to ensure they were signed with specified NdovuCoin addresses</source>
+        <translation>Verificar mensaxes para asegurar que foron asinados con direccións NdovuCoin dadas.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -401,8 +401,8 @@
         <translation>Empregar un directorio de datos personalizado</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin</translation>
+        <source>NdovuCoin</source>
+        <translation>NdovuCoin</translation>
     </message>
     <message>
         <source>Error</source>
@@ -466,8 +466,8 @@
         <translation>Moedeiro</translation>
     </message>
     <message>
-        <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente o porto do cliente Bitcoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
+        <source>Automatically open the NdovuCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abrir automáticamente o porto do cliente NdovuCoin no router. Esto so funciona se o teu router soporta UPnP e está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -549,8 +549,8 @@
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede Bitcoin despois de que se estableza unha conexión, pero este proceso non está todavía rematado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NdovuCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>A información amosada por estar desactualizada. O teu moedeiro sincronízase automáticamente coa rede NdovuCoin despois de que se estableza unha conexión, pero este proceso non está todavía rematado.</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
@@ -923,8 +923,8 @@
         <translation>Copiar a sinatura actual ao portapapeis do sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>Asina a mensaxe para probar que posees esta dirección Bitcoin</translation>
+        <source>Sign the message to prove you own this NdovuCoin address</source>
+        <translation>Asina a mensaxe para probar que posees esta dirección NdovuCoin</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -943,8 +943,8 @@
         <translation>&amp;Verificar Mensaxe</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección Bitcoin especificada</translation>
+        <source>Verify the message to ensure it was signed with the specified NdovuCoin address</source>
+        <translation>Verificar a mensaxe para asegurar que foi asinada coa dirección NdovuCoin especificada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -1000,8 +1000,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Core de Bitcoin</translation>
+        <source>NdovuCoin Core</source>
+        <translation>Core de NdovuCoin</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>

@@ -81,7 +81,7 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 bitcoin-qt
-Bitcoin-Qt.app
+NdovuCoin-Qt.app
 background.tiff*
 
 # Unit-tests
