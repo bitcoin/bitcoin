@@ -145,6 +145,7 @@ extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
+extern int nLastStakeAttempt;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 

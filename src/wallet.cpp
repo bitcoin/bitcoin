@@ -342,7 +342,7 @@ set<uint256> CWallet::GetConflicts(const uint256& txid) const
     AssertLockHeld(cs_wallet);
 
     std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(txid);
-    if (it == mapWallet.end())
+    if (it == mapWallet.end() || it->second.IsCoinStake() || it->second.IsCoinBase())
         return result;
     const CWalletTx& wtx = it->second;
 
@@ -1947,6 +1947,7 @@ bool CWallet::CreateCoinStake(const int nHeight, const uint32_t& nBits, const ui
         auto pOutpoint = std::make_pair(pointer.txid, pointer.nPos);
         Kernel kernel(pOutpoint, nAmountMN, nStakeModifier, pindex->GetBlockTime(), nTxNewTime);
         uint256 nTarget = ArithToUint256(arith_uint256().SetCompact(nBits));
+        nLastStakeAttempt = GetTime();
 
         if (!SearchTimeSpan(kernel, nTime, nTime + STAKE_SEARCH_INTERVAL, nTarget))
             continue;

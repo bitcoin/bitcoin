@@ -71,6 +71,7 @@ bool fIsBareMultisigStd = true;
 bool fCheckBlockIndex = false;
 size_t nCoinCacheUsage = 5000 * 300;
 bool fAlerts = DEFAULT_ALERTS;
+int nLastStakeAttempt = 0;
 
 /** Fees smaller than this (in cSats) are considered zero fee (for relaying and mining)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
@@ -2035,7 +2036,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
         // restore inputs
         if (i > 0 && !tx.IsCoinStake()) { // not coinbases
-            const CTxUndo &txundo = blockUndo.vtxundo[i-2];
+            int nOffSet = 1;
+            if (pindex->nHeight >= Params().PoSStartHeight())
+                nOffSet = 2;
+            const CTxUndo &txundo = blockUndo.vtxundo[i-nOffSet];
             if (txundo.vprevout.size() != tx.vin.size())
                 return error("DisconnectBlock() : transaction and undo data inconsistent prevout=%d vin=%d height=%d %s", txundo.vprevout.size(), blockUndo.vtxundo.size(), pindex->nHeight, tx.ToString());
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
@@ -2112,6 +2116,40 @@ void ThreadScriptCheck() {
     scriptcheckqueue.Thread();
 }
 
+bool IsStakePointerUsed(const CBlockIndex* pindexStake, const COutPoint& outpointFrom)
+{
+    auto hashPointer = outpointFrom.GetHash();
+    if (!mapUsedStakePointers.count(hashPointer))
+        return false;
+
+    // Marked as already used, but could potentially be a reorg, so check if they are in the same chain
+    auto hashBlockOfPointer = mapUsedStakePointers.at(hashPointer);
+    if (!mapBlockIndex.count(hashBlockOfPointer))
+        return false;
+
+    auto pindexUsedPointer = mapBlockIndex.at(hashBlockOfPointer);
+
+    // This check is only applicable if the used pointer is deeper in the chain (else it is likely just reindex or other check)
+    if (pindexStake->nHeight < pindexUsedPointer->nHeight)
+        return false;
+
+    // if it is the same block, then it is not a duplicate
+    if (pindexStake->GetBlockHash() == pindexUsedPointer->GetBlockHash())
+        return false;
+
+    //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
+    //then this is the same chain and therefore need to reject the new block
+    auto pindexCheck = pindexStake->GetAncestor(pindexUsedPointer->nHeight);
+    if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash()) {
+        error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s",
+              __func__, outpointFrom.hash.GetHex(), outpointFrom.n, pindexCheck->GetBlockHash().GetHex());
+        return true;
+    }
+
+    // This stakepointer has not been used
+    return false;
+}
+
 bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPubKey& pubkeyMasternode, COutPoint& outpointStakePointer, CTransaction& txPayment)
 {
     //First make sure that the stake pointer points to a block that is in the blockchain
@@ -2137,32 +2175,8 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
 
     //Ensure that this stake pointer is not already used by another block in the chain
     COutPoint stakeSource(stakePointer.txid, stakePointer.nPos);
-    auto hashPointer = stakeSource.GetHash();
-    if (mapUsedStakePointers.count(hashPointer)) {
-        //Marked as already used, but could potentially be a reorg, so check if they are in the same chain
-        auto hashBlockOfPointer = mapUsedStakePointers.at(hashPointer);
-        if (mapBlockIndex.count(hashBlockOfPointer)) {
-
-            auto pindexUsedPointer = mapBlockIndex.at(hashBlockOfPointer);
-
-            // This check is only applicable if the used pointer is deeper in the chain (else it is likely just reindex or other check)
-            if (pindex->nHeight >= pindexUsedPointer->nHeight) {
-
-                // if it is the same block, then it is not a duplicate
-                if (pindex->GetBlockHash() != pindexUsedPointer->GetBlockHash()) {
-
-                    //Check the ancestor of the block we are checking. If this chain's block at the height of the prev stake pointer has the same hash,
-                    //then this is the same chain and therefore need to reject the new block
-                    auto pindexCheck = pindex->GetAncestor(pindexUsedPointer->nHeight);
-                    if (pindexCheck && pindexCheck->GetBlockHash() == pindexUsedPointer->GetBlockHash())
-                        return error("%s: StakePointer (txid=%s, nPos=%u) has already been used in block %s",
-                                     __func__,
-                                     stakePointer.txid.GetHex(), stakePointer.nPos,
-                                     pindexCheck->GetBlockHash().GetHex());
-                }
-            }
-        }
-    }
+    if (IsStakePointerUsed(pindex, stakeSource))
+        return error("%s: stake pointer already used", __func__);
 
     CBlock blockFrom;
     if (!ReadBlockFromDisk(blockFrom, pindexFrom))
@@ -3006,7 +3020,7 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block, bool fProofOfStake)
         return it->second;
 
     // Construct new block index object
-    CBlockIndex* pindexNew = new CBlockIndex(block);
+    CBlockIndex* pindexNew = new CBlockIndex(block, fProofOfStake);
     assert(pindexNew);
     // We assign the sequence id to blocks only when the full data is available,
     // to avoid miners withholding blocks but broadcasting headers, to get a
@@ -3477,6 +3491,13 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         return true;
     }
 
+    pindex->fProofOfStake = block.IsProofOfStake();
+    if (pindex->fProofOfStake) {
+        pindex->stakeSource.first = block.stakePointer.txid;
+        pindex->stakeSource.second = block.stakePointer.nPos;
+        setDirtyBlockIndex.insert(pindex);
+    }
+
     if ((!CheckBlock(block, state)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
@@ -3625,7 +3646,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     assert(pindexPrev == chainActive.Tip());
 
     CCoinsViewCache viewNew(pcoinsTip);
-    CBlockIndex indexDummy(block);
+    CBlockIndex indexDummy(block, block.IsProofOfStake());
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 

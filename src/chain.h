@@ -174,7 +174,7 @@ public:
         SetNull();
     }
 
-    CBlockIndex(const CBlock& block)
+    CBlockIndex(const CBlock& block, bool fProofOfStakeIn)
     {
         SetNull();
 
@@ -183,7 +183,9 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
-        fProofOfStake  = block.IsProofOfStake();
+
+        //CBlockHeader may be passed in here, which will only have knowledge of PoS by looking at fProofOfStakeIn
+        fProofOfStake  = block.IsProofOfStake() || fProofOfStakeIn;
         if (fProofOfStake) {
             stakeSource.first = block.stakePointer.txid;
             stakeSource.second = block.stakePointer.nPos;
