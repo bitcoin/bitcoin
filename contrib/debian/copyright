@@ -1,14 +1,12 @@
 Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
-Upstream-Name: Bitcoin
-Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: http://sourceforge.net/projects/bitcoin/files/
- https://github.com/bitcoin/bitcoin
+Upstream-Name: Peercoin
+Upstream-Contact: Stichting Peercoin Foundation <foundation@peercoin.net>
+Source: https://github.com/peercoin/peercoin
 
 Files: *
-Copyright: 2009-2012, Bitcoin Developers
+Copyright: 2012-2019, Peercoin Developers
 License: Expat
-Comment: The Bitcoin Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Peercoin Developers encompasses the current developers listed on https://github.com/peercoin/peercoin,
          as well as the numerous contributors to the project.
 
 Files: src/json/*
@@ -22,10 +20,11 @@ License: ISC
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
+           2019 Zvonimir Mostarac <peerchemist@protonmail.ch>
 License: GPL-2+
 
 Files: debian/manpages/*
-Copyright: Micah Anderson <micah@debian.org>
+Copyright: 2019 Zvonimir Mostarac <peerchemist@protonmail.ch>
 License: GPL-3+
 
 Files: src/qt/res/icons/clock*.png, src/qt/res/icons/tx*.png,
@@ -77,11 +76,9 @@ License: GPL-3+
 Comment: Icon Pack: Kids
          Site: http://findicons.com/icon/17102/reload?id=17102
 
-Files: src/qt/res/images/splash2.jpg
+Files: src/qt/res/images/splash.png
 License: PUB-DOM
-Copyright: Crobbo (forum)
-Comment: Site: https://bitcointalk.org/index.php?topic=32273.0
-
+Copyright: Buckkets (forum)
 
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a

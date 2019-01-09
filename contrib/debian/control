@@ -26,7 +26,7 @@ Build-Depends: debhelper,
  qttools5-dev-tools, qttools5-dev,
  libqrencode-dev
 Standards-Version: 3.9.5
-Homepage: https://peercoin.net/
+Homepage: https://www.peercoin.net/
 Vcs-Git: git://github.com/peercoin/peercoin.git
 Vcs-Browser: https://github.com/peercoin/peercoin
 

@@ -1,3 +1,9 @@
+peercoin (0.7.0~rc5-1) stable; urgency=low
+
+  * RC for the v0.7 branch.
+
+ --  <peerchemist@protonmail.ch>  Wed, 09 Jan 2019 13:16:20 +0000
+
 peercoin (0.6.4-1) stable; urgency=low
 
   * New upstream release, minor fixes in the manpages.
