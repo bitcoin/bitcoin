@@ -33,7 +33,7 @@ void base_blob<BITS>::SetHex(const char* psz)
         psz++;
 
     // skip 0x
-    if (psz[0] == '0' && tolower(psz[1]) == 'x')
+    if (psz[0] == '0' && ToLower((unsigned char)psz[1]) == 'x')
         psz += 2;
 
     // hex string to uint

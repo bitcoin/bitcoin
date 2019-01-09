@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/strencodings.h>
 #include <util/system.h>
 #include <test/test_bitcoin.h>
 
@@ -17,7 +18,7 @@ static void ResetArgs(const std::string& strArg)
 {
     std::vector<std::string> vecArg;
     if (strArg.size())
-      boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
+      boost::split(vecArg, strArg, IsSpace, boost::token_compress_on);
 
     // Insert dummy executable name:
     vecArg.insert(vecArg.begin(), "testbitcoin");
