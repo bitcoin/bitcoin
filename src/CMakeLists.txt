@@ -362,6 +362,27 @@ target_link_libraries(crown_wallet
   PUBLIC CURL::libcurl
   )
 
+#LIBCROWN-PLATFORM
+
+add_library(crown_platform
+  platform/specialtx.cpp
+  platform/governance-vote.cpp
+  platform/governance.cpp
+  platform/agent.cpp
+  platform/rpc/specialtx-rpc-utils.cpp
+  platform/rpc/rpcagents.cpp
+  platform/rpc/rpc-nf-token.cpp
+  platform/nf-token/nf-token-multiindex-utils.cpp
+  platform/nf-token/nf-tokens-single-protocol-manager.cpp
+  platform/nf-token/nf-tokens-manager.cpp
+  platform/nf-token/nf-token-tx-mem-pool-handler.cpp
+  platform/nf-token/nf-token-reg-tx.cpp
+  platform/nf-token/nf-token-protocol-reg-tx.cpp
+)
+target_include_directories(crown_platform
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 
 add_executable(crownd
   crownd.cpp
@@ -378,6 +399,7 @@ target_link_libraries(crownd
   crown_univalue
   crown_util
   crown_crypto
+  crown_platform
   leveldb
   memenv
   secp256k1

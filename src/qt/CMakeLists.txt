@@ -206,6 +206,7 @@ target_link_libraries(crown_qt
   crown_crypto
   crown_univalue
   crown_client
+  crown_platform
   crownqtlib
   Qt5::Widgets
   protobuf::libprotobuf
