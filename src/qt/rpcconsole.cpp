@@ -18,6 +18,7 @@
 #include <netbase.h>
 #include <rpc/server.h>
 #include <rpc/client.h>
+#include <util/strencodings.h>
 #include <util/system.h>
 
 #include <openssl/crypto.h>
@@ -226,7 +227,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                                 if (lastResult.isArray())
                                 {
                                     for(char argch: curarg)
-                                        if (!std::isdigit(argch))
+                                        if (!IsDigit(argch))
                                             throw std::runtime_error("Invalid result query");
                                     subelement = lastResult[atoi(curarg.c_str())];
                                 }
