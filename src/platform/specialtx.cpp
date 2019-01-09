@@ -14,6 +14,7 @@
 #include "nf-token/nf-tokens-manager.h"
 
 #include "governance.h"
+
 namespace Platform
 {
     bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexLast, CValidationState& state)
@@ -70,8 +71,7 @@ namespace Platform
         return false;
     }
 
-    bool
-    ProcessSpecialTxsInBlock(bool justCheck, const CBlock &block, const CBlockIndex *pindex, CValidationState &state)
+    bool ProcessSpecialTxsInBlock(bool justCheck, const CBlock &block, const CBlockIndex *pindex, CValidationState &state)
     {
         for (int i = 0; i < (int) block.vtx.size(); i++) {
             const CTransaction &tx = block.vtx[i];
@@ -94,27 +94,18 @@ namespace Platform
         return true;
     }
 
-    bool UndoSpecialTxsInBlock(const CBlock &block, const CBlockIndex *pindex)
+    void UpdateSpecialTxsBlockTip(const CBlockIndex* pindex)
     {
-        for (int i = (int) block.vtx.size() - 1; i >= 0; --i) {
-            const CTransaction &tx = block.vtx[i];
-            if (!UndoSpecialTx(tx, pindex))
-                return false;
+        NfTokensManager::Instance().UpdateBlockTip(pindex);
+    }
+
+    uint256 CalcTxInputsHash(const CTransaction& tx)
+    {
+        CHashWriter hw(CLIENT_VERSION, SER_GETHASH);
+        for (const auto& in : tx.vin)
+        {
+            hw << in.prevout;
         }
-        return true;
+        return hw.GetHash();
     }
-
-void UpdateSpecialTxsBlockTip(const CBlockIndex* pindex)
-{
-    Platform::NfTokensManager::Instance().UpdateBlockTip(pindex);
-}
-
-uint256 CalcTxInputsHash(const CTransaction& tx)
-{
-    CHashWriter hw(CLIENT_VERSION, SER_GETHASH);
-    for (const auto& in : tx.vin) {
-        hw << in.prevout;
-    }
-    return hw.GetHash();
-}
 }

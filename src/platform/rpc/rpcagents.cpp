@@ -60,6 +60,7 @@ namespace
             auto voteTx = Platform::VoteTx(vote, 1);
 
             FundSpecialTx(tx, voteTx);
+            voteTx.keyId = keyMasternode.GetPubKey().GetID();
             SignSpecialTxPayload(tx, voteTx, keyMasternode);
             SetTxPayload(tx, voteTx);
 

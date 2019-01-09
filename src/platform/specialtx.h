@@ -113,7 +113,6 @@ namespace Platform
         // TODO: consider adding inputs to payload
 
         payload.signature.clear();
-        payload.keyId = key.GetPubKey().GetID();
 
         uint256 hash = ::SerializeHash(payload);
         if (!CHashSigner::SignHash(hash, key, payload.signature)) {
