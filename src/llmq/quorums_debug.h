@@ -39,7 +39,7 @@ public:
         uint16_t statusBitset;
     };
 
-    std::set<size_t> complaintsFromMembers;
+    std::set<uint16_t> complaintsFromMembers;
 
 public:
     CDKGDebugMemberStatus() : statusBitset(0) {}

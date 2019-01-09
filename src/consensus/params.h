@@ -97,11 +97,27 @@ struct LLMQParams {
     // should at the same time not be too large so that not too much space is wasted with null commitments in case a DKG
     // session failed.
     int dkgMiningWindowEnd;
+
+    // Each member will sleep for a random time between 0 and dkgRndSleepTime milliseconds. The purpose of this is to
+    // avoid overloading the network due to all members sending out expensive-to-verify DKG messages at once
     int dkgRndSleepTime;
+
+    // In the complaint phase, members will vote on other members being bad (missing valid contribution). If at least
+    // dkgBadVotesThreshold have voted for another member to be bad, it will considered to be bad by all other members
+    // as well. This serves as a protection against late-comers who send their contribution on the bring of
+    // phase-transition, which would otherwise result in inconsistent views of the valid members set
     int dkgBadVotesThreshold;
 
+    // Used for inter-quorum communication. This is the number of deterministic connections built to the clockwise
+    // neighbors on the circle shaped nodes topography
     int neighborConnections;
+
+    // Used for inter-quorum communication. This is the number of deterministic connections built diagonally to the
+    // member on the circle shaped nodes topography.
     int diagonalConnections;
+
+    // Used for inter-quorum communication. This is the number of quorums for which we should keep old connections. This
+    // should be at least as much as the active quorums set.
     int keepOldConnections;
 };
 

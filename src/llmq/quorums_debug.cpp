@@ -64,7 +64,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
                 v.arr.push_back((int)idx);
             } else if (detailLevel == 2) {
                 UniValue a(UniValue::VOBJ);
-                a.push_back(Pair("memberIndex", idx));
+                a.push_back(Pair("memberIndex", (int)idx));
                 if (idx < dmnMembers.size()) {
                     a.push_back(Pair("proTxHash", dmnMembers[idx]->proTxHash.ToString()));
                 }
