@@ -212,23 +212,50 @@ BOOST_AUTO_TEST_CASE(is)
     p2sh << OP_HASH160 << ToByteVector(dummy) << OP_EQUAL;
     BOOST_CHECK(p2sh.IsPayToScriptHash());
 
-    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
+    // Same test as above, but use string interface
     std::vector<unsigned char> direct = {OP_HASH160, 20};
-    direct.insert(direct.end(), 20, 0);
+    direct.insert(direct.end(), 20, 0); // this is 160bit dummy
     direct.push_back(OP_EQUAL);
     BOOST_CHECK(CScript(direct.begin(), direct.end()).IsPayToScriptHash());
+
+    //---------><----- cut here
+    // orig version fixed by re-adding OP_PUSHDATA2/4
+    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
     std::vector<unsigned char> pushdata1 = {OP_HASH160, OP_PUSHDATA1, 20};
     pushdata1.insert(pushdata1.end(), 20, 0);
     pushdata1.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata1.begin(), pushdata1.end()).IsPayToScriptHash());
-    std::vector<unsigned char> pushdata2 = {OP_HASH160, 20, 0};
+    std::vector<unsigned char> pushdata2 = {OP_HASH160, OP_PUSHDATA2, 20, 0}; // add missing OP_PUSHDATA2
     pushdata2.insert(pushdata2.end(), 20, 0);
     pushdata2.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata2.begin(), pushdata2.end()).IsPayToScriptHash());
-    std::vector<unsigned char> pushdata4 = {OP_HASH160, 20, 0, 0, 0};
+    std::vector<unsigned char> pushdata4 = {OP_HASH160, OP_PUSHDATA4, 20, 0, 0, 0}; // add missing OP_PUSHDATA4
     pushdata4.insert(pushdata4.end(), 20, 0);
     pushdata4.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata4.begin(), pushdata4.end()).IsPayToScriptHash());
+
+    //---------><----- cut here
+
+    // orig version loopified, and using both interfaces (string and stream)
+    std::vector<std::vector<unsigned char>>
+     scripts = {{OP_HASH160, OP_PUSHDATA1, 20}, // 8bit
+                {OP_HASH160, OP_PUSHDATA2, 20,0}, // 16bit
+                {OP_HASH160, OP_PUSHDATA4, 20,0,0,0}}; // 32bit
+    std::vector<unsigned char> dum;
+    dum.insert(dum.end(), 20, 0); // make an 160bit dummy
+    for(auto &script: scripts)
+    {
+        // Check using the CScript stream interface
+        CScript not_p2sh;
+        not_p2sh.clear(); not_p2sh << script << dum << OP_EQUAL;
+        BOOST_CHECK(!not_p2sh.IsPayToScriptHash());
+        // Check using a simple string
+        script.insert(script.end(), 20, 0);
+        script.push_back(OP_EQUAL);
+        BOOST_CHECK(!CScript(script.begin(), script.end()).IsPayToScriptHash());
+    }
+
+    //---------><----- cut here
 
     CScript not_p2sh;
     BOOST_CHECK(!not_p2sh.IsPayToScriptHash());
