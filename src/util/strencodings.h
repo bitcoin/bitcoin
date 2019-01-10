@@ -208,7 +208,7 @@ NODISCARD bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32
  * @return          the lowercase equivalent of c; or the argument
  *                  if no conversion is possible.
  */
-constexpr unsigned char ToLower(unsigned char c)
+constexpr char ToLower(char c)
 {
     return (c >= 'A' && c <= 'Z' ? (c - 'A') + 'a' : c);
 }
@@ -229,7 +229,7 @@ void Downcase(std::string& str);
  * @return          the uppercase equivalent of c; or the argument
  *                  if no conversion is possible.
  */
-constexpr unsigned char ToUpper(unsigned char c)
+constexpr char ToUpper(char c)
 {
     return (c >= 'a' && c <= 'z' ? (c - 'a') + 'A' : c);
 }

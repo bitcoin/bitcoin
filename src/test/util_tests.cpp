@@ -1224,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(test_ToLower)
     BOOST_CHECK_EQUAL(ToLower('Z'), 'z');
     BOOST_CHECK_EQUAL(ToLower('['), '[');
     BOOST_CHECK_EQUAL(ToLower(0), 0);
-    BOOST_CHECK_EQUAL(ToLower(255), 255);
+    BOOST_CHECK_EQUAL(ToLower('\xff'), '\xff');
 
     std::string testVector;
     Downcase(testVector);
@@ -1246,7 +1246,7 @@ BOOST_AUTO_TEST_CASE(test_ToUpper)
     BOOST_CHECK_EQUAL(ToUpper('z'), 'Z');
     BOOST_CHECK_EQUAL(ToUpper('{'), '{');
     BOOST_CHECK_EQUAL(ToUpper(0), 0);
-    BOOST_CHECK_EQUAL(ToUpper(255), 255);
+    BOOST_CHECK_EQUAL(ToUpper('\xff'), '\xff');
 }
 
 BOOST_AUTO_TEST_CASE(test_Capitalize)
