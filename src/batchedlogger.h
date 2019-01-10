@@ -17,9 +17,9 @@ public:
     virtual ~CBatchedLogger();
 
     template<typename... Args>
-    void Printf(const std::string& fmt, const Args&... args)
+    void Batch(const std::string& fmt, const Args&... args)
     {
-        msg += strprintf(fmt, args...);
+        msg += "    " + strprintf(fmt, args...) + "\n";
     }
 
     void Flush();
