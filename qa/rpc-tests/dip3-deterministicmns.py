@@ -220,7 +220,7 @@ class DIP3Test(BitcoinTestFramework):
                 for j in range(6):
                     self.nodes[0].generate(2)
                     self.sync_all()
-                    time.sleep(0.5)
+                    time.sleep(2)
 
                 info = self.nodes[0].protx('info', mn.protx_hash)
                 if not punished:
