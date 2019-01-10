@@ -174,6 +174,7 @@ BASE_SCRIPTS = [
     'wallet_fallbackfee.py',
     'feature_minchainwork.py',
     'rpc_getblockstats.py',
+    'wallet_create_tx.py',
     'p2p_fingerprint.py',
     'feature_uacomment.py',
     'wallet_coinbase_category.py',
