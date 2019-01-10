@@ -620,7 +620,7 @@ std::string HexStr(const Span<const uint8_t> s)
 
 void Downcase(std::string& str)
 {
-    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){return ToLower(c);});
+    std::transform(str.begin(), str.end(), str.begin(), [](char c){return ToLower(c);});
 }
 
 std::string Capitalize(std::string str)
