@@ -98,10 +98,6 @@ struct LLMQParams {
     // session failed.
     int dkgMiningWindowEnd;
 
-    // Each member will sleep for a random time between 0 and dkgRndSleepTime milliseconds. The purpose of this is to
-    // avoid overloading the network due to all members sending out expensive-to-verify DKG messages at once
-    int dkgRndSleepTime;
-
     // In the complaint phase, members will vote on other members being bad (missing valid contribution). If at least
     // dkgBadVotesThreshold have voted for another member to be bad, it will considered to be bad by all other members
     // as well. This serves as a protection against late-comers who send their contribution on the bring of

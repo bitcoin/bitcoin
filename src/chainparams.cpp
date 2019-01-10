@@ -118,7 +118,6 @@ static Consensus::LLMQParams llmq10_60 = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgRndSleepTime = 0,
         .dkgBadVotesThreshold = 8,
 
         .neighborConnections = 2,
@@ -137,7 +136,6 @@ static Consensus::LLMQParams llmq50_60 = {
         .dkgPhaseBlocks = 2,
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
-        .dkgRndSleepTime = 1 * 60 * 1000,
         .dkgBadVotesThreshold = 40,
 
         .neighborConnections = 2,
@@ -156,7 +154,6 @@ static Consensus::LLMQParams llmq400_60 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 28,
-        .dkgRndSleepTime = 2 * 60 * 1000,
         .dkgBadVotesThreshold = 300,
 
         .neighborConnections = 4,
@@ -176,7 +173,6 @@ static Consensus::LLMQParams llmq400_85 = {
         .dkgPhaseBlocks = 4,
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
-        .dkgRndSleepTime = 2 * 60 * 1000,
         .dkgBadVotesThreshold = 300,
 
         .neighborConnections = 4,

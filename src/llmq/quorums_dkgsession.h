@@ -293,6 +293,8 @@ public:
 
     bool Init(int _height, const uint256& _quorumHash, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 
+    size_t GetMyMemberIndex() const { return myIdx; }
+
     /**
      * The following sets of methods are for the first 4 phases handled in the session. The flow of message calls
      * is identical for all phases:
