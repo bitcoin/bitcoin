@@ -970,6 +970,19 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
     UniValue result(UniValue::VOBJ);
 
     try {
+        const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
+        // Internal addresses should not have a label
+        if (internal && data.exists("label")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
+        }
+        const std::string& label = data.exists("label") ? data["label"].get_str() : "";
+
+        ImportData import_data;
+        std::map<CKeyID, CPubKey> pubkey_map;
+        std::map<CKeyID, CKey> privkey_map;
+        std::set<CScript> script_pub_keys;
+        bool have_solving_data;
+
         // First ensure scriptPubKey has either a script or JSON with "address" string
         const UniValue& scriptPubKey = data["scriptPubKey"];
         bool isScript = scriptPubKey.getType() == UniValue::VSTR;
@@ -983,9 +996,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         const std::string& witness_script_hex = data.exists("witnessscript") ? data["witnessscript"].get_str() : "";
         const UniValue& pubKeys = data.exists("pubkeys") ? data["pubkeys"].get_array() : UniValue();
         const UniValue& keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
-        const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
         const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
-        const std::string& label = data.exists("label") ? data["label"].get_str() : "";
 
         // If private keys are disabled, abort if private keys are being imported
         if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !keys.isNull()) {
@@ -1011,9 +1022,9 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal must be set to true for nonstandard scriptPubKey imports.");
             }
         }
+        script_pub_keys.emplace(script);
 
         // Parse all arguments
-        ImportData import_data;
         if (strRedeemScript.size()) {
             if (!IsHex(strRedeemScript)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid redeem script \"" + strRedeemScript + "\": must be hex string");
@@ -1028,7 +1039,6 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             auto parsed_witnessscript = ParseHex(witness_script_hex);
             import_data.witnessscript = MakeUnique<CScript>(parsed_witnessscript.begin(), parsed_witnessscript.end());
         }
-        std::map<CKeyID, CPubKey> pubkey_map;
         for (size_t i = 0; i < pubKeys.size(); ++i) {
             const auto& str = pubKeys[i].get_str();
             if (!IsHex(str)) {
@@ -1041,7 +1051,6 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             }
             pubkey_map.emplace(pubkey.GetID(), pubkey);
         }
-        std::map<CKeyID, CKey> privkey_map;
         for (size_t i = 0; i < keys.size(); ++i) {
             const auto& str = keys[i].get_str();
             CKey key = DecodeSecret(str);
@@ -1056,13 +1065,9 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             privkey_map.emplace(id, key);
         }
 
-        // Internal addresses should not have a label
-        if (internal && data.exists("label")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
-        }
 
         // Verify and process input data
-        bool have_solving_data = import_data.redeemscript || import_data.witnessscript || pubkey_map.size() || privkey_map.size();
+        have_solving_data = import_data.redeemscript || import_data.witnessscript || pubkey_map.size() || privkey_map.size();
         if (have_solving_data) {
             // Match up data in import_data with the scriptPubKey in script.
             auto error = RecurseImportData(script, import_data, ScriptContext::TOP);
@@ -1115,8 +1120,10 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         }
 
         // Check whether we have any work to do
-        if (::IsMine(*pwallet, script) & ISMINE_SPENDABLE) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
+        for (const CScript& script : script_pub_keys) {
+            if (::IsMine(*pwallet, script) & ISMINE_SPENDABLE) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
+            }
         }
 
         // All good, time to import
@@ -1146,14 +1153,19 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
             }
         }
-        if (!have_solving_data || !::IsMine(*pwallet, script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
-            if (!pwallet->AddWatchOnly(script, timestamp)) {
-                throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+
+        for (const CScript& script : script_pub_keys) {
+            if (!have_solving_data || !::IsMine(*pwallet, script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
+                if (!pwallet->AddWatchOnly(script, timestamp)) {
+                    throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
+                }
             }
-        }
-        if (!internal) {
-            assert(IsValidDestination(dest));
-            pwallet->SetAddressBook(dest, label, "receive");
+            CTxDestination dest;
+            ExtractDestination(script, dest);
+            if (!internal) {
+                assert(IsValidDestination(dest));
+                pwallet->SetAddressBook(dest, label, "receive");
+            }
         }
 
         result.pushKV("success", UniValue(true));
