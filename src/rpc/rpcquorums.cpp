@@ -11,7 +11,7 @@
 void quorum_dkgstatus_help()
 {
     throw std::runtime_error(
-            "quorum dkgstatus (proTxHash) (detail_level)\n"
+            "quorum dkgstatus (\"proTxHash\" detail_level)\n"
             "\nArguments:\n"
             "1. \"proTxHash\"          (string, optional, default=0) ProTxHash of masternode to show status for.\n"
             "                        If set to an empty string, the local status is shown.\n"
