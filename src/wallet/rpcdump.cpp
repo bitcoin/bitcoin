@@ -967,29 +967,6 @@ static std::string RecurseImportData(const CScript& script, ImportData& import_d
 static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CPubKey>& pubkey_map, std::map<CKeyID, CKey>& privkey_map, std::set<CScript>& script_pub_keys, bool& have_solving_data, const UniValue& data)
 {
     UniValue warnings(UniValue::VARR);
-    return warnings;
-}
-
-static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
-{
-    UniValue warnings(UniValue::VARR);
-    UniValue result(UniValue::VOBJ);
-
-    try {
-        const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
-        // Internal addresses should not have a label
-        if (internal && data.exists("label")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
-        }
-        const std::string& label = data.exists("label") ? data["label"].get_str() : "";
-
-        ImportData import_data;
-        std::map<CKeyID, CPubKey> pubkey_map;
-        std::map<CKeyID, CKey> privkey_map;
-        std::set<CScript> script_pub_keys;
-        bool have_solving_data;
-
-        warnings = ProcessImportLegacy(import_data, pubkey_map, privkey_map, script_pub_keys, have_solving_data, data);
 
     // First ensure scriptPubKey has either a script or JSON with "address" string
     const UniValue& scriptPubKey = data["scriptPubKey"];
@@ -1004,12 +981,8 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
     const std::string& witness_script_hex = data.exists("witnessscript") ? data["witnessscript"].get_str() : "";
     const UniValue& pubKeys = data.exists("pubkeys") ? data["pubkeys"].get_array() : UniValue();
     const UniValue& keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
+    const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
     const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
-
-    // If private keys are disabled, abort if private keys are being imported
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !keys.isNull()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
-    }
 
     // Generate the script and destination for the scriptPubKey provided
     CScript script;
@@ -1126,6 +1099,35 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             }
         }
     }
+
+    return warnings;
+}
+
+static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    UniValue warnings(UniValue::VARR);
+    UniValue result(UniValue::VOBJ);
+
+    try {
+        const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
+        // Internal addresses should not have a label
+        if (internal && data.exists("label")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Internal addresses should not have a label");
+        }
+        const std::string& label = data.exists("label") ? data["label"].get_str() : "";
+
+        ImportData import_data;
+        std::map<CKeyID, CPubKey> pubkey_map;
+        std::map<CKeyID, CKey> privkey_map;
+        std::set<CScript> script_pub_keys;
+        bool have_solving_data;
+
+        warnings = ProcessImportLegacy(import_data, pubkey_map, privkey_map, script_pub_keys, have_solving_data, data);
+
+        // If private keys are disabled, abort if private keys are being imported
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !privkey_map.empty()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
+        }
 
         // Check whether we have any work to do
         for (const CScript& script : script_pub_keys) {
