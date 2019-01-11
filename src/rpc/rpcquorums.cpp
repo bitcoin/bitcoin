@@ -14,8 +14,8 @@ void quorum_dkgstatus_help()
             "quorum dkgstatus (proTxHash) (detail_level)\n"
             "\nArguments:\n"
             "1. \"proTxHash\"          (string, optional, default=0) ProTxHash of masternode to show status for.\n"
-            "                        If set to an empty string or 0, the local status is shown.\n"
-            "2. \"detail_level\"       (number, optional, default=0) Detail level of output.\n"
+            "                        If set to an empty string, the local status is shown.\n"
+            "2. detail_level         (number, optional, default=\"\") Detail level of output.\n"
             "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n"
     );
 }
@@ -27,7 +27,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     }
 
     uint256 proTxHash;
-    if (request.params.size() > 1 && request.params[1].get_str() != "" && request.params[1].get_str() != "0") {
+    if (request.params.size() > 1 && request.params[1].get_str() != "") {
         proTxHash = ParseHashV(request.params[1], "proTxHash");
     }
 
