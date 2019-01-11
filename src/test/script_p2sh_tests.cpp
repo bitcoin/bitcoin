@@ -237,10 +237,10 @@ BOOST_AUTO_TEST_CASE(is)
     //---------><----- cut here
 
     // orig version loopified, and using both interfaces (string and stream)
-    std::vector<std::vector<unsigned char>>
-     scripts = {{OP_HASH160, OP_PUSHDATA1, 20}, // 8bit
-                {OP_HASH160, OP_PUSHDATA2, 20,0}, // 16bit
-                {OP_HASH160, OP_PUSHDATA4, 20,0,0,0}}; // 32bit
+    std::vector<std::vector<unsigned char>> scripts = {
+        {OP_HASH160, OP_PUSHDATA1, 20},        // 8bit
+        {OP_HASH160, OP_PUSHDATA2, 20,0},      // 16bit
+        {OP_HASH160, OP_PUSHDATA4, 20,0,0,0}}; // 32bit
     std::vector<unsigned char> dum;
     dum.insert(dum.end(), 20, 0); // make an 160bit dummy
     for(auto &script: scripts)
