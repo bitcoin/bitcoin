@@ -224,7 +224,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 void protx_register_fund_help()
 {
     throw std::runtime_error(
-            "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerKeyAddr\" \"operatorPubKey\" \"votingKeyAddr\" operatorReward \"payoutAddress\" ( \"fundAddress\" )\n"
+            "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" )\n"
             "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "masternode.\n"
@@ -235,12 +235,12 @@ void protx_register_fund_help()
             "                         Must be a P2PKH address.\n"
             "2. \"ipAndPort\"           (string, required) IP and port in the form \"IP:PORT\".\n"
             "                         Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards.\n"
-            "3. \"ownerKeyAddr\"        (string, required) The owner key used for payee updates and proposal voting.\n"
+            "3. \"ownerAddress\"        (string, required) The owner key used for payee updates and proposal voting.\n"
             "                         The private key belonging to this address must be known in your wallet. The address must\n"
             "                         be unused and must differ from the collateralAddress\n"
             "4. \"operatorPubKey\"      (string, required) The operator BLS public key. The private key does not have to be known.\n"
             "                         It has to match the private key which is later used when operating the masternode.\n"
-            "5. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
+            "5. \"votingAddress\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
             "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
             "6. \"operatorReward\"      (numeric, required) The fraction in % to share with the operator. The value must be\n"
@@ -257,7 +257,7 @@ void protx_register_fund_help()
 void protx_register_help()
 {
     throw std::runtime_error(
-            "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerKeyAddr\" \"operatorPubKey\" \"votingKeyAddr\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
+            "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
             "transaction output. It must also not be used by any other masternode.\n"
@@ -274,7 +274,7 @@ void protx_register_help()
 void protx_register_prepare_help()
 {
     throw std::runtime_error(
-            "protx register_prepare \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerKeyAddr\" \"operatorPubKey\" \"votingKeyAddr\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
+            "protx register_prepare \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nCreates an unsigned ProTx and returns it. The ProTx must be signed externally with the collateral\n"
             "key and then passed to \"protx register_submit\". The prepared transaction will also contain inputs\n"
             "and outputs to cover fees.\n"
@@ -577,7 +577,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
 void protx_update_registrar_help()
 {
     throw std::runtime_error(
-            "protx update_registrar \"proTxHash\" \"operatorKeyAddr\" \"votingKeyAddr\" \"payoutAddress\" ( \"feeSourceAddress\" )\n"
+            "protx update_registrar \"proTxHash\" \"operatorPubKey\" \"votingAddress\" \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
             "address of the masternode specified by \"proTxHash\".\n"
             "The owner key of the masternode must be known to your wallet.\n"
@@ -586,7 +586,7 @@ void protx_update_registrar_help()
             "2. \"operatorPubKey\"      (string, required) The operator public key. The private key does not have to be known by you.\n"
             "                         It has to match the private key which is later used when operating the masternode.\n"
             "                         If set to \"0\" or an empty string, the last on-chain operator key of the masternode will be used.\n"
-            "3. \"votingKeyAddr\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
+            "3. \"votingAddress\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
             "                         If set to \"0\" or an empty string, the last on-chain voting key of the masternode will be used.\n"
             "4. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
@@ -632,7 +632,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 
     CKey keyOwner;
     if (!pwalletMain->GetKey(dmn->pdmnState->keyIDOwner, keyOwner)) {
-        throw std::runtime_error(strprintf("owner key %s not found in your wallet", dmn->pdmnState->keyIDOwner.ToString()));
+        throw std::runtime_error(strprintf("Private key for owner address %s not found in your wallet", CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString()));
     }
 
     CMutableTransaction tx;

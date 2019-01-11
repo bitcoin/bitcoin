@@ -692,7 +692,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 
         CKey votingKey;
         if (!pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Voting ekey %s not known by wallet", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
+            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
         }
 
         CBitcoinSecret secret(votingKey);

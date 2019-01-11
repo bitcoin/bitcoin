@@ -27,45 +27,43 @@ std::string CDeterministicMNState::ToString() const
 {
     CTxDestination dest;
     std::string payoutAddress = "unknown";
-    std::string operatorRewardAddress = "none";
+    std::string operatorPayoutAddress = "none";
     if (ExtractDestination(scriptPayout, dest)) {
         payoutAddress = CBitcoinAddress(dest).ToString();
     }
     if (ExtractDestination(scriptOperatorPayout, dest)) {
-        operatorRewardAddress = CBitcoinAddress(dest).ToString();
+        operatorPayoutAddress = CBitcoinAddress(dest).ToString();
     }
 
     return strprintf("CDeterministicMNState(nRegisteredHeight=%d, nLastPaidHeight=%d, nPoSePenalty=%d, nPoSeRevivedHeight=%d, nPoSeBanHeight=%d, nRevocationReason=%d, "
-        "keyIDOwner=%s, pubKeyOperator=%s, keyIDVoting=%s, addr=%s, payoutAddress=%s, operatorRewardAddress=%s)",
+        "ownerAddress=%s, pubKeyOperator=%s, votingAddress=%s, addr=%s, payoutAddress=%s, operatorPayoutAddress=%s)",
         nRegisteredHeight, nLastPaidHeight, nPoSePenalty, nPoSeRevivedHeight, nPoSeBanHeight, nRevocationReason,
-        keyIDOwner.ToString(), pubKeyOperator.ToString(), keyIDVoting.ToString(), addr.ToStringIPPort(false), payoutAddress, operatorRewardAddress);
+        CBitcoinAddress(keyIDOwner).ToString(), pubKeyOperator.ToString(), CBitcoinAddress(keyIDVoting).ToString(), addr.ToStringIPPort(false), payoutAddress, operatorPayoutAddress);
 }
 
 void CDeterministicMNState::ToJson(UniValue& obj) const
 {
     obj.clear();
     obj.setObject();
+    obj.push_back(Pair("service", addr.ToStringIPPort(false)));
     obj.push_back(Pair("registeredHeight", nRegisteredHeight));
     obj.push_back(Pair("lastPaidHeight", nLastPaidHeight));
     obj.push_back(Pair("PoSePenalty", nPoSePenalty));
     obj.push_back(Pair("PoSeRevivedHeight", nPoSeRevivedHeight));
     obj.push_back(Pair("PoSeBanHeight", nPoSeBanHeight));
     obj.push_back(Pair("revocationReason", nRevocationReason));
-    obj.push_back(Pair("keyIDOwner", keyIDOwner.ToString()));
-    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
-    obj.push_back(Pair("keyIDVoting", keyIDVoting.ToString()));
-    obj.push_back(Pair("ownerKeyAddr", CBitcoinAddress(keyIDOwner).ToString()));
-    obj.push_back(Pair("votingKeyAddr", CBitcoinAddress(keyIDVoting).ToString()));
-    obj.push_back(Pair("addr", addr.ToStringIPPort(false)));
+    obj.push_back(Pair("ownerAddress", CBitcoinAddress(keyIDOwner).ToString()));
+    obj.push_back(Pair("votingAddress", CBitcoinAddress(keyIDVoting).ToString()));
 
     CTxDestination dest;
     if (ExtractDestination(scriptPayout, dest)) {
-        CBitcoinAddress bitcoinAddress(dest);
-        obj.push_back(Pair("payoutAddress", bitcoinAddress.ToString()));
+        CBitcoinAddress payoutAddress(dest);
+        obj.push_back(Pair("payoutAddress", payoutAddress.ToString()));
     }
+    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
     if (ExtractDestination(scriptOperatorPayout, dest)) {
-        CBitcoinAddress bitcoinAddress(dest);
-        obj.push_back(Pair("operatorRewardAddress", bitcoinAddress.ToString()));
+        CBitcoinAddress operatorPayoutAddress(dest);
+        obj.push_back(Pair("operatorPayoutAddress", operatorPayoutAddress.ToString()));
     }
 }
 
