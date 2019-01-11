@@ -794,6 +794,10 @@
         <translation>Veuillez passer en “mode liste” pour utiliser cette fonction.</translation>
     </message>
     <message>
+        <source>Non-anonymized input selected. &lt;b&gt;PrivateSend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use PrivateSend, please deselect all non-anonymized inputs first and then check the PrivateSend checkbox again.</source>
+        <translation>Éléments non-anonymisés sélectionnés. &lt;b&gt;PrivateSend sera désactivé.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Si vous voulez quand même utiliser PrivateSend, veuillez d'abord désélectionner tous les éléments non-anonymisés, puis recochez la case PrivateSend.</translation>
+    </message>
+    <message>
         <source>(%1 locked)</source>
         <translation>(%1 verrouillés)</translation>
     </message>
@@ -966,7 +970,11 @@
         <source>PrivateSend information</source>
         <translation>Information PrivateSend</translation>
     </message>
-    </context>
+    <message>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Ce qu'il faut savoir sur PrivateSend&lt;/h3&gt; PrivateSend vous donne une véritable confidentialité financière en obscurcissant l'origine de vos fonds. Tous les dashs de votre portefeuille sont répartis en différentes "entrées", qu'on peut se représenter comme des pièces distinctes.&lt;br&gt; PrivateSend utilise une procédure innovante pour mélanger vos entrées avec les entrées de deux autres personnes, sans que vos fonds ne quittent jamais votre portefeuille. Vous gardez le contrôle de votre argent à tout moment.&lt;hr&gt; &lt;b&gt;La procédure PrivateSend fonctionne comme ceci :&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend commence par diviser vos entrées de transaction en coupures standard. Ces coupures sont de 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH et 10 DASH -- un peu comme pour les billets de banque que vous utilisez tous les jours.&lt;/li&gt; &lt;li&gt;Votre portefeuille envoie alors des requêtes à des serveurs spécifiques sur le réseau, appelés "masternodes". Ces masternodes sont informés que vous souhaiteriez mélanger certaines coupures. Aucune information permettant de vous identifier n'est envoyée aux masternodes, qui ne savent donc jamais "qui" vous êtes.&lt;/li&gt; &lt;li&gt;Quand deux autres personnes envoient des requêtes similaires, indiquant qu'elles veulent mélanger les mêmes coupures, alors commence une session de mélange. Le masternode mélange les entrées et demande aux portefeuilles des trois utilisateurs de payer l'entrée, désormais transformée, à eux-mêmes. Votre portefeuille paie cette coupure directement à lui-même, mais à une adresse différente (appelée une adresse de monnaie rendue).&lt;/li&gt; &lt;li&gt;Afin d'obscurcir complètement vos fonds, votre portefeuille doit répéter cette procédure un certain nombre de fois avec chaque coupure. Une procédure terminée s'appelle un "cycle". Chaque cycle PrivateSend rend exponentiellement plus difficile de déterminer d'où viennent vos fonds.&lt;/li&gt; &lt;li&gt;Cette procédure de mélange intervient en arrière-plan, sans aucune intervention de votre part. Quand vous souhaiterez faire une transaction, vos fonds seront déjà anonymisés. Aucune autre attente ne sera nécessaire.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT :&lt;/b&gt; Votre portefeuille ne contient que 1000 de ces "adresses de monnaie rendue". À chaque opération de mélange, jusqu'à 9 de ces adresses sont utilisées. Cela signifie que ces 1000 adresses couvrent environ 100 opérations de mélange. Quand 900 d'entre elles sont utilisées, votre portefeuille doit créer de nouvelles adresses. Cependant il ne peut le faire que si vous avez activé les sauvegardes automatiques.&lt;br&gt; En conséquence, les utilisateurs qui ont désactivé les sauvegardes ont aussi PrivateSend désactivé. &lt;hr&gt;Pour en savoir plus, voir la documentation PrivateSend.   </translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1101,8 +1109,76 @@
         <translation>Nombre de nœuds :</translation>
     </message>
     <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note : ceci est la liste des masternodes non-déterministes historiques. Elle restera active tant que la DIP3 n'aura pas été entièrement activée. Après l'activation SPORK15, cette liste sera vide.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>DIP3 Masternodes</source>
+        <translation>Masternodes DIP3</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>Score PoSe</translation>
+    </message>
+    <message>
+        <source>Registered</source>
+        <translation>Enregistré</translation>
+    </message>
+    <message>
+        <source>Last Paid</source>
+        <translation>Dernier paiement</translation>
+    </message>
+    <message>
+        <source>Next Payment</source>
+        <translation>Prochain paiement</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>Récompense opérateur</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note : cette liste n'est pas encore active, elle n'est affichée qu'à titre informatif. Le réseau fonctionne encore en mode de compatibilité, ce qui signifie que la liste des masternodes non-déterministes est encore active. Ce n'est qu'après l'activation SPORK15 que cette liste deviendra la liste active. Par ailleurs, les valeurs des champs relatifs aux paiements ne sont pas encore utilisées, mais sont mises à jour avec chaque bloc. Veuillez ignorer cette liste avant l'activation SPORK15.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
         <source>Start alias</source>
         <translation>Start-alias</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>Copier hachage ProTx</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Copier sortie caution</translation>
+    </message>
+    <message>
+        <source>ENABLED</source>
+        <translation>ACTIVÉ</translation>
+    </message>
+    <message>
+        <source>POSE_BANNED</source>
+        <translation>BANNI_PoSe</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>INCONNU</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>à %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>à INCONNU</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>mais non réclamé</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>AUCUN</translation>
     </message>
     <message>
         <source>Confirm masternode start</source>
@@ -1167,6 +1243,10 @@
     <message>
         <source>Sentinel</source>
         <translation>Sentinel</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>Infos supplémentaires pour le masternode DIP3 %1</translation>
     </message>
 </context>
 <context>
@@ -1372,6 +1452,14 @@
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>Activer les fonctions de &amp;contrôle des pièces</translation>
+    </message>
+    <message>
+        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>Affiche des notifications système pour les transactions de mélange PrivateSend&lt;br/&gt;tout comme pour les autres types de transaction.</translation>
+    </message>
+    <message>
+        <source>Show popups for PrivateSend transactions</source>
+        <translation>Afficher des notifications pour les transactions PrivateSend</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1755,6 +1843,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Une nouvelle sauvegarde automatique est sur le point d'être créée pour vous, cependant &lt;span style='color:red;'&gt;assurez-vous toujours d'avoir des sauvegardes en lieu sûr&lt;/span&gt; !</translation>
     </message>
     <message>
+        <source>Note: You can turn this message off in options.</source>
+        <translation>À noter : vous pouvez masquer ce message dans Options.</translation>
+    </message>
+    <message>
         <source>WARNING! Something went wrong on automatic backup</source>
         <translation>ATTENTION ! Quelque chose a mal tourné lors de la sauvegarde automatique</translation>
     </message>
@@ -1783,10 +1875,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>Dernier message PrivateSend :
 </translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>n.d.</translation>
     </message>
     <message>
         <source>PrivateSend was successfully reset.</source>
@@ -3528,6 +3616,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Si une adresse en lecture seule est impliquée dans cette transaction.</translation>
     </message>
     <message>
+        <source>Whether or not this transaction was locked by InstantSend.</source>
+        <translation>Si cette transaction est ou n'est pas verrouillée par InstantSend.</translation>
+    </message>
+    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>Intention/raison de la transaction définie par l'utilisateur</translation>
     </message>
@@ -3541,6 +3633,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>All</source>
         <translation>Toutes</translation>
+    </message>
+    <message>
+        <source>Locked by InstantSend</source>
+        <translation>Verrouillée par InstantSend</translation>
+    </message>
+    <message>
+        <source>Not locked by InstantSend</source>
+        <translation>Non verrouillée par InstantSend</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3966,6 +4066,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Effacer toutes les transactions du portefeuille et récupérer celles qui font partie de la chaîne de blocs par un -rescan au démarrage</translation>
     </message>
     <message>
+        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
+        <translation>Activer la publication des transactions brutes des tentatives de double dépense InstantSend dans &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
+        <translation>Activer la publication des empreintes de transaction des tentatives de double dépense InstantSend dans &lt;address&gt;</translation>
+    </message>
+    <message>
         <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
         <translation>Erreur en chargeant %s : Impossible d'activer HD sur un portefeuille non-HD déjà existant</translation>
     </message>
@@ -4010,6 +4118,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Extraire les informations de débogage (par défaut : %u, fournir &lt;category&gt; est optionnel)</translation>
     </message>
     <message>
+        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
+        <translation>Ignore le nombre minimal de signataires spork pour la modification de la valeur de spork. Utile seulement pour les réseaux d'enregistrement et de développement. Utiliser ceci sur les réseaux principal ou de test entraînera votre bannissement.</translation>
+    </message>
+    <message>
+        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
+        <translation>Utiliser en parallèle N masternodes distincts pour mélanger les fonds (%u-%u, par défaut : %u)</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Utiliser un serveur proxy SOCKS5 séparé pour atteindre les pairs par les services cachés de Tor (par défaut : %s)</translation>
     </message>
@@ -4028,6 +4144,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
         <translation>Vous devez reconstruire la base de données en utilisant -reindex-chainstate pour modifier -txindex</translation>
+    </message>
+    <message>
+        <source>You should specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
+        <translation>Vous devriez indiquer une "masternodeprivkey" dans la configuration. Veuillez consulter la documentation pour en savoir plus.</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -4142,6 +4262,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Montant invalide pour -paytxfee=&lt;montant&gt; : « %s » (minimum possible: %s)</translation>
     </message>
     <message>
+        <source>Invalid masternodeblsprivkey. Please see documenation.</source>
+        <translation>masternodeblsprivkey invalide. Veuillez vous référer à la documentation.</translation>
+    </message>
+    <message>
+        <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
+        <translation>Le nombre minimal de signataires spork spécifié avec -minsporkkeys est invalide</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>La réserve de clefs est épuisée, veuillez d'abord utiliser keypoolrefill</translation>
     </message>
@@ -4242,6 +4370,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Définir la taille de la réserve de clefs à &lt;n&gt; (par défaut : %u)</translation>
     </message>
     <message>
+        <source>Set the masternode BLS private key</source>
+        <translation>Définir la clé privée BLS du masternode</translation>
+    </message>
+    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Définir le nombre de fils d’exécution pour desservir les appels RPC (par défaut : %d)</translation>
     </message>
@@ -4304,6 +4436,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Too many %f denominations, removing.</source>
         <translation>Trop de coupures %f, suppression en cours.</translation>
+    </message>
+    <message>
+        <source>Too many %f denominations, skipping.</source>
+        <translation>Trop de coupures %f, on ignore.</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4402,6 +4538,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Désactiver toutes les fonctionnalités liées à Dash (masternodes, PrivateSend, InstantSend, gouvernance) (0-1, par défaut : %u)</translation>
     </message>
     <message>
+        <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
+        <translation>Le fichier %s contient toutes les clés privées de ce portefeuille. Ne le partagez avec personne !</translation>
+    </message>
+    <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Découvrir sa propre adresse IP (par défaut : 1 lors de l'écoute et si aucun -externalip ou -proxy)</translation>
     </message>
@@ -4424,6 +4564,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
         <translation>Exécuter la commande lorsqu'une transaction InstantSend de portefeuille est bloquée avec succès (%s dans la commande est remplacée par TxID)</translation>
+    </message>
+    <message>
+        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
+        <translation>Transactions supplémentaires à conserver en mémoire pour les reconstructions de bloc compact (par défaut : %u)</translation>
     </message>
     <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
@@ -4506,6 +4650,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La taille totale de la chaîne de version réseau (%i) dépasse la taille maximum (%i). Réduisez le nombre ou la taille des uacomments.</translation>
     </message>
     <message>
+        <source>Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index.</source>
+        <translation>L'index de transaction ne peut pas être désactivé en mode complet. Démarrez en ligne de commande avec l'argument -litemode, ou bien activez l'index de transaction.</translation>
+    </message>
+    <message>
         <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
         <translation>Essaie de limiter le trafic sortant sous la cible indiquée (en Mio par 24h), 0 = sans limite (par défaut : %d)</translation>
     </message>
@@ -4536,6 +4684,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
         <translation>Attention : un bloc de version inconnue est en train d'être miné ! Il est possible que des règles inconnues soient en vigueur.</translation>
+    </message>
+    <message>
+        <source>You are starting in lite mode, all Dash-specific functionality is disabled.</source>
+        <translation>Vous démarrez en mode allégé : toutes les fonctionnalités propres à Dash sont désactivées.</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -4582,6 +4734,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Activer la publication du hachage de bloc dans &lt;address&gt;</translation>
     </message>
     <message>
+        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
+        <translation>Activer la publication du hachage des objets de gouvernance (tels que les propositions budgétaires) dans &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
+        <translation>Activer la publication du hachage des votes de gouvernance dans &lt;address&gt;</translation>
+    </message>
+    <message>
         <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
         <translation>Activer la publication du hachage de transaction (verrouillée via InstantSend) dans &lt;address&gt; </translation>
     </message>
@@ -4602,10 +4762,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Activer la publication de la transaction brute dans &lt;address&gt; </translation>
     </message>
     <message>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation>Activer le remplacement de transaction dans la zone mémoire (par défaut : %u)</translation>
-    </message>
-    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Erreur : Une erreur interne fatale est survenue, voir debug.log pour les détails</translation>
     </message>
@@ -4620,6 +4776,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to delete backup, error: %s</source>
         <translation>La suppression de la sauvegarde a échoué, erreur : %s !</translation>
+    </message>
+    <message>
+        <source>Failed to load InstantSend data cache from</source>
+        <translation>Échec du chargement du cache de données InstantSend depuis</translation>
+    </message>
+    <message>
+        <source>Failed to load sporks cache from</source>
+        <translation>Échec du chargement du cache des sporks depuis</translation>
     </message>
     <message>
         <source>Failed to parse host:port string</source>
@@ -4658,6 +4822,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ligne : %d</translation>
     </message>
     <message>
+        <source>Loading InstantSend data cache...</source>
+        <translation>Chargement du cache de données d'InstantSend…</translation>
+    </message>
+    <message>
         <source>Loading addresses...</source>
         <translation>Chargement des adresses...</translation>
     </message>
@@ -4668,6 +4836,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Loading governance cache...</source>
         <translation>Chargement du cache de gouvernance...</translation>
+    </message>
+    <message>
+        <source>Loading sporks cache...</source>
+        <translation>Chargement du cache des sporks…</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
@@ -4810,6 +4982,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La transaction doit comporter au moins un destinataire</translation>
     </message>
     <message>
+        <source>Transaction too large</source>
+        <translation>Transaction trop volumineuse</translation>
+    </message>
+    <message>
         <source>Trying to connect...</source>
         <translation>Tentative de connexion...</translation>
     </message>
@@ -4830,6 +5006,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Options de débogage/de test du porte-monnaie :</translation>
     </message>
     <message>
+        <source>Wallet is not initialized</source>
+        <translation>Le portefeuille n'est pas initialisé</translation>
+    </message>
+    <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
         <translation>Le porte-monnaie devait être réécrit : redémarrer %s pour terminer l’opération.</translation>
     </message>
@@ -4844,6 +5024,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Whether to operate in a blocks only mode (default: %u)</source>
         <translation>Opérer en mode blocs uniquement (par défaut : %u)</translation>
+    </message>
+    <message>
+        <source>You can not start a masternode in lite mode.</source>
+        <translation>Vous ne pouvez pas démarrer un masternode en mode allégé.</translation>
     </message>
     <message>
         <source>ZeroMQ notification options:</source>

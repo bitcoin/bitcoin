@@ -463,17 +463,17 @@ void MasternodeList::updateDIP3List()
 
         QString operatorRewardStr;
         if (dmn->nOperatorReward) {
-            operatorRewardStr += QString::number(dmn->nOperatorReward / 100.0, 'f', 2) + "%";
+            operatorRewardStr += QString::number(dmn->nOperatorReward / 100.0, 'f', 2) + "% ";
 
             if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
                 CTxDestination operatorDest;
                 if (ExtractDestination(dmn->pdmnState->scriptOperatorPayout, operatorDest)) {
-                    operatorRewardStr += tr(" to %1").arg(QString::fromStdString(CBitcoinAddress(operatorDest).ToString()));
+                    operatorRewardStr += tr("to %1").arg(QString::fromStdString(CBitcoinAddress(operatorDest).ToString()));
                 } else {
-                    operatorRewardStr += tr(" to UNKNOWN");
+                    operatorRewardStr += tr("to UNKNOWN");
                 }
             } else {
-                operatorRewardStr += tr(" but not claimed");
+                operatorRewardStr += tr("but not claimed");
             }
         } else {
             operatorRewardStr = tr("NONE");

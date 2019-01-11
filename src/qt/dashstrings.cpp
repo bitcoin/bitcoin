@@ -72,6 +72,12 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Enable multiple PrivateSend mixing sessions per block, experimental (0-1, "
 "default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Enable publish raw transactions of attempted InstantSend double spend in "
+"<address>"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"Enable publish transaction hashes of attempted InstantSend double spend in "
+"<address>"),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Enable use of automated PrivateSend for funds stored in this wallet (0-1, "
 "default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -174,6 +180,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Override spork address. Only useful for regtest and devnet. Using this on "
 "mainnet or testnet will ban you."),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Overrides minimum spork signers to change spork value. Only useful for "
+"regtest and devnet. Using this on mainnet or testnet will ban you."),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -261,6 +270,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Use N separate masternodes for each denominated input to mix funds (%u-%u, "
 "default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
+"Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"),
+QT_TRANSLATE_NOOP("dash-core", ""
 "Use UPnP to map the listening port (default: 1 when listening and no -proxy)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only "
@@ -327,6 +338,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "mode.  This will redownload the entire blockchain"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "You need to rebuild the database using -reindex-chainstate to change -txindex"),
+QT_TRANSLATE_NOOP("dash-core", ""
+"You should specify a masternodeblsprivkey in the configuration. Please see "
+"documentation for help."),
 QT_TRANSLATE_NOOP("dash-core", "%s corrupt, salvage failed"),
 QT_TRANSLATE_NOOP("dash-core", "%s is not a valid backup folder!"),
 QT_TRANSLATE_NOOP("dash-core", "%s is set very high!"),
@@ -382,7 +396,6 @@ QT_TRANSLATE_NOOP("dash-core", "Enable publish raw block in <address>"),
 QT_TRANSLATE_NOOP("dash-core", "Enable publish raw transaction (locked via InstantSend) in <address>"),
 QT_TRANSLATE_NOOP("dash-core", "Enable publish raw transaction in <address>"),
 QT_TRANSLATE_NOOP("dash-core", "Enable the client to act as a masternode (0-1, default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Enable transaction replacement in the memory pool (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Entries are full."),
 QT_TRANSLATE_NOOP("dash-core", "Entry exceeds maximum size."),
 QT_TRANSLATE_NOOP("dash-core", "Error initializing block database"),
@@ -431,8 +444,9 @@ QT_TRANSLATE_NOOP("dash-core", "Invalid -proxy address: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid amount for -%s=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-QT_TRANSLATE_NOOP("dash-core", "Invalid input count."),
+QT_TRANSLATE_NOOP("dash-core", "Invalid masternodeblsprivkey. Please see documenation."),
 QT_TRANSLATE_NOOP("dash-core", "Invalid masternodeprivkey. Please see documenation."),
+QT_TRANSLATE_NOOP("dash-core", "Invalid minimum number of spork signers specified with -minsporkkeys"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid netmask specified in -whitelist: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid port detected in masternode.conf"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid script detected."),
@@ -517,6 +531,7 @@ QT_TRANSLATE_NOOP("dash-core", "Session timed out."),
 QT_TRANSLATE_NOOP("dash-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", "Set key pool size to <n> (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Set maximum block size in bytes (default: %d)"),
+QT_TRANSLATE_NOOP("dash-core", "Set the masternode BLS private key"),
 QT_TRANSLATE_NOOP("dash-core", "Set the masternode private key"),
 QT_TRANSLATE_NOOP("dash-core", "Set the number of threads to service RPC calls (default: %d)"),
 QT_TRANSLATE_NOOP("dash-core", "Show all debugging options (usage: --help -help-debug)"),
@@ -550,6 +565,7 @@ QT_TRANSLATE_NOOP("dash-core", "This is the minimum transaction fee you pay on e
 QT_TRANSLATE_NOOP("dash-core", "This is the transaction fee you will pay if you send a transaction."),
 QT_TRANSLATE_NOOP("dash-core", "Threshold for disconnecting misbehaving peers (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Too many %f denominations, removing."),
+QT_TRANSLATE_NOOP("dash-core", "Too many %f denominations, skipping."),
 QT_TRANSLATE_NOOP("dash-core", "Tor control port password (default: empty)"),
 QT_TRANSLATE_NOOP("dash-core", "Tor control port to use if onion listening enabled (default: %s)"),
 QT_TRANSLATE_NOOP("dash-core", "Transaction amount too small"),

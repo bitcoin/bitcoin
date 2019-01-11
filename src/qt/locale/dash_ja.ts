@@ -971,8 +971,8 @@
         <translation>プライベートセンドの情報</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.         </source>
-        <translation>&lt;h3&gt;プライベートセンドの基本&lt;/h3&gt; プライベートセンドはあなたのファンドの起源を不明瞭にすることによって真のファイナンシャルプライバシーを提供します。あなたのウォレットにあるDashは別々の異なるコインとして考えられる”インプット”から構成されています。&lt;br&gt; プライベートセンドは画期的なプロセスを使用し、ウォレットからあなたのコインが移動させられることなく、他の二人の人々のインプットとあなたのインプットをミックスします。あなたは常にあなたのファンドをコントロールしています。&lt;hr&gt; &lt;b&gt;プライベートセンドのプロセスは以下のように機能します:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;プライベートセンドは、あなたのトランザクションインプットをスタンダードな通貨単位に分割します。これらの通貨単位は0.01 DASH, 0.1 DASH, 1 DASH そして 10 DASH -- 日常的に使われる紙幣のようなものです。&lt;/li&gt; &lt;li&gt;あなたのウォレットは次に、 "マスターノード"と呼ばれるネットワーク上に特別に設定されたソフトウェアノードにリクエストを送信します。これらのマスターノードは、特定の通貨単位をミキシングしたいというあなたの要望を知らされます。送信者を特定できる情報は送信されないので、マスターノードはあなたが誰かわかりません。 &lt;/li&gt; &lt;li&gt;二人の別の人たちが同じようなメッセージを送信して、同じ通貨単位をミキシングしたいという要望を伝え、ミキシングセッションが開始されます。マスターノードはインプットをミックスし、すべての三人のユーザーのウォレットに命じて変更されたインプットをもとのウォレットに戻させます。あなたのウォレットはその通貨単位を直接もとのウォレットに支払いますが、アドレスは異なっています（チェンジアドレスといいます）&lt;/li&gt; &lt;li&gt;完全にあなたのファンドを匿名化するには、あなたのウォレットはこのプロセスをそれぞれの通貨単位で何回もリピートする必要があります。このプロセスは "ラウンド"と呼びます。プライベートセンドのラウンドが進めば、あなたのファンドの起源を遡ることは指数関数的に困難になっていきます。&lt;/li&gt; &lt;li&gt;このミキシングのプロセスはあなたになにも干渉することなくバックグラウンドで実行されます。あなたがトランザクションを実行したいとき、あなたのファンドはすでに匿名化されています。追加の待ち時間は必要ありません。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;重要:&lt;/b&gt; あなたのウォレットは、 1000個の "チェンジアドレス"しか保有できません。ミキシングが実行されるたびに、9個のアドレスが使用されます。これは1000個のアドレスを使い切るまでに約100回のミキシングがきることを意味します。900個のアドレスが使用されると、あなたのウォレットは追加のアドレスを生成しなくてはなりません。しかし、あなたが自動バックアップを有効にしていれば可能です。&lt;br&gt; つまりバックアップが無効なユーザーはプライベートセンドが無効になります。 &lt;hr&gt;詳細は &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;プライベートセンドドキュメンテーション&lt;/a&gt;参照.         </translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;プライベートセンドの基本&lt;/h3&gt; プライベートセンドはあなたのファンドの起源を不明瞭にすることによって真のファイナンシャルプライバシーを提供します。あなたのウォレットにあるDashは別々の異なるコインとして考えられる”インプット”から構成されています。&lt;br&gt; プライベートセンドは画期的なプロセスを使用し、ウォレットからあなたのコインが移動させられることなく、他の二人の人々のインプットとあなたのインプットをミックスします。あなたは常にあなたのファンドをコントロールしています。&lt;hr&gt; &lt;b&gt;プライベートセンドのプロセスは以下のように機能します:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;プライベートセンドは、あなたのトランザクションインプットをスタンダードな通貨単位に分割します。これらの通貨単位は0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH そして 10 DASH -- 日常的に使われる紙幣のようなものです。&lt;/li&gt; &lt;li&gt;あなたのウォレットは次に、 "マスターノード"と呼ばれるネットワーク上に特別に設定されたソフトウェアノードにリクエストを送信します。これらのマスターノードは、特定の通貨単位をミキシングしたいというあなたの要望を知らされます。送信者を特定できる情報は送信されないので、マスターノードはあなたが誰かわかりません。 &lt;/li&gt; &lt;li&gt;二人の別の人たちが同じようなメッセージを送信して、同じ通貨単位をミキシングしたいという要望を伝え、ミキシングセッションが開始されます。マスターノードはインプットをミックスし、すべての三人のユーザーのウォレットに命じて変更されたインプットをもとのウォレットに戻させます。あなたのウォレットはその通貨単位を直接もとのウォレットに支払いますが、アドレスは異なっています（チェンジアドレスといいます）&lt;/li&gt; &lt;li&gt;完全にあなたのファンドを匿名化するには、あなたのウォレットはこのプロセスをそれぞれの通貨単位で何回もリピートする必要があります。このプロセスは "ラウンド"と呼びます。プライベートセンドのラウンドが進めば、あなたのファンドの起源を遡ることは指数関数的に困難になっていきます。&lt;/li&gt; &lt;li&gt;このミキシングのプロセスはあなたになにも干渉することなくバックグラウンドで実行されます。あなたがトランザクションを実行したいとき、あなたのファンドはすでに匿名化されています。追加の待ち時間は必要ありません。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;重要:&lt;/b&gt; あなたのウォレットは、 1000個の "チェンジアドレス"しか保有できません。ミキシングが実行されるたびに、9個のアドレスが使用されます。これは1000個のアドレスを使い切るまでに約100回のミキシングがきることを意味します。900個のアドレスが使用されると、あなたのウォレットは追加のアドレスを生成しなくてはなりません。しかし、あなたが自動バックアップを有効にしていれば可能です。&lt;br&gt; つまりバックアップが無効なユーザーはプライベートセンドが無効になります。 &lt;hr&gt;詳細は &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;プライベートセンドドキュメンテーション&lt;/a&gt;参照.         </translation>
     </message>
 </context>
 <context>
@@ -1110,8 +1110,76 @@
         <translation>ノード数:</translation>
     </message>
     <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;注：このリストは、従来の非決定論的マスターノードリストを表します。 DIP3が完全にアクティブ化されていない限り有効です。 SPORK15の有効化後、このリストは空になります。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>DIP3 Masternodes</source>
+        <translation>DIP3マスターノード</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>PoSeスコア</translation>
+    </message>
+    <message>
+        <source>Registered</source>
+        <translation>登録済み</translation>
+    </message>
+    <message>
+        <source>Last Paid</source>
+        <translation>最新の支払い</translation>
+    </message>
+    <message>
+        <source>Next Payment</source>
+        <translation>次の支払い</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>オペレーター報酬</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;注：このリストはまだアクティブではなく、情報提供のみを目的としています。 ネットワークはまだ互換モードで実行されています。つまり、非決定論的マスターノードリストはまだアクティブです。 SPORK15のアクティブ化後に初めて、このリストがアクティブになります。 また、支払い関連フィールドの値は現時点では使用されていませんが、ブロックごとに更新されています。 SPORK15のアクティブ化までこれを無視してください。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
         <source>Start alias</source>
         <translation>エイリアス開始</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>ProTxハッシュをコピー</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Collateral Outpointをコピー</translation>
+    </message>
+    <message>
+        <source>ENABLED</source>
+        <translation>使用可能</translation>
+    </message>
+    <message>
+        <source>POSE_BANNED</source>
+        <translation>POSE_BANNED</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>不明</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>to %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>to UNKNOWN</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>but not claimed</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>無し</translation>
     </message>
     <message>
         <source>Confirm masternode start</source>
@@ -1176,6 +1244,10 @@
     <message>
         <source>Sentinel</source>
         <translation>センチネル</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>DIP3 Masternode %1の追加情報</translation>
     </message>
 </context>
 <context>
@@ -1324,7 +1396,7 @@
     </message>
     <message>
         <source>PrivateSend rounds to use</source>
-        <translation>プライベートセンドのラウンドを使用</translation>
+        <translation>プライベートセンドを利用する際のラウンド回数</translation>
     </message>
     <message>
         <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
@@ -1381,6 +1453,14 @@
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>コインコントロール機能を有効化 (&amp;C)</translation>
+    </message>
+    <message>
+        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>守秘送金［プライベートセンド］のミキシングトランザクション&lt;br/&gt;を他のすべてのトランザクションタイプと同じようにポップアップ表示します。</translation>
+    </message>
+    <message>
+        <source>Show popups for PrivateSend transactions</source>
+        <translation>守秘送金［プライベートセンド］トランザクションのポップアップを表示する</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1796,10 +1876,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>最後のプライベートセンドのメッセージ:
 </translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>N/A</translation>
     </message>
     <message>
         <source>PrivateSend was successfully reset.</source>
@@ -3541,6 +3617,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ウォッチオンリーのアドレスがこのトランザクションに含まれているかどうか</translation>
     </message>
     <message>
+        <source>Whether or not this transaction was locked by InstantSend.</source>
+        <translation>このトランザクションがインスタントセンドによってロックされていたかどうか。</translation>
+    </message>
+    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>ユーザー定義のトランザクションの意図／目的</translation>
     </message>
@@ -3554,6 +3634,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>All</source>
         <translation>すべて</translation>
+    </message>
+    <message>
+        <source>Locked by InstantSend</source>
+        <translation>即時送金［インスタントセンド］によってロックされています</translation>
+    </message>
+    <message>
+        <source>Not locked by InstantSend</source>
+        <translation>即時送金［インスタントセンド］によってロックされていません</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3979,6 +4067,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ウォレットの全トランザクションを削除し、これらを-rescanオプションを用いることで起動時にブロックチェインのデータのみからリカバリします。</translation>
     </message>
     <message>
+        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
+        <translation>試行中のインスタントセンド二重支払い &lt;address&gt; の未確定トランザクションの生成を有効にする</translation>
+    </message>
+    <message>
+        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
+        <translation>&lt;address&gt;で試行されたインスタントセンド二重支払いのトランザクションハッシュの生成を有効にする</translation>
+    </message>
+    <message>
         <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
         <translation>%s読み込みエラー:  既存の非HDウォレット上でHDを有効化できません</translation>
     </message>
@@ -4023,6 +4119,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>デバッグ情報を出力する (初期設定： %u, &lt;category&gt; の指定は任意です)</translation>
     </message>
     <message>
+        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
+        <translation>スポーク値を変更するために最小のスポーク署名者を無視します。 regtestとdevnetでのみ使用可能です。これをmainnetやtestnetで使うとあなたは追放されます。</translation>
+    </message>
+    <message>
+        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
+        <translation>資金を混合するためにN個の別々のマスターノードを並行して使用する (%u-%u, default: %u)</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Tor 秘匿サービスを経由して別々の SOCKS5 プロキシを用いることでピアに到達する (初期設定： %s)</translation>
     </message>
@@ -4041,6 +4145,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
         <translation>-txindexを変更するために -reindex-chainstate を使用してデータベースをリビルドする必要があります。</translation>
+    </message>
+    <message>
+        <source>You should specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
+        <translation>設定でマスターノードBLS秘密鍵を指定する必要があります。 ヘルプの説明を参照してください。</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -4155,6 +4263,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-paytxfee=&lt;amount&gt; に対する無効な数量です： '%s' (少なくとも %s でなければいけません)</translation>
     </message>
     <message>
+        <source>Invalid masternodeblsprivkey. Please see documenation.</source>
+        <translation>マスターノードBLS秘密鍵が無効です。説明をお読み下さい。</translation>
+    </message>
+    <message>
+        <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
+        <translation>-minsporkkeysで指定されたスポーク署名者の最小数が無効です</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>キープールが枯渇しました。まずはじめに keypoolrefill を呼び出してください。</translation>
     </message>
@@ -4255,6 +4371,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>key pool のサイズを &lt;n&gt; (初期設定： %u) にセット</translation>
     </message>
     <message>
+        <source>Set the masternode BLS private key</source>
+        <translation>マスターノードBLS秘密鍵の設定</translation>
+    </message>
+    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>RPC 呼び出しのスレッド数を設定 (初期設定： %d)</translation>
     </message>
@@ -4317,6 +4437,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Too many %f denominations, removing.</source>
         <translation>異常に多くの %f デノミネーション、削除中</translation>
+    </message>
+    <message>
+        <source>Too many %f denominations, skipping.</source>
+        <translation>%f 分割単位が多すぎるため、スキップします。</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4639,10 +4763,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;address&gt; に対し、原トランザクションの公開を有効にする</translation>
     </message>
     <message>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation>メモリプール内のトランザクションの置換を有効化する (初期設定: %u)</translation>
-    </message>
-    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
     </message>
@@ -4685,10 +4805,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>無効な額 -fallbackfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid input count.</source>
-        <translation>無効なインプットカウント</translation>
     </message>
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
