@@ -30,7 +30,7 @@ class CDKGPendingMessages;
 class CDKGLogger : public CBatchedLogger
 {
 public:
-    CDKGLogger(CDKGSession& _quorumDkg, const std::string& _func);
+    CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func);
     CDKGLogger(Consensus::LLMQType _llmqType, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func);
 };
 
@@ -310,26 +310,26 @@ public:
     // Phase 1: contribution
     void Contribute(CDKGPendingMessages& pendingMessages);
     void SendContributions(CDKGPendingMessages& pendingMessages);
-    bool PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan);
+    bool PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan);
     void VerifyPendingContributions();
 
     // Phase 2: complaint
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
     void SendComplaint(CDKGPendingMessages& pendingMessages);
-    bool PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);
+    bool PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);
 
     // Phase 3: justification
     void VerifyAndJustify(CDKGPendingMessages& pendingMessages);
     void SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers);
-    bool PreVerifyMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan);
+    bool PreVerifyMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan);
 
     // Phase 4: commit
     void VerifyAndCommit(CDKGPendingMessages& pendingMessages);
     void SendCommitment(CDKGPendingMessages& pendingMessages);
-    bool PreVerifyMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan);
+    bool PreVerifyMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan);
 
     // Phase 5: aggregate/finalize
@@ -339,10 +339,10 @@ public:
     void MarkBadMember(size_t idx);
 
     void AddParticipatingNode(NodeId nodeId);
-    void RelayInvToParticipants(const CInv& inv);
+    void RelayInvToParticipants(const CInv& inv) const;
 
 public:
-    CDKGMember* GetMember(const uint256& proTxHash);
+    CDKGMember* GetMember(const uint256& proTxHash) const;
 };
 
 }

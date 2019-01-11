@@ -73,7 +73,7 @@ public:
 
         std::vector<std::pair<NodeId, std::shared_ptr<Message>>> ret;
         ret.reserve(binaryMessages.size());
-        for (auto& bm : binaryMessages) {
+        for (const auto& bm : binaryMessages) {
             auto msg = std::make_shared<Message>();
             try {
                 *bm.second >> *msg;
@@ -129,7 +129,7 @@ public:
 private:
     bool InitNewQuorum(int height, const uint256& quorumHash);
 
-    std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash();
+    std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 
     typedef std::function<void()> StartPhaseFunc;
     typedef std::function<bool()> WhileWaitFunc;

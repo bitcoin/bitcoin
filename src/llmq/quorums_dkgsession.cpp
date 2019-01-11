@@ -33,7 +33,7 @@ double justifyLieRate = 0;
 double commitOmitRate = 0;
 double commitLieRate = 0;
 
-CDKGLogger::CDKGLogger(CDKGSession& _quorumDkg, const std::string& _func) :
+CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) :
     CDKGLogger(_quorumDkg.params.type, _quorumDkg.quorumHash, _quorumDkg.height, _quorumDkg.AreWeMember(), _func)
 {
 }
@@ -178,7 +178,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
-bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan)
+bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan) const
 {
     CDKGLogger logger(*this, __func__);
 
@@ -271,7 +271,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
     receivedVvecs[member->idx] = qc.vvec;
 
     int receivedCount = 0;
-    for (auto& m : members) {
+    for (const auto& m : members) {
         if (!m->contributions.empty()) {
             receivedCount++;
         }
@@ -341,7 +341,7 @@ void CDKGSession::VerifyPendingContributions()
     std::vector<BLSVerificationVectorPtr> vvecs;
     BLSSecretKeyVector skContributions;
 
-    for (auto& idx : pend) {
+    for (const auto& idx : pend) {
         auto& m = members[idx];
         if (m->bad || m->weComplain) {
             continue;
@@ -394,7 +394,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
     cxxtimer::Timer t1(true);
 
-    for (auto& m : members) {
+    for (const auto& m : members) {
         if (m->bad) {
             continue;
         }
@@ -454,7 +454,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
-bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan)
+bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan) const
 {
     CDKGLogger logger(*this, __func__);
 
@@ -573,7 +573,7 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
 
     std::set<uint256> justifyFor;
 
-    for (auto& m : members) {
+    for (const auto& m : members) {
         if (m->bad) {
             continue;
         }
@@ -652,7 +652,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
-bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan)
+bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan) const
 {
     CDKGLogger logger(*this, __func__);
 
@@ -803,7 +803,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
     int receivedCount = 0;
     int expectedCount = 0;
 
-    for (auto& m : members) {
+    for (const auto& m : members) {
         if (!m->justifications.empty()) {
             receivedCount++;
         }
@@ -827,7 +827,7 @@ void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
     std::vector<size_t> badMembers;
     std::vector<size_t> openComplaintMembers;
 
-    for (auto& m : members) {
+    for (const auto& m : members) {
         if (m->bad) {
             badMembers.emplace_back(m->idx);
             continue;
@@ -843,13 +843,13 @@ void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
     }
     if (!badMembers.empty()) {
         logger.Batch("  members previously determined as bad:");
-        for (auto& idx : badMembers) {
+        for (const auto& idx : badMembers) {
             logger.Batch("    %s", members[idx]->dmn->proTxHash.ToString());
         }
     }
     if (!openComplaintMembers.empty()) {
         logger.Batch("  members with open complaints and now marked as bad:");
-        for (auto& idx : openComplaintMembers) {
+        for (const auto& idx : openComplaintMembers) {
             logger.Batch("    %s", members[idx]->dmn->proTxHash.ToString());
         }
     }
@@ -974,7 +974,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
-bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan)
+bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan) const
 {
     CDKGLogger logger(*this, __func__);
 
@@ -1110,7 +1110,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
     });
 
     int receivedCount = 0;
-    for (auto& m : members) {
+    for (const auto& m : members) {
         if (!m->prematureCommitments.empty()) {
             receivedCount++;
         }
@@ -1134,7 +1134,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
     typedef std::vector<bool> Key;
     std::map<Key, std::vector<CDKGPrematureCommitment>> commitmentsMap;
 
-    for (auto& p : prematureCommitments) {
+    for (const auto& p : prematureCommitments) {
         auto& qc = p.second;
         if (!validCommitments.count(p.first)) {
             continue;
@@ -1218,7 +1218,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
     return finalCommitments;
 }
 
-CDKGMember* CDKGSession::GetMember(const uint256& proTxHash)
+CDKGMember* CDKGSession::GetMember(const uint256& proTxHash) const
 {
     auto it = membersMap.find(proTxHash);
     if (it == membersMap.end()) {
@@ -1248,14 +1248,14 @@ void CDKGSession::AddParticipatingNode(NodeId nodeId)
             return true;
         }
 
-        for (auto& inv : invSet) {
+        for (const auto& inv : invSet) {
             pnode->PushInventory(inv);
         }
         return true;
     });
 }
 
-void CDKGSession::RelayInvToParticipants(const CInv& inv)
+void CDKGSession::RelayInvToParticipants(const CInv& inv) const
 {
     LOCK(invCs);
     g_connman->ForEachNode([&](CNode* pnode) {

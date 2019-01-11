@@ -1969,8 +1969,8 @@ void CConnman::ThreadOpenMasternodeConnections()
             LOCK2(cs_vNodes, cs_vPendingMasternodes);
 
             std::vector<CService> pending;
-            for (auto& group : masternodeQuorumNodes) {
-                for (auto& addr : group.second) {
+            for (const auto& group : masternodeQuorumNodes) {
+                for (const auto& addr : group.second) {
                     if (!connectedNodes.count(addr) && !IsMasternodeOrDisconnectRequested(addr)) {
                         pending.emplace_back(addr);
                     }
@@ -2616,7 +2616,7 @@ std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
 {
     LOCK(cs_vPendingMasternodes);
     std::set<uint256> result;
-    for (auto& p : masternodeQuorumNodes) {
+    for (const auto& p : masternodeQuorumNodes) {
         if (p.first.first != llmqType) {
             continue;
         }
@@ -2643,7 +2643,7 @@ std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType
         return {};
     }
     std::set<NodeId> nodes;
-    for (auto pnode : vNodes) {
+    for (const auto pnode : vNodes) {
         if (pnode->fDisconnect) {
             continue;
         }

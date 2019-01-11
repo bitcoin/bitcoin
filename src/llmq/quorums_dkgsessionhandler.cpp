@@ -187,7 +187,7 @@ bool CDKGSessionHandler::InitNewQuorum(int height, const uint256& quorumHash)
     return true;
 }
 
-std::pair<QuorumPhase, uint256> CDKGSessionHandler::GetPhaseAndQuorumHash()
+std::pair<QuorumPhase, uint256> CDKGSessionHandler::GetPhaseAndQuorumHash() const
 {
     LOCK(cs);
     return std::make_pair(phase, quorumHash);
@@ -495,7 +495,7 @@ void CDKGSessionHandler::HandleDKGRound()
         }
         if (!connections.empty()) {
             std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->quorumHash.ToString());
-            for (auto& c : connections) {
+            for (const auto& c : connections) {
                 debugMsg += strprintf("  %s\n", c.ToString(false));
             }
             LogPrintf(debugMsg);
@@ -545,7 +545,7 @@ void CDKGSessionHandler::HandleDKGRound()
     HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.5, fCommitStart, fCommitWait);
 
     auto finalCommitments = curSession->FinalizeCommitments();
-    for (auto& fqc : finalCommitments) {
+    for (const auto& fqc : finalCommitments) {
         quorumBlockProcessor->AddMinableCommitment(fqc);
     }
 }

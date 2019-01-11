@@ -25,7 +25,7 @@ CDKGSessionManager::CDKGSessionManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker) :
     evoDb(_evoDb),
     blsWorker(_blsWorker)
 {
-    for (auto& qt : Params().GetConsensus().llmqs) {
+    for (const auto& qt : Params().GetConsensus().llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
                 std::forward_as_tuple(qt.first),
                 std::forward_as_tuple(qt.second, _evoDb, messageHandlerPool, blsWorker, *this));
@@ -104,7 +104,7 @@ bool CDKGSessionManager::AlreadyHave(const CInv& inv) const
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return false;
 
-    for (auto& p : dkgSessionHandlers) {
+    for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
         if (dkgType.pendingContributions.HasSeen(inv.hash)
             || dkgType.pendingComplaints.HasSeen(inv.hash)
@@ -121,7 +121,7 @@ bool CDKGSessionManager::GetContribution(const uint256& hash, CDKGContribution& 
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return false;
 
-    for (auto& p : dkgSessionHandlers) {
+    for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
         LOCK2(dkgType.cs, dkgType.curSession->invCs);
         if (dkgType.phase < QuorumPhase_Initialized || dkgType.phase > QuorumPhase_Contribute) {
@@ -141,7 +141,7 @@ bool CDKGSessionManager::GetComplaint(const uint256& hash, CDKGComplaint& ret) c
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return false;
 
-    for (auto& p : dkgSessionHandlers) {
+    for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
         LOCK2(dkgType.cs, dkgType.curSession->invCs);
         if (dkgType.phase < QuorumPhase_Contribute || dkgType.phase > QuorumPhase_Complain) {
@@ -161,7 +161,7 @@ bool CDKGSessionManager::GetJustification(const uint256& hash, CDKGJustification
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return false;
 
-    for (auto& p : dkgSessionHandlers) {
+    for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
         LOCK2(dkgType.cs, dkgType.curSession->invCs);
         if (dkgType.phase < QuorumPhase_Complain || dkgType.phase > QuorumPhase_Justify) {
@@ -181,7 +181,7 @@ bool CDKGSessionManager::GetPrematureCommitment(const uint256& hash, CDKGPrematu
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return false;
 
-    for (auto& p : dkgSessionHandlers) {
+    for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
         LOCK2(dkgType.cs, dkgType.curSession->invCs);
         if (dkgType.phase < QuorumPhase_Justify || dkgType.phase > QuorumPhase_Commit) {
