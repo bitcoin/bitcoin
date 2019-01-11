@@ -11,18 +11,18 @@
 void quorum_dkgstatus_help()
 {
     throw std::runtime_error(
-            "quorum dkgstatus (detailed)\n"
+            "quorum dkgstatus (proTxHash) (detail_level)\n"
             "\nArguments:\n"
             "1. \"proTxHash\"          (string, optional, default=0) ProTxHash of masternode to show status for.\n"
             "                        If set to an empty string or 0, the local status is shown.\n"
-            "2. \"detailLevel\"        (number, optional, default=0) Detail level of output.\n"
+            "2. \"detail_level\"       (number, optional, default=0) Detail level of output.\n"
             "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n"
     );
 }
 
 UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2 && request.params.size() != 3)) {
+    if (request.fHelp || (request.params.size() < 1 || request.params.size() > 3)) {
         quorum_dkgstatus_help();
     }
 
@@ -33,9 +33,9 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
     int detailLevel = 0;
     if (request.params.size() > 2) {
-        detailLevel = ParseInt32V(request.params[2], "detailLevel");
+        detailLevel = ParseInt32V(request.params[2], "detail_level");
         if (detailLevel < 0 || detailLevel > 2) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid detailLevel");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid detail_level");
         }
     }
 
