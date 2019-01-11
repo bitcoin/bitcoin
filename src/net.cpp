@@ -2612,16 +2612,6 @@ bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint
     return masternodeQuorumNodes.count(std::make_pair(llmqType, quorumHash));
 }
 
-std::set<std::pair<Consensus::LLMQType, uint256>> CConnman::GetMasternodeQuorums()
-{
-    LOCK(cs_vPendingMasternodes);
-    std::set<std::pair<Consensus::LLMQType, uint256>> result;
-    for (auto& p : masternodeQuorumNodes) {
-        result.emplace(p.first);
-    }
-    return result;
-}
-
 std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
 {
     LOCK(cs_vPendingMasternodes);

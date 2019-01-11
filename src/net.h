@@ -360,7 +360,6 @@ public:
     bool AddPendingMasternode(const CService& addr);
     bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<CService>& addresses);
     bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    std::set<std::pair<Consensus::LLMQType, uint256>> GetMasternodeQuorums();
     std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
     std::set<CService> GetMasternodeQuorumAddresses(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     // also returns QWATCH nodes
