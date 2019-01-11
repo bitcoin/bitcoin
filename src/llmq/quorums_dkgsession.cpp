@@ -105,7 +105,7 @@ bool CDKGSession::Init(int _height, const uint256& _quorumHash, const std::vecto
     return true;
 }
 
-void CDKGSession::Contribute()
+void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -122,10 +122,10 @@ void CDKGSession::Contribute()
     }
     logger.Batch("generated contributions. time=%d", t1.count());
 
-    SendContributions();
+    SendContributions(pendingMessages);
 }
 
-void CDKGSession::SendContributions()
+void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -174,11 +174,7 @@ void CDKGSession::SendContributions()
         return true;
     });
 
-    uint256 hash = ::SerializeHash(qc);
-    bool ban = false;
-    if (PreVerifyMessage(hash, qc, ban)) {
-        ReceiveMessage(hash, qc, ban);
-    }
+    pendingMessages.PushPendingMessage(-1, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -192,10 +188,6 @@ bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGContribution& 
 
     if (qc.quorumHash != quorumHash) {
         logger.Batch("contribution for wrong quorum, rejecting");
-        return false;
-    }
-
-    if (Seen(hash)) {
         return false;
     }
 
@@ -383,7 +375,7 @@ void CDKGSession::VerifyPendingContributions()
     logger.Batch("verified %d pending contributions. time=%d", pend.size(), t1.count());
 }
 
-void CDKGSession::VerifyAndComplain()
+void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 {
     if (!AreWeMember()) {
         return;
@@ -416,10 +408,10 @@ void CDKGSession::VerifyAndComplain()
     logger.Batch("verified contributions. time=%d", t1.count());
     logger.Flush();
 
-    SendComplaint();
+    SendComplaint(pendingMessages);
 }
 
-void CDKGSession::SendComplaint()
+void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -458,11 +450,7 @@ void CDKGSession::SendComplaint()
         return true;
     });
 
-    uint256 hash = ::SerializeHash(qc);
-    bool ban = false;
-    if (PreVerifyMessage(hash, qc, ban)) {
-        ReceiveMessage(hash, qc, ban);
-    }
+    pendingMessages.PushPendingMessage(-1, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -474,10 +462,6 @@ bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc,
 
     if (qc.quorumHash != quorumHash) {
         logger.Batch("complaint for wrong quorum, rejecting");
-        return false;
-    }
-
-    if (Seen(hash)) {
         return false;
     }
 
@@ -579,7 +563,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
     logger.Batch("received and relayed complaint. received=%d", receivedCount);
 }
 
-void CDKGSession::VerifyAndJustify()
+void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
 {
     if (!AreWeMember()) {
         return;
@@ -615,11 +599,11 @@ void CDKGSession::VerifyAndJustify()
 
     logger.Flush();
     if (!justifyFor.empty()) {
-        SendJustification(justifyFor);
+        SendJustification(pendingMessages, justifyFor);
     }
 }
 
-void CDKGSession::SendJustification(const std::set<uint256>& forMembers)
+void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -664,11 +648,7 @@ void CDKGSession::SendJustification(const std::set<uint256>& forMembers)
         return true;
     });
 
-    uint256 hash = ::SerializeHash(qj);
-    bool ban = false;
-    if (PreVerifyMessage(hash, qj, ban)) {
-        ReceiveMessage(hash, qj, ban);
-    }
+    pendingMessages.PushPendingMessage(-1, qj);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -680,10 +660,6 @@ bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGJustification&
 
     if (qj.quorumHash != quorumHash) {
         logger.Batch("justification for wrong quorum, rejecting");
-        return false;
-    }
-
-    if (Seen(hash)) {
         return false;
     }
 
@@ -840,7 +816,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
     logger.Batch("verified justification: received=%d/%d time=%d", receivedCount, expectedCount, t1.count());
 }
 
-void CDKGSession::VerifyAndCommit()
+void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
 {
     if (!AreWeMember()) {
         return;
@@ -880,10 +856,10 @@ void CDKGSession::VerifyAndCommit()
 
     logger.Flush();
 
-    SendCommitment();
+    SendCommitment(pendingMessages);
 }
 
-void CDKGSession::SendCommitment()
+void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -994,11 +970,7 @@ void CDKGSession::SendCommitment()
         return true;
     });
 
-    uint256 hash = ::SerializeHash(qc);
-    bool ban = false;
-    if (PreVerifyMessage(hash, qc, ban)) {
-        ReceiveMessage(hash, qc, ban);
-    }
+    pendingMessages.PushPendingMessage(-1, qc);
 }
 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
@@ -1012,11 +984,6 @@ bool CDKGSession::PreVerifyMessage(const uint256& hash, const CDKGPrematureCommi
 
     if (qc.quorumHash != quorumHash) {
         logger.Batch("commitment for wrong quorum, rejecting");
-        return false;
-    }
-
-    if (Seen(hash)) {
-        logger.Batch("already received premature commitment");
         return false;
     }
 
@@ -1271,11 +1238,6 @@ void CDKGSession::MarkBadMember(size_t idx)
         return true;
     });
     member->bad = true;
-}
-
-bool CDKGSession::Seen(const uint256& msgHash)
-{
-    return !seenMessages.emplace(msgHash).second;
 }
 
 void CDKGSession::AddParticipatingNode(NodeId nodeId)

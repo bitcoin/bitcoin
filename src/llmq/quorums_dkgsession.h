@@ -25,6 +25,7 @@ namespace llmq
 class CFinalCommitment;
 class CDKGSession;
 class CDKGSessionManager;
+class CDKGPendingMessages;
 
 class CDKGLogger : public CBatchedLogger
 {
@@ -280,8 +281,6 @@ private:
     std::set<CInv> invSet;
     std::set<CService> participatingNodes;
 
-    std::set<uint256> seenMessages;
-
     std::vector<size_t> pendingContributionVerifications;
 
     // filled by ReceivePrematureCommitment and used by FinalizeCommitments
@@ -309,27 +308,27 @@ public:
      */
 
     // Phase 1: contribution
-    void Contribute();
-    void SendContributions();
+    void Contribute(CDKGPendingMessages& pendingMessages);
+    void SendContributions(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan);
     void ReceiveMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan);
     void VerifyPendingContributions();
 
     // Phase 2: complaint
-    void VerifyAndComplain();
-    void SendComplaint();
+    void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
+    void SendComplaint(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);
     void ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);
 
     // Phase 3: justification
-    void VerifyAndJustify();
-    void SendJustification(const std::set<uint256>& forMembers);
+    void VerifyAndJustify(CDKGPendingMessages& pendingMessages);
+    void SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers);
     bool PreVerifyMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan);
     void ReceiveMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan);
 
     // Phase 4: commit
-    void VerifyAndCommit();
-    void SendCommitment();
+    void VerifyAndCommit(CDKGPendingMessages& pendingMessages);
+    void SendCommitment(CDKGPendingMessages& pendingMessages);
     bool PreVerifyMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan);
     void ReceiveMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan);
 
@@ -339,7 +338,6 @@ public:
     bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 
-    bool Seen(const uint256& msgHash);
     void AddParticipatingNode(NodeId nodeId);
     void RelayInvToParticipants(const CInv& inv);
 

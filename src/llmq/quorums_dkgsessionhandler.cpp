@@ -510,7 +510,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     // Contribute
     auto fContributeStart = [this]() {
-        curSession->Contribute();
+        curSession->Contribute(pendingContributions);
     };
     auto fContributeWait = [this] {
         return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8);
@@ -519,7 +519,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     // Complain
     auto fComplainStart = [this]() {
-        curSession->VerifyAndComplain();
+        curSession->VerifyAndComplain(pendingComplaints);
     };
     auto fComplainWait = [this] {
         return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8);
@@ -528,7 +528,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     // Justify
     auto fJustifyStart = [this]() {
-        curSession->VerifyAndJustify();
+        curSession->VerifyAndJustify(pendingJustifications);
     };
     auto fJustifyWait = [this] {
         return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8);
@@ -537,7 +537,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     // Commit
     auto fCommitStart = [this]() {
-        curSession->VerifyAndCommit();
+        curSession->VerifyAndCommit(pendingPrematureCommitments);
     };
     auto fCommitWait = [this] {
         return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8);

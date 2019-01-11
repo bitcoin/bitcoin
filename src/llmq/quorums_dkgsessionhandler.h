@@ -54,6 +54,14 @@ public:
     bool HasSeen(const uint256& hash) const;
     void Clear();
 
+    template<typename Message>
+    void PushPendingMessage(NodeId from, Message& msg)
+    {
+        CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
+        ds << msg;
+        PushPendingMessage(from, ds);
+    }
+
     // Might return nullptr messages, which indicates that deserialization failed for some reason
     template<typename Message>
     std::vector<std::pair<NodeId, std::shared_ptr<Message>>> PopAndDeserializeMessages(size_t maxCount)
