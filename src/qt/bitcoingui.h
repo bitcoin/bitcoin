@@ -243,6 +243,7 @@ public Q_SLOTS:
 private:
     /** Set the proxy-enabled icon as shown in the UI. */
     void updateProxyIcon();
+    void updateWindowTitle();
 
 public Q_SLOTS:
 #ifdef ENABLE_WALLET
