@@ -76,7 +76,8 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     QMainWindow(parent),
     m_node(node),
     trayIconMenu{new QMenu()},
-    platformStyle(_platformStyle)
+    platformStyle(_platformStyle),
+    m_network_style(networkStyle)
 {
     QSettings settings;
     if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
@@ -94,9 +95,9 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
     } else {
         windowTitle += tr("Node");
     }
-    windowTitle += " " + networkStyle->getTitleAddText();
-    QApplication::setWindowIcon(networkStyle->getTrayAndWindowIcon());
-    setWindowIcon(networkStyle->getTrayAndWindowIcon());
+    windowTitle += " " + m_network_style->getTitleAddText();
+    QApplication::setWindowIcon(m_network_style->getTrayAndWindowIcon());
+    setWindowIcon(m_network_style->getTrayAndWindowIcon());
     setWindowTitle(windowTitle);
 
     rpcConsole = new RPCConsole(node, _platformStyle, nullptr);
@@ -132,7 +133,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
 
     // Create system tray icon and notification
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        createTrayIcon(networkStyle);
+        createTrayIcon();
     }
     notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
 
@@ -639,14 +640,14 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     openAction->setEnabled(enabled);
 }
 
-void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
+void BitcoinGUI::createTrayIcon()
 {
     assert(QSystemTrayIcon::isSystemTrayAvailable());
 
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
-        trayIcon = new QSystemTrayIcon(networkStyle->getTrayAndWindowIcon(), this);
-        QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
+        trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
+        QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }
 #endif
