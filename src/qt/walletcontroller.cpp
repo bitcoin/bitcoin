@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include <QMessageBox>
 #include <QMutexLocker>
 #include <QThread>
 
@@ -35,6 +36,30 @@ std::vector<WalletModel*> WalletController::getWallets() const
 {
     QMutexLocker locker(&m_mutex);
     return m_wallets;
+}
+
+std::vector<std::string> WalletController::getWalletsAvailableToOpen() const
+{
+    QMutexLocker locker(&m_mutex);
+    std::vector<std::string> wallets = m_node.listWalletDir();
+    for (WalletModel* wallet_model : m_wallets) {
+        auto it = std::remove(wallets.begin(), wallets.end(), wallet_model->wallet().getWalletName());
+        if (it != wallets.end()) wallets.erase(it);
+    }
+    return wallets;
+}
+
+WalletModel* WalletController::openWallet(const std::string& name, QWidget* parent)
+{
+    std::string error, warning;
+    WalletModel* wallet_model = getOrCreateWallet(m_node.loadWallet(name, error, warning));
+    if (!wallet_model) {
+        QMessageBox::warning(parent, tr("Open Wallet"), QString::fromStdString(error));
+    }
+    if (!warning.empty()) {
+        QMessageBox::information(parent, tr("Open Wallet"), QString::fromStdString(warning));
+    }
+    return wallet_model;
 }
 
 WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet)
