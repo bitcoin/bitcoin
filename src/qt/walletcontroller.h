@@ -37,6 +37,9 @@ public:
     ~WalletController();
 
     std::vector<WalletModel*> getWallets() const;
+    std::vector<std::string> getWalletsAvailableToOpen() const;
+
+    WalletModel* openWallet(const std::string& name, QWidget* parent = nullptr);
 
 private Q_SLOTS:
     void addWallet(WalletModel* wallet_model);
