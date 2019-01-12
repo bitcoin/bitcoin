@@ -192,6 +192,11 @@ public:
     //! Return interfaces for accessing wallets (if any).
     virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 
+    //! Attempts to load a wallet from file or directory.
+    //! The loaded wallet is also notified to handlers previously registered
+    //! with handleLoadWallet.
+    virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) = 0;
+
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;
     virtual std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) = 0;
