@@ -282,6 +282,14 @@ namespace {
 
 class RNGState {
     Mutex m_mutex;
+    /* The RNG state consists of 256 bits of entropy, taken from the output of
+     * one operation's SHA512 output, and fed as input to the next one.
+     * Carrying 256 bits of entropy should be sufficient to guarantee
+     * unpredictability as long as any entropy source was ever unpredictable
+     * to an attacker. To protect against situations where an attacker might
+     * observe the RNG's state, fresh entropy is always mixed when
+     * GetStrongRandBytes is called.
+     */
     unsigned char m_state[32] GUARDED_BY(m_mutex) = {0};
     uint64_t m_counter GUARDED_BY(m_mutex) = 0;
     bool m_strongly_seeded GUARDED_BY(m_mutex) = false;
