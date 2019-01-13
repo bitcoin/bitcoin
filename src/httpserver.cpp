@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@
 #include <ui_interface.h>
 
 #include <memory>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -147,6 +148,8 @@ static WorkQueue<HTTPClosure>* workQueue = nullptr;
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 std::vector<evhttp_bound_socket *> boundSockets;
+//! First of the binding addresses
+std::string firstBindAddress;
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -318,6 +321,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     }
 
     // Bind addresses
+    firstBindAddress.clear();
     for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
@@ -327,6 +331,11 @@ static bool HTTPBindAddresses(struct evhttp* http)
                 LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             boundSockets.push_back(bind_handle);
+            if (firstBindAddress.empty()) {
+                std::ostringstream addrStr;
+                addrStr << "http://" << i->first << ":" << i->second << "/";
+                firstBindAddress = addrStr.str();
+            }
         } else {
             LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
         }
@@ -476,6 +485,15 @@ void StopHTTPServer()
         eventBase = nullptr;
     }
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
+}
+
+bool GetHTTPServerBindAddress(std::string& addr)
+{
+    if (boundSockets.empty() || firstBindAddress.empty()) {
+        return false;
+    }
+    addr = firstBindAddress;
+    return true;
 }
 
 struct event_base* EventBase()

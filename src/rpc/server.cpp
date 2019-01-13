@@ -1,11 +1,12 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <rpc/server.h>
 
 #include <fs.h>
+#include <httpserver.h>
 #include <key_io.h>
 #include <random.h>
 #include <rpc/util.h>
@@ -514,8 +515,13 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
+    std::string bindAddr;
+    if (!GetHTTPServerBindAddress(bindAddr)) {
+        bindAddr = "http://127.0.0.1:8332/";
+    }
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' "
+        "-H 'content-type: text/plain;' " + bindAddr + "\n";
 }
 
 void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)

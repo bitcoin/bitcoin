@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC help output."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import assert_equal, assert_raises_rpc_error, rpc_port
 
 import os
+import re
 
 
 class HelpRpcTest(BitcoinTestFramework):
@@ -16,6 +17,7 @@ class HelpRpcTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_categories()
+        self.test_example_url()
         self.dump_help()
 
     def test_categories(self):
@@ -42,6 +44,10 @@ class HelpRpcTest(BitcoinTestFramework):
             components.append('Zmq')
 
         assert_equal(titles, components)
+
+    def test_example_url(self):
+        text = self.nodes[0].help("getblockchaininfo")
+        assert re.search("curl .* http:\\/\\/.*:%d\\/" % rpc_port(0), text) is not None
 
     def dump_help(self):
         dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
