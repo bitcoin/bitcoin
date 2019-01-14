@@ -43,5 +43,6 @@ fi
 # SC2206: Quote to prevent word splitting, or split robustly with mapfile or read -a.
 # SC2207: Prefer mapfile or read -a to split command output (or quote to avoid splitting).
 # SC2230: which is non-standard. Use builtin 'command -v' instead.
-shellcheck -e SC1087,SC1117,SC2001,SC2004,SC2005,SC2006,SC2016,SC2028,SC2046,SC2048,SC2066,SC2086,SC2116,SC2148,SC2162,SC2166,SC2181,SC2206,SC2207,SC2230 \
+# SC2236: Don't force -n instead of ! -z.
+shellcheck -e SC1087,SC1117,SC2001,SC2004,SC2005,SC2006,SC2016,SC2028,SC2046,SC2048,SC2066,SC2086,SC2116,SC2148,SC2162,SC2166,SC2181,SC2206,SC2207,SC2230,SC2236 \
     $(git ls-files -- "*.sh" | grep -vE 'src/(secp256k1|univalue)/')
