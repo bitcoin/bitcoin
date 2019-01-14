@@ -38,7 +38,7 @@ public:
         MINIMUM_COLUMN_WIDTH = 130
     };
 
-    explicit ReceiveCoinsDialog(QWidget* parent = 0);
+    explicit ReceiveCoinsDialog(QWidget* parent = nullptr);
     ~ReceiveCoinsDialog();
 
     void setModel(WalletModel *model);

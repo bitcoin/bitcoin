@@ -44,8 +44,8 @@
 static const char* PERSISTENCE_DATE_FORMAT = "yyyy-MM-dd";
 
 TransactionView::TransactionView(QWidget* parent) :
-    QWidget(parent), model(0), transactionProxyModel(0),
-    transactionView(0), abandonAction(0), columnResizingFixer(0)
+QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
+transactionView(nullptr), abandonAction(nullptr), columnResizingFixer(nullptr)
 {
     QSettings settings;
     // Build filter row

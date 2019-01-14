@@ -34,8 +34,8 @@
 
 WalletView::WalletView(QWidget* parent) :
     QStackedWidget(parent),
-    clientModel(0),
-    walletModel(0)
+    clientModel(nullptr),
+    walletModel(nullptr)
 {
     // Create tabs
     overviewPage = new OverviewPage();

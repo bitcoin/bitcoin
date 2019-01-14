@@ -22,8 +22,8 @@
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::ReceiveCoinsDialog),
-    columnResizingFixer(0),
-    model(0)
+    columnResizingFixer(nullptr),
+    model(nullptr)
 {
     ui->setupUi(this);
 

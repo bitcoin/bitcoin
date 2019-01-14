@@ -31,7 +31,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(BitcoinGUI* _gui = 0);
+    explicit WalletFrame(BitcoinGUI* _gui = nullptr);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);

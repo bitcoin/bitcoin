@@ -34,9 +34,9 @@
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
-    model(0),
-    mapper(0),
-    pageButtons(0)
+    model(nullptr),
+    mapper(nullptr),
+    pageButtons(nullptr)
 {
     ui->setupUi(this);
 

@@ -18,7 +18,7 @@
  * return validity.
  * @note Must return 0 if !valid.
  */
-static CAmount parse(const QString &text, int nUnit, bool *valid_out=0)
+static CAmount parse(const QString &text, int nUnit, bool *valid_out= nullptr)
 {
     CAmount val = 0;
     bool valid = BitcoinUnits::parse(nUnit, text, &val);
@@ -87,7 +87,7 @@ public:
         }
     }
 
-    CAmount value(bool *valid_out=0) const
+    CAmount value(bool *valid_out=nullptr) const
     {
         return parse(text(), currentUnit, valid_out);
     }
@@ -158,7 +158,7 @@ Q_SIGNALS:
 
 BitcoinAmountField::BitcoinAmountField(QWidget *parent) :
     QWidget(parent),
-    amount(0)
+    amount(nullptr)
 {
     amount = new AmountLineEdit(this);
     amount->setLocale(QLocale::c());
