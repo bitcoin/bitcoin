@@ -144,6 +144,7 @@ public:
         bool m_use_addrman_outgoing = true;
         std::vector<std::string> m_specified_outgoing;
         std::vector<std::string> m_added_nodes;
+        uint16_t m_listen_port = 0;
     };
 
     void Init(const Options& connOptions) {
@@ -170,6 +171,7 @@ public:
             LOCK(cs_vAddedNodes);
             vAddedNodes = connOptions.m_added_nodes;
         }
+        m_listen_port = connOptions.m_listen_port;
     }
 
     CConnman(uint64_t seed0, uint64_t seed1);
@@ -272,6 +274,7 @@ public:
     bool DisconnectNode(NodeId id);
 
     ServiceFlags GetLocalServices() const;
+    uint16_t GetListenPort() const;
 
     //!set the max outbound target in bytes
     void SetMaxOutboundTarget(uint64_t limit);
@@ -386,6 +389,8 @@ private:
     unsigned int nSendBufferMaxSize{0};
     unsigned int nReceiveFloodSize{0};
 
+    uint16_t m_listen_port;
+
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
@@ -499,7 +504,7 @@ enum
 };
 
 bool IsPeerAddrLocalGood(CNode *pnode);
-void AdvertiseLocal(CNode *pnode);
+void AdvertiseLocal(CNode *pnode, uint16_t listen_port);
 
 /**
  * Mark a network as reachable or unreachable (no automatic connects to it)
@@ -517,7 +522,7 @@ void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);
 bool GetLocal(CService &addr, const CNetAddr *paddrPeer = nullptr);
-CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices);
+CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices, uint16_t listen_port);
 
 
 extern bool fDiscover;
