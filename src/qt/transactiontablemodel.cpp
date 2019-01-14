@@ -197,7 +197,7 @@ public:
             }
             return rec;
         }
-        return 0;
+        return nullptr;
     }
 
     QString describe(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit)
