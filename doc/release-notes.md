@@ -116,15 +116,20 @@ With further refactoring of PrivateSend code it became possible to implement mix
 mixing sessions at once from one single wallet. You can set number of mixing sessions via
 `privatesendsessions` cmd-line option or dash.conf. You can pick any number of sessions between 1 and 10,
 default is 4 which should be good enough for most users. For this feature to work you should also make
-sure that `privatesendmultisession` is set to `1` via cmd-line or `Enable PrivateSend multi-session` is enabled
-in GUI.
+sure that `privatesendmultisession` is set to `1` via cmd-line or `Enable PrivateSend multi-session` is
+enabled in GUI.
 
-Introducing parallel mixing sessions should speed mixing up which makes it's reasonable to add a new
+Introducing parallel mixing sessions should speed mixing up which makes it reasonable to add a new
 mixing denom (0.00100001 DASH) now while keeping all the old ones too. It also makes sense to allow more
 mixing rounds now, so the new default number of rounds is 4 and the maximum number of rounds is 16 now.
 
 You can also adjust rounds and amount via `setprivatesendrounds` and `setprivatesendamount` RPC commands
 which override corresponding cmd-line params (`privatesendrounds` and `privatesendamount` respectively).
+
+NOTE: Introducing the new denom and a couple of other changes made it incompatible with mixing on
+masternodes running on pre-0.13 software. Please keep using 0.12.3 local wallet to mix your coins until
+there is some significant number of masternodes running on version 0.13 to make sure you have enough
+masternodes to choose from when the wallet picks one to mix funds on.
 
 InstantSend
 -----------
@@ -189,8 +194,8 @@ detailed list of fixes.
 RPC changes
 -----------
 There are a few changes in existing RPC interfaces in this release:
-- `gobject prepare` accepts an UTXO reference to spend;
-- `masternode status` has DIP0003 related info now;
+- `gobject prepare` allows to send proposal transaction as an InstantSend one and also accepts an UTXO reference to spend;
+- `masternode status` and `masternode list` show some DIP0003 related info now;
 - `previousbits` and `coinbase_payload` fields were added in `getblocktemplate`;
 - `getblocktemplate` now returns an array for masternode payments instead of a single object (miners and mining pools have to upgrade their software to support multiple masternode payees);
 - `getblockchaininfo` shows BIP9 deployment progress;
@@ -278,6 +283,8 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.12.3.4.
 - [`0a086898f`](https://github.com/dashpay/dash/commit/0a086898f) Implement and enforce CbTx with correct block height and deprecate BIP34
 
 ### RPC
+- [`a22f1bffe`](https://github.com/dashpay/dash/commit/a22f1bffe) Remove support for "0" as an alternative to "" when the default is requested (#2622) (#2624)
+- [`18e1edabf`](https://github.com/dashpay/dash/commit/18e1edabf) Backport 2618 to v0.13.0.x (#2619)
 - [`0dce846d5`](https://github.com/dashpay/dash/commit/0dce846d5) Add an option to use specific address as a source of funds in protx rpc commands (otherwise use payoutAddress/operatorPayoutAddress) (#2581)
 - [`e71ea29e6`](https://github.com/dashpay/dash/commit/e71ea29e6) Add ownerAddr and votingAddr to CDeterministicMNState::ToJson (#2571)
 - [`999a51907`](https://github.com/dashpay/dash/commit/999a51907) Fix optional revocation reason parameter for "protx revoke" and a few help strings (#2568)
@@ -332,6 +339,7 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.12.3.4.
 - [`ac30196bc`](https://github.com/dashpay/dash/commit/ac30196bc) Show some info about the wallet dumped via dumpwallet (#2191)
 
 ### LLMQ and Deterministic Masternodes
+- [`a3b01dfbe`](https://github.com/dashpay/dash/commit/a3b01dfbe) Gracefully shutdown on evodb inconsistency instead of crashing (#2611) (#2620)
 - [`3861c6a82`](https://github.com/dashpay/dash/commit/3861c6a82) Add BIP9 deployment for DIP3 on mainnet (#2585)
 - [`587911b36`](https://github.com/dashpay/dash/commit/587911b36) Fix IsBlockPayeeValid (#2577)
 - [`3c30a6aff`](https://github.com/dashpay/dash/commit/3c30a6aff) Add missing masternodeblsprivkey help text (#2569)
@@ -517,6 +525,10 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.12.3.4.
 - [`d7e210341`](https://github.com/dashpay/dash/commit/d7e210341) Fixes inaccurate round count in CoinControlDialog (#2137)
 
 ### Cleanups/Tests/Docs/Other
+- [`b5670c475`](https://github.com/dashpay/dash/commit/b5670c475) Set CLIENT_VERSION_IS_RELEASE to true (#2591)
+- [`a05eeb21e`](https://github.com/dashpay/dash/commit/a05eeb21e) Update immer to c89819df92191d6969a6a22c88c72943b8e25016 (#2626)
+- [`10b3736bd`](https://github.com/dashpay/dash/commit/10b3736bd) [0.13.0.x] Translations201901 (#2592)
+- [`34d2a6038`](https://github.com/dashpay/dash/commit/34d2a6038) Release notes 0.13.0.0 draft (#2583)
 - [`c950a8f51`](https://github.com/dashpay/dash/commit/c950a8f51) Merge v0.12.3.4 commits into develop (#2582)
 - [`6dfceaba5`](https://github.com/dashpay/dash/commit/6dfceaba5) Force FlushStateToDisk on ConnectTip/DisconnectTip while not in IBD (#2560)
 - [`552d9089e`](https://github.com/dashpay/dash/commit/552d9089e) Update testnet seeds to point to MNs that are on the new chain (#2558)
