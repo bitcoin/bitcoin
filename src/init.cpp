@@ -1740,11 +1740,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), listen_port);
 
-    Discover();
+    Discover(listen_port);
 
     // Map ports with UPnP
     if (gArgs.GetBoolArg("-upnp", DEFAULT_UPNP)) {
-        StartMapPort();
+        StartMapPort(listen_port);
     }
 
     CConnman::Options connOptions;

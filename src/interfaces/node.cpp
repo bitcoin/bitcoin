@@ -84,8 +84,14 @@ public:
     bool shutdownRequested() override { return ShutdownRequested(); }
     void mapPort(bool use_upnp) override
     {
+        // TODO: pass in CConnman and Banman into NodeImpl's constructor
+        if (!g_connman) return;
+
         if (use_upnp) {
-            StartMapPort();
+            // The port parameter should already be sanity-checked by init.
+            int64_t listen_port = GetListenPort();
+            assert(CheckListenPort(listen_port));
+            StartMapPort(listen_port);
         } else {
             InterruptMapPort();
             StopMapPort();

@@ -449,8 +449,8 @@ private:
 };
 extern std::unique_ptr<CConnman> g_connman;
 extern std::unique_ptr<BanMan> g_banman;
-void Discover();
-void StartMapPort();
+void Discover(uint16_t port);
+void StartMapPort(uint16_t port);
 void InterruptMapPort();
 void StopMapPort();
 // We don't support the reserved port 0 for system-allocated dynamic ports yet.
@@ -517,7 +517,6 @@ bool IsReachable(enum Network net);
 bool IsReachable(const CNetAddr& addr);
 
 bool AddLocal(const CService& addr, int nScore = LOCAL_NONE);
-bool AddLocal(const CNetAddr& addr, int nScore = LOCAL_NONE);
 void RemoveLocal(const CService& addr);
 bool SeenLocal(const CService& addr);
 bool IsLocal(const CService& addr);

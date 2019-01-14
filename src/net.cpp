@@ -231,11 +231,6 @@ bool AddLocal(const CService& addr, int nScore)
     return true;
 }
 
-bool AddLocal(const CNetAddr &addr, int nScore)
-{
-    return AddLocal(CService(addr, GetListenPort()), nScore);
-}
-
 void RemoveLocal(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
@@ -1399,9 +1394,9 @@ void CConnman::WakeMessageHandler()
 #ifdef USE_UPNP
 static CThreadInterrupt g_upnp_interrupt;
 static std::thread g_upnp_thread;
-static void ThreadMapPort()
+static void ThreadMapPort(uint16_t map_port)
 {
-    std::string port = strprintf("%u", GetListenPort());
+    std::string port = strprintf("%u", map_port);
     const char * multicastif = nullptr;
     const char * minissdpdpath = nullptr;
     struct UPNPDev * devlist = nullptr;
@@ -1439,7 +1434,7 @@ static void ThreadMapPort()
                     CNetAddr resolved;
                     if(LookupHost(externalIPAddress, resolved, false)) {
                         LogPrintf("UPnP: ExternalIPAddress = %s\n", resolved.ToString().c_str());
-                        AddLocal(resolved, LOCAL_UPNP);
+                        AddLocal(CService(resolved, map_port), LOCAL_UPNP);
                     }
                 }
                 else
@@ -1480,11 +1475,11 @@ static void ThreadMapPort()
     }
 }
 
-void StartMapPort()
+void StartMapPort(uint16_t port)
 {
     if (!g_upnp_thread.joinable()) {
         assert(!g_upnp_interrupt);
-        g_upnp_thread = std::thread((std::bind(&TraceThread<void (*)()>, "upnp", &ThreadMapPort)));
+        g_upnp_thread = std::thread(&TraceThread<std::function<void()> >, "upnp", [port] { ThreadMapPort(port); });
     }
 }
 
@@ -1504,7 +1499,7 @@ void StopMapPort()
 }
 
 #else
-void StartMapPort()
+void StartMapPort(uint16_t port)
 {
     // Intentionally left blank.
 }
@@ -2069,7 +2064,7 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
     return true;
 }
 
-void Discover()
+void Discover(uint16_t port)
 {
     if (!fDiscover)
         return;
@@ -2084,7 +2079,7 @@ void Discover()
         {
             for (const CNetAddr &addr : vaddr)
             {
-                if (AddLocal(addr, LOCAL_IF))
+                if (AddLocal(CService(addr, port), LOCAL_IF))
                     LogPrintf("%s: %s - %s\n", __func__, pszHostName, addr.ToString());
             }
         }
@@ -2104,14 +2099,14 @@ void Discover()
             {
                 struct sockaddr_in* s4 = (struct sockaddr_in*)(ifa->ifa_addr);
                 CNetAddr addr(s4->sin_addr);
-                if (AddLocal(addr, LOCAL_IF))
+                if (AddLocal(CService(addr, port), LOCAL_IF))
                     LogPrintf("%s: IPv4 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
             else if (ifa->ifa_addr->sa_family == AF_INET6)
             {
                 struct sockaddr_in6* s6 = (struct sockaddr_in6*)(ifa->ifa_addr);
                 CNetAddr addr(s6->sin6_addr);
-                if (AddLocal(addr, LOCAL_IF))
+                if (AddLocal(CService(addr, port), LOCAL_IF))
                     LogPrintf("%s: IPv6 %s: %s\n", __func__, ifa->ifa_name, addr.ToString());
             }
         }
