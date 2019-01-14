@@ -242,7 +242,7 @@ void protx_register_fund_help()
             "                         It has to match the private key which is later used when operating the masternode.\n"
             "5. \"votingAddress\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
-            "                         If set to \"0\" or an empty string, ownerAddr will be used.\n"
+            "                         If set to an empty string, ownerAddress will be used.\n"
             "6. \"operatorReward\"      (numeric, required) The fraction in % to share with the operator. The value must be\n"
             "                         between 0.00 and 100.00.\n"
             "7. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments.\n"
@@ -359,7 +359,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         pwalletMain->LockCoin(ptx.collateralOutpoint);
     }
 
-    if (request.params[paramIdx].get_str() != "0" && request.params[paramIdx].get_str() != "") {
+    if (request.params[paramIdx].get_str() != "") {
         if (!Lookup(request.params[paramIdx].get_str().c_str(), ptx.addr, Params().GetDefaultPort(), false)) {
             throw std::runtime_error(strprintf("invalid network address %s", request.params[paramIdx].get_str()));
         }
@@ -368,7 +368,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     CKey keyOwner = ParsePrivKey(request.params[paramIdx + 1].get_str(), true);
     CBLSPublicKey pubKeyOperator = ParseBLSPubKey(request.params[paramIdx + 2].get_str(), "operator BLS address");
     CKeyID keyIDVoting = keyOwner.GetPubKey().GetID();
-    if (request.params[paramIdx + 3].get_str() != "0" && request.params[paramIdx + 3].get_str() != "") {
+    if (request.params[paramIdx + 3].get_str() != "") {
         keyIDVoting = ParsePubKeyIDFromAddress(request.params[paramIdx + 3].get_str(), "voting address");
     }
 
@@ -497,6 +497,7 @@ void protx_update_service_help()
             "                              registered operator public key.\n"
             "4. \"operatorPayoutAddress\"    (string, optional) The address used for operator reward payments.\n"
             "                              Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
+            "                              If set to an empty string, the currently active payout address is reused.\n"
             "5. \"feeSourceAddress\"         (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
             "                              If not specified, operatorPayoutAddress is the one that is going to be used.\n"
             "                              The private key belonging to this address must be known in your wallet.\n"
@@ -535,7 +536,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
 
     // param operatorPayoutAddress
     if (request.params.size() >= 5) {
-        if (request.params[4].get_str().empty() || request.params[4].get_str() == "0") {
+        if (request.params[4].get_str().empty()) {
             ptx.scriptOperatorPayout = dmn->pdmnState->scriptOperatorPayout;
         } else {
             CBitcoinAddress payoutAddress(request.params[4].get_str());
@@ -585,12 +586,12 @@ void protx_update_registrar_help()
             "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
             "2. \"operatorPubKey\"      (string, required) The operator public key. The private key does not have to be known by you.\n"
             "                         It has to match the private key which is later used when operating the masternode.\n"
-            "                         If set to \"0\" or an empty string, the last on-chain operator key of the masternode will be used.\n"
+            "                         If set to an empty string, the last on-chain operator key of the masternode will be used.\n"
             "3. \"votingAddress\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                         It has to match the private key which is later used when voting on proposals.\n"
-            "                         If set to \"0\" or an empty string, the last on-chain voting key of the masternode will be used.\n"
+            "                         If set to an empty string, the last on-chain voting key of the masternode will be used.\n"
             "4. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
-            "                         If set to \"0\" or an empty string, the last on-chain payout address of the masternode will be used.\n"
+            "                         If set to an empty string, the last on-chain payout address of the masternode will be used.\n"
             "5. \"feeSourceAddress\"    (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
             "                         If not specified, payoutAddress is the one that is going to be used.\n"
             "                         The private key belonging to this address must be known in your wallet.\n"
@@ -617,10 +618,10 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
     ptx.scriptPayout = dmn->pdmnState->scriptPayout;
 
-    if (request.params[2].get_str() != "0" && request.params[2].get_str() != "") {
+    if (request.params[2].get_str() != "") {
         ptx.pubKeyOperator = ParseBLSPubKey(request.params[2].get_str(), "operator BLS address");
     }
-    if (request.params[3].get_str() != "0" && request.params[3].get_str() != "") {
+    if (request.params[3].get_str() != "") {
         ptx.keyIDVoting = ParsePubKeyIDFromAddress(request.params[3].get_str(), "operator address");
     }
 
