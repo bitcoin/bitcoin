@@ -305,7 +305,7 @@ bool RPCConsole::RPCParseCommandLine(interfaces::Node* node, std::string &strRes
                             // and pass it along with the method name to the dispatcher.
                             UniValue params = RPCConvertValues(stack.back()[0], std::vector<std::string>(stack.back().begin() + 1, stack.back().end()));
                             std::string method = stack.back()[0];
-                            std::string uri;
+                            std::string uri = "/nowallet";
 #ifdef ENABLE_WALLET
                             if (wallet_model) {
                                 QByteArray encodedName = QUrl::toPercentEncoding(wallet_model->getWalletName());

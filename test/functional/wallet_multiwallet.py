@@ -287,7 +287,7 @@ class MultiWalletTest(BitcoinTestFramework):
         for wallet_name in self.nodes[0].listwallets():
             self.nodes[0].unloadwallet(wallet_name)
         assert_equal(self.nodes[0].listwallets(), [])
-        assert_raises_rpc_error(-32601, "Method not found (wallet method is disabled because no wallet is loaded)", self.nodes[0].getwalletinfo)
+        assert_raises_rpc_error(-32601, "Method not found (wallet method is disabled because no wallet is loaded or selected)", self.nodes[0].getwalletinfo)
 
         # Successfully load a previously unloaded wallet
         self.nodes[0].loadwallet('w1')
