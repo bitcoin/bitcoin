@@ -23,6 +23,7 @@ import sys
 import json
 import codecs
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 # External tools (can be overridden using environment)
 GIT = os.getenv('GIT','git')
@@ -57,6 +58,11 @@ def retrieve_pr_info(repo,pull):
         reader = codecs.getreader('utf-8')
         obj = json.load(reader(result))
         return obj
+    except HTTPError as e:
+        error_message = e.read()
+        print('Warning: unable to retrieve pull information from github: %s' % e)
+        print('Detailed error: %s' % error_message)
+        return None
     except Exception as e:
         print('Warning: unable to retrieve pull information from github: %s' % e)
         return None
