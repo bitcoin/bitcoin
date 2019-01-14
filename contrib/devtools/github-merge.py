@@ -168,7 +168,10 @@ def main():
         print("git config --global user.signingkey <key>",file=stderr)
         sys.exit(1)
 
-    host_repo = host+":"+repo # shortcut for push/pull target
+    if host.startswith(('https:','http:')):
+        host_repo = host+"/"+repo+".git"
+    else:
+        host_repo = host+":"+repo
 
     # Extract settings from command line
     args = parse_arguments()
