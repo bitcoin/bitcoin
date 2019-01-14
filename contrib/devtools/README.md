@@ -119,7 +119,25 @@ Configuring the github-merge tool for the bitcoin repository is done in the foll
 
     git config githubmerge.repository bitcoin/bitcoin
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
-    git config --global user.signingkey mykeyid (if you want to GPG sign)
+    git config --global user.signingkey mykeyid
+
+Authentication (optional)
+--------------------------
+
+The API request limit for unauthenticated requests is quite low, but the
+limit for authenticated requests is much higher. If you start running
+into rate limiting errors it can be useful to set an authentication token
+so that the script can authenticate requests.
+
+- First, go to [Personal access tokens](https://github.com/settings/tokens).
+- Click 'Generate new token'.
+- Fill in an arbitrary token description. No further privileges are needed.
+- Click the `Generate token` button at the bottom of the form.
+- Copy the generated token (should be a hexadecimal string)
+
+Then do:
+
+    git config --global user.ghtoken "pasted token"
 
 Create and verify timestamps of merge commits
 ---------------------------------------------

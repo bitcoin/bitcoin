@@ -47,13 +47,15 @@ def git_config_get(option, default=None):
     except subprocess.CalledProcessError:
         return default
 
-def retrieve_pr_info(repo,pull):
+def retrieve_pr_info(repo,pull,ghtoken):
     '''
     Retrieve pull request information from github.
     Return None if no title can be found, or an error happens.
     '''
     try:
         req = Request("https://api.github.com/repos/"+repo+"/pulls/"+pull)
+        if ghtoken is not None:
+            req.add_header('Authorization', 'token ' + ghtoken)
         result = urlopen(req)
         reader = codecs.getreader('utf-8')
         obj = json.load(reader(result))
@@ -140,6 +142,7 @@ def parse_arguments():
         In addition, you can set the following git configuration variables:
         githubmerge.repository (mandatory),
         user.signingkey (mandatory),
+        user.ghtoken (default: none).
         githubmerge.host (default: git@github.com),
         githubmerge.branch (no default),
         githubmerge.testcmd (default: none).
@@ -158,6 +161,7 @@ def main():
     host = git_config_get('githubmerge.host','git@github.com')
     opt_branch = git_config_get('githubmerge.branch',None)
     testcmd = git_config_get('githubmerge.testcmd')
+    ghtoken = git_config_get('user.ghtoken')
     signingkey = git_config_get('user.signingkey')
     if repo is None:
         print("ERROR: No repository configured. Use this command to set:", file=stderr)
@@ -178,7 +182,7 @@ def main():
     pull = str(args.pull[0])
 
     # Receive pull information from github
-    info = retrieve_pr_info(repo,pull)
+    info = retrieve_pr_info(repo,pull,ghtoken)
     if info is None:
         sys.exit(1)
     title = info['title'].strip()
