@@ -5,12 +5,22 @@
 """Tests some generic aspects of the RPC interface."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal, assert_greater_than_or_equal
 
 class RPCInterfaceTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
+
+    def test_getrpcinfo(self):
+        self.log.info("Testing getrpcinfo...")
+
+        info = self.nodes[0].getrpcinfo()
+        assert_equal(len(info['active_commands']), 1)
+
+        command = info['active_commands'][0]
+        assert_equal(command['method'], 'getrpcinfo')
+        assert_greater_than_or_equal(command['duration'], 0)
 
     def test_batch_request(self):
         self.log.info("Testing basic JSON-RPC batch request...")
@@ -39,6 +49,7 @@ class RPCInterfaceTest(BitcoinTestFramework):
         assert result_by_id[3]['result'] is not None
 
     def run_test(self):
+        self.test_getrpcinfo()
         self.test_batch_request()
 
 
