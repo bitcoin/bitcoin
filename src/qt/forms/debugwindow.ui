@@ -453,6 +453,9 @@
          </item>
          <item>
           <widget class="QComboBox" name="WalletSelector">
+           <property name="sizeAdjustPolicy">
+            <enum>QComboBox::AdjustToContents</enum>
+           </property>
            <item>
             <property name="text">
              <string>(none)</string>
