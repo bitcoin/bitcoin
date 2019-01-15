@@ -32,6 +32,7 @@ from .util import (
     set_node_times,
     sync_blocks,
     sync_mempools,
+    wait_until,
 )
 
 class TestStatus(Enum):
@@ -220,7 +221,16 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             exit_code = TEST_EXIT_FAILED
         logging.shutdown()
         if cleanup_tree_on_exit:
-            shutil.rmtree(self.options.tmpdir)
+            # retry when rmtree fails due to file access by another process, e.g. on windows
+            def no_permission_error(predicate, action):
+                try:
+                    predicate()
+                except PermissionError as e:
+                    self.log.warning("Failed {} with: {}".format(action, e))
+                    return False
+                return True
+            wait_until(lambda: no_permission_error(lambda: shutil.rmtree(self.options.tmpdir), "clean up on exit"), timeout=1)
+
         sys.exit(exit_code)
 
     # Methods to override in subclass test scripts.
