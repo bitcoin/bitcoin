@@ -15,10 +15,10 @@ void CChain::SetTip(CBlockIndex *pindex) {
     }
     vChain.resize(pindex->nHeight + 1);
 
-	// compare with the current vector tip after resizing
+    // compare with the current vector tip after resizing
     if (vChain.size() >= 2 && pindex->pprev == vChain[vChain.size() - 2]) {
         vChain[pindex->nHeight] = pindex;
-    } 
+    }
     else {
         while (pindex && vChain[pindex->nHeight] != pindex) {
             vChain[pindex->nHeight] = pindex;
