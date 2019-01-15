@@ -375,6 +375,7 @@ void PrepareShutdown()
         LogPrintf("%s: Unable to remove PID file: %s\n", __func__, e.what());
     }
 #endif
+    g_wallet_init_interface.Close();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
@@ -396,7 +397,6 @@ void Shutdown()
         PrepareShutdown();
     }
     // Shutdown part 2: delete wallet instance
-    g_wallet_init_interface.Close();
     globalVerifyHandle.reset();
     ECC_Stop();
     LogPrintf("%s: done\n", __func__);
