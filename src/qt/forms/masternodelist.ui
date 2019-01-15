@@ -357,6 +357,16 @@
             </widget>
            </item>
            <item>
+            <widget class="QCheckBox" name="checkBoxMyMasternodesOnly">
+             <property name="toolTip">
+              <string>Show only masternodes this wallet has keys for.</string>
+             </property>
+             <property name="text">
+              <string>My masternodes only</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer_4">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

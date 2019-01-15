@@ -90,6 +90,7 @@ private Q_SLOTS:
     void on_startMissingButton_clicked();
     void on_tableWidgetMyMasternodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
+    void on_checkBoxMyMasternodesOnly_stateChanged(int state);
 
     void extraInfoDIP3_clicked();
     void copyProTxHash_clicked();
