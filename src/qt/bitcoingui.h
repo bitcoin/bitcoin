@@ -80,8 +80,8 @@ public:
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
-    bool addWallet(WalletModel *walletModel);
-    bool removeWallet(WalletModel* walletModel);
+    void addWallet(WalletModel* walletModel);
+    void removeWallet(WalletModel* walletModel);
     void removeAllWallets();
 #endif // ENABLE_WALLET
     bool enableWallet = false;
@@ -161,6 +161,7 @@ private:
     int spinnerFrame = 0;
 
     const PlatformStyle *platformStyle;
+    const NetworkStyle* const m_network_style;
 
     /** Create the main UI actions. */
     void createActions();
@@ -169,7 +170,7 @@ private:
     /** Create the toolbars */
     void createToolBars();
     /** Create system tray icon and notification */
-    void createTrayIcon(const NetworkStyle *networkStyle);
+    void createTrayIcon();
     /** Create system tray menu (or setup the dock menu) */
     void createTrayIconMenu();
 
@@ -213,8 +214,8 @@ public Q_SLOTS:
     void message(const QString &title, const QString &message, unsigned int style, bool *ret = nullptr);
 
 #ifdef ENABLE_WALLET
-    bool setCurrentWallet(WalletModel* wallet_model);
-    bool setCurrentWalletBySelectorIndex(int index);
+    void setCurrentWallet(WalletModel* wallet_model);
+    void setCurrentWalletBySelectorIndex(int index);
     /** Set the UI status indicators based on the currently selected wallet.
     */
     void updateWalletStatus();
@@ -242,6 +243,7 @@ public Q_SLOTS:
 private:
     /** Set the proxy-enabled icon as shown in the UI. */
     void updateProxyIcon();
+    void updateWindowTitle();
 
 public Q_SLOTS:
 #ifdef ENABLE_WALLET
