@@ -29,6 +29,7 @@
 #include <qt/macdockiconhandler.h>
 #endif
 
+#include <chain.h>
 #include <chainparams.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
@@ -1321,16 +1322,12 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, const QStri
 
     // Set icon state: spinning if catching up, tick otherwise
 #ifdef ENABLE_WALLET
-    if (walletFrame)
-    {
-        if(secs < 25*60) // 90*60 in bitcoin
-        {
+    if (walletFrame) {
+        if(secs < MAX_BLOCK_TIME_GAP) {
             modalOverlay->showHide(true, true);
             // TODO instead of hiding it forever, we should add meaningful information about MN sync to the overlay
             modalOverlay->hideForever();
-        }
-        else
-        {
+        } else {
             modalOverlay->showHide();
         }
     }

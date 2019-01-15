@@ -343,7 +343,8 @@ public:
         return result;
     }
     bool tryGetTxStatus(const uint256& txid,
-        interfaces::WalletTxStatus& tx_status) override
+        interfaces::WalletTxStatus& tx_status,
+        int64_t& block_time) override
     {
         TRY_LOCK(::cs_main, locked_chain);
         if (!locked_chain) {
@@ -358,6 +359,7 @@ public:
             return false;
         }
         tx_status = MakeWalletTxStatus(mi->second);
+        block_time = ::chainActive.Tip()->GetBlockTime();
         return true;
     }
     WalletTx getWalletTxDetails(const uint256& txid,
