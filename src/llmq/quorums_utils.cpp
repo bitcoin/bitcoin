@@ -2,10 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "quorums.h"
 #include "quorums_utils.h"
 
 #include "chainparams.h"
 #include "random.h"
+#include "validation.h"
 
 namespace llmq
 {
@@ -27,6 +29,16 @@ uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHa
     hw << pubKey;
     hw << vvecHash;
     return hw.GetHash();
+}
+
+uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
+{
+    CHashWriter h(SER_GETHASH, 0);
+    h << (uint8_t)llmqType;
+    h << quorumHash;
+    h << id;
+    h << msgHash;
+    return h.GetHash();
 }
 
 std::set<CService> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember)
@@ -84,5 +96,24 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
     }
     return result;
 }
+
+bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash)
+{
+    AssertLockHeld(cs_main);
+
+    auto& params = Params().GetConsensus().llmqs.at(llmqType);
+
+    // sig shares and recovered sigs are only accepted from recent/active quorums
+    // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
+    // fail while we are on the brink of a new quorum
+    auto quorums = quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1);
+    for (auto& q : quorums) {
+        if (q->quorumHash == quorumHash) {
+            return true;
+        }
+    }
+    return false;
+}
+
 
 }

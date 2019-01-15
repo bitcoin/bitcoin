@@ -49,6 +49,7 @@
 #include "llmq/quorums_debug.h"
 #include "llmq/quorums_dkgsessionmgr.h"
 #include "llmq/quorums_init.h"
+#include "llmq/quorums_signing.h"
 
 #include <boost/thread.hpp>
 
@@ -969,6 +970,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return llmq::quorumDKGSessionManager->AlreadyHave(inv);
     case MSG_QUORUM_DEBUG_STATUS:
         return llmq::quorumDKGDebugManager->AlreadyHave(inv);
+    case MSG_QUORUM_RECOVERED_SIG:
+        return llmq::quorumSigningManager->AlreadyHave(inv);
     }
 
     // Don't know what it is, just say we already got one
@@ -1270,6 +1273,13 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     llmq::CDKGDebugStatus o;
                     if (llmq::quorumDKGDebugManager->GetDebugStatus(inv.hash, o)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QDEBUGSTATUS, o));
+                        push = true;
+                    }
+                }
+                if (!push && (inv.type == MSG_QUORUM_RECOVERED_SIG)) {
+                    llmq::CRecoveredSig o;
+                    if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
                         push = true;
                     }
                 }
@@ -2932,6 +2942,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGDebugManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {

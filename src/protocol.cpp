@@ -65,6 +65,7 @@ const char *QJUSTIFICATION="qjustify";
 const char *QPCOMMITMENT="qpcommit";
 const char *QWATCH="qwatch";
 const char *QDEBUGSTATUS="qdebugstatus";
+const char *QSIGREC="qsigrec";
 };
 
 static const char* ppszTypeName[] =
@@ -99,6 +100,7 @@ static const char* ppszTypeName[] =
     NetMsgType::QJUSTIFICATION,
     NetMsgType::QPCOMMITMENT,
     NetMsgType::QDEBUGSTATUS,
+    NetMsgType::QSIGREC,
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -158,6 +160,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QPCOMMITMENT,
     NetMsgType::QWATCH,
     NetMsgType::QDEBUGSTATUS,
+    NetMsgType::QSIGREC,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

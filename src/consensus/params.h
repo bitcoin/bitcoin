@@ -104,6 +104,9 @@ struct LLMQParams {
     // phase-transition, which would otherwise result in inconsistent views of the valid members set
     int dkgBadVotesThreshold;
 
+    // Number of quorums to consider "active" for signing sessions
+    int signingActiveQuorumCount;
+
     // Used for inter-quorum communication. This is the number of deterministic connections built to the clockwise
     // neighbors on the circle shaped nodes topography
     int neighborConnections;

@@ -9,6 +9,7 @@
 #include "quorums_commitment.h"
 #include "quorums_debug.h"
 #include "quorums_dkgsessionmgr.h"
+#include "quorums_signing.h"
 
 #include "scheduler.h"
 
@@ -17,16 +18,19 @@ namespace llmq
 
 static CBLSWorker blsWorker;
 
-void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler)
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
 {
     quorumDKGDebugManager = new CDKGDebugManager(scheduler);
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
     quorumDKGSessionManager = new CDKGSessionManager(evoDb, blsWorker);
     quorumManager = new CQuorumManager(evoDb, blsWorker, *quorumDKGSessionManager);
+    quorumSigningManager = new CSigningManager(unitTests);
 }
 
 void DestroyLLMQSystem()
 {
+    delete quorumSigningManager;
+    quorumSigningManager = nullptr;
     delete quorumManager;
     quorumManager = NULL;
     delete quorumDKGSessionManager;
