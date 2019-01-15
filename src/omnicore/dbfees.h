@@ -79,9 +79,9 @@ public:
 namespace mastercore
 {
     //! LevelDB based storage for the MetaDEx fee cache
-    extern COmniFeeCache* p_feecache;
+    extern COmniFeeCache* pDbFeeCache;
     //! LevelDB based storage for the MetaDEx fee distributions
-    extern COmniFeeHistory* p_feehistory;
+    extern COmniFeeHistory* pDbFeeHistory;
 }
 
 #endif // OMNICORE_FEES_H

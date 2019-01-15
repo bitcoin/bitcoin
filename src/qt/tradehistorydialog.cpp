@@ -313,7 +313,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         std::string tempStrValue;
         {
             LOCK(cs_tally);
-            if (!p_txlistdb->getTX(hash, tempStrValue)) continue;
+            if (!pDbTransactionList->getTX(hash, tempStrValue)) continue;
         }
         std::vector<std::string> vstr;
         boost::split(vstr, tempStrValue, boost::is_any_of(":"), boost::token_compress_on);
@@ -369,7 +369,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
         // parse the transaction
         if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) continue;
         if (mp_obj.interpret_Transaction()) {
-            valid = p_txlistdb->getValidMPTX(hash);
+            valid = pDbTransactionList->getValidMPTX(hash);
             propertyIdForSale = mp_obj.getProperty();
             amountForSale = mp_obj.getAmount();
             divisibleForSale = isPropertyDivisible(propertyIdForSale);
@@ -379,7 +379,7 @@ int TradeHistoryDialog::PopulateTradeHistoryMap()
             amountDesired = temp_metadexoffer.getAmountDesired();
             {
                 LOCK(cs_tally);
-                t_tradelistdb->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
+                pDbTradeList->getMatchingTrades(hash, propertyIdForSale, tradeArray, totalSold, totalReceived);
                 orderOpen = MetaDEx_isOpen(hash, propertyIdForSale);
             }
         }
@@ -465,7 +465,7 @@ void TradeHistoryDialog::UpdateData()
         bool orderOpen = false;
         {
             LOCK(cs_tally);
-            t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+            pDbTradeList->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
             orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
         }
         // work out new status & icon

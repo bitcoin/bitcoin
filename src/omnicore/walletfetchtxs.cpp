@@ -76,7 +76,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
         const uint256& txHash = pwtx->GetHash();
         {
             LOCK(cs_tally);
-            if (!p_txlistdb->exists(txHash)) continue;
+            if (!pDbTransactionList->exists(txHash)) continue;
         }
         const uint256& blockHash = pwtx->hashBlock;
         if (blockHash.IsNull() || (NULL == GetBlockIndex(blockHash))) continue;
@@ -95,7 +95,7 @@ std::map<std::string, uint256> FetchWalletOmniTransactions(unsigned int count, i
     std::string mySTOReceipts;
     {
         LOCK(cs_tally);
-        mySTOReceipts = s_stolistdb->getMySTOReceipts("");
+        mySTOReceipts = pDbStoList->getMySTOReceipts("");
     }
     std::vector<std::string> vecReceipts;
     if (!mySTOReceipts.empty()) {

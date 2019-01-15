@@ -37,7 +37,7 @@ private:
 namespace mastercore
 {
     //! LevelDB based storage for storing Omni transaction validation and position in block data
-    extern COmniTransactionDB* p_OmniTXDB;
+    extern COmniTransactionDB* pDbTransaction;
 }
 
 #endif // OMNICORE_DBTRANSACTION_H

@@ -962,7 +962,7 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(pcrowdsale->getPropertyId(), sp));
+    assert(pDbSpInfo->getSP(pcrowdsale->getPropertyId(), sp));
     PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
 
     // Holds the tokens to be credited to the sender and issuer
@@ -1165,7 +1165,7 @@ int CMPTransaction::logicMath_SendToOwners()
         // v0 - do not credit the subtracted fee to any tally (ie burn the tokens)
     } else {
         // v1 - credit the subtracted fee to the fee cache
-        p_feecache->AddFee(feeProperty, block, transferFee);
+        pDbFeeCache->AddFee(feeProperty, block, transferFee);
     }
 
     // split up what was taken and distribute between all holders
@@ -1181,7 +1181,7 @@ int CMPTransaction::logicMath_SendToOwners()
         assert(update_tally_map(address, property, will_really_receive, BALANCE));
 
         // add to stodb
-        s_stolistdb->recordSTOReceive(address, txid, block, property, will_really_receive);
+        pDbStoList->recordSTOReceive(address, txid, block, property, will_really_receive);
 
         if (sent_so_far != (int64_t)nValue) {
             PrintToLog("sent_so_far= %14d, nValue= %14d, n_owners= %d\n", sent_so_far, nValue, numberOfReceivers);
@@ -1243,7 +1243,7 @@ int CMPTransaction::logicMath_SendAll()
             ++numberOfPropertiesSent;
             assert(update_tally_map(sender, propertyId, -moneyAvailable, BALANCE));
             assert(update_tally_map(receiver, propertyId, moneyAvailable, BALANCE));
-            p_txlistdb->recordSendAllSubRecord(txid, numberOfPropertiesSent, propertyId, moneyAvailable);
+            pDbTransactionList->recordSendAllSubRecord(txid, numberOfPropertiesSent, propertyId, moneyAvailable);
         }
     }
 
@@ -1450,7 +1450,7 @@ int CMPTransaction::logicMath_MetaDExTrade()
 
     // ------------------------------------------
 
-    t_tradelistdb->recordNewTrade(txid, sender, property, desired_property, block, tx_idx);
+    pDbTradeList->recordNewTrade(txid, sender, property, desired_property, block, tx_idx);
     int rc = MetaDEx_ADD(sender, property, nNewValue, block, desired_property, desired_value, txid, tx_idx);
     return rc;
 }
@@ -1641,7 +1641,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
     newSP.creation_block = blockHash;
     newSP.update_block = newSP.creation_block;
 
-    const uint32_t propertyId = _my_sps->putSP(ecosystem, newSP);
+    const uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
     assert(update_tally_map(sender, propertyId, nValue, BALANCE));
 
@@ -1743,7 +1743,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
     newSP.creation_block = blockHash;
     newSP.update_block = newSP.creation_block;
 
-    const uint32_t propertyId = _my_sps->putSP(ecosystem, newSP);
+    const uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
     my_crowds.insert(std::make_pair(sender, CMPCrowd(propertyId, nValue, property, deadline, early_bird, percentage, 0, 0)));
 
@@ -1797,7 +1797,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     // ------------------------------------------
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     int64_t missedTokens = GetMissedIssuerBonus(sp, crowd);
 
@@ -1808,7 +1808,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     sp.txid_close = txid;
     sp.missedTokens = missedTokens;
 
-    assert(_my_sps->updateSP(property, sp));
+    assert(pDbSpInfo->updateSP(property, sp));
     if (missedTokens > 0) {
         assert(update_tally_map(sp.issuer, property, missedTokens, BALANCE));
     }
@@ -1875,7 +1875,7 @@ int CMPTransaction::logicMath_CreatePropertyManaged()
     newSP.creation_block = blockHash;
     newSP.update_block = newSP.creation_block;
 
-    uint32_t propertyId = _my_sps->putSP(ecosystem, newSP);
+    uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
 
     PrintToLog("CREATED MANUAL PROPERTY id: %d admin: %s\n", propertyId, sender);
@@ -1919,7 +1919,7 @@ int CMPTransaction::logicMath_GrantTokens()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (!sp.manual) {
         PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
@@ -1951,7 +1951,7 @@ int CMPTransaction::logicMath_GrantTokens()
     sp.update_block = blockHash;
 
     // Persist the number of granted tokens
-    assert(_my_sps->updateSP(property, sp));
+    assert(pDbSpInfo->updateSP(property, sp));
 
     // Move the tokens
     assert(update_tally_map(receiver, property, nValue, BALANCE));
@@ -2006,7 +2006,7 @@ int CMPTransaction::logicMath_RevokeTokens()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (!sp.manual) {
         PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
@@ -2033,7 +2033,7 @@ int CMPTransaction::logicMath_RevokeTokens()
     sp.update_block = blockHash;
 
     assert(update_tally_map(sender, property, -nValue, BALANCE));
-    assert(_my_sps->updateSP(property, sp));
+    assert(pDbSpInfo->updateSP(property, sp));
 
     NotifyTotalTokensChanged(property, block);
 
@@ -2071,7 +2071,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (sender != sp.issuer) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
@@ -2098,7 +2098,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
     sp.issuer = receiver;
     sp.update_block = blockHash;
 
-    assert(_my_sps->updateSP(property, sp));
+    assert(pDbSpInfo->updateSP(property, sp));
 
     return 0;
 }
@@ -2134,7 +2134,7 @@ int CMPTransaction::logicMath_EnableFreezing()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (!sp.manual) {
         PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
@@ -2195,7 +2195,7 @@ int CMPTransaction::logicMath_DisableFreezing()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (!sp.manual) {
         PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
@@ -2248,7 +2248,7 @@ int CMPTransaction::logicMath_FreezeTokens()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (!sp.manual) {
         PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);
@@ -2306,7 +2306,7 @@ int CMPTransaction::logicMath_UnfreezeTokens()
     }
 
     CMPSPInfo::Entry sp;
-    assert(_my_sps->getSP(property, sp));
+    assert(pDbSpInfo->getSP(property, sp));
 
     if (!sp.manual) {
         PrintToLog("%s(): rejected: property %d is not managed\n", __func__, property);

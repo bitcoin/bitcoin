@@ -39,7 +39,7 @@ public:
 namespace mastercore
 {
     //! LevelDB based storage for STO recipients
-    extern CMPSTOList* s_stolistdb;
+    extern CMPSTOList* pDbStoList;
 }
 
 #endif // OMNICORE_DBSTOLIST_H

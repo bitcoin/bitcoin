@@ -163,7 +163,7 @@ void COmniFeeCache::RollBackCache(int block)
     assert(pdb);
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t propertyId = startPropertyId; propertyId < mastercore::_my_sps->peekNextSPID(ecosystem); propertyId++) {
+        for (uint32_t propertyId = startPropertyId; propertyId < mastercore::pDbSpInfo->peekNextSPID(ecosystem); propertyId++) {
             const std::string key = strprintf("%010d", propertyId);
             std::set<feeCacheItem> sCacheHistoryItems = GetCacheHistory(propertyId);
             if (!sCacheHistoryItems.empty()) {
@@ -230,7 +230,7 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
     PrintToLog("Fee distribution completed, distributed %d out of %d\n", sent_so_far, cachedAmount);
 
     // store the fee distribution
-    p_feehistory->RecordFeeDistribution(propertyId, block, sent_so_far, historyItems);
+    pDbFeeHistory->RecordFeeDistribution(propertyId, block, sent_so_far, historyItems);
 
     // final check to ensure the entire fee cache was distributed, then empty the cache
     assert(sent_so_far == cachedAmount);

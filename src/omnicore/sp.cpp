@@ -108,9 +108,9 @@ bool mastercore::IsPropertyIdValid(uint32_t propertyId)
     uint32_t nextId = 0;
 
     if (propertyId < TEST_ECO_PROPERTY_1) {
-        nextId = _my_sps->peekNextSPID(1);
+        nextId = pDbSpInfo->peekNextSPID(1);
     } else {
-        nextId = _my_sps->peekNextSPID(2);
+        nextId = pDbSpInfo->peekNextSPID(2);
     }
 
     if (propertyId < nextId) {
@@ -125,7 +125,7 @@ bool mastercore::isPropertyDivisible(uint32_t propertyId)
     // TODO: is a lock here needed
     CMPSPInfo::Entry sp;
 
-    if (_my_sps->getSP(propertyId, sp)) return sp.isDivisible();
+    if (pDbSpInfo->getSP(propertyId, sp)) return sp.isDivisible();
 
     return true;
 }
@@ -133,7 +133,7 @@ bool mastercore::isPropertyDivisible(uint32_t propertyId)
 std::string mastercore::getPropertyName(uint32_t propertyId)
 {
     CMPSPInfo::Entry sp;
-    if (_my_sps->getSP(propertyId, sp)) return sp.name;
+    if (pDbSpInfo->getSP(propertyId, sp)) return sp.name;
     return "Property Name Not Found";
 }
 
@@ -312,9 +312,9 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
     // if we still haven't found txid, check non active crowdsales to this address
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t loopPropertyId = startPropertyId; loopPropertyId < _my_sps->peekNextSPID(ecosystem); loopPropertyId++) {
+        for (uint32_t loopPropertyId = startPropertyId; loopPropertyId < pDbSpInfo->peekNextSPID(ecosystem); loopPropertyId++) {
             CMPSPInfo::Entry sp;
-            if (!_my_sps->getSP(loopPropertyId, sp)) continue;
+            if (!pDbSpInfo->getSP(loopPropertyId, sp)) continue;
             for (std::map<uint256, std::vector<int64_t> >::const_iterator it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
                 if (it->first == txid) {
                     *propertyId = loopPropertyId;
@@ -347,7 +347,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
         // get sp from data struct
         CMPSPInfo::Entry sp;
-        assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
+        assert(pDbSpInfo->getSP(crowdsale.getPropertyId(), sp));
 
         // get txdata
         sp.historicalData = crowdsale.getDatabase();
@@ -357,7 +357,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
         // update SP with this data
         sp.update_block = chainActive[block]->GetBlockHash();
-        assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
+        assert(pDbSpInfo->updateSP(crowdsale.getPropertyId(), sp));
 
         // no calculate fractional calls here, no more tokens (at MAX)
         my_crowds.erase(it);
@@ -388,7 +388,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // get sp from data struct
             CMPSPInfo::Entry sp;
-            assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
+            assert(pDbSpInfo->getSP(crowdsale.getPropertyId(), sp));
 
             // find missing tokens
             int64_t missedTokens = GetMissedIssuerBonus(sp, crowdsale);
@@ -399,7 +399,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // update SP with this data
             sp.update_block = pBlockIndex->GetBlockHash();
-            assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
+            assert(pDbSpInfo->updateSP(crowdsale.getPropertyId(), sp));
 
             // update values
             if (missedTokens > 0) {

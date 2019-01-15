@@ -276,7 +276,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
                     buyer_amountGotAfterFee = buyer_amountGot - tradingFee;
 
                     // add the fee to the fee cache
-                    p_feecache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
+                    pDbFeeCache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
                 } else {
                     if (msc_debug_fees) PrintToLog("Skipping fee reduction for trade match %s:%s as one of the properties is Omni\n", pold->getHash().GetHex(), pnew->getHash().GetHex());
                 }
@@ -312,7 +312,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             if (msc_debug_metadex1) PrintToLog("==== TRADED !!! %u=%s\n", NewReturn, getTradeReturnType(NewReturn));
 
             // record the trade in MPTradeList
-            t_tradelistdb->recordMatchedTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
+            pDbTradeList->recordMatchedTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
                 pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGot, buyer_amountGotAfterFee, pnew->getBlock(), tradingFee);
 
             if (msc_debug_metadex1) PrintToLog("++ erased old: %s\n", offerIt->ToString());
@@ -570,7 +570,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
 
             // record the cancellation
             bool bValid = true;
-            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
+            pDbTransactionList->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
             indexes->erase(iitt++);
         }
@@ -619,7 +619,7 @@ int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int bl
 
             // record the cancellation
             bool bValid = true;
-            p_txlistdb->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
+            pDbTransactionList->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
             indexes->erase(iitt++);
         }
@@ -676,7 +676,7 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
 
                 // record the cancellation
                 bool bValid = true;
-                p_txlistdb->recordMetaDExCancelTX(txid, it->getHash(), bValid, block, it->getProperty(), it->getAmountRemaining());
+                pDbTransactionList->recordMetaDExCancelTX(txid, it->getHash(), bValid, block, it->getProperty(), it->getAmountRemaining());
 
                 indexes.erase(it++);
             }
@@ -783,11 +783,11 @@ int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSal
     if (totalSold == -1) {
         UniValue tradeArray(UniValue::VARR);
         int64_t totalReceived;
-        t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
+        pDbTradeList->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     }
 
     // Return a "trade invalid" status if the trade was invalidated at parsing/interpretation (eg insufficient funds)
-    if (!p_txlistdb->getValidMPTX(txid)) return TRADE_INVALID;
+    if (!pDbTransactionList->getValidMPTX(txid)) return TRADE_INVALID;
 
     // Calculate and return the status of the trade via the amount sold and open/closed attributes.
     if (MetaDEx_isOpen(txid, propertyIdForSale)) {

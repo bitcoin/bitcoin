@@ -42,7 +42,7 @@ using mastercore::CheckLiveActivations;
 using mastercore::DeleteAlerts;
 using mastercore::GetBlockIndex;
 using mastercore::isNonMainNet;
-using mastercore::p_OmniTXDB;
+using mastercore::pDbTransaction;
 
 CMPTxList::CMPTxList(const boost::filesystem::path& path, bool fWipe)
 {
@@ -664,7 +664,7 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
                 txtype != MSC_TYPE_ENABLE_FREEZING && txtype != MSC_TYPE_DISABLE_FREEZING) continue;
         if (atoi(vstr[0]) != 1) continue; // invalid, ignore
         uint256 txid = uint256S(it->key().ToString());
-        int txPosition = p_OmniTXDB->FetchTransactionPosition(txid);
+        int txPosition = pDbTransaction->FetchTransactionPosition(txid);
         std::string sortKey = strprintf("%06d%010d", atoi(vstr[1]), txPosition);
         loadOrder.push_back(std::make_pair(sortKey, txid));
     }

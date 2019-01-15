@@ -156,7 +156,7 @@ public:
             omniOverride = true;
             amount = 0;
         } else { // cache miss, check database
-            if (p_txlistdb->exists(hash)) {
+            if (pDbTransactionList->exists(hash)) {
                 omniOverride = true;
                 amount = 0;
                 CTransaction wtx;
@@ -173,14 +173,14 @@ public:
                                 uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
                                 {
                                     LOCK(cs_tally);
-                                    p_txlistdb->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                    pDbTransactionList->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
                                 }
                                 bool bIsBuy = IsMyAddress(tmpBuyer);
                                 LOCK(cs_tally);
-                                int numberOfPurchases=p_txlistdb->getNumberOfSubRecords(hash);
+                                int numberOfPurchases=pDbTransactionList->getNumberOfSubRecords(hash);
                                 if (0<numberOfPurchases) { // calculate total bought/sold
                                     for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
-                                        p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
+                                        pDbTransactionList->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
                                         total += tmpNValue;
                                     }
                                     if (!bIsBuy) {
@@ -193,7 +193,7 @@ public:
                                 }
                             } else if (0 == parseRC) {
                                 if (mp_obj.interpret_Transaction()) {
-                                    valid = p_txlistdb->getValidMPTX(hash);
+                                    valid = pDbTransactionList->getValidMPTX(hash);
                                     uint32_t omniPropertyId = mp_obj.getProperty();
                                     int64_t omniAmount = mp_obj.getAmount();
                                     if (isPropertyDivisible(omniPropertyId)) {

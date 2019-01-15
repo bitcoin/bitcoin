@@ -42,7 +42,7 @@ using namespace mastercore;
 extern int64_t exodus_prev;
 
 //! Path for file based persistence
-extern boost::filesystem::path MPPersistencePath;
+extern boost::filesystem::path pathStateFiles;
 
 enum FILETYPES {
   FILETYPE_BALANCES = 0,
@@ -149,8 +149,8 @@ static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
 {
-    uint32_t nextSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_MSC);
-    uint32_t nextTestSPID = _my_sps->peekNextSPID(OMNI_PROPERTY_TMSC);
+    uint32_t nextSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_MSC);
+    uint32_t nextTestSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_TMSC);
     std::string lineOut = strprintf("%d,%d,%d",
             exodus_prev,
             nextSPID,
@@ -320,7 +320,7 @@ static int input_globals_state_string(const std::string& s)
     nextTestSPID = boost::lexical_cast<uint32_t>(vstr[i++]);
 
     exodus_prev = exodusPrev;
-    _my_sps->init(nextSPID, nextTestSPID);
+    pDbSpInfo->init(nextSPID, nextTestSPID);
     return 0;
 }
 
@@ -402,7 +402,7 @@ static int input_mp_mdexorder_string(const std::string& s)
 
 static int write_state_file(const CBlockIndex* pBlockIndex, int what)
 {
-    boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
+    boost::filesystem::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[what], pBlockIndex->GetBlockHash().ToString());
     const std::string strFile = path.string();
 
     std::ofstream file;
@@ -456,7 +456,7 @@ static void prune_state_files(const CBlockIndex* topIndex)
     // build a set of blockHashes for which we have any state files
     std::set<uint256> statefulBlockHashes;
 
-    boost::filesystem::directory_iterator dIter(MPPersistencePath);
+    boost::filesystem::directory_iterator dIter(pathStateFiles);
     boost::filesystem::directory_iterator endIter;
     for (; dIter != endIter; ++dIter) {
         std::string fName = dIter->path().empty() ? "<invalid>" : (*--dIter->path().end()).string();
@@ -499,7 +499,7 @@ static void prune_state_files(const CBlockIndex* topIndex)
             // destroy the associated files!
             std::string strBlockHash = iter->ToString();
             for (int i = 0; i < NUM_FILETYPES; ++i) {
-                boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
+                boost::filesystem::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], strBlockHash);
                 boost::filesystem::remove(path);
             }
         }
@@ -535,7 +535,7 @@ int PersistInMemoryState(const CBlockIndex* pBlockIndex)
     // clean-up the directory
     prune_state_files(pBlockIndex);
 
-    _my_sps->setWatermark(pBlockIndex->GetBlockHash());
+    pDbSpInfo->setWatermark(pBlockIndex->GetBlockHash());
 
     return 0;
 }
@@ -664,7 +664,7 @@ int LoadMostRelevantInMemoryState()
     // check the SP database and roll it back to its latest valid state
     // according to the active chain
     uint256 spWatermark;
-    if (!_my_sps->getWatermark(spWatermark)) {
+    if (!pDbSpInfo->getWatermark(spWatermark)) {
         // trigger a full reparse, if the SP database has no watermark
         PrintToLog("Failed to load historical state: SP database has no watermark\n");
         return -1;
@@ -678,7 +678,7 @@ int LoadMostRelevantInMemoryState()
     }
 
     while (NULL != spBlockIndex && false == chainActive.Contains(spBlockIndex)) {
-        int remainingSPs = _my_sps->popBlock(spBlockIndex->GetBlockHash());
+        int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
         if (remainingSPs < 0) {
             // trigger a full reparse, if the levelDB cannot roll back
             PrintToLog("Failed to load historical state: no valid state found after rolling back SP database\n");
@@ -688,14 +688,14 @@ int LoadMostRelevantInMemoryState()
     }*/
         spBlockIndex = spBlockIndex->pprev;
         if (spBlockIndex != NULL) {
-            _my_sps->setWatermark(spBlockIndex->GetBlockHash());
+            pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
         }
     }
 
     // prepare a set of available files by block hash pruning any that are
     // not in the active chain
     std::set<uint256> persistedBlocks;
-    boost::filesystem::directory_iterator dIter(MPPersistencePath);
+    boost::filesystem::directory_iterator dIter(pathStateFiles);
     boost::filesystem::directory_iterator endIter;
     for (; dIter != endIter; ++dIter) {
         if (false == boost::filesystem::is_regular_file(dIter->status()) || dIter->path().empty()) {
@@ -732,7 +732,7 @@ int LoadMostRelevantInMemoryState()
         if (persistedBlocks.find(curTip->GetBlockHash()) != persistedBlocks.end()) {
             int success = -1;
             for (int i = 0; i < NUM_FILETYPES; ++i) {
-                boost::filesystem::path path = MPPersistencePath / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
+                boost::filesystem::path path = pathStateFiles / strprintf("%s-%s.dat", statePrefix[i], curTip->GetBlockHash().ToString());
                 const std::string strFile = path.string();
                 success = RestoreInMemoryState(strFile, i, true);
                 if (success < 0) {
@@ -753,7 +753,7 @@ int LoadMostRelevantInMemoryState()
         }
 
         // go to the previous block
-        if (_my_sps->popBlock(curTip->GetBlockHash()) <= 0) {
+        if (pDbSpInfo->popBlock(curTip->GetBlockHash()) <= 0) {
             // trigger a full reparse, if the levelDB cannot roll back
             PrintToLog("Failed to load historical state: no valid state found after rolling back SP database (2)\n");
             return -1;
@@ -761,7 +761,7 @@ int LoadMostRelevantInMemoryState()
         curTip = curTip->pprev;
         spBlockIndex = curTip;
         if (curTip != NULL) {
-            _my_sps->setWatermark(curTip->GetBlockHash());
+            pDbSpInfo->setWatermark(curTip->GetBlockHash());
         }
     }
 

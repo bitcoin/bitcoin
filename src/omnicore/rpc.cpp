@@ -187,7 +187,7 @@ UniValue omni_getfeedistribution(const UniValue& params, bool fHelp)
 
     UniValue response(UniValue::VOBJ);
 
-    bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
+    bool found = pDbFeeHistory->GetDistributionData(id, &propertyId, &block, &total);
     if (!found) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee distribution ID does not exist");
     }
@@ -196,7 +196,7 @@ UniValue omni_getfeedistribution(const UniValue& params, bool fHelp)
     response.push_back(Pair("block", block));
     response.push_back(Pair("amount", FormatMP(propertyId, total)));
     UniValue recipients(UniValue::VARR);
-    std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
+    std::set<std::pair<std::string,int64_t> > sRecipients = pDbFeeHistory->GetFeeDistribution(id);
     bool divisible = isPropertyDivisible(propertyId);
     if (!sRecipients.empty()) {
         for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
@@ -251,7 +251,7 @@ UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
 
     UniValue response(UniValue::VARR);
 
-    std::set<int> sDistributions = p_feehistory->GetDistributionsForProperty(prop);
+    std::set<int> sDistributions = pDbFeeHistory->GetDistributionsForProperty(prop);
     if (!sDistributions.empty()) {
         for (std::set<int>::iterator it = sDistributions.begin(); it != sDistributions.end(); it++) {
             int id = *it;
@@ -259,7 +259,7 @@ UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
             uint32_t propertyId = 0;
             int64_t total = 0;
             UniValue responseObj(UniValue::VOBJ);
-            bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
+            bool found = pDbFeeHistory->GetDistributionData(id, &propertyId, &block, &total);
             if (!found) {
                 PrintToLog("Fee History Error - Distribution data not found for distribution ID %d but it was included in GetDistributionsForProperty(prop %d)\n", id, prop);
                 continue;
@@ -269,7 +269,7 @@ UniValue omni_getfeedistributions(const UniValue& params, bool fHelp)
             responseObj.push_back(Pair("block", block));
             responseObj.push_back(Pair("amount", FormatMP(propertyId, total)));
             UniValue recipients(UniValue::VARR);
-            std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
+            std::set<std::pair<std::string,int64_t> > sRecipients = pDbFeeHistory->GetFeeDistribution(id);
             bool divisible = isPropertyDivisible(propertyId);
             if (!sRecipients.empty()) {
                 for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
@@ -327,9 +327,9 @@ UniValue omni_getfeetrigger(const UniValue& params, bool fHelp)
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < pDbSpInfo->peekNextSPID(ecosystem); itPropertyId++) {
             if (propertyId == 0 || propertyId == itPropertyId) {
-                int64_t feeTrigger = p_feecache->GetDistributionThreshold(itPropertyId);
+                int64_t feeTrigger = pDbFeeCache->GetDistributionThreshold(itPropertyId);
                 std::string strFeeTrigger = FormatMP(itPropertyId, feeTrigger);
                 UniValue cacheObj(UniValue::VOBJ);
                 cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
@@ -448,9 +448,9 @@ UniValue omni_getfeecache(const UniValue& params, bool fHelp)
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < pDbSpInfo->peekNextSPID(ecosystem); itPropertyId++) {
             if (propertyId == 0 || propertyId == itPropertyId) {
-                int64_t cachedFee = p_feecache->GetCachedAmount(itPropertyId);
+                int64_t cachedFee = pDbFeeCache->GetCachedAmount(itPropertyId);
                 if (cachedFee == 0) {
                     // filter empty results unless the call specifically requested this property
                     if (propertyId != itPropertyId) continue;
@@ -498,7 +498,7 @@ UniValue omni_getseedblocks(const UniValue& params, bool fHelp)
 
     {
         LOCK(cs_tally);
-        std::set<int> setSeedBlocks = p_txlistdb->GetSeedBlocks(startHeight, endHeight);
+        std::set<int> setSeedBlocks = pDbTransactionList->GetSeedBlocks(startHeight, endHeight);
         for (std::set<int>::const_iterator it = setSeedBlocks.begin(); it != setSeedBlocks.end(); ++it) {
             response.push_back(*it);
         }
@@ -619,15 +619,15 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         {
             LOCK(cs_tally);
             // display the whole CMPTxList (leveldb)
-            p_txlistdb->printAll();
-            p_txlistdb->printStats();
+            pDbTransactionList->printAll();
+            pDbTransactionList->printStats();
             break;
         }
         case 2:
         {
             LOCK(cs_tally);
             // display smart properties
-            _my_sps->printAll();
+            pDbSpInfo->printAll();
             break;
         }
         case 3:
@@ -657,7 +657,7 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         case 5:
         {
             LOCK(cs_tally);
-            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, p_txlistdb->isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
+            PrintToConsole("isMPinBlockRange(%d,%d)=%s\n", extra2, extra3, pDbTransactionList->isMPinBlockRange(extra2, extra3, false) ? "YES" : "NO");
             break;
         }
         case 6:
@@ -670,16 +670,16 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         {
             LOCK(cs_tally);
             // display the whole CMPTradeList (leveldb)
-            t_tradelistdb->printAll();
-            t_tradelistdb->printStats();
+            pDbTradeList->printAll();
+            pDbTradeList->printStats();
             break;
         }
         case 8:
         {
             LOCK(cs_tally);
             // display the STO receive list
-            s_stolistdb->printAll();
-            s_stolistdb->printStats();
+            pDbStoList->printAll();
+            pDbStoList->printStats();
             break;
         }
         case 9:
@@ -711,8 +711,8 @@ UniValue mscrpc(const UniValue& params, bool fHelp)
         case 14:
         {
             LOCK(cs_tally);
-            p_feecache->printAll();
-            p_feecache->printStats();
+            pDbFeeCache->printAll();
+            pDbFeeCache->printStats();
 
             int64_t a = 1000;
             int64_t b = 1999;
@@ -874,7 +874,7 @@ UniValue omni_getallbalancesforaddress(const UniValue& params, bool fHelp)
     uint32_t propertyId = 0;
     while (0 != (propertyId = addressTally->next())) {
         CMPSPInfo::Entry property;
-        if (!_my_sps->getSP(propertyId, property)) {
+        if (!pDbSpInfo->getSP(propertyId, property)) {
             continue;
         }
 
@@ -991,7 +991,7 @@ UniValue omni_getwalletbalances(const UniValue& params, bool fHelp)
         std::tuple<int64_t, int64_t, int64_t> balance = item.second;
 
         CMPSPInfo::Entry property;
-        if (!_my_sps->getSP(propertyId, property)) {
+        if (!pDbSpInfo->getSP(propertyId, property)) {
             continue; // token wasn't found in the DB
         }
 
@@ -1078,7 +1078,7 @@ UniValue omni_getwalletaddressbalances(const UniValue& params, bool fHelp)
 
         while (0 != (propertyId = addressTally->next())) {
             CMPSPInfo::Entry property;
-            if (!_my_sps->getSP(propertyId, property)) {
+            if (!pDbSpInfo->getSP(propertyId, property)) {
                 continue; // token wasn't found in the DB
             }
 
@@ -1140,7 +1140,7 @@ UniValue omni_getproperty(const UniValue& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-        if (!_my_sps->getSP(propertyId, sp)) {
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }
@@ -1193,10 +1193,10 @@ UniValue omni_listproperties(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
 
-    uint32_t nextSPID = _my_sps->peekNextSPID(1);
+    uint32_t nextSPID = pDbSpInfo->peekNextSPID(1);
     for (uint32_t propertyId = 1; propertyId < nextSPID; propertyId++) {
         CMPSPInfo::Entry sp;
-        if (_my_sps->getSP(propertyId, sp)) {
+        if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.push_back(Pair("propertyid", (uint64_t) propertyId));
             PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
@@ -1205,10 +1205,10 @@ UniValue omni_listproperties(const UniValue& params, bool fHelp)
         }
     }
 
-    uint32_t nextTestSPID = _my_sps->peekNextSPID(2);
+    uint32_t nextTestSPID = pDbSpInfo->peekNextSPID(2);
     for (uint32_t propertyId = TEST_ECO_PROPERTY_1; propertyId < nextTestSPID; propertyId++) {
         CMPSPInfo::Entry sp;
-        if (_my_sps->getSP(propertyId, sp)) {
+        if (pDbSpInfo->getSP(propertyId, sp)) {
             UniValue propertyObj(UniValue::VOBJ);
             propertyObj.push_back(Pair("propertyid", (uint64_t) propertyId));
             PropertyToJSON(sp, propertyObj); // name, category, subcategory, data, url, divisible
@@ -1273,7 +1273,7 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-        if (!_my_sps->getSP(propertyId, sp)) {
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }
@@ -1403,7 +1403,7 @@ UniValue omni_getactivecrowdsales(const UniValue& params, bool fHelp)
         uint32_t propertyId = crowd.getPropertyId();
 
         CMPSPInfo::Entry sp;
-        if (!_my_sps->getSP(propertyId, sp)) {
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
             continue;
         }
 
@@ -1476,7 +1476,7 @@ UniValue omni_getgrants(const UniValue& params, bool fHelp)
     CMPSPInfo::Entry sp;
     {
         LOCK(cs_tally);
-        if (false == _my_sps->getSP(propertyId, sp)) {
+        if (false == pDbSpInfo->getSP(propertyId, sp)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not exist");
         }
     }
@@ -1652,7 +1652,7 @@ UniValue omni_gettradehistoryforaddress(const UniValue& params, bool fHelp)
     std::vector<uint256> vecTransactions;
     {
         LOCK(cs_tally);
-        t_tradelistdb->getTradesForAddress(address, vecTransactions, propertyId);
+        pDbTradeList->getTradesForAddress(address, vecTransactions, propertyId);
     }
 
     // Populate the address trade history into JSON objects until we have processed count transactions
@@ -1714,7 +1714,7 @@ UniValue omni_gettradehistoryforpair(const UniValue& params, bool fHelp)
     // request pair trade history from trade db
     UniValue response(UniValue::VARR);
     LOCK(cs_tally);
-    t_tradelistdb->getTradesForPair(propertyIdSideA, propertyIdSideB, response, count);
+    pDbTradeList->getTradesForPair(propertyIdSideA, propertyIdSideB, response, count);
     return response;
 }
 
@@ -1883,7 +1883,7 @@ UniValue omni_listblocktransactions(const UniValue& params, bool fHelp)
     LOCK(cs_tally);
 
     BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-        if (p_txlistdb->exists(tx.GetHash())) {
+        if (pDbTransactionList->exists(tx.GetHash())) {
             // later we can add a verbose flag to decode here, but for now callers can send returned txids into gettransaction_MP
             // add the txid into the response as it's an MP transaction
             response.push_back(tx.GetHash().GetHex());
@@ -1922,7 +1922,7 @@ UniValue omni_listblockstransactions(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
     {
-        p_txlistdb->GetOmniTxsInBlockRange(blockFirst, blockLast, txs);
+        pDbTransactionList->GetOmniTxsInBlockRange(blockFirst, blockLast, txs);
     }
 
     BOOST_FOREACH(const uint256& tx, txs) {
@@ -2140,9 +2140,9 @@ UniValue omni_getinfo(const UniValue& params, bool fHelp)
 
     LOCK(cs_tally);
 
-    int blockMPTransactions = p_txlistdb->getMPTransactionCountBlock(block);
-    int totalMPTransactions = p_txlistdb->getMPTransactionCountTotal();
-    int totalMPTrades = t_tradelistdb->getMPTradeCountTotal();
+    int blockMPTransactions = pDbTransactionList->getMPTransactionCountBlock(block);
+    int totalMPTransactions = pDbTransactionList->getMPTransactionCountTotal();
+    int totalMPTrades = pDbTradeList->getMPTradeCountTotal();
     infoResponse.push_back(Pair("block", block));
     infoResponse.push_back(Pair("blocktime", blockTime));
     infoResponse.push_back(Pair("blocktransactions", blockMPTransactions));
