@@ -156,7 +156,7 @@ class SpendNegative(BadTxTemplate):
 
 
 class InvalidOPIFConstruction(BadTxTemplate):
-    reject_reason = "script-verify-flag-failed (Invalid OP_IF construction)"
+    reject_reason = "script-verify-flag-failed"
     expect_disconnect = False
     valid_in_block = True
 
