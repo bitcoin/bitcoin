@@ -107,6 +107,17 @@ void MasternodeList::showContextMenuDIP3(const QPoint& point)
     if (item) contextMenuDIP3->exec(QCursor::pos());
 }
 
+static bool CheckWalletOwnsScript(const CScript& script)
+{
+    CTxDestination dest;
+    if (ExtractDestination(script, dest)) {
+        if ((boost::get<CKeyID>(&dest) && pwalletMain->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwalletMain->HaveCScript(*boost::get<CScriptID>(&dest)))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void MasternodeList::updateDIP3List()
 {
     if (ShutdownRequested()) {
@@ -146,7 +157,26 @@ void MasternodeList::updateDIP3List()
         nextPayments.emplace(dmn->proTxHash, mnList.GetHeight() + (int)i + 1);
     }
 
+    std::set<COutPoint> setOutpts;
+    if (pwalletMain && ui->checkBoxMyMasternodesOnly->isChecked()) {
+        LOCK(pwalletMain->cs_wallet);
+        std::vector<COutPoint> vOutpts;
+        pwalletMain->ListProTxCoins(vOutpts);
+        for (const auto& outpt : vOutpts) {
+            setOutpts.emplace(outpt);
+        }
+    }
+
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
+        if (pwalletMain && ui->checkBoxMyMasternodesOnly->isChecked()) {
+            LOCK(pwalletMain->cs_wallet);
+            bool fMyMasternode = setOutpts.count(dmn->collateralOutpoint) ||
+                pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner) ||
+                pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting) ||
+                CheckWalletOwnsScript(dmn->pdmnState->scriptPayout) ||
+                CheckWalletOwnsScript(dmn->pdmnState->scriptOperatorPayout);
+            if (!fMyMasternode) return;
+        }
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
         QTableWidgetItem* addressItem = new QTableWidgetItem(QString::fromStdString(dmn->pdmnState->addr.ToString()));
@@ -220,6 +250,13 @@ void MasternodeList::on_filterLineEditDIP3_textChanged(const QString& strFilterI
     nTimeFilterUpdatedDIP3 = GetTime();
     fFilterUpdatedDIP3 = true;
     ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
+}
+
+void MasternodeList::on_checkBoxMyMasternodesOnly_stateChanged(int state)
+{
+    // no cooldown
+    nTimeFilterUpdatedDIP3 = GetTime() - MASTERNODELIST_FILTER_COOLDOWN_SECONDS;
+    fFilterUpdatedDIP3 = true;
 }
 
 CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
