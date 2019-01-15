@@ -54,6 +54,13 @@ void StopWallets();
 //! Close all wallets.
 void UnloadWallets();
 
+//! Explicitly unload and delete the wallet.
+//  Blocks the current thread after signaling the unload intent so that all
+//  wallet clients release the wallet.
+//  Note that, when blocking is not required, the wallet is implicitly unloaded
+//  by the shared pointer deleter.
+void UnloadWallet(std::shared_ptr<CWallet>&& wallet);
+
 bool AddWallet(const std::shared_ptr<CWallet>& wallet);
 bool RemoveWallet(const std::shared_ptr<CWallet>& wallet);
 bool HasWallets();
@@ -770,6 +777,8 @@ public:
 
     ~CWallet()
     {
+        // Should not have slots connected at this point.
+        assert(NotifyUnload.empty());
         delete encrypted_batch;
         encrypted_batch = nullptr;
     }
