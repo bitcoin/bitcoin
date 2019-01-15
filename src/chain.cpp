@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <validation.h>
 
 /**
  * CChain implementation
@@ -17,12 +16,12 @@ void CChain::SetTip(CBlockIndex *pindex) {
     vChain.resize(pindex->nHeight + 1);
 
 	// compare with the current vector tip after resizing
-	if (vChain.size() >= 2 && pindex->pprev == vChain[vChain.size() - 2]) {
+    if (vChain.size() >= 2 && pindex->pprev == vChain[vChain.size() - 2]) {
         vChain[pindex->nHeight] = pindex;
-	} 
-	else {
-		while (pindex && vChain[pindex->nHeight] != pindex) {
-			vChain[pindex->nHeight] = pindex;
+    } 
+    else {
+        while (pindex && vChain[pindex->nHeight] != pindex) {
+            vChain[pindex->nHeight] = pindex;
             pindex = pindex->pprev;
         }
     }
@@ -87,6 +86,9 @@ int static inline GetSkipHeight(int height) {
     // up to 2**18 blocks).
     return (height & 1) ? InvertLowestOne(InvertLowestOne(height - 1)) + 1 : InvertLowestOne(height);
 }
+
+
+extern CChain& chainActive;
 
 const CBlockIndex* CBlockIndex::GetAncestor(int height) const
 {
