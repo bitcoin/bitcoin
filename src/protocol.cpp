@@ -59,8 +59,12 @@ const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
 const char *GETMNLISTDIFF="getmnlistd";
 const char *MNLISTDIFF="mnlistdiff";
 const char *QFCOMMITMENT="qfcommit";
-const char *QDCOMMITMENT="qdcommit";
 const char *QCONTRIB="qcontrib";
+const char *QCOMPLAINT="qcomplaint";
+const char *QJUSTIFICATION="qjustify";
+const char *QPCOMMITMENT="qpcommit";
+const char *QWATCH="qwatch";
+const char *QDEBUGSTATUS="qdebugstatus";
 };
 
 static const char* ppszTypeName[] =
@@ -89,8 +93,12 @@ static const char* ppszTypeName[] =
     "unused inv type 19",
     "compact block", // Should never occur
     NetMsgType::QFCOMMITMENT,
-    NetMsgType::QDCOMMITMENT,
+    "qdcommit", // was only shortly used on testnet
     NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
+    NetMsgType::QDEBUGSTATUS,
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -144,8 +152,12 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETMNLISTDIFF,
     NetMsgType::MNLISTDIFF,
     NetMsgType::QFCOMMITMENT,
-    NetMsgType::QDCOMMITMENT,
     NetMsgType::QCONTRIB,
+    NetMsgType::QCOMPLAINT,
+    NetMsgType::QJUSTIFICATION,
+    NetMsgType::QPCOMMITMENT,
+    NetMsgType::QWATCH,
+    NetMsgType::QDEBUGSTATUS,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

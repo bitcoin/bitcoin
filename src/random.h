@@ -21,6 +21,8 @@ uint64_t GetRand(uint64_t nMax);
 int GetRandInt(int nMax);
 uint256 GetRandHash();
 
+bool GetRandBool(double rate);
+
 /**
  * Function to gather random data from multiple sources, failing whenever any
  * of those source fail to provide a result.

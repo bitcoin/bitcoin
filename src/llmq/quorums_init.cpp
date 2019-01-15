@@ -6,23 +6,31 @@
 
 #include "quorums_blockprocessor.h"
 #include "quorums_commitment.h"
-#include "quorums_dummydkg.h"
+#include "quorums_debug.h"
+#include "quorums_dkgsessionmgr.h"
+
+#include "scheduler.h"
 
 namespace llmq
 {
 
-void InitLLMQSystem(CEvoDB& evoDb)
+static CBLSWorker blsWorker;
+
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler)
 {
+    quorumDKGDebugManager = new CDKGDebugManager(scheduler);
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDummyDKG = new CDummyDKG();
+    quorumDKGSessionManager = new CDKGSessionManager(evoDb, blsWorker);
 }
 
 void DestroyLLMQSystem()
 {
-    delete quorumDummyDKG;
-    quorumDummyDKG = nullptr;
+    delete quorumDKGSessionManager;
+    quorumDKGSessionManager = NULL;
     delete quorumBlockProcessor;
     quorumBlockProcessor = nullptr;
+    delete quorumDKGDebugManager;
+    quorumDKGDebugManager = nullptr;
 }
 
 }

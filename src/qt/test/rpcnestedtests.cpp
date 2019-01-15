@@ -55,7 +55,7 @@ void RPCNestedTests::rpcNestedTests()
     pcoinsdbview = new CCoinsViewDB(1 << 23, true);
     deterministicMNManager = new CDeterministicMNManager(*evoDb);
 
-    llmq::InitLLMQSystem(*evoDb);
+    llmq::InitLLMQSystem(*evoDb, nullptr);
 
     pcoinsTip = new CCoinsViewCache(pcoinsdbview);
     InitBlockIndex(chainparams);

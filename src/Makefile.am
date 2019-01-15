@@ -85,6 +85,7 @@ BITCOIN_CORE_H = \
   addrman.h \
   alert.h \
   base58.h \
+  batchedlogger.h \
   bip39.h \
   bip39_english.h \
   blockencodings.h \
@@ -109,6 +110,7 @@ BITCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   ctpl.h \
+  cxxtimer.hpp \
   evo/evodb.h \
   evo/specialtx.h \
   evo/providertx.h \
@@ -139,11 +141,14 @@ BITCOIN_CORE_H = \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
-  llmq/quorums_commitment.h \
   llmq/quorums_blockprocessor.h \
-  llmq/quorums_dummydkg.h \
-  llmq/quorums_utils.h \
+  llmq/quorums_commitment.h \
+  llmq/quorums_debug.h \
+  llmq/quorums_dkgsessionhandler.h \
+  llmq/quorums_dkgsessionmgr.h \
+  llmq/quorums_dkgsession.h \
   llmq/quorums_init.h \
+  llmq/quorums_utils.h \
   masternode-meta.h \
   masternode-payments.h \
   masternode-sync.h \
@@ -225,6 +230,7 @@ libdash_server_a_SOURCES = \
   addrman.cpp \
   addrdb.cpp \
   alert.cpp \
+  batchedlogger.cpp \
   bloom.cpp \
   blockencodings.cpp \
   chain.cpp \
@@ -247,11 +253,14 @@ libdash_server_a_SOURCES = \
   governance-validators.cpp \
   governance-vote.cpp \
   governance-votedb.cpp \
-  llmq/quorums_commitment.cpp \
   llmq/quorums_blockprocessor.cpp \
-  llmq/quorums_dummydkg.cpp \
-  llmq/quorums_utils.cpp \
+  llmq/quorums_commitment.cpp \
+  llmq/quorums_debug.cpp \
+  llmq/quorums_dkgsessionhandler.cpp \
+  llmq/quorums_dkgsessionmgr.cpp \
+  llmq/quorums_dkgsession.cpp \
   llmq/quorums_init.cpp \
+  llmq/quorums_utils.cpp \
   masternode-meta.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
@@ -277,6 +286,7 @@ libdash_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/rpcevo.cpp \
+  rpc/rpcquorums.cpp \
   rpc/server.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \

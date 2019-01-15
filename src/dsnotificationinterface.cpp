@@ -9,14 +9,13 @@
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "privatesend.h"
+#include "llmq/quorums_dkgsessionmgr.h"
 #ifdef ENABLE_WALLET
 #include "privatesend-client.h"
 #endif // ENABLE_WALLET
 #include "validation.h"
 
 #include "evo/deterministicmns.h"
-
-#include "llmq/quorums_dummydkg.h"
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()
 {
@@ -40,7 +39,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         return;
 
     deterministicMNManager->UpdatedBlockTip(pindexNew);
-    llmq::quorumDummyDKG->UpdatedBlockTip(pindexNew, fInitialDownload);
 
     masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
@@ -62,6 +60,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 #endif // ENABLE_WALLET
     instantsend.UpdatedBlockTip(pindexNew);
     governance.UpdatedBlockTip(pindexNew, connman);
+    llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
 }
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
