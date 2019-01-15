@@ -9,7 +9,7 @@
 #include <list>
 #include <vector>
 
-static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
@@ -97,7 +97,7 @@ static void MempoolEviction(benchmark::Bench& bench)
     tx7.vout[1].nValue = 10 * COIN;
 
     CTxMemPool pool;
-    LOCK(pool.cs);
+    LOCK2(cs_main, pool.cs);
 
     bench.run([&]() NO_THREAD_SAFETY_ANALYSIS {
         AddTx(tx1, 10000LL, pool);
