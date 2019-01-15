@@ -15,6 +15,7 @@
 
 #include <immer/config.hpp>
 #include <immer/heap/tags.hpp>
+#include <immer/detail/util.hpp>
 #include <immer/detail/rbts/position.hpp>
 #include <immer/detail/rbts/visitor.hpp>
 
@@ -1959,9 +1960,9 @@ struct concat_merger_mut
                                                 from_data + from_offset + to_copy,
                                                 data + to_offset_);
                     else
-                        uninitialized_move(from_data + from_offset,
-                                           from_data + from_offset + to_copy,
-                                           data + to_offset_);
+                        detail::uninitialized_move(from_data + from_offset,
+                                                  from_data + from_offset + to_copy,
+                                                  data + to_offset_);
                 }
                 to_offset_  += to_copy;
                 from_offset += to_copy;

@@ -971,8 +971,8 @@
         <translation>ข้อมูล PrivateSend</translation>
     </message>
     <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.         </source>
-        <translation>&lt;h3&gt;ข้อมูลพื้นฐานเกี่ยวกับ PrivateSend PrivateSend ช่วยให้คุณมีความเป็นส่วนตัวทางการเงินอย่างแท้จริงโดยปิดบังแหล่งที่มาของเงินทุนของคุณ  Dash ทั้งหมดใน wallet ของคุณประกอบด้วย "อินพุต" ที่แตกต่างกันซึ่งคุณสามารถแยกเหรียญกันได้ &lt;br&gt;  PrivateSend ใช้กระบวนการใหม่ในการผสมผสานอินพุตของคุณเข้ากับอินพุตของคนอื่นอีกสองคนโดยไม่ต้องมีเหรียญออกจาก wallet  คุณสามารถควบคุมเงินได้ตลอดเวลา&lt;hr&gt;&lt;b&gt;กระบวนการ PrivateSend ทำงานได้ดังนี้:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend เริ่มต้นด้วยการทำลายอินพุตการทำธุรกรรมของคุณลงไปเป็นหน่วยเงินมาตรฐาน หน่วยเงินเหล่านี้คือ 0.01 DASH, 0.1 DASH, 1 DASH และ 10 DASH - เหมือนกับเงินกระดาษที่คุณใช้ทุกวัน&lt;/li&gt;&lt;li&gt; Wallet ของคุณจะส่งคำขอไปยังโหนดซอฟต์แวร์ที่กำหนดค่าไว้เป็นพิเศษในเครือข่ายที่ เรียกว่า "masternodes"  โดย masternodes เหล่านี้จะแจ้งให้ทราบแล้วว่าคุณสนใจที่จะผสมหน่วยเงินนั้นๆ  ไม่มีข้อมูลที่สามารถระบุตัวได้ถูกส่งไปยัง masternodes ดังนั้นพวกเขาจึงไม่เคยรู้จักว่าคุณเป็นใคร &lt;/li&gt;&lt;li&gt;เมื่อมีคนอีกสองคนส่งข้อความที่คล้ายกันแสดงว่าพวกเขาต้องการที่จะผสมผสานหน่วยเงินเดียวกันเซสชันการผสมจะเริ่มขึ้น  Masternode จะผสมผสานอินพุตเข้าด้วยกันและสั่งให้ wallet ของผู้ใช้ทั้ง 3 รายชำระค่าป้อนข้อมูลที่เปลี่ยนไปแล้วกลับคืนสู่ตัวเอง Wallet ของคุณจ่ายเงินให้กับตัวเองโดยตรง แต่ในที่อยู่อื่น (เรียกว่าที่อยู่เปลี่ยน)&lt;/li&gt;&lt;li&gt;เพื่อเป็นการปิดบังเงินทุนของคุณ   wallet ของคุณจะต้องทำซ้ำขั้นตอนนี้ซ้ำหลายครั้งโดยใช้แต่ละหน่วยเงิน ทุกครั้งที่ดำเนินการเสร็จสิ้นระบบจะเรียกว่า "รอบ ๆ "  รอบ PrivateSend ในแต่ละครั้งทำให้การระบุแหล่งเงินทุนของคุณเกิดขึ้นยากขึ้นอย่างมาก&lt;/li&gt;&lt;li&gt;กระบวนการผสมนี้เกิดขึ้นโดยไม่มีการก้าวก่ายในส่วนของคุณ  เมื่อคุณต้องการทำธุรกรรม เงินของคุณจะถูกซ่อนไว้  ไม่ต้องการเพิ่มเติม &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;สำคัญ:&lt;/b&gt;Wallet ของคุณมีเพียง 1,000 ที่อยู่ในการเปลี่ยนแปลงเท่านั้น ทุกครั้งที่เกิดเหตุการณ์ผสมเกิดขึ้น 9 ที่อยู่ของคุณจะถูกนำมาใช้  ซึ่งหมายความว่า 1000 ที่อยู่ล่าสุดสำหรับการผสมประมาณ 100 เหตุการณ์ เมื่อมีการใช้ 900 ราย Wallet ของคุณต้องสร้างที่อยู่เพิ่มเติม  สามารถทำเช่นนี้ได้หากคุณเปิดใช้งานการสำรองข้อมูลอัตโนมัติไว้&lt;br&gt;ดังนั้นผู้ใช้ที่มีการสำรองข้อมูลถูกปิดใช้งานจะมีการปิดใช้ PrivateSend &lt;hr&gt;สำหรับข้อมูลเพิ่มเติม&lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;โปรดดูที่เอกสาร PrivateSend &lt;/a&gt;</translation>
+        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be anonymized. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;ข้อมูลพื้นฐานเกี่ยวกับ PrivateSend PrivateSend ช่วยให้คุณมีความเป็นส่วนตัวทางการเงินอย่างแท้จริงโดยปิดบังแหล่งที่มาของเงินทุนของคุณ  Dash ทั้งหมดใน wallet ของคุณประกอบด้วย "อินพุต" ที่แตกต่างกันซึ่งคุณสามารถแยกเหรียญกันได้ &lt;br&gt;  PrivateSend ใช้กระบวนการใหม่ในการผสมผสานอินพุตของคุณเข้ากับอินพุตของคนอื่นอีกสองคนโดยไม่ต้องมีเหรียญออกจาก wallet  คุณสามารถควบคุมเงินได้ตลอดเวลา&lt;hr&gt;&lt;b&gt;กระบวนการ PrivateSend ทำงานได้ดังนี้:&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;PrivateSend เริ่มต้นด้วยการทำลายอินพุตการทำธุรกรรมของคุณลงไปเป็นหน่วยเงินมาตรฐาน หน่วยเงินเหล่านี้คือ 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH และ 10 DASH - เหมือนกับเงินกระดาษที่คุณใช้ทุกวัน&lt;/li&gt;&lt;li&gt; Wallet ของคุณจะส่งคำขอไปยังโหนดซอฟต์แวร์ที่กำหนดค่าไว้เป็นพิเศษในเครือข่ายที่ เรียกว่า "masternodes"  โดย masternodes เหล่านี้จะแจ้งให้ทราบแล้วว่าคุณสนใจที่จะผสมหน่วยเงินนั้นๆ  ไม่มีข้อมูลที่สามารถระบุตัวได้ถูกส่งไปยัง masternodes ดังนั้นพวกเขาจึงไม่เคยรู้จักว่าคุณเป็นใคร &lt;/li&gt;&lt;li&gt;เมื่อมีคนอีกสองคนส่งข้อความที่คล้ายกันแสดงว่าพวกเขาต้องการที่จะผสมผสานหน่วยเงินเดียวกันเซสชันการผสมจะเริ่มขึ้น  Masternode จะผสมผสานอินพุตเข้าด้วยกันและสั่งให้ wallet ของผู้ใช้ทั้ง 3 รายชำระค่าป้อนข้อมูลที่เปลี่ยนไปแล้วกลับคืนสู่ตัวเอง Wallet ของคุณจ่ายเงินให้กับตัวเองโดยตรง แต่ในที่อยู่อื่น (เรียกว่าที่อยู่เปลี่ยน)&lt;/li&gt;&lt;li&gt;เพื่อเป็นการปิดบังเงินทุนของคุณ   wallet ของคุณจะต้องทำซ้ำขั้นตอนนี้ซ้ำหลายครั้งโดยใช้แต่ละหน่วยเงิน ทุกครั้งที่ดำเนินการเสร็จสิ้นระบบจะเรียกว่า "รอบ ๆ "  รอบ PrivateSend ในแต่ละครั้งทำให้การระบุแหล่งเงินทุนของคุณเกิดขึ้นยากขึ้นอย่างมาก&lt;/li&gt;&lt;li&gt;กระบวนการผสมนี้เกิดขึ้นโดยไม่มีการก้าวก่ายในส่วนของคุณ  เมื่อคุณต้องการทำธุรกรรม เงินของคุณจะถูกซ่อนไว้  ไม่ต้องการเพิ่มเติม &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;สำคัญ:&lt;/b&gt;Wallet ของคุณมีเพียง 1,000 ที่อยู่ในการเปลี่ยนแปลงเท่านั้น ทุกครั้งที่เกิดเหตุการณ์ผสมเกิดขึ้น 9 ที่อยู่ของคุณจะถูกนำมาใช้  ซึ่งหมายความว่า 1000 ที่อยู่ล่าสุดสำหรับการผสมประมาณ 100 เหตุการณ์ เมื่อมีการใช้ 900 ราย Wallet ของคุณต้องสร้างที่อยู่เพิ่มเติม  สามารถทำเช่นนี้ได้หากคุณเปิดใช้งานการสำรองข้อมูลอัตโนมัติไว้&lt;br&gt;ดังนั้นผู้ใช้ที่มีการสำรองข้อมูลถูกปิดใช้งานจะมีการปิดใช้ PrivateSend &lt;hr&gt;สำหรับข้อมูลเพิ่มเติม&lt;a href="https://docs.dash.org/en/latest/wallets/dashcore/privatesend-instantsend.html"&gt;โปรดดูที่เอกสาร PrivateSend &lt;/a&gt;</translation>
     </message>
 </context>
 <context>
@@ -1109,8 +1109,76 @@
         <translation>จำนวนโหนด:</translation>
     </message>
     <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;หมายเหตุ: รายการนี้แสดงทรัพย์สินและรายการ masternode แบบไม่กำหนดค่า มันเปิดใช้งานได้ตราบใดที่ DIP3 ยังไม่ได้เปิดใช้งานอย่างสมบูรณ์  หลังจากเปิดใช้งาน SPORK15 รายการนี้จะว่างเปล่า &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
+        <source>DIP3 Masternodes</source>
+        <translation>DIP3 Masternodes</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>คะแนน PoSe</translation>
+    </message>
+    <message>
+        <source>Registered</source>
+        <translation>ลงทะเบียน</translation>
+    </message>
+    <message>
+        <source>Last Paid</source>
+        <translation>ชำระครั้งล่าสุด</translation>
+    </message>
+    <message>
+        <source>Next Payment</source>
+        <translation>การชำระครั้งถัดไป</translation>
+    </message>
+    <message>
+        <source>Operator Reward</source>
+        <translation>รางวัลผู้ดำเนินการ</translation>
+    </message>
+    <message>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;หมายเหตุ: รายการนี้ยังไม่เปิดใช้งานและมีวัตถุประสงค์เพื่อให้ข้อมูลเท่านั้น  เครือข่ายยังคงทำงานในโหมดสอดคล้องกันได้ซึ่งหมายความว่ารายการ masternode ที่ไม่ได้กำหนดค่ายังคงทำงานอยู่ หลังจากเปิดงาน SPORK15 แล้วรายการนี้จะเปิดใช้งาน นอกจากนี้ยังไม่ได้ใช้ค่าในฟิลด์ที่เกี่ยวข้องกับการชำระเงิน แต่ยังคงได้รับการอัปเดตสำหรับทุก ๆ บล็อก โปรดเพิกเฉยต่อสิ่งนี้จนกว่าจะเปิดใช้งาน SPORK15&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+    </message>
+    <message>
         <source>Start alias</source>
         <translation>เริ่มนามแฝง</translation>
+    </message>
+    <message>
+        <source>Copy ProTx Hash</source>
+        <translation>คัดลอก ProTx Hash</translation>
+    </message>
+    <message>
+        <source>Copy Collateral Outpoint</source>
+        <translation>Copy Collateral Outpoint</translation>
+    </message>
+    <message>
+        <source>ENABLED</source>
+        <translation>เปิดการใช้งาน</translation>
+    </message>
+    <message>
+        <source>POSE_BANNED</source>
+        <translation>POSE_BANNED</translation>
+    </message>
+    <message>
+        <source>UNKNOWN</source>
+        <translation>ไม่ทราบ</translation>
+    </message>
+    <message>
+        <source>to %1</source>
+        <translation>ไปยัง %1</translation>
+    </message>
+    <message>
+        <source>to UNKNOWN</source>
+        <translation>ไม่ทราบ</translation>
+    </message>
+    <message>
+        <source>but not claimed</source>
+        <translation>แต่ไม่ได้ถูกเรียกร้อง</translation>
+    </message>
+    <message>
+        <source>NONE</source>
+        <translation>ไม่มี</translation>
     </message>
     <message>
         <source>Confirm masternode start</source>
@@ -1175,6 +1243,10 @@
     <message>
         <source>Sentinel</source>
         <translation>Sentinel</translation>
+    </message>
+    <message>
+        <source>Additional information for DIP3 Masternode %1</source>
+        <translation>ข้อมูลเพิ่มเติมสำหรับ DIP3 Masternode %1</translation>
     </message>
 </context>
 <context>
@@ -1380,6 +1452,14 @@
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>เปิดใช้ coin &amp; รูปแบบการควบคุม</translation>
+    </message>
+    <message>
+        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>แสดงระบบป๊อปอัพสำหรับทำธุรกรรมผสม PrivateSend &lt;br/&gt; เช่นเดียวกับทำธุรกรรมแบบประเภทอื่นๆ</translation>
+    </message>
+    <message>
+        <source>Show popups for PrivateSend transactions</source>
+        <translation>แสดงป๊อปอัปสำหรับธุรกรรม PrivateSend</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1795,10 +1875,6 @@ https://www.transifex.com/projects/p/dash/</translation>
 </source>
         <translation>ข้อความ PrivateSend ล่าสุด:
 </translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>N/A</translation>
     </message>
     <message>
         <source>PrivateSend was successfully reset.</source>
@@ -3540,6 +3616,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ไม่ว่าจะเป็นที่อยู่สำหรับดูอย่างเดียวหรือไม่ก็ตามก็เกี่ยวข้องกับธุรกรรมนี้</translation>
     </message>
     <message>
+        <source>Whether or not this transaction was locked by InstantSend.</source>
+        <translation>ไม่ว่าธุรกรรมนี้จะถูกล็อคโดย InstantSend หรือไม่</translation>
+    </message>
+    <message>
         <source>User-defined intent/purpose of the transaction.</source>
         <translation>เจตนา / วัตถุประสงค์ที่กำหนดโดยผู้ใช้ของธุรกรรม</translation>
     </message>
@@ -3553,6 +3633,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>All</source>
         <translation>ทั้งหมด</translation>
+    </message>
+    <message>
+        <source>Locked by InstantSend</source>
+        <translation>ล็อคโดย InstantSend</translation>
+    </message>
+    <message>
+        <source>Not locked by InstantSend</source>
+        <translation>ไม่ได้ถูกล็อคโดย InstantSend</translation>
     </message>
     <message>
         <source>Today</source>
@@ -3978,6 +4066,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ลบการทำธุรกรรมทั้งหมดของ wallet และกู้เฉพาะส่วนของ blockchain ผ่านการสแกนใหม่เมื่อเริ่มต้น</translation>
     </message>
     <message>
+        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
+        <translation>เปิดใช้งาน raw transactions ของ InstantSend พยายามที่จะใช้จ่ายสองเท่าใน &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
+        <translation>เปิดใช้งาน transaction hashes ของ InstantSend พยายามที่จะใช้จ่ายสองเท่าใน&lt;address&gt;</translation>
+    </message>
+    <message>
         <source>Error loading %s: You can't enable HD on a already existing non-HD wallet</source>
         <translation>เกิดข้อผิดพลาดในการโหลด %s: คุณไม่สามารถเปิดใช้งาน HD บน wallet ที่ไม่ใช่ของ HD ที่มีอยู่แล้ว</translation>
     </message>
@@ -4022,6 +4118,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ข้อมูลการแก้ไขจุดบกพร่องของ Output (ค่าดีฟอลต์: %u &lt;category&gt; เป็นตัวเลือกเพิ่มเติม)</translation>
     </message>
     <message>
+        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
+        <translation>ยกเลิกจำนวนขั้นต่ำ spork signers เพื่อเปลี่ยนจำนวน  มีประโยชน์สำหรับ regtest และ devnet เท่านั้น หากใช้สิ่งนี้บน mainnet หรือ testnet  คุณจะถูกแบน</translation>
+    </message>
+    <message>
+        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
+        <translation>ใช้ N masternode ในการผสมเงินทุน (%u-%u, ค่าเริ่มต้น: %u)</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>ใช้พร็อกซี SOCKS5 แยกเพื่อเข้าถึงเพื่อนร่วมทางผ่านบริการที่ซ่อนไว้ของ Tor (ค่าดีฟอลต์: %s)</translation>
     </message>
@@ -4040,6 +4144,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
         <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex-chainstate เพื่อเปลี่ยน -txindex</translation>
+    </message>
+    <message>
+        <source>You should specify a masternodeblsprivkey in the configuration. Please see documentation for help.</source>
+        <translation>คุณควรระบุ masternodeblsprivkey ในการกำหนดค่า โปรดดูเอกสารประกอบสำหรับความช่วยเหลือเพิ่มเติม</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -4154,6 +4262,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>จำนวนที่ไม่ถูกต้องสำหรับ -paytxfee = &lt;amount&gt;: '%s' (ต้องมีอย่างน้อย %s)</translation>
     </message>
     <message>
+        <source>Invalid masternodeblsprivkey. Please see documenation.</source>
+        <translation>masternodeprivkey ไม่ถูกต้อง โปรดดูเอกสารประกอบ</translation>
+    </message>
+    <message>
+        <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
+        <translation>จำนวนขั้นต่ำ spork signers ไม่ถูกต้องระบุด้วย -minsporkkeys</translation>
+    </message>
+    <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool หมดแล้ว โปรดเติม Keypool ก่อน</translation>
     </message>
@@ -4254,6 +4370,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ตั้งค่าขนาด key pool เป็น &lt;n&gt; (ค่าเริ่มต้น: %u)</translation>
     </message>
     <message>
+        <source>Set the masternode BLS private key</source>
+        <translation>ตั้งค่า The Masternode BLS private key</translation>
+    </message>
+    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>กำหนดจำนวน threads เพื่อให้บริการการโทร RPC (ค่าเริ่มต้น: %d)</translation>
     </message>
@@ -4316,6 +4436,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Too many %f denominations, removing.</source>
         <translation>จำนวนเงิน %f มากเกินไป, กำลังลบออก</translation>
+    </message>
+    <message>
+        <source>Too many %f denominations, skipping.</source>
+        <translation>จำนวน %f มากเกินไป , ข้าม</translation>
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
@@ -4638,10 +4762,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>เปิดใช้งานการทำธุรกรรมดิบใหม่ใน &lt;address&gt;</translation>
     </message>
     <message>
-        <source>Enable transaction replacement in the memory pool (default: %u)</source>
-        <translation>เปิดใช้การแทนที่ธุรกรรมในหน่วยความจำ pool  (ค่าดีฟอลต์: %u)</translation>
-    </message>
-    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>ข้อผิดพลาด: มีข้อผิดพลาดร้ายแรงภายในเกิดขึ้น โปรดดูที่ debug.log เพื่อดูรายละเอียด</translation>
     </message>
@@ -4684,10 +4804,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>จำนวนเงินที่ไม่ถูกต้องสำหรับ -fallbackfee = 1: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid input count.</source>
-        <translation>จำนวนการป้อนข้อมูลไม่ถูกต้อง</translation>
     </message>
     <message>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>

@@ -33,7 +33,14 @@ struct champ
     node_t* root;
     size_t  size;
 
-    static const champ empty;
+    static const champ& empty()
+    {
+        static const champ empty_ {
+            node_t::make_inner_n(0),
+            0,
+        };
+        return empty_;
+    }
 
     champ(node_t* r, size_t sz)
         : root{r}, size{sz}
@@ -47,7 +54,7 @@ struct champ
     }
 
     champ(champ&& other)
-        : champ{empty}
+        : champ{empty()}
     {
         swap(*this, other);
     }
@@ -387,7 +394,7 @@ struct champ
                                                   node->values()[!offset]);
                     } else {
                         assert(shift == 0);
-                        return empty.root->inc();
+                        return empty().root->inc();
                     }
                 }
             }
@@ -461,12 +468,6 @@ struct champ
         }
         return true;
     }
-};
-
-template <typename T, typename H, typename Eq, typename MP, bits_t B>
-const champ<T, H, Eq, MP, B> champ<T, H, Eq, MP, B>::empty = {
-    node_t::make_inner_n(0),
-    0,
 };
 
 } // namespace hamts
