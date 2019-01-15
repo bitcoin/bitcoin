@@ -767,6 +767,21 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         PrecomputedTransactionData txdata(tx);
         if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, false, txdata)) {
+            // Assume that this is due to a policy violation, rather than
+            // re-checking with the consensus flags. Separating policy rules
+            // from consensus rules is tricky, because we want to be able to
+            // support old peers who may not be aware of recent consensus
+            // changes; returning NOT_STANDARD here is maximally permissive.
+            // Anyway re-checking the scripts with a different set of flags
+            // wastes CPU as well (particularly if an attacker is constructing
+            // transactions designed to waste our CPU).
+            // Note that CheckInputs now always returns CONSENSUS on failure.
+            state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, state.GetRejectReason(), state.GetDebugMessage());
+
+            // TODO: We only do these script checks to determine when we cannot
+            // add a txid to our reject filter; an improvement at the p2p layer
+            // could allow us to drop these checks and further speed up
+            // validation.
             // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
             // need to turn both off, and compare against just turning off CLEANSTACK
             // to see if the failure is specifically due to witness validation.
@@ -1304,30 +1319,18 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                     pvChecks->push_back(CScriptCheck());
                     check.swap(pvChecks->back());
                 } else if (!check()) {
-                    if (flags & STANDARD_NOT_MANDATORY_VERIFY_FLAGS) {
-                        // Check whether the failure was caused by a
-                        // non-mandatory script verification check, such as
-                        // non-standard DER encodings or non-null dummy
-                        // arguments; if so, ensure we return NOT_STANDARD
-                        // instead of CONSENSUS to avoid downstream users
-                        // splitting the network between upgraded and
-                        // non-upgraded nodes by banning CONSENSUS-failing
-                        // data providers.
-                        CScriptCheck check2(coin.out, tx, i,
-                                flags & ~STANDARD_NOT_MANDATORY_VERIFY_FLAGS, cacheSigStore, &txdata);
-                        if (check2())
-                            return state.Invalid(ValidationInvalidReason::TX_NOT_STANDARD, false, REJECT_NONSTANDARD, strprintf("non-mandatory-script-verify-flag (%s)", ScriptErrorString(check.GetScriptError())));
-                    }
-                    // MANDATORY flag failures correspond to
-                    // ValidationInvalidReason::CONSENSUS. Because CONSENSUS
-                    // failures are the most serious case of validation
-                    // failures, we may need to consider using
-                    // RECENT_CONSENSUS_CHANGE for any script failure that
-                    // could be due to non-upgraded nodes which we may want to
-                    // support, to avoid splitting the network (but this
-                    // depends on the details of how net_processing handles
-                    // such errors).
-                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
+                    // NOTE: We return CONSENSUS as the reason here, even
+                    // though it's possible that the script flags that were
+                    // passed in do not match the actual consensus rules in
+                    // effect, for instance some of the script flags may
+                    // reflect standard-ness rules that we apply during mempool
+                    // acceptance. We leave it to the caller of this function
+                    // to pass in the correct consensus flags anyway, so the
+                    // caller can differentiate between a standardness failure
+                    // and a consensus failure with respect to whatever
+                    // consensus rules are in effect by calling this function
+                    // again.
+                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
                 }
             }
 
@@ -1909,16 +1912,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr)) {
-                if (state.GetReason() == ValidationInvalidReason::TX_NOT_STANDARD) {
-                    // CheckInputs may return NOT_STANDARD for extra flags we passed,
-                    // but we can't return that, as it's not defined for a block, so
-                    // we reset the reason flag to CONSENSUS here.
-                    // In the event of a future soft-fork, we may need to
-                    // consider whether rewriting to CONSENSUS or
-                    // RECENT_CONSENSUS_CHANGE would be more appropriate.
-                    state.Invalid(ValidationInvalidReason::CONSENSUS, false,
-                              state.GetRejectCode(), state.GetRejectReason(), state.GetDebugMessage());
-                }
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             }

@@ -156,8 +156,8 @@ class SpendNegative(BadTxTemplate):
 
 
 class InvalidOPIFConstruction(BadTxTemplate):
-    reject_reason = "mandatory-script-verify-flag-failed (Invalid OP_IF construction)"
-    expect_disconnect = True
+    reject_reason = "script-verify-flag-failed (Invalid OP_IF construction)"
+    expect_disconnect = False
     valid_in_block = True
 
     def get_tx(self):

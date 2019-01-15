@@ -20,7 +20,7 @@ from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
-NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero) (code 64)"
+NULLDUMMY_ERROR = "script-verify-flag-failed (Dummy CHECKMULTISIG argument must be zero) (code 64)"
 
 def trueDummy(tx):
     scriptSig = CScript(tx.vin[0].scriptSig)
