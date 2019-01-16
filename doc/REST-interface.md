@@ -27,6 +27,7 @@ For full TX query capability, one must enable the transaction index via "txindex
 `GET /rest/block/notxdetails/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns a block, in binary, hex-encoded binary or JSON formats.
+Responds with 404 if the block doesn't exist.
 
 The HTTP request and response are both handled entirely in-memory, thus making maximum memory usage at least 2.66MB (1 MB max block, plus hex encoding) per request.
 
