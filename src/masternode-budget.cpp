@@ -1047,7 +1047,9 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 void CBudgetManager::ResetSync()
 {
     LOCK(cs);
-
+    // Jump start should only be used for brief moment to start the chain.
+    if (GetBoolArg("-jumpstart", false))
+        return;
 
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
