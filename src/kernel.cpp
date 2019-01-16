@@ -23,6 +23,9 @@ unsigned int nProtocolV05TestSwitchTime = 1447700000;
 // supermajority hardfork: actual fork will happen later than switch time
 const unsigned int nProtocolV06SwitchTime     = 1513050000; // Tue 12 Dec 03:40:00 UTC 2017
 const unsigned int nProtocolV06TestSwitchTime = 1508198400; // Tue 17 Oct 00:00:00 UTC 2017
+// Protocol switch time for 0.7 kernel protocol
+const unsigned int nProtocolV07SwitchTime     = 1552392000; // Tue 12 Mar 12:00:00 UTC 2019
+const unsigned int nProtocolV07TestSwitchTime = 1541505600; // Tue 06 Nov 12:00:00 UTC 2018
 
 
 // Modifier interval: time to elapse before new modifier is computed
@@ -39,6 +42,17 @@ static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     (219999, 0x91b7444du )
     (336000, 0x6c3c8048u )
     (371850, 0x9b850bdfu )
+    (407813, 0x46fe50b5u )
+    ;
+
+static std::map<int, unsigned int> mapStakeModifierTestnetCheckpoints =
+    boost::assign::map_list_of
+    ( 0, 0x0e00670bu )
+    ( 19080, 0x3711dc3au )
+    ( 30583, 0xb480fadeu )
+    ( 99999, 0x9a62eaecu )
+    (219999, 0xeafe96c3u )
+    (336000, 0x8330dc09u )
     ;
 
 // Whether the given coinstake is subject to new v0.3 protocol
@@ -75,6 +89,12 @@ bool IsProtocolV06(const CBlockIndex* pindexPrev)
     return true;
 
   return false;
+}
+
+// Whether a given transaction is subject to new v0.7 protocol
+bool IsProtocolV07(unsigned int nTimeTx)
+{
+    return (nTimeTx >= (fTestNet? nProtocolV07TestSwitchTime : nProtocolV07SwitchTime));
 }
 
 // Get the last stake modifier and its generation time from a given block
@@ -532,8 +552,11 @@ unsigned int GetStakeModifierChecksum(const CBlockIndex* pindex)
 // Check stake modifier hard checkpoints
 bool CheckStakeModifierCheckpoints(int nHeight, unsigned int nStakeModifierChecksum)
 {
-    if (fTestNet) return true; // Testnet has no checkpoints
-    if (mapStakeModifierCheckpoints.count(nHeight))
+    if (fTestNet && mapStakeModifierTestnetCheckpoints.count(nHeight))
+        return nStakeModifierChecksum == mapStakeModifierTestnetCheckpoints[nHeight];
+
+    if (!fTestNet && mapStakeModifierCheckpoints.count(nHeight))
         return nStakeModifierChecksum == mapStakeModifierCheckpoints[nHeight];
+
     return true;
 }

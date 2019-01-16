@@ -15,6 +15,7 @@
 #include "init.h"
 #include "base58.h"
 #include "checkpointsync.h"
+#include "kernel.h"
 
 #include <boost/assign/list_of.hpp>
 

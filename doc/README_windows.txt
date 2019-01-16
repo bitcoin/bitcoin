@@ -1,4 +1,4 @@
-Peercoin 0.6.4 BETA
+Peercoin 0.7.0 BETA
 
 Copyright (c) 2011-2018 Peercoin Developers
 Distributed under the MIT/X11 software license, see the accompanying
@@ -40,7 +40,7 @@ To upgrade from 0.5, first backup wallet in qt menu or by command line
 peercoind backupwallet <destination_backup_file>
 Then shutdown peercoind by
 peercoind stop
-Uninstall v0.5 client, download and install v0.6 client.
+Uninstall v0.5 client, download and install v0.7 client.
 Remove all files and subdirectory in your wallet directory EXCEPT FOR
 wallet.dat (wallet file) and peercoin.conf (configuration file).
 For this upgrade blockchain re-download is required.

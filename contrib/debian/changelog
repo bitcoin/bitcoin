@@ -1,23 +1,35 @@
+peercoin (0.7.0~rc6-1) stable; urgency=low
+
+  * RC6 of the v0.7 branch.
+
+ -- Peerchemist <peerchemist@protonmail.ch>  Wed, 16 Jan 2019 11:06:20 +0000
+
+peercoin (0.7.0~rc5-1) stable; urgency=low
+
+  * RC for the v0.7 branch.
+
+ -- Peerchemist <peerchemist@protonmail.ch>  Wed, 09 Jan 2019 13:16:20 +0000
+
 peercoin (0.6.4-1) stable; urgency=low
 
   * New upstream release, minor fixes in the manpages.
 
- --  <peerchemist@protonmail.ch>  Wed, 20 Jun 2018 10:35:20 +0000
+ -- Peerchemist <peerchemist@protonmail.ch>  Wed, 20 Jun 2018 10:35:20 +0000
 
 peercoin (0.6.3-1) stable; urgency=low
 
   * New upstream release, improved desktop integration.
 
- --  <peerchemist@protonmail.ch>  Fri, 20 Apr 2018 14:59:20 +0000
+ -- Peerchemist <peerchemist@protonmail.ch>  Fri, 20 Apr 2018 14:59:20 +0000
 
 peercoin (0.6.2-2) stable; urgency=low
 
   * More polish for the package.
 
- --  <peerchemist@protonmail.ch>  Mon, 14 Feb 2018 20:56:20 +0000
+ -- Peerchemist <peerchemist@protonmail.ch>  Mon, 14 Feb 2018 20:56:20 +0000
 
 peercoin (0.6.2-1) stable; urgency=low
 
   * Upgrade to v0.6.2
 
- --  <peerchemist@protonmail.ch>  Mon, 8 Jan 2018 13:15:20 +0000
+ -- Peerchemist <peerchemist@protonmail.ch>  Mon, 8 Jan 2018 13:15:20 +0000

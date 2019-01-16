@@ -56,7 +56,7 @@ bool fTxIndex = false;
 unsigned int nCoinCacheSize = 5000;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
-int64 CTransaction::nMinTxFee = MIN_TX_FEE;  // Override with -mintxfee
+int64 CTransaction::nMinTxFee = PERKB_TX_FEE;  // Override with -mintxfee
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 int64 CTransaction::nMinRelayTxFee = MIN_RELAY_TX_FEE;
 
@@ -85,7 +85,7 @@ int nBlocksToIgnore = 0;
 #endif
 
 // Settings
-int64 nTransactionFee = MIN_TX_FEE;
+int64 nTransactionFee = PERKB_TX_FEE;
 
 
 
@@ -646,12 +646,14 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
 int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
                               enum GetMinFee_mode mode) const
 {
-    // Base fee is either nMinTxFee or nMinRelayTxFee
-    int64 nBaseFee = (mode == GMF_RELAY) ? nMinRelayTxFee : nMinTxFee;
-
     unsigned int nBytes = ::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION);
     unsigned int nNewBlockSize = nBlockSize + nBytes;
-    int64 nMinFee = (1 + (int64)nBytes / 1000) * nBaseFee;
+    int64 nMinFee;
+
+    if (IsProtocolV07(nTime)) // RFC-0007
+        nMinFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * (PERKB_TX_FEE / 1000));
+    else
+        nMinFee = (1 + (int64)nBytes / 1000) * PERKB_TX_FEE;
 
     if (fAllowFree)
     {
@@ -663,16 +665,6 @@ int64 CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree,
         //   to be considered safe and assume they can likely make it into this section.
         if (nBytes < (mode == GMF_SEND ? 1000 : (DEFAULT_BLOCK_PRIORITY_SIZE - 1000)))
             nMinFee = 0;
-    }
-
-    // This code can be removed after enough miners have upgraded to version 0.9.
-    // Until then, be safe when sending and require a fee if any output
-    // is less than CENT:
-    if (nMinFee < nBaseFee && mode == GMF_SEND)
-    {
-        BOOST_FOREACH(const CTxOut& txout, vout)
-            if (txout.nValue < CENT)
-                nMinFee = nBaseFee;
     }
 
     // Raise the price as the block approaches full
@@ -1521,14 +1513,15 @@ bool CTransaction::CheckInputs(CValidationState &state, CCoinsViewCache &inputs,
             if (!GetCoinAge(state, inputs, nCoinAge))
                 return error("CheckInputs() : %s unable to get coin age for coinstake", GetHash().ToString().c_str());
             int64 nStakeReward = GetValueOut() - nValueIn;
-            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - GetMinFee() + MIN_TX_FEE)
+            int64 nCoinstakeCost = (GetMinFee() < PERKB_TX_FEE)? 0 : (GetMinFee() - PERKB_TX_FEE);
+            if (nStakeReward > GetProofOfStakeReward(nCoinAge) - nCoinstakeCost)
                 return state.DoS(100, error("CheckInputs() : %s stake reward exceeded", GetHash().ToString().c_str()));
         }
         else
         {
             if (nValueIn < GetValueOut())
                 return state.DoS(100, error("CheckInputs() : %s value in < value out", GetHash().ToString().c_str()));
-    
+
             // Tally transaction fees
             int64 nTxFee = nValueIn - GetValueOut();
             if (nTxFee < 0)
@@ -2389,8 +2382,12 @@ bool CBlock::CheckBlock(CValidationState &state, bool fCheckPOW, bool fCheckMerk
         return state.DoS(50, error("CheckBlock() : coinstake timestamp violation nTimeBlock=%" PRI64u" nTimeTx=%u", GetBlockTime(), vtx[1].nTime));
 
     // Check coinbase reward
-    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - vtx[0].GetMinFee() + MIN_TX_FEE) : 0))
-        return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s", 
+    int64 nCoinbaseCost = 0;
+    if (IsProofOfWork())
+        nCoinbaseCost = (vtx[0].GetMinFee() < PERKB_TX_FEE)? 0 : (vtx[0].GetMinFee() - PERKB_TX_FEE);
+
+    if (vtx[0].GetValueOut() > (IsProofOfWork()? (GetProofOfWorkReward(nBits) - nCoinbaseCost) : 0))
+        return state.DoS(50, error("CheckBlock() : coinbase reward exceeded %s > %s",
                    FormatMoney(vtx[0].GetValueOut()).c_str(),
                    FormatMoney(IsProofOfWork()? GetProofOfWorkReward(nBits) : 0).c_str()));
 
@@ -5226,6 +5223,7 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     unsigned int nExtraNonce = 0;
 
     string strMintMessage = _("Info: Minting suspended due to locked wallet.");
+    string strMintSyncMessage = _("Info: Minting suspended while synchronizing wallet.");
     string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
 
@@ -5238,6 +5236,13 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
 
         while (vNodes.empty())
             MilliSleep(1000);
+
+        while (Checkpoints::GuessVerificationProgress(pindexBest)<0.996)
+        {
+            printf("Minter thread sleeps while sync at %f\n",Checkpoints::GuessVerificationProgress(pindexBest));
+            strMintWarning = strMintSyncMessage;
+            MilliSleep(10000);
+        }
 
         while (pwallet->IsLocked())
         {
