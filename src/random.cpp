@@ -47,6 +47,7 @@
 
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <openssl/conf.h>
 
 [[noreturn]] static void RandFailure()
 {
@@ -294,15 +295,46 @@ void GetRandBytes(unsigned char* buf, int num)
     }
 }
 
+void LockingCallbackOpenSSL(int mode, int i, const char* file, int line);
+
 namespace {
+
 struct RNGState {
     Mutex m_mutex;
     unsigned char m_state[32] GUARDED_BY(m_mutex) = {0};
     uint64_t m_counter GUARDED_BY(m_mutex) = 0;
+    std::unique_ptr<Mutex[]> m_mutex_openssl;
 
     RNGState()
     {
         InitHardwareRand();
+
+        // Init OpenSSL library multithreading support
+        m_mutex_openssl.reset(new Mutex[CRYPTO_num_locks()]);
+        CRYPTO_set_locking_callback(LockingCallbackOpenSSL);
+
+        // OpenSSL can optionally load a config file which lists optional loadable modules and engines.
+        // We don't use them so we don't require the config. However some of our libs may call functions
+        // which attempt to load the config file, possibly resulting in an exit() or crash if it is missing
+        // or corrupt. Explicitly tell OpenSSL not to try to load the file. The result for our libs will be
+        // that the config appears to have been loaded and there are no modules/engines available.
+        OPENSSL_no_config();
+
+#ifdef WIN32
+        // Seed OpenSSL PRNG with current contents of the screen
+        RAND_screen();
+#endif
+
+        // Seed OpenSSL PRNG with performance counter
+        RandAddSeed();
+    }
+
+    ~RNGState()
+    {
+        // Securely erase the memory used by the OpenSSL PRNG
+        RAND_cleanup();
+        // Shutdown OpenSSL library multithreading support
+        CRYPTO_set_locking_callback(nullptr);
     }
 
     /** Extract up to 32 bytes of entropy from the RNG state, mixing in new entropy from hasher. */
@@ -341,6 +373,17 @@ RNGState& GetRNGState()
     static std::unique_ptr<RNGState> g_rng{new RNGState()};
     return *g_rng;
 }
+}
+
+void LockingCallbackOpenSSL(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
+{
+    RNGState& rng = GetRNGState();
+
+    if (mode & CRYPTO_LOCK) {
+        rng.m_mutex_openssl[i].lock();
+    } else {
+        rng.m_mutex_openssl[i].unlock();
+    }
 }
 
 static void AddDataToRng(void* data, size_t len, RNGState& rng);
