@@ -231,6 +231,7 @@ public:
     std::vector<std::string> listWalletDir() override
     {
         std::vector<std::string> paths;
+        paths.reserve(ListWalletDir().size());
         for (auto& path : ListWalletDir()) {
             paths.push_back(path.string());
         }
@@ -239,6 +240,7 @@ public:
     std::vector<std::unique_ptr<Wallet>> getWallets() override
     {
         std::vector<std::unique_ptr<Wallet>> wallets;
+        wallets.reserve(GetWallets().size());
         for (const std::shared_ptr<CWallet>& wallet : GetWallets()) {
             wallets.emplace_back(MakeWallet(wallet));
         }
