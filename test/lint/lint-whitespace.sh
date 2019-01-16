@@ -23,7 +23,7 @@ while getopts "?" opt; do
 done
 
 if [ -z "${COMMIT_RANGE}" ]; then
-  if [ "$1" ]; then
+  if [ -n "$1" ]; then
     COMMIT_RANGE="HEAD~$1...HEAD"
   else
     COMMIT_RANGE="HEAD"
