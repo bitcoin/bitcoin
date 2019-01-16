@@ -295,7 +295,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.log.info("Reject a block spending an immature coinbase.")
         self.move_tip(15)
         b20 = self.next_block(20, spend=out[7])
-        self.send_blocks([b20], success=False, reject_reason='bad-txns-premature-spend-of-coinbase')
+        self.send_blocks([b20], success=False, reject_reason='bad-txns-premature-spend-of-coinbase', reconnect=True)
 
         # Attempt to spend a coinbase at depth too low (on a fork this time)
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -308,7 +308,7 @@ class FullBlockTest(BitcoinTestFramework):
         self.send_blocks([b21], False)
 
         b22 = self.next_block(22, spend=out[5])
-        self.send_blocks([b22], success=False, reject_reason='bad-txns-premature-spend-of-coinbase')
+        self.send_blocks([b22], success=False, reject_reason='bad-txns-premature-spend-of-coinbase', reconnect=True)
 
         # Create a block on either side of MAX_BLOCK_BASE_SIZE and make sure its accepted/rejected
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
