@@ -125,6 +125,8 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
         return false;
     }
 
+    // We ignore the return value here as it is ok if this fails. If it fails, it usually means that we are not a
+    // member of the quorum but observed the whole DKG process to have the quorum verification vector.
     evoDb.Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
 
     return true;
@@ -267,10 +269,15 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
     quorumVvec = blsWorker.BuildQuorumVerificationVector(vvecs);
     if (quorumVvec == nullptr) {
         LogPrintf("CQuorumManager::%s -- failed to build quorumVvec\n", __func__);
+        // without the quorum vvec, there can't be a skShare, so we fail here. Failure is not fatal here, as it still
+        // allows to use the quorum as a non-member (verification through the quorum pub key)
+        return false;
     }
     skShare = blsWorker.AggregateSecretKeys(skContributions);
     if (!skShare.IsValid()) {
         LogPrintf("CQuorumManager::%s -- failed to build skShare\n", __func__);
+        // We don't bail out here as this is not a fatal error and still allows us to recover public key shares (as we
+        // have a valid quorum vvec at this point)
     }
     t2.stop();
 
