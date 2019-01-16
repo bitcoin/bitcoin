@@ -237,18 +237,24 @@ bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, std::
 
     quorum->Init(qc.quorumHash, quorumIndex->nHeight, members, qc.validMembers, qc.quorumPublicKey);
 
-    if (!quorum->ReadContributions(evoDb)) {
+    bool hasValidVvec = false;
+    if (quorum->ReadContributions(evoDb)) {
+        hasValidVvec = true;
+    } else {
         if (BuildQuorumContributions(qc, quorum)) {
             quorum->WriteContributions(evoDb);
+            hasValidVvec = true;
         } else {
             LogPrintf("CQuorumManager::%s -- quorum.ReadContributions and BuildQuorumContributions for block %s failed", __func__, qc.quorumHash.ToString());
         }
     }
 
-    // pre-populate caches in the background
-    // recovering public key shares is quite expensive and would result in serious lags for the first few signing
-    // sessions if the shares would be calculated on-demand
-    CQuorum::StartCachePopulatorThread(quorum);
+    if (hasValidVvec) {
+        // pre-populate caches in the background
+        // recovering public key shares is quite expensive and would result in serious lags for the first few signing
+        // sessions if the shares would be calculated on-demand
+        CQuorum::StartCachePopulatorThread(quorum);
+    }
 
     return true;
 }
