@@ -144,7 +144,7 @@ public:
                 *lockingSuccess = true;
             }
 
-            return reinterpret_cast<void*>(0x08000000 + (count<<24)); // Fake address, do not actually use this memory
+            return reinterpret_cast<void*>(uint64_t{static_cast<uint64_t>(0x08000000) + (count << 24)}); // Fake address, do not actually use this memory
         }
         return nullptr;
     }
