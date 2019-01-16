@@ -13,9 +13,9 @@
 void quorum_list_help()
 {
     throw std::runtime_error(
-            "quorum list (count)\n"
+            "quorum list ( count )\n"
             "\nArguments:\n"
-            "1. count           (number, optional) Number of quorums to list.\n"
+            "1. count           (number, optional, default=10) Number of quorums to list.\n"
     );
 }
 
@@ -51,11 +51,11 @@ UniValue quorum_list(const JSONRPCRequest& request)
 void quorum_info_help()
 {
     throw std::runtime_error(
-            "quorum info \"llmqType\" \"blockquorumHash\" (includeSkShare)\n"
+            "quorum info llmqType \"quorumHash\" ( includeSkShare )\n"
             "\nArguments:\n"
-            "1. \"llmqType\"            (int, required) LLMQ type.\n"
+            "1. llmqType              (int, required) LLMQ type.\n"
             "2. \"quorumHash\"          (string, required) Block hash of quorum.\n"
-            "3. \"includeSkShare\"      (boolean, optional) Include secret key share in output.\n"
+            "3. includeSkShare        (boolean, optional) Include secret key share in output.\n"
     );
 }
 
@@ -155,15 +155,31 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     return status.ToJson(detailLevel);
 }
 
+[[ noreturn ]] void quorum_help()
+{
+    throw std::runtime_error(
+            "quorum \"command\" ...\n"
+            "Set of commands for quorums/LLMQs.\n"
+            "To get help on individual commands, use \"help quorum command\".\n"
+            "\nArguments:\n"
+            "1. \"command\"        (string, required) The command to execute\n"
+            "\nAvailable commands:\n"
+            "  list              - List of on-chain quorums\n"
+            "  info              - Return information about a quorum\n"
+            "  dkgstatus         - Return the status of the current DKG process\n"
+    );
+}
+
 UniValue quorum(const JSONRPCRequest& request)
 {
-    if (request.params.empty()) {
-        throw std::runtime_error(
-                "quorum \"command\" ...\n"
-        );
+    if (request.fHelp && request.params.empty()) {
+        quorum_help();
     }
 
-    std::string command = request.params[0].get_str();
+    std::string command;
+    if (request.params.size() >= 1) {
+        command = request.params[0].get_str();
+    }
 
     if (command == "list") {
         return quorum_list(request);
@@ -172,7 +188,7 @@ UniValue quorum(const JSONRPCRequest& request)
     } else if (command == "dkgstatus") {
         return quorum_dkgstatus(request);
     } else {
-        throw std::runtime_error("invalid command: " + command);
+        quorum_help();
     }
 }
 
