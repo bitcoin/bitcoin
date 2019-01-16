@@ -5,7 +5,7 @@ DEB_INSTALL_EXAMPLES_peercoind += debian/examples/*
 DEB_INSTALL_MANPAGES_peercoind += debian/manpages/*
 
 %:
-	dh $@ --parallel
+	dh $@
 
 override_dh_auto_clean:
 	if [ -f Makefile ]; then $(MAKE) distclean; fi
