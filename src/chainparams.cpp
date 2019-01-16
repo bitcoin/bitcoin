@@ -253,7 +253,7 @@ public:
 
 /**
  * Regression test
- */
+
 class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
@@ -318,6 +318,7 @@ public:
         bech32_hrp = "bcrt";
     }
 };
+ */
 
 static std::unique_ptr<CChainParams> globalChainParams;
 
