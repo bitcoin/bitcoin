@@ -36,6 +36,7 @@ With the /notxdetails/ option JSON response will only contain the transaction ha
 `GET /rest/headers/<COUNT>/<BLOCK-HASH>.<bin|hex|json>`
 
 Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
+Returns empty if the block doesn't exist or it isn't in the active chain.
 
 #### Chaininfos
 `GET /rest/chaininfo.json`
