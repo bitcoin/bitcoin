@@ -73,8 +73,9 @@ public:
     static const uint32_t SEQUENCE_FINAL = 0xffffffff;
 
     /* Below flags apply in the context of BIP 68*/
-    /* If this flag set, CTxIn::nSequence is NOT interpreted as a
-     * relative lock-time. */
+    /* If this flag is set on the script operand for relative
+     * locktime script evaluation, CTxIn::nSequence is NOT
+     * interpreted as a relative lock-time. */
     static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1U << 31);
 
     /* If CTxIn::nSequence encodes a relative lock-time and this flag
