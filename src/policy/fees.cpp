@@ -168,7 +168,7 @@ public:
      * Read saved state of estimation data from a file and replace all internal data structures and
      * variables with this state.
      */
-    void Read(CAutoFile& filein, int nFileVersion, size_t numBuckets);
+    void Read(CAutoFile& filein, size_t numBuckets);
 };
 
 
@@ -403,7 +403,7 @@ void TxConfirmStats::Write(CAutoFile& fileout) const
     fileout << failAvg;
 }
 
-void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets)
+void TxConfirmStats::Read(CAutoFile& filein, size_t numBuckets)
 {
     // Read data file and do some very basic sanity checking
     // buckets and bucketMap are not updated yet, so don't access them
@@ -953,9 +953,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
             std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
             std::unique_ptr<TxConfirmStats> fileLongStats(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
-            fileFeeStats->Read(filein, nVersionThatWrote, numBuckets);
-            fileShortStats->Read(filein, nVersionThatWrote, numBuckets);
-            fileLongStats->Read(filein, nVersionThatWrote, numBuckets);
+            fileFeeStats->Read(filein, numBuckets);
+            fileShortStats->Read(filein, numBuckets);
+            fileLongStats->Read(filein, numBuckets);
 
             // Fee estimates file parsed correctly
             // Copy buckets from file and refresh our bucketmap
