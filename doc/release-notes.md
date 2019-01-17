@@ -111,6 +111,14 @@ Configuration option changes
   ambiguous whether the hash character is meant for the password or as a
   comment.
 
+- The `whitelistforcerelay` option is used to relay transactions from
+  whitelisted peers even when not accepted to the mempool. This option now
+  defaults to being off, so that changes in policy and disconnect/ban behavior
+  will not cause a node that is whitelisting another to be dropped by peers.
+  Users can still explicitly enable this behavior with the command line option
+  (and may want to consider letting the Bitcoin Core project know about their
+  use-case, as this feature could be deprecated in the future).
+
 Documentation
 -------------
 
