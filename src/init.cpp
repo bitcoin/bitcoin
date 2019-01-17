@@ -688,7 +688,10 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
-        pblocktree->WriteReindexing(false);
+        {
+            LOCK(cs_main);
+            pblocktree->WriteReindexing(false);
+        }
         fReindex = false;
         LogPrintf("Reindexing finished\n");
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
