@@ -212,7 +212,7 @@ BitcoinApplication::~BitcoinApplication()
     if(coreThread)
     {
         qDebug() << __func__ << ": Stopping thread";
-        Q_EMIT stopThread();
+        coreThread->quit();
         coreThread->wait();
         qDebug() << __func__ << ": Stopped thread";
     }
@@ -279,8 +279,7 @@ void BitcoinApplication::startThread()
     connect(this, &BitcoinApplication::requestedInitialize, executor, &BitcoinCore::initialize);
     connect(this, &BitcoinApplication::requestedShutdown, executor, &BitcoinCore::shutdown);
     /*  make sure executor object is deleted in its own thread */
-    connect(this, &BitcoinApplication::stopThread, executor, &QObject::deleteLater);
-    connect(this, &BitcoinApplication::stopThread, coreThread, &QThread::quit);
+    connect(coreThread, &QThread::finished, executor, &QObject::deleteLater);
 
     coreThread->start();
 }
