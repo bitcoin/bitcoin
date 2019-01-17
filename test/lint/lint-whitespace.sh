@@ -23,7 +23,7 @@ while getopts "?" opt; do
 done
 
 if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
-  if [ "$1" ]; then
+  if [ -n "$1" ]; then
     TRAVIS_COMMIT_RANGE="HEAD~$1...HEAD"
   else
     TRAVIS_COMMIT_RANGE="HEAD"
