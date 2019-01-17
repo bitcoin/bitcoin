@@ -134,12 +134,12 @@ namespace {
 
     CCriticalSection cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
-    int nLastBlockFile = 0;
+    int nLastBlockFile GUARDED_BY(cs_LastBlockFile) = 0;
     /** Global flag to indicate we should check to see if there are
      *  block/undo files that should be deleted.  Set on startup
      *  or if we allocate more file space when we're in prune mode
      */
-    bool fCheckForPruning = false;
+    bool fCheckForPruning GUARDED_BY(cs_LastBlockFile) = false;
 
     /** Dirty block index entries. */
     std::set<CBlockIndex*> setDirtyBlockIndex;
@@ -2064,7 +2064,10 @@ void CChainState::ForceFlushStateToDisk() {
 
 void CChainState::PruneAndFlush() {
     CValidationState state;
-    fCheckForPruning = true;
+    {
+        LOCK(cs_LastBlockFile);
+        fCheckForPruning = true;
+    }
     const CChainParams& chainparams = Params();
 
     if (!this->FlushStateToDisk(chainparams, state, FlushStateMode::NONE)) {
@@ -3753,6 +3756,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_RE
     if (!::ChainstateActive().LoadBlockIndex(chainparams.GetConsensus(), *pblocktree))
         return false;
 
+    LOCK(cs_LastBlockFile);
     // Load block file info
     pblocktree->ReadLastBlockFile(nLastBlockFile);
     vinfoBlockFile.resize(nLastBlockFile + 1);
@@ -4192,7 +4196,10 @@ void UnloadBlockIndex()
     mempool.clear();
     mapBlocksUnlinked.clear();
     vinfoBlockFile.clear();
-    nLastBlockFile = 0;
+    {
+        LOCK(cs_LastBlockFile);
+        nLastBlockFile = 0;
+    }
     setDirtyBlockIndex.clear();
     setDirtyFileInfo.clear();
     versionbitscache.Clear();
