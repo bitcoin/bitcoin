@@ -39,6 +39,8 @@ add_definitions(
 file(GLOB SOURCE_FILES
         src/bench/*.cpp
         src/bench/*.h
+        src/bls/*.cpp
+        src/bls/*.h
         src/compat/*.cpp
         src/compat/*.h
         src/consensus/*.h
