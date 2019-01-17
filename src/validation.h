@@ -616,7 +616,7 @@ CChainState& ChainstateActive();
 CChain& ChainActive();
 
 /** Global variable that points to the coins database (protected by cs_main) */
-extern std::unique_ptr<CCoinsViewDB> pcoinsdbview;
+extern std::unique_ptr<CCoinsViewDB> pcoinsdbview GUARDED_BY(cs_main);
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
 extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
