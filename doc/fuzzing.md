@@ -82,7 +82,7 @@ make
 ```
 
 The fuzzer needs some inputs to work on, but the inputs or seeds can be used
-interchangably between libFuzzer and AFL.
+interchangeably between libFuzzer and AFL.
 
 See https://llvm.org/docs/LibFuzzer.html#running on how to run the libFuzzer
 instrumented executable.
