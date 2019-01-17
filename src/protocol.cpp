@@ -65,6 +65,9 @@ const char *QJUSTIFICATION="qjustify";
 const char *QPCOMMITMENT="qpcommit";
 const char *QWATCH="qwatch";
 const char *QDEBUGSTATUS="qdebugstatus";
+const char *QSIGSHARESINV="qsigsinv";
+const char *QGETSIGSHARES="qgetsigs";
+const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
 };
 
@@ -160,6 +163,9 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QPCOMMITMENT,
     NetMsgType::QWATCH,
     NetMsgType::QDEBUGSTATUS,
+    NetMsgType::QSIGSHARESINV,
+    NetMsgType::QGETSIGSHARES,
+    NetMsgType::QBSIGSHARES,
     NetMsgType::QSIGREC,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));

@@ -10,6 +10,7 @@
 #include "quorums_debug.h"
 #include "quorums_dkgsessionmgr.h"
 #include "quorums_signing.h"
+#include "quorums_signing_shares.h"
 
 #include "scheduler.h"
 
@@ -24,13 +25,22 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
     quorumDKGSessionManager = new CDKGSessionManager(evoDb, blsWorker);
     quorumManager = new CQuorumManager(evoDb, blsWorker, *quorumDKGSessionManager);
+    quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(unitTests);
+
+    quorumSigSharesManager->StartWorkerThread();
 }
 
 void DestroyLLMQSystem()
 {
+    if (quorumSigSharesManager) {
+        quorumSigSharesManager->StopWorkerThread();
+    }
+
     delete quorumSigningManager;
     quorumSigningManager = nullptr;
+    delete quorumSigSharesManager;
+    quorumSigSharesManager = nullptr;
     delete quorumManager;
     quorumManager = NULL;
     delete quorumDKGSessionManager;

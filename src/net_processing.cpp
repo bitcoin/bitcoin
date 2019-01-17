@@ -50,6 +50,7 @@
 #include "llmq/quorums_dkgsessionmgr.h"
 #include "llmq/quorums_init.h"
 #include "llmq/quorums_signing.h"
+#include "llmq/quorums_signing_shares.h"
 
 #include <boost/thread.hpp>
 
@@ -2942,6 +2943,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumDKGDebugManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
