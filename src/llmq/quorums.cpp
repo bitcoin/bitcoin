@@ -101,7 +101,7 @@ int CQuorum::GetMemberIndex(const uint256& proTxHash) const
     return -1;
 }
 
-bool CQuorum::WriteContributions(CEvoDB& evoDb)
+void CQuorum::WriteContributions(CEvoDB& evoDb)
 {
     uint256 dbKey = MakeQuorumKey(*this);
 
@@ -111,7 +111,6 @@ bool CQuorum::WriteContributions(CEvoDB& evoDb)
     if (skShare.IsValid()) {
         evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
     }
-    return true;
 }
 
 bool CQuorum::ReadContributions(CEvoDB& evoDb)

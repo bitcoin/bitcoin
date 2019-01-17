@@ -63,7 +63,7 @@ public:
     CBLSSecretKey GetSkShare() const;
 
 private:
-    bool WriteContributions(CEvoDB& evoDb);
+    void WriteContributions(CEvoDB& evoDb);
     bool ReadContributions(CEvoDB& evoDb);
     static void StartCachePopulatorThread(std::shared_ptr<CQuorum> _this);
 };
