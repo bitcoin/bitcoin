@@ -619,7 +619,7 @@ CChain& ChainActive();
 extern std::unique_ptr<CCoinsViewDB> pcoinsdbview GUARDED_BY(cs_main);
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
-extern std::unique_ptr<CCoinsViewCache> pcoinsTip;
+extern std::unique_ptr<CCoinsViewCache> pcoinsTip GUARDED_BY(cs_main);
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern std::unique_ptr<CBlockTreeDB> pblocktree;
