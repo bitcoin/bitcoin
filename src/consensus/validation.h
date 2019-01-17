@@ -71,13 +71,6 @@ public:
     bool IsError() const {
         return mode == MODE_ERROR;
     }
-    bool IsInvalid(int &nDoSOut) const {
-        if (IsInvalid()) {
-            nDoSOut = nDoS;
-            return true;
-        }
-        return false;
-    }
     bool CorruptionPossible() const {
         return corruptionPossible;
     }
