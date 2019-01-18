@@ -51,6 +51,32 @@ struct MainSignalsInstance {
 
 static CMainSignals g_signals;
 
+#if defined(DEBUG_LOCKORDER)
+
+void ThrowIfRunningInValidationInterfaceQueue() {
+    if (IsRunningInValidationInterfaceQueue()) {
+        throw std::logic_error(
+            "This function cannot be called from within the ValidationInterface "
+            "queue because it may result in a deadlock when attempting to "
+            "drain the same queue.");
+    }
+}
+
+#if defined(HAVE_THREAD_LOCAL)
+static thread_local bool g_is_running_in_queue_thread{false};
+
+bool IsRunningInValidationInterfaceQueue() { return g_is_running_in_queue_thread; }
+static void MarkRunningInQueue() { g_is_running_in_queue_thread = true; }
+
+#else
+
+bool IsRunningInValidationInterfaceQueue() { return false; }
+static void MarkRunningInQueue() {}
+
+#endif // defined(HAVE_THREAD_LOCAL)
+
+#endif // defined(DEBUG_LOCKORDER)
+
 // This map has to a separate global instead of a member of MainSignalsInstance,
 // because RegisterWithMempoolSignals is currently called before RegisterBackgroundSignalScheduler,
 // so MainSignalsInstance hasn't been created yet.
@@ -59,6 +85,12 @@ static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_con
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
     assert(!m_internals);
     m_internals.reset(new MainSignalsInstance(&scheduler));
+
+#ifdef DEBUG_LOCKORDER
+    // Indicate that we're running in a ValidationInterface thread. This
+    // affects which functions can be called without risk of deadlock.
+    AddToProcessQueue(MarkRunningInQueue);
+#endif
 }
 
 void CMainSignals::UnregisterBackgroundSignalScheduler() {
@@ -113,11 +145,15 @@ void UnregisterAllValidationInterfaces() {
     g_signals.m_internals->m_connMainSignals.clear();
 }
 
+
 void CallFunctionInValidationInterfaceQueue(std::function<void ()> func) {
-    g_signals.m_internals->m_schedulerClient.AddToProcessQueue(std::move(func));
+    g_signals.AddToProcessQueue(std::move(func));
 }
 
 void SyncWithValidationInterfaceQueue() {
+#ifdef DEBUG_LOCKORDER
+    ThrowIfRunningInValidationInterfaceQueue();
+#endif
     AssertLockNotHeld(cs_main);
     // Block until the validation queue drains
     std::promise<void> promise;
@@ -129,7 +165,7 @@ void SyncWithValidationInterfaceQueue() {
 
 void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason reason) {
     if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
+        AddToProcessQueue([ptx, this] {
             m_internals->TransactionRemovedFromMempool(ptx);
         });
     }
@@ -140,31 +176,31 @@ void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInd
     // the chain actually updates. One way to ensure this is for the caller to invoke this signal
     // in the same critical section where the chain is updated
 
-    m_internals->m_schedulerClient.AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
+    AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
         m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
     });
 }
 
 void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
+    AddToProcessQueue([ptx, this] {
         m_internals->TransactionAddedToMempool(ptx);
     });
 }
 
 void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>>& pvtxConflicted) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, pvtxConflicted, this] {
+    AddToProcessQueue([pblock, pindex, pvtxConflicted, this] {
         m_internals->BlockConnected(pblock, pindex, *pvtxConflicted);
     });
 }
 
 void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, this] {
+    AddToProcessQueue([pblock, this] {
         m_internals->BlockDisconnected(pblock);
     });
 }
 
 void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
-    m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
+    AddToProcessQueue([locator, this] {
         m_internals->ChainStateFlushed(locator);
     });
 }
@@ -179,4 +215,9 @@ void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& sta
 
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
     m_internals->NewPoWValidBlock(pindex, block);
+}
+
+void CMainSignals::AddToProcessQueue(std::function<void ()> func)
+{
+    m_internals->m_schedulerClient.AddToProcessQueue(std::move(func));
 }

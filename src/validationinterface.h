@@ -55,6 +55,25 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  */
 void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 
+#ifdef DEBUG_LOCKORDER
+/**
+ * Return true if we're running in a thread processing the ValidationInterface
+ * queue.
+ *
+ * Used to warn against calls to functions which may introduce deadlocks by
+ * interacting with the queue we're executing from.
+ *
+ * Only supported for platforms which HAVE_THREAD_LOCAL.
+ */
+bool IsRunningInValidationInterfaceQueue();
+
+/**
+ * Throw a std::logic_error if we're currently executing in a
+ * ValidationInterface queue thread.
+ */
+void ThrowIfRunningInValidationInterfaceQueue();
+#endif
+
 /**
  * Implement this to subscribe to events generated in validation
  *
@@ -187,6 +206,9 @@ public:
     void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+
+    /** Schedule a function for execution in the ValidationInterface queue. */
+    void AddToProcessQueue(std::function<void ()> func);
 };
 
 CMainSignals& GetMainSignals();
