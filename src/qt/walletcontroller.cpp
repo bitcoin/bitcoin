@@ -63,6 +63,22 @@ OpenWalletActivity* WalletController::openWallet(const std::string& name, QWidge
     return activity;
 }
 
+void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
+{
+    QMessageBox box(parent);
+    box.setWindowTitle(tr("Close wallet"));
+    box.setText(tr("Are you sure you wish to close wallet <i>%1</i>?").arg(wallet_model->getDisplayName()));
+    box.setInformativeText(tr("Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled."));
+    box.setStandardButtons(QMessageBox::Yes|QMessageBox::Cancel);
+    box.setDefaultButton(QMessageBox::Yes);
+    if (box.exec() != QMessageBox::Yes) return;
+
+    // First remove wallet from node.
+    wallet_model->wallet().remove();
+    // Now release the model.
+    removeAndDeleteWallet(wallet_model);
+}
+
 WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet)
 {
     QMutexLocker locker(&m_mutex);
