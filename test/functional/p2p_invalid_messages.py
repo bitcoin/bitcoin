@@ -183,7 +183,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
             # modify checksum
             msg = msg[:cut_len] + b'\xff' * 4 + msg[cut_len + 4:]
             self.nodes[0].p2p.send_raw_message(msg)
-            conn.sync_with_ping(timeout=1)
+            conn.wait_for_disconnect(timeout=1)
             self.nodes[0].disconnect_p2ps()
 
     def test_size(self):

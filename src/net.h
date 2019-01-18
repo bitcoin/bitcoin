@@ -616,7 +616,6 @@ public:
     int64_t m_time = 0;                  // time (in microseconds) of message receipt.
     bool m_valid_netmagic = false;
     bool m_valid_header = false;
-    bool m_valid_checksum = false;
     uint32_t m_message_size = 0;         // size of the payload
     uint32_t m_raw_message_size = 0;     // used wire size of the message (including header/checksum)
     std::string m_command;

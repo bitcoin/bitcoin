@@ -675,6 +675,18 @@ int V1TransportDeserializer::readData(const char *pch, unsigned int nBytes)
     memcpy(&vRecv[nDataPos], pch, nCopy);
     nDataPos += nCopy;
 
+    if (Complete()) {
+        const uint256& hash = GetMessageHash();
+        if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0)
+        {
+            LogPrint(BCLog::NET, "CHECKSUM ERROR (%s, %u bytes), expected %s was %s, disconnecting\n",
+               SanitizeString(hdr.pchCommand), hdr.nMessageSize,
+               HexStr(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE),
+               HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE));
+            return -1;
+        }
+    }
+
     return nCopy;
 }
 
@@ -693,7 +705,6 @@ CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageSta
     // store state about valid header, netmagic and checksum
     msg.m_valid_header = hdr.IsValid(message_start);
     msg.m_valid_netmagic = (memcmp(hdr.pchMessageStart, message_start, CMessageHeader::MESSAGE_START_SIZE) == 0);
-    uint256 hash = GetMessageHash();
 
     // store command string, payload size
     msg.m_command = hdr.GetCommand();
@@ -701,15 +712,7 @@ CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageSta
     msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
 
     // We just received a message off the wire, harvest entropy from the time (and the message checksum)
-    RandAddEvent(ReadLE32(hash.begin()));
-
-    msg.m_valid_checksum = (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) == 0);
-    if (!msg.m_valid_checksum) {
-        LogPrint(BCLog::NET, "CHECKSUM ERROR (%s, %u bytes), expected %s was %s\n",
-                 SanitizeString(msg.m_command), msg.m_message_size,
-                 HexStr(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE),
-                 HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE));
-    }
+    RandAddEvent(ReadLE32(GetMessageHash().begin()));
 
     // store receive time
     msg.m_time = time;
