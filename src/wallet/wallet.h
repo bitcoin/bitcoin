@@ -1087,6 +1087,9 @@ public:
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
 
+    /** Keypool has new keys */
+    boost::signals2::signal<void ()> NotifyCanGetAddressesChanged;
+
     /** Inquire whether this wallet broadcasts transactions. */
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
