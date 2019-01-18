@@ -123,8 +123,8 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
             return false;
     }
 
-    // Message size
-    if (nMessageSize > MAX_SIZE)
+    // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
+    if (nMessageSize > MAX_SIZE || nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH)
     {
         LogPrintf("CMessageHeader::IsValid(): (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand(), nMessageSize);
         return false;

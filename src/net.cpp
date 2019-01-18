@@ -649,8 +649,9 @@ int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
         return -1;
     }
 
-    // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
-    if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+    // reject if message has an invalid header
+    if (!hdr.IsValid(Params().MessageStart())) {
+        LogPrint(BCLog::NET, "INVALID HEADER DETECTED\n");
         return -1;
     }
 

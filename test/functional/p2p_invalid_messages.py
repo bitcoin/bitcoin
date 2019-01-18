@@ -193,14 +193,14 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_msgtype(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: ERRORS IN HEADER']):
+        with self.nodes[0].assert_debug_log(['INVALID HEADER DETECTED']):
             msg = msg_unrecognized(str_data="d")
             msg.msgtype = b'\xff' * 12
             msg = conn.build_message(msg)
             # Modify msgtype
             msg = msg[:7] + b'\x00' + msg[7 + 1:]
             self.nodes[0].p2p.send_raw_message(msg)
-            conn.sync_with_ping(timeout=1)
+            conn.wait_for_disconnect(timeout=1)
             self.nodes[0].disconnect_p2ps()
 
     def test_large_inv(self):
