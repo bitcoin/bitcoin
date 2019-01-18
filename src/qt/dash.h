@@ -18,6 +18,7 @@ class ClientModel;
 class NetworkStyle;
 class OptionsModel;
 class PaymentServer;
+class WalletController;
 class WalletModel;
 
 namespace interfaces {
@@ -90,8 +91,6 @@ public Q_SLOTS:
     void shutdownResult();
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
-    void addWallet(WalletModel* walletModel);
-    void removeWallet();
 
 Q_SIGNALS:
     void requestedInitialize();
@@ -109,9 +108,8 @@ private:
     BitcoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
-    PaymentServer* paymentServer;
-    std::vector<WalletModel*> m_wallet_models;
-    std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
+    PaymentServer* paymentServer{nullptr};
+    WalletController* m_wallet_controller{nullptr};
 #endif
     int returnValue;
     std::unique_ptr<QWidget> shutdownWindow;
