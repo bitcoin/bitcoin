@@ -47,7 +47,9 @@ struct MainSignalsInstance {
     std::unordered_map<CValidationInterface*, ValidationInterfaceConnections> m_connMainSignals;
 
     explicit MainSignalsInstance(CScheduler *pscheduler) : m_schedulerClient(pscheduler) {}
+    ~MainSignalsInstance() {}
 };
+
 
 static CMainSignals g_signals;
 
@@ -81,6 +83,9 @@ static void MarkRunningInQueue() {}
 // because RegisterWithMempoolSignals is currently called before RegisterBackgroundSignalScheduler,
 // so MainSignalsInstance hasn't been created yet.
 static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_connNotifyEntryRemoved;
+
+CMainSignals::CMainSignals() {}
+CMainSignals::~CMainSignals() {}
 
 void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
     assert(!m_internals);
