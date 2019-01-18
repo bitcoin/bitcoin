@@ -75,25 +75,20 @@ private:
         MODE_ERROR,   //!< run-time error
     } mode;
     ValidationInvalidReason m_reason;
-    int nDoS;
     std::string strRejectReason;
     unsigned int chRejectCode;
-    bool corruptionPossible;
     std::string strDebugMessage;
 public:
-    CValidationState() : mode(MODE_VALID), m_reason(ValidationInvalidReason::NONE), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+    CValidationState() : mode(MODE_VALID), m_reason(ValidationInvalidReason::NONE), chRejectCode(0) {}
     bool DoS(int level, ValidationInvalidReason reasonIn, bool ret = false,
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
-             bool corruptionIn=false,
+             bool corruptionPossibleIn=false,
              const std::string &strDebugMessageIn="") {
         m_reason = reasonIn;
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
-        corruptionPossible = corruptionIn;
         strDebugMessage = strDebugMessageIn;
-        nDoS += level;
-        assert(nDoS == GetDoSForReason());
-        assert(corruptionPossible == (m_reason == ValidationInvalidReason::BLOCK_MUTATED || m_reason == ValidationInvalidReason::TX_WITNESS_MUTATED));
+        assert(corruptionPossibleIn == CorruptionPossible());
         if (mode == MODE_ERROR)
             return ret;
         mode = MODE_INVALID;
@@ -120,15 +115,9 @@ public:
         return mode == MODE_ERROR;
     }
     bool CorruptionPossible() const {
-        assert(corruptionPossible == (m_reason == ValidationInvalidReason::BLOCK_MUTATED || m_reason == ValidationInvalidReason::TX_WITNESS_MUTATED));
-        return corruptionPossible;
+        return m_reason == ValidationInvalidReason::BLOCK_MUTATED || m_reason == ValidationInvalidReason::TX_WITNESS_MUTATED;
     }
-    void SetCorruptionPossible() {
-        corruptionPossible = true;
-        assert(corruptionPossible == (m_reason == ValidationInvalidReason::BLOCK_MUTATED || m_reason == ValidationInvalidReason::TX_WITNESS_MUTATED));
-    }
-    int GetDoS(void) const { return nDoS; }
-    int GetDoSForReason() const {
+    int GetDoS() const {
         switch (m_reason) {
         case ValidationInvalidReason::NONE:
             return 0;
