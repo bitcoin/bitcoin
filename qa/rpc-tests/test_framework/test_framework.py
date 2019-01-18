@@ -375,6 +375,112 @@ class DashTestFramework(BitcoinTestFramework):
             sleep(0.1)
         return locked
 
+    def wait_for_sporks_same(self, timeout=30):
+        st = time()
+        while time() < st + timeout:
+            if self.check_sporks_same():
+                return
+            sleep(0.5)
+        raise AssertionError("wait_for_sporks_same timed out")
+
+    def check_sporks_same(self):
+        sporks = self.nodes[0].spork('show')
+        for node in self.nodes[1:]:
+            sporks2 = node.spork('show')
+            if sporks != sporks2:
+                return False
+        return True
+
+    def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=5):
+        t = time()
+        while time() - t < timeout:
+            all_ok = True
+            for mn in self.mninfo:
+                s = mn.node.quorum("dkgstatus")["session"]["llmq_10"]
+                if "phase" not in s:
+                    all_ok = False
+                    break
+                if s["phase"] != phase:
+                    all_ok = False
+                    break
+                if check_received_messages is not None:
+                    if s["receivedContributions"] < check_received_messages_count:
+                        all_ok = False
+                        break
+            if all_ok:
+                break
+            sleep(0.1)
+
+    def wait_for_quorum_commitment(self, timeout = 5):
+        t = time()
+        while time() - t < timeout:
+            all_ok = True
+            for node in self.nodes:
+                s = node.quorum("dkgstatus")["session"]["llmq_10"]
+                if not s["receivedFinalCommitment"]:
+                    all_ok = False
+                    break
+            if all_ok:
+                break
+            sleep(0.1)
+
+    def mine_quorum(self, expected_valid_count=10):
+        quorums = self.nodes[0].quorum("list")
+
+        # move forward to next DKG
+        skip_count = 24 - (self.nodes[0].getblockcount() % 24)
+        if skip_count != 0:
+            set_mocktime(get_mocktime() + 1)
+            set_node_times(self.nodes, get_mocktime())
+            self.nodes[0].generate(skip_count)
+
+        # Make sure all reached phase 1 (init)
+        self.wait_for_quorum_phase(1, None, 0)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(2)
+
+        # Make sure all reached phase 2 (contribute) and received all contributions
+        self.wait_for_quorum_phase(2, "receivedContributions", expected_valid_count)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(2)
+
+        # Make sure all reached phase 3 (complain) and received all complaints
+        self.wait_for_quorum_phase(3, "receivedComplaints" if expected_valid_count != 0 else None, expected_valid_count)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(2)
+
+        # Make sure all reached phase 4 (justify)
+        self.wait_for_quorum_phase(4, None, 0)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(2)
+
+        # Make sure all reached phase 5 (commit)
+        self.wait_for_quorum_phase(5, "receivedPrematureCommitments", expected_valid_count)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(2)
+
+        # Make sure all reached phase 6 (mining)
+        self.wait_for_quorum_phase(6, None, 0)
+
+        # Wait for final commitment
+        self.wait_for_quorum_commitment()
+
+        # mine the final commitment
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(1)
+        while quorums == self.nodes[0].quorum("list"):
+            sleep(2)
+            set_mocktime(get_mocktime() + 1)
+            set_node_times(self.nodes, get_mocktime())
+            self.nodes[0].generate(1)
+
+
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
