@@ -1623,19 +1623,6 @@
         <bool>true</bool>
        </property>
       </widget>
-      <widget class="QLabel" name="wallet_path">
-       <property name="geometry">
-        <rect>
-         <x>10</x>
-         <y>70</y>
-         <width>731</width>
-         <height>21</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Wallet Path</string>
-       </property>
-      </widget>
      </widget>
     </widget>
    </item>
