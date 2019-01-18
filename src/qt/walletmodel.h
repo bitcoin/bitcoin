@@ -233,6 +233,7 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_watch_only_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_can_get_addrs_changed;
     interfaces::Node& m_node;
 
     bool fHaveWatchOnly;
@@ -283,6 +284,9 @@ Q_SIGNALS:
 
     // Signal that wallet is about to be removed
     void unload();
+
+    // Notify that there are now keys in the keypool
+    void canGetAddressesChanged();
 
 public Q_SLOTS:
     /* Wallet status might have changed */
