@@ -157,7 +157,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # we might run into races later on
         asyncio.run_coroutine_threadsafe(swap_magic_bytes(), NetworkThread.network_event_loop).result()
 
-        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART ping']):
+        with self.nodes[0].assert_debug_log(['INVALID MESSAGESTART ping']):
             conn.send_message(messages.msg_ping(nonce=0xff))
             conn.wait_for_disconnect(timeout=1)
             self.nodes[0].disconnect_p2ps()

@@ -104,8 +104,10 @@ std::string CMessageHeader::GetCommand() const
 bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
 {
     // Check start string
-    if (memcmp(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE) != 0)
+    if (memcmp(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE) != 0) {
+        LogPrint(BCLog::NET, "INVALID MESSAGESTART %s\n", SanitizeString(GetCommand()));
         return false;
+    }
 
     // Check the command string for errors
     for (const char* p1 = pchCommand; p1 < pchCommand + COMMAND_SIZE; p1++)
