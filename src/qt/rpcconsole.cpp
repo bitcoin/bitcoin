@@ -400,13 +400,12 @@ void RPCExecutor::request(const QString &command, const QString &walletID)
         std::string executableCommand = command.toStdString() + "\n";
 
         // Catch the console-only-help command before RPC call is executed and reply with help text as-if a RPC reply.
-        if(executableCommand == "help-console\n")
-        {
+        if(executableCommand == "help-console\n") {
             Q_EMIT reply(RPCConsole::CMD_REPLY, QString(("\n"
                 "This console accepts RPC commands using the standard syntax.\n"
                 "   example:    getblockhash 0\n\n"
 
-                "This console can also accept RPC commands using parenthesized syntax.\n"
+                "This console can also accept RPC commands using the parenthesized syntax.\n"
                 "   example:    getblockhash(0)\n\n"
 
                 "Commands may be nested when specified with the parenthesized syntax.\n"
@@ -416,11 +415,11 @@ void RPCExecutor::request(const QString &command, const QString &walletID)
                 "   example:    getblockhash 0\n"
                 "               getblockhash,0\n\n"
 
-                "Named results can be queried with a non-quoted key string in brackets.\n"
-                "   example:    getblock(getblockhash(0) true)[tx]\n\n"
+                "Named results can be queried with a non-quoted key string in brackets using the parenthesized syntax.\n"
+                "   example:    getblock(getblockhash(0) 1)[tx]\n\n"
 
-                "Results without keys can be queried using an integer in brackets.\n"
-                "   example:    getblock(getblockhash(0),true)[tx][0]\n\n")));
+                "Results without keys can be queried with an integer in brackets using the parenthesized syntax.\n"
+                "   example:    getblock(getblockhash(0),1)[tx][0]\n\n")));
             return;
         }
         std::string wallet_id = walletID.toStdString();
