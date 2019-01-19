@@ -262,6 +262,12 @@ Graphical User Interface (GUI)
   balance shown if the wallet was created using the `createwallet` RPC
   and the `disable_private_keys` parameter was set to true.
 
+- The launch-on-startup option is no longer available on macOS if
+  compiled with macosx min version greater than 10.11 (use
+  CXXFLAGS="-mmacosx-version-min=10.11"
+  CFLAGS="-mmacosx-version-min=10.11" for setting the deployment
+  sdk version)
+
 Low-level changes
 =================
 
