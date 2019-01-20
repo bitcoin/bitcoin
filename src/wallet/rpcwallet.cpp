@@ -4755,7 +4755,6 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
                             "                             accepted as second parameter.\n"
                             "   ]\n"
                             "3. locktime                  (numeric, optional, default=0) Raw locktime. Non-0 value also locktime-activates inputs\n"
-                            "                             Allows this transaction to be replaced by a transaction with higher fees. If provided, it is an error if explicit sequence numbers are incompatible.\n"
                             "4. options                 (object, optional)\n"
                             "   {\n"
                             "     \"changeAddress\"          (string, optional, default pool address) The syscoin address to receive the change\n"
