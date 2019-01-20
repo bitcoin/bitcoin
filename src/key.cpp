@@ -234,7 +234,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
     uint256 hash;
     CHash256().Write((unsigned char*)str.data(), str.size()).Write(rnd, sizeof(rnd)).Finalize(hash.begin());
     std::vector<unsigned char> vchSig;
-    Sign(hash, vchSig);
+    (void) Sign(hash, vchSig);
     return pubkey.Verify(hash, vchSig);
 }
 
