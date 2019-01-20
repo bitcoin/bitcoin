@@ -405,13 +405,14 @@ static CScript PushAll(const std::vector<valtype>& values)
     return result;
 }
 
-static void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
+static bool ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
 {
     std::vector<valtype> stack;
-    EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
+    bool r = EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), SigVersion::BASE);
     assert(stack.size() > 0);
     stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
     script = PushAll(stack);
+    return r;
 }
 
 BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
@@ -563,7 +564,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     // P2SH pay-to-compressed-pubkey.
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey1)), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey2)), output2, input2);
-    ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1);
+    BOOST_CHECK(ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1));
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
@@ -588,7 +589,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     // P2SH witness pay-to-compressed-pubkey (v0).
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey1))), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(GetScriptForWitness(scriptPubkey2))), output2, input2);
-    ReplaceRedeemScript(input2.vin[0].scriptSig, GetScriptForWitness(scriptPubkey1));
+    BOOST_CHECK(ReplaceRedeemScript(input2.vin[0].scriptSig, GetScriptForWitness(scriptPubkey1)));
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
@@ -613,7 +614,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     // P2SH pay-to-uncompressed-pubkey.
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey1L)), output1, input1);
     CreateCreditAndSpend(keystore, GetScriptForDestination(CScriptID(scriptPubkey2L)), output2, input2);
-    ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1L);
+    BOOST_CHECK(ReplaceRedeemScript(input2.vin[0].scriptSig, scriptPubkey1L));
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);

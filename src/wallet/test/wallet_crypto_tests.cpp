@@ -39,34 +39,40 @@ static void TestPassphrase(const std::vector<unsigned char>& vchSalt, const Secu
         TestPassphraseSingle(vchSalt, SecureString(i, passphrase.end()), rounds);
 }
 
-static void TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchCiphertext, \
+static bool TestDecrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchCiphertext, \
                         const std::vector<unsigned char>& vchPlaintext = std::vector<unsigned char>())
 {
     CKeyingMaterial vchDecrypted;
-    crypt.Decrypt(vchCiphertext, vchDecrypted);
-    if (vchPlaintext.size())
-        BOOST_CHECK(CKeyingMaterial(vchPlaintext.begin(), vchPlaintext.end()) == vchDecrypted);
+    bool decrypted = crypt.Decrypt(vchCiphertext, vchDecrypted);
+    bool nonZeroSizeMatches = false;
+    if (vchPlaintext.size()) {
+        nonZeroSizeMatches = CKeyingMaterial(vchPlaintext.begin(), vchPlaintext.end()) == vchDecrypted;
+        BOOST_CHECK(nonZeroSizeMatches);
+    }
+    return decrypted && nonZeroSizeMatches;
 }
 
-static void TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& vchPlaintext,
+static bool TestEncryptSingle(const CCrypter& crypt, const CKeyingMaterial& vchPlaintext,
                        const std::vector<unsigned char>& vchCiphertextCorrect = std::vector<unsigned char>())
 {
     std::vector<unsigned char> vchCiphertext;
-    crypt.Encrypt(vchPlaintext, vchCiphertext);
+    bool encrypted = crypt.Encrypt(vchPlaintext, vchCiphertext);
+    BOOST_CHECK(encrypted);
 
     if (!vchCiphertextCorrect.empty())
         BOOST_CHECK(vchCiphertext == vchCiphertextCorrect);
 
     const std::vector<unsigned char> vchPlaintext2(vchPlaintext.begin(), vchPlaintext.end());
-    TestDecrypt(crypt, vchCiphertext, vchPlaintext2);
+    return TestDecrypt(crypt, vchCiphertext, vchPlaintext2);
 }
 
-static void TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchPlaintextIn, \
+static bool TestEncrypt(const CCrypter& crypt, const std::vector<unsigned char>& vchPlaintextIn, \
                        const std::vector<unsigned char>& vchCiphertextCorrect = std::vector<unsigned char>())
 {
-    TestEncryptSingle(crypt, CKeyingMaterial(vchPlaintextIn.begin(), vchPlaintextIn.end()), vchCiphertextCorrect);
+    bool r = TestEncryptSingle(crypt, CKeyingMaterial(vchPlaintextIn.begin(), vchPlaintextIn.end()), vchCiphertextCorrect);
     for(std::vector<unsigned char>::const_iterator i(vchPlaintextIn.begin()); i != vchPlaintextIn.end(); ++i)
-        TestEncryptSingle(crypt, CKeyingMaterial(i, vchPlaintextIn.end()));
+        r = r && TestEncryptSingle(crypt, CKeyingMaterial(i, vchPlaintextIn.end()));
+    return r;
 }
 
 };
@@ -92,12 +98,12 @@ BOOST_AUTO_TEST_CASE(encrypt) {
     BOOST_CHECK(vchSalt.size() == WALLET_CRYPTO_SALT_SIZE);
     CCrypter crypt;
     crypt.SetKeyFromPassphrase("passphrase", vchSalt, 25000, 0);
-    TestCrypter::TestEncrypt(crypt, ParseHex("22bcade09ac03ff6386914359cfe885cfeb5f77ff0d670f102f619687453b29d"));
+    BOOST_CHECK(TestCrypter::TestEncrypt(crypt, ParseHex("22bcade09ac03ff6386914359cfe885cfeb5f77ff0d670f102f619687453b29d")));
 
     for (int i = 0; i != 100; i++)
     {
         uint256 hash(GetRandHash());
-        TestCrypter::TestEncrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end()));
+        BOOST_CHECK(TestCrypter::TestEncrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end())));
     }
 
 }
@@ -108,18 +114,20 @@ BOOST_AUTO_TEST_CASE(decrypt) {
     CCrypter crypt;
     crypt.SetKeyFromPassphrase("passphrase", vchSalt, 25000, 0);
 
+    BOOST_CHECK(TestCrypter::TestDecrypt(crypt, ParseHex("268d36ce1233e9c990caa3c18807b7a7e1552ca1c80bea78ac6170b6ef8e8d98b6adb506a312e0ad4756b4633d46d54a"), ParseHex("22bcade09ac03ff6386914359cfe885cfeb5f77ff0d670f102f619687453b29d")));
+
     // Some corner cases the came up while testing
-    TestCrypter::TestDecrypt(crypt,ParseHex("795643ce39d736088367822cdc50535ec6f103715e3e48f4f3b1a60a08ef59ca"));
-    TestCrypter::TestDecrypt(crypt,ParseHex("de096f4a8f9bd97db012aa9d90d74de8cdea779c3ee8bc7633d8b5d6da703486"));
-    TestCrypter::TestDecrypt(crypt,ParseHex("32d0a8974e3afd9c6c3ebf4d66aa4e6419f8c173de25947f98cf8b7ace49449c"));
-    TestCrypter::TestDecrypt(crypt,ParseHex("e7c055cca2faa78cb9ac22c9357a90b4778ded9b2cc220a14cea49f931e596ea"));
-    TestCrypter::TestDecrypt(crypt,ParseHex("b88efddd668a6801d19516d6830da4ae9811988ccbaf40df8fbb72f3f4d335fd"));
-    TestCrypter::TestDecrypt(crypt,ParseHex("8cae76aa6a43694e961ebcb28c8ca8f8540b84153d72865e8561ddd93fa7bfa9"));
+    BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, ParseHex("795643ce39d736088367822cdc50535ec6f103715e3e48f4f3b1a60a08ef59ca")));
+    BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, ParseHex("de096f4a8f9bd97db012aa9d90d74de8cdea779c3ee8bc7633d8b5d6da703486")));
+    BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, ParseHex("32d0a8974e3afd9c6c3ebf4d66aa4e6419f8c173de25947f98cf8b7ace49449c")));
+    BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, ParseHex("e7c055cca2faa78cb9ac22c9357a90b4778ded9b2cc220a14cea49f931e596ea")));
+    BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, ParseHex("b88efddd668a6801d19516d6830da4ae9811988ccbaf40df8fbb72f3f4d335fd")));
+    BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, ParseHex("8cae76aa6a43694e961ebcb28c8ca8f8540b84153d72865e8561ddd93fa7bfa9")));
 
     for (int i = 0; i != 100; i++)
     {
         uint256 hash(GetRandHash());
-        TestCrypter::TestDecrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end()));
+        BOOST_CHECK(!TestCrypter::TestDecrypt(crypt, std::vector<unsigned char>(hash.begin(), hash.end())));
     }
 }
 
