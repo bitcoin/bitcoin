@@ -5,6 +5,7 @@
 #ifndef BITCOIN_WALLET_CRYPTER_H
 #define BITCOIN_WALLET_CRYPTER_H
 
+#include <attributes.h>
 #include <keystore.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
@@ -85,8 +86,8 @@ private:
 
 public:
     bool SetKeyFromPassphrase(const SecureString &strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod);
-    bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
-    bool Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext) const;
+    NODISCARD bool Encrypt(const CKeyingMaterial& vchPlaintext, std::vector<unsigned char> &vchCiphertext) const;
+    NODISCARD bool Decrypt(const std::vector<unsigned char>& vchCiphertext, CKeyingMaterial& vchPlaintext) const;
     bool SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigned char>& chNewIV);
 
     void CleanKey()

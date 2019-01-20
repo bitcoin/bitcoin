@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_INTERPRETER_H
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
+#include <attributes.h>
 #include <script/script_error.h>
 #include <primitives/transaction.h>
 
@@ -185,7 +186,7 @@ public:
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
 using MutableTransactionSignatureChecker = GenericTransactionSignatureChecker<CMutableTransaction>;
 
-bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
+NODISCARD bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, SigVersion sigversion, ScriptError* error = nullptr);
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = nullptr);
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);

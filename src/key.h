@@ -7,6 +7,7 @@
 #ifndef BITCOIN_KEY_H
 #define BITCOIN_KEY_H
 
+#include <attributes.h>
 #include <pubkey.h>
 #include <serialize.h>
 #include <support/allocators/secure.h>
@@ -114,7 +115,7 @@ public:
      * Create a DER-serialized signature.
      * The test_case parameter tweaks the deterministic nonce.
      */
-    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
+    NODISCARD bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
 
     /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.
