@@ -84,20 +84,22 @@ public:
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
              bool corruptionPossibleIn=false,
              const std::string &strDebugMessageIn="") {
+        ret = Invalid(reasonIn, ret, chRejectCodeIn, strRejectReasonIn, strDebugMessageIn);
+        assert(level == GetDoS());
+        assert(corruptionPossibleIn == CorruptionPossible());
+        return ret;
+    }
+    bool Invalid(ValidationInvalidReason reasonIn, bool ret = false,
+                 unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
+                 const std::string &strDebugMessageIn="") {
         m_reason = reasonIn;
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
         strDebugMessage = strDebugMessageIn;
-        assert(corruptionPossibleIn == CorruptionPossible());
         if (mode == MODE_ERROR)
             return ret;
         mode = MODE_INVALID;
         return ret;
-    }
-    bool Invalid(ValidationInvalidReason _reason, bool ret = false,
-                 unsigned int _chRejectCode=0, const std::string &_strRejectReason="",
-                 const std::string &_strDebugMessage="") {
-        return DoS(0, _reason, ret, _chRejectCode, _strRejectReason, false, _strDebugMessage);
     }
     bool Error(const std::string& strRejectReasonIn) {
         if (mode == MODE_VALID)
