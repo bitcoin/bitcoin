@@ -48,6 +48,23 @@
 #include <unistd.h>
 #endif
 
+// Fix for ancient MinGW versions, that don't have defined these in ws2tcpip.h.
+// Todo: Can be removed when our pull-tester is upgraded to a modern MinGW version.
+#ifdef WIN32
+#ifndef AI_ADDRCONFIG
+#define AI_ADDRCONFIG 0x00000400
+#elif defined(FAIL_ON_EXTRANEOUS_COMPAT)
+#error Unnecessary fix for AI_ADDRCONFIG
+#endif
+#ifndef PROCESS_DEP_ENABLE
+// We define this here, because GCCs winbase.h limits this to _WIN32_WINNT >= 0x0601 (Windows 7),
+// which is not correct. Can be removed, when GCCs winbase.h is fixed!
+#define PROCESS_DEP_ENABLE 0x00000001
+#elif defined(FAIL_ON_EXTRANEOUS_COMPAT)
+#error Unnecessary fix for PROCESS_DEP_ENABLE
+#endif
+#endif
+
 #ifndef WIN32
 typedef unsigned int SOCKET;
 #include <errno.h>
