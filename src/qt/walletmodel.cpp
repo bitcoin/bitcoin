@@ -571,6 +571,11 @@ bool WalletModel::privateKeysDisabled() const
     return m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
 }
 
+bool WalletModel::canGetAddresses() const
+{
+    return m_wallet->hdEnabled() || (!m_wallet->hdEnabled() && !m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+}
+
 QString WalletModel::getWalletName() const
 {
     return QString::fromStdString(m_wallet->getWalletName());
