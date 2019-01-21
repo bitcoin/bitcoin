@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 
+#include <QMessageBox>
 #include <QMutex>
 #include <QThread>
 
@@ -22,6 +23,8 @@ namespace interfaces {
 class Handler;
 class Node;
 } // namespace interfaces
+
+class OpenWalletActivity;
 
 /**
  * Controller between interfaces::Node, WalletModel instances and the GUI.
@@ -40,7 +43,7 @@ public:
     std::vector<WalletModel*> getWallets() const;
     std::vector<std::string> getWalletsAvailableToOpen() const;
 
-    WalletModel* openWallet(const std::string& name, QWidget* parent = nullptr);
+    OpenWalletActivity* openWallet(const std::string& name, QWidget* parent = nullptr);
 
 private Q_SLOTS:
     void addWallet(WalletModel* wallet_model);
@@ -59,6 +62,28 @@ private:
     mutable QMutex m_mutex;
     std::vector<WalletModel*> m_wallets;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
+
+    friend class OpenWalletActivity;
+};
+
+class OpenWalletActivity : public QObject
+{
+    Q_OBJECT
+
+public:
+    OpenWalletActivity(WalletController* wallet_controller, const std::string& name);
+
+public Q_SLOTS:
+    void open();
+
+Q_SIGNALS:
+    void message(QMessageBox::Icon icon, const QString text);
+    void finished();
+    void opened(WalletModel* wallet_model);
+
+private:
+    WalletController* const m_wallet_controller;
+    std::string const m_name;
 };
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H
