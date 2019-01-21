@@ -68,17 +68,11 @@ private:
  */
 class CConnman;
 class CNode;
-struct CConnmanTest {
-    static void AddNode(CNode& node);
-    static void ClearNodes();
-};
 
 class PeerLogicValidation;
 struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
-    CConnman* connman;
     CScheduler scheduler;
-    std::unique_ptr<PeerLogicValidation> peerLogic;
 
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
