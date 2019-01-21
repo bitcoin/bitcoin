@@ -101,6 +101,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
     else
     {
         LogPrint(BCLog::ZMQ, "zmq: Reusing socket for address %s\n", address);
+        LogPrint(BCLog::ZMQ, "zmq: Outbound message high water mark for %s at %s is %d\n", type, address, outbound_message_high_water_mark);
 
         psocket = i->second->psocket;
         mapPublishNotifiers.insert(std::make_pair(address, this));
