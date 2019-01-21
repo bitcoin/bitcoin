@@ -72,7 +72,7 @@ public:
         strNetworkID = "main";
         consensus.BIP16Height = 0;
         consensus.BIP34Height = 0;
-        consensus.BIP34Hash = 6;
+        consensus.BIP34Hash = uint256S("6");
         //ppcTODO - set above values to correct ones
         consensus.powLimit =            uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 32;
         consensus.bnInitialHashTarget = uint256S("0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 40;
@@ -174,7 +174,7 @@ public:
         strNetworkID = "test";
         consensus.BIP16Height = 0;
         consensus.BIP34Height = 1;
-        consensus.BIP34Hash = 6;
+        consensus.BIP34Hash = uint256S("6");
         //ppcTODO - set above values to correct ones
         consensus.powLimit =            uint256S("0000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 28;
         consensus.bnInitialHashTarget = uint256S("00000007ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~arith_uint256(0) >> 29;
@@ -333,8 +333,8 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
-    else if (chain == CBaseChainParams::REGTEST)
-        return std::unique_ptr<CChainParams>(new CRegTestParams());
+//    else if (chain == CBaseChainParams::REGTEST)
+//        return std::unique_ptr<CChainParams>(new CRegTestParams());
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
