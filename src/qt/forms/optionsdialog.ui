@@ -51,20 +51,20 @@
         </spacer>
        </item>
        <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
-        <item>
-         <widget class="QCheckBox" name="prune">
-          <property name="toolTip">
-           <string>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</string>
-          </property>
-          <property name="text">
-           <string>Prune &amp;block storage to</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="pruneSize"/>
-        </item>
+        <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
+         <item>
+          <widget class="QCheckBox" name="prune">
+           <property name="toolTip">
+            <string>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</string>
+           </property>
+           <property name="text">
+            <string>Prune &amp;block storage to</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="pruneSize"/>
+         </item>
          <item>
           <widget class="QLabel" name="pruneSizeUnitLabel">
            <property name="text">
