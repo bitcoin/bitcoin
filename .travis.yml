@@ -59,18 +59,18 @@ matrix:
         script:
           - ./archive.sh
           - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-trusty .
-      - os: linux
-        sudo: required
-        env:
-          - V=windows-ubuntu
-        before_install:
-          - cd $TRAVIS_BUILD_DIR/scripts/windows-crosscompile
-          - pwd && ls -al
-          - travis_wait 60 ./dependencies.sh
-          - cd $TRAVIS_BUILD_DIR
-        install: true
-        script:
-          - travis_wait 60 ./scripts/windows-crosscompile/compile-peercoin.sh
+      #- os: linux
+      #  sudo: required
+      #  env:
+      #    - V=windows-ubuntu
+      #  before_install:
+      #    - cd $TRAVIS_BUILD_DIR/scripts/windows-crosscompile
+      #    - pwd && ls -al
+      #    - travis_wait 60 ./dependencies.sh
+      #    - cd $TRAVIS_BUILD_DIR
+      #  install: true
+      #  script:
+      #    - travis_wait 60 ./scripts/windows-crosscompile/compile-peercoin.sh
       #osx     
       - os: osx
         osx_image: xcode9.2

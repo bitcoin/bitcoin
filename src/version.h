@@ -1,5 +1,5 @@
 // Copyright (c) 2012 The Bitcoin developers
-// Copyright (c) 2012-2018 The Peercoin developers
+// Copyright (c) 2012-2019 The Peercoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_VERSION_H
@@ -32,7 +32,7 @@ static const int PEERCOIN_VERSION =
 // network protocol versioning
 //
 
-static const int PROTOCOL_VERSION = 70001;
+static const int PROTOCOL_VERSION = 70002;
 
 // earlier versions not supported as of Feb 2012, and are disconnected
 // NOTE: as of bitcoin v0.6 message serialization (vSend, vRecv) still

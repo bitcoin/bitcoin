@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Peercoin developers
+// Copyright (c) 2012-2019 The Peercoin developers
 // Distributed under conditional MIT/X11 software license,
 // see the accompanying file COPYING
 //
@@ -69,8 +69,8 @@ using namespace std;
 
 
 // ppcoin: sync-checkpoint master key
-const std::string CSyncCheckpoint::strMainPubKey = "04c0c707c28533fd5c9f79d2d3a2d80dff259ad8f915241cd14608fb9bc07c74830efe8438f2b272a866b4af5e0c2cc2a9909972aefbd976937e39f46bb38c277c";
-const std::string CSyncCheckpoint::strTestPubKey = "0400c195be8d5194007b3f02249f785a51505776bd8f43cc6d49206163e08a63ad9009c814966921c361b14949c51e281edc9347e7ce0e8c57019df1313a6cac7b";
+const std::string CSyncCheckpoint::strMainPubKey = "0420a39aeecfa0e3c79f7177eff4a873d56deaf8b1052eeb2cade243e6d87ef14c202bafe21289bdf0f14258dc9a13855867ed1b0dea898d2c86a11f1ee9f545c8";
+const std::string CSyncCheckpoint::strTestPubKey = "046cad3d8254b182a4e5289d01d17f0eb687f937648aa025655ed0bcc9dde0b3357e6791d6178d92e37599718e6435532872e751c244e8b096ebe6b6810f1e02aa";
 std::string CSyncCheckpoint::strMasterPrivKey = "";
 
 

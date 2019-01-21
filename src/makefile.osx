@@ -1,6 +1,6 @@
 # -*- mode: Makefile; -*-
 # Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2011-2018 The Peercoin developers
+# Copyright (c) 2011-2019 The Peercoin developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -57,7 +57,7 @@ LIBS += \
 TESTDEFS += -DBOOST_TEST_DYN_LINK
 endif
 
-DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE -DHAVE_WORKING_BOOST_SLEEP_FOR
+DEFS=-DMAC_OSX -DMSG_NOSIGNAL=0 -DBOOST_SPIRIT_THREADSAFE -DHAVE_WORKING_BOOST_SLEEP_FOR -DBOOST_NO_CXX11_SCOPED_ENUMS
 
 ifdef RELEASE
 CFLAGS = -mmacosx-version-min=10.5 -O3

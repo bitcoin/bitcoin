@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin Core developers
-// Copyright (c) 2011-2018 The Peercoin developers
+// Copyright (c) 2011-2019 The Peercoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1207,7 +1207,6 @@ void MapPort(bool)
 // The second name should resolve to a list of seed addresses.
 static const char *strMainNetDNSSeed[][2] = {
     {"seedpeercoin", "seed.peercoin.net"},
-    {"seed", "seed.ppcoin.net"},
     {"seed2", "seed2.peercoin.net"},
     {"libraryseed", "seed.peercoin-library.org"},
     {"7serverseed", "ppcseed.ns.7server.net"},
