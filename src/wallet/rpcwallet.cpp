@@ -3062,7 +3062,7 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
     FundTransaction(pwallet, tx, fee, change_position, request.params[1]);
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("hex", EncodeHexTx(tx));
+    result.pushKV("hex", EncodeHexTx(CTransaction(tx)));
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
 
