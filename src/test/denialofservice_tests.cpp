@@ -4,6 +4,7 @@
 
 // Unit tests for denial-of-service detection/prevention code
 
+#include <banman.h>
 #include <chainparams.h>
 #include <keystore.h>
 #include <net.h>
@@ -19,6 +20,23 @@
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
+
+struct CConnmanTest : public CConnman {
+    using CConnman::CConnman;
+    void AddNode(CNode& node)
+    {
+        LOCK(cs_vNodes);
+        vNodes.push_back(&node);
+    }
+    void ClearNodes()
+    {
+        LOCK(cs_vNodes);
+        for (CNode* node : vNodes) {
+            delete node;
+        }
+        vNodes.clear();
+    }
+};
 
 // Tests these internal-to-net_processing.cpp methods:
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
@@ -57,6 +75,8 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 // work.
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
+    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler, false);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -109,7 +129,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
 }
 
-static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic)
+static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidation &peerLogic, CConnmanTest* connman)
 {
     CAddress addr(ip(g_insecure_rand_ctx.randbits(32)), NODE_NONE);
     vNodes.emplace_back(new CNode(id++, ServiceFlags(NODE_NETWORK|NODE_WITNESS), 0, INVALID_SOCKET, addr, 0, 0, CAddress(), "", /*fInboundIn=*/ false));
@@ -120,11 +140,14 @@ static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerLogicValidat
     node.nVersion = 1;
     node.fSuccessfullyConnected = true;
 
-    CConnmanTest::AddNode(node);
+    connman->AddNode(node);
 }
 
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
+    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), nullptr, scheduler, false);
+
     const Consensus::Params& consensusParams = Params().GetConsensus();
     constexpr int nMaxOutbound = 8;
     CConnman::Options options;
@@ -137,7 +160,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 
     // Mock some outbound peers
     for (int i=0; i<nMaxOutbound; ++i) {
-        AddRandomOutboundPeer(vNodes, *peerLogic);
+        AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
     }
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
@@ -162,7 +185,7 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     // If we add one more peer, something should get marked for eviction
     // on the next check (since we're mocking the time to be in the future, the
     // required time connected check should be satisfied).
-    AddRandomOutboundPeer(vNodes, *peerLogic);
+    AddRandomOutboundPeer(vNodes, *peerLogic, connman.get());
 
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
     for (int i=0; i<nMaxOutbound; ++i) {
@@ -189,13 +212,16 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
         peerLogic->FinalizeNode(node->GetId(), dummy);
     }
 
-    CConnmanTest::ClearNodes();
+    connman->ClearNodes();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_banning)
 {
+    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler, false);
 
-    connman->ClearBanned();
+    banman->ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode1(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", true);
     dummyNode1.SetSendVersion(PROTOCOL_VERSION);
@@ -210,8 +236,8 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
-    BOOST_CHECK(connman->IsBanned(addr1));
-    BOOST_CHECK(!connman->IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
+    BOOST_CHECK(banman->IsBanned(addr1));
+    BOOST_CHECK(!banman->IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
 
     CAddress addr2(ip(0xa0b0c002), NODE_NONE);
     CNode dummyNode2(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr2, 1, 1, CAddress(), "", true);
@@ -227,8 +253,8 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
         LOCK2(cs_main, dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
-    BOOST_CHECK(!connman->IsBanned(addr2)); // 2 not banned yet...
-    BOOST_CHECK(connman->IsBanned(addr1));  // ... but 1 still should be
+    BOOST_CHECK(!banman->IsBanned(addr2)); // 2 not banned yet...
+    BOOST_CHECK(banman->IsBanned(addr1));  // ... but 1 still should be
     {
         LOCK(cs_main);
         Misbehaving(dummyNode2.GetId(), 50);
@@ -237,7 +263,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
         LOCK2(cs_main, dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
-    BOOST_CHECK(connman->IsBanned(addr2));
+    BOOST_CHECK(banman->IsBanned(addr2));
 
     bool dummy;
     peerLogic->FinalizeNode(dummyNode1.GetId(), dummy);
@@ -246,8 +272,11 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 
 BOOST_AUTO_TEST_CASE(DoS_banscore)
 {
+    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler, false);
 
-    connman->ClearBanned();
+    banman->ClearBanned();
     gArgs.ForceSetArg("-banscore", "111"); // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode1(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr1, 3, 1, CAddress(), "", true);
@@ -263,7 +292,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
-    BOOST_CHECK(!connman->IsBanned(addr1));
+    BOOST_CHECK(!banman->IsBanned(addr1));
     {
         LOCK(cs_main);
         Misbehaving(dummyNode1.GetId(), 10);
@@ -272,7 +301,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
-    BOOST_CHECK(!connman->IsBanned(addr1));
+    BOOST_CHECK(!banman->IsBanned(addr1));
     {
         LOCK(cs_main);
         Misbehaving(dummyNode1.GetId(), 1);
@@ -281,7 +310,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
-    BOOST_CHECK(connman->IsBanned(addr1));
+    BOOST_CHECK(banman->IsBanned(addr1));
     gArgs.ForceSetArg("-banscore", std::to_string(DEFAULT_BANSCORE_THRESHOLD));
 
     bool dummy;
@@ -290,8 +319,11 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
+    auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    auto peerLogic = MakeUnique<PeerLogicValidation>(connman.get(), banman.get(), scheduler, false);
 
-    connman->ClearBanned();
+    banman->ClearBanned();
     int64_t nStartTime = GetTime();
     SetMockTime(nStartTime); // Overrides future calls to GetTime()
 
@@ -310,13 +342,13 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
         LOCK2(cs_main, dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
     }
-    BOOST_CHECK(connman->IsBanned(addr));
+    BOOST_CHECK(banman->IsBanned(addr));
 
     SetMockTime(nStartTime+60*60);
-    BOOST_CHECK(connman->IsBanned(addr));
+    BOOST_CHECK(banman->IsBanned(addr));
 
     SetMockTime(nStartTime+60*60*24+1);
-    BOOST_CHECK(!connman->IsBanned(addr));
+    BOOST_CHECK(!banman->IsBanned(addr));
 
     bool dummy;
     peerLogic->FinalizeNode(dummyNode.GetId(), dummy);

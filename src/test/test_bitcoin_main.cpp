@@ -4,6 +4,7 @@
 
 #define BOOST_TEST_MODULE Bitcoin Test Suite
 
+#include <banman.h>
 #include <net.h>
 
 #include <memory>
@@ -11,6 +12,7 @@
 #include <boost/test/unit_test.hpp>
 
 std::unique_ptr<CConnman> g_connman;
+std::unique_ptr<BanMan> g_banman;
 
 [[noreturn]] void Shutdown(void* parg)
 {
