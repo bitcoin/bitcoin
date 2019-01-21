@@ -118,6 +118,7 @@ BITCOIN_CORE_H = \
   spentindex.h \
   addrman.h \
   attributes.h \
+  banman.h \
   base58.h \
   batchedlogger.h \
   bech32.h \
@@ -311,6 +312,7 @@ libdash_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_server_a_SOURCES = \
   addrdb.cpp \
   addrman.cpp \
+  banman.cpp \
   batchedlogger.cpp \
   bloom.cpp \
   blockencodings.cpp \

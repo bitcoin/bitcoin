@@ -18,6 +18,7 @@
 #include <tuple>
 #include <vector>
 
+class BanMan;
 class CCoinControl;
 class CDeterministicMNList;
 class CFeeRate;
@@ -165,7 +166,10 @@ public:
     //! Unban node.
     virtual bool unban(const CSubNet& ip) = 0;
 
-    //! Disconnect node.
+    //! Disconnect node by address.
+    virtual bool disconnect(const CNetAddr& net_addr) = 0;
+
+    //! Disconnect node by id.
     virtual bool disconnect(NodeId id) = 0;
 
     //! Get total bytes recv.

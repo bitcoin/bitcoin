@@ -4,6 +4,7 @@
 
 #include <test/test_dash.h>
 
+#include <banman.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
@@ -28,28 +29,6 @@
 #include <llmq/quorums_init.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
-
-void CConnmanTest::AddNode(CNode& node)
-{
-    LOCK2(g_connman->cs_vNodes, node.cs_hSocket);
-    g_connman->vNodes.push_back(&node);
-    g_connman->mapSocketToNode.emplace(node.hSocket, &node);
-}
-
-void CConnmanTest::ClearNodes()
-{
-    LOCK(g_connman->cs_vNodes);
-    for (CNode* node : g_connman->vNodes) {
-        delete node;
-    }
-    g_connman->vNodes.clear();
-    g_connman->mapSocketToNode.clear();
-
-    g_connman->mapReceivableNodes.clear();
-    g_connman->mapSendableNodes.clear();
-    LOCK(g_connman->cs_mapNodesWithDataToSend);
-    g_connman->mapNodesWithDataToSend.clear();
-}
 
 uint256 insecure_rand_seed = GetRandHash();
 FastRandomContext insecure_rand_ctx(insecure_rand_seed);
@@ -113,8 +92,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         threadGroup.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         mempool.setSanityCheck(1.0);
+        g_banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
         g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
-        connman = g_connman.get();
         pblocktree.reset(new CBlockTreeDB(1 << 20, true));
         pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
         g_txindex = MakeUnique<TxIndex>(1 << 20, true);
@@ -134,7 +113,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         constexpr int script_check_threads = 2;
         StartScriptCheckWorkerThreads(script_check_threads);
         g_parallel_script_checks = true;
-        peerLogic.reset(new PeerLogicValidation(connman, scheduler, /*enable_bip61=*/true));
 }
 
 TestingSetup::~TestingSetup()
@@ -150,7 +128,7 @@ TestingSetup::~TestingSetup()
         GetMainSignals().FlushBackgroundCallbacks();
         GetMainSignals().UnregisterBackgroundSignalScheduler();
         g_connman.reset();
-        peerLogic.reset();
+        g_banman.reset();
         UnloadBlockIndex();
         pcoinsTip.reset();
         llmq::DestroyLLMQSystem();
