@@ -451,7 +451,7 @@ class DIP3Test(BitcoinTestFramework):
         dummy_txin = None
         if with_dummy_input_output:
             dummyaddress = self.nodes[0].getnewaddress()
-            unspent = self.nodes[0].listunspent(20)
+            unspent = self.nodes[0].listunspent(110)
             for u in unspent:
                 if u['amount'] > Decimal(1):
                     dummy_txin = {'txid': u['txid'], 'vout': u['vout']}
