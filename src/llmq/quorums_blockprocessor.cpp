@@ -4,6 +4,7 @@
 
 #include "quorums_blockprocessor.h"
 #include "quorums_commitment.h"
+#include "quorums_debug.h"
 #include "quorums_utils.h"
 
 #include "evo/specialtx.h"
@@ -335,6 +336,14 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
             }
         }
     }
+
+    quorumDKGDebugManager->UpdateLocalSessionStatus((Consensus::LLMQType)fqc.llmqType, [&](CDKGDebugSessionStatus& status) {
+        if (status.quorumHash != fqc.quorumHash || status.receivedFinalCommitment) {
+            return false;
+        }
+        status.receivedFinalCommitment = true;
+        return true;
+    });
 
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
