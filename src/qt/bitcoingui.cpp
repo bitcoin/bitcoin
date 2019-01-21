@@ -1703,20 +1703,22 @@ void BitcoinGUI::updateProxyIcon()
 
 void BitcoinGUI::updateWindowTitle()
 {
-    QString window_title = tr(PACKAGE_NAME) + " - ";
+    QString window_title = tr(PACKAGE_NAME);
 #ifdef ENABLE_WALLET
     if (walletFrame) {
         WalletModel* const wallet_model = walletFrame->currentWalletModel();
         QString userWindowTitle = QString::fromStdString(gArgs.GetArg("-windowtitle", ""));
         if (!userWindowTitle.isEmpty()) {
-            window_title += userWindowTitle + " - ";
+            window_title += " - " + userWindowTitle;
         }
         if (wallet_model && !wallet_model->getWalletName().isEmpty()) {
-            window_title += wallet_model->getDisplayName() + " - ";
+            window_title += " - " + wallet_model->getDisplayName();
         }
     }
 #endif
-    window_title += m_network_style->getTitleAddText();
+    if (!m_network_style->getTitleAddText().isEmpty()) {
+        window_title += " - " + m_network_style->getTitleAddText();
+    }
     setWindowTitle(window_title);
 }
 
