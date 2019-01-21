@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <QMutex>
+#include <QThread>
 
 class OptionsModel;
 class PlatformStyle;
@@ -51,6 +52,7 @@ Q_SIGNALS:
     void coinsSent(WalletModel* wallet_model, SendCoinsRecipient recipient, QByteArray transaction);
 
 private:
+    QThread m_activity_thread;
     interfaces::Node& m_node;
     const PlatformStyle* const m_platform_style;
     OptionsModel* const m_options_model;
