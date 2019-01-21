@@ -201,6 +201,16 @@ class RESTTest (BitcoinTestFramework):
         self.log.info("Test the /block and /headers URIs")
         bb_hash = self.nodes[0].getbestblockhash()
 
+        # Check result if block does not exists
+        assert_equal(self.test_rest_request('/headers/1/0000000000000000000000000000000000000000000000000000000000000000'), [])
+        self.test_rest_request('/block/0000000000000000000000000000000000000000000000000000000000000000', status=404, ret_type=RetType.OBJ)
+
+        # Check result if block is not in the active chain
+        self.nodes[0].invalidateblock(bb_hash)
+        assert_equal(self.test_rest_request('/headers/1/{}'.format(bb_hash)), [])
+        self.test_rest_request('/block/{}'.format(bb_hash))
+        self.nodes[0].reconsiderblock(bb_hash)
+
         # Check binary format
         response = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_greater_than(int(response.getheader('content-length')), 80)
