@@ -65,9 +65,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # Check whether last block header received from node has a given hash
     def last_header_equals(self, expected_hash, node):
         headers_msg = node.last_message.get("headers")
-        return (headers_msg and
-                headers_msg.headers and
-                headers_msg.headers[0].rehash() == expected_hash)
+        return (headers_msg and headers_msg.headers and headers_msg.headers[0].rehash() == expected_hash)
 
     # Checks that stale blocks timestamped more than a month ago are not served
     # by the node while recent stale blocks and old active chain blocks are.

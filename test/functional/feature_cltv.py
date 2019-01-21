@@ -35,8 +35,7 @@ def cltv_invalidate(tx):
     TODO: test more ways that transactions using CLTV could be invalid (eg
     locktime requirements fail, sequence time requirements fail, etc).
     '''
-    tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
-                                  list(CScript(tx.vin[0].scriptSig)))
+    tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
 
 def cltv_validate(node, tx, height):
     '''Modify the signature in vin 0 of the tx to pass CLTV
@@ -50,8 +49,7 @@ def cltv_validate(node, tx, height):
     new_tx = CTransaction()
     new_tx.deserialize(BytesIO(hex_str_to_bytes(signed_result['hex'])))
 
-    new_tx.vin[0].scriptSig = CScript([CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
-                                  list(CScript(new_tx.vin[0].scriptSig)))
+    new_tx.vin[0].scriptSig = CScript([CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP] + list(CScript(new_tx.vin[0].scriptSig)))
     return new_tx
 
 

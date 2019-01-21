@@ -165,9 +165,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
         # Replace the correct data size in the message with an incorrect one.
         raw_msg_with_wrong_size = (
-            raw_msg[:num_header_bytes_before_size] +
-            bad_size_bytes +
-            raw_msg[(num_header_bytes_before_size + len(bad_size_bytes)):]
+            raw_msg[:num_header_bytes_before_size] + bad_size_bytes + raw_msg[(num_header_bytes_before_size + len(bad_size_bytes)):]
         )
         assert len(raw_msg) == len(raw_msg_with_wrong_size)
 

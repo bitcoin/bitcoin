@@ -29,8 +29,7 @@ def uint32(x):
     return x & 0xffffffff
 
 def bytereverse(x):
-    return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) |
-               (((x) >> 8) & 0x0000ff00) | ((x) >> 24) ))
+    return uint32(( ((x) << 24) | (((x) << 8) & 0x00ff0000) | (((x) >> 8) & 0x0000ff00) | ((x) >> 24) ))
 
 def bufreverse(in_buf):
     out_words = []
@@ -263,12 +262,12 @@ if __name__ == '__main__':
     f = open(sys.argv[1], encoding="utf8")
     for line in f:
         # skip comment lines
-        m = re.search('^\s*#', line)
+        m = re.search(r'^\s*#', line)
         if m:
             continue
 
         # parse key=value lines
-        m = re.search('^(\w+)\s*=\s*(\S.*)$', line)
+        m = re.search(r'^(\w+)\s*=\s*(\S.*)$', line)
         if m is None:
             continue
         settings[m.group(1)] = m.group(2)

@@ -1329,16 +1329,14 @@ class msg_reject:
         self.message = deser_string(f)
         self.code = struct.unpack("<B", f.read(1))[0]
         self.reason = deser_string(f)
-        if (self.code != self.REJECT_MALFORMED and
-                (self.message == b"block" or self.message == b"tx")):
+        if (self.code != self.REJECT_MALFORMED and (self.message == b"block" or self.message == b"tx")):
             self.data = deser_uint256(f)
 
     def serialize(self):
         r = ser_string(self.message)
         r += struct.pack("<B", self.code)
         r += ser_string(self.reason)
-        if (self.code != self.REJECT_MALFORMED and
-                (self.message == b"block" or self.message == b"tx")):
+        if (self.code != self.REJECT_MALFORMED and (self.message == b"block" or self.message == b"tx")):
             r += ser_uint256(self.data)
         return r
 

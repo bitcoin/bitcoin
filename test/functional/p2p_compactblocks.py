@@ -356,8 +356,7 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         index = 0
         while index < len(block.vtx):
-            if (len(header_and_shortids.prefilled_txn) > 0 and
-                    header_and_shortids.prefilled_txn[0].index == index):
+            if len(header_and_shortids.prefilled_txn) > 0 and header_and_shortids.prefilled_txn[0].index == index:
                 # Already checked prefilled transactions above
                 header_and_shortids.prefilled_txn.pop(0)
             else:
