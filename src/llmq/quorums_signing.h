@@ -91,6 +91,14 @@ private:
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
 };
 
+class CRecoveredSigsListener
+{
+public:
+    virtual ~CRecoveredSigsListener() {}
+
+    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) = 0;
+};
+
 class CSigningManager
 {
     friend class CSigSharesManager;
@@ -108,6 +116,8 @@ private:
     FastRandomContext rnd;
 
     int64_t lastCleanupTime{0};
+
+    std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
 
 public:
     CSigningManager(bool fMemory);
@@ -128,6 +138,9 @@ private:
 
 public:
     // public interface
+    void RegisterRecoveredSigsListener(CRecoveredSigsListener* l);
+    void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
+
     bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);

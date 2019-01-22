@@ -414,8 +414,10 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
         connman.RemoveAskFor(recoveredSig.GetHash());
     }
 
+    std::vector<CRecoveredSigsListener*> listeners;
     {
         LOCK(cs);
+        listeners = recoveredSigsListeners;
 
         auto signHash = CLLMQUtils::BuildSignHash(recoveredSig);
 
@@ -435,6 +437,10 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash());
     g_connman->RelayInv(inv);
+
+    for (auto& l : listeners) {
+        l->HandleNewRecoveredSig(recoveredSig);
+    }
 }
 
 void CSigningManager::Cleanup()
@@ -449,6 +455,19 @@ void CSigningManager::Cleanup()
     db.CleanupOldRecoveredSigs(maxAge);
 
     lastCleanupTime = GetTimeMillis();
+}
+
+void CSigningManager::RegisterRecoveredSigsListener(CRecoveredSigsListener* l)
+{
+    LOCK(cs);
+    recoveredSigsListeners.emplace_back(l);
+}
+
+void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
+{
+    LOCK(cs);
+    auto itRem = std::remove(recoveredSigsListeners.begin(), recoveredSigsListeners.end(), l);
+    recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
 bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
