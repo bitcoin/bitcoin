@@ -68,6 +68,7 @@
 CCriticalSection cs_main;
 
 BlockMap mapBlockIndex;
+PrevBlockMap mapPrevBlockIndex;
 CChain chainActive;
 CBlockIndex *pindexBestHeader = NULL;
 CWaitableCriticalSection csBestBlock;
@@ -3042,6 +3043,11 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
 
     setDirtyBlockIndex.insert(pindexNew);
 
+    // track prevBlockHash -> pindex (multimap)
+    if (pindexNew->pprev) {
+        mapPrevBlockIndex.emplace(pindexNew->pprev->GetBlockHash(), pindexNew);
+    }
+
     return pindexNew;
 }
 
@@ -3827,6 +3833,11 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     {
         CBlockIndex* pindex = item.second;
         vSortedByHeight.push_back(std::make_pair(pindex->nHeight, pindex));
+
+        // build mapPrevBlockIndex
+        if (pindex->pprev) {
+            mapPrevBlockIndex.emplace(pindex->pprev->GetBlockHash(), pindex);
+        }
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
     BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
