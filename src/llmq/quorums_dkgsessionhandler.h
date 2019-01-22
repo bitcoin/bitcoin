@@ -15,15 +15,14 @@ namespace llmq
 {
 
 enum QuorumPhase {
-    QuorumPhase_Idle,
+    QuorumPhase_None = -1,
     QuorumPhase_Initialized,
     QuorumPhase_Contribute,
     QuorumPhase_Complain,
     QuorumPhase_Justify,
     QuorumPhase_Commit,
     QuorumPhase_Finalize,
-
-    QuorumPhase_None=-1,
+    QuorumPhase_Idle,
 };
 
 /**
@@ -127,16 +126,16 @@ public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
 private:
-    bool InitNewQuorum(int height, const uint256& quorumHash);
+    bool InitNewQuorum(int newQuorumHeight, const uint256& newQuorumHash);
 
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 
     typedef std::function<void()> StartPhaseFunc;
     typedef std::function<bool()> WhileWaitFunc;
-    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting);
+    void WaitForNextPhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, const WhileWaitFunc& runWhileWaiting);
     void WaitForNewQuorum(const uint256& oldQuorumHash);
-    void SleepBeforePhase(QuorumPhase curPhase, uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting);
-    void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);
+    void SleepBeforePhase(QuorumPhase curPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const WhileWaitFunc& runWhileWaiting);
+    void HandlePhase(QuorumPhase curPhase, QuorumPhase nextPhase, const uint256& expectedQuorumHash, double randomSleepFactor, const StartPhaseFunc& startPhaseFunc, const WhileWaitFunc& runWhileWaiting);
     void HandleDKGRound();
     void PhaseHandlerThread();
 };

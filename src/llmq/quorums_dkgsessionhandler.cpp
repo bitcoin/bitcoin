@@ -120,24 +120,11 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     quorumHeight = pindexQuorum->nHeight;
     quorumHash = pindexQuorum->GetBlockHash();
 
-    QuorumPhase newPhase = phase;
-    if (quorumStageInt == 0) {
-        newPhase = QuorumPhase_Initialized;
-        quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumHash, quorumHeight);
-    } else if (quorumStageInt == params.dkgPhaseBlocks * 1) {
-        newPhase = QuorumPhase_Contribute;
-    } else if (quorumStageInt == params.dkgPhaseBlocks * 2) {
-        newPhase = QuorumPhase_Complain;
-    } else if (quorumStageInt == params.dkgPhaseBlocks * 3) {
-        newPhase = QuorumPhase_Justify;
-    } else if (quorumStageInt == params.dkgPhaseBlocks * 4) {
-        newPhase = QuorumPhase_Commit;
-    } else if (quorumStageInt == params.dkgPhaseBlocks * 5) {
-        newPhase = QuorumPhase_Finalize;
-    } else if (quorumStageInt == params.dkgPhaseBlocks * 6) {
-        newPhase = QuorumPhase_Idle;
+    bool fNewPhase = (quorumStageInt % params.dkgPhaseBlocks) == 0;
+    int phaseInt = quorumStageInt / params.dkgPhaseBlocks;
+    if (fNewPhase && phaseInt >= QuorumPhase_Initialized && phaseInt <= QuorumPhase_Idle) {
+        phase = static_cast<QuorumPhase>(phaseInt);
     }
-    phase = newPhase;
 
     quorumDKGDebugManager->UpdateLocalStatus([&](CDKGDebugStatus& status) {
         bool changed = status.nHeight != pindexNew->nHeight;
@@ -165,7 +152,7 @@ void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-bool CDKGSessionHandler::InitNewQuorum(int height, const uint256& quorumHash)
+bool CDKGSessionHandler::InitNewQuorum(int newQuorumHeight, const uint256& newQuorumHash)
 {
     //AssertLockHeld(cs_main);
 
@@ -173,13 +160,13 @@ bool CDKGSessionHandler::InitNewQuorum(int height, const uint256& quorumHash)
 
     curSession = std::make_shared<CDKGSession>(params, evoDb, blsWorker, dkgManager);
 
-    if (!deterministicMNManager->IsDIP3Active(height)) {
+    if (!deterministicMNManager->IsDIP3Active(newQuorumHeight)) {
         return false;
     }
 
-    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, quorumHash);
+    auto mns = CLLMQUtils::GetAllQuorumMembers(params.type, newQuorumHash);
 
-    if (!curSession->Init(height, quorumHash, mns, activeMasternodeInfo.proTxHash)) {
+    if (!curSession->Init(newQuorumHeight, newQuorumHash, mns, activeMasternodeInfo.proTxHash)) {
         LogPrintf("CDKGSessionManager::%s -- quorum initialiation failed\n", __func__);
         return false;
     }
@@ -198,7 +185,7 @@ class AbortPhaseException : public std::exception {
 
 void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
                                           QuorumPhase nextPhase,
-                                          uint256& expectedQuorumHash,
+                                          const uint256& expectedQuorumHash,
                                           const WhileWaitFunc& runWhileWaiting)
 {
     while (true) {
@@ -210,7 +197,6 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
             throw AbortPhaseException();
         }
         if (p.first == nextPhase) {
-            expectedQuorumHash = p.second;
             return;
         }
         if (curPhase != QuorumPhase_None && p.first != curPhase) {
@@ -238,7 +224,7 @@ void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash)
 
 // Sleep some time to not fully overload the whole network
 void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
-                                          uint256& expectedQuorumHash,
+                                          const uint256& expectedQuorumHash,
                                           double randomSleepFactor,
                                           const WhileWaitFunc& runWhileWaiting)
 {
@@ -273,7 +259,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
 
 void CDKGSessionHandler::HandlePhase(QuorumPhase curPhase,
                                      QuorumPhase nextPhase,
-                                     uint256& expectedQuorumHash,
+                                     const uint256& expectedQuorumHash,
                                      double randomSleepFactor,
                                      const StartPhaseFunc& startPhaseFunc,
                                      const WhileWaitFunc& runWhileWaiting)
@@ -466,8 +452,9 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
 void CDKGSessionHandler::HandleDKGRound()
 {
     uint256 curQuorumHash;
+    int curQuorumHeight;
 
-    WaitForNextPhase(QuorumPhase_None, QuorumPhase_Initialized, curQuorumHash, []{return false;});
+    WaitForNextPhase(QuorumPhase_None, QuorumPhase_Initialized, uint256(), []{return false;});
 
     {
         LOCK(cs);
@@ -475,9 +462,11 @@ void CDKGSessionHandler::HandleDKGRound()
         pendingComplaints.Clear();
         pendingJustifications.Clear();
         pendingPrematureCommitments.Clear();
+        curQuorumHash = quorumHash;
+        curQuorumHeight = quorumHeight;
     }
 
-    if (!InitNewQuorum(quorumHeight, quorumHash)) {
+    if (!InitNewQuorum(curQuorumHeight, curQuorumHash)) {
         // should actually never happen
         WaitForNewQuorum(curQuorumHash);
         throw AbortPhaseException();
@@ -501,8 +490,9 @@ void CDKGSessionHandler::HandleDKGRound()
             LogPrintf(debugMsg);
             g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
 
+            auto participatingNodesTmp = g_connman->GetMasternodeQuorumAddresses(params.type, curQuorumHash);
             LOCK(curSession->invCs);
-            curSession->participatingNodes = g_connman->GetMasternodeQuorumAddresses(params.type, curQuorumHash);
+            curSession->participatingNodes = std::move(participatingNodesTmp);
         }
     }
 
