@@ -78,6 +78,7 @@ public:
     };
 
     std::vector<CDKGDebugMemberStatus> members;
+    bool receivedFinalCommitment{false};
 
 public:
     CDKGDebugSessionStatus() : statusBitset(0) {}
@@ -94,6 +95,7 @@ public:
         READWRITE(phase);
         READWRITE(statusBitset);
         READWRITE(members);
+        READWRITE(receivedFinalCommitment);
     }
 
     UniValue ToJson(int detailLevel) const;

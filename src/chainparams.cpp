@@ -120,6 +120,8 @@ static Consensus::LLMQParams llmq10_60 = {
         .dkgMiningWindowEnd = 18,
         .dkgBadVotesThreshold = 8,
 
+        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
         .neighborConnections = 2,
         .diagonalConnections = 2,
         .keepOldConnections = 24,
@@ -137,6 +139,8 @@ static Consensus::LLMQParams llmq50_60 = {
         .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 18,
         .dkgBadVotesThreshold = 40,
+
+        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
         .neighborConnections = 2,
         .diagonalConnections = 2,
@@ -156,6 +160,8 @@ static Consensus::LLMQParams llmq400_60 = {
         .dkgMiningWindowEnd = 28,
         .dkgBadVotesThreshold = 300,
 
+        .signingActiveQuorumCount = 4, // two days worth of LLMQs
+
         .neighborConnections = 4,
         .diagonalConnections = 4,
         .keepOldConnections = 4,
@@ -174,6 +180,8 @@ static Consensus::LLMQParams llmq400_85 = {
         .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
         .dkgMiningWindowEnd = 48, // give it a larger mining window to make sure it is mined
         .dkgBadVotesThreshold = 300,
+
+        .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
         .neighborConnections = 4,
         .diagonalConnections = 4,

@@ -948,7 +948,7 @@ public:
         vBlockHashesToAnnounce.push_back(hash);
     }
 
-    void AskFor(const CInv& inv);
+    void AskFor(const CInv& inv, int64_t doubleRequestDelay = 2 * 60 * 1000000);
     void RemoveAskFor(const uint256& hash);
 
     void CloseSocketDisconnect();

@@ -14,7 +14,7 @@ namespace llmq
 // If true, we will connect to all new quorums and watch their communication
 static const bool DEFAULT_WATCH_QUORUMS = false;
 
-void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler);
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests);
 void DestroyLLMQSystem();
 
 }

@@ -225,8 +225,8 @@ public:
     CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
     ~CDBWrapper();
 
-    template <typename K, typename V>
-    bool Read(const K& key, V& value) const
+    template <typename K>
+    bool ReadDataStream(const K& key, CDataStream& ssValue) const
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
@@ -241,9 +241,21 @@ public:
             LogPrintf("LevelDB read failure: %s\n", status.ToString());
             dbwrapper_private::HandleError(status);
         }
+        CDataStream ssValueTmp(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        ssValueTmp.Xor(obfuscate_key);
+        ssValue = std::move(ssValueTmp);
+        return true;
+    }
+
+    template <typename K, typename V>
+    bool Read(const K& key, V& value) const
+    {
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        if (!ReadDataStream(key, ssValue)) {
+            return false;
+        }
+
         try {
-            CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
-            ssValue.Xor(obfuscate_key);
             ssValue >> value;
         } catch (const std::exception&) {
             return false;
