@@ -39,7 +39,7 @@ public:
     uint32_t nHeight : 31;
 
     // peercoin: whether transaction is a coinstake
-    unsigned int fCoinStake : 1;
+    bool fCoinStake;
 
     // peercoin: transaction timestamp
     unsigned int nTime;
