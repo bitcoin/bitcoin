@@ -46,6 +46,7 @@
 #include "evo/simplifiedmns.h"
 #include "llmq/quorums_blockprocessor.h"
 #include "llmq/quorums_commitment.h"
+#include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_debug.h"
 #include "llmq/quorums_dkgsessionmgr.h"
 #include "llmq/quorums_init.h"
@@ -973,6 +974,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return llmq::quorumDKGDebugManager->AlreadyHave(inv);
     case MSG_QUORUM_RECOVERED_SIG:
         return llmq::quorumSigningManager->AlreadyHave(inv);
+    case MSG_CLSIG:
+        return llmq::chainLocksHandler->AlreadyHave(inv);
     }
 
     // Don't know what it is, just say we already got one
@@ -1281,6 +1284,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     llmq::CRecoveredSig o;
                     if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                        push = true;
+                    }
+                }
+
+                if (!push && (inv.type == MSG_CLSIG)) {
+                    llmq::CChainLockSig o;
+                    if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
                         push = true;
                     }
                 }
@@ -1785,6 +1796,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                         // some messages need to be re-requested faster when the first announcing peer did not answer to GETDATA
                         switch (inv.type) {
                             case MSG_QUORUM_RECOVERED_SIG:
+                                doubleRequestDelay = 5 * 1000000;
+                                break;
+                            case MSG_CLSIG:
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
                         }
@@ -2952,6 +2966,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             llmq::quorumDKGDebugManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {
