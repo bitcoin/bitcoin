@@ -636,29 +636,30 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     if (!recoveredSig.Recover(sigSharesForRecovery, idsForRecovery)) {
         LogPrintf("CSigSharesManager::%s -- failed to recover signature. id=%s, msgHash=%s, time=%d\n", __func__,
                   id.ToString(), msgHash.ToString(), t.count());
-    } else {
-        LogPrintf("CSigSharesManager::%s -- recovered signature. id=%s, msgHash=%s, time=%d\n", __func__,
-                  id.ToString(), msgHash.ToString(), t.count());
-
-        CRecoveredSig rs;
-        rs.llmqType = quorum->params.type;
-        rs.quorumHash = quorum->quorumHash;
-        rs.id = id;
-        rs.msgHash = msgHash;
-        rs.sig = recoveredSig;
-        rs.UpdateHash();
-
-        auto signHash = CLLMQUtils::BuildSignHash(rs);
-        bool valid = rs.sig.VerifyInsecure(quorum->quorumPublicKey, signHash);
-        if (!valid) {
-            // this should really not happen as we have verified all signature shares before
-            LogPrintf("CSigSharesManager::%s -- own recovered signature is invalid. id=%s, msgHash=%s\n", __func__,
-                      id.ToString(), msgHash.ToString());
-            return;
-        }
-
-        quorumSigningManager->ProcessRecoveredSig(-1, rs, quorum, connman);
+        return;
     }
+
+    LogPrintf("CSigSharesManager::%s -- recovered signature. id=%s, msgHash=%s, time=%d\n", __func__,
+              id.ToString(), msgHash.ToString(), t.count());
+
+    CRecoveredSig rs;
+    rs.llmqType = quorum->params.type;
+    rs.quorumHash = quorum->quorumHash;
+    rs.id = id;
+    rs.msgHash = msgHash;
+    rs.sig = recoveredSig;
+    rs.UpdateHash();
+
+    auto signHash = CLLMQUtils::BuildSignHash(rs);
+    bool valid = rs.sig.VerifyInsecure(quorum->quorumPublicKey, signHash);
+    if (!valid) {
+        // this should really not happen as we have verified all signature shares before
+        LogPrintf("CSigSharesManager::%s -- own recovered signature is invalid. id=%s, msgHash=%s\n", __func__,
+                  id.ToString(), msgHash.ToString());
+        return;
+    }
+
+    quorumSigningManager->ProcessRecoveredSig(-1, rs, quorum, connman);
 }
 
 // cs must be held
@@ -722,40 +723,37 @@ void CSigSharesManager::CollectSigSharesToRequest(std::map<NodeId, std::map<uint
                     // too many pending requests for this node
                     break;
                 }
-                bool doRequest = false;
                 auto it = sigSharesRequested.find(k);
                 if (it != sigSharesRequested.end()) {
                     if (now - it->second.second >= SIG_SHARE_REQUEST_TIMEOUT && nodeId != it->second.first) {
                         // other node timed out, re-request from this node
                         LogPrint("llmq", "CSigSharesManager::%s -- other node timeout while waiting for %s-%d, re-request from=%d, node=%d\n", __func__,
                                  it->first.first.ToString(), it->first.second, nodeId, it->second.first);
-                        doRequest = true;
+                    } else {
+                        continue;
                     }
-                } else {
-                    doRequest = true;
                 }
+                // if we got this far we should do a request
 
-                if (doRequest) {
-                    // track when we initiated the request so that we can detect timeouts
-                    nodeState.requestedSigShares.emplace(k, now);
+                // track when we initiated the request so that we can detect timeouts
+                nodeState.requestedSigShares.emplace(k, now);
 
-                    // don't request it from other nodes until a timeout happens
-                    auto& r = sigSharesRequested[k];
-                    r.first = nodeId;
-                    r.second = now;
+                // don't request it from other nodes until a timeout happens
+                auto& r = sigSharesRequested[k];
+                r.first = nodeId;
+                r.second = now;
 
-                    if (!invMap) {
-                        invMap = &sigSharesToRequest[nodeId];
-                    }
-                    auto& inv = (*invMap)[signHash];
-                    if (inv.inv.empty()) {
-                        inv.Init((Consensus::LLMQType)session.announced.llmqType, signHash);
-                    }
-                    inv.inv[k.second] = true;
-
-                    // dont't request it again from this node
-                    session.announced.inv[i] = false;
+                if (!invMap) {
+                    invMap = &sigSharesToRequest[nodeId];
                 }
+                auto& inv = (*invMap)[signHash];
+                if (inv.inv.empty()) {
+                    inv.Init((Consensus::LLMQType)session.announced.llmqType, signHash);
+                }
+                inv.inv[k.second] = true;
+
+                // dont't request it again from this node
+                session.announced.inv[i] = false;
             }
         }
     }

@@ -232,7 +232,6 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
         if (ban) {
             LOCK(cs_main);
             Misbehaving(pfrom->id, 100);
-            return;
         }
         return;
     }
