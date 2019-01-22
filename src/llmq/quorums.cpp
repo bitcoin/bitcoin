@@ -244,7 +244,7 @@ bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, std::
             quorum->WriteContributions(evoDb);
             hasValidVvec = true;
         } else {
-            LogPrintf("CQuorumManager::%s -- quorum.ReadContributions and BuildQuorumContributions for block %s failed", __func__, qc.quorumHash.ToString());
+            LogPrintf("CQuorumManager::%s -- quorum.ReadContributions and BuildQuorumContributions for block %s failed\n", __func__, qc.quorumHash.ToString());
         }
     }
 
