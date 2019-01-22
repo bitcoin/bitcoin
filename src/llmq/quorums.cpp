@@ -333,14 +333,17 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     return result;
 }
 
-CQuorumCPtr CQuorumManager::SelectQuorum(Consensus::LLMQType llmqType, const uint256& selectionHash, size_t poolSize)
+CQuorumCPtr CQuorumManager::SelectQuorum(Consensus::LLMQType llmqType, const uint256& selectionHash)
 {
     LOCK(cs_main);
-    return SelectQuorum(llmqType, chainActive.Tip()->GetBlockHash(), selectionHash, poolSize);
+    return SelectQuorum(llmqType, chainActive.Tip()->GetBlockHash(), selectionHash);
 }
 
-CQuorumCPtr CQuorumManager::SelectQuorum(Consensus::LLMQType llmqType, const uint256& startBlock, const uint256& selectionHash, size_t poolSize)
+CQuorumCPtr CQuorumManager::SelectQuorum(Consensus::LLMQType llmqType, const uint256& startBlock, const uint256& selectionHash)
 {
+    auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
+    size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
+
     auto quorums = ScanQuorums(llmqType, startBlock, poolSize);
     if (quorums.empty()) {
         return nullptr;

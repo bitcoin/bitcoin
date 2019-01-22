@@ -482,7 +482,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     // This gives a slight risk of not getting enough shares to recover a signature
     // But at least it shouldn't be possible to get conflicting recovered signatures
     // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-    CQuorumCPtr quorum = quorumManager->SelectQuorum(llmqType, id, params.signingActiveQuorumCount);
+    CQuorumCPtr quorum = quorumManager->SelectQuorum(llmqType, id);
     if (!quorum) {
         LogPrintf("CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
         return false;
