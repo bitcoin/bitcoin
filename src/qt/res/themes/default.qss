@@ -133,15 +133,15 @@ QTableView {
  }
 
 QHeaderView::section {
-    background-color: #E3E3E3;
-    color: #8C8C8C;
+    background-color: #3cb054;
+    color: #ffffff;
     border-left: 0px;
     padding: 4px;
  }
 
 QHeaderView::section:checked
 {
-    background-color: #E3E3E3;
+    background-color: #8C8C8C;
 }
 
 QHeaderView::down-arrow {
