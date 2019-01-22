@@ -146,6 +146,9 @@ public:
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
     bool IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+
+    // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
+    bool VerifyRecoveredSig(Consensus::LLMQType llmqType, const uint256& signedAtTip, const uint256& id, const uint256& msgHash, const CBLSSignature& sig);
 };
 
 extern CSigningManager* quorumSigningManager;

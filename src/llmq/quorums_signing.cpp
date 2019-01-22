@@ -548,4 +548,17 @@ bool CSigningManager::IsConflicting(Consensus::LLMQType llmqType, const uint256&
     return false;
 }
 
+bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, const uint256& signedAtTip, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
+{
+    auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeForChainLocks);
+
+    auto quorum = quorumManager->SelectQuorum(llmqParams.type, signedAtTip, id);
+    if (!quorum) {
+        return false;
+    }
+
+    uint256 signHash = CLLMQUtils::BuildSignHash(llmqParams.type, quorum->quorumHash, id, msgHash);
+    return sig.VerifyInsecure(quorum->quorumPublicKey, signHash);
+}
+
 }
