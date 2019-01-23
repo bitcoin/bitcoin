@@ -10,6 +10,7 @@
 #include "chain.h"
 #include "net_processing.h"
 #include "scheduler.h"
+#include "spork.h"
 #include "validation.h"
 
 namespace llmq
@@ -56,6 +57,10 @@ bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLoc
 
 void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+        return;
+    }
+
     if (strCommand == NetMsgType::CLSIG) {
         CChainLockSig clsig;
         vRecv >> clsig;
@@ -171,6 +176,9 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     if (!pindexNew->pprev) {
         return;
     }
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+        return;
+    }
 
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
@@ -257,6 +265,10 @@ void CChainLocksHandler::EnforceBestChainLock()
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+        return;
+    }
+
     CChainLockSig clsig;
     {
         LOCK(cs);
@@ -316,6 +328,10 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex, bool activ
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
 {
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+        return false;
+    }
+
     LOCK(cs);
     return InternalHasChainLock(nHeight, blockHash);
 }
@@ -342,6 +358,10 @@ bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockH
 
 bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blockHash)
 {
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+        return false;
+    }
+
     LOCK(cs);
     return InternalHasConflictingChainLock(nHeight, blockHash);
 }
