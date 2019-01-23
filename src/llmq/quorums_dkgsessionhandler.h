@@ -16,7 +16,7 @@ namespace llmq
 
 enum QuorumPhase {
     QuorumPhase_None = -1,
-    QuorumPhase_Initialized,
+    QuorumPhase_Initialized = 1,
     QuorumPhase_Contribute,
     QuorumPhase_Complain,
     QuorumPhase_Justify,
