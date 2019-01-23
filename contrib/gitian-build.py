@@ -152,7 +152,7 @@ def verify():
 def main():
     global args, workdir
 
-    parser = argparse.ArgumentParser(usage='%(prog)s [options] signer version')
+    parser = argparse.ArgumentParser(description='Script for running full Gitian builds.')
     parser.add_argument('-c', '--commit', action='store_true', dest='commit', help='Indicate that the version argument is for a commit or branch')
     parser.add_argument('-p', '--pull', action='store_true', dest='pull', help='Indicate that the version argument is the number of a github repository pull request')
     parser.add_argument('-u', '--url', dest='url', default='https://github.com/bitcoin/bitcoin', help='Specify the URL of the repository. Default is %(default)s')
@@ -168,26 +168,16 @@ def main():
     parser.add_argument('-S', '--setup', action='store_true', dest='setup', help='Set up the Gitian building environment. Only works on Debian-based systems (Ubuntu, Debian)')
     parser.add_argument('-D', '--detach-sign', action='store_true', dest='detach_sign', help='Create the assert file for detached signing. Will not commit anything.')
     parser.add_argument('-n', '--no-commit', action='store_false', dest='commit_files', help='Do not commit anything to git')
-    parser.add_argument('signer', help='GPG signer to sign each build assert file')
-    parser.add_argument('version', help='Version number, commit, or branch to build. If building a commit or branch, the -c option must be specified')
+    parser.add_argument('signer', nargs='?', help='GPG signer to sign each build assert file')
+    parser.add_argument('version', nargs='?', help='Version number, commit, or branch to build. If building a commit or branch, the -c option must be specified')
 
     args = parser.parse_args()
     workdir = os.getcwd()
 
-    args.linux = 'l' in args.os
-    args.windows = 'w' in args.os
-    args.macos = 'm' in args.os
-
     args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
-
-    if args.buildsign:
-        args.build = True
-        args.sign = True
 
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')
-
-    args.sign_prog = 'true' if args.detach_sign else 'gpg --detach-sign'
 
     # Ensure no more than one environment variable for gitian-builder (USE_LXC, USE_VBOX, USE_DOCKER) is set as they
     # can interfere (e.g., USE_LXC being set shadows USE_DOCKER; for details see gitian-builder/libexec/make-clean-vm).
@@ -203,19 +193,34 @@ def main():
         if 'LXC_GUEST_IP' not in os.environ.keys():
             os.environ['LXC_GUEST_IP'] = '10.0.3.5'
 
+    if args.setup:
+        setup()
+
+    if args.buildsign:
+        args.build = True
+        args.sign = True
+
+    if not args.build and not args.sign and not args.verify:
+        sys.exit(0)
+
+    args.linux = 'l' in args.os
+    args.windows = 'w' in args.os
+    args.macos = 'm' in args.os
+
     # Disable for MacOS if no SDK found
     if args.macos and not os.path.isfile('gitian-builder/inputs/MacOSX10.11.sdk.tar.gz'):
         print('Cannot build for MacOS, SDK does not exist. Will build for other OSes')
         args.macos = False
 
+    args.sign_prog = 'true' if args.detach_sign else 'gpg --detach-sign'
+
     script_name = os.path.basename(sys.argv[0])
-    # Signer and version shouldn't be empty
-    if args.signer == '':
-        print(script_name+': Missing signer.')
+    if not args.signer:
+        print(script_name+': Missing signer')
         print('Try '+script_name+' --help for more information')
         sys.exit(1)
-    if args.version == '':
-        print(script_name+': Missing version.')
+    if not args.version:
+        print(script_name+': Missing version')
         print('Try '+script_name+' --help for more information')
         sys.exit(1)
 
@@ -223,9 +228,6 @@ def main():
     if args.commit and args.pull:
         raise Exception('Cannot have both commit and pull')
     args.commit = ('' if args.commit else 'v') + args.version
-
-    if args.setup:
-        setup()
 
     os.chdir('bitcoin')
     if args.pull:
