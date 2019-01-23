@@ -176,14 +176,8 @@ def main():
 
     args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
 
-    if args.buildsign:
-        args.build = True
-        args.sign = True
-
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')
-
-    args.sign_prog = 'true' if args.detach_sign else 'gpg --detach-sign'
 
     # Ensure no more than one environment variable for gitian-builder (USE_LXC, USE_VBOX, USE_DOCKER) is set as they
     # can interfere (e.g., USE_LXC being set shadows USE_DOCKER; for details see gitian-builder/libexec/make-clean-vm).
@@ -225,8 +219,8 @@ def main():
         print(script_name+': Missing signer')
         print('Try '+script_name+' --help for more information')
         sys.exit(1)
-    if args.version == '':
-        print(script_name+': Missing version.')
+    if not args.version:
+        print(script_name+': Missing version')
         print('Try '+script_name+' --help for more information')
         sys.exit(1)
 
