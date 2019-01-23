@@ -23,7 +23,7 @@ transactions with high fee.
 
 class AutoInstantSendTest(DashTestFramework):
     def __init__(self):
-        super().__init__(14, 10, [])
+        super().__init__(14, 10, [], fast_dip3_activation=True)
         # set sender,  receiver,  isolated nodes
         self.isolated_idx = self.num_nodes - 1
         self.receiver_idx = self.num_nodes - 2

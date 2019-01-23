@@ -22,8 +22,9 @@ class DIP3Test(BitcoinTestFramework):
         self.num_nodes = 1 + self.num_initial_mn + 2 # +1 for controller, +1 for mn-qt, +1 for mn created after dip3 activation
         self.setup_clean_chain = True
 
-        self.extra_args = ["-budgetparams=240:100:240"]
+        self.extra_args = ["-budgetparams=10:10:10"]
         self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
+        self.extra_args += ["-bip9params=dip0003:0:999999999999:45:45", "-dip3activationheight=150"]
 
     def setup_network(self):
         disable_mocktime()
@@ -56,9 +57,9 @@ class DIP3Test(BitcoinTestFramework):
             self.nodes[0].generate(1) # generate enough for collaterals
         print("controller node has {} dash".format(self.nodes[0].getbalance()))
 
-        # Make sure we're below block 432 (which activates dip3)
+        # Make sure we're below block 135 (which activates dip3)
         print("testing rejection of ProTx before dip3 activation")
-        assert(self.nodes[0].getblockchaininfo()['blocks'] < 432)
+        assert(self.nodes[0].getblockchaininfo()['blocks'] < 135)
 
         mns = []
 
@@ -69,7 +70,7 @@ class DIP3Test(BitcoinTestFramework):
         mns.append(before_dip3_mn)
 
         # block 500 starts enforcing DIP3 MN payments
-        while self.nodes[0].getblockcount() < 498:
+        while self.nodes[0].getblockcount() < 150:
             self.nodes[0].generate(1)
 
         print("mining final block for DIP3 activation")

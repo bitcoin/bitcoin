@@ -145,7 +145,12 @@ void SelectParams(const std::string& chain);
 /**
  * Allows modifying the BIP9 regtest parameters.
  */
-void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold);
+
+/**
+ * Allows modifying the DIP3 activation height
+ */
+void UpdateRegtestDIP3ActivationHeight(int nHeight);
 
 /**
  * Allows modifying the budget regtest parameters.

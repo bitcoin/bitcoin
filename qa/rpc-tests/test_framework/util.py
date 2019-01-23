@@ -400,6 +400,21 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
         raise
     return rpcs
 
+
+def copy_datadir(from_node, to_node, dirname):
+    from_datadir = os.path.join(dirname, "node"+str(from_node), "regtest")
+    to_datadir = os.path.join(dirname, "node"+str(to_node), "regtest")
+
+    dirs = ["blocks", "chainstate", "evodb", "llmq"]
+    for d in dirs:
+        try:
+            src = os.path.join(from_datadir, d)
+            dst = os.path.join(to_datadir, d)
+            shutil.copytree(src, dst)
+        except:
+            pass
+
+
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 

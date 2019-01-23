@@ -11,6 +11,7 @@ import sys
 import shutil
 import tempfile
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from time import time, sleep
 
 from .util import (
@@ -35,7 +36,8 @@ from .util import (
     set_node_times,
     p2p_port,
     satoshi_round,
-    wait_to_sync)
+    wait_to_sync,
+    copy_datadir)
 from .authproxy import JSONRPCException
 
 
@@ -218,7 +220,7 @@ class MasternodeInfo:
 
 
 class DashTestFramework(BitcoinTestFramework):
-    def __init__(self, num_nodes, masterodes_count, extra_args):
+    def __init__(self, num_nodes, masterodes_count, extra_args, fast_dip3_activation=False):
         super().__init__()
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
@@ -227,6 +229,12 @@ class DashTestFramework(BitcoinTestFramework):
         self.is_network_split = False
         # additional args
         self.extra_args = extra_args
+
+        self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
+
+        self.fast_dip3_activation = fast_dip3_activation
+        if fast_dip3_activation:
+            self.extra_args += ["-bip9params=dip0003:0:999999999999:10:5", "-dip3activationheight=50"]
 
     def create_simple_node(self):
         idx = len(self.nodes)
@@ -268,24 +276,64 @@ class DashTestFramework(BitcoinTestFramework):
             self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
 
-    def start_masternodes(self):
+    def prepare_datadirs(self):
+        # stop faucet node so that we can copy the datadir
+        stop_node(self.nodes[0], 0)
+
         start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
+            copy_datadir(0, idx + start_idx, self.options.tmpdir)
+
+        # restart faucet node
+        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args)
+
+    def start_masternodes(self):
+        start_idx = len(self.nodes)
+
+        for idx in range(0, self.mn_count):
+            self.nodes.append(None)
+        executor = ThreadPoolExecutor(max_workers=20)
+
+        def do_start(idx):
             args = ['-masternode=1',
                     '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
             node = start_node(idx + start_idx, self.options.tmpdir, args)
             self.mninfo[idx].node = node
-            self.nodes.append(node)
+            self.nodes[idx + start_idx] = node
+            wait_to_sync(node, True)
+
+        def do_connect(idx):
             for i in range(0, idx + 1):
                 connect_nodes(self.nodes[idx + start_idx], i)
-            wait_to_sync(node, True)
+
+        jobs = []
+
+        # start up nodes in parallel
+        for idx in range(0, self.mn_count):
+            jobs.append(executor.submit(do_start, idx))
+
+        # wait for all nodes to start up
+        for job in jobs:
+            job.result()
+        jobs.clear()
+
+        # connect nodes in parallel
+        for idx in range(0, self.mn_count):
+            jobs.append(executor.submit(do_connect, idx))
+
+        # wait for all nodes to connect
+        for job in jobs:
+            job.result()
+        jobs.clear()
+
         sync_masternodes(self.nodes, True)
+
+        executor.shutdown()
 
     def setup_network(self):
         self.nodes = []
         # create faucet node for collateral and transactions
-        args = ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"] + self.extra_args
-        self.nodes.append(start_node(0, self.options.tmpdir, args))
+        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
             set_mocktime(get_mocktime() + 1)
@@ -297,12 +345,14 @@ class DashTestFramework(BitcoinTestFramework):
         sync_masternodes(self.nodes, True)
 
         # activate DIP3
-        while self.nodes[0].getblockcount() < 500:
-            self.nodes[0].generate(10)
+        if not self.fast_dip3_activation:
+            while self.nodes[0].getblockcount() < 500:
+                self.nodes[0].generate(10)
         self.sync_all()
 
         # create masternodes
         self.prepare_masternodes()
+        self.prepare_datadirs()
         self.start_masternodes()
 
         set_mocktime(get_mocktime() + 1)

@@ -14,7 +14,7 @@ InstantSendTest -- test InstantSend functionality (prevent doublespend for uncon
 
 class InstantSendTest(DashTestFramework):
     def __init__(self):
-        super().__init__(14, 10, [])
+        super().__init__(14, 10, [], fast_dip3_activation=True)
         # set sender,  receiver,  isolated nodes
         self.isolated_idx = self.num_nodes - 1
         self.receiver_idx = self.num_nodes - 2
@@ -55,7 +55,7 @@ class InstantSendTest(DashTestFramework):
         # start last node
         self.nodes[self.isolated_idx] = start_node(self.isolated_idx,
                                                    self.options.tmpdir,
-                                                   ["-debug"])
+                                                   ["-debug"] + self.extra_args)
         # send doublespend transaction to isolated node
         self.nodes[self.isolated_idx].sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction

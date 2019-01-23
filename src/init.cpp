@@ -543,7 +543,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitancestorsize=<n>", strprintf("Do not accept transactions whose size with all in-mempool ancestors exceeds <n> kilobytes (default: %u)", DEFAULT_ANCESTOR_SIZE_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantcount=<n>", strprintf("Do not accept transactions if any ancestor would have <n> or more in-mempool descendants (default: %u)", DEFAULT_DESCENDANT_LIMIT));
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
-        strUsage += HelpMessageOpt("-bip9params=<deployment>:<start>:<end>", "Use given start/end times for specified BIP9 deployment (regtest-only)");
+        strUsage += HelpMessageOpt("-bip9params=<deployment>:<start>:<end>(:<window>:<threshold>)", "Use given start/end times for specified BIP9 deployment (regtest-only). Specifying window and threshold is optional.");
         strUsage += HelpMessageOpt("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS));
     }
     std::string debugCategories = "addrman, alert, bench, cmpctblock, coindb, db, http, leveldb, libevent, lock, mempool, mempoolrej, net, proxy, prune, rand, reindex, rpc, selectcoins, tor, zmq, "
@@ -1290,23 +1290,31 @@ bool AppInitParameterInteraction()
         for (auto i : deployments) {
             std::vector<std::string> vDeploymentParams;
             boost::split(vDeploymentParams, i, boost::is_any_of(":"));
-            if (vDeploymentParams.size() != 3) {
-                return InitError("BIP9 parameters malformed, expecting deployment:start:end");
+            if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5) {
+                return InitError("BIP9 parameters malformed, expecting deployment:start:end or deployment:start:end:window:threshold");
             }
-            int64_t nStartTime, nTimeout;
+            int64_t nStartTime, nTimeout, nWindowSize = -1, nThreshold = -1;
             if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
                 return InitError(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
             }
             if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
                 return InitError(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
             }
+            if (vDeploymentParams.size() == 5) {
+                if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
+                    return InitError(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
+                }
+                if (!ParseInt64(vDeploymentParams[4], &nThreshold)) {
+                    return InitError(strprintf("Invalid nThreshold (%s)", vDeploymentParams[4]));
+                }
+            }
             bool found = false;
             for (int j=0; j<(int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j)
             {
                 if (vDeploymentParams[0].compare(VersionBitsDeploymentInfo[j].name) == 0) {
-                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                    UpdateRegtestBIP9Parameters(Consensus::DeploymentPos(j), nStartTime, nTimeout, nWindowSize, nThreshold);
                     found = true;
-                    LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
+                    LogPrintf("Setting BIP9 activation parameters for %s to start=%ld, timeout=%ld, window=%ld, threshold=%ld\n", vDeploymentParams[0], nStartTime, nTimeout, nWindowSize, nThreshold);
                     break;
                 }
             }
@@ -1314,6 +1322,10 @@ bool AppInitParameterInteraction()
                 return InitError(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
             }
         }
+    }
+
+    if (IsArgSet("-dip3activationheight")) {
+        UpdateRegtestDIP3ActivationHeight(GetArg("-dip3activationheight", 0));
     }
 
     if (IsArgSet("-budgetparams")) {
