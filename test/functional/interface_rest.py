@@ -195,7 +195,7 @@ class RESTTest (BitcoinTestFramework):
         self.nodes[0].generate(1)  # generate block to not affect upcoming tests
         self.sync_all()
 
-        self.log.info("Test the /block and /headers URIs")
+        self.log.info("Test the /block, /blockhashbyheight and /headers URIs")
         bb_hash = self.nodes[0].getbestblockhash()
 
         # Check result if block does not exists
@@ -234,6 +234,23 @@ class RESTTest (BitcoinTestFramework):
         # Check json format
         block_json_obj = self.test_rest_request("/block/{}".format(bb_hash))
         assert_equal(block_json_obj['hash'], bb_hash)
+        assert_equal(self.test_rest_request("/blockhashbyheight/{}".format(block_json_obj['height']))['blockhash'], bb_hash)
+
+        # Check hex/bin format
+        resp_hex = self.test_rest_request("/blockhashbyheight/{}".format(block_json_obj['height']), req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        assert_equal(resp_hex.read().decode('utf-8').rstrip(), bb_hash)
+        resp_bytes = self.test_rest_request("/blockhashbyheight/{}".format(block_json_obj['height']), req_type=ReqType.BIN, ret_type=RetType.BYTES)
+        blockhash = binascii.hexlify(resp_bytes[::-1]).decode('utf-8')
+        assert_equal(blockhash, bb_hash)
+
+        # Check invalid blockhashbyheight requests
+        resp = self.test_rest_request("/blockhashbyheight/abc", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), "Invalid height: abc")
+        resp = self.test_rest_request("/blockhashbyheight/1000000", ret_type=RetType.OBJ, status=404)
+        assert_equal(resp.read().decode('utf-8').rstrip(), "Block height out of range")
+        resp = self.test_rest_request("/blockhashbyheight/-1", ret_type=RetType.OBJ, status=400)
+        assert_equal(resp.read().decode('utf-8').rstrip(), "Invalid height: -1")
+        self.test_rest_request("/blockhashbyheight/", ret_type=RetType.OBJ, status=400)
 
         # Compare with json block header
         json_obj = self.test_rest_request("/headers/1/{}".format(bb_hash))

@@ -573,6 +573,52 @@ static bool rest_getutxos(HTTPRequest* req, const std::string& strURIPart)
     }
 }
 
+static bool rest_blockhash_by_height(HTTPRequest* req,
+                       const std::string& str_uri_part)
+{
+    if (!CheckWarmup(req)) return false;
+    std::string height_str;
+    const RetFormat rf = ParseDataFormat(height_str, str_uri_part);
+
+    int32_t blockheight;
+    if (!ParseInt32(height_str, &blockheight) || blockheight < 0) {
+        return RESTERR(req, HTTP_BAD_REQUEST, "Invalid height: " + SanitizeString(height_str));
+    }
+
+    CBlockIndex* pblockindex = nullptr;
+    {
+        LOCK(cs_main);
+        if (blockheight > chainActive.Height()) {
+            return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
+        }
+        pblockindex = chainActive[blockheight];
+    }
+    switch (rf) {
+    case RetFormat::BINARY: {
+        CDataStream ss_blockhash(SER_NETWORK, PROTOCOL_VERSION);
+        ss_blockhash << pblockindex->GetBlockHash();
+        req->WriteHeader("Content-Type", "application/octet-stream");
+        req->WriteReply(HTTP_OK, ss_blockhash.str());
+        return true;
+    }
+    case RetFormat::HEX: {
+        req->WriteHeader("Content-Type", "text/plain");
+        req->WriteReply(HTTP_OK, pblockindex->GetBlockHash().GetHex() + "\n");
+        return true;
+    }
+    case RetFormat::JSON: {
+        req->WriteHeader("Content-Type", "application/json");
+        UniValue resp = UniValue(UniValue::VOBJ);
+        resp.pushKV("blockhash", pblockindex->GetBlockHash().GetHex());
+        req->WriteReply(HTTP_OK, resp.write() + "\n");
+        return true;
+    }
+    default: {
+        return RESTERR(req, HTTP_NOT_FOUND, "output format not found (available: " + AvailableDataFormatsString() + ")");
+    }
+    }
+}
+
 static const struct {
     const char* prefix;
     bool (*handler)(HTTPRequest* req, const std::string& strReq);
@@ -585,6 +631,7 @@ static const struct {
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+      {"/rest/blockhashbyheight/", rest_blockhash_by_height},
 };
 
 bool StartREST()
