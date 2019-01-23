@@ -124,6 +124,9 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     int phaseInt = quorumStageInt / params.dkgPhaseBlocks;
     if (fNewPhase && phaseInt >= QuorumPhase_Initialized && phaseInt <= QuorumPhase_Idle) {
         phase = static_cast<QuorumPhase>(phaseInt);
+        if (phase == QuorumPhase_Initialized) {
+            quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumHash, quorumHeight);
+        }
     }
 
     quorumDKGDebugManager->UpdateLocalStatus([&](CDKGDebugStatus& status) {
