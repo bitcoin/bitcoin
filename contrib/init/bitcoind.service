@@ -19,6 +19,8 @@ User=bitcoin
 Type=forking
 PIDFile=/run/bitcoind/bitcoind.pid
 Restart=on-failure
+# Consider uncommenting the following line during initial block download
+#TimeoutStopSec=infinity
 
 # Hardening measures
 ####################
