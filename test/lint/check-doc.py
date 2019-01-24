@@ -30,8 +30,8 @@ def main():
         used = check_output(CMD_GREP_ARGS, shell=True, universal_newlines=True, encoding='utf8')
         docd = check_output(CMD_GREP_DOCS, shell=True, universal_newlines=True, encoding='utf8')
     else:
-        used = check_output(CMD_GREP_ARGS, shell=True, universal_newlines=True) # encoding='utf8'
-        docd = check_output(CMD_GREP_DOCS, shell=True, universal_newlines=True) # encoding='utf8'
+        used = check_output(CMD_GREP_ARGS, shell=True).decode('utf8').strip()
+        docd = check_output(CMD_GREP_DOCS, shell=True).decode('utf8').strip()
 
     args_used = set(re.findall(re.compile(REGEX_ARG), used))
     args_docd = set(re.findall(re.compile(REGEX_DOC), docd)).union(SET_DOC_OPTIONAL)
