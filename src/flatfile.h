@@ -24,14 +24,12 @@ struct FlatFilePos
         READWRITE(VARINT(nPos));
     }
 
-    FlatFilePos() {
-        SetNull();
-    }
+    FlatFilePos() : nFile(-1), nPos(0) {}
 
-    FlatFilePos(int nFileIn, unsigned int nPosIn) {
-        nFile = nFileIn;
-        nPos = nPosIn;
-    }
+    FlatFilePos(int nFileIn, unsigned int nPosIn) :
+        nFile(nFileIn),
+        nPos(nPosIn)
+    {}
 
     friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) {
         return (a.nFile == b.nFile && a.nPos == b.nPos);
@@ -72,7 +70,7 @@ public:
     fs::path FileName(const FlatFilePos& pos) const;
 
     /** Open a handle to the file at the given position. */
-    FILE* Open(const FlatFilePos& pos, bool fReadOnly = false);
+    FILE* Open(const FlatFilePos& pos, bool read_only = false);
 
     /**
      * Allocate additional space in a file after the given starting position. The amount allocated
