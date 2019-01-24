@@ -20,7 +20,10 @@
 #include "walletmodel.h"
 
 
-MultisigDialog::MultisigDialog(QWidget *parent) : QDialog(parent), ui(new Ui::MultisigDialog), model(0)
+MultisigDialog::MultisigDialog(QWidget *parent) :
+    QDialog(parent),
+    ui(new Ui::MultisigDialog),
+    model(0)
 {
     ui->setupUi(this);
 

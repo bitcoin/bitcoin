@@ -214,6 +214,9 @@ void BitcoinGUI::createActions()
 
     multisigAction = new QAction(QIcon(":/icons/multisig"), tr("&Multisig"), this);
     multisigAction->setStatusTip(tr("UI to create multisig addresses"));
+    multisigAction->setToolTip(multisigAction->statusTip());
+    multisigAction->setCheckable(true);
+    multisigAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     tabGroup->addAction(multisigAction);
 
     connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -338,6 +341,7 @@ void BitcoinGUI::createToolBars()
     toolbar->addAction(mintingAction);
 #endif // DISABLE_MINING
     toolbar->addAction(addressBookAction);
+    toolbar->addAction(multisigAction);
 }
 
 void BitcoinGUI::setClientModel(ClientModel *clientModel)

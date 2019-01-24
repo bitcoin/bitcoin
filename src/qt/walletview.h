@@ -63,7 +63,7 @@ private:
     OverviewPage *overviewPage;
     QWidget *transactionsPage;
     QWidget *mintingPage;
-    MultisigDialog *multisigPage;
+    MultisigDialog *multisigDialog;
     AddressBookPage *addressBookPage;
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
