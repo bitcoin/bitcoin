@@ -138,3 +138,14 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
+
+    - stage: test
+      name: 'macOS 10.10  [GOAL: deploy]  [enable-debug]  [no gui tests]'
+      env: >-
+        HOST=x86_64-apple-darwin14
+        PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
+        OSX_SDK=10.11
+        RUN_UNIT_TESTS=true
+        RUN_FUNCTIONAL_TESTS=false
+        GOAL="deploy"
+        BITCOIN_CONFIG="--disable-gui --enable-reduce-exports --enable-werror --disable-gui-tests --enable-debug"
