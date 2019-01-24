@@ -19,6 +19,7 @@ from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_HASH160, OP_CHECKSIG, OP_0, hash160, OP_EQUAL, OP_DUP, OP_EQUALVERIFY, OP_1, OP_2, OP_CHECKMULTISIG, OP_TRUE, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_raises_rpc_error,
     connect_nodes,
@@ -277,6 +278,34 @@ class SegWitTest(BitcoinTestFramework):
 
         # Mine a block to clear the gbt cache again.
         self.nodes[0].generate(1)
+
+        self.log.info("Signing with all-segwit inputs reveals fee rate")
+        # Test that signing a tx with all-segwit inputs returns the fee
+        # in the results
+        addr = self.nodes[0].getnewaddress(address_type='p2sh-segwit')
+        txid = self.nodes[0].sendtoaddress(addr, 1)
+        tx = self.nodes[0].getrawtransaction(txid, True)
+        n = -1
+        value = -1
+        for o in tx["vout"]:
+            if o["scriptPubKey"]["addresses"][0] == addr:
+                n = o["n"]
+                value = Decimal(o["value"])
+                break
+        assert n > -1 # failure means we could not find the address in the outputs despite sending to it
+        assert_approx(value, 1.0, 0.01) # failure means we got an unexpected amount of coins, despite trying to send 1
+        fee = Decimal("0.00010000")
+        value_out = value - fee
+        self.nodes[0].generatetoaddress(1, self.nodes[0].getnewaddress())
+        raw = self.nodes[0].createrawtransaction([{"txid" : txid, "vout" : n}], [{self.nodes[0].getnewaddress() : value_out}])
+        signed = self.nodes[0].signrawtransactionwithwallet(raw)
+        assert_equal(signed["complete"], True)
+        txsize = self.nodes[0].decoderawtransaction(signed['hex'])['vsize']
+        exp_feerate = 1000 * fee / Decimal(txsize)
+        assert_approx(signed["feerate"], exp_feerate, Decimal("0.00000010"))
+        # discrepancy = 100000000 * (exp_feerate - signed["feerate"])
+        # assert -10 < discrepancy < 10
+        assert Decimal(signed["fee"]) == fee
 
         self.log.info("Verify behaviour of importaddress and listunspent")
 
