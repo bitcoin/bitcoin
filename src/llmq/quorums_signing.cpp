@@ -565,7 +565,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         if (signHeight > chainActive.Height()) {
             return nullptr;
         }
-        startBlock = chainActive[signHeight]->GetBlockHash();
+        startBlock = chainActive[signHeight - SIGN_HEIGHT_OFFSET]->GetBlockHash();
     }
 
     auto quorums = quorumManager->ScanQuorums(llmqType, startBlock, poolSize);

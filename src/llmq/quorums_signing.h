@@ -104,6 +104,11 @@ class CSigningManager
     friend class CSigSharesManager;
     static const int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
 
+    // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
+    // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
+    // which are not 100% at the chain tip.
+    static const int SIGN_HEIGHT_OFFSET = 8;
+
 private:
     CCriticalSection cs;
 
