@@ -99,8 +99,6 @@ public:
     CQuorumCPtr GetNewestQuorum(Consensus::LLMQType llmqType);
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, size_t maxCount);
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, const uint256& startBlock, size_t maxCount);
-    CQuorumCPtr SelectQuorum(Consensus::LLMQType llmqType, const uint256& selectionHash);
-    CQuorumCPtr SelectQuorum(Consensus::LLMQType llmqType, const uint256& startBlock, const uint256& selectionHash);
 
 private:
     void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew);

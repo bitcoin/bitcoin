@@ -496,12 +496,18 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         db.WriteVoteForId(llmqType, id, msgHash);
     }
 
+    int tipHeight;
+    {
+        LOCK(cs_main);
+        tipHeight = chainActive.Height();
+    }
+
     // This might end up giving different results on different members
     // This might happen when we are on the brink of confirming a new quorum
     // This gives a slight risk of not getting enough shares to recover a signature
     // But at least it shouldn't be possible to get conflicting recovered signatures
     // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-    CQuorumCPtr quorum = quorumManager->SelectQuorum(llmqType, id);
+    CQuorumCPtr quorum = SelectQuorumForSigning(llmqType, tipHeight, id);
     if (!quorum) {
         LogPrintf("CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
         return false;
@@ -548,11 +554,43 @@ bool CSigningManager::IsConflicting(Consensus::LLMQType llmqType, const uint256&
     return false;
 }
 
-bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, const uint256& signedAtTip, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash)
+{
+    auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
+    size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
+
+    uint256 startBlock;
+    {
+        LOCK(cs_main);
+        if (signHeight > chainActive.Height()) {
+            return nullptr;
+        }
+        startBlock = chainActive[signHeight]->GetBlockHash();
+    }
+
+    auto quorums = quorumManager->ScanQuorums(llmqType, startBlock, poolSize);
+    if (quorums.empty()) {
+        return nullptr;
+    }
+
+    std::vector<std::pair<uint256, size_t>> scores;
+    scores.reserve(quorums.size());
+    for (size_t i = 0; i < quorums.size(); i++) {
+        CHashWriter h(SER_NETWORK, 0);
+        h << (uint8_t)llmqType;
+        h << quorums[i]->quorumHash;
+        h << selectionHash;
+        scores.emplace_back(h.GetHash(), i);
+    }
+    std::sort(scores.begin(), scores.end());
+    return quorums[scores.front().second];
+}
+
+bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
 {
     auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeForChainLocks);
 
-    auto quorum = quorumManager->SelectQuorum(llmqParams.type, signedAtTip, id);
+    auto quorum = SelectQuorumForSigning(llmqParams.type, signedAtHeight, id);
     if (!quorum) {
         return false;
     }
