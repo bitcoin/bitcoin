@@ -135,12 +135,12 @@ bool DirIsWritable(const fs::path& directory)
     return true;
 }
 
-bool CheckDiskSpace(const fs::path& dir, uint64_t nAdditionalBytes)
+bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
 {
-    constexpr uint64_t nMinDiskSpace = 52428800; // 50 MiB
+    constexpr uint64_t min_disk_space = 52428800; // 50 MiB
 
-    uint64_t nFreeBytesAvailable = fs::space(dir).available;
-    return nFreeBytesAvailable >= nMinDiskSpace + nAdditionalBytes;
+    uint64_t free_bytes_available = fs::space(dir).available;
+    return free_bytes_available >= min_disk_space + additional_bytes;
 }
 
 /**
