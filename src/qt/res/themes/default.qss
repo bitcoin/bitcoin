@@ -265,6 +265,12 @@ QStackedWidget#walletstack {
 }
 
 /* Send Page */
+QDialog {
+    background-image: url(:/images/logomask);
+    background-repeat: no-repeat;
+    background-position: bottom left;
+}
+
 QScrollArea {
     background-image: url(:/images/transparent);
 }
