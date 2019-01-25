@@ -578,8 +578,10 @@ UniValue importwallet(const JSONRPCRequest& request)
         // Use uiInterface.ShowProgress instead of pwallet.ShowProgress because pwallet.ShowProgress has a cancel button tied to AbortRescan which
         // we don't want for this progress bar showing the import progress. uiInterface.ShowProgress does not have a cancel button.
         uiInterface.ShowProgress(strprintf("%s " + _("Importing..."), pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
+        std::vector<std::tuple<CKey, int64_t, bool, std::string>> keys;
+        std::vector<std::pair<CScript, int64_t>> scripts;
         while (file.good()) {
-            uiInterface.ShowProgress("", std::max(1, std::min(99, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
+            uiInterface.ShowProgress("", std::max(1, std::min(50, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
             std::string line;
             std::getline(file, line);
             if (line.empty() || line[0] == '#')
@@ -591,13 +593,6 @@ UniValue importwallet(const JSONRPCRequest& request)
                 continue;
             CKey key = DecodeSecret(vstr[0]);
             if (key.IsValid()) {
-                CPubKey pubkey = key.GetPubKey();
-                assert(key.VerifyPubKey(pubkey));
-                CKeyID keyid = pubkey.GetID();
-                if (pwallet->HaveKey(keyid)) {
-                    pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
-                    continue;
-                }
                 int64_t nTime = DecodeDumpTime(vstr[1]);
                 std::string strLabel;
                 bool fLabel = true;
@@ -613,36 +608,62 @@ UniValue importwallet(const JSONRPCRequest& request)
                         fLabel = true;
                     }
                 }
-                pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
-                if (!pwallet->AddKeyPubKey(key, pubkey)) {
-                    fGood = false;
-                    continue;
-                }
-                pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
-                if (fLabel)
-                    pwallet->SetAddressBook(keyid, strLabel, "receive");
-                nTimeBegin = std::min(nTimeBegin, nTime);
+                keys.push_back(std::make_tuple(key, nTime, fLabel, strLabel));
             } else if(IsHex(vstr[0])) {
-               std::vector<unsigned char> vData(ParseHex(vstr[0]));
-               CScript script = CScript(vData.begin(), vData.end());
-               CScriptID id(script);
-               if (pwallet->HaveCScript(id)) {
-                   pwallet->WalletLogPrintf("Skipping import of %s (script already present)\n", vstr[0]);
-                   continue;
-               }
-               if(!pwallet->AddCScript(script)) {
-                   pwallet->WalletLogPrintf("Error importing script %s\n", vstr[0]);
-                   fGood = false;
-                   continue;
-               }
-               int64_t birth_time = DecodeDumpTime(vstr[1]);
-               if (birth_time > 0) {
-                   pwallet->m_script_metadata[id].nCreateTime = birth_time;
-                   nTimeBegin = std::min(nTimeBegin, birth_time);
-               }
+                std::vector<unsigned char> vData(ParseHex(vstr[0]));
+                CScript script = CScript(vData.begin(), vData.end());
+                int64_t birth_time = DecodeDumpTime(vstr[1]);
+                scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
             }
         }
         file.close();
+        double total = (double)(keys.size() + scripts.size());
+        double progress = 0;
+        for (const auto& key_tuple : keys) {
+            uiInterface.ShowProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
+            const CKey& key = std::get<0>(key_tuple);
+            int64_t time = std::get<1>(key_tuple);
+            bool has_label = std::get<2>(key_tuple);
+            std::string label = std::get<3>(key_tuple);
+
+            CPubKey pubkey = key.GetPubKey();
+            assert(key.VerifyPubKey(pubkey));
+            CKeyID keyid = pubkey.GetID();
+            if (pwallet->HaveKey(keyid)) {
+                pwallet->WalletLogPrintf("Skipping import of %s (key already present)\n", EncodeDestination(keyid));
+                continue;
+            }
+            pwallet->WalletLogPrintf("Importing %s...\n", EncodeDestination(keyid));
+            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+                fGood = false;
+                continue;
+            }
+            pwallet->mapKeyMetadata[keyid].nCreateTime = time;
+            if (has_label)
+                pwallet->SetAddressBook(keyid, label, "receive");
+            nTimeBegin = std::min(nTimeBegin, time);
+            progress++;
+        }
+        for (const auto& script_pair : scripts) {
+            uiInterface.ShowProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
+            const CScript& script = script_pair.first;
+            int64_t time = script_pair.second;
+            CScriptID id(script);
+            if (pwallet->HaveCScript(id)) {
+                pwallet->WalletLogPrintf("Skipping import of %s (script already present)\n", HexStr(script));
+                continue;
+            }
+            if(!pwallet->AddCScript(script)) {
+                pwallet->WalletLogPrintf("Error importing script %s\n", HexStr(script));
+                fGood = false;
+                continue;
+            }
+            if (time > 0) {
+                pwallet->m_script_metadata[id].nCreateTime = time;
+                nTimeBegin = std::min(nTimeBegin, time);
+            }
+            progress++;
+        }
         uiInterface.ShowProgress("", 100, false); // hide progress dialog in GUI
         pwallet->UpdateTimeFirstKey(nTimeBegin);
     }
