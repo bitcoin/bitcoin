@@ -15,6 +15,7 @@
 #include <ui_interface.h>
 
 #include <memory>
+#include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -149,6 +150,8 @@ WorkQueue<HTTPClosure>* workQueue = nullptr;
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 std::vector<evhttp_bound_socket *> boundSockets;
+//! One bind address of the server (if not empty)
+std::string bindAddress;
 
 } // anonymous namespace
 
@@ -331,6 +334,10 @@ static bool HTTPBindAddresses(struct evhttp* http)
                 LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             boundSockets.push_back(bind_handle);
+
+            std::ostringstream addressStr;
+            addressStr << "http://" << i->first << ":" << i->second;
+            bindAddress = addressStr.str();
         } else {
             LogPrintf("Binding RPC on address %s port %i failed.\n", i->first, i->second);
         }
@@ -461,6 +468,7 @@ void StopHTTPServer()
         delete workQueue;
         workQueue = nullptr;
     }
+    bindAddress.clear();
     // Unlisten sockets, these are what make the event loop running, which means
     // that after this and all connections are closed the event loop will quit.
     for (evhttp_bound_socket *socket : boundSockets) {
@@ -480,6 +488,15 @@ void StopHTTPServer()
         eventBase = nullptr;
     }
     LogPrint(BCLog::HTTP, "Stopped HTTP server\n");
+}
+
+bool GetHTTPBindAddress(std::string& address)
+{
+    if (bindAddress.empty()) {
+        return false;
+    }
+    address = bindAddress;
+    return true;
 }
 
 struct event_base* EventBase()

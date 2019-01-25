@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,6 +31,12 @@ void StartHTTPServer();
 void InterruptHTTPServer();
 /** Stop HTTP server */
 void StopHTTPServer();
+
+/**
+ * Tries to get (one) address at which the HTTP server is bound.  Returns
+ * false if the server is not bound anywhere at the moment.
+ */
+bool GetHTTPBindAddress(std::string& address);
 
 /** Change logging level for libevent. Removes BCLog::LIBEVENT from log categories if
  * libevent doesn't support debug logging.*/

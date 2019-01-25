@@ -20,6 +20,7 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include <memory> // for unique_ptr
+#include <sstream>
 #include <unordered_map>
 
 namespace {
@@ -32,6 +33,9 @@ std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
+
+/** The bind address that is used for the RPC help example.  */
+std::string rpcHelpBindAddress = "http://localhost:8336";
 
 struct RPCCommandExecutionInfo
 {
@@ -405,6 +409,11 @@ bool RPCIsInWarmup(std::string *outStatus)
     return fRPCInWarmup;
 }
 
+void SetRPCHelpAddress(const std::string& address)
+{
+    rpcHelpBindAddress = address;
+}
+
 void JSONRPCRequest::parse(const UniValue& valRequest)
 {
     // Parse request
@@ -571,8 +580,14 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
-    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+    std::ostringstream helpText;
+    helpText << "> curl --user myusername --data-binary "
+             << "'{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
+             << "\"method\": \"" + methodname + "\", "
+             << "\"params\": [" + args + "] }' "
+             << "-H 'content-type: text/plain;' "
+             << rpcHelpBindAddress << "\n";
+    return helpText.str();
 }
 
 void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)

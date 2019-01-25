@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -239,6 +239,11 @@ bool StartHTTPRPC()
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
+
+    std::string bindAddress;
+    if (GetHTTPBindAddress(bindAddress)) {
+        SetRPCHelpAddress(bindAddress);
+    }
 
     RegisterHTTPHandler("/", true, HTTPReq_JSONRPC);
     if (g_wallet_init_interface.HasWalletSupport()) {
