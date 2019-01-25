@@ -42,12 +42,12 @@ class LLMQSigningTest(DashTestFramework):
         # Sign 5 shares, should not result in recovered sig
         for i in range(5):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
-        sleep(2)
+        sleep(4)
         assert_sigs(False, False, False)
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
         self.mninfo[6].node.quorum("sign", 100, id, msgHash)
-        sleep(2)
+        sleep(4)
         assert_sigs(True, False, True)
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
@@ -74,7 +74,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum("sign", 100, id, msgHashConflict)
         for i in range(4, 10):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
-        sleep(2)
+        sleep(4)
         assert_sigs(True, False, True)
 
 if __name__ == '__main__':
