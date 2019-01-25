@@ -7,7 +7,7 @@
 export LC_ALL=C
 
 travis_retry pip3 install codespell==1.15.0
-travis_retry pip3 install flake8==3.5.0
+travis_retry pip3 install flake8==3.7.8
 travis_retry pip3 install vulture==0.29
 
 SHELLCHECK_VERSION=v0.6.0
