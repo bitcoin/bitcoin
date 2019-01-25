@@ -124,7 +124,7 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     if (request.params.size() > 0)
         strAccount = AccountFromValue(request.params[0]);
 
-    if (!pwallet->IsLocked()) {
+    if (!pwallet->IsLocked(true)) {
         pwallet->TopUpKeyPool();
     }
 
@@ -206,7 +206,7 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    if (!pwallet->IsLocked()) {
+    if (!pwallet->IsLocked(true)) {
         pwallet->TopUpKeyPool();
     }
 
