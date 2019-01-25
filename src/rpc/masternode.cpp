@@ -80,7 +80,6 @@ UniValue privatesend(const JSONRPCRequest& request)
 
 UniValue getpoolinfo(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getpoolinfo\n"
@@ -108,6 +107,7 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("pools", pools));
     }
 
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (pwallet) {
         obj.push_back(Pair("keys_left",     pwallet->nKeysLeftSinceAutoBackup));
         obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
