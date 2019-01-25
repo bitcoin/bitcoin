@@ -26,7 +26,7 @@ don't have test cases for.
   The Travis linter also checks this, but [possibly not in all cases](https://github.com/bitcoin/bitcoin/pull/14884#discussion_r239585126).
 - See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
   could lead to bugs and issues in the test code.
-- Avoid wildcard imports where possible
+- Avoid wildcard imports
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the BitcoinTestFramwork, place overrides for the
