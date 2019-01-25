@@ -50,7 +50,7 @@ class BIP68Test(BitcoinTestFramework):
         self.activateCSV()
 
         print("Verifying nVersion=2 transactions are standard.")
-        print("Note that with current versions of bitcoin software, nVersion=2 transactions are always standard (independent of BIP68 activation status).")
+        print("Note that with current versions of Dash Core software, nVersion=2 transactions are always standard (independent of BIP68 activation status).")
         self.test_version2_relay()
 
         print("Passed\n")

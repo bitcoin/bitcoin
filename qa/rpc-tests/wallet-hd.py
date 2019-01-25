@@ -13,9 +13,10 @@ class WalletHDTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
+        self.node_args = [['-usehd=0'], ['-usehd=1', '-keypool=0']]
 
     def setup_network(self):
-        self.nodes = start_nodes(2, self.options.tmpdir, [['-usehd=0'], ['-usehd=1', '-keypool=0']], redirect_stderr=True)
+        self.nodes = start_nodes(2, self.options.tmpdir, self.node_args, redirect_stderr=True)
         self.is_network_split = False
         connect_nodes_bi(self.nodes, 0, 1)
         self.is_network_split=False
@@ -27,7 +28,7 @@ class WalletHDTest(BitcoinTestFramework):
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
         assert_start_raises_init_error(1, self.options.tmpdir, ['-usehd=0'], 'already existing HD wallet')
-        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1])
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.node_args[1], redirect_stderr=True)
         connect_nodes_bi(self.nodes, 0, 1)
 
         # Make sure we use hd, keep chainid
