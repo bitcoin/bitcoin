@@ -69,10 +69,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
         return TransactionError::P2P_DISABLED;
     }
 
-    CInv inv(MSG_TX, hashTx);
-    g_connman->ForEachNode([&inv](CNode* pnode) {
-        pnode->PushInventory(inv);
-    });
+    g_connman->RelayTransaction(hashTx);
 
     return TransactionError::OK;
 }

@@ -283,8 +283,7 @@ public:
     }
     void relayTransaction(const uint256& txid) override
     {
-        CInv inv(MSG_TX, txid);
-        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+        g_connman->RelayTransaction(txid);
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {

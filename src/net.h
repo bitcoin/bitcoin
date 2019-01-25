@@ -299,6 +299,9 @@ public:
     void SetBestHeight(int height);
     int GetBestHeight() const;
 
+    /** Announce transaction to all peers */
+    void RelayTransaction(const uint256& txid) const;
+
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
 
