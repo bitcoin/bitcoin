@@ -504,10 +504,9 @@ Common misconceptions are clarified in those sections:
 
   - *Rationale*: This avoids memory and resource leaks, and ensures exception safety.
 
-- Use `MakeUnique()` to construct objects owned by `unique_ptr`s.
+- Use `std::make_unique` to construct objects owned by `unique_ptr`s
 
-  - *Rationale*: `MakeUnique` is concise and ensures exception safety in complex expressions.
-    `MakeUnique` is a temporary project local implementation of `std::make_unique` (C++14).
+  - *Rationale*: `std::make_unique` is concise and ensures exception safety in complex expressions.
 
 C++ data structures
 --------------------

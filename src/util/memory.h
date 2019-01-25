@@ -9,11 +9,11 @@
 #include <memory>
 #include <utility>
 
-//! Substitute for C++14 std::make_unique.
+//! No longer needed substitute for C++14 std::make_unique. Needed when we were using C++11.
 template <typename T, typename... Args>
 std::unique_ptr<T> MakeUnique(Args&&... args)
 {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+    return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
 #endif
