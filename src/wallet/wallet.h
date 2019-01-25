@@ -35,8 +35,8 @@
 #include <vector>
 
 //! Responsible for reading and validating the -wallet arguments and verifying the wallet database.
-//  This function will perform salvage on the wallet if requested, as long as only one wallet is
-//  being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
+//! This function will perform salvage on the wallet if requested, as long as only one wallet is
+//! being loaded (WalletParameterInteraction forbids -salvagewallet, -zapwallettxes or -upgradewallet with multiwallet).
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files);
 
 //! Load wallet databases.
@@ -55,10 +55,10 @@ void StopWallets();
 void UnloadWallets();
 
 //! Explicitly unload and delete the wallet.
-//  Blocks the current thread after signaling the unload intent so that all
-//  wallet clients release the wallet.
-//  Note that, when blocking is not required, the wallet is implicitly unloaded
-//  by the shared pointer deleter.
+//! Blocks the current thread after signaling the unload intent so that all
+//! wallet clients release the wallet.
+//! Note that, when blocking is not required, the wallet is implicitly unloaded
+//! by the shared pointer deleter.
 void UnloadWallet(std::shared_ptr<CWallet>&& wallet);
 
 bool AddWallet(const std::shared_ptr<CWallet>& wallet);
@@ -588,8 +588,8 @@ public:
     int64_t nTimeCreated;
     int64_t nTimeExpires;
     std::string strComment;
-    //! todo: add something to note what created it (user, getnewaddress, change)
-    //!   maybe should have a map<string, string> property map
+    // todo: add something to note what created it (user, getnewaddress, change)
+    //   maybe should have a map<string, string> property map
 
     explicit CWalletKey(int64_t nExpires=0);
 
