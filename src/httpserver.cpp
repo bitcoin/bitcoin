@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -135,18 +135,22 @@ struct HTTPPathHandler
 
 /** HTTP module state */
 
+namespace {
+
 //! libevent event loop
-static struct event_base* eventBase = nullptr;
+struct event_base* eventBase = nullptr;
 //! HTTP server
 struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
-static std::vector<CSubNet> rpc_allow_subnets;
+std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
-static WorkQueue<HTTPClosure>* workQueue = nullptr;
+WorkQueue<HTTPClosure>* workQueue = nullptr;
 //! Handlers for (sub)paths
 std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
 std::vector<evhttp_bound_socket *> boundSockets;
+
+} // anonymous namespace
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)

@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,14 +22,16 @@
 #include <memory> // for unique_ptr
 #include <unordered_map>
 
-static CCriticalSection cs_rpcWarmup;
-static std::atomic<bool> g_rpc_running{false};
-static bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
-static std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
+namespace {
+
+CCriticalSection cs_rpcWarmup;
+std::atomic<bool> g_rpc_running{false};
+bool fRPCInWarmup GUARDED_BY(cs_rpcWarmup) = true;
+std::string rpcWarmupStatus GUARDED_BY(cs_rpcWarmup) = "RPC server started";
 /* Timer-creating functions */
-static RPCTimerInterface* timerInterface = nullptr;
+RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
-static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
+std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
 
 struct RPCCommandExecutionInfo
 {
@@ -43,7 +45,7 @@ struct RPCServerInfo
     std::list<RPCCommandExecutionInfo> active_commands GUARDED_BY(mutex);
 };
 
-static RPCServerInfo g_rpc_server_info;
+RPCServerInfo g_rpc_server_info;
 
 struct RPCCommandExecution
 {
@@ -60,11 +62,13 @@ struct RPCCommandExecution
     }
 };
 
-static struct CRPCSignals
+struct CRPCSignals
 {
     boost::signals2::signal<void ()> Started;
     boost::signals2::signal<void ()> Stopped;
 } g_rpcSignals;
+
+} // anonymous namespace
 
 void RPCServer::OnStarted(std::function<void ()> slot)
 {
