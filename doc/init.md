@@ -86,6 +86,8 @@ To test, run `systemctl start bitcoind` and to enable for system startup run
 
 NOTE: When installing for systemd in Debian/Ubuntu the .service file needs to be copied to the /lib/systemd/system directory instead.
 
+NOTE: Systemd can be very agressive in killing processes that don't stop in a reasonable amount of time. This can be a problem during Initial Block Download where it can take several minutes to flush cached data to disk. Therefore consider adding `TimeoutStopSec=infinity` to the file during IBD.
+
 ### OpenRC
 
 Rename bitcoind.openrc to bitcoind and drop it in /etc/init.d.  Double
