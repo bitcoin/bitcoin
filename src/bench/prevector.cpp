@@ -9,14 +9,6 @@
 
 #include <bench/bench.h>
 
-// GCC 4.8 is missing some C++11 type_traits,
-// https://www.gnu.org/software/gcc/gcc-5/changes.html
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::has_trivial_default_constructor
-#else
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivially_default_constructible
-#endif
-
 struct nontrivial_t {
     int x;
     nontrivial_t() :x(-1) {}
@@ -24,11 +16,11 @@ struct nontrivial_t {
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {READWRITE(x);}
 };
-static_assert(!IS_TRIVIALLY_CONSTRUCTIBLE<nontrivial_t>::value,
+static_assert(!std::is_trivially_default_constructible<nontrivial_t>::value,
               "expected nontrivial_t to not be trivially constructible");
 
 typedef unsigned char trivial_t;
-static_assert(IS_TRIVIALLY_CONSTRUCTIBLE<trivial_t>::value,
+static_assert(std::is_trivially_default_constructible<trivial_t>::value,
               "expected trivial_t to be trivially constructible");
 
 template <typename T>
