@@ -1189,6 +1189,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                     {"options", RPCArg::Type::OBJ, /* opt */ true, /* default_val */ "null", "",
                         {
                             {"rescan", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Stating if should rescan the blockchain after all imports"},
+                            {"update", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "true", "Stating if rescan should notify existent transactions"},
                         },
                         "\"options\""},
                 }}
@@ -1210,12 +1211,17 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
     //Default options
     bool fRescan = true;
+    bool update = true;
 
     if (!mainRequest.params[1].isNull()) {
         const UniValue& options = mainRequest.params[1];
 
         if (options.exists("rescan")) {
             fRescan = options["rescan"].get_bool();
+        }
+
+        if (options.exists("update")) {
+            update = options["update"].get_bool();
         }
     }
 
@@ -1268,7 +1274,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         }
     }
     if (fRescan && fRunScan && requests.size()) {
-        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
+        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, update /* update */);
         pwallet->ReacceptWalletTransactions();
 
         if (pwallet->IsAbortingRescan()) {
