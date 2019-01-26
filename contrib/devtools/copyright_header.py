@@ -52,15 +52,22 @@ def applies_to_file(filename):
 # obtain list of files in repo according to INCLUDE and EXCLUDE
 ################################################################################
 
-GIT_LS_CMD = 'git ls-files'
+GIT_LS_CMD = 'git ls-files --full-name'.split(' ')
+GIT_TOPLEVEL_CMD = 'git rev-parse --show-toplevel'.split(' ')
 
-def call_git_ls():
-    out = subprocess.check_output(GIT_LS_CMD.split(' '))
+def call_git_ls(base_directory):
+    out = subprocess.check_output([*GIT_LS_CMD, base_directory])
     return [f for f in out.decode("utf-8").split('\n') if f != '']
 
-def get_filenames_to_examine():
-    filenames = call_git_ls()
-    return sorted([filename for filename in filenames if
+def call_git_toplevel():
+    "Returns the absolute path to the project root"
+    return subprocess.check_output(GIT_TOPLEVEL_CMD).strip().decode("utf-8")
+
+def get_filenames_to_examine(base_directory):
+    "Returns an array of absolute paths to any project files in the base_directory that pass the include/exclude filters"
+    root = call_git_toplevel()
+    filenames = call_git_ls(base_directory)
+    return sorted([os.path.join(root, filename) for filename in filenames if
                    applies_to_file(filename)])
 
 ################################################################################
@@ -87,24 +94,12 @@ def compile_copyright_regex(copyright_style, year_style, name):
 EXPECTED_HOLDER_NAMES = [
     "Satoshi Nakamoto\n",
     "The Bitcoin Core developers\n",
-    "The Bitcoin Core developers \n",
     "Bitcoin Core Developers\n",
-    "the Bitcoin Core developers\n",
-    "The Bitcoin developers\n",
-    "The LevelDB Authors\. All rights reserved\.\n",
     "BitPay Inc\.\n",
-    "BitPay, Inc\.\n",
     "University of Illinois at Urbana-Champaign\.\n",
-    "MarcoFalke\n",
     "Pieter Wuille\n",
-    "Pieter Wuille +\*\n",
-    "Pieter Wuille, Gregory Maxwell +\*\n",
-    "Pieter Wuille, Andrew Poelstra +\*\n",
-    "Andrew Poelstra +\*\n",
     "Wladimir J. van der Laan\n",
     "Jeff Garzik\n",
-    "Diederik Huys, Pieter Wuille +\*\n",
-    "Thomas Daede, Cory Fields +\*\n",
     "Jan-Klaas Kollhof\n",
     "Sam Rushing\n",
     "ArtForz -- public domain half-a-node\n",
@@ -148,7 +143,7 @@ def file_has_without_c_style_copyright_for_holder(contents, holder_name):
 ################################################################################
 
 def read_file(filename):
-    return open(os.path.abspath(filename), 'r', encoding="utf8").read()
+    return open(filename, 'r', encoding="utf8").read()
 
 def gather_file_info(filename):
     info = {}
@@ -262,12 +257,9 @@ def print_report(file_infos, verbose):
     print(SEPARATOR)
 
 def exec_report(base_directory, verbose):
-    original_cwd = os.getcwd()
-    os.chdir(base_directory)
-    filenames = get_filenames_to_examine()
+    filenames = get_filenames_to_examine(base_directory)
     file_infos = [gather_file_info(f) for f in filenames]
     print_report(file_infos, verbose)
-    os.chdir(original_cwd)
 
 ################################################################################
 # report cmd
@@ -327,13 +319,13 @@ def get_most_recent_git_change_year(filename):
 ################################################################################
 
 def read_file_lines(filename):
-    f = open(os.path.abspath(filename), 'r', encoding="utf8")
+    f = open(filename, 'r', encoding="utf8")
     file_lines = f.readlines()
     f.close()
     return file_lines
 
 def write_file_lines(filename, file_lines):
-    f = open(os.path.abspath(filename), 'w', encoding="utf8")
+    f = open(filename, 'w', encoding="utf8")
     f.write(''.join(file_lines))
     f.close()
 
@@ -401,11 +393,8 @@ def update_updatable_copyright(filename):
                               "Copyright updated! -> %s" % last_git_change_year)
 
 def exec_update_header_year(base_directory):
-    original_cwd = os.getcwd()
-    os.chdir(base_directory)
-    for filename in get_filenames_to_examine():
+    for filename in get_filenames_to_examine(base_directory):
         update_updatable_copyright(filename)
-    os.chdir(original_cwd)
 
 ################################################################################
 # update cmd
