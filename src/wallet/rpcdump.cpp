@@ -849,9 +849,9 @@ struct ImportData
 
 enum class ScriptContext
 {
-    TOP, //! Top-level scriptPubKey
-    P2SH, //! P2SH redeemScript
-    WITNESS_V0, //! P2WSH witnessScript
+    TOP, //!< Top-level scriptPubKey
+    P2SH, //!< P2SH redeemScript
+    WITNESS_V0, //!< P2WSH witnessScript
 };
 
 // Analyse the provided scriptPubKey, determining which keys and which redeem scripts from the ImportData struct are needed to spend it, and mark them as used.
