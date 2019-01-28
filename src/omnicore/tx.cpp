@@ -536,7 +536,7 @@ bool CMPTransaction::interpret_CreatePropertyVariable()
         PrintToLog("\t            data: %s\n", data);
         PrintToLog("\tproperty desired: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t tokens per unit: %s\n", FormatByType(nValue, prop_type));
-        PrintToLog("\t        deadline: %s (%x)\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
+        PrintToLog("\t        deadline: %d\n", deadline);
         PrintToLog("\tearly bird bonus: %d\n", early_bird);
         PrintToLog("\t    issuer bonus: %d\n", percentage);
     }

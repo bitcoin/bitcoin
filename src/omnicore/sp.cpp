@@ -45,8 +45,8 @@ void CMPCrowd::insertDatabase(const uint256& txHash, const std::vector<int64_t>&
 
 std::string CMPCrowd::toString(const std::string& address) const
 {
-    return strprintf("%34s : id=%u=%X; prop=%u, value= %li, deadline: %s (%lX)", address, propertyId, propertyId,
-        property_desired, nValue, DateTimeStrFormat("%Y-%m-%d %H:%M:%S", deadline), deadline);
+    return strprintf("%34s : id=%u=%X; prop=%u, value= %li, deadline: %d)", address, propertyId, propertyId,
+        property_desired, nValue, deadline);
 }
 
 void CMPCrowd::print(const std::string& address, FILE* fp) const
