@@ -162,7 +162,18 @@ add_library(crown_server
 
 target_include_directories(crown_server PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/helpers/memenv)
 
-target_link_libraries(crown_server PUBLIC leveldb PRIVATE crown_core PUBLIC json PRIVATE crown_util PRIVATE crown_common PRIVATE crown_wallet PRIVATE OpenSSL::SSL PRIVATE leveldb PRIVATE memenv)
+target_link_libraries(crown_server
+        PUBLIC leveldb
+        PRIVATE crown_core
+        PUBLIC json
+        PRIVATE crown_util
+        PRIVATE crown_common
+        PRIVATE crown_wallet
+        PRIVATE OpenSSL::SSL
+        PRIVATE leveldb
+        PRIVATE memenv
+        PRIVATE crown_platform
+        )
 
 
 #LIBCROWN-COMMON
@@ -367,6 +378,7 @@ target_link_libraries(crown_wallet
 add_library(crown_platform
   platform/specialtx.cpp
   platform/governance-vote.cpp
+  platform/governance-approval-voting.cpp
   platform/governance.cpp
   platform/agent.cpp
   platform/rpc/specialtx-rpc-utils.cpp

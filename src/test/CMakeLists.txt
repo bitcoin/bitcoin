@@ -41,7 +41,7 @@ add_executable(crown_test
   accounting_tests.cpp 
   wallet_tests.cpp 
   rpc_wallet_tests.cpp
-  governance-test.cpp
+  mnbudget-test.cpp
   db_tests.cpp
 )
 

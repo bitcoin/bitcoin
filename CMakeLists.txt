@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(Boost COMPONENTS thread program_options filesystem unit_test_framework REQUIRED)
 find_package(OpenSSL REQUIRED)
