@@ -4,11 +4,13 @@
 
 #include <script/descriptor.h>
 
+#include <hash.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/miniscript.h>
 #include <script/script.h>
 #include <script/standard.h>
+#include <uint256.h>
 
 #include <span.h>
 #include <util/bip32.h>
@@ -1618,8 +1620,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TxoutType::WITNESS_V0_SCRIPTHASH && (ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH)) {
-        CScriptID scriptid;
-        CRIPEMD160().Write(data[0].data(), data[0].size()).Finalize(scriptid.begin());
+        CScriptID scriptid{RIPEMD160(data[0])};
         CScript subscript;
         if (provider.GetCScript(scriptid, subscript)) {
             auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
