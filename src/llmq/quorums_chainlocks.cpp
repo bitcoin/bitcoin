@@ -192,7 +192,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
         LOCK(cs);
 
         if (InternalHasConflictingChainLock(pindexNew->nHeight, pindexNew->GetBlockHash())) {
-            if (!inInvalidate) {
+            if (!inEnforceBestChainLock) {
                 // we accepted this block when there was no lock yet, but now a conflicting lock appeared. Invalidate it.
                 LogPrintf("CChainLocksHandler::%s -- conflicting lock after block was accepted, invalidating now\n",
                           __func__);
@@ -237,7 +237,7 @@ void CChainLocksHandler::EnforceBestChainLock()
         // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
         // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
         // and invalidate each of them.
-        inInvalidate = true; // avoid unnecessary ScheduleInvalidateBlock calls inside UpdatedBlockTip
+        inEnforceBestChainLock = true; // avoid unnecessary ScheduleInvalidateBlock calls inside UpdatedBlockTip
         while (pindex && !chainActive.Contains(pindex)) {
             // Invalidate all blocks that have the same prevBlockHash but are not equal to blockHash
             auto itp = mapPrevBlockIndex.equal_range(pindex->pprev->GetBlockHash());
@@ -252,7 +252,7 @@ void CChainLocksHandler::EnforceBestChainLock()
 
             pindex = pindex->pprev;
         }
-        inInvalidate = false;
+        inEnforceBestChainLock = false;
     }
 
     CValidationState state;

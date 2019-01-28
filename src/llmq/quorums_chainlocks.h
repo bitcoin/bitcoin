@@ -11,6 +11,8 @@
 #include "net.h"
 #include "chainparams.h"
 
+#include <atomic>
+
 class CBlockIndex;
 class CScheduler;
 
@@ -46,7 +48,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 private:
     CScheduler* scheduler;
     CCriticalSection cs;
-    bool inInvalidate{false};
+    std::atomic<bool> inEnforceBestChainLock{false};
 
     uint256 bestChainLockHash;
     CChainLockSig bestChainLock;
