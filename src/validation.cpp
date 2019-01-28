@@ -2179,6 +2179,11 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
+    if (!control.Wait())
+        return state.DoS(100, false);
+    int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
+    LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
+
     if (!ProcessSpecialTxsInBlock(block, pindex, state)) {
         return error("ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
                      pindex->GetBlockHash().ToString(), FormatStateMessage(state));
@@ -2203,12 +2208,10 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         return state.DoS(0, error("ConnectBlock(DASH): couldn't find masternode or superblock payments"),
                                 REJECT_INVALID, "bad-cb-payee");
     }
-    // END DASH
+    int64_t nTime5 = GetTimeMicros(); nTimeVerify += nTime5 - nTime4;
+    LogPrint("bench", "    - Payee and special txes: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime2), nTimeVerify * 0.000001);
 
-    if (!control.Wait())
-        return state.DoS(100, false);
-    int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
-    LogPrint("bench", "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs]\n", nInputs - 1, 0.001 * (nTime4 - nTime2), nInputs <= 1 ? 0 : 0.001 * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * 0.000001);
+    // END DASH
 
     if (fJustCheck)
         return true;
@@ -2265,8 +2268,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         }
     }
 
-    int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
-    LogPrint("bench", "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeIndex * 0.000001);
+    int64_t nTime6 = GetTimeMicros(); nTimeIndex += nTime6 - nTime5;
+    LogPrint("bench", "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeIndex * 0.000001);
 
     // Watch for changes to the previous coinbase transaction.
     static uint256 hashPrevBestCoinBase;
@@ -2275,8 +2278,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     evoDb->WriteBestBlock(pindex->GetBlockHash());
 
-    int64_t nTime6 = GetTimeMicros(); nTimeCallbacks += nTime6 - nTime5;
-    LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeCallbacks * 0.000001);
+    int64_t nTime7 = GetTimeMicros(); nTimeCallbacks += nTime7 - nTime6;
+    LogPrint("bench", "    - Callbacks: %.2fms [%.2fs]\n", 0.001 * (nTime7 - nTime6), nTimeCallbacks * 0.000001);
 
     return true;
 }
