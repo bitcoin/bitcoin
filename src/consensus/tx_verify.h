@@ -79,4 +79,7 @@ bool EvaluateSequenceLocks(const CBlockIndex& block, std::pair<int, int64_t> loc
  */
 bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeights, const CBlockIndex& block);
 
+// peercoin: minimum fee for transaction to be accepted in a blockchain.
+CAmount GetMinFee(const CTransaction& tx);
+
 #endif // BITCOIN_CONSENSUS_TX_VERIFY_H

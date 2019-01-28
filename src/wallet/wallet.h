@@ -43,17 +43,19 @@ extern bool fWalletUnlockMintOnly;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
+//ppcTODO: from 0.7: int64 nTransactionFee = PERKB_TX_FEE;
 static const CAmount DEFAULT_TRANSACTION_FEE = MIN_TX_FEE; //0;
 //! -fallbackfee default
 static const CAmount DEFAULT_FALLBACK_FEE = MIN_TX_FEE; //20000;
 //! -m_discard_rate default
 static const CAmount DEFAULT_DISCARD_FEE = MIN_TX_FEE; //10000;
 //! -mintxfee default
+//ppcTODO: from 0.7: int64 CTransaction::nMinTxFee = PERKB_TX_FEE;  // Override with -mintxfee
 static const CAmount DEFAULT_TRANSACTION_MINFEE = MIN_TX_FEE; //1000;
 //! minimum recommended increment for BIP 125 replacement txs
 static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5*MIN_TX_FEE; //5000;
 //! target minimum change amount
-static const CAmount MIN_CHANGE = 2*MIN_TXOUT_AMOUNT;
+static const CAmount MIN_CHANGE = MIN_TXOUT_AMOUNT;
 //! final minimum change amount after paying for fees
 static const CAmount MIN_FINAL_CHANGE = MIN_CHANGE/2;
 //! Default for -spendzeroconfchange

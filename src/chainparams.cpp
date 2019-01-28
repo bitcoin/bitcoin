@@ -122,7 +122,6 @@ public:
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
         vSeeds.emplace_back("seed.peercoin.net");
-        vSeeds.emplace_back("seed.ppcoin.net");
         vSeeds.emplace_back("seed2.peercoin.net");
         vSeeds.emplace_back("seed.peercoin-library.org");
         vSeeds.emplace_back("ppcseed.ns.7server.net");
@@ -151,15 +150,17 @@ public:
                 { 99999, uint256S("0x27fd5e1de16a4270eb8c68dee2754a64da6312c7c3a0e99a7e6776246be1ee3f")},
                 {219999, uint256S("0xab0dad4b10d2370f009ed6df6effca1ba42f01d5070d6b30afeedf6463fbe7a2")},
                 {336000, uint256S("0x4d261cef6e61a5ed8325e560f1d6e36f4698853a4c7134677f47a1d1d842bdf6")},
+                {371850, uint256S("0x6b18adcb0a6e080dae85b74eee2b83fabb157bbea64fab0ed2192b2f6d5b89f3")},
+                {407813, uint256S("0x00000000000000012730b0f48bed8afbeb08164c9d63597afb082e82ea05cec9")},
             }
         };
 
         chainTxData = ChainTxData{
             // Data as of block d25bd7cee527575afcf32d69e0438161899257f911fc507e71c78526e88b3e13 (height 401725).
-            1544091904, // * UNIX timestamp of last known number of transactions
-            1561895,    // * total number of transactions between genesis and that timestamp
+            1547015614, // * UNIX timestamp of last known number of transactions
+            1576839,    // * total number of transactions between genesis and that timestamp
                         //   (the tx=... number in the SetBestChain debug.log lines)
-            0.00786     // * estimated number of transactions per second after that timestamp
+            0.00347     // * estimated number of transactions per second after that timestamp
                         // 1561895/(1544091904-1345400356) = 0.00786
         };
     }
@@ -237,15 +238,22 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x00000001f757bb737f6596503e17cd17b0658ce630cc727c0cca81aec47c9f06")},
+                {     0, uint256S("0x00000001f757bb737f6596503e17cd17b0658ce630cc727c0cca81aec47c9f06")},
+                { 19080, uint256S("0xb054d63d41852d71b611eaa8eca37d9fddca69b5013cf0966d453402ec8005ce")},
+                { 30583, uint256S("0x5179c0c496b5d25ab81ffe14273ea6928c6ff81c0a0d6a83b5d7d41d64886300")},
+                { 99999, uint256S("0xa7b03b14b8673683d972ab81775f3e85fea4fe689874b5956183466535dc651c")},
+                {219999, uint256S("0x0691bb86c92762c5c4c5a3723585ebeb7ec59310bbb0bdb6666551ab24ad919e")},
+                {336000, uint256S("0xf07adf61615c529f7c282b858d13d3e037b197324cb12e0669c461947494c4e3")},
+                {372751, uint256S("0x000000000000148db599b217c117b5104f5043c55f6ca2a8a065d9fab9f9bba1")},
+                {382019, uint256S("0x3ab75769d7957d9bf0857b5019d0a0e41044fa9ecf30b2f9c32aa457b0864ce5")},
             }
         };
 
         chainTxData = ChainTxData{
             // Data as of block 000000000000033cfa3c975eb83ecf2bb4aaedf68e6d279f6ed2b427c64caff9 (height 1260526)
-            1516903490,
-            17082348,
-            0.09
+            1547644079,
+            746761,
+            0.00231
         };
 
     }

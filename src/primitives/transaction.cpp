@@ -117,14 +117,3 @@ std::string CTransaction::ToString() const
         str += "    " + tx_out.ToString() + "\n";
     return str;
 }
-
-CAmount GetMinFee(size_t nBytes)
-{
-    // Base fee is either nMinTxFee or nMinRelayTxFee
-    CAmount nBaseFee = MIN_TX_FEE;
-    CAmount nMinFee = (1 + (int64_t)nBytes / 1000) * nBaseFee;
-
-    if (!MoneyRange(nMinFee))
-        nMinFee = MAX_MONEY;
-    return nMinFee;
-}

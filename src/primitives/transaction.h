@@ -272,8 +272,6 @@ inline void SerializeTransaction(const TxType& tx, Stream& s) {
     s << tx.nLockTime;
 }
 
-CAmount GetMinFee(size_t nBytes);
-
 /** The basic transaction that is broadcasted on the network and contained in
  * blocks.  A transaction can contain multiple inputs and outputs.
  */
@@ -379,11 +377,6 @@ public:
         }
         return false;
     }
-
-    CAmount GetMinFee() const
-    {
-        return ::GetMinFee(::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION));
-    }
 };
 
 /** A mutable version of CTransaction. */
@@ -432,12 +425,6 @@ struct CMutableTransaction
             }
         }
         return false;
-    }
-
-    CAmount GetMinFee() const
-    {
-        CTransaction tmp(*this);
-        return ::GetMinFee(::GetSerializeSize(tmp, SER_NETWORK, PROTOCOL_VERSION));
     }
 };
 

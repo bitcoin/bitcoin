@@ -11,6 +11,7 @@
 #include <wallet/coincontrol.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <consensus/tx_verify.h>
 #include <fs.h>
 #include <wallet/init.h>
 #include <key.h>
@@ -2715,6 +2716,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
     CMutableTransaction txNew;
+    txNew.nTime = wtxNew.tx->nTime;  // peercoin: set time
 
     // Discourage fee sniping.
     //
@@ -2755,7 +2757,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, wtxNew.tx->nTime);
+            AvailableCoins(vAvailableCoins, true, &coin_control, txNew.nTime);
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
@@ -2792,7 +2794,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
 
             CFeeRate discard_rate = GetDiscardRate(::feeEstimator);
-            nFeeRet = 0;
+            bool fNewFees = IsProtocolV07(txNew.nTime);
+            nFeeRet = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
             bool pick_new_inputs = true;
             CAmount nValueIn = 0;
             // Start with no fee and loop until there is enough fee
@@ -2852,6 +2855,19 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                 }
 
                 CAmount nChange = nValueIn - nValueToSelect;
+
+//ppcTODO: this code was in 0.7:
+//                  CAmount nMinFeeBase = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
+//                // The following if statement should be removed once enough miners
+//                // have upgraded to the 0.9 GetMinFee() rules. Until then, this avoids
+//                // creating free transactions that have change outputs less than
+//                // CENT bitcoins.
+//                if (nFeeRet < CTransaction::nMinTxFee && nChange > 0 && nChange < nMinFeeBase)
+//                {
+//                    CAmount nMoveToFee = min(nChange, CTransaction::nMinTxFee - nFeeRet);
+//                    nChange -= nMoveToFee;
+//                    nFeeRet += nMoveToFee;
+//                }
 
                 // peercoin: sub-cent change is moved to fee
                 if (nChange > 0 && nChange < MIN_TXOUT_AMOUNT)
@@ -2914,6 +2930,13 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     vin.scriptSig = CScript();
                     vin.scriptWitness.SetNull();
                 }
+
+//ppcTODO: this code was in 0.7, but was refactored by b33d1f5ee512da5719b793b3867f75f1eea5cf52:
+//                int64 nPayFee;
+//                if (fNewFees)
+//                    nPayFee = (nBytes < 100) ? MIN_TX_FEE : (int64)(nBytes * (nTransactionFee / 1000));
+//                else
+//                    nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
 
                 nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool, ::feeEstimator, &feeCalc);
 
@@ -4294,6 +4317,7 @@ CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, Out
 
 
 // peercoin: create coin stake transaction
+//ppcTODO: replace int64_t with CAmount where it deals with peercoin amounts.
 typedef std::vector<unsigned char> valtype;
 bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew)
 {
@@ -4480,12 +4504,13 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     }
 
     int64_t nMinFee = 0;
+    int64_t nMinFeeBase = (IsProtocolV07(txNew.nTime) ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
     while(true)
     {
         // Set output amount
         if (txNew.vout.size() == 3)
         {
-            txNew.vout[1].nValue = ((nCredit - nMinFee) / 2 / CENT) * CENT;
+            txNew.vout[1].nValue = ((nCredit - nMinFee) / 2 / nMinFeeBase) * nMinFeeBase;
             txNew.vout[2].nValue = nCredit - nMinFee - txNew.vout[1].nValue;
         }
         else
@@ -4505,9 +4530,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
             return error("CreateCoinStake : exceeded coinstake size limit");
 
         // Check enough fee is paid
-        if (nMinFee < txNew.GetMinFee() - MIN_TX_FEE)
+        if (nMinFee < GetMinFee(txNew) - nMinFeeBase)
         {
-            nMinFee = txNew.GetMinFee() - MIN_TX_FEE;
+            nMinFee = GetMinFee(txNew) - nMinFeeBase;
             continue; // try signing again
         }
         else

@@ -1,18 +1,17 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: Bitcoin
-Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
- irc://#bitcoin@freenode.net
-Source: https://github.com/bitcoin/bitcoin
+Upstream-Name: Peercoin
+Upstream-Contact: Stichting Peercoin Foundation <foundation@peercoin.net>
+Source: https://github.com/peercoin/peercoin
 
 Files: *
-Copyright: 2009-2018, Bitcoin Core Developers
+Copyright: 2012-2019, Peercoin Developers
 License: Expat
-Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
+Comment: The Peercoin Developers encompasses the current developers listed on https://github.com/peercoin/peercoin,
          as well as the numerous contributors to the project.
 
 Files: debian/*
 Copyright: 2010-2011, Jonas Smedegaard <dr@jones.dk>
            2011, Matt Corallo <matt@bluematt.me>
+           2019 Zvonimir Mostarac <peerchemist@protonmail.ch>
 License: GPL-2+
 
 Files: src/secp256k1/build-aux/m4/ax_jni_include_dir.m4

@@ -546,6 +546,7 @@ void PoSMiner(CWallet *pwallet)
     }
 
     std::string strMintMessage = _("Info: Minting suspended due to locked wallet.");
+    std::string strMintSyncMessage = _("Info: Minting suspended while synchronizing wallet.");
     std::string strMintDisabledMessage = _("Info: Minting disabled by 'nominting' option.");
     std::string strMintBlockMessage = _("Info: Minting suspended due to block creation failure.");
     if (gArgs.GetBoolArg("-nominting", false))
@@ -573,12 +574,17 @@ void PoSMiner(CWallet *pwallet)
                 while(g_connman == nullptr || g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0 || IsInitialBlockDownload())
                     MilliSleep(5 * 60 * 1000);
             }
+            while (GuessVerificationProgress(Params().TxData(), chainActive.Tip()) < 0.996)
+            {
+                LogPrintf("Minter thread sleeps while sync at %f\n", GuessVerificationProgress(Params().TxData(), chainActive.Tip()));
+                strMintWarning = strMintSyncMessage;
+                MilliSleep(10000);
+            }
 
             //
             // Create new block
             //
             CBlockIndex* pindexPrev = chainActive.Tip();
-
             bool fPoSCancel = false;
             std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript, true, pwallet, &fPoSCancel));
             if (!pblocktemplate.get())

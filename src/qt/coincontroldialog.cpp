@@ -20,6 +20,7 @@
 #include <validation.h> // For mempool
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
+#include <kernel.h>
 
 #include <QApplication>
 #include <QCheckBox>
@@ -29,6 +30,8 @@
 #include <QIcon>
 #include <QSettings>
 #include <QTreeWidget>
+
+#include <timedata.h> // for GetAdjustedTime()
 
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
@@ -418,6 +421,9 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     if (!model)
         return;
 
+    bool fNewFees = IsProtocolV07(GetAdjustedTime());
+    CAmount nMinFeeBase = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
+
     // nPayAmount
     CAmount nPayAmount = 0;
     bool fDust = false;
@@ -448,6 +454,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     coinControl()->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
+    nPayFee = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
     for (const COutput& out : vOutputs) {
         // unselect already spent, very unlikely scenario, this could happen
         // when selected are spent elsewhere, like rpc or another computer
@@ -509,6 +516,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         // Fee
         nPayFee = GetMinimumFee(nBytes, *coinControl(), ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        //ppcTODO add this instead:
+        //nPayFee = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
 
         if (nPayAmount > 0)
         {
@@ -516,22 +525,46 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (!CoinControlDialog::fSubtractFeeFromAmount)
                 nChange -= nPayFee;
 
-            // Never create dust outputs; if we would, just add the dust to the fee.
+//ppcTODO maybe add this?:
+//            // if sub-cent change is required, the fee must be raised to at least unit's min fee
+//            // or until nChange becomes zero
+//            // NOTE: this depends on the exact behaviour of GetMinFee
+//            if (nPayFee < nMinFeeBase && nChange > 0 && nChange < nMinFeeBase)
+//            {
+//                int64_t nMoveToFee = min(nChange, nMinFeeBase - nPayFee);
+//                nChange -= nMoveToFee;
+//                nPayFee += nMoveToFee;
+//            }
+
+            // ppcoin: sub-cent change is moved to fee
             if (nChange > 0 && nChange < MIN_CHANGE)
             {
-                CTxOut txout(nChange, (CScript)std::vector<unsigned char>(24, 0));
-                if (IsDust(txout, ::dustRelayFee))
-                {
-                    nPayFee += nChange;
-                    nChange = 0;
-                    if (CoinControlDialog::fSubtractFeeFromAmount)
-                        nBytes -= 34; // we didn't detect lack of change above
-                }
+                nPayFee += nChange;
+                nChange = 0;
+				if (CoinControlDialog::fSubtractFeeFromAmount)
+					nBytes -= 34; // we didn't detect lack of change above
             }
 
             if (nChange == 0 && !CoinControlDialog::fSubtractFeeFromAmount)
                 nBytes -= 34;
         }
+//ppcTODO maybe add this?:
+//            // Fee
+//            int64 nFee;
+//
+//            if (fNewFees)
+//                nFee = nTransactionFee * nBytes / 1000;
+//            else
+//                nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+//
+//            // Min Fee
+//            int64 nMinFee = txDummy.GetMinFee(nBytes);
+//
+//            if (nPayFee < max(nFee, nMinFee))
+//            {
+//                nPayFee = max(nFee, nMinFee);
+//                continue;
+//            }
 
         // after fee
         nAfterFee = std::max<CAmount>(nAmount - nPayFee, 0);
