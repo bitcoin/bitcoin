@@ -30,52 +30,67 @@ class LLMQSigningTest(DashTestFramework):
         msgHash = "0000000000000000000000000000000000000000000000000000000000000002"
         msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
 
-        def assert_sigs(hasrecsigs, isconflicting1, isconflicting2):
+        def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
             for mn in self.mninfo:
-                assert(mn.node.quorum("hasrecsig", 100, id, msgHash) == hasrecsigs)
-                assert(mn.node.quorum("isconflicting", 100, id, msgHash) == isconflicting1)
-                assert(mn.node.quorum("isconflicting", 100, id, msgHashConflict) == isconflicting2)
+                if mn.node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
+                    return False
+                if mn.node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
+                    return False
+                if mn.node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
+                    return False
+            return True
+
+        def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
+            t = time()
+            while time() - t < timeout:
+                if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
+                    return
+                sleep(0.1)
+            raise AssertionError("wait_for_sigs timed out")
+
+        def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
+            t = time()
+            while time() - t < timeout:
+                assert(check_sigs(hasrecsigs, isconflicting1, isconflicting2))
+                sleep(0.1)
 
         # Initial state
-        assert_sigs(False, False, False)
+        wait_for_sigs(False, False, False, 1)
 
         # Sign 5 shares, should not result in recovered sig
         for i in range(5):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
-        sleep(4)
-        assert_sigs(False, False, False)
+        assert_sigs_nochange(False, False, False, 3)
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
         self.mninfo[6].node.quorum("sign", 100, id, msgHash)
-        sleep(4)
-        assert_sigs(True, False, True)
+        wait_for_sigs(True, False, True, 15)
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
         self.mine_quorum()
-        assert_sigs(True, False, True)
+        assert_sigs_nochange(True, False, True, 3)
 
         # Mine 2 more quorums, so that the one used for the the recovered sig should become inactive, nothing should change
         self.mine_quorum()
         self.mine_quorum()
-        assert_sigs(True, False, True)
+        assert_sigs_nochange(True, False, True, 3)
 
         # fast forward 6.5 days, recovered sig should still be valid
         set_mocktime(get_mocktime() + int(60 * 60 * 24 * 6.5))
         set_node_times(self.nodes, get_mocktime())
-        sleep(6) # Cleanup starts every 5 seconds
-        assert_sigs(True, False, True)
+        # Cleanup starts every 5 seconds
+        wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         set_mocktime(get_mocktime() + int(60 * 60 * 24 * 1))
         set_node_times(self.nodes, get_mocktime())
-        sleep(6) # Cleanup starts every 5 seconds
-        assert_sigs(False, False, False)
+        # Cleanup starts every 5 seconds
+        wait_for_sigs(False, False, False, 15)
 
         for i in range(4):
             self.mninfo[i].node.quorum("sign", 100, id, msgHashConflict)
         for i in range(4, 10):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
-        sleep(4)
-        assert_sigs(True, False, True)
+        wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
     LLMQSigningTest().main()
