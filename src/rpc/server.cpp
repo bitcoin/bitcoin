@@ -226,7 +226,7 @@ bool ParseBoolV(const UniValue& v, const std::string &strName)
  * Note: This interface may still be subject to change.
  */
 
-std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest& helpreq, const std::string& strSubCommand) const
+std::string CRPCTable::help(const std::string& strCommand, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
     std::string category;
@@ -308,7 +308,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.params.size() > 1)
         strSubCommand = jsonRequest.params[1].get_str();
 
-    return tableRPC.help(strCommand, jsonRequest, strSubCommand);
+    return tableRPC.help(strCommand, strSubCommand, jsonRequest);
 }
 
 
