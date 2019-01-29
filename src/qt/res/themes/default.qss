@@ -219,13 +219,13 @@ QFrame {
 
 #OverviewPage QFrame[frameShape="4"] /* horizontal lines */
 {
-    background: #F4F4F4;
+    background: #E3E3E3;
     height: 3px;
 }
 
 #OverviewPage QFrame[frameShape="5"] /* vertical lines */
 {
-    background: #F4F4F4;
+    background: #E3E3E3;
     width: 3px;
 }
 
