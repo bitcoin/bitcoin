@@ -24,7 +24,6 @@
 #include "netaddress.h"
 #include "bls/bls.h"
 
-#undef foreach
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/hashed_index.hpp"
