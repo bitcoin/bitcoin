@@ -220,7 +220,7 @@ class MasternodeInfo:
 
 
 class DashTestFramework(BitcoinTestFramework):
-    def __init__(self, num_nodes, masterodes_count, extra_args, fast_dip3_activation=False):
+    def __init__(self, num_nodes, masterodes_count, extra_args, fast_dip3_enforcement=False):
         super().__init__()
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
@@ -232,9 +232,9 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
 
-        self.fast_dip3_activation = fast_dip3_activation
-        if fast_dip3_activation:
-            self.extra_args += ["-bip9params=dip0003:0:999999999999:10:5", "-dip3activationheight=50"]
+        self.fast_dip3_enforcement = fast_dip3_enforcement
+        if fast_dip3_enforcement:
+            self.extra_args += ["-bip9params=dip0003:0:999999999999:10:5", "-dip3enforcementheight=50"]
 
     def create_simple_node(self):
         idx = len(self.nodes)
@@ -345,7 +345,7 @@ class DashTestFramework(BitcoinTestFramework):
         sync_masternodes(self.nodes, True)
 
         # activate DIP3
-        if not self.fast_dip3_activation:
+        if not self.fast_dip3_enforcement:
             while self.nodes[0].getblockcount() < 500:
                 self.nodes[0].generate(10)
         self.sync_all()

@@ -17,7 +17,7 @@ Checks LLMQs signing sessions
 
 class LLMQSigningTest(DashTestFramework):
     def __init__(self):
-        super().__init__(11, 10, [], fast_dip3_activation=True)
+        super().__init__(11, 10, [], fast_dip3_enforcement=True)
 
     def run_test(self):
 

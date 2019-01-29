@@ -481,13 +481,13 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     }
 
     const auto& consensusParams = Params().GetConsensus();
-    if (nHeight == consensusParams.DIP0003Height) {
-        if (!consensusParams.DIP0003Hash.IsNull() && consensusParams.DIP0003Hash != pindex->GetBlockHash()) {
-            LogPrintf("CDeterministicMNManager::%s -- DIP3 activation block has wrong hash: hash=%s, expected=%s, nHeight=%d\n", __func__,
-                    pindex->GetBlockHash().ToString(), consensusParams.DIP0003Hash.ToString(), nHeight);
-            return _state.DoS(100, false, REJECT_INVALID, "bad-dip3-block");
+    if (nHeight == consensusParams.DIP0003EnforcementHeight) {
+        if (!consensusParams.DIP0003EnforcementHash.IsNull() && consensusParams.DIP0003EnforcementHash != pindex->GetBlockHash()) {
+            LogPrintf("CDeterministicMNManager::%s -- DIP3 enforcement block has wrong hash: hash=%s, expected=%s, nHeight=%d\n", __func__,
+                    pindex->GetBlockHash().ToString(), consensusParams.DIP0003EnforcementHash.ToString(), nHeight);
+            return _state.DoS(100, false, REJECT_INVALID, "bad-dip3-enf-block");
         }
-        LogPrintf("CDeterministicMNManager::%s -- DIP3 is active now. nHeight=%d\n", __func__, nHeight);
+        LogPrintf("CDeterministicMNManager::%s -- DIP3 is enforced now. nHeight=%d\n", __func__, nHeight);
     }
 
     LOCK(cs);
@@ -518,8 +518,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
     }
 
     const auto& consensusParams = Params().GetConsensus();
-    if (nHeight == consensusParams.DIP0003Height) {
-        LogPrintf("CDeterministicMNManager::%s -- DIP3 is not active anymore. nHeight=%d\n", __func__, nHeight);
+    if (nHeight == consensusParams.DIP0003EnforcementHeight) {
+        LogPrintf("CDeterministicMNManager::%s -- DIP3 is not enforced anymore. nHeight=%d\n", __func__, nHeight);
     }
 
     return true;
@@ -875,7 +875,7 @@ bool CDeterministicMNManager::IsProTxWithCollateral(const CTransactionRef& tx, u
     return true;
 }
 
-bool CDeterministicMNManager::IsDIP3Active(int nHeight)
+bool CDeterministicMNManager::IsDIP3Enforced(int nHeight)
 {
     LOCK(cs);
 
@@ -883,7 +883,7 @@ bool CDeterministicMNManager::IsDIP3Active(int nHeight)
         nHeight = tipHeight;
     }
 
-    return nHeight >= Params().GetConsensus().DIP0003Height;
+    return nHeight >= Params().GetConsensus().DIP0003EnforcementHeight;
 }
 
 void CDeterministicMNManager::CleanupCache(int nHeight)

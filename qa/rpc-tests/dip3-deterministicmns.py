@@ -24,7 +24,7 @@ class DIP3Test(BitcoinTestFramework):
 
         self.extra_args = ["-budgetparams=10:10:10"]
         self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-        self.extra_args += ["-bip9params=dip0003:0:999999999999:45:45", "-dip3activationheight=150"]
+        self.extra_args += ["-bip9params=dip0003:0:999999999999:45:45", "-dip3enforcementheight=150"]
 
     def setup_network(self):
         disable_mocktime()

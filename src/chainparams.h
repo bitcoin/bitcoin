@@ -150,7 +150,7 @@ void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime,
 /**
  * Allows modifying the DIP3 activation height
  */
-void UpdateRegtestDIP3ActivationHeight(int nHeight);
+void UpdateRegtestDIP3EnforcementHeight(int nHeight);
 
 /**
  * Allows modifying the budget regtest parameters.

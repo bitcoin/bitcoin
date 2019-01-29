@@ -61,7 +61,7 @@ void CActiveMasternodeManager::Init()
 
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDIP3Active()) return;
+    if (!deterministicMNManager->IsDIP3Enforced()) return;
 
     // Check that our local network configuration is correct
     if (!fListen) {
@@ -131,7 +131,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 
     if (!fMasternodeMode) return;
 
-    if (!deterministicMNManager->IsDIP3Active(pindexNew->nHeight)) return;
+    if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 
     if (state == MASTERNODE_READY) {
         auto mnList = deterministicMNManager->GetListForBlock(pindexNew->GetBlockHash());

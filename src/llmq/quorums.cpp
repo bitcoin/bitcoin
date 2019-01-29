@@ -318,7 +318,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
 
     CBlockIndex* pindex = mapBlockIndex[startBlock];
 
-    while (pindex != NULL && result.size() < maxCount && deterministicMNManager->IsDIP3Active(pindex->nHeight)) {
+    while (pindex != NULL && result.size() < maxCount && deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
         if (HasQuorum(llmqType, pindex->GetBlockHash())) {
             auto quorum = GetQuorum(llmqType, pindex->GetBlockHash());
             if (quorum) {

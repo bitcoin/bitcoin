@@ -163,7 +163,7 @@ bool CDKGSessionHandler::InitNewQuorum(int newQuorumHeight, const uint256& newQu
 
     curSession = std::make_shared<CDKGSession>(params, evoDb, blsWorker, dkgManager);
 
-    if (!deterministicMNManager->IsDIP3Active(newQuorumHeight)) {
+    if (!deterministicMNManager->IsDIP3Enforced(newQuorumHeight)) {
         return false;
     }
 
