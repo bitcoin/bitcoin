@@ -38,6 +38,6 @@ static const int MAX_URI_LENGTH = 255;
 /* Colors for minting tab for each coin age group */
 #define COLOR_MINT_YOUNG QColor(255, 224, 226)
 #define COLOR_MINT_MATURE QColor(204, 255, 207)
-#define COLOR_MINT_OLD QColor(51, 64, 52)
+#define COLOR_MINT_OLD QColor(111, 252, 141)
 
 #endif // GUICONSTANTS_H

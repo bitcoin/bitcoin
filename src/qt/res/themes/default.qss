@@ -2,11 +2,13 @@
 /* Green: #3cb054 1*/
 /* Dark Grey: #8C8C8C 2*/
 /* Light Grey: #E3E3E3 3*/
+/* New Dark Grey: #666666 2*/
+/* New Light Grey: #8c8c8c 3*
 
 /* Global Styles */
 * {
     font-family: "NotoSans-Regular";
-    color: #8C8C8C;
+    color: #666666;
 }
 
 QMainWindow, QDialog {
@@ -37,11 +39,11 @@ QPushButton {
 }
 
 QToolButton:checked, QPushButton:checked {
-    background: #8C8C8C;
+    background: #666666;
 }
 
 QToolButton:hover, QPushButton:hover {
-    background: #8C8C8C;
+    background: #666666;
 }
 
 QToolButton:!enabled, QPushButton:!enabled {
@@ -52,13 +54,13 @@ QToolButton:!enabled, QPushButton:!enabled {
 QLineEdit, QTextEdit, QPlainTextEdit {
     background: #ffffff;
     border-radius: 0px;
-    border: 1px solid #8C8C8C;
+    border: 1px solid #666666;
 }
 
 QSpinBox, QDoubleSpinBox   {
     background: #ffffff;
     border-radius: 0px;
-    border: 1px solid #8C8C8C;
+    border: 1px solid #666666;
     padding: 0px;
 }
 
@@ -86,7 +88,7 @@ QSpinBox::down-button, QDoubleSpinBox::down-button   {
     subcontrol-position: bottom right; /* position at bottom right corner */
     background: #ffffff;
     color: #ffffff;
-    border: 1px solid #8C8C8C;
+    border: 1px solid #666666;
 }
 
 QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover   {
@@ -105,7 +107,7 @@ QSpinBox::down-arrow, QDoubleSpinBox::down-arrow   {
 QComboBox {
     background: #ffffff;
     border-radius: 0px;
-    border: 1px solid #8C8C8C;
+    border: 1px solid #666666;
 }
 
 QComboBox::down-arrow {
@@ -126,7 +128,7 @@ QTableView {
     show-decoration-selected: 1;
     background: #ffffff;
     alternate-background-color: #E3E3E3;
-    color: #8C8C8C;
+    color: #666666;
     gridline-color: #8C8C8C;
     selection-background-color: #3cb054;
     border: 1px solid #8C8C8C;
@@ -155,7 +157,7 @@ QHeaderView::up-arrow {
 /* Global Styles - Misc */
 QToolTip {
     background: #ffffff;
-    color: #8C8C8C;
+    color: #666666;
 }
 
 /* Toolbar */
@@ -182,16 +184,16 @@ QToolBar > QToolButton {
 
 /* Status Bar */
 QStatusBar {
-    color: #8C8C8C;
+    color: #666666;
     background: #E3E3E3;
 }
 
 QStatusBar QLabel {
-    color: #8C8C8C;
+    color: #666666;
 }
 
 QStatusBar::item {
-    color: #8C8C8C;
+    color: #666666;
 }
 
 /* Overview Page */
@@ -241,7 +243,7 @@ QFrame QLabel#labelNumTransactions,
 QFrame QLabel#labelImmature,
 QFrame QLabel#labelUnconfirmed,
 QFrame QLabel#labelTotal {
-    color: #8C8C8C;
+    color: #666666;
     font-weight: normal;
     font-size: 20px;
 }

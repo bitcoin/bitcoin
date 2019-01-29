@@ -45,7 +45,7 @@ MintingView::MintingView(QWidget *parent) :
     oldColor->setMaximumHeight(15);
     oldColor->setMaximumWidth(10);
     oldColor->setStyleSheet(legendBoxStyle.arg(COLOR_MINT_OLD.red()).arg(COLOR_MINT_OLD.green()).arg(COLOR_MINT_OLD.blue()));
-    QLabel *oldLegend = new QLabel(tr("transaction  has reached maximum probability"));
+    QLabel *oldLegend = new QLabel(tr("transaction has reached maximum probability"));
     oldLegend->setContentsMargins(5,0,15,0);
 
     QHBoxLayout *legendLayout = new QHBoxLayout();
