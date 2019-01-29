@@ -31,6 +31,73 @@ extern UniValue signrawtransaction(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 #endif//ENABLE_WALLET
 
+std::string GetHelpString(int nParamNum, std::string strParamName)
+{
+    static const std::map<std::string, std::string> mapParamHelp = {
+        {"collateralAddress",
+            "%d. \"collateralAddress\"        (string, required) The dash address to send the collateral to.\n"
+            "                              Must be a P2PKH address.\n"
+        },
+        {"collateralHash",
+            "%d. \"collateralHash\"           (string, required) The collateral transaction hash.\n"
+        },
+        {"collateralIndex",
+            "%d. collateralIndex            (numeric, required) The collateral transaction output index.\n"
+        },
+        {"feeSourceAddress",
+            "%d. \"feeSourceAddress\"         (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
+            "                              If not specified, payoutAddress is the one that is going to be used.\n"
+            "                              The private key belonging to this address must be known in your wallet.\n"
+        },
+        {"fundAddress",
+            "%d. \"fundAddress\"              (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
+            "                              If not specified, payoutAddress is the one that is going to be used.\n"
+            "                              The private key belonging to this address must be known in your wallet.\n"
+        },
+        {"ipAndPort",
+            "%d. \"ipAndPort\"                (string, required) IP and port in the form \"IP:PORT\".\n"
+            "                              Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards.\n"
+        },
+        {"operatorKey",
+            "%d. \"operatorKey\"              (string, required) The operator private key belonging to the\n"
+            "                              registered operator public key.\n"
+        },
+        {"operatorPubKey",
+            "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
+            "                              It has to match the private key which is later used when operating the masternode.\n"
+        },
+        {"operatorReward",
+            "%d. \"operatorReward\"           (numeric, required) The fraction in %% to share with the operator. The value must be\n"
+            "                              between 0.00 and 100.00.\n"
+        },
+        {"ownerAddress",
+            "%d. \"ownerAddress\"             (string, required) The dash address to use for payee updates and proposal voting.\n"
+            "                              The private key belonging to this address must be known in your wallet. The address must\n"
+            "                              be unused and must differ from the collateralAddress\n"
+        },
+        {"payoutAddress",
+            "%d. \"payoutAddress\"            (string, required) The dash address to use for masternode reward payments.\n"
+        },
+        {"proTxHash",
+            "%d. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
+        },
+        {"reason",
+            "%d. reason                     (numeric, optional) The reason for masternode service revocation.\n"
+        },
+        {"votingAddress",
+            "%d. \"votingAddress\"            (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
+            "                              It has to match the private key which is later used when voting on proposals.\n"
+            "                              If set to an empty string, ownerAddress will be used.\n"
+        },
+    };
+
+    auto it = mapParamHelp.find(strParamName);
+    if (it == mapParamHelp.end())
+        throw std::runtime_error(strprintf("FIXME: WRONG PARAM NAME %s!", strParamName));
+
+    return strprintf(it->second, nParamNum);
+}
+
 // Allows to specify Dash address or priv key. In case of Dash address, the priv key is taken from the wallet
 static CKey ParsePrivKey(CWallet* pwallet, const std::string &strKeyOrAddress, bool allowAddresses = true) {
     CBitcoinAddress address;
@@ -232,24 +299,16 @@ void protx_register_fund_help()
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
             "is fully deployed.\n"
             "\nArguments:\n"
-            "1. \"collateralAddress\"   (string, required) The dash address to send the collateral to.\n"
-            "                         Must be a P2PKH address.\n"
-            "2. \"ipAndPort\"           (string, required) IP and port in the form \"IP:PORT\".\n"
-            "                         Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards.\n"
-            "3. \"ownerAddress\"        (string, required) The owner key used for payee updates and proposal voting.\n"
-            "                         The private key belonging to this address must be known in your wallet. The address must\n"
-            "                         be unused and must differ from the collateralAddress\n"
-            "4. \"operatorPubKey\"      (string, required) The operator BLS public key. The private key does not have to be known.\n"
-            "                         It has to match the private key which is later used when operating the masternode.\n"
-            "5. \"votingAddress\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
-            "                         It has to match the private key which is later used when voting on proposals.\n"
-            "                         If set to an empty string, ownerAddress will be used.\n"
-            "6. \"operatorReward\"      (numeric, required) The fraction in % to share with the operator. The value must be\n"
-            "                         between 0.00 and 100.00.\n"
-            "7. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments.\n"
-            "8. \"fundAddress\"         (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
-            "                         If not specified, payoutAddress is the one that is going to be used.\n"
-            "                         The private key belonging to this address must be known in your wallet.\n"
+            + GetHelpString(1, "collateralAddress")
+            + GetHelpString(2, "ipAndPort")
+            + GetHelpString(3, "ownerAddress")
+            + GetHelpString(4, "operatorPubKey")
+            + GetHelpString(5, "votingAddress")
+            + GetHelpString(6, "operatorReward")
+            + GetHelpString(7, "payoutAddress")
+            + GetHelpString(8, "fundAddress") +
+            "\nResult:\n"
+            "\"txid\"                        (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "register_fund \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
@@ -261,12 +320,19 @@ void protx_register_help()
             "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
-            "transaction output. It must also not be used by any other masternode.\n"
+            "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
             "\nArguments:\n"
-            "1. \"collateralHash\"     (string, required) The collateral transaction hash.\n"
-            "2. collateralIndex      (numeric, required) The collateral transaction output index.\n"
-            "3., 4., 5. ...          See help text of \"protx register_fund\"\n"
-            "feeSourceAddress        See help text for \"fundAddress\" of \"protx register_fund\"\n"
+            + GetHelpString(1, "collateralHash")
+            + GetHelpString(2, "collateralIndex")
+            + GetHelpString(3, "ipAndPort")
+            + GetHelpString(4, "ownerAddress")
+            + GetHelpString(5, "operatorPubKey")
+            + GetHelpString(6, "votingAddress")
+            + GetHelpString(7, "operatorReward")
+            + GetHelpString(8, "payoutAddress")
+            + GetHelpString(9, "feeSourceAddress") +
+            "\nResult:\n"
+            "\"txid\"                        (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "register \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
@@ -280,14 +346,21 @@ void protx_register_prepare_help()
             "key and then passed to \"protx register_submit\". The prepared transaction will also contain inputs\n"
             "and outputs to cover fees.\n"
             "\nArguments:\n"
-            "1., 2., 3., ...         See help text of \"protx register\".\n"
-            "feeSourceAddress        See help text for \"fundAddress\" of \"protx register_fund\"\n"
+            + GetHelpString(1, "collateralHash")
+            + GetHelpString(2, "collateralIndex")
+            + GetHelpString(3, "ipAndPort")
+            + GetHelpString(4, "ownerAddress")
+            + GetHelpString(5, "operatorPubKey")
+            + GetHelpString(6, "votingAddress")
+            + GetHelpString(7, "operatorReward")
+            + GetHelpString(8, "payoutAddress")
+            + GetHelpString(9, "feeSourceAddress") +
             "\nResult:\n"
-            "{                         (json object)\n"
-            "  \"tx\" :                  (string) The serialized ProTx in hex format.\n"
-            "  \"collateralAddress\" :   (string) The collateral address.\n"
-            "  \"signMessage\" :         (string) The string message that needs to be signed with\n"
-            "                          the collateral key.\n"
+            "{                             (json object)\n"
+            "  \"tx\" :                      (string) The serialized ProTx in hex format.\n"
+            "  \"collateralAddress\" :       (string) The collateral address.\n"
+            "  \"signMessage\" :             (string) The string message that needs to be signed with\n"
+            "                              the collateral key.\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "register_prepare \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
@@ -303,6 +376,8 @@ void protx_register_submit_help()
             "\nArguments:\n"
             "1. \"tx\"                 (string, required) The serialized transaction previously returned by \"protx register_prepare\"\n"
             "2. \"sig\"                (string, required) The signature signed with the collateral key. Must be in base64 format.\n"
+            "\nResult:\n"
+            "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "register_submit \"tx\" \"sig\"")
     );
@@ -492,17 +567,13 @@ void protx_update_service_help()
             "of a masternode.\n"
             "If this is done for a masternode that got PoSe-banned, the ProUpServTx will also revive this masternode.\n"
             "\nArguments:\n"
-            "1. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
-            "2. \"ipAndPort\"                (string, required) IP and port in the form \"IP:PORT\".\n"
-            "                              Must be unique on the network.\n"
-            "3. \"operatorKey\"              (string, required) The operator private key belonging to the\n"
-            "                              registered operator public key.\n"
-            "4. \"operatorPayoutAddress\"    (string, optional) The address used for operator reward payments.\n"
-            "                              Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
-            "                              If set to an empty string, the currently active payout address is reused.\n"
-            "5. \"feeSourceAddress\"         (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
-            "                              If not specified, operatorPayoutAddress is the one that is going to be used.\n"
-            "                              The private key belonging to this address must be known in your wallet.\n"
+            + GetHelpString(1, "proTxHash")
+            + GetHelpString(2, "ipAndPort")
+            + GetHelpString(3, "operatorKey")
+            + GetHelpString(4, "operatorPayoutAddress")
+            + GetHelpString(5, "feeSourceAddress") +
+            "\nResult:\n"
+            "\"txid\"                        (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "update_service \"0123456701234567012345670123456701234567012345670123456701234567\" \"1.2.3.4:1234\" 5a2e15982e62f1e0b7cf9783c64cf7e3af3f90a52d6c40f6f95d624c0b1621cd")
     );
@@ -586,18 +657,13 @@ void protx_update_registrar_help()
             "address of the masternode specified by \"proTxHash\".\n"
             "The owner key of the masternode must be known to your wallet.\n"
             "\nArguments:\n"
-            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
-            "2. \"operatorPubKey\"      (string, required) The operator public key. The private key does not have to be known by you.\n"
-            "                         It has to match the private key which is later used when operating the masternode.\n"
-            "                         If set to an empty string, the last on-chain operator key of the masternode will be used.\n"
-            "3. \"votingAddress\"       (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
-            "                         It has to match the private key which is later used when voting on proposals.\n"
-            "                         If set to an empty string, the last on-chain voting key of the masternode will be used.\n"
-            "4. \"payoutAddress\"       (string, required) The dash address to use for masternode reward payments\n"
-            "                         If set to an empty string, the last on-chain payout address of the masternode will be used.\n"
-            "5. \"feeSourceAddress\"    (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
-            "                         If not specified, payoutAddress is the one that is going to be used.\n"
-            "                         The private key belonging to this address must be known in your wallet.\n"
+            + GetHelpString(1, "proTxHash")
+            + GetHelpString(2, "operatorPubKey")
+            + GetHelpString(3, "votingAddress")
+            + GetHelpString(4, "payoutAddress")
+            + GetHelpString(5, "feeSourceAddress") +
+            "\nResult:\n"
+            "\"txid\"                        (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "update_registrar \"0123456701234567012345670123456701234567012345670123456701234567\" \"982eb34b7c7f614f29e5c665bc3605f1beeef85e3395ca12d3be49d2868ecfea5566f11cedfad30c51b2403f2ad95b67\" \"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\"")
     );
@@ -670,13 +736,12 @@ void protx_revoke_help()
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
             "to the masternode owner.\n"
             "\nArguments:\n"
-            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
-            "2. \"operatorKey\"         (string, required) The operator private key belonging to the\n"
-            "                         registered operator public key.\n"
-            "3. reason                (numeric, optional) The reason for revocation.\n"
-            "4. \"feeSourceAddress\"    (string, optional) If specified wallet will only use coins from this address to fund ProTx.\n"
-            "                         If not specified, operatorPayoutAddress specified earlier is the one that is going to be used.\n"
-            "                         The private key belonging to this address must be known in your wallet.\n"
+            + GetHelpString(1, "proTxHash")
+            + GetHelpString(2, "operatorKey")
+            + GetHelpString(3, "reason")
+            + GetHelpString(4, "feeSourceAddress") +
+            "\nResult:\n"
+            "\"txid\"                        (string) The transaction id.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "revoke \"0123456701234567012345670123456701234567012345670123456701234567\" \"072f36a77261cdd5d64c32d97bac417540eddca1d5612f416feb07ff75a8e240\"")
     );
@@ -915,7 +980,12 @@ void protx_info_help()
             "protx info \"proTxHash\"\n"
             "\nReturns detailed information about a deterministic masternode.\n"
             "\nArguments:\n"
-            "1. \"proTxHash\"           (string, required) The hash of the initial ProRegTx.\n"
+            + GetHelpString(1, "proTxHash") +
+            "\nResult:\n"
+            "{                             (json object) Details about a specific deterministic masternode\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
     );
 }
 
