@@ -226,7 +226,7 @@ bool ParseBoolV(const UniValue& v, const std::string &strName)
  * Note: This interface may still be subject to change.
  */
 
-std::string CRPCTable::help(const std::string& strCommand, const std::string& strSubCommand) const
+std::string CRPCTable::help(const std::string& strCommand, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const
 {
     std::string strRet;
     std::string category;
@@ -237,16 +237,19 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
         vCommands.push_back(make_pair(mi->second->category + mi->first, mi->second));
     sort(vCommands.begin(), vCommands.end());
 
+    JSONRPCRequest jreq(helpreq);
+    jreq.fHelp = true;
+    jreq.params = UniValue();
+
     BOOST_FOREACH(const PAIRTYPE(std::string, const CRPCCommand*)& command, vCommands)
     {
         const CRPCCommand *pcmd = command.second;
         std::string strMethod = pcmd->name;
         if ((strCommand != "" || pcmd->category == "hidden") && strMethod != strCommand)
             continue;
+        jreq.strMethod = strMethod;
         try
         {
-            JSONRPCRequest jreq;
-            jreq.fHelp = true;
             if (!strSubCommand.empty()) {
                 jreq.params.setArray();
                 jreq.params.push_back(strSubCommand);
@@ -302,7 +305,7 @@ UniValue help(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.params.size() > 1)
         strSubCommand = jsonRequest.params[1].get_str();
 
-    return tableRPC.help(strCommand, strSubCommand);
+    return tableRPC.help(strCommand, strSubCommand, jsonRequest);
 }
 
 
