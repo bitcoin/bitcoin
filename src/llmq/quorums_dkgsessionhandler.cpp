@@ -111,11 +111,10 @@ CDKGSessionHandler::~CDKGSessionHandler()
 
 void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
-    AssertLockHeld(cs_main);
     LOCK(cs);
 
     int quorumStageInt = pindexNew->nHeight % params.dkgInterval;
-    CBlockIndex* pindexQuorum = chainActive[pindexNew->nHeight - quorumStageInt];
+    const CBlockIndex* pindexQuorum = pindexNew->GetAncestor(pindexNew->nHeight - quorumStageInt);
 
     quorumHeight = pindexQuorum->nHeight;
     quorumHash = pindexQuorum->GetBlockHash();

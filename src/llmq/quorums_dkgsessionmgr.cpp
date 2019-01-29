@@ -53,8 +53,6 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return;
 
-    LOCK(cs_main);
-
     for (auto& qt : dkgSessionHandlers) {
         qt.second.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
     }
