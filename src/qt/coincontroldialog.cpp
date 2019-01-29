@@ -15,7 +15,6 @@
 
 #include <wallet/coincontrol.h>
 #include <init.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <validation.h> // For mempool
 #include <wallet/fees.h>
@@ -515,8 +514,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = GetMinimumFee(nBytes, *coinControl(), ::mempool, ::feeEstimator, nullptr /* FeeCalculation */);
-        //ppcTODO add this instead:
+        nPayFee = GetMinimumFee(nBytes, *coinControl(), ::mempool);
+        //ppcTODO maybe add this instead?:
         //nPayFee = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
 
         if (nPayAmount > 0)

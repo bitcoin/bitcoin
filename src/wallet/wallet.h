@@ -78,10 +78,7 @@ class CReserveKey;
 class CScript;
 class CScheduler;
 class CTxMemPool;
-class CBlockPolicyEstimator;
 class CWalletTx;
-struct FeeCalculation;
-enum class FeeEstimateMode;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature

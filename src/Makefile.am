@@ -120,7 +120,6 @@ BITCOIN_CORE_H = \
   netmessagemaker.h \
   noui.h \
   policy/feerate.h \
-  policy/fees.h \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
@@ -207,7 +206,6 @@ libbitcoin_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   noui.cpp \
-  policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
   rest.cpp \

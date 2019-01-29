@@ -6,7 +6,6 @@
 #define BITCOIN_WALLET_COINCONTROL_H
 
 #include <policy/feerate.h>
-#include <policy/fees.h>
 #include <primitives/transaction.h>
 #include <wallet/wallet.h>
 
@@ -30,8 +29,6 @@ public:
     boost::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
-    //! Fee estimation mode to control arguments to estimateSmartFee
-    FeeEstimateMode m_fee_mode;
 
     CCoinControl()
     {
@@ -48,7 +45,6 @@ public:
         m_feerate.reset();
         fOverrideFeeRate = false;
         m_confirm_target.reset();
-        m_fee_mode = FeeEstimateMode::UNSET;
     }
 
     bool HasSelected() const

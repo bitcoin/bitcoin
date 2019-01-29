@@ -12,7 +12,6 @@
 #include <validation.h>
 #include <net.h>
 #include <policy/feerate.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <rpc/mining.h>
 #include <rpc/safemode.h>
@@ -459,10 +458,6 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                             The recipient will receive less peercoins than you enter in the amount field.\n"
             "6. replaceable            (boolean, optional) disabled, left for rpc backward compatibility\n"
             "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-            "       \"UNSET\"\n"
-            "       \"ECONOMICAL\"\n"
-            "       \"CONSERVATIVE\"\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
@@ -508,13 +503,6 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     if (!request.params[6].isNull()) {
         coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
     }
-
-    if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-        }
-    }
-
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -1039,10 +1027,6 @@ UniValue sendmany(const JSONRPCRequest& request)
             "    ]\n"
             "6. replaceable            (boolean, optional) disabled, left for rpc backward compatibility\n"
             "7. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
-            "8. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-            "       \"UNSET\"\n"
-            "       \"ECONOMICAL\"\n"
-            "       \"CONSERVATIVE\"\n"
              "\nResult:\n"
             "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
             "                                    the number of addresses.\n"
@@ -1087,12 +1071,6 @@ UniValue sendmany(const JSONRPCRequest& request)
     CCoinControl coin_control;
     if (!request.params[6].isNull()) {
         coin_control.m_confirm_target = ParseConfirmTarget(request.params[6]);
-    }
-
-    if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-        }
     }
 
     std::set<CTxDestination> destinations;
@@ -3092,10 +3070,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "                                  [vout_index,...]\n"
                             "     \"replaceable\"            (boolean, optional) disabled, left for rpc backward compatibility.\n"
                             "     \"conf_target\"            (numeric, optional) Confirmation target (in blocks)\n"
-                            "     \"estimate_mode\"          (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
-                            "         \"UNSET\"\n"
-                            "         \"ECONOMICAL\"\n"
-                            "         \"CONSERVATIVE\"\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
                             "3. iswitness               (boolean, optional) Whether the transaction hex is a serialized witness transaction \n"
@@ -3153,7 +3127,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
-                {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
             true, true);
 
@@ -3200,14 +3173,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
             }
             coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"]);
-        }
-        if (options.exists("estimate_mode")) {
-            if (options.exists("feeRate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
-            }
-            if (!FeeModeFromString(options["estimate_mode"].get_str(), coinControl.m_fee_mode)) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
-            }
         }
       }
     }
@@ -3628,8 +3593,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "lockunspent",              &lockunspent,              {"unlock","transactions"} },
     { "wallet",             "move",                     &movecmd,                  {"fromaccount","toaccount","amount","minconf","comment"} },
     { "wallet",             "sendfrom",                 &sendfrom,                 {"fromaccount","toaddress","amount","minconf","comment","comment_to"} },
-    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode"} },
-    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target"} },
+    { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
     { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
     { "wallet",             "signmessage",              &signmessage,              {"address","message"} },

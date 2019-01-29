@@ -17,7 +17,6 @@
 #include <cuckoocache.h>
 #include <hash.h>
 #include <init.h>
-#include <policy/fees.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/block.h>
@@ -237,8 +236,7 @@ arith_uint256 nMinimumChainWork;
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
-CBlockPolicyEstimator feeEstimator;
-CTxMemPool mempool(&feeEstimator);
+CTxMemPool mempool;
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -450,18 +448,6 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectReason(),
         state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
         state.GetRejectCode());
-}
-
-static bool IsCurrentForFeeEstimation()
-{
-    AssertLockHeld(cs_main);
-    if (IsInitialBlockDownload())
-        return false;
-    if (chainActive.Tip()->GetBlockTime() < (GetTime() - MAX_FEE_ESTIMATION_TIP_AGE))
-        return false;
-    if (chainActive.Height() < pindexBestHeader->nHeight - 1)
-        return false;
-    return true;
 }
 
 /* Make mempool consistent after a reorg, by re-adding or recursively erasing
@@ -940,14 +926,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         }
         pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
-        // This transaction should only count for fee estimation if:
-        // - it's not being readded during a reorg which bypasses typical mempool fee limits
-        // - the node is not behind
-        // - the transaction is not dependent on any other transactions in the mempool
-        bool validForFeeEstimation = !fReplacementTransaction && !bypass_limits && IsCurrentForFeeEstimation() && pool.HasNoInputsOf(tx);
-
         // Store transaction in memory
-        pool.addUnchecked(hash, entry, setAncestors, validForFeeEstimation);
+        pool.addUnchecked(hash, entry, setAncestors);
 
         // trim mempool and check if tx was trimmed
         if (!bypass_limits) {
@@ -2417,7 +2397,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
     // Remove conflicting transactions from the mempool.;
-    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight);
+    mempool.removeForBlock(blockConnecting.vtx);
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update chainActive & related variables.
     chainActive.SetTip(pindexNew);

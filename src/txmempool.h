@@ -315,8 +315,6 @@ struct descendant_score {};
 struct entry_time {};
 struct ancestor_score {};
 
-class CBlockPolicyEstimator;
-
 /**
  * Information about a mempool transaction.
  */
@@ -435,7 +433,6 @@ class CTxMemPool
 private:
     uint32_t nCheckFrequency; //!< Value n means that n times in 2^32 we check.
     unsigned int nTransactionsUpdated; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
-    CBlockPolicyEstimator* minerPolicyEstimator;
 
     uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
@@ -513,7 +510,7 @@ public:
 
     /** Create a new CTxMemPool.
      */
-    explicit CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
+    explicit CTxMemPool();
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -531,13 +528,13 @@ public:
     // Note that addUnchecked is ONLY called from ATMP outside of tests
     // and any other callers may break wallet's in-mempool tracking (due to
     // lack of CValidationInterface::TransactionAddedToMempool callbacks).
-    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool validFeeEstimate = true);
-    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors, bool validFeeEstimate = true);
+    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry);
+    bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, setEntries &setAncestors);
 
     void removeRecursive(const CTransaction &tx, MemPoolRemovalReason reason = MemPoolRemovalReason::UNKNOWN);
     void removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight, int flags);
     void removeConflicts(const CTransaction &tx);
-    void removeForBlock(const std::vector<CTransactionRef>& vtx, unsigned int nBlockHeight);
+    void removeForBlock(const std::vector<CTransactionRef>& vtx);
 
     void clear();
     void _clear(); //lock free
