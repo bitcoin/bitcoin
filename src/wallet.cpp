@@ -1989,7 +1989,7 @@ bool GetPointers(stakingnode* pstaker, std::vector<StakePointer>& vStakePointers
         if (budget.IsBudgetPaymentBlock(pindex->nHeight))
             continue;
 
-        // Pointer has to be at least deeper than the max reorg depth 
+        // Pointer has to be at least deeper than the max reorg depth
         if (nBestHeight - pindex->nHeight < Params().MaxReorganizationDepth())
             continue;
 
