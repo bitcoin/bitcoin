@@ -414,8 +414,10 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
         connman.RemoveAskFor(recoveredSig.GetHash());
     }
 
+    std::vector<CRecoveredSigsListener*> listeners;
     {
         LOCK(cs);
+        listeners = recoveredSigsListeners;
 
         auto signHash = CLLMQUtils::BuildSignHash(recoveredSig);
 
@@ -435,6 +437,10 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
     CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash());
     g_connman->RelayInv(inv);
+
+    for (auto& l : listeners) {
+        l->HandleNewRecoveredSig(recoveredSig);
+    }
 }
 
 void CSigningManager::Cleanup()
@@ -449,6 +455,19 @@ void CSigningManager::Cleanup()
     db.CleanupOldRecoveredSigs(maxAge);
 
     lastCleanupTime = GetTimeMillis();
+}
+
+void CSigningManager::RegisterRecoveredSigsListener(CRecoveredSigsListener* l)
+{
+    LOCK(cs);
+    recoveredSigsListeners.emplace_back(l);
+}
+
+void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
+{
+    LOCK(cs);
+    auto itRem = std::remove(recoveredSigsListeners.begin(), recoveredSigsListeners.end(), l);
+    recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
 bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
@@ -477,12 +496,18 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         db.WriteVoteForId(llmqType, id, msgHash);
     }
 
+    int tipHeight;
+    {
+        LOCK(cs_main);
+        tipHeight = chainActive.Height();
+    }
+
     // This might end up giving different results on different members
     // This might happen when we are on the brink of confirming a new quorum
     // This gives a slight risk of not getting enough shares to recover a signature
     // But at least it shouldn't be possible to get conflicting recovered signatures
     // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-    CQuorumCPtr quorum = quorumManager->SelectQuorum(llmqType, id, params.signingActiveQuorumCount);
+    CQuorumCPtr quorum = SelectQuorumForSigning(llmqType, tipHeight, id);
     if (!quorum) {
         LogPrintf("CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
         return false;
@@ -527,6 +552,51 @@ bool CSigningManager::IsConflicting(Consensus::LLMQType llmqType, const uint256&
 
     // all good
     return false;
+}
+
+CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash)
+{
+    auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
+    size_t poolSize = (size_t)llmqParams.signingActiveQuorumCount;
+
+    uint256 startBlock;
+    {
+        LOCK(cs_main);
+        if (signHeight > chainActive.Height()) {
+            return nullptr;
+        }
+        startBlock = chainActive[signHeight - SIGN_HEIGHT_OFFSET]->GetBlockHash();
+    }
+
+    auto quorums = quorumManager->ScanQuorums(llmqType, startBlock, poolSize);
+    if (quorums.empty()) {
+        return nullptr;
+    }
+
+    std::vector<std::pair<uint256, size_t>> scores;
+    scores.reserve(quorums.size());
+    for (size_t i = 0; i < quorums.size(); i++) {
+        CHashWriter h(SER_NETWORK, 0);
+        h << (uint8_t)llmqType;
+        h << quorums[i]->quorumHash;
+        h << selectionHash;
+        scores.emplace_back(h.GetHash(), i);
+    }
+    std::sort(scores.begin(), scores.end());
+    return quorums[scores.front().second];
+}
+
+bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
+{
+    auto& llmqParams = Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqChainLocks);
+
+    auto quorum = SelectQuorumForSigning(llmqParams.type, signedAtHeight, id);
+    if (!quorum) {
+        return false;
+    }
+
+    uint256 signHash = CLLMQUtils::BuildSignHash(llmqParams.type, quorum->quorumHash, id, msgHash);
+    return sig.VerifyInsecure(quorum->quorumPublicKey, signHash);
 }
 
 }

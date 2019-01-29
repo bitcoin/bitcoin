@@ -69,6 +69,7 @@ const char *QSIGSHARESINV="qsigsinv";
 const char *QGETSIGSHARES="qgetsigs";
 const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
+const char *CLSIG="clsig";
 };
 
 static const char* ppszTypeName[] =
@@ -104,6 +105,7 @@ static const char* ppszTypeName[] =
     NetMsgType::QPCOMMITMENT,
     NetMsgType::QDEBUGSTATUS,
     NetMsgType::QSIGREC,
+    NetMsgType::CLSIG,
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -167,6 +169,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QGETSIGSHARES,
     NetMsgType::QBSIGSHARES,
     NetMsgType::QSIGREC,
+    NetMsgType::CLSIG,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

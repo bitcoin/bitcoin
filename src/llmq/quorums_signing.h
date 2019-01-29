@@ -91,10 +91,23 @@ private:
     bool ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret);
 };
 
+class CRecoveredSigsListener
+{
+public:
+    virtual ~CRecoveredSigsListener() {}
+
+    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) = 0;
+};
+
 class CSigningManager
 {
     friend class CSigSharesManager;
     static const int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7; // keep them for a week
+
+    // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
+    // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
+    // which are not 100% at the chain tip.
+    static const int SIGN_HEIGHT_OFFSET = 8;
 
 private:
     CCriticalSection cs;
@@ -108,6 +121,8 @@ private:
     FastRandomContext rnd;
 
     int64_t lastCleanupTime{0};
+
+    std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
 
 public:
     CSigningManager(bool fMemory);
@@ -128,11 +143,19 @@ private:
 
 public:
     // public interface
+    void RegisterRecoveredSigsListener(CRecoveredSigsListener* l);
+    void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
+
     bool AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
     bool IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
+
+    CQuorumCPtr SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash);
+
+    // Verifies a recovered sig that was signed while the chain tip was at signedAtTip
+    bool VerifyRecoveredSig(Consensus::LLMQType llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig);
 };
 
 extern CSigningManager* quorumSigningManager;

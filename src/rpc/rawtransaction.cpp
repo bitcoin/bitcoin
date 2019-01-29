@@ -33,6 +33,8 @@
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 #include "evo/cbtx.h"
+
+#include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_commitment.h"
 
 #include <stdint.h>
@@ -177,6 +179,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         }
     }
 
+    bool chainLock = false;
     if (!hashBlock.IsNull()) {
         entry.push_back(Pair("blockhash", hashBlock.GetHex()));
         BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
@@ -187,6 +190,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
                 entry.push_back(Pair("confirmations", 1 + chainActive.Height() - pindex->nHeight));
                 entry.push_back(Pair("time", pindex->GetBlockTime()));
                 entry.push_back(Pair("blocktime", pindex->GetBlockTime()));
+
+                chainLock = llmq::chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
             } else {
                 entry.push_back(Pair("height", -1));
                 entry.push_back(Pair("confirmations", 0));
@@ -195,6 +200,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     }
     bool fLocked = instantsend.IsLockedInstantSendTransaction(txid);
     entry.push_back(Pair("instantlock", fLocked));
+    entry.push_back(Pair("chainlock", chainLock));
 }
 
 UniValue getrawtransaction(const JSONRPCRequest& request)

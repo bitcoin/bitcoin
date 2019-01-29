@@ -275,6 +275,7 @@ extern const char *QSIGSHARESINV;
 extern const char *QGETSIGSHARES;
 extern const char *QBSIGSHARES;
 extern const char *QSIGREC;
+extern const char *CLSIG;
 };
 
 /* Get a vector of all valid message types (see above) */
@@ -376,6 +377,7 @@ enum GetDataMsg {
     MSG_QUORUM_PREMATURE_COMMITMENT = 26,
     MSG_QUORUM_DEBUG_STATUS = 27,
     MSG_QUORUM_RECOVERED_SIG = 28,
+    MSG_CLSIG = 29,
 };
 
 /** inv message data */
