@@ -444,7 +444,7 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 {
 }
 
-bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& _state)
+bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& _state, bool fJustCheck)
 {
     CDeterministicMNList oldList, newList;
     CDeterministicMNListDiff diff;
@@ -456,6 +456,10 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 
         if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
             return false;
+        }
+
+        if (fJustCheck) {
+            return true;
         }
 
         if (newList.GetHeight() == -1) {
