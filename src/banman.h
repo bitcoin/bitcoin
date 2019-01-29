@@ -42,6 +42,7 @@ public:
     void Ban(const CNetAddr& net_addr, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void ClearBanned();
+    int IsBannedLevel(CNetAddr net_addr);
     bool IsBanned(CNetAddr net_addr);
     bool IsBanned(CSubNet sub_net);
     bool Unban(const CNetAddr& net_addr);

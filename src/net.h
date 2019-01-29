@@ -651,6 +651,7 @@ public:
     // the network or wire types and the cleaned string used when displayed or logged.
     std::string strSubVer GUARDED_BY(cs_SubVer), cleanSubVer GUARDED_BY(cs_SubVer);
     CCriticalSection cs_SubVer; // used for both cleanSubVer and strSubVer
+    bool m_prefer_evict{false}; // This peer is preferred for eviction.
     bool fWhitelisted{false}; // This peer can bypass DoS banning.
     bool fFeeler{false}; // If true this node is being used as a short lived feeler.
     bool fOneShot{false};
