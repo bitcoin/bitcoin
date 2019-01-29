@@ -997,7 +997,7 @@ void CWallet::ReacceptWalletTransactions()
 
         int nDepth = wtx.GetDepthInMainChain();
 
-        if (!wtx.IsCoinBase() && nDepth < 0)
+        if (!wtx.IsCoinBase() && !wtx.IsCoinStake() && nDepth < 0)
         {
             // Try to add to memory pool
             LOCK(mempool.cs);
