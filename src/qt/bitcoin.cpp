@@ -218,6 +218,8 @@ BitcoinApplication::~BitcoinApplication()
 #ifdef ENABLE_WALLET
     delete paymentServer;
     paymentServer = nullptr;
+    delete m_wallet_controller;
+    m_wallet_controller = nullptr;
 #endif
     delete optionsModel;
     optionsModel = nullptr;
@@ -310,10 +312,6 @@ void BitcoinApplication::requestShutdown()
     window->setClientModel(nullptr);
     pollShutdownTimer->stop();
 
-#ifdef ENABLE_WALLET
-    delete m_wallet_controller;
-    m_wallet_controller = nullptr;
-#endif
     delete clientModel;
     clientModel = nullptr;
 
