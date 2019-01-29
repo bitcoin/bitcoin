@@ -1984,8 +1984,13 @@ bool GetPointers(stakingnode* pstaker, std::vector<StakePointer>& vStakePointers
         return false;
     }
 
+    int nBestHeight = chainActive.Height();
     for (auto pindex : vBlocksLastPaid) {
         if (budget.IsBudgetPaymentBlock(pindex->nHeight))
+            continue;
+
+        // Pointer has to be at least deeper than the max reorg depth 
+        if (nBestHeight - pindex->nHeight < Params().MaxReorganizationDepth())
             continue;
 
         CBlock blockLastPaid;
