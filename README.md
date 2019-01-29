@@ -9,7 +9,7 @@ Peercoin Official Development Repo
 
 ### Peercoin Resources
 * Client and Source:
-[Client Binaries](https://peercoin.net/download),
+[Client Binaries](https://peercoin.net/wallet),
 [Source Code](https://github.com/peercoin/peercoin)
 * Documentation: [Peercoin Whitepaper](https://peercoin.net/whitepaper),
 [Peercoin Wiki](https://github.com/peercoin/peercoin/wiki)
