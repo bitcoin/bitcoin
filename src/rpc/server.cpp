@@ -231,10 +231,12 @@ UniValue help(const JSONRPCRequest& jsonRequest)
                 "\nList all commands, or get help for a specified command.\n",
                 {
                     {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all commands", "The command to get help on"},
-                }}
-                .ToString() +
-            "\nResult:\n"
+                },
+                RPCResult{
             "\"text\"     (string) The help text\n"
+                },
+                RPCExamples{""},
+            }.ToString()
         );
 
     std::string strCommand;
@@ -254,8 +256,11 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw std::runtime_error(
             RPCHelpMan{"stop",
-                "\nStop Bitcoin server.", {}}
-                .ToString());
+                "\nStop Bitcoin server.",
+                {},
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString());
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
@@ -270,14 +275,16 @@ static UniValue uptime(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 0)
         throw std::runtime_error(
             RPCHelpMan{"uptime",
-                "\nReturns the total uptime of the server.\n", {}}
-                .ToString() +
-                        "\nResult:\n"
+                "\nReturns the total uptime of the server.\n",
+                            {},
+                            RPCResult{
                         "ttt        (numeric) The number of seconds that the server has been running\n"
-                        "\nExamples:\n"
-                + HelpExampleCli("uptime", "")
+                            },
+                RPCExamples{
+                    HelpExampleCli("uptime", "")
                 + HelpExampleRpc("uptime", "")
-        );
+                },
+            }.ToString());
 
     return GetTime() - GetStartupTime();
 }
@@ -287,8 +294,11 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 0) {
         throw std::runtime_error(
             RPCHelpMan{"getrpcinfo",
-                "\nReturns details of the RPC server.\n", {}}
-                .ToString()
+                "\nReturns details of the RPC server.\n",
+                {},
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString()
         );
     }
 
