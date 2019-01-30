@@ -27,6 +27,7 @@ std::map<int, int64_t> mapSporkDefaults = {
     {SPORK_16_INSTANTSEND_AUTOLOCKS,         4070908800ULL}, // OFF
     {SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL}, // OFF
     {SPORK_18_QUORUM_DEBUG_ENABLED,          4070908800ULL}, // OFF
+    {SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL}, // OFF
 };
 
 bool CSporkManager::SporkValueIsActive(int nSporkID, int64_t &nActiveValueRet) const
