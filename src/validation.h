@@ -102,14 +102,14 @@ static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = 6;
 static const unsigned int DEFAULT_CHECKLEVEL = 3;
 
-// Require that user allocate at least 945MB for block & undo files (blk???.dat and rev???.dat)
-// At 2MB per block, 288 blocks = 576MB.
-// Add 15% for Undo data = 662MB
-// Add 20% for Orphan block rate = 794MB
-// We want the low water mark after pruning to be at least 794 MB and since we prune in
+// Require that user allocate at least 945 MiB for block & undo files (blk???.dat and rev???.dat)
+// At 2B MiB per block, 288 blocks = 576 MiB.
+// Add 15% for Undo data = 662 MiB
+// Add 20% for Orphan block rate = 794 MiB
+// We want the low water mark after pruning to be at least 794 MiB and since we prune in
 // full block file chunks, we need the high water mark which triggers the prune to be
-// one 128MB block file + added 15% undo data = 147MB greater for a total of 941MB
-// Setting the target to > than 945MB will make it likely we can respect the target.
+// one 128 MiB block file + added 15% undo data = 147 MiB greater for a total of 941 MiB
+// Setting the target to > than 945 MiB will make it likely we can respect the target.
 static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 945 * 1024 * 1024;
 
 struct BlockHasher

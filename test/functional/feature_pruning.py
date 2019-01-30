@@ -315,7 +315,7 @@ class PruneTest(BitcoinTestFramework):
         if has_block(3):
             raise AssertionError("blk00003.dat is still there, should be pruned by now")
 
-        # stop node, start back up with auto-prune at 550MB, make sure still runs
+        # stop node, start back up with auto-prune at 550 MiB, make sure still runs
         self.stop_node(node_number)
         self.start_node(node_number, extra_args=["-dip3params=2000:2000", "-dip8params=2000", "-disablegovernance", "-txindex=0", "-prune=550"])
 
