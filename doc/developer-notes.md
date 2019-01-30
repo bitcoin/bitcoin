@@ -33,6 +33,7 @@ Developer Notes
     - [Subtrees](#subtrees)
     - [Git and GitHub tips](#git-and-github-tips)
     - [Scripted diffs](#scripted-diffs)
+    - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
 
 <!-- markdown-toc end -->
@@ -804,6 +805,21 @@ To create a scripted-diff:
 The scripted-diff is verified by the tool `test/lint/commit-script-check.sh`
 
 Commit [`bb81e173`](https://github.com/bitcoin/bitcoin/commit/bb81e173) is an example of a scripted-diff.
+
+Release notes
+-------------
+
+Release notes should be written for any PR that:
+
+- introduces a notable new feature
+- fixes a significant bug
+- changes an API or configuration model
+- makes any other visible change to the end-user experience.
+
+Release notes should be added to a PR-specific release note file at
+`/doc/release-notes-<PR number>.md` to avoid conflicts between multiple PRs.
+All `release-notes*` files are merged into a single
+[/doc/release-notes.md](/doc/release-notes.md) file prior to the release.
 
 RPC interface guidelines
 --------------------------
