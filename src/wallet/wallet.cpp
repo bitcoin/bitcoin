@@ -1642,7 +1642,8 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         fAbortRescan = false;
         ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
         uint256 tip_hash;
-        Optional<int> block_height;
+        // The way the 'block_height' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
+        Optional<int> block_height = MakeOptional(false, int());
         double progress_begin;
         double progress_end;
         {
