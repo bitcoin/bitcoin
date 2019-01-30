@@ -227,6 +227,7 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   pow.h \
   protocol.h \
+  psbt.h \
   random.h \
   reverse_iterator.h \
   reverselock.h \
@@ -291,6 +292,7 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/fees.h \
+  wallet/psbtwallet.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/walletdb.h \
@@ -431,6 +433,7 @@ libdash_wallet_a_SOURCES = \
   wallet/db.cpp \
   wallet/fees.cpp \
   wallet/init.cpp \
+  wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
@@ -577,6 +580,7 @@ libdash_common_a_SOURCES = \
   netbase.cpp \
   net_permissions.cpp \
   policy/feerate.cpp \
+  psbt.cpp \
   protocol.cpp \
   saltedhasher.cpp \
   scheduler.cpp \

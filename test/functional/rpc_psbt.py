@@ -183,5 +183,8 @@ class PSBTTest(BitcoinTestFramework):
         psbt = self.nodes[1].walletcreatefundedpsbt([], [{p2pkh : 1}], 0, {"includeWatching" : True}, True)
         self.nodes[0].decodepsbt(psbt['psbt'])
 
+        # Test decoding error: invalid base64
+        assert_raises_rpc_error(-22, "TX decode failed invalid base64", self.nodes[0].decodepsbt, ";definitely not base64;")
+
 if __name__ == '__main__':
     PSBTTest().main()
