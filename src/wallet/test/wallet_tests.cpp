@@ -39,7 +39,6 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     auto chain = interfaces::MakeChain();
 
     // Cap last block file size, and mine new block in a new block file.
-    const CBlockIndex* const null_block = nullptr;
     CBlockIndex* oldTip = chainActive.Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
@@ -53,10 +52,11 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
-        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(nullptr, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK_EQUAL(failed_block, null_block);
-        BOOST_CHECK_EQUAL(stop_block, null_block);
+        CWallet::ScanResult result = wallet.ScanForWalletTransactions({} /* start_block */, {} /* stop_block */, reserver, false /* update */);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK(result.failed_block.IsNull());
+        BOOST_CHECK(result.stop_block.IsNull());
+        BOOST_CHECK(!result.stop_height);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 0);
     }
 
@@ -67,10 +67,11 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
-        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK_EQUAL(failed_block, null_block);
-        BOOST_CHECK_EQUAL(stop_block, newTip);
+        CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK(result.failed_block.IsNull());
+        BOOST_CHECK_EQUAL(result.stop_block, newTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.stop_height, newTip->nHeight);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
     }
 
@@ -85,10 +86,11 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
-        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
-        BOOST_CHECK_EQUAL(failed_block, oldTip);
-        BOOST_CHECK_EQUAL(stop_block, newTip);
+        CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(result.failed_block, oldTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(result.stop_block, newTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.stop_height, newTip->nHeight);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
 
@@ -102,10 +104,11 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         AddKey(wallet, coinbaseKey);
         WalletRescanReserver reserver(&wallet);
         reserver.reserve();
-        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
-        BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
-        BOOST_CHECK_EQUAL(failed_block, newTip);
-        BOOST_CHECK_EQUAL(stop_block, null_block);
+        CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
+        BOOST_CHECK_EQUAL(result.failed_block, newTip->GetBlockHash());
+        BOOST_CHECK(result.stop_block.IsNull());
+        BOOST_CHECK(!result.stop_height);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 0);
     }
 }
@@ -276,7 +279,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
 
     CWalletTx wtx(&wallet, MakeTransactionRef(tx));
     if (block) {
-        wtx.SetMerkleBranch(block, 0);
+        wtx.SetMerkleBranch(block->GetBlockHash(), 0);
     }
     {
         LOCK(cs_main);
@@ -340,11 +343,11 @@ public:
         AddKey(*wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        const CBlockIndex* const null_block = nullptr;
-        const CBlockIndex *stop_block = null_block + 1, *failed_block = null_block + 1;
-        BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK_EQUAL(stop_block, chainActive.Tip());
-        BOOST_CHECK_EQUAL(failed_block, null_block);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(chainActive.Genesis()->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+        BOOST_CHECK_EQUAL(result.stop_block, chainActive.Tip()->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.stop_height, chainActive.Height());
+        BOOST_CHECK(result.failed_block.IsNull());
     }
 
     ~ListCoinsTestingSetup()
@@ -372,7 +375,7 @@ public:
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip(), 1);
+        it->second.SetMerkleBranch(chainActive.Tip()->GetBlockHash(), 1);
         return it->second;
     }
 
