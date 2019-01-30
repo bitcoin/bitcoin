@@ -915,7 +915,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     }
     t2.stop();
 
-    logger.Batch("skShare=%s, pubKeyShare=%s", skShare.ToString(), skShare.GetPublicKey().ToString());
+    logger.Batch("pubKeyShare=%s", skShare.GetPublicKey().ToString());
 
     cxxtimer::Timer t3(true);
     qc.quorumPublicKey = (*vvec)[0];
