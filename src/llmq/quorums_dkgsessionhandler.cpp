@@ -123,19 +123,11 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     int phaseInt = quorumStageInt / params.dkgPhaseBlocks + 1;
     if (fNewPhase && phaseInt >= QuorumPhase_Initialized && phaseInt <= QuorumPhase_Idle) {
         phase = static_cast<QuorumPhase>(phaseInt);
-        if (phase == QuorumPhase_Initialized) {
-            quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumHash, quorumHeight);
-        }
     }
 
     quorumDKGDebugManager->UpdateLocalStatus([&](CDKGDebugStatus& status) {
         bool changed = status.nHeight != pindexNew->nHeight;
         status.nHeight = (uint32_t)pindexNew->nHeight;
-        return changed;
-    });
-    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
-        bool changed = status.phase != (uint8_t)phase;
-        status.phase = (uint8_t)phase;
         return changed;
     });
 }
@@ -199,7 +191,7 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
             throw AbortPhaseException();
         }
         if (p.first == nextPhase) {
-            return;
+            break;
         }
         if (curPhase != QuorumPhase_None && p.first != curPhase) {
             throw AbortPhaseException();
@@ -208,6 +200,15 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
             MilliSleep(100);
         }
     }
+
+    if (nextPhase == QuorumPhase_Initialized) {
+        quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumHash, quorumHeight);
+    }
+    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
+        bool changed = status.phase != (uint8_t)nextPhase;
+        status.phase = (uint8_t)nextPhase;
+        return changed;
+    });
 }
 
 void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash)
