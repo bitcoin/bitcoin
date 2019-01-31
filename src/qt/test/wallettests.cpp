@@ -149,8 +149,8 @@ void TestGUI()
         reserver.reserve();
         CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
-        QCOMPARE(result.stop_block, chainActive.Tip()->GetBlockHash());
-        QVERIFY(result.failed_block.IsNull());
+        QCOMPARE(result.last_scanned_block, chainActive.Tip()->GetBlockHash());
+        QVERIFY(result.last_failed_block.IsNull());
     }
     wallet->SetBroadcastTransactions(true);
 
