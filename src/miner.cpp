@@ -369,7 +369,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         }
 
         // Masternode and general budget payments
-        if (IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
+        if (IsSporkActive(SPORK_4_ENABLE_MASTERNODE_PAYMENTS)) {
             FillBlockPayee(txCoinbase, nFees);
             SNFillBlockPayee(txCoinbase, nFees);
         }
