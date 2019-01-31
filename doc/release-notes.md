@@ -190,13 +190,17 @@ Deprecated or removed RPCs
 New RPCs
 --------
 
-- A new `getnodeaddresses` RPC returns peer addresses known to this
+- The `getnodeaddresses` RPC returns peer addresses known to this
   node. It may be used to find nodes to connect to without using a DNS
   seeder.
 
-- A new `listwalletdir` RPC returns a list of wallets in the wallet
+- The `listwalletdir` RPC returns a list of wallets in the wallet
   directory (either the default wallet directory or the directory
   configured by the `-walletdir` parameter).
+
+- The `getrpcinfo` returns runtime details of the RPC server. At the
+  moment, it returns an array of the currently active commands and how
+  long they've been running.
 
 Updated RPCs
 ------------
@@ -259,6 +263,16 @@ in the Low-level Changes section below.
   blockhash is provided, check the corresponding block. 2. If no
   blockhash is provided, check the mempool. 3. If no blockhash is
   provided but txindex is enabled, also check txindex.
+
+- The `unloadwallet` RPC is now synchronous, meaning it will not return
+  until the wallet is fully unloaded.
+
+REST changes
+------------
+
+- A new `/rest/blockhashbyheight/` endpoint is added for fetching the
+  hash of the block in the current best blockchain based on its height
+  (how many blocks it is after the Genesis Block).
 
 Graphical User Interface (GUI)
 ------------------------------
