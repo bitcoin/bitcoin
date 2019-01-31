@@ -1222,7 +1222,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.</sourc
     </message>
     <message>
         <location line="+7"/>
-        <source>transaction  has reached maximum probability</source>
+        <source>transaction has reached maximum probability</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
