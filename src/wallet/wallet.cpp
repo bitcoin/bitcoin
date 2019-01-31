@@ -1603,7 +1603,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
         ScanResult result = ScanForWalletTransactions(start_block, {} /* stop_block */, reserver, update);
         if (result.status == ScanResult::FAILURE) {
             int64_t time_max;
-            if (!chain().findBlock(result.failed_block, nullptr /* block */, nullptr /* time */, &time_max)) {
+            if (!chain().findBlock(result.last_failed_block, nullptr /* block */, nullptr /* time */, &time_max)) {
                 throw std::logic_error("ScanForWalletTransactions returned invalid block hash");
             }
             return time_max + TIMESTAMP_WINDOW + 1;
@@ -1678,7 +1678,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     // marking transactions as coming from the wrong block.
                     // TODO: This should return success instead of failure, see
                     // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
-                    result.failed_block = block_hash;
+                    result.last_failed_block = block_hash;
                     result.status = ScanResult::FAILURE;
                     break;
                 }
@@ -1686,11 +1686,11 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     SyncTransaction(block.vtx[posInBlock], block_hash, posInBlock, fUpdate);
                 }
                 // scan succeeded, record block as most recent successfully scanned
-                result.stop_block = block_hash;
-                result.stop_height = *block_height;
+                result.last_scanned_block = block_hash;
+                result.last_scanned_height = *block_height;
             } else {
                 // could not scan block, keep scanning but record this block as the most recent failure
-                result.failed_block = block_hash;
+                result.last_failed_block = block_hash;
                 result.status = ScanResult::FAILURE;
             }
             if (block_hash == stop_block) {
