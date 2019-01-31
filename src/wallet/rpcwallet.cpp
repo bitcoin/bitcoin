@@ -3459,6 +3459,11 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
 
         if (tip_height) {
             start_block = locked_chain->getBlockHash(start_height);
+            // If called with a stop_height, set the stop_height here to
+            // trigger a rescan to that height.
+            // If called without a stop height, leave stop_height as null here
+            // so rescan continues to the tip (even if the tip advances during
+            // rescan).
             if (stop_height) {
                 stop_block = locked_chain->getBlockHash(*stop_height);
             }
