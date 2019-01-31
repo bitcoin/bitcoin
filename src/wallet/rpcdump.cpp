@@ -216,9 +216,7 @@ UniValue abortrescan(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
-    pwallet->AbortRescan();
-    return true;
+    return pwallet->AbortRescan();
 }
 
 UniValue importaddress(const JSONRPCRequest& request)

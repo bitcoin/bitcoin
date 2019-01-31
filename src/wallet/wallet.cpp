@@ -169,6 +169,13 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string&
     return LoadWallet(chain, WalletLocation(name), error, warnings);
 }
 
+bool CWallet::AbortRescan()
+{
+    if (!fScanningWallet || fAbortRescan) return false;
+    fAbortRescan = true;
+    return true;
+}
+
 WalletCreationStatus CreateWallet(interfaces::Chain& chain, const SecureString& passphrase, uint64_t wallet_creation_flags, const std::string& name, std::string& error, std::vector<std::string>& warnings, std::shared_ptr<CWallet>& result)
 {
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
