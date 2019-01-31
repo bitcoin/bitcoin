@@ -547,7 +547,7 @@ This product includes software developed by the OpenSSL Project for use in the O
     </message>
     <message>
         <location line="+1"/>
-        <source>Open https://peercoin.chat in a web browser.</source>
+        <source>Open the Peercoin Discord in a web browser.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

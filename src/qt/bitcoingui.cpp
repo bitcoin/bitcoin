@@ -269,7 +269,7 @@ void BitcoinGUI::createActions()
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
 
     openChatroomAction = new QAction(QIcon(":/icons/peercoin"), tr("&Chatroom"), this);
-    openChatroomAction->setStatusTip(tr("Open https://peercoin.chat in a web browser."));
+    openChatroomAction->setStatusTip(tr("Open the Peercoin Discord in a web browser."));
 
     openForumAction = new QAction(QIcon(":/icons/peercoin"), tr("&Forum"), this);
     openForumAction->setStatusTip(tr("Open https://talk.peercoin.net in a web browser."));
@@ -552,7 +552,7 @@ void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 }
 
 void BitcoinGUI::openChatroom() {
-    QDesktopServices::openUrl(QUrl("https://peercoin.chat"));
+    QDesktopServices::openUrl(QUrl("https://discord.gg/XPxfwtG"));
 }
 
 void BitcoinGUI::openForum() {
