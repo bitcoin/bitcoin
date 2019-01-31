@@ -42,13 +42,20 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
-    if (nNet > 0 || wtx.IsCoinBase())
+    if (nNet > 0 || wtx.IsCoinBase() || wtx.IsCoinStake())
     {
         //
         // Credit
         //
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-        {
+        bool isPoSActive = false;
+        if (mapBlockIndex.count(wtx.hashBlock))
+            isPoSActive = mapBlockIndex.at(wtx.hashBlock)->nHeight >= Params().PoSStartHeight();
+
+        if ((wtx.IsCoinBase() || wtx.IsCoinStake()) && isPoSActive)
+            nTime = mapBlockIndex.at(wtx.hashBlock)->GetBlockTime();
+
+        for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+            const CTxOut& txout = wtx.vout[i];
             isminetype mine = wallet->IsMine(txout);
             if(mine)
             {
@@ -71,7 +78,17 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
                 if (wtx.IsCoinBase())
                 {
-                    // Generated
+                    if (isPoSActive) {
+                        //After PoS activates, only MN/SN rewards (and budget too) will be in coinbase tx
+                        if (i == MN_PMT_SLOT)
+                            sub.type = TransactionRecord::MasterNodeReward;
+                        else if (i == SN_PMT_SLOT)
+                            sub.type = TransactionRecord::SystemNodeReward;
+                    } else {
+                        //PoS not active, just consider this 'generated'
+                        sub.type = TransactionRecord::Generated;
+                    }
+                } else if (wtx.IsCoinStake()) {
                     sub.type = TransactionRecord::Generated;
                 }
 
