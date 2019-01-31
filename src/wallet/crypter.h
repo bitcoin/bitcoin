@@ -140,7 +140,7 @@ protected:
     bool SetHDChain(const CHDChain& chain);
     bool SetCryptedHDChain(const CHDChain& chain);
 
-    bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false);
+    bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false, bool accept_no_keys = false);
     CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
 
 public:

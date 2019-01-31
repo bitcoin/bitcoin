@@ -18,6 +18,7 @@ BITCOIN_DAEMON_NAME=dashd
 BITCOIN_GUI_NAME=dash-qt
 BITCOIN_CLI_NAME=dash-cli
 BITCOIN_TX_NAME=dash-tx
+BITCOIN_WALLET_TOOL_NAME=dash-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -537,7 +538,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build dash-cli dash-tx (default=yes)])],
+  [build dash-cli dash-tx dash-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -552,6 +553,12 @@ AC_ARG_ENABLE([util-tx],
   [build dash-tx])],
   [build_bitcoin_tx=$enableval],
   [build_bitcoin_tx=$build_bitcoin_utils])
+
+AC_ARG_ENABLE([util-wallet],
+  [AS_HELP_STRING([--enable-util-wallet],
+  [build dash-wallet])],
+  [build_bitcoin_wallet=$enableval],
+  [build_bitcoin_wallet=$build_bitcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -1161,7 +1168,7 @@ if test x$suppress_external_warnings != xno ; then
   QT_TEST_INCLUDES=SUPPRESS_WARNINGS($QT_TEST_INCLUDES)
 fi
 
-if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
 else
     use_boost=yes
@@ -1387,7 +1394,7 @@ AC_CHECK_LIB([gmp],  [__gmpz_init],GMP_LIBS=-lgmp, AC_MSG_ERROR(libgmp missing))
 dnl check if immer headers-only library is present
 AC_CHECK_HEADER([immer/map.hpp],, AC_MSG_ERROR(immer map headers missing))
 
-if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   need_bundled_univalue=no
 else
 
@@ -1448,6 +1455,10 @@ AC_MSG_RESULT($build_bitcoin_cli)
 AC_MSG_CHECKING([whether to build dash-tx])
 AM_CONDITIONAL([BUILD_BITCOIN_TX], [test x$build_bitcoin_tx = xyes])
 AC_MSG_RESULT($build_bitcoin_tx)
+
+AC_MSG_CHECKING([whether to build dash-wallet])
+AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])
+AC_MSG_RESULT($build_bitcoin_wallet)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
@@ -1602,7 +1613,7 @@ else
 fi
 AC_MSG_RESULT($dsymutil_needs_flat)
 
-if test x$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnonononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
 
@@ -1651,6 +1662,7 @@ AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
+AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
