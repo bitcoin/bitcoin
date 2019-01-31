@@ -175,7 +175,8 @@ cat /tmp/user/1000/testo9vsdjo3/node1/regtest/bitcoind.pid
 gdb /home/example/bitcoind <pid>
 ```
 
-Note: gdb attach step may require `sudo`
+Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
+See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
 
 ### Util tests
 
