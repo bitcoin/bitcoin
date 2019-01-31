@@ -129,6 +129,45 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Flush();
+    } else if (command == "salvage") {
+        if (!fs::exists(path)) {
+            fprintf(stderr, "Error: no wallet file at %s\n", name.c_str());
+            return false;
+        }
+        // Recover readable keypairs:
+        std::string error;
+        if (!WalletBatch::VerifyEnvironment(path, error)) {
+            fprintf(stderr, "WalletBatch::VerifyEnvironment Error: %s\n", error.c_str());
+            return false;
+        }
+
+        // dummy chain interface
+        auto chain = interfaces::MakeChain();
+        CWallet dummyWallet(*chain, WalletLocation("dummy"), WalletDatabase::CreateDummy());
+        std::string backup_filename;
+        if (!WalletBatch::Recover(path, (void*)&dummyWallet, WalletBatch::RecoverKeysOnlyFilter, backup_filename)) {
+            fprintf(stderr, "Salvage failed\n");
+            return false;
+        }
+        // TODO, set wallets best block to genesis to enforce a rescan
+        fprintf(stdout, "Salvage successful. Please rescan your wallet.\n");
+    } else if (command == "zaptxs") {
+        if (!fs::exists(path)) {
+            fprintf(stderr, "Error: no wallet file at %s\n", name.c_str());
+            return false;
+        }
+        // needed to restore wallet transaction meta data after -zapwallettxes
+        std::vector<CWalletTx> vWtx;
+
+        // dummy chain interface
+        auto chain = interfaces::MakeChain();
+        std::shared_ptr<CWallet> tempWallet = MakeUnique<CWallet>(*chain, WalletLocation(name), WalletDatabase::Create(path));
+        DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
+        if (nZapWalletRet != DBErrors::LOAD_OK) {
+            fprintf(stderr, "Error loading %s: Wallet corrupted", name.c_str());
+            return false;
+        }
+        fprintf(stdout, "Zaptxs successful executed. Please rescan your wallet.\n");
     } else {
         fprintf(stderr, "Invalid command: %s\n", command.c_str());
         return false;

@@ -30,6 +30,8 @@ static void SetupWalletToolArgs()
 
     gArgs.AddArg("info", "Get wallet info", false, OptionsCategory::COMMANDS);
     gArgs.AddArg("create", "Create new wallet file", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("salvage", "Recover readable keypairs", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("zaptxs", "Remove all transactions including metadata (will keep keys)", false, OptionsCategory::COMMANDS);
 
     // Hidden
     gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);

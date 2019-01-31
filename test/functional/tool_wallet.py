@@ -45,6 +45,8 @@ class ToolWalletTest(BitcoinTestFramework):
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
         self.assert_raises_tool_error('Error loading wallet.dat. Is wallet being used by other process?', '-wallet=wallet.dat', 'info')
         self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'info')
+        self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'zaptxs')
+        self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'salvage')
 
         # stop the node to close the wallet to call info command
         self.stop_node(0)
