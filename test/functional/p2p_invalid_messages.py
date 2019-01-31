@@ -16,7 +16,7 @@ class msg_unrecognized:
 
     command = b'badmsg'
 
-    def __init__(self, str_data):
+    def __init__(self, *, str_data):
         self.str_data = str_data.encode() if not isinstance(str_data, bytes) else str_data
 
     def serialize(self):
@@ -26,19 +26,14 @@ class msg_unrecognized:
         return "{}(data={})".format(self.command, self.str_data)
 
 
-class msg_nametoolong(msg_unrecognized):
-
-    command = b'thisnameiswayyyyyyyyytoolong'
-
-
 class InvalidMessagesTest(BitcoinTestFramework):
-
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
 
     def run_test(self):
         """
+         . Test msg header
         0. Send a bunch of large (4MB) messages of an unrecognized type. Check to see
            that it isn't an effective DoS against the node.
 
@@ -46,10 +41,12 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
         2. Send a few messages with an incorrect data size in the header, ensure the
            messages are ignored.
-
-        3. Send an unrecognized message with a command name longer than 12 characters.
-
         """
+        self.test_magic_bytes()
+        self.test_checksum()
+        self.test_size()
+        self.test_command()
+
         node = self.nodes[0]
         self.node = node
         node.add_p2p_connection(P2PDataStore())
@@ -64,7 +61,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # Send as large a message as is valid, ensure we aren't disconnected but
         # also can't exhaust resources.
         #
-        msg_at_size = msg_unrecognized("b" * valid_data_limit)
+        msg_at_size = msg_unrecognized(str_data="b" * valid_data_limit)
         assert len(msg_at_size.serialize()) == msg_limit
 
         increase_allowed = 0.5
@@ -94,10 +91,10 @@ class InvalidMessagesTest(BitcoinTestFramework):
         #
         # Send an oversized message, ensure we're disconnected.
         #
-        msg_over_size = msg_unrecognized("b" * (valid_data_limit + 1))
+        msg_over_size = msg_unrecognized(str_data="b" * (valid_data_limit + 1))
         assert len(msg_over_size.serialize()) == (msg_limit + 1)
 
-        with node.assert_debug_log(["Oversized message from peer=0, disconnecting"]):
+        with node.assert_debug_log(["Oversized message from peer=4, disconnecting"]):
             # An unknown message type (or *any* message type) over
             # MAX_PROTOCOL_MESSAGE_LENGTH should result in a disconnect.
             node.p2p.send_message(msg_over_size)
@@ -113,7 +110,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
         # Send messages with an incorrect data size in the header.
         #
         actual_size = 100
-        msg = msg_unrecognized("b" * actual_size)
+        msg = msg_unrecognized(str_data="b" * actual_size)
 
         # TODO: handle larger-than cases. I haven't been able to pin down what behavior to expect.
         for wrong_size in (2, 77, 78, 79):
@@ -140,18 +137,58 @@ class InvalidMessagesTest(BitcoinTestFramework):
             node.disconnect_p2ps()
             node.add_p2p_connection(P2PDataStore())
 
-        #
-        # 3.
-        #
-        # Send a message with a too-long command name.
-        #
-        node.p2p.send_message(msg_nametoolong("foobar"))
-        node.p2p.wait_for_disconnect(timeout=4)
-
         # Node is still up.
         conn = node.add_p2p_connection(P2PDataStore())
         conn.sync_with_ping()
 
+    def test_magic_bytes(self):
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        conn.magic_bytes = b'\x00\x11\x22\x32'
+        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART ping']):
+            conn.send_message(messages.msg_ping(nonce=0xff))
+            conn.wait_for_disconnect(timeout=1)
+            self.nodes[0].disconnect_p2ps()
+
+    def test_checksum(self):
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        with self.nodes[0].assert_debug_log(['ProcessMessages(badmsg, 2 bytes): CHECKSUM ERROR expected 78df0a04 was ffffffff']):
+            msg = conn.build_message(msg_unrecognized(str_data="d"))
+            cut_len = (
+                4 +  # magic
+                12 +  # command
+                4  #len
+            )
+            # modify checksum
+            msg = msg[:cut_len] + b'\xff' * 4 + msg[cut_len + 4:]
+            self.nodes[0].p2p.send_raw_message(msg)
+            conn.sync_with_ping(timeout=1)
+            self.nodes[0].disconnect_p2ps()
+
+    def test_size(self):
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        with self.nodes[0].assert_debug_log(['']):
+            msg = conn.build_message(msg_unrecognized(str_data="d"))
+            cut_len = (
+                4 +  # magic
+                12  # command
+            )
+            # modify len to MAX_SIZE + 1
+            msg = msg[:cut_len] + struct.pack("<I", 0x02000000 + 1) + msg[cut_len + 4:]
+            self.nodes[0].p2p.send_raw_message(msg)
+            conn.wait_for_disconnect(timeout=1)
+            self.nodes[0].disconnect_p2ps()
+
+    def test_command(self):
+        conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: ERRORS IN HEADER']):
+            msg = msg_unrecognized(str_data="d")
+            msg.command = b'\xff' * 12
+            msg = conn.build_message(msg)
+            # Modify command
+            msg = msg[:7] + b'\x00' + msg[7 + 1:]
+            self.nodes[0].p2p.send_raw_message(msg)
+            conn.sync_with_ping(timeout=1)
+            self.nodes[0].disconnect_p2ps()
 
     def _tweak_msg_data_size(self, message, wrong_size):
         """
