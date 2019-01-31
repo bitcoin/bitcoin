@@ -1692,7 +1692,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // Start enforcing the DERSIG (BIP66) rule
-    if (IsBTC16BIPsEnabled(pindex->pprev->nTime)) {
+    if (pindex->pprev && IsBTC16BIPsEnabled(pindex->pprev->nTime)) {
         flags |= SCRIPT_VERIFY_DERSIG;
     }
 
@@ -1702,7 +1702,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     }
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
-    if (IsBTC16BIPsEnabled(pindex->pprev->nTime)) {
+    if (pindex->pprev && IsBTC16BIPsEnabled(pindex->pprev->nTime)) {
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
@@ -1900,7 +1900,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     // Start enforcing BIP68 (sequence locks) and BIP112 (CHECKSEQUENCEVERIFY)
     int nLockTimeFlags = 0;
-    if (IsBTC16BIPsEnabled(pindex->pprev->nTime)) {
+    if (pindex->pprev && IsBTC16BIPsEnabled(pindex->pprev->nTime)) {
         nLockTimeFlags |= LOCKTIME_VERIFY_SEQUENCE;
     }
 
@@ -3231,13 +3231,13 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfS
  *  in ConnectBlock().
  *  Note that -reindex-chainstate skips the validation that happens here!
  */
-static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
     // Start enforcing BIP113 (Median Time Past)
     int nLockTimeFlags = 0;
-    if (IsBTC16BIPsEnabled(pindexPrev->nTime)) {
+    if (pindexPrev && IsBTC16BIPsEnabled(pindexPrev->nTime)) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
 
@@ -3271,7 +3271,7 @@ static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, c
     //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
-    if (IsBTC16BIPsEnabled(pindexPrev->nTime)) {
+    if (pindexPrev && IsBTC16BIPsEnabled(pindexPrev->nTime)) {
         int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;
@@ -3488,7 +3488,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     if (fNewBlock) *fNewBlock = true;
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
-        !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
+        !ContextualCheckBlock(block, state, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -3596,7 +3596,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
-    if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
+    if (!ContextualCheckBlock(block, state, pindexPrev))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     if (!g_chainstate.ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
