@@ -22,7 +22,7 @@
 // ppcoin version - intended for display purpose ONLY
 #define PEERCOIN_VERSION_MAJOR       0
 #define PEERCOIN_VERSION_MINOR       7
-#define PEERCOIN_VERSION_REVISION    0
+#define PEERCOIN_VERSION_REVISION    1
 #define PEERCOIN_VERSION_BUILD       0
 
 // Copyright year (2009-this)
