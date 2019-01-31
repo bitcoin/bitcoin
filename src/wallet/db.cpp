@@ -136,6 +136,8 @@ void BerkeleyEnvironment::Close()
         DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
 
     if (error_file) fclose(error_file);
+
+    UnlockDirectory(strPath, ".walletlock");
 }
 
 void BerkeleyEnvironment::Reset()
