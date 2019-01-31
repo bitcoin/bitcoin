@@ -79,10 +79,12 @@ static const int64_t TIMESTAMP_MIN = 0;
 
 static void RescanWallet(CWallet& wallet, const WalletRescanReserver& reserver, int64_t time_begin = TIMESTAMP_MIN, bool update = true)
 {
-    int64_t scanned_time = wallet.RescanFromTime(time_begin, reserver, update);
-    if (wallet.IsAbortingRescan()) {
+    switch (wallet.RescanFromTime(time_begin, reserver, update).status) {
+    case CWallet::ScanResult::SUCCESS:
+        break;
+    case CWallet::ScanResult::USER_ABORT:
         throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
-    } else if (scanned_time > time_begin) {
+    case CWallet::ScanResult::FAILURE:
         throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");
     }
 }
@@ -1413,17 +1415,24 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         }
     }
     if (fRescan && fRunScan && requests.size()) {
-        int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
+        CWallet::ScanResult result = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
         {
             auto locked_chain = pwallet->chain().lock();
             LOCK(pwallet->cs_wallet);
             pwallet->ReacceptWalletTransactions();
         }
 
-        if (pwallet->IsAbortingRescan()) {
+        switch (result.status) {
+        case CWallet::ScanResult::SUCCESS:
+            break;
+        case CWallet::ScanResult::USER_ABORT:
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
-        }
-        if (scannedTime > nLowestTimestamp) {
+        case CWallet::ScanResult::FAILURE:
+            int64_t scannedTime = TIMESTAMP_MIN;
+            if (!pwallet->chain().findBlock(result.last_failed_block, nullptr /* block */, nullptr /* time */, &scannedTime)) {
+                throw std::logic_error("ScanForWalletTransactions returned invalid block hash");
+            }
+            scannedTime += TIMESTAMP_WINDOW + 1;
             std::vector<UniValue> results = response.getValues();
             response.clear();
             response.setArray();
