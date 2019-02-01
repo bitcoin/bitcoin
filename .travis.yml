@@ -38,27 +38,27 @@ matrix:
         script:
           - ./scripts/debuild.sh
       #cross compile windows
-      - os: linux
-        services: docker
-        env:
-          - V=windows-Dockerfile-wheezy
-        script:
-          - ./archive.sh
-          - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
-      - os: linux
-        services: docker
-        env:
-          - V=windows-Dockerfile-xenial
-        script:
-          - ./archive.sh
-          - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
-      - os: linux
-        services: docker
-        env:
-          - V=windows-Dockerfile-trusty
-        script:
-          - ./archive.sh
-          - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-trusty .
+      #- os: linux
+      #  services: docker
+      #  env:
+      #    - V=windows-Dockerfile-wheezy
+      #  script:
+      #    - ./archive.sh
+      #    - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-wheezy .
+      #- os: linux
+      #  services: docker
+      #  env:
+      #    - V=windows-Dockerfile-xenial
+      #  script:
+      #    - ./archive.sh
+      #    - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-xenial .
+      #- os: linux
+      #  services: docker
+      #  env:
+      #    - V=windows-Dockerfile-trusty
+      #  script:
+      #    - ./archive.sh
+      #    - travis_wait 60 docker build -f scripts/docker/windows-crosscompile/Dockerfile-trusty .
       #- os: linux
       #  sudo: required
       #  env:
@@ -71,7 +71,7 @@ matrix:
       #  install: true
       #  script:
       #    - travis_wait 60 ./scripts/windows-crosscompile/compile-peercoin.sh
-      #osx     
+      #osx
       - os: osx
         osx_image: xcode9.2
         before_script:
