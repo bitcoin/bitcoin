@@ -10,6 +10,7 @@
 #include <txmempool.h>
 
 #include <future>
+#include <utility>
 
 #include <boost/signals2/signal.hpp>
 
@@ -91,7 +92,10 @@ size_t CMainSignals::CallbacksPending() {
 }
 
 void CMainSignals::RegisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.emplace(&pool, pool.NotifyEntryRemoved.connect(std::bind(&CMainSignals::MempoolEntryRemoved, this, std::placeholders::_1, std::placeholders::_2)));
+    g_connNotifyEntryRemoved.emplace(std::piecewise_construct,
+        std::forward_as_tuple(&pool),
+        std::forward_as_tuple(pool.NotifyEntryRemoved.connect(std::bind(&CMainSignals::MempoolEntryRemoved, this, std::placeholders::_1, std::placeholders::_2)))
+    );
 }
 
 void CMainSignals::UnregisterWithMempoolSignals(CTxMemPool& pool) {
