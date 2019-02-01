@@ -8,6 +8,7 @@ KNOWN_VIOLATIONS=(
     "src/dbwrapper.cpp:.*vsnprintf"
     "src/httprpc.cpp.*trim"
     "src/init.cpp:.*atoi"
+    "src/init.cpp:.*fprintf"
     "src/qt/rpcconsole.cpp:.*atoi"
     "src/rest.cpp:.*strtol"
     "src/test/dbwrapper_tests.cpp:.*snprintf"
@@ -18,7 +19,6 @@ KNOWN_VIOLATIONS=(
     "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.h:.*atoi"
     "src/util/system.cpp:.*atoi"
-    "src/util/system.cpp:.*fprintf"
 )
 
 REGEXP_IGNORE_EXTERNAL_DEPENDENCIES="^src/(crypto/ctaes/|leveldb/|secp256k1/|tinyformat.h|univalue/)"

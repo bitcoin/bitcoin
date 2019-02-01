@@ -53,6 +53,8 @@
 #include <stdio.h>
 
 #ifndef WIN32
+#include <attributes.h>
+#include <cerrno>
 #include <signal.h>
 #include <sys/stat.h>
 #endif
@@ -1192,12 +1194,29 @@ bool AppInitLockDataDirectory()
     return true;
 }
 
+#ifndef WIN32
+NODISCARD static bool CreatePidFile()
+{
+    FILE* file = fsbridge::fopen(GetPidFile(), "w");
+    if (file) {
+        fprintf(file, "%d\n", getpid());
+        fclose(file);
+        return true;
+    } else {
+        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
+    }
+}
+#endif
+
 bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
 #ifndef WIN32
-    CreatePidFile(GetPidFile(), getpid());
+    if (!CreatePidFile()) {
+        // Detailed error printed inside CreatePidFile().
+        return false;
+    }
 #endif
     if (g_logger->m_print_to_file) {
         if (gArgs.GetBoolArg("-shrinkdebugfile", g_logger->DefaultShrinkDebugFile())) {
