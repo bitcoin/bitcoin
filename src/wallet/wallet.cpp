@@ -4262,8 +4262,10 @@ void CWallet::KeepKey(int64_t nIndex)
     if (fFileBacked)
     {
         CWalletDB walletdb(strWalletFile);
-        walletdb.ErasePool(nIndex);
-        nKeysLeftSinceAutoBackup = nWalletBackups ? nKeysLeftSinceAutoBackup - 1 : 0;
+        if (walletdb.ErasePool(nIndex))
+            --nKeysLeftSinceAutoBackup;
+        if (!nWalletBackups)
+            nKeysLeftSinceAutoBackup = 0;
     }
     LogPrintf("keypool keep %d\n", nIndex);
 }
