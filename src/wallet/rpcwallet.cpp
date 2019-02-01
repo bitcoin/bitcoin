@@ -3181,6 +3181,10 @@ static UniValue upgradetohd(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot downgrade wallet");
     }
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+    }
+
     bool prev_encrypted = pwallet->IsCrypted();
 
     SecureString secureWalletPassphrase;
