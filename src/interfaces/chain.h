@@ -96,7 +96,7 @@ public:
         virtual bool isPotentialTip(const uint256& hash) = 0;
 
         //! Get locator for the current chain tip.
-        virtual CBlockLocator getLocator() = 0;
+        virtual CBlockLocator getTipLocator() = 0;
 
         //! Return height of the latest block common to locator and chain, which
         //! is guaranteed to be an ancestor of the block used to create the
