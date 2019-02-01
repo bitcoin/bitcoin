@@ -100,7 +100,7 @@ jobs:
         BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-fuzz --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no depends, only system libs]'
+      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         DOCKER_NAME_TAG=ubuntu:14.04
@@ -140,7 +140,7 @@ jobs:
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 
     - stage: test
-      name: 'macOS 10.10  [GOAL: deploy]'
+      name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
       env: >-
         HOST=x86_64-apple-darwin14
         PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
