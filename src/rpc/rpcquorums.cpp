@@ -7,6 +7,7 @@
 #include "validation.h"
 
 #include "llmq/quorums.h"
+#include "llmq/quorums_blockprocessor.h"
 #include "llmq/quorums_debug.h"
 #include "llmq/quorums_dkgsession.h"
 #include "llmq/quorums_signing.h"
@@ -153,7 +154,25 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
         }
     }
 
-    return status.ToJson(detailLevel);
+    auto ret = status.ToJson(detailLevel);
+
+    LOCK(cs_main);
+    int tipHeight = chainActive.Height();
+
+    UniValue minableCommitments(UniValue::VOBJ);
+    for (const auto& p : Params().GetConsensus().llmqs) {
+        auto& params = p.second;
+        llmq::CFinalCommitment fqc;
+        if (llmq::quorumBlockProcessor->GetMinableCommitment(params.type, tipHeight, fqc)) {
+            UniValue obj(UniValue::VOBJ);
+            fqc.ToJson(obj);
+            minableCommitments.push_back(Pair(params.name, obj));
+        }
+    }
+
+    ret.push_back(Pair("minableCommitments", minableCommitments));
+
+    return ret;
 }
 
 void quorum_sign_help()

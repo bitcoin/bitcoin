@@ -124,12 +124,6 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     if (fNewPhase && phaseInt >= QuorumPhase_Initialized && phaseInt <= QuorumPhase_Idle) {
         phase = static_cast<QuorumPhase>(phaseInt);
     }
-
-    quorumDKGDebugManager->UpdateLocalStatus([&](CDKGDebugStatus& status) {
-        bool changed = status.nHeight != pindexNew->nHeight;
-        status.nHeight = (uint32_t)pindexNew->nHeight;
-        return changed;
-    });
 }
 
 void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
@@ -202,13 +196,14 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
     }
 
     if (nextPhase == QuorumPhase_Initialized) {
-        quorumDKGDebugManager->ResetLocalSessionStatus(params.type, quorumHash, quorumHeight);
+        quorumDKGDebugManager->ResetLocalSessionStatus(params.type);
+    } else {
+        quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
+            bool changed = status.phase != (uint8_t) nextPhase;
+            status.phase = (uint8_t) nextPhase;
+            return changed;
+        });
     }
-    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
-        bool changed = status.phase != (uint8_t)nextPhase;
-        status.phase = (uint8_t)nextPhase;
-        return changed;
-    });
 }
 
 void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash)
@@ -474,6 +469,12 @@ void CDKGSessionHandler::HandleDKGRound()
         WaitForNewQuorum(curQuorumHash);
         throw AbortPhaseException();
     }
+
+    quorumDKGDebugManager->UpdateLocalSessionStatus(params.type, [&](CDKGDebugSessionStatus& status) {
+        bool changed = status.phase != (uint8_t) QuorumPhase_Initialized;
+        status.phase = (uint8_t) QuorumPhase_Initialized;
+        return changed;
+    });
 
     if (curSession->AreWeMember() || GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
         std::set<CService> connections;

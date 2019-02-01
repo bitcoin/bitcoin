@@ -94,6 +94,10 @@ bool CDKGSession::Init(int _height, const uint256& _quorumHash, const std::vecto
         }
     }
 
+    if (!myProTxHash.IsNull()) {
+        quorumDKGDebugManager->InitLocalSessionStatus(params.type, quorumHash, height);
+    }
+
     CDKGLogger logger(*this, __func__);
 
     if (myProTxHash.IsNull()) {

@@ -25,6 +25,9 @@ private:
     typedef typename MessageMap::iterator MessageMapIterator;
     typedef std::map<SourceId, std::vector<MessageMapIterator>> MessagesBySourceMap;
 
+    bool perMessageFallback;
+    size_t subBatchSize;
+
     MessageMap messages;
     MessagesBySourceMap messagesBySource;
 
@@ -33,15 +36,32 @@ public:
     std::set<MessageId> badMessages;
 
 public:
+    CBLSInsecureBatchVerifier(bool _perMessageFallback, size_t _subBatchSize = 0) :
+            perMessageFallback(_perMessageFallback),
+            subBatchSize(_subBatchSize)
+    {
+    }
+
     void PushMessage(const SourceId& sourceId, const MessageId& msgId, const uint256& msgHash, const CBLSSignature& sig, const CBLSPublicKey& pubKey)
     {
         assert(sig.IsValid() && pubKey.IsValid());
 
         auto it = messages.emplace(msgId, Message{msgId, msgHash, sig, pubKey}).first;
         messagesBySource[sourceId].emplace_back(it);
+
+        if (subBatchSize != 0 && messages.size() >= subBatchSize) {
+            Verify();
+            ClearMessages();
+        }
     }
 
-    void Verify(bool perMessageFallback)
+    void ClearMessages()
+    {
+        messages.clear();
+        messagesBySource.clear();
+    }
+
+    void Verify()
     {
         std::map<uint256, std::vector<MessageMapIterator>> byMessageHash;
 

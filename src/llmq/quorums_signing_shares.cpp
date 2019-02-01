@@ -474,7 +474,7 @@ void CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
         return;
     }
 
-    CBLSInsecureBatchVerifier<NodeId, SigShareKey> batchVerifier;
+    CBLSInsecureBatchVerifier<NodeId, SigShareKey> batchVerifier(true);
 
     size_t verifyCount = 0;
     for (auto& p : sigSharesByNodes) {
@@ -502,7 +502,7 @@ void CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
     }
 
     cxxtimer::Timer verifyTimer;
-    batchVerifier.Verify(true);
+    batchVerifier.Verify();
     verifyTimer.stop();
 
     LogPrint("llmq", "CSigSharesManager::%s -- verified sig shares. count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), sigSharesByNodes.size());

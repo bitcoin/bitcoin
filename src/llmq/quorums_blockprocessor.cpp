@@ -337,14 +337,6 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
         }
     }
 
-    quorumDKGDebugManager->UpdateLocalSessionStatus((Consensus::LLMQType)fqc.llmqType, [&](CDKGDebugSessionStatus& status) {
-        if (status.quorumHash != fqc.quorumHash || status.receivedFinalCommitment) {
-            return false;
-        }
-        status.receivedFinalCommitment = true;
-        return true;
-    });
-
     // We only relay the new commitment if it's new or better then the old one
     if (relay) {
         CInv inv(MSG_QUORUM_FINAL_COMMITMENT, commitmentHash);

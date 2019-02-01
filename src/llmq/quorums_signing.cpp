@@ -361,7 +361,7 @@ void CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
         return;
     }
 
-    CBLSInsecureBatchVerifier<NodeId, uint256> batchVerifier;
+    CBLSInsecureBatchVerifier<NodeId, uint256> batchVerifier(false);
 
     size_t verifyCount = 0;
     for (auto& p : recSigsByNode) {
@@ -376,7 +376,7 @@ void CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
     }
 
     cxxtimer::Timer verifyTimer;
-    batchVerifier.Verify(false);
+    batchVerifier.Verify();
     verifyTimer.stop();
 
     LogPrint("llmq", "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());

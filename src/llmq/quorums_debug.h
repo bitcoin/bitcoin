@@ -36,7 +36,7 @@ public:
             bool receivedJustification : 1;
             bool receivedPrematureCommitment : 1;
         };
-        uint16_t statusBitset;
+        uint8_t statusBitset;
     };
 
     std::set<uint16_t> complaintsFromMembers;
@@ -74,11 +74,10 @@ public:
 
             bool aborted : 1;
         };
-        uint16_t statusBitset;
+        uint8_t statusBitset;
     };
 
     std::vector<CDKGDebugMemberStatus> members;
-    bool receivedFinalCommitment{false};
 
 public:
     CDKGDebugSessionStatus() : statusBitset(0) {}
@@ -95,7 +94,6 @@ public:
         READWRITE(phase);
         READWRITE(statusBitset);
         READWRITE(members);
-        READWRITE(receivedFinalCommitment);
     }
 
     UniValue ToJson(int detailLevel) const;
@@ -106,7 +104,6 @@ class CDKGDebugStatus
 public:
     uint256 proTxHash;
     int64_t nTime{0};
-    uint32_t nHeight{0};
 
     std::map<uint8_t, CDKGDebugSessionStatus> sessions;
 
@@ -120,7 +117,6 @@ public:
     {
         READWRITE(proTxHash);
         READWRITE(nTime);
-        READWRITE(nHeight);
         READWRITE(sessions);
     }
 
@@ -145,7 +141,13 @@ public:
 class CDKGDebugManager
 {
 private:
+    CScheduler* scheduler;
+
     CCriticalSection cs;
+
+    std::map<uint256, int64_t> seenStatuses;
+    std::multimap<uint256, std::pair<CDKGDebugStatus, NodeId>> pendingIncomingStatuses;
+    bool hasScheduledProcessPending{false};
 
     std::map<uint256, CDKGDebugStatus> statuses;
     std::map<uint256, uint256> statusesForMasternodes;
@@ -154,17 +156,21 @@ private:
     uint256 lastStatusHash;
 
 public:
-    CDKGDebugManager(CScheduler* scheduler);
+    CDKGDebugManager(CScheduler* _scheduler);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    void ProcessDebugStatusMessage(NodeId nodeId, CDKGDebugStatus& status);
+    bool PreVerifyDebugStatusMessage(const uint256& hash, CDKGDebugStatus& status, bool& retBan);
+    void ScheduleProcessPending();
+    void ProcessPending();
+    void ProcessDebugStatusMessage(const uint256& hash, const CDKGDebugStatus& status);
 
     bool AlreadyHave(const CInv& inv);
     bool GetDebugStatus(const uint256& hash, CDKGDebugStatus& ret);
     bool GetDebugStatusForMasternode(const uint256& proTxHash, CDKGDebugStatus& ret);
     void GetLocalDebugStatus(CDKGDebugStatus& ret);
 
-    void ResetLocalSessionStatus(Consensus::LLMQType llmqType, const uint256& quorumHash, int quorumHeight);
+    void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
+    void InitLocalSessionStatus(Consensus::LLMQType llmqType, const uint256& quorumHash, int quorumHeight);
 
     void UpdateLocalStatus(std::function<bool(CDKGDebugStatus& status)>&& func);
     void UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
