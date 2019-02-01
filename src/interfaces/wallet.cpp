@@ -353,7 +353,7 @@ public:
         LOCK(m_wallet.cs_wallet);
         auto mi = m_wallet.mapWallet.find(txid);
         if (mi != m_wallet.mapWallet.end()) {
-            num_blocks = locked_chain->getHeight().value_or(-1);
+            num_blocks = locked_chain->getHeight().get_value_or(-1);
             in_mempool = mi->second.InMempool();
             order_form = mi->second.vOrderForm;
             tx_status = MakeWalletTxStatus(*locked_chain, mi->second);
@@ -384,7 +384,7 @@ public:
             return false;
         }
         balances = getBalances();
-        num_blocks = locked_chain->getHeight().value_or(-1);
+        num_blocks = locked_chain->getHeight().get_value_or(-1);
         return true;
     }
     CAmount getBalance() override { return m_wallet.GetBalance(); }
