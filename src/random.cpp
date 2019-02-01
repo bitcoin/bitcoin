@@ -514,9 +514,11 @@ void GetRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNG
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept { ProcRand(buf, num, RNGLevel::SLOW); }
 void RandAddSeedSleep() { ProcRand(nullptr, 0, RNGLevel::SLEEP); }
 
+bool g_mock_deterministic_tests{false};
+
 uint64_t GetRand(uint64_t nMax) noexcept
 {
-    return FastRandomContext().randrange(nMax);
+    return FastRandomContext(g_mock_deterministic_tests).randrange(nMax);
 }
 
 int GetRandInt(int nMax) noexcept
