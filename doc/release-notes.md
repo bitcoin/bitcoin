@@ -116,7 +116,8 @@ Configuration option changes
   defaults to being off, so that changes in policy and disconnect/ban behavior
   will not cause a node that is whitelisting another to be dropped by peers.
   Users can still explicitly enable this behavior with the command line option
-  (and may want to consider letting the Bitcoin Core project know about their
+  (and may want to consider [contacting](https://bitcoincore.org/en/contact/)
+  the Bitcoin Core project to let us know about their
   use-case, as this feature could be deprecated in the future).
 
 Documentation
@@ -129,6 +130,10 @@ Documentation
   subsystems, such as wallet state and mempool state.  A note is added
   to the [REST interface documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/REST-interface.md)
   indicating that the same rules apply.
+
+- Further information is added to the [JSON-RPC
+  documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/JSON-RPC-interface.md)
+  about how to secure this interface.
 
 - A new [document](https://github.com/bitcoin/bitcoin/blob/master/doc/bitcoin-conf.md)
   about the `bitcoin.conf` file describes how to use it to configure
@@ -296,6 +301,16 @@ Graphical User Interface (GUI)
   CFLAGS="-mmacosx-version-min=10.11" for setting the deployment
   sdk version)
 
+Tools
+----
+
+- A new `bitcoin-wallet` tool is now distributed alongside Bitcoin
+  Core's other executables.  Without needing to use any RPCs, this tool
+  can currently create a new wallet file or display some basic
+  information about an existing wallet, such as whether the wallet is
+  encrypted, whether it uses an HD seed, how many transactions it
+  contains, and how many address book entries it has.
+
 Low-level changes
 =================
 
@@ -319,6 +334,32 @@ Configuration
   that version onwards, all new wallets created are hierarchical
   deterministic wallets. This release makes specifying `-usehd` an
   invalid configuration option.
+
+Network
+-------
+
+- This release allows peers that your node automatically disconnected
+  for misbehavior (e.g. sending invalid data) to reconnect to your node
+  if you have unused incoming connection slots.  If your slots fill up,
+  a misbehaving node will be disconnected to make room for nodes without
+  a history of problems (unless the misbehaving node helps your node in
+  some other way, such as by connecting to a part of the Internet from
+  which you don't have many other peers).  Previously, Bitcoin Core
+  banned the IP addresses of misbehaving peers for a period of time
+  (default of 1 day); this was easily circumvented by attackers with
+  multiple IP addresses.  If you manually ban a peer, such as by using
+  the `setban` RPC, all connections from that peer will still be
+  rejected.
+
+Security
+--------
+
+- This release changes the Random Number Generator (RNG) used from
+  OpenSSL to Bitcoin Core's own implementation, although entropy
+  gathered by Bitcoin Core is fed out to OpenSSL and then read back in
+  when the program needs strong randomness.  This moves Bitcoin Core a
+  little closer to no longer needing to depend on OpenSSL, a dependency
+  that has caused security issues in the past.
 
 Changes for particular platforms
 --------------------------------
