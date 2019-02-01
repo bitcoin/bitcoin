@@ -63,6 +63,16 @@ distribution provides binaries for the RISC-V platform.
 Notable changes
 ===============
 
+C++14
+-----
+
+The Bitcoin Core code base has started using C++14. This means that a C++14 capable
+compiler is now needed for building. Effectively this means GCC 5.0 or higher,
+or Clang 3.4 or higher.
+
+When cross-compiling for a target that doesn't have C++14 libraries, configure with
+`./configure --enable-glibc-back-compat ... LDFLAGS=-static-libstdc++`.
+
 Credits
 =======
 
