@@ -148,7 +148,7 @@ private:
                 }
             }
 
-            if (!aggSig.IsValid()) {
+            if (!aggPubKey.IsValid()) {
                 // only duplicates for this msgHash
                 continue;
             }

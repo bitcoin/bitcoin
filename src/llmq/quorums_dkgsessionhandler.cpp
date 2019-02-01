@@ -509,7 +509,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fContributeWait = [this] {
         return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8);
     };
-    HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.5, fContributeStart, fContributeWait);
+    HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
     // Complain
     auto fComplainStart = [this]() {
@@ -518,7 +518,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fComplainWait = [this] {
         return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8);
     };
-    HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.1, fComplainStart, fComplainWait);
+    HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
     // Justify
     auto fJustifyStart = [this]() {
@@ -527,7 +527,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fJustifyWait = [this] {
         return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8);
     };
-    HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.1, fJustifyStart, fJustifyWait);
+    HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
     // Commit
     auto fCommitStart = [this]() {
@@ -536,7 +536,7 @@ void CDKGSessionHandler::HandleDKGRound()
     auto fCommitWait = [this] {
         return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8);
     };
-    HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.5, fCommitStart, fCommitWait);
+    HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto& fqc : finalCommitments) {
