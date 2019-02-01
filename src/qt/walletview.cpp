@@ -241,11 +241,11 @@ void WalletView::encryptWallet(bool status)
 {
     if(!walletModel)
         return;
-    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt : AskPassphraseDialog::Decrypt, this);
-    dlg.setModel(walletModel);
-    dlg.exec();
-
-    updateEncryptionStatus();
+    AskPassphraseDialog *dlg = new AskPassphraseDialog(status ? AskPassphraseDialog::Encrypt : AskPassphraseDialog::Decrypt, this);
+    dlg->setModel(walletModel);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dlg, &QDialog::finished, this, &WalletView::updateEncryptionStatus);
+    dlg->open();
 }
 
 void WalletView::backupWallet()
@@ -269,9 +269,10 @@ void WalletView::backupWallet()
 
 void WalletView::changePassphrase()
 {
-    AskPassphraseDialog dlg(AskPassphraseDialog::ChangePass, this);
-    dlg.setModel(walletModel);
-    dlg.exec();
+    AskPassphraseDialog *dlg = new AskPassphraseDialog(AskPassphraseDialog::ChangePass, this);
+    dlg->setModel(walletModel);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->open();
 }
 
 void WalletView::unlockWallet()
@@ -281,9 +282,10 @@ void WalletView::unlockWallet()
     // Unlock wallet when requested by wallet model
     if (walletModel->getEncryptionStatus() == WalletModel::Locked)
     {
-        AskPassphraseDialog dlg(AskPassphraseDialog::Unlock, this);
-        dlg.setModel(walletModel);
-        dlg.exec();
+        AskPassphraseDialog *dlg = new AskPassphraseDialog(AskPassphraseDialog::Unlock, this);
+        dlg->setModel(walletModel);
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        dlg->open();
     }
 }
 

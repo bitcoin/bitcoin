@@ -74,6 +74,9 @@ AskPassphraseDialog::AskPassphraseDialog(Mode _mode, QWidget *parent) :
     connect(ui->passEdit1, &QLineEdit::textChanged, this, &AskPassphraseDialog::textChanged);
     connect(ui->passEdit2, &QLineEdit::textChanged, this, &AskPassphraseDialog::textChanged);
     connect(ui->passEdit3, &QLineEdit::textChanged, this, &AskPassphraseDialog::textChanged);
+
+    // always use modal userflow blocking
+    setModal(true);
 }
 
 AskPassphraseDialog::~AskPassphraseDialog()
