@@ -1617,10 +1617,11 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
  *
- * @param[in] start_block if not null, the scan will start at this block instead
- *            of the genesis block
- * @param[in] stop_block if not null, the scan will stop at this block instead
- *            of the chain tip
+ * @param[in] start_block Scan starting block. If block is not on the active
+ *                        chain, the scan will return SUCCESS immediately.
+ * @param[in] stop_block  Scan ending block. If block is not on the active
+ *                        chain, the scan will continue until it reaches the
+ *                        chain tip.
  *
  * @return ScanResult returning scan information and indicating success or
  *         failure. Return status will be set to SUCCESS if scan was
