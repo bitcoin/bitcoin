@@ -226,7 +226,7 @@ protected:
      *  @param pubkeys The evaluations of the m_pubkey_args field.
      *  @param script The evaluation of m_script_arg (or nullptr when m_script_arg is nullptr).
      *  @param out A FlatSigningProvider to put scripts or public keys in that are necessary to the solver.
-     *             The script and pubkeys argument to this function are automatically added.
+     *             The script arguments to this function are automatically added, as is the origin info of the provided pubkeys.
      *  @return A vector with scriptPubKeys for this descriptor.
      */
     virtual std::vector<CScript> MakeScripts(const std::vector<CPubKey>& pubkeys, const CScript* script, FlatSigningProvider& out) const = 0;
@@ -322,7 +322,6 @@ public:
         for (auto& entry : entries) {
             pubkeys.push_back(entry.first);
             out.origins.emplace(entry.first.GetID(), std::move(entry.second));
-            out.pubkeys.emplace(entry.first.GetID(), entry.first);
         }
         if (m_script_arg) {
             for (const auto& subscript : subscripts) {
@@ -396,7 +395,12 @@ public:
 class PKHDescriptor final : public DescriptorImpl
 {
 protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(keys[0].GetID())); }
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider& out) const override
+    {
+        CKeyID id = keys[0].GetID();
+        out.pubkeys.emplace(id, keys[0]);
+        return Singleton(GetScriptForDestination(id));
+    }
 public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "pkh") {}
 };
@@ -405,7 +409,12 @@ public:
 class WPKHDescriptor final : public DescriptorImpl
 {
 protected:
-    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0KeyHash(keys[0].GetID()))); }
+    std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider& out) const override
+    {
+        CKeyID id = keys[0].GetID();
+        out.pubkeys.emplace(id, keys[0]);
+        return Singleton(GetScriptForDestination(WitnessV0KeyHash(id)));
+    }
 public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "wpkh") {}
 };
@@ -418,6 +427,7 @@ protected:
     {
         std::vector<CScript> ret;
         CKeyID id = keys[0].GetID();
+        out.pubkeys.emplace(id, keys[0]);
         ret.emplace_back(GetScriptForRawPubKey(keys[0])); // P2PK
         ret.emplace_back(GetScriptForDestination(id)); // P2PKH
         if (keys[0].IsCompressed()) {
