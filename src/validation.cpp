@@ -1883,6 +1883,7 @@ static ThresholdConditionCache warningcache[VERSIONBITS_NUM_BITS];
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
 static int64_t nTimeVerify = 0;
+static int64_t nTimePayeeAndSpecial = 0;
 static int64_t nTimeConnect = 0;
 static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
@@ -2220,8 +2221,8 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                      pindex->GetBlockHash().ToString(), FormatStateMessage(state));
     }
 
-    int64_t nTime5 = GetTimeMicros(); nTimeVerify += nTime5 - nTime4;
-    LogPrint("bench", "    - Payee and special txes: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime2), nTimeVerify * 0.000001);
+    int64_t nTime5 = GetTimeMicros(); nTimePayeeAndSpecial += nTime5 - nTime4;
+    LogPrint("bench", "    - Payee and special txes: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimePayeeAndSpecial * 0.000001);
 
     // END DASH
 
