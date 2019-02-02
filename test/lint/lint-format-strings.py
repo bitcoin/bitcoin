@@ -55,7 +55,7 @@ def normalize(s):
     assert type(s) is str
     s = s.replace("\n", " ")
     s = s.replace("\t", " ")
-    s = re.sub("/\*.*?\*/", " ", s)
+    s = re.sub(r"/\*.*?\*/", " ", s)
     s = re.sub(" {2,}", " ", s)
     return s.strip()
 
