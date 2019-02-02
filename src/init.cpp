@@ -985,16 +985,16 @@ bool AppInitParameterInteraction()
     // if using block pruning, then disallow txindex
     if (gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
-            return InitError(_("Prune mode is incompatible with -txindex."));
+            return InitError(strprintf(_("Prune mode is incompatible with %s."), "-txindex"));
         if (!g_enabled_filter_types.empty()) {
-            return InitError(_("Prune mode is incompatible with -blockfilterindex."));
+            return InitError(strprintf(_("Prune mode is incompatible with %s."), "-blockfilterindex"));
         }
     }
 
     // -bind and -whitebind can't be set when not listening
     size_t nUserBind = gArgs.GetArgs("-bind").size() + gArgs.GetArgs("-whitebind").size();
     if (nUserBind != 0 && !gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
-        return InitError(_("Cannot set -bind or -whitebind together with -listen=0"));
+        return InitError(strprintf(_("Cannot set %s or %s together with %s=0"), "-bind", "-whitebind", "-listen"));
     }
 
     // Make sure enough file descriptors are available
@@ -1016,7 +1016,7 @@ bool AppInitParameterInteraction()
     nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS, nMaxConnections);
 
     if (nMaxConnections < nUserMaxConnections)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+        InitWarning(strprintf(_("Reducing %s from %d to %d, because of system limitations."), "-maxconnections", nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (gArgs.IsArgSet("-debug")) {
@@ -1072,7 +1072,7 @@ bool AppInitParameterInteraction()
     int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nMempoolSizeMin = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
-        return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
+        return InitError(strprintf(_("%s must be at least %d MB"), "-maxmempool", std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (gArgs.IsArgSet("-incrementalrelayfee"))
@@ -1117,7 +1117,7 @@ bool AppInitParameterInteraction()
 
     peer_connect_timeout = gArgs.GetArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
-        return InitError(_("peertimeout cannot be configured with a negative value."));
+        return InitError(strprintf(_("%s cannot be configured with a negative value."), "-peertimeout"));
     }
 
     if (gArgs.IsArgSet("-minrelaytxfee")) {
@@ -1170,7 +1170,7 @@ bool AppInitParameterInteraction()
 
     fRequireStandard = !gArgs.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (chainparams.RequireStandard() && !fRequireStandard)
-        return InitError(strprintf(_("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString()));
+        return InitError(strprintf(_("%s is not currently supported for %s chain"), "-acceptnonstdtxn", chainparams.NetworkIDString()));
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
@@ -1186,10 +1186,10 @@ bool AppInitParameterInteraction()
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
-        return InitError(_("rpcserialversion must be non-negative."));
+        return InitError(strprintf(_("%s must be non-negative."), "-rpcserialversion"));
 
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
-        return InitError(_("unknown rpcserialversion requested."));
+        return InitError(strprintf(_("Unknown %s requested."), "-rpcserialversion"));
 
     nMaxTipAge = gArgs.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
@@ -1383,7 +1383,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         for (const std::string& snet : gArgs.GetArgs("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
-                return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
+                return InitError(strprintf(_("Unknown network specified in %s: '%s'"), "-onlynet", snet));
             nets.insert(net);
         }
         for (int n = 0; n < NET_MAX; n++) {
@@ -1404,12 +1404,12 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
         if (!Lookup(proxyArg.c_str(), proxyAddr, 9050, fNameLookup)) {
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+            return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-proxy", proxyArg));
         }
 
         proxyType addrProxy = proxyType(proxyAddr, proxyRandomize);
         if (!addrProxy.IsValid())
-            return InitError(strprintf(_("Invalid -proxy address or hostname: '%s'"), proxyArg));
+            return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-proxy", proxyArg));
 
         SetProxy(NET_IPV4, addrProxy);
         SetProxy(NET_IPV6, addrProxy);
@@ -1428,11 +1428,11 @@ bool AppInitMain(InitInterfaces& interfaces)
         } else {
             CService onionProxy;
             if (!Lookup(onionArg.c_str(), onionProxy, 9050, fNameLookup)) {
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+                return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-onion", onionArg));
             }
             proxyType addrOnion = proxyType(onionProxy, proxyRandomize);
             if (!addrOnion.IsValid())
-                return InitError(strprintf(_("Invalid -onion address or hostname: '%s'"), onionArg));
+                return InitError(strprintf(_("Invalid %s address or hostname: '%s'"), "-onion", onionArg));
             SetProxy(NET_ONION, addrOnion);
             SetReachable(NET_ONION, true);
         }
@@ -1550,7 +1550,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 // Check for changed -prune state.  What we are concerned about is a user who has pruned blocks
                 // in the past, but is now trying to run unpruned.
                 if (fHavePruned && !fPruneMode) {
-                    strLoadError = _("You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain");
+                    strLoadError = strprintf(_("You need to rebuild the database using %s to go back to unpruned mode.  This will redownload the entire blockchain"), "-reindex");
                     break;
                 }
 
@@ -1578,7 +1578,7 @@ bool AppInitMain(InitInterfaces& interfaces)
 
                 // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
                 if (!ReplayBlocks(chainparams, pcoinsdbview.get())) {
-                    strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
+                    strLoadError = strprintf(_("Unable to replay blocks. You will need to rebuild the database using %s."), "-reindex-chainstate");
                     break;
                 }
 
@@ -1650,7 +1650,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
                     strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
-                    strLoadError + ".\n" + _("Please restart with -reindex or -reindex-chainstate to recover."),
+                    strLoadError + ".\n" + strprintf(_("Please restart with %s or %s to recover."), "-reindex", "-reindex-chainstate"),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
@@ -1819,7 +1819,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             return InitError(ResolveErrMsg("whitebind", strBind));
         }
         if (addrBind.GetPort() == 0) {
-            return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind));
+            return InitError(strprintf(_("Need to specify a port with %s: '%s'"), "-whitebind", strBind));
         }
         connOptions.vWhiteBinds.push_back(addrBind);
     }
@@ -1828,7 +1828,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         CSubNet subnet;
         LookupSubNet(net.c_str(), subnet);
         if (!subnet.IsValid())
-            return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net));
+            return InitError(strprintf(_("Invalid netmask specified in %s: '%s'"), "-whitelist", net));
         connOptions.vWhitelistedRange.push_back(subnet);
     }
 

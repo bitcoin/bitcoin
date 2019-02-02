@@ -3911,16 +3911,16 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
           (path_type == fs::symlink_file && fs::is_directory(wallet_path)) ||
           (path_type == fs::regular_file && fs::path(location.GetName()).filename() == location.GetName()))) {
         error_string = strprintf(_(
-              "Invalid -wallet path '%s'. -wallet path should point to a directory where wallet.dat and "
-              "database/log.?????????? files can be stored, a location where such a directory could be created, "
-              "or (for backwards compatibility) the name of an existing data file in -walletdir (%s)"),
-              location.GetName(), GetWalletDir());
+              "Invalid %s path '%s'. %s path should point to a directory where %s and "
+              "%s files can be stored, a location where such a directory could be created, "
+              "or (for backwards compatibility) the name of an existing data file in %s (%s)"),
+              "-wallet", location.GetName(), "-wallet", "wallet.dat", "database/log.??????????", "-walletdir", GetWalletDir());
         return false;
     }
 
     // Make sure that the wallet path doesn't clash with an existing wallet path
     if (IsWalletLoaded(wallet_path)) {
-        error_string = strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), location.GetName());
+        error_string = strprintf(_("Error loading wallet %s. Duplicate %s filename specified."), location.GetName(), "-wallet");
         return false;
     }
 
@@ -4028,7 +4028,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
         int max_version = walletInstance->GetVersion();
         if (!walletInstance->CanSupportFeature(FEATURE_HD_SPLIT) && max_version >= FEATURE_HD_SPLIT && max_version < FEATURE_PRE_SPLIT_KEYPOOL) {
-            chain.initError(_("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified."));
+            chain.initError(strprintf(_("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use %s or %s with no version specified."), "-upgradewallet=169900", "-upgradewallet"));
             return nullptr;
         }
 
@@ -4124,7 +4124,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.IsArgSet("-fallbackfee")) {
         CAmount nFeePerK = 0;
         if (!ParseMoney(gArgs.GetArg("-fallbackfee", ""), nFeePerK)) {
-            chain.initError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), gArgs.GetArg("-fallbackfee", "")));
+            chain.initError(strprintf(_("Invalid amount for %s=<amount>: '%s'"), "-fallbackfee", gArgs.GetArg("-fallbackfee", "")));
             return nullptr;
         }
         if (nFeePerK > HIGH_TX_FEE_PER_KB) {
@@ -4137,7 +4137,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     if (gArgs.IsArgSet("-discardfee")) {
         CAmount nFeePerK = 0;
         if (!ParseMoney(gArgs.GetArg("-discardfee", ""), nFeePerK)) {
-            chain.initError(strprintf(_("Invalid amount for -discardfee=<amount>: '%s'"), gArgs.GetArg("-discardfee", "")));
+            chain.initError(strprintf(_("Invalid amount for %s=<amount>: '%s'"), "-discardfee", gArgs.GetArg("-discardfee", "")));
             return nullptr;
         }
         if (nFeePerK > HIGH_TX_FEE_PER_KB) {
@@ -4158,8 +4158,8 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
         walletInstance->m_pay_tx_fee = CFeeRate(nFeePerK, 1000);
         if (walletInstance->m_pay_tx_fee < chain.relayMinFee()) {
-            chain.initError(strprintf(_("Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
-                gArgs.GetArg("-paytxfee", ""), chain.relayMinFee().ToString()));
+            chain.initError(strprintf(_("Invalid amount for %s=<amount>: '%s' (must be at least %s)"),
+                "-paytxfee", gArgs.GetArg("-paytxfee", ""), chain.relayMinFee().ToString()));
             return nullptr;
         }
     }
@@ -4206,7 +4206,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             }
 
             if (rescan_height != block_height) {
-                chain.initError(_("Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)"));
+                chain.initError(strprintf(_("Prune: last wallet synchronisation goes beyond pruned data. You need to %s (download the whole blockchain again in case of pruned node)"), "-reindex"));
                 return nullptr;
             }
         }

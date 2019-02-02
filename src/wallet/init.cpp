@@ -120,12 +120,13 @@ bool WalletInit::ParameterInteraction() const
     }
 
     if (gArgs.GetBoolArg("-sysperms", false))
-        return InitError(_("-sysperms is not allowed in combination with enabled wallet functionality"));
+        return InitError(strprintf(_("%s is not allowed in combination with enabled wallet functionality"), "-sysperms"));
     if (gArgs.GetArg("-prune", 0) && gArgs.GetBoolArg("-rescan", false))
-        return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
+        return InitError(strprintf(_("Rescans are not possible in pruned mode. You will need to use %s which will download the whole blockchain again."), "-reindex"));
 
     if (::minRelayTxFee.GetFeePerK() > HIGH_TX_FEE_PER_KB)
-        InitWarning(AmountHighWarn("-minrelaytxfee") + " " + _("The wallet will avoid paying less than the minimum relay fee."));
+        InitWarning(AmountHighWarn("-minrelaytxfee") + " " +
+                    _("The wallet will avoid paying less than the minimum relay fee."));
 
     return true;
 }
