@@ -765,8 +765,8 @@ if config.dmg is not None:
             output = runHDIUtil("attach", dmg_name + ".temp", readwrite=True, noverify=True, noautoopen=True, capture_stdout=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
-        
-        m = re.search("/Volumes/(.+$)", output)
+
+        m = re.search(r"/Volumes/(.+$)", output)
         disk_root = m.group(0)
         disk_name = m.group(1)
         
