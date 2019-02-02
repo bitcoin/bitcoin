@@ -2,7 +2,7 @@ Bitcoin Core version 0.17.x is now available from:
 
   <https://bitcoincore.org/bin/bitcoin-core-0.17.x/>
 
-This is a new major version release, including new features, various bugfixes
+This is a new minor version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
@@ -60,7 +60,16 @@ support versions of macOS older than 10.10.
 Notable changes
 ===============
 
-(todo)
+Documentation
+-------------
+
+- A new document introduces Bitcoin Core's BIP174
+  [Partially-Signed Bitcoin Transactions (PSBT)](https://github.com/bitcoin/bitcoin/blob/0.17/doc/psbt.md)
+  interface, which is used to allow multiple programs to collaboratively
+  work to create, sign, and broadcast new transactions.  This is useful
+  for offline (cold storage) wallets, multisig wallets, coinjoin
+  implementations, and many other cases where two or more programs need
+  to interact to generate a complete transaction.
 
 0.17.x change log
 =================
