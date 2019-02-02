@@ -917,7 +917,7 @@ bool AppInitBasicSetup()
 #endif
 
     if (!SetupNetworking())
-        return InitError("Initializing networking failed");
+        return InitError(_("Initializing networking failed"));
 
 #ifndef WIN32
     if (!gArgs.GetBoolArg("-sysperms", false)) {
@@ -994,7 +994,7 @@ bool AppInitParameterInteraction()
     // -bind and -whitebind can't be set when not listening
     size_t nUserBind = gArgs.GetArgs("-bind").size() + gArgs.GetArgs("-whitebind").size();
     if (nUserBind != 0 && !gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
-        return InitError("Cannot set -bind or -whitebind together with -listen=0");
+        return InitError(_("Cannot set -bind or -whitebind together with -listen=0"));
     }
 
     // Make sure enough file descriptors are available
@@ -1057,7 +1057,7 @@ bool AppInitParameterInteraction()
     if (gArgs.IsArgSet("-minimumchainwork")) {
         const std::string minChainWorkStr = gArgs.GetArg("-minimumchainwork", "");
         if (!IsHexNumber(minChainWorkStr)) {
-            return InitError(strprintf("Invalid non-hex (%s) minimum chain work value specified", minChainWorkStr));
+            return InitError(strprintf(_("Invalid non-hex (%s) minimum chain work value specified"), minChainWorkStr));
         }
         nMinimumChainWork = UintToArith256(uint256S(minChainWorkStr));
     } else {
@@ -1117,7 +1117,7 @@ bool AppInitParameterInteraction()
 
     peer_connect_timeout = gArgs.GetArg("-peertimeout", DEFAULT_PEER_CONNECT_TIMEOUT);
     if (peer_connect_timeout <= 0) {
-        return InitError("peertimeout cannot be configured with a negative value.");
+        return InitError(_("peertimeout cannot be configured with a negative value."));
     }
 
     if (gArgs.IsArgSet("-minrelaytxfee")) {
@@ -1170,7 +1170,7 @@ bool AppInitParameterInteraction()
 
     fRequireStandard = !gArgs.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (chainparams.RequireStandard() && !fRequireStandard)
-        return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
+        return InitError(strprintf(_("acceptnonstdtxn is not currently supported for %s chain"), chainparams.NetworkIDString()));
     nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
     if (!g_wallet_init_interface.ParameterInteraction()) return false;
@@ -1186,10 +1186,10 @@ bool AppInitParameterInteraction()
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
-        return InitError("rpcserialversion must be non-negative.");
+        return InitError(_("rpcserialversion must be non-negative."));
 
     if (gArgs.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) > 1)
-        return InitError("unknown rpcserialversion requested.");
+        return InitError(_("unknown rpcserialversion requested."));
 
     nMaxTipAge = gArgs.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
@@ -1266,8 +1266,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             LogInstance().ShrinkDebugFile();
         }
         if (!LogInstance().OpenDebugLog()) {
-            return InitError(strprintf("Could not open debug log file %s",
-                LogInstance().m_file_path.string()));
+            return InitError(strprintf(_("Could not open debug log file %s"), LogInstance().m_file_path.string()));
         }
     }
 
@@ -1651,7 +1650,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             if (!fReset) {
                 bool fRet = uiInterface.ThreadSafeQuestion(
                     strLoadError + ".\n\n" + _("Do you want to rebuild the block database now?"),
-                    strLoadError + ".\nPlease restart with -reindex or -reindex-chainstate to recover.",
+                    strLoadError + ".\n" + _("Please restart with -reindex or -reindex-chainstate to recover."),
                     "", CClientUIInterface::MSG_ERROR | CClientUIInterface::BTN_ABORT);
                 if (fRet) {
                     fReindex = true;
