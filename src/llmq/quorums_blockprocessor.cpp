@@ -23,6 +23,7 @@ namespace llmq
 CQuorumBlockProcessor* quorumBlockProcessor;
 
 static const std::string DB_MINED_COMMITMENT = "q_mc";
+static const std::string DB_FIRST_MINED_COMMITMENT = "q_fmc";
 
 void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
@@ -188,6 +189,9 @@ bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindex, const C
 
     // Store commitment in DB
     evoDb.Write(std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)params.type, quorumHash)), qc);
+    if (!evoDb.Exists(std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)params.type))) {
+        evoDb.Write(std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)params.type), quorumHash);
+    }
 
     LogPrintf("CQuorumBlockProcessor::%s -- processed commitment from block. type=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s\n", __func__,
               qc.llmqType, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
@@ -213,9 +217,12 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
 
         evoDb.Erase(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)));
 
-        if (!qc.IsNull()) {
-            // if a reorg happened, we should allow to mine this commitment later
-            AddMinableCommitment(qc);
+        // if a reorg happened, we should allow to mine this commitment later
+        AddMinableCommitment(qc);
+
+        uint256 fmq = GetFirstMinedQuorumHash(p.first);
+        if (fmq == qc.quorumHash) {
+            evoDb.Erase(std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)p.first));
         }
     }
 
@@ -304,6 +311,16 @@ bool CQuorumBlockProcessor::GetMinedCommitment(Consensus::LLMQType llmqType, con
 {
     auto key = std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)llmqType, quorumHash));
     return evoDb.Read(key, ret);
+}
+
+uint256 CQuorumBlockProcessor::GetFirstMinedQuorumHash(Consensus::LLMQType llmqType)
+{
+    auto key = std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)llmqType);
+    uint256 quorumHash;
+    if (!evoDb.Read(key, quorumHash)) {
+        return uint256();
+    }
+    return quorumHash;
 }
 
 bool CQuorumBlockProcessor::HasMinableCommitment(const uint256& hash)

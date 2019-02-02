@@ -46,6 +46,8 @@ public:
     bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash);
     bool GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, CFinalCommitment& ret);
 
+    uint256 GetFirstMinedQuorumHash(Consensus::LLMQType llmqType);
+
 private:
     bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
     bool ProcessCommitment(const CBlockIndex* pindex, const CFinalCommitment& qc, CValidationState& state);
