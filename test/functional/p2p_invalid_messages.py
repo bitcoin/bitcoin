@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid network messages."""
@@ -143,6 +143,7 @@ class InvalidMessagesTest(BitcoinTestFramework):
 
     def test_magic_bytes(self):
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
+        conn._on_data = lambda: None  # Need to ignore all incoming messages from now, since they come with "invalid" magic bytes
         conn.magic_bytes = b'\x00\x11\x22\x32'
         with self.nodes[0].assert_debug_log(['PROCESSMESSAGE: INVALID MESSAGESTART ping']):
             conn.send_message(messages.msg_ping(nonce=0xff))
@@ -209,7 +210,6 @@ class InvalidMessagesTest(BitcoinTestFramework):
         assert len(raw_msg) == len(raw_msg_with_wrong_size)
 
         return raw_msg_with_wrong_size
-
 
 
 if __name__ == '__main__':
