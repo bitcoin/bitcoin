@@ -141,11 +141,6 @@ QHeaderView::section {
     padding: 4px;
  }
 
-QHeaderView::section:checked
-{
-    background-color: #8C8C8C;
-}
-
 QHeaderView::down-arrow {
     image: url(:/controls/caret-down);
 }
