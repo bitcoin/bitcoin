@@ -41,6 +41,11 @@ bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& ca
     return false;
 }
 
+bool noui_ThreadSafeBilingualMessageBox(const std::string& noui_message, const std::string& ui_message, const std::string& caption, unsigned int style)
+{
+    return noui_ThreadSafeMessageBox(noui_message, caption, style);
+}
+
 bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
 {
     return noui_ThreadSafeMessageBox(message, caption, style);
@@ -54,6 +59,7 @@ void noui_InitMessage(const std::string& message)
 void noui_connect()
 {
     uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBox);
+    uiInterface.ThreadSafeBilingualMessageBox_connect(noui_ThreadSafeBilingualMessageBox);
     uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestion);
     uiInterface.InitMessage_connect(noui_InitMessage);
 }

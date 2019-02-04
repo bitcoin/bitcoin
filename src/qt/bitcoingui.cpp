@@ -1382,10 +1382,16 @@ static bool ThreadSafeMessageBox(BitcoinGUI* gui, const std::string& message, co
     return ret;
 }
 
+static bool ThreadSafeBilingualMessageBox(BitcoinGUI* gui, const std::string& noui_message, const std::string& ui_message, const std::string& caption, unsigned int style)
+{
+    return ThreadSafeMessageBox(gui, ui_message, caption, style);
+}
+
 void BitcoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
     m_handler_message_box = m_node.handleMessageBox(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    m_handler_bilingual_message_box = m_node.handleBilingualMessageBox(std::bind(ThreadSafeBilingualMessageBox, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
     m_handler_question = m_node.handleQuestion(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_3, std::placeholders::_4));
 }
 
@@ -1393,6 +1399,7 @@ void BitcoinGUI::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
     m_handler_message_box->disconnect();
+    m_handler_bilingual_message_box->disconnect();
     m_handler_question->disconnect();
 }
 

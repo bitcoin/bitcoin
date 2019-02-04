@@ -54,6 +54,16 @@ inline std::string _(const char* psz)
     return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
 }
 
+struct bilingual_str {
+    std::string original_str;
+    std::string translated_str;
+};
+
+inline bilingual_str _(const char* psz, bool translate)
+{
+    return bilingual_str{psz, (translate && G_TRANSLATION_FUN) ? (G_TRANSLATION_FUN)(psz) : psz};
+}
+
 void SetupEnvironment();
 bool SetupNetworking();
 

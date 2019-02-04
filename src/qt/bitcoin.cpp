@@ -427,6 +427,7 @@ int GuiMain(int argc, char* argv[])
 
     // Subscribe to global signals from core
     std::unique_ptr<interfaces::Handler> handler_message_box = node->handleMessageBox(noui_ThreadSafeMessageBox);
+    std::unique_ptr<interfaces::Handler> handler_bilingual_message_box = node->handleBilingualMessageBox(noui_ThreadSafeBilingualMessageBox);
     std::unique_ptr<interfaces::Handler> handler_question = node->handleQuestion(noui_ThreadSafeQuestion);
     std::unique_ptr<interfaces::Handler> handler_init_message = node->handleInitMessage(noui_InitMessage);
 

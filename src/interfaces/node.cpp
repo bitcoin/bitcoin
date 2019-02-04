@@ -264,6 +264,10 @@ public:
     {
         return MakeHandler(::uiInterface.ThreadSafeMessageBox_connect(fn));
     }
+    std::unique_ptr<Handler> handleBilingualMessageBox(BilingualMessageBoxFn fn) override
+    {
+        return MakeHandler(::uiInterface.ThreadSafeBilingualMessageBox_connect(fn));
+    }
     std::unique_ptr<Handler> handleQuestion(QuestionFn fn) override
     {
         return MakeHandler(::uiInterface.ThreadSafeQuestion_connect(fn));

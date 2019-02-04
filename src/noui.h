@@ -9,6 +9,8 @@
 
 /** Non-GUI handler, which logs and prints messages. */
 bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style);
+/** Non-GUI handler, which logs untranslated messages and prints bilingual ones. */
+bool noui_ThreadSafeBilingualMessageBox(const std::string& noui_message, const std::string& ui_message, const std::string& caption, unsigned int style);
 /** Non-GUI handler, which logs and prints questions. */
 bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style);
 /** Non-GUI handler, which only logs a message. */

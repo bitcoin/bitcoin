@@ -11,6 +11,7 @@ CClientUIInterface uiInterface;
 
 struct UISignals {
     boost::signals2::signal<CClientUIInterface::ThreadSafeMessageBoxSig, boost::signals2::last_value<bool>> ThreadSafeMessageBox;
+    boost::signals2::signal<CClientUIInterface::ThreadSafeBilingualMessageBoxSig, boost::signals2::last_value<bool>> ThreadSafeBilingualMessageBox;
     boost::signals2::signal<CClientUIInterface::ThreadSafeQuestionSig, boost::signals2::last_value<bool>> ThreadSafeQuestion;
     boost::signals2::signal<CClientUIInterface::InitMessageSig> InitMessage;
     boost::signals2::signal<CClientUIInterface::NotifyNumConnectionsChangedSig> NotifyNumConnectionsChanged;
@@ -30,6 +31,7 @@ struct UISignals {
     }
 
 ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeMessageBox);
+ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeBilingualMessageBox);
 ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeQuestion);
 ADD_SIGNALS_IMPL_WRAPPER(InitMessage);
 ADD_SIGNALS_IMPL_WRAPPER(NotifyNumConnectionsChanged);
@@ -42,6 +44,7 @@ ADD_SIGNALS_IMPL_WRAPPER(NotifyHeaderTip);
 ADD_SIGNALS_IMPL_WRAPPER(BannedListChanged);
 
 bool CClientUIInterface::ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeMessageBox(message, caption, style); }
+bool CClientUIInterface::ThreadSafeBilingualMessageBox(const std::string& noui_message, const std::string& ui_message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeBilingualMessageBox(noui_message, ui_message, caption, style); }
 bool CClientUIInterface::ThreadSafeQuestion(const std::string& message, const std::string& non_interactive_message, const std::string& caption, unsigned int style) { return g_ui_signals.ThreadSafeQuestion(message, non_interactive_message, caption, style); }
 void CClientUIInterface::InitMessage(const std::string& message) { return g_ui_signals.InitMessage(message); }
 void CClientUIInterface::NotifyNumConnectionsChanged(int newNumConnections) { return g_ui_signals.NotifyNumConnectionsChanged(newNumConnections); }
