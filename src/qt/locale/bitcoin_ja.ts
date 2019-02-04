@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>右クリックでアドレスまたはラベルを編集します</translation>
+        <translation>右クリックでアドレスまたはラベルを編集</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>新規アドレスの作成</translation>
+        <translation>新しいアドレスを作成</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>現在選択されているアドレスをシステムのクリップボードにコピーする</translation>
+        <translation>現在選択されているアドレスをシステムのクリップボードにコピー</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,15 +27,15 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>選択されたアドレスを一覧から削除する</translation>
+        <translation>選択されたアドレスを一覧から削除</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>検索するアドレスまたはラベルを入力</translation>
+        <translation>検索したいアドレスまたはラベルを入力</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>ファイルに現在のタブのデータをエクスポート</translation>
+        <translation>このタブのデータをファイルにエクスポート</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>送信先のアドレスを選択</translation>
+        <translation>コインを送りたいアドレスを選択</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>支払いを受け取るアドレスを指定する</translation>
+        <translation>コインを受け取りたいアドレスを選択</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -59,19 +59,19 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>送金用</translation>
+        <translation>送金先アドレス</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>受け取りアドレス</translation>
+        <translation>受取用アドレス</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>これらは支払いを送信するためのあなたの Bitcoin アドレスです。コインを送信する前に、常に額と受信アドレスを確認してください。</translation>
+        <translation>これらは、あなたが知っている支払い送り先の Bitcoin アドレスです。コインを送る前に、必ず金額と送金先アドレスを確認してください。</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>これらは支払いを受け取るためのビットコインアドレスです。トランザクションごとに新しい受け取り用アドレスを作成することが推奨されます。</translation>
+        <translation>これらは支払いを受け取るための、あなたの Bitcoin アドレスです。トランザクションごとに新しい受け取り用アドレスを作成することが推奨されます。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -149,7 +149,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>この操作はウォレットをアンロックするためにパスフレーズが必要です。</translation>
+        <translation>この操作を続行するには、ウォレットをアンロックするためのパスフレーズが必要です。</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>この操作はウォレットの暗号化解除のためにパスフレーズが必要です。</translation>
+        <translation>この操作を続行するには、ウォレットの暗号化を解除するためのパスフレーズが必要です。</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -177,7 +177,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを失ってしまったなら、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;!</translation>
+        <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを忘れてしまったら、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -189,11 +189,11 @@
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>暗号化処理を完了させるため %1 をいますぐ終了します。ウォレットの暗号化では、コンピュータに感染したマルウェアなどによるビットコインの盗難から完全に守ることはできないことにご注意ください。</translation>
+        <translation>暗号化処理を完了させるため %1 をいますぐ終了します。ウォレットを暗号化しても、コンピュータに感染したマルウェアなどによる Bitcoin の盗難を完全に防ぐことはできないことにご注意ください。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>重要: 過去のウォレット ファイルのバックアップは、暗号化された新しいウォレット ファイルに取り替える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレット ファイルのバックアップはすぐに使えなくなります。</translation>
+        <translation>重要: 今までに作成されたウォレット ファイルのバックアップは、暗号化された新しいウォレット ファイルに置き換える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレット ファイルのバックアップはすぐに使えなくなります。</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -225,7 +225,7 @@
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>警告: Caps Lock キーがオンになっています!</translation>
+        <translation>警告: Caps Lock キーがオンになっています！</translation>
     </message>
 </context>
 <context>
@@ -247,7 +247,7 @@
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>ネットワークに同期中……</translation>
+        <translation>ネットワークと同期しています……</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
@@ -347,11 +347,11 @@
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
-        <translation>未知。ヘッダを同期しています (%1%)...</translation>
+        <translation>ヘッダーを同期しています (%1%)...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>ディスク上のブロックのインデックスを再作成中...</translation>
+        <translation>ディスク上のブロックのインデックスを再作成しています...</translation>
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
@@ -395,7 +395,7 @@
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>入金 (&amp;R)</translation>
+        <translation>受取 (&amp;R)</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -411,11 +411,11 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>あなたが所有していることを証明するために、あなたの Bitcoin アドレスでメッセージに署名してください</translation>
+        <translation>Bitcoin アドレスをあなたが所有していることを証明するために、そのアドレスでメッセージに署名してください</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>指定された Bitcoin アドレスで署名されたことを確認するためにメッセージを検証します</translation>
+        <translation>指定された Bitcoin アドレスで署名されたことを確認するために、メッセージを検証してください</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -435,15 +435,15 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>支払いを要求する (QRコードとbitcoin:ではじまるURIを生成する)</translation>
+        <translation>支払いをリクエストする (QRコードとbitcoin:ではじまるURIを生成する)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
-        <translation>使用済みの送金用アドレスとラベルの一覧を表示する</translation>
+        <translation>使用したことのある送金用アドレスとラベルの一覧を表示する</translation>
     </message>
     <message>
         <source>Show the list of used receiving addresses and labels</source>
-        <translation>支払いを受け取るアドレスとラベルのリストを表示する</translation>
+        <translation>使用したことのある受け取り用アドレスとラベルの一覧を表示する</translation>
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
@@ -455,7 +455,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n の Bitcoin ネットワークへのアクティブな接続</numerusform></translation>
+        <translation><numerusform>Bitcoin ネットワークへのアクティブな接続は %n 個</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -479,7 +479,7 @@
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>この後の取引はまだ表示されません。</translation>
+        <translation>この後の取引はまだ表示されていません。</translation>
     </message>
     <message>
         <source>Error</source>
@@ -575,7 +575,7 @@
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>致命的なエラーが発生しました。Bitcoin は安全に継続することができず終了するでしょう。</translation>
+        <translation>致命的なエラーが発生しました。Bitcoin を安全に動作し続けることができないため終了します。</translation>
     </message>
 </context>
 <context>
@@ -710,7 +710,7 @@
     </message>
     <message>
         <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
-        <translation>少なくともひとつの受取額が現在のダスト閾値を下回る場合にはこのラベルは赤くなります。</translation>
+        <translation>少なくともひとつの受取額が現在のダスト閾値を下回る場合に、このラベルは赤くなります。</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -753,15 +753,15 @@
     </message>
     <message>
         <source>New sending address</source>
-        <translation>新しい送信アドレス</translation>
+        <translation>新しい送金用アドレス</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>入金アドレスを編集</translation>
+        <translation>受け取り用アドレスを編集</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>送信アドレスを編集</translation>
+        <translation>送金用アドレスを編集</translation>
     </message>
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
@@ -769,11 +769,11 @@
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
-        <translation>アドレス "%1" は既に受取用アドレスにラベル "%2" として存在するので、送金用アドレスとしては追加できません。</translation>
+        <translation>アドレス "%1" は、既に受け取り用アドレスにラベル "%2" として存在するので、送金用アドレスとしては追加できません。</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book with label "%2".</source>
-        <translation>入力されたアドレス"%1"はすでにアドレス帳のラベル"%2"に存在します｡</translation>
+        <translation>入力されたアドレス"%1"は、既にアドレス帳にラベル "%2" として存在します｡</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -796,7 +796,7 @@
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>ディレクトリがもうあります。 新しいのディレクトリを作るつもりなら%1を書いてください。</translation>
+        <translation>ディレクトリが既に存在します。 新しいディレクトリを作成したい場合は %1 を追加してください。</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
@@ -846,19 +846,19 @@
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
-        <translation>この初期同期には多大なリソースを消費し、あなたのコンピュータにこれまで見つからなかったハードウェア上の問題を露呈させるかもしれません。%1 を実行する度に、中断された時点からダウンロードを継続します。</translation>
+        <translation>この初期同期には多大なリソースを消費し、あなたのコンピュータでこれまで見つからなかったハードウェア上の問題が発生する場合があります。%1 を実行する度に、中断された時点からダウンロードを再開します。</translation>
     </message>
     <message>
         <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
-        <translation>ブロックチェーンの保存容量に制限を設けることを選択した場合 (剪定) にも、過去のデータのダウンロードおよび処理が必要になります。しかしこれらのデータはディスク使用量を低く抑えるためにその後削除されるでしょう</translation>
+        <translation>ブロックチェーンの保存容量に制限を設けることを選択した場合 (剪定) にも、過去のデータのダウンロードおよび処理が必要になります。しかし、これらのデータはディスク使用量を低く抑えるために、後で削除されます。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>初期値のデータ ディレクトリを使用</translation>
+        <translation>既定のデータ ディレクトリを使用</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>任意のデータ ディレクトリを使用:</translation>
+        <translation>カスタムのデータ ディレクトリを使用:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -905,11 +905,11 @@
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>確認できない最近のトランザクションがあるかもしれません。これによりウォレットの残高は不正確なものである可能性があります。この情報はウォレットが一度ビットコインネットワークへの同期が完了すると正確なものとなります。詳細は下記を参照してください。</translation>
+        <translation>最近のトランザクションがまだ表示されていない可能性があります。そのため、ウォレットの残高が正しく表示されていないかもしれません。この情報は、ウォレットが Bitcoin ネットワークへの同期が完了すると正確なものとなります。詳細は下記を参照してください。</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>まだ表示されていないトランザクションが影響するビットコインを使用しようとすると、ネットワークから認証がなされないでしょう。</translation>
+        <translation>まだ表示されていないトランザクションが影響する Bitcoin を使用しようとすると、ネットワークから認証を受けられません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -3200,6 +3200,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%s の読み込みエラー! すべてのキーは正しく読み取れますが、取引データやアドレス帳のエントリが失われたか、正しくない可能性があります。</translation>
     </message>
     <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation>出力ごとではなく、アドレス単位に出力をまとめて選択します。(後からまたそのアドレスに支払われない限り)アドレスが一度しか使用されないためプライバシーが向上します。ただし追加の制限により最適ではないコイン選択が発生した場合に、わずかに高い手数料となる可能性があります。(初期値: %u)</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>あなたのPCの日付と時刻が正しいことを確認して下さい！ もしあなたの時計が正しくなければ %s が正確に動作しません。</translation>
     </message>
@@ -3341,6 +3345,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>不正な額 -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>指定のブロックディレクトリ"%s"は存在しません｡</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>txindex データベースを更新しています</translation>
     </message>
@@ -3479,12 +3487,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Signing transaction failed</source>
         <translation>取引の署名に失敗しました</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>指定のブロックディレクトリ"%s"が存在しません｡
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
