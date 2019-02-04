@@ -91,21 +91,41 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
         return result;
     }
 
-    // figure out which output was change
-    // if there was no change output or multiple change outputs, fail
     int nOutput = -1;
-    for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
-        if (wallet->IsChange(wtx.tx->vout[i])) {
-            if (nOutput != -1) {
-                errors.push_back("Transaction has multiple change outputs");
-                return Result::WALLET_ERROR;
-            }
-            nOutput = i;
+    if (!boost::get<CNoDestination>(&coin_control.destChange)) {
+        // Determine output index of the specified change address.
+        // The specified change address must be spendable.
+        if (!(IsMine(*wallet, coin_control.destChange) & ISMINE_SPENDABLE)) {
+            errors.push_back("Invalid or non-wallet address");
+            return Result::INVALID_ADDRESS_OR_KEY;
         }
-    }
-    if (nOutput == -1) {
-        errors.push_back("Transaction does not have a change output");
-        return Result::WALLET_ERROR;
+        CScript script_change = GetScriptForDestination(coin_control.destChange);
+        for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
+            if (wtx.tx->vout[i].scriptPubKey == script_change) {
+                nOutput = i;
+                break;
+            }
+        }
+        if (nOutput == -1) {
+            errors.push_back("Transaction does not have the specified change output");
+            return Result::WALLET_ERROR;
+        }
+    } else {
+        // figure out which output was change
+        // if there was no change output or multiple change outputs, fail
+        for (size_t i = 0; i < wtx.tx->vout.size(); ++i) {
+            if (wallet->IsChange(wtx.tx->vout[i])) {
+                if (nOutput != -1) {
+                    errors.push_back("Transaction has multiple change outputs");
+                    return Result::WALLET_ERROR;
+                }
+                nOutput = i;
+            }
+        }
+        if (nOutput == -1) {
+            errors.push_back("Transaction does not have a change output");
+            return Result::WALLET_ERROR;
+        }
     }
 
     // Calculate the expected size of the new transaction.

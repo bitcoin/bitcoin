@@ -3239,6 +3239,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             "                         so the new transaction will not be explicitly bip-125 replaceable (though it may\n"
             "                         still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
             "                         are replaceable)."},
+                            {"change_address", RPCArg::Type::STR_HEX, /* default */ "fallback to the transaction change address, if any", "The change address to pay the fee bump"},
                             {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
             "         \"UNSET\"\n"
             "         \"ECONOMICAL\"\n"
@@ -3276,6 +3277,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 {"totalFee", UniValueType(UniValue::VNUM)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"change_address", UniValueType(UniValue::VSTR)},
             },
             true, true);
 
@@ -3297,6 +3299,13 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             if (!FeeModeFromString(options["estimate_mode"].get_str(), coin_control.m_fee_mode)) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
             }
+        }
+        if (options.exists("change_address")) {
+            CTxDestination dest = DecodeDestination(options["change_address"].get_str());
+            if (!IsValidDestination(dest)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "change_address must be a valid bitcoin address");
+            }
+            coin_control.destChange = dest;
         }
     }
 
