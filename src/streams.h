@@ -545,11 +545,11 @@ protected:
             readNow = nAvail;
         if (readNow == 0)
             return false;
-        size_t read = fread((void*)&vchBuf[pos], 1, readNow, src);
-        if (read == 0) {
+        size_t nBytes = fread((void*)&vchBuf[pos], 1, readNow, src);
+        if (nBytes == 0) {
             throw std::ios_base::failure(feof(src) ? "CBufferedFile::Fill: end of file" : "CBufferedFile::Fill: fread failed");
         } else {
-            nSrcPos += read;
+            nSrcPos += nBytes;
             return true;
         }
     }

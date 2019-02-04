@@ -212,10 +212,6 @@ def main():
         except subprocess.CalledProcessError as e:
             printf("ERROR: Cannot update message.",file=stderr)
             exit(4)
-        second_sha512 = tree_sha512sum()
-        if first_sha512 != second_sha512:
-            print("ERROR: Tree hash changed unexpectedly",file=stderr)
-            exit(4)
 
         print('%s#%s%s %s %sinto %s%s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title,ATTR_RESET+ATTR_PR,branch,ATTR_RESET))
         subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
@@ -257,6 +253,11 @@ def main():
             else:
                 print("ERROR: Merge rejected.",file=stderr)
                 exit(7)
+
+        second_sha512 = tree_sha512sum()
+        if first_sha512 != second_sha512:
+            print("ERROR: Tree hash changed unexpectedly",file=stderr)
+            exit(8)
 
         # Sign the merge commit.
         reply = ask_prompt("Type 's' to sign off on the merge.")
