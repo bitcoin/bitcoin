@@ -221,7 +221,7 @@ void CDKGDebugManager::ProcessPending()
         return;
     }
 
-    CBLSInsecureBatchVerifier<NodeId, uint256> batchVerifier(true, 8);
+    CBLSBatchVerifier<NodeId, uint256> batchVerifier(true, true, 8);
     for (const auto& p : pend) {
         const auto& hash = p.first;
         const auto& status = p.second.first;
