@@ -61,6 +61,11 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "%d. \"operatorKey\"              (string, required) The operator private key belonging to the\n"
             "                              registered operator public key.\n"
         },
+        {"operatorPayoutAddress",
+            "%d. \"operatorPayoutAddress\"    (string, optional) The address used for operator reward payments.\n"
+            "                              Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
+            "                              If set to an empty string, the currently active payout address is reused.\n"
+        },
         {"operatorPubKey",
             "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
             "                              It has to match the private key which is later used when operating the masternode.\n"
