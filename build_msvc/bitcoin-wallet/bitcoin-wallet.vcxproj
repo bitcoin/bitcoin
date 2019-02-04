@@ -53,6 +53,9 @@
     <ProjectReference Include="..\libbitcoin_wallet_tool\libbitcoin_wallet_tool.vcxproj">
       <Project>{f91ac55e-6f5e-4c58-9ac5-b40db7deef93}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">
+      <Project>{bb493552-3b8c-4a8c-bf69-a6e7a51d2ea6}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
