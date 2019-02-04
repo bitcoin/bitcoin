@@ -118,9 +118,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         }
 
         if (nProp == uint256()) {
-            SyncAll(pfrom, connman);
+            SyncObjects(pfrom, connman);
         } else {
-            SyncSingleObjAndItsVotes(pfrom, nProp, filter, connman);
+            SyncSingleObjVotes(pfrom, nProp, filter, connman);
         }
         LogPrint("gobject", "MNGOVERNANCESYNC -- syncing governance objects to our peer at %s\n", pfrom->addr.ToString());
     }
@@ -647,7 +647,7 @@ bool CGovernanceManager::ConfirmInventoryRequest(const CInv& inv)
     return true;
 }
 
-void CGovernanceManager::SyncSingleObjAndItsVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
+void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman)
 {
     // do not provide any data until our node is synced
     if (!masternodeSync.IsSynced()) return;
@@ -677,10 +677,6 @@ void CGovernanceManager::SyncSingleObjAndItsVotes(CNode* pnode, const uint256& n
         return;
     }
 
-    // Push the govobj inventory message over to the other client
-    LogPrint("gobject", "CGovernanceManager::%s -- syncing govobj: %s, peer=%d\n", __func__, strHash, pnode->id);
-    pnode->PushInventory(CInv(MSG_GOVERNANCE_OBJECT, it->first));
-
     auto fileVotes = govobj.GetVoteFile();
 
     for (const auto& vote : fileVotes.GetVotes()) {
@@ -696,12 +692,11 @@ void CGovernanceManager::SyncSingleObjAndItsVotes(CNode* pnode, const uint256& n
     }
 
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
-    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, 1));
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE, nVoteCount));
-    LogPrintf("CGovernanceManager::%s -- sent 1 object and %d votes to peer=%d\n", __func__, nVoteCount, pnode->id);
+    LogPrintf("CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, pnode->id);
 }
 
-void CGovernanceManager::SyncAll(CNode* pnode, CConnman& connman) const
+void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
 {
     // do not provide any data until our node is synced
     if (!masternodeSync.IsSynced()) return;
@@ -716,7 +711,6 @@ void CGovernanceManager::SyncAll(CNode* pnode, CConnman& connman) const
     netfulfilledman.AddFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC);
 
     int nObjCount = 0;
-    int nVoteCount = 0;
 
     // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
 
@@ -746,8 +740,7 @@ void CGovernanceManager::SyncAll(CNode* pnode, CConnman& connman) const
 
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ, nObjCount));
-    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_GOVOBJ_VOTE, nVoteCount));
-    LogPrintf("CGovernanceManager::%s -- sent %d objects and %d votes to peer=%d\n", __func__, nObjCount, nVoteCount, pnode->id);
+    LogPrintf("CGovernanceManager::%s -- sent %d objects to peer=%d\n", __func__, nObjCount, pnode->id);
 }
 
 void CGovernanceManager::MasternodeRateUpdate(const CGovernanceObject& govobj)
