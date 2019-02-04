@@ -198,8 +198,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 static int GetnScore(const CService& addr)
 {
     LOCK(cs_mapLocalHost);
-    if (mapLocalHost.count(addr) == LOCAL_NONE)
-        return 0;
+    if (mapLocalHost.count(addr) == 0) return 0;
     return mapLocalHost[addr].nScore;
 }
 
