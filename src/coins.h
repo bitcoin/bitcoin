@@ -126,6 +126,7 @@ class CCoinsViewCursor
 {
 public:
     CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
+    CCoinsViewCursor(uint256&& hashBlockIn): hashBlock(std::move(hashBlockIn)) {}
     virtual ~CCoinsViewCursor() {}
 
     virtual bool GetKey(COutPoint &key) const = 0;

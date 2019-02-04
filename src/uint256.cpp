@@ -11,22 +11,22 @@
 #include <string.h>
 
 template <unsigned int BITS>
-base_blob<BITS>::base_blob(const std::vector<unsigned char>& vch)
+base_blob<BITS>::base_blob(const std::vector<unsigned char>& vch) : data(new data_type)
 {
-    assert(vch.size() == sizeof(data));
-    memcpy(data, vch.data(), sizeof(data));
+    assert(vch.size() == size());
+    std::copy(vch.begin(), vch.end(), begin());
 }
 
 template <unsigned int BITS>
 std::string base_blob<BITS>::GetHex() const
 {
-    return HexStr(std::reverse_iterator<const uint8_t*>(data + sizeof(data)), std::reverse_iterator<const uint8_t*>(data));
+    return HexStr(data->rbegin(), data->rend());
 }
 
 template <unsigned int BITS>
 void base_blob<BITS>::SetHex(const char* psz)
 {
-    memset(data, 0, sizeof(data));
+    SetNull();
 
     // skip leading spaces
     while (IsSpace(*psz))
@@ -41,13 +41,13 @@ void base_blob<BITS>::SetHex(const char* psz)
     while (::HexDigit(*psz) != -1)
         psz++;
     psz--;
-    unsigned char* p1 = (unsigned char*)data;
-    unsigned char* pend = p1 + WIDTH;
+    auto p1 = begin();
+    auto pend = end();
     while (psz >= pbegin && p1 < pend) {
         *p1 = ::HexDigit(*psz--);
         if (psz >= pbegin) {
             *p1 |= ((unsigned char)::HexDigit(*psz--) << 4);
-            p1++;
+            ++p1;
         }
     }
 }

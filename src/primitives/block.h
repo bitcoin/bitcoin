@@ -33,6 +33,12 @@ public:
         SetNull();
     }
 
+    CBlockHeader(CBlockHeader&&) = default;
+    CBlockHeader(const CBlockHeader&) = default;
+
+    CBlockHeader& operator=(CBlockHeader&&) = default;
+    CBlockHeader& operator=(const CBlockHeader&) = default;
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -130,6 +136,7 @@ struct CBlockLocator
     CBlockLocator() {}
 
     explicit CBlockLocator(const std::vector<uint256>& vHaveIn) : vHave(vHaveIn) {}
+    explicit CBlockLocator(std::vector<uint256>&& vHaveIn) : vHave(std::move(vHaveIn)) {}
 
     ADD_SERIALIZE_METHODS;
 

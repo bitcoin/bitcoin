@@ -708,16 +708,14 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TX_PUBKEYHASH) {
-        uint160 hash(data[0]);
-        CKeyID keyid(hash);
+        CKeyID keyid = CKeyID(uint160(data[0]));
         CPubKey pubkey;
         if (provider.GetPubKey(keyid, pubkey)) {
             return MakeUnique<PKHDescriptor>(InferPubkey(pubkey, ctx, provider));
         }
     }
     if (txntype == TX_WITNESS_V0_KEYHASH && ctx != ParseScriptContext::P2WSH) {
-        uint160 hash(data[0]);
-        CKeyID keyid(hash);
+        CKeyID keyid = CKeyID(uint160(data[0]));
         CPubKey pubkey;
         if (provider.GetPubKey(keyid, pubkey)) {
             return MakeUnique<WPKHDescriptor>(InferPubkey(pubkey, ctx, provider));
@@ -732,8 +730,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         return MakeUnique<MultisigDescriptor>((int)data[0][0], std::move(providers));
     }
     if (txntype == TX_SCRIPTHASH && ctx == ParseScriptContext::TOP) {
-        uint160 hash(data[0]);
-        CScriptID scriptid(hash);
+        CScriptID scriptid = CScriptID(uint160(data[0]));
         CScript subscript;
         if (provider.GetCScript(scriptid, subscript)) {
             auto sub = InferScript(subscript, ParseScriptContext::P2SH, provider);

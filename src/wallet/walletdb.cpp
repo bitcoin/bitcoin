@@ -52,7 +52,7 @@ bool WalletBatch::WriteTx(const CWalletTx& wtx)
     return WriteIC(std::make_pair(std::string("tx"), wtx.GetHash()), wtx);
 }
 
-bool WalletBatch::EraseTx(uint256 hash)
+bool WalletBatch::EraseTx(const uint256& hash)
 {
     return EraseIC(std::make_pair(std::string("tx"), hash));
 }
@@ -575,8 +575,8 @@ DBErrors WalletBatch::FindWalletTx(std::vector<uint256>& vTxHash, std::vector<CW
                 CWalletTx wtx(nullptr /* pwallet */, MakeTransactionRef());
                 ssValue >> wtx;
 
-                vTxHash.push_back(hash);
-                vWtx.push_back(wtx);
+                vTxHash.push_back(std::move(hash));
+                vWtx.push_back(std::move(wtx));
             }
         }
         pcursor->close();

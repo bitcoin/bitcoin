@@ -42,6 +42,11 @@ public:
         SetNull();
     }
 
+    CCoinControl(CCoinControl&&) = default;
+    CCoinControl(const CCoinControl&) = default;
+    CCoinControl& operator=(CCoinControl&&) = default;
+    CCoinControl& operator=(const CCoinControl&) = default;
+
     void SetNull();
 
     bool HasSelected() const

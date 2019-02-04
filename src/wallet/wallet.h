@@ -258,6 +258,9 @@ public:
         Init();
     }
 
+    CMerkleTx(CMerkleTx&&) = default;
+    CMerkleTx(const CMerkleTx&) = default;
+
     explicit CMerkleTx(CTransactionRef arg)
     {
         SetTx(std::move(arg));

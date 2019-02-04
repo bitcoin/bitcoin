@@ -288,7 +288,7 @@ bool CKey::Derive(CKey& keyChild, ChainCode &ccChild, unsigned int nChild, const
 bool CExtKey::Derive(CExtKey &out, unsigned int _nChild) const {
     out.nDepth = nDepth + 1;
     CKeyID id = key.GetPubKey().GetID();
-    memcpy(&out.vchFingerprint[0], &id, 4);
+    memcpy(&out.vchFingerprint[0], id.begin(), 4);
     out.nChild = _nChild;
     return key.Derive(out.key, out.chaincode, _nChild, chaincode);
 }

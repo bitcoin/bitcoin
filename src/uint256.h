@@ -6,7 +6,9 @@
 #ifndef BITCOIN_UINT256_H
 #define BITCOIN_UINT256_H
 
+#include <array>
 #include <assert.h>
+#include <memory>
 #include <cstring>
 #include <stdexcept>
 #include <stdint.h>
@@ -17,31 +19,44 @@
 template<unsigned int BITS>
 class base_blob
 {
-protected:
-    static constexpr int WIDTH = BITS / 8;
-    uint8_t data[WIDTH];
+    using data_type = std::array<uint8_t, BITS / 8>;
+    std::unique_ptr<data_type> data;
 public:
-    base_blob()
+    base_blob() : data(new data_type)
     {
-        memset(data, 0, sizeof(data));
+        SetNull();
+    }
+
+    base_blob(base_blob&&) = default;
+    base_blob(const base_blob& other) : data(new data_type)
+    {
+        std::copy(other.begin(), other.end(), begin());
     }
 
     explicit base_blob(const std::vector<unsigned char>& vch);
 
+    base_blob& operator=(base_blob&&) = default;
+    base_blob& operator=(const base_blob& other)
+    {
+        if (this != &other)
+            std::copy(other.begin(), other.end(), begin());
+        return *this;
+    }
+
     bool IsNull() const
     {
-        for (int i = 0; i < WIDTH; i++)
-            if (data[i] != 0)
+        for (auto i: *data)
+            if (i != 0)
                 return false;
         return true;
     }
 
     void SetNull()
     {
-        memset(data, 0, sizeof(data));
+        data->fill(0);
     }
 
-    inline int Compare(const base_blob& other) const { return memcmp(data, other.data, sizeof(data)); }
+    inline int Compare(const base_blob& other) const { return memcmp(begin(), other.begin(), size()); }
 
     friend inline bool operator==(const base_blob& a, const base_blob& b) { return a.Compare(b) == 0; }
     friend inline bool operator!=(const base_blob& a, const base_blob& b) { return a.Compare(b) != 0; }
@@ -52,34 +67,34 @@ public:
     void SetHex(const std::string& str);
     std::string ToString() const;
 
-    unsigned char* begin()
+    uint8_t* begin()
     {
-        return &data[0];
+        return data->begin();
     }
 
-    unsigned char* end()
+    uint8_t* end()
     {
-        return &data[WIDTH];
+        return data->end();
     }
 
-    const unsigned char* begin() const
+    const uint8_t* begin() const
     {
-        return &data[0];
+        return data->begin();
     }
 
-    const unsigned char* end() const
+    const uint8_t* end() const
     {
-        return &data[WIDTH];
+        return data->end();
     }
 
-    unsigned int size() const
+    constexpr std::size_t size() const
     {
-        return sizeof(data);
+        return data->size();
     }
 
     uint64_t GetUint64(int pos) const
     {
-        const uint8_t* ptr = data + pos * 8;
+        const uint8_t* ptr = begin() + pos * 8;
         return ((uint64_t)ptr[0]) | \
                ((uint64_t)ptr[1]) << 8 | \
                ((uint64_t)ptr[2]) << 16 | \
@@ -93,13 +108,13 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        s.write((char*)data, sizeof(data));
+        s.write((const char*)begin(), size());
     }
 
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        s.read((char*)data, sizeof(data));
+        s.read((char*)begin(), size());
     }
 };
 
@@ -109,8 +124,12 @@ public:
  */
 class uint160 : public base_blob<160> {
 public:
-    uint160() {}
-    explicit uint160(const std::vector<unsigned char>& vch) : base_blob<160>(vch) {}
+    uint160() = default;
+    using base_blob<160>::base_blob;
+    uint160(uint160&&) = default;
+    uint160(const uint160&) = default;
+    uint160& operator=(uint160&&) = default;
+    uint160& operator=(const uint160&) = default;
 };
 
 /** 256-bit opaque blob.
@@ -120,8 +139,12 @@ public:
  */
 class uint256 : public base_blob<256> {
 public:
-    uint256() {}
-    explicit uint256(const std::vector<unsigned char>& vch) : base_blob<256>(vch) {}
+    uint256() = default;
+    using base_blob<256>::base_blob;
+    uint256(uint256&&) = default;
+    uint256(const uint256&) = default;
+    uint256& operator=(uint256&&) = default;
+    uint256& operator=(const uint256&) = default;
 };
 
 /* uint256 from const char *.

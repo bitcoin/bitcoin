@@ -22,7 +22,7 @@ static bool IsToKeyID(const CScript& script, CKeyID &hash)
     if (script.size() == 25 && script[0] == OP_DUP && script[1] == OP_HASH160
                             && script[2] == 20 && script[23] == OP_EQUALVERIFY
                             && script[24] == OP_CHECKSIG) {
-        memcpy(&hash, &script[3], 20);
+        memcpy(hash.begin(), &script[3], 20);
         return true;
     }
     return false;
@@ -32,7 +32,7 @@ static bool IsToScriptID(const CScript& script, CScriptID &hash)
 {
     if (script.size() == 23 && script[0] == OP_HASH160 && script[1] == 20
                             && script[22] == OP_EQUAL) {
-        memcpy(&hash, &script[2], 20);
+        memcpy(hash.begin(), &script[2], 20);
         return true;
     }
     return false;
@@ -59,14 +59,14 @@ bool CompressScript(const CScript& script, std::vector<unsigned char> &out)
     if (IsToKeyID(script, keyID)) {
         out.resize(21);
         out[0] = 0x00;
-        memcpy(&out[1], &keyID, 20);
+        memcpy(&out[1], keyID.begin(), 20);
         return true;
     }
     CScriptID scriptID;
     if (IsToScriptID(script, scriptID)) {
         out.resize(21);
         out[0] = 0x01;
-        memcpy(&out[1], &scriptID, 20);
+        memcpy(&out[1], scriptID.begin(), 20);
         return true;
     }
     CPubKey pubkey;

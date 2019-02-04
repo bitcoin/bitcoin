@@ -175,7 +175,7 @@ public:
     bool ErasePurpose(const std::string& strAddress);
 
     bool WriteTx(const CWalletTx& wtx);
-    bool EraseTx(uint256 hash);
+    bool EraseTx(const uint256& hash);
 
     bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta);
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta);

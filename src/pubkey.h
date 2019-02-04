@@ -22,6 +22,7 @@ class CKeyID : public uint160
 public:
     CKeyID() : uint160() {}
     explicit CKeyID(const uint160& in) : uint160(in) {}
+    explicit CKeyID(uint160&& in) : uint160(std::move(in)) {}
 };
 
 typedef uint256 ChainCode;

@@ -260,8 +260,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
         nSequenceIn = std::stoul(vStrInputParts[2]);
 
     // append to transaction input list
-    CTxIn txin(txid, vout, CScript(), nSequenceIn);
-    tx.vin.push_back(txin);
+    tx.vin.emplace_back(std::move(txid), vout, CScript(), nSequenceIn);
 }
 
 static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strInput)
@@ -599,7 +598,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             if (nOut < 0)
                 throw std::runtime_error("vout must be positive");
 
-            COutPoint out(txid, nOut);
+            COutPoint out(std::move(txid), nOut);
             std::vector<unsigned char> pkData(ParseHexUV(prevOut["scriptPubKey"], "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 

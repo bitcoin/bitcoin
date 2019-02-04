@@ -386,6 +386,7 @@ class CInv
 {
 public:
     CInv();
+    CInv(int typeIn, uint256&& hashIn);
     CInv(int typeIn, const uint256& hashIn);
 
     ADD_SERIALIZE_METHODS;

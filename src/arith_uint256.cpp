@@ -13,9 +13,9 @@
 #include <string.h>
 
 template <unsigned int BITS>
-base_uint<BITS>::base_uint(const std::string& str)
+base_uint<BITS>::base_uint(const std::string& str) : data(std::make_shared<data_type>())
 {
-    static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
+    static_assert(WIDTH > 0 && BITS % 32 == 0, "Template parameter BITS must be a positive multiple of 32.");
 
     SetHex(str);
 }
@@ -23,16 +23,17 @@ base_uint<BITS>::base_uint(const std::string& str)
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
 {
-    base_uint<BITS> a(*this);
-    for (int i = 0; i < WIDTH; i++)
-        pn[i] = 0;
+    const base_uint<BITS> a(*this);
+    auto& an = *a.data;
+    *this = 0;
+    auto& pn = *data;
     int k = shift / 32;
     shift = shift % 32;
     for (int i = 0; i < WIDTH; i++) {
         if (i + k + 1 < WIDTH && shift != 0)
-            pn[i + k + 1] |= (a.pn[i] >> (32 - shift));
+            pn[i + k + 1] |= (an[i] >> (32 - shift));
         if (i + k < WIDTH)
-            pn[i + k] |= (a.pn[i] << shift);
+            pn[i + k] |= (an[i] << shift);
     }
     return *this;
 }
@@ -40,16 +41,17 @@ base_uint<BITS>& base_uint<BITS>::operator<<=(unsigned int shift)
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator>>=(unsigned int shift)
 {
-    base_uint<BITS> a(*this);
-    for (int i = 0; i < WIDTH; i++)
-        pn[i] = 0;
+    const base_uint<BITS> a(*this);
+    auto& an = *a.data;
+    *this = 0;
+    auto& pn = *data;
     int k = shift / 32;
     shift = shift % 32;
     for (int i = 0; i < WIDTH; i++) {
         if (i - k - 1 >= 0 && shift != 0)
-            pn[i - k - 1] |= (a.pn[i] << (32 - shift));
+            pn[i - k - 1] |= (an[i] << (32 - shift));
         if (i - k >= 0)
-            pn[i - k] |= (a.pn[i] >> shift);
+            pn[i - k] |= (an[i] >> shift);
     }
     return *this;
 }
@@ -57,6 +59,8 @@ base_uint<BITS>& base_uint<BITS>::operator>>=(unsigned int shift)
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator*=(uint32_t b32)
 {
+    copy();
+    auto& pn = *data;
     uint64_t carry = 0;
     for (int i = 0; i < WIDTH; i++) {
         uint64_t n = carry + (uint64_t)b32 * pn[i];
@@ -69,12 +73,14 @@ base_uint<BITS>& base_uint<BITS>::operator*=(uint32_t b32)
 template <unsigned int BITS>
 base_uint<BITS>& base_uint<BITS>::operator*=(const base_uint& b)
 {
+    auto& pn = *data;
     base_uint<BITS> a;
+    auto& an = *a.data;
     for (int j = 0; j < WIDTH; j++) {
         uint64_t carry = 0;
         for (int i = 0; i + j < WIDTH; i++) {
-            uint64_t n = carry + a.pn[i + j] + (uint64_t)pn[j] * b.pn[i];
-            a.pn[i + j] = n & 0xffffffff;
+            uint64_t n = carry + an[i + j] + (uint64_t)pn[j] * (*b.data)[i];
+            an[i + j] = n & 0xffffffff;
             carry = n >> 32;
         }
     }
@@ -88,6 +94,7 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
     base_uint<BITS> div = b;     // make a copy, so we can shift.
     base_uint<BITS> num = *this; // make a copy, so we can subtract.
     *this = 0;                   // the quotient.
+    auto& pn = *data;
     int num_bits = num.bits();
     int div_bits = div.bits();
     if (div_bits == 0)
@@ -111,10 +118,11 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
 template <unsigned int BITS>
 int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
 {
+    auto& pn = *data;
     for (int i = WIDTH - 1; i >= 0; i--) {
-        if (pn[i] < b.pn[i])
+        if (pn[i] < (*b.data)[i])
             return -1;
-        if (pn[i] > b.pn[i])
+        if (pn[i] > (*b.data)[i])
             return 1;
     }
     return 0;
@@ -123,6 +131,7 @@ int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
 template <unsigned int BITS>
 bool base_uint<BITS>::EqualTo(uint64_t b) const
 {
+    auto& pn = *data;
     for (int i = WIDTH - 1; i >= 2; i--) {
         if (pn[i])
             return false;
@@ -137,6 +146,7 @@ bool base_uint<BITS>::EqualTo(uint64_t b) const
 template <unsigned int BITS>
 double base_uint<BITS>::getdouble() const
 {
+    auto& pn = *data;
     double ret = 0.0;
     double fact = 1.0;
     for (int i = 0; i < WIDTH; i++) {
@@ -173,6 +183,7 @@ std::string base_uint<BITS>::ToString() const
 template <unsigned int BITS>
 unsigned int base_uint<BITS>::bits() const
 {
+    auto& pn = *data;
     for (int pos = WIDTH - 1; pos >= 0; pos--) {
         if (pn[pos]) {
             for (int nbits = 31; nbits > 0; nbits--) {
@@ -249,14 +260,16 @@ uint32_t arith_uint256::GetCompact(bool fNegative) const
 uint256 ArithToUint256(const arith_uint256 &a)
 {
     uint256 b;
+    auto& pn = *a.data;
     for(int x=0; x<a.WIDTH; ++x)
-        WriteLE32(b.begin() + x*4, a.pn[x]);
+        WriteLE32(b.begin() + x*4, pn[x]);
     return b;
 }
 arith_uint256 UintToArith256(const uint256 &a)
 {
     arith_uint256 b;
+    auto& pn = *b.data;
     for(int x=0; x<b.WIDTH; ++x)
-        b.pn[x] = ReadLE32(a.begin() + x*4);
+        pn[x] = ReadLE32(a.begin() + x*4);
     return b;
 }

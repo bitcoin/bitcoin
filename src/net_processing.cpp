@@ -850,7 +850,7 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
     return true;
 }
 
-int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+int static EraseOrphanTx(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
 {
     std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
     if (it == mapOrphanTransactions.end())
@@ -1004,8 +1004,7 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
             if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
             for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
                 const CTransaction& orphanTx = *(*mi)->second.tx;
-                const uint256& orphanHash = orphanTx.GetHash();
-                vOrphanErase.push_back(orphanHash);
+                vOrphanErase.push_back(orphanTx.GetHash());
             }
         }
     }

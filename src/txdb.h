@@ -74,6 +74,8 @@ public:
     void Next() override;
 
 private:
+    CCoinsViewDBCursor(CDBIterator* pcursorIn, uint256&& hashBlockIn):
+        CCoinsViewCursor(std::move(hashBlockIn)), pcursor(pcursorIn) {}
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
         CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
     std::unique_ptr<CDBIterator> pcursor;

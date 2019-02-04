@@ -529,7 +529,7 @@ int GetRandInt(int nMax) noexcept
 uint256 GetRandHash() noexcept
 {
     uint256 hash;
-    GetRandBytes((unsigned char*)&hash, sizeof(hash));
+    GetRandBytes(hash.begin(), hash.size());
     return hash;
 }
 

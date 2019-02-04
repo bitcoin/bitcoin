@@ -1626,7 +1626,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
     UniValue transactions(UniValue::VARR);
 
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
-        CWalletTx tx = pairWtx.second;
+        const CWalletTx& tx = pairWtx.second;
 
         if (depth == -1 || tx.GetDepthInMainChain(*locked_chain) < depth) {
             ListTransactions(*locked_chain, pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
@@ -3007,7 +3007,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
 
     std::string strFailReason;
 
-    if (!pwallet->FundTransaction(tx, fee_out, change_position, strFailReason, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
+    if (!pwallet->FundTransaction(tx, fee_out, change_position, strFailReason, lockUnspents, setSubtractFeeFromOutputs, std::move(coinControl))) {
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
 }
@@ -3578,7 +3578,7 @@ public:
         CRIPEMD160 hasher;
         uint160 hash;
         hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
+        if (pwallet && pwallet->GetCScript(CScriptID(std::move(hash)), subscript)) {
             ProcessSubScript(subscript, obj);
         }
         return obj;

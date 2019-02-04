@@ -685,7 +685,7 @@ struct TransactionNotification
 public:
     TransactionNotification() {}
     TransactionNotification(uint256 _hash, ChangeType _status, bool _showTransaction):
-        hash(_hash), status(_status), showTransaction(_showTransaction) {}
+        hash(std::move(_hash)), status(_status), showTransaction(_showTransaction) {}
 
     void invoke(QObject *ttm)
     {

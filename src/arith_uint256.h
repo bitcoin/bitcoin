@@ -6,9 +6,11 @@
 #ifndef BITCOIN_ARITH_UINT256_H
 #define BITCOIN_ARITH_UINT256_H
 
+#include <array>
 #include <assert.h>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
@@ -27,36 +29,37 @@ class base_uint
 {
 protected:
     static constexpr int WIDTH = BITS / 32;
-    uint32_t pn[WIDTH];
+    using data_type = std::array<uint32_t, WIDTH>;
+    std::shared_ptr<data_type> data;
+private:
+    void copy()
+    {
+        if (data.use_count() > 1) {
+            auto tmp = data;
+            data = std::make_shared<data_type>();
+            std::copy(tmp->begin(), tmp->end(), data->begin());
+        }
+    }
 public:
 
-    base_uint()
+    base_uint() : data(std::make_shared<data_type>())
     {
-        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
+        static_assert(WIDTH > 0 && BITS % 32 == 0, "Template parameter BITS must be a positive multiple of 32.");
 
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = 0;
+        data->fill(0);
     }
 
-    base_uint(const base_uint& b)
+    base_uint(base_uint&&) = default;
+    base_uint(const base_uint&) = default;
+
+    base_uint& operator=(base_uint&&) = default;
+    base_uint& operator=(const base_uint&) = default;
+
+    base_uint(uint64_t b) : data(std::make_shared<data_type>())
     {
-        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
+        static_assert(WIDTH > 0 && BITS % 32 == 0, "Template parameter BITS must be a positive multiple of 32.");
 
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = b.pn[i];
-    }
-
-    base_uint& operator=(const base_uint& b)
-    {
-        for (int i = 0; i < WIDTH; i++)
-            pn[i] = b.pn[i];
-        return *this;
-    }
-
-    base_uint(uint64_t b)
-    {
-        static_assert(BITS/32 > 0 && BITS%32 == 0, "Template parameter BITS must be a positive multiple of 32.");
-
+        auto& pn = *data;
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
         for (int i = 2; i < WIDTH; i++)
@@ -68,16 +71,15 @@ public:
     const base_uint operator~() const
     {
         base_uint ret;
+        auto& pn = *data;
         for (int i = 0; i < WIDTH; i++)
-            ret.pn[i] = ~pn[i];
+            (*ret.data)[i] = ~pn[i];
         return ret;
     }
 
     const base_uint operator-() const
     {
-        base_uint ret;
-        for (int i = 0; i < WIDTH; i++)
-            ret.pn[i] = ~pn[i];
+        base_uint ret = ~(*this);
         ++ret;
         return ret;
     }
@@ -86,6 +88,8 @@ public:
 
     base_uint& operator=(uint64_t b)
     {
+        copy();
+        auto& pn = *data;
         pn[0] = (unsigned int)b;
         pn[1] = (unsigned int)(b >> 32);
         for (int i = 2; i < WIDTH; i++)
@@ -95,27 +99,35 @@ public:
 
     base_uint& operator^=(const base_uint& b)
     {
+        copy();
+        auto& pn = *data;
         for (int i = 0; i < WIDTH; i++)
-            pn[i] ^= b.pn[i];
+            pn[i] ^= (*b.data)[i];
         return *this;
     }
 
     base_uint& operator&=(const base_uint& b)
     {
+        copy();
+        auto& pn = *data;
         for (int i = 0; i < WIDTH; i++)
-            pn[i] &= b.pn[i];
+            pn[i] &= (*b.data)[i];
         return *this;
     }
 
     base_uint& operator|=(const base_uint& b)
     {
+        copy();
+        auto& pn = *data;
         for (int i = 0; i < WIDTH; i++)
-            pn[i] |= b.pn[i];
+            pn[i] |= (*b.data)[i];
         return *this;
     }
 
     base_uint& operator^=(uint64_t b)
     {
+        copy();
+        auto& pn = *data;
         pn[0] ^= (unsigned int)b;
         pn[1] ^= (unsigned int)(b >> 32);
         return *this;
@@ -123,6 +135,8 @@ public:
 
     base_uint& operator|=(uint64_t b)
     {
+        copy();
+        auto& pn = *data;
         pn[0] |= (unsigned int)b;
         pn[1] |= (unsigned int)(b >> 32);
         return *this;
@@ -133,10 +147,12 @@ public:
 
     base_uint& operator+=(const base_uint& b)
     {
+        copy();
+        auto& pn = *data;
         uint64_t carry = 0;
         for (int i = 0; i < WIDTH; i++)
         {
-            uint64_t n = carry + pn[i] + b.pn[i];
+            uint64_t n = carry + pn[i] + (*b.data)[i];
             pn[i] = n & 0xffffffff;
             carry = n >> 32;
         }
@@ -151,17 +167,13 @@ public:
 
     base_uint& operator+=(uint64_t b64)
     {
-        base_uint b;
-        b = b64;
-        *this += b;
+        *this += base_uint(b64);
         return *this;
     }
 
     base_uint& operator-=(uint64_t b64)
     {
-        base_uint b;
-        b = b64;
-        *this += -b;
+        *this += -base_uint(b64);
         return *this;
     }
 
@@ -172,7 +184,9 @@ public:
     base_uint& operator++()
     {
         // prefix operator
+        copy();
         int i = 0;
+        auto& pn = *data;
         while (i < WIDTH && ++pn[i] == 0)
             i++;
         return *this;
@@ -189,7 +203,9 @@ public:
     base_uint& operator--()
     {
         // prefix operator
+        copy();
         int i = 0;
+        auto& pn = *data;
         while (i < WIDTH && --pn[i] == std::numeric_limits<uint32_t>::max())
             i++;
         return *this;
@@ -216,8 +232,8 @@ public:
     friend inline const base_uint operator>>(const base_uint& a, int shift) { return base_uint(a) >>= shift; }
     friend inline const base_uint operator<<(const base_uint& a, int shift) { return base_uint(a) <<= shift; }
     friend inline const base_uint operator*(const base_uint& a, uint32_t b) { return base_uint(a) *= b; }
-    friend inline bool operator==(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) == 0; }
-    friend inline bool operator!=(const base_uint& a, const base_uint& b) { return memcmp(a.pn, b.pn, sizeof(a.pn)) != 0; }
+    friend inline bool operator==(const base_uint& a, const base_uint& b) { return memcmp(a.data->begin(), b.data->begin(), a.size()) == 0; }
+    friend inline bool operator!=(const base_uint& a, const base_uint& b) { return !(a == b); }
     friend inline bool operator>(const base_uint& a, const base_uint& b) { return a.CompareTo(b) > 0; }
     friend inline bool operator<(const base_uint& a, const base_uint& b) { return a.CompareTo(b) < 0; }
     friend inline bool operator>=(const base_uint& a, const base_uint& b) { return a.CompareTo(b) >= 0; }
@@ -230,9 +246,9 @@ public:
     void SetHex(const std::string& str);
     std::string ToString() const;
 
-    unsigned int size() const
+    constexpr std::size_t size() const
     {
-        return sizeof(pn);
+        return WIDTH * sizeof(uint32_t);
     }
 
     /**
@@ -243,7 +259,8 @@ public:
 
     uint64_t GetLow64() const
     {
-        static_assert(WIDTH >= 2, "Assertion WIDTH >= 2 failed (WIDTH = BITS / 32). BITS is a template parameter.");
+        auto& pn = *data;
+        static_assert(WIDTH >= 2, "Assertion size >= 2 failed (size = BITS / 32). BITS is a template parameter.");
         return pn[0] | (uint64_t)pn[1] << 32;
     }
 };
@@ -251,10 +268,15 @@ public:
 /** 256-bit unsigned big integer. */
 class arith_uint256 : public base_uint<256> {
 public:
-    arith_uint256() {}
+    arith_uint256() = default;
+    using base_uint<256>::base_uint;
+    arith_uint256(arith_uint256&&) = default;
+    arith_uint256(const arith_uint256&) = default;
+    arith_uint256& operator=(arith_uint256&&) = default;
+    arith_uint256& operator=(const arith_uint256&) = default;
+
+    arith_uint256(base_uint<256>&& b) : base_uint<256>(std::move(b)) {}
     arith_uint256(const base_uint<256>& b) : base_uint<256>(b) {}
-    arith_uint256(uint64_t b) : base_uint<256>(b) {}
-    explicit arith_uint256(const std::string& str) : base_uint<256>(str) {}
 
     /**
      * The "compact" format is a representation of a whole

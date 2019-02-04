@@ -28,6 +28,12 @@ public:
         effective_value = txout.nValue;
     }
 
+    CInputCoin(CInputCoin&&) = default;
+    CInputCoin(const CInputCoin&) = default;
+
+    CInputCoin& operator=(CInputCoin&&) = default;
+    CInputCoin& operator=(const CInputCoin&) = default;
+
     CInputCoin(const CTransactionRef& tx, unsigned int i, int input_bytes) : CInputCoin(tx, i)
     {
         m_input_bytes = input_bytes;

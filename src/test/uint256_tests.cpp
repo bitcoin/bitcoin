@@ -173,8 +173,6 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     BOOST_CHECK(memcmp(R2L.begin(), R2Array, 32)==0);
     BOOST_CHECK(memcmp(ZeroL.begin(), ZeroArray, 32)==0);
     BOOST_CHECK(memcmp(OneL.begin(), OneArray, 32)==0);
-    BOOST_CHECK(R1L.size() == sizeof(R1L));
-    BOOST_CHECK(sizeof(R1L) == 32);
     BOOST_CHECK(R1L.size() == 32);
     BOOST_CHECK(R2L.size() == 32);
     BOOST_CHECK(ZeroL.size() == 32);
@@ -219,8 +217,6 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     BOOST_CHECK(memcmp(R2S.begin(), R2Array, 20)==0);
     BOOST_CHECK(memcmp(ZeroS.begin(), ZeroArray, 20)==0);
     BOOST_CHECK(memcmp(OneS.begin(), OneArray, 20)==0);
-    BOOST_CHECK(R1S.size() == sizeof(R1S));
-    BOOST_CHECK(sizeof(R1S) == 20);
     BOOST_CHECK(R1S.size() == 20);
     BOOST_CHECK(R2S.size() == 20);
     BOOST_CHECK(ZeroS.size() == 20);

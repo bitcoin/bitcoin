@@ -508,7 +508,7 @@ bool WalletModel::saveReceiveRequest(const std::string &sAddress, const int64_t 
         return m_wallet->addDestData(dest, key, sRequest);
 }
 
-bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
+bool WalletModel::bumpFee(const uint256& hash, uint256& new_hash)
 {
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;

@@ -24,7 +24,13 @@ public:
     static constexpr uint32_t NULL_INDEX = std::numeric_limits<uint32_t>::max();
 
     COutPoint(): n(NULL_INDEX) { }
+    COutPoint(COutPoint&&) = default;
+    COutPoint(const COutPoint&) = default;
     COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
+    COutPoint(uint256&& hashIn, uint32_t nIn): hash(std::move(hashIn)), n(nIn) { }
+
+    COutPoint& operator=(COutPoint&&) = default;
+    COutPoint& operator=(const COutPoint&) = default;
 
     ADD_SERIALIZE_METHODS;
 
@@ -39,8 +45,7 @@ public:
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
-        int cmp = a.hash.Compare(b.hash);
-        return cmp < 0 || (cmp == 0 && a.n < b.n);
+        return a.hash < b.hash || (a.hash == b.hash && a.n < b.n);
     }
 
     friend bool operator==(const COutPoint& a, const COutPoint& b)
@@ -100,8 +105,16 @@ public:
         nSequence = SEQUENCE_FINAL;
     }
 
-    explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
-    CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    CTxIn(CTxIn&&) = default;
+    CTxIn(const CTxIn&) = default;
+
+    explicit CTxIn(const COutPoint& prevoutIn, const CScript& scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    explicit CTxIn(COutPoint&& prevoutIn, const CScript& scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    CTxIn(uint256&& hashPrevTx, uint32_t nOut, const CScript& scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+    CTxIn(const uint256& hashPrevTx, uint32_t nOut, const CScript& scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
+
+    CTxIn& operator=(CTxIn&&) = default;
+    CTxIn& operator=(const CTxIn&) = default;
 
     ADD_SERIALIZE_METHODS;
 

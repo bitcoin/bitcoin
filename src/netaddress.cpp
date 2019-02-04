@@ -395,7 +395,7 @@ uint64_t CNetAddr::GetHash() const
 {
     uint256 hash = Hash(&ip[0], &ip[16]);
     uint64_t nRet;
-    memcpy(&nRet, &hash, sizeof(nRet));
+    memcpy(&nRet, hash.begin(), sizeof(nRet));
     return nRet;
 }
 

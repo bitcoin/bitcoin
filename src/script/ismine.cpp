@@ -129,7 +129,7 @@ IsMineResult IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey,
         }
         uint160 hash;
         CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(hash.begin());
-        CScriptID scriptID = CScriptID(hash);
+        CScriptID scriptID = CScriptID(std::move(hash));
         CScript subscript;
         if (keystore.GetCScript(scriptID, subscript)) {
             ret = std::max(ret, IsMineInner(keystore, subscript, IsMineSigVersion::WITNESS_V0));

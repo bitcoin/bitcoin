@@ -24,6 +24,7 @@ class CScriptID : public uint160
 public:
     CScriptID() : uint160() {}
     explicit CScriptID(const CScript& in);
+    CScriptID(uint160&& in) : uint160(std::move(in)) {}
     CScriptID(const uint160& in) : uint160(in) {}
 };
 
@@ -76,6 +77,7 @@ public:
 struct WitnessV0ScriptHash : public uint256
 {
     WitnessV0ScriptHash() : uint256() {}
+    explicit WitnessV0ScriptHash(uint256&& hash) : uint256(std::move(hash)) {}
     explicit WitnessV0ScriptHash(const uint256& hash) : uint256(hash) {}
     explicit WitnessV0ScriptHash(const CScript& script);
     using uint256::uint256;
@@ -84,6 +86,7 @@ struct WitnessV0ScriptHash : public uint256
 struct WitnessV0KeyHash : public uint160
 {
     WitnessV0KeyHash() : uint160() {}
+    explicit WitnessV0KeyHash(uint160&& hash) : uint160(std::move(hash)) {}
     explicit WitnessV0KeyHash(const uint160& hash) : uint160(hash) {}
     using uint160::uint160;
 };
