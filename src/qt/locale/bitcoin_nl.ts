@@ -3200,6 +3200,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
         <translation>Waarschuwing: Fout bij het lezen van %s! Alle sleutels zijn in goede orde uitgelezen, maar transactiedata of adresboeklemma's zouden kunnen ontbreken of fouten bevatten.</translation>
     </message>
     <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation>Groepeer outputs per adres, alles of niets selecterend, in plaats van per output. Privacy wordt verbeterd omdat een adres slechts één keer wordt gebruikt (tenzij iemand ernaar stuurt na ermee te betalen), maar kan resulteren in iets hogere fees, als gevolg van suboptimale coin selectie ten gevolge van de toegevoegde beperking (standaard: %u)</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Waarschuwing: Controleer dat de datum en tijd van uw computer correct zijn ingesteld! Bij een onjuist ingestelde klok zal %s niet goed werken.</translation>
     </message>
@@ -3338,6 +3342,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Ongeldig bedrag voor -fallbackfee=&lt;bedrag&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Opgegeven blocks map "%s" bestaat niet.</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3490,12 +3498,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Opgegeven -walletdir "%s" is geen map</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Opgegeven blocks map "%s" bestaat niet.
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
