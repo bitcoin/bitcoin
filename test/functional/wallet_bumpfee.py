@@ -62,6 +62,7 @@ class BumpFeeTest(BitcoinTestFramework):
         dest_address = peer_node.getnewaddress()
         test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
+        test_change_address_succeeds(rbf_node, peer_node)
         test_nonrbf_bumpfee_fails(peer_node, dest_address)
         test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address)
         test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
@@ -126,6 +127,20 @@ def test_segwit_bumpfee_succeeds(rbf_node, dest_address):
     bumped_tx = rbf_node.bumpfee(rbfid)
     assert bumped_tx["txid"] in rbf_node.getrawmempool()
     assert rbfid not in rbf_node.getrawmempool()
+
+
+def test_change_address_succeeds(rbf_node, peer_node):
+    dest_address = peer_node.getnewaddress()
+    change_address = rbf_node.getnewaddress()
+    hex = rbf_node.createrawtransaction([], {dest_address: '0.00100000'})
+    tx = rbf_node.fundrawtransaction(hex, {'changeAddress': change_address})
+    tx = rbf_node.signrawtransactionwithwallet(tx['hex'])
+    txid = rbf_node.sendrawtransaction(tx['hex'])
+    assert_raises_rpc_error(-4, 'Transaction does not have a change output', rbf_node.bumpfee, txid)
+    assert_raises_rpc_error(-5, 'change_address must be a valid bitcoin address', rbf_node.bumpfee, txid, {'change_address': 'abc'})
+    assert_raises_rpc_error(-5, 'Invalid or non-wallet address', rbf_node.bumpfee, txid, {'change_address': peer_node.getnewaddress()})
+    assert_raises_rpc_error(-4, 'Transaction does not have the specified change output', rbf_node.bumpfee, txid, {'change_address': rbf_node.getnewaddress()})
+    rbf_node.bumpfee(txid, {'change_address': change_address})
 
 
 def test_nonrbf_bumpfee_fails(peer_node, dest_address):
