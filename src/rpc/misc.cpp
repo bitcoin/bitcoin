@@ -59,14 +59,14 @@ static UniValue debug(const JSONRPCRequest& request)
         );
 
     std::string strMode = request.params[0].get_str();
-    g_logger->DisableCategory(BCLog::ALL);
+    LogInstance().DisableCategory(BCLog::ALL);
 
     std::vector<std::string> categories;
     boost::split(categories, strMode, boost::is_any_of("+"));
 
     if (std::find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
         for (const auto& cat : categories) {
-            g_logger->EnableCategory(cat);
+            LogInstance().EnableCategory(cat);
         }
     }
 
@@ -1023,9 +1023,9 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
 
         bool success;
         if (enable) {
-            success = g_logger->EnableCategory(cat);
+            success = LogInstance().EnableCategory(cat);
         } else {
-            success = g_logger->DisableCategory(cat);
+            success = LogInstance().DisableCategory(cat);
         }
 
         if (!success) {
@@ -1072,14 +1072,14 @@ static UniValue logging(const JSONRPCRequest& request)
         );
     }
 
-    uint64_t original_log_categories = g_logger->GetCategoryMask();
+    uint64_t original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
         EnableOrDisableLogCategories(request.params[0], true);
     }
     if (request.params[1].isArray()) {
         EnableOrDisableLogCategories(request.params[1], false);
     }
-    uint64_t updated_log_categories = g_logger->GetCategoryMask();
+    uint64_t updated_log_categories = LogInstance().GetCategoryMask();
     uint64_t changed_log_categories = original_log_categories ^ updated_log_categories;
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
@@ -1088,8 +1088,8 @@ static UniValue logging(const JSONRPCRequest& request)
     // Throw an error if the user has explicitly asked to change only the libevent
     // flag and it failed.
     if (changed_log_categories & BCLog::LIBEVENT) {
-        if (!UpdateHTTPServerLogging(g_logger->WillLogCategory(BCLog::LIBEVENT))) {
-            g_logger->DisableCategory(BCLog::LIBEVENT);
+        if (!UpdateHTTPServerLogging(LogInstance().WillLogCategory(BCLog::LIBEVENT))) {
+            LogInstance().DisableCategory(BCLog::LIBEVENT);
             if (changed_log_categories == BCLog::LIBEVENT) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "libevent logging cannot be updated when using libevent before v2.1.1.");
             }
