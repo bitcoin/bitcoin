@@ -3342,6 +3342,11 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Nieprawidłowa kwota dla -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Podany folder bloków "%s" nie istnieje.
+</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Aktualizowanie bazy txindex</translation>
     </message>
@@ -3492,12 +3497,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>Podany -walletdir "%s" nie jest katalogiem</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>Podany folder bloków "%s" nie istnieje.
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

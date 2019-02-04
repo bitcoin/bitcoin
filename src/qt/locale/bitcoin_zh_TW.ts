@@ -3336,6 +3336,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>設定 -fallbackfee=&lt;金額&gt; 的金額無效: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>指定的區塊目錄 "%s" 不存在。</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>正在升級 txindex 資料庫</translation>
     </message>
@@ -3486,12 +3490,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>以 -walletdir 指定的路徑 "%s" 不是個目錄</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>指定的區塊目錄 "%s" 不存在。
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
