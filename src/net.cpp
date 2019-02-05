@@ -58,17 +58,6 @@ static constexpr int DUMP_PEERS_INTERVAL = 15 * 60;
 #define MSG_DONTWAIT 0
 #endif
 
-// Fix for ancient MinGW versions, that don't have defined these in ws2tcpip.h.
-// Todo: Can be removed when our pull-tester is upgraded to a modern MinGW version.
-#ifdef WIN32
-#ifndef PROTECTION_LEVEL_UNRESTRICTED
-#define PROTECTION_LEVEL_UNRESTRICTED 10
-#endif
-#ifndef IPV6_PROTECTION_LEVEL
-#define IPV6_PROTECTION_LEVEL 23
-#endif
-#endif
-
 /** Used to pass flags to the Bind() function */
 enum BindFlags {
     BF_NONE         = 0,
