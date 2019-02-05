@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <deque>
 #include <map>
 #include <set>
 #include <stdexcept>
