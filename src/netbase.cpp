@@ -86,9 +86,6 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     aiHint.ai_protocol = IPPROTO_TCP;
     // We don't care which address family (IPv4 or IPv6) is returned
     aiHint.ai_family = AF_UNSPEC;
-#ifdef WIN32
-    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
-#else
     // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
     // return addresses whose family we have an address configured for.
     //
@@ -96,7 +93,6 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     // getaddrinfo to only decode numerical network addresses and suppress
     // hostname lookups.
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
-#endif
     struct addrinfo *aiRes = nullptr;
     int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
     if (nErr)
