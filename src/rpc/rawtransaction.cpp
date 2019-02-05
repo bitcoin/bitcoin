@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -66,17 +66,21 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            RPCHelpMan{"getrawtransaction",
+            RPCHelpMan{
+                "getrawtransaction",
+                "\nReturn the raw transaction data.\n"
+
                 "\nBy default this function only works for mempool transactions. When called with a blockhash\n"
                 "argument, getrawtransaction will return the transaction if the specified block is available and\n"
                 "the transaction is found in that block. When called without a blockhash argument, getrawtransaction\n"
                 "will return the transaction if it is in the mempool, or if -txindex is enabled and the transaction\n"
                 "is in a block in the blockchain.\n"
 
-            "\nReturn the raw transaction data.\n"
-            "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
-            "If verbose is 'false' or omitted, returns a string that is serialized, hex-encoded data for 'txid'.\n"
-                ,
+                "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n"
+                "Or use gettransaction for wallet transactions.\n"
+
+                "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
+                "If verbose is 'false' or omitted, returns a string that is serialized, hex-encoded data for 'txid'.\n",
                 {
                     {"txid", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The transaction id"},
                     {"verbose", RPCArg::Type::BOOL, /* opt */ true, /* default_val */ "false", "If false, return a string, otherwise return a json object"},
