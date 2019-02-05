@@ -178,6 +178,26 @@ gdb /home/example/bitcoind <pid>
 Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
 See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
 
+##### Profiling
+
+An easy way to profile node performance during functional tests is provided
+for Linux platforms using `perf`.
+
+Perf will sample the running node and will generate profile data in the node's
+datadir. The profile data can then be presented using `perf report` or a graphical
+tool like [hotspot](https://github.com/KDAB/hotspot).
+
+To generate a profile during test suite runs, use the `--perf` flag.
+
+To see render the output to text, run
+
+```sh
+perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt | less
+```
+
+For ways to generate more granular profiles, see the README in
+[test/functional](/test/functional).
+
 ### Util tests
 
 Util tests can be run locally by running `test/util/bitcoin-util-test.py`.
