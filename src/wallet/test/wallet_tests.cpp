@@ -54,9 +54,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         reserver.reserve();
         CWallet::ScanResult result = wallet.ScanForWalletTransactions({} /* start_block */, {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK(result.failed_block.IsNull());
-        BOOST_CHECK(result.stop_block.IsNull());
-        BOOST_CHECK(!result.stop_height);
+        BOOST_CHECK(result.last_failed_block.IsNull());
+        BOOST_CHECK(result.last_scanned_block.IsNull());
+        BOOST_CHECK(!result.last_scanned_height);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 0);
     }
 
@@ -69,9 +69,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         reserver.reserve();
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK(result.failed_block.IsNull());
-        BOOST_CHECK_EQUAL(result.stop_block, newTip->GetBlockHash());
-        BOOST_CHECK_EQUAL(*result.stop_height, newTip->nHeight);
+        BOOST_CHECK(result.last_failed_block.IsNull());
+        BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 100 * COIN);
     }
 
@@ -88,9 +88,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         reserver.reserve();
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
-        BOOST_CHECK_EQUAL(result.failed_block, oldTip->GetBlockHash());
-        BOOST_CHECK_EQUAL(result.stop_block, newTip->GetBlockHash());
-        BOOST_CHECK_EQUAL(*result.stop_height, newTip->nHeight);
+        BOOST_CHECK_EQUAL(result.last_failed_block, oldTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(result.last_scanned_block, newTip->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.last_scanned_height, newTip->nHeight);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 50 * COIN);
     }
 
@@ -106,9 +106,9 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
         reserver.reserve();
         CWallet::ScanResult result = wallet.ScanForWalletTransactions(oldTip->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::FAILURE);
-        BOOST_CHECK_EQUAL(result.failed_block, newTip->GetBlockHash());
-        BOOST_CHECK(result.stop_block.IsNull());
-        BOOST_CHECK(!result.stop_height);
+        BOOST_CHECK_EQUAL(result.last_failed_block, newTip->GetBlockHash());
+        BOOST_CHECK(result.last_scanned_block.IsNull());
+        BOOST_CHECK(!result.last_scanned_height);
         BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 0);
     }
 }
@@ -345,9 +345,9 @@ public:
         reserver.reserve();
         CWallet::ScanResult result = wallet->ScanForWalletTransactions(chainActive.Genesis()->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK_EQUAL(result.stop_block, chainActive.Tip()->GetBlockHash());
-        BOOST_CHECK_EQUAL(*result.stop_height, chainActive.Height());
-        BOOST_CHECK(result.failed_block.IsNull());
+        BOOST_CHECK_EQUAL(result.last_scanned_block, chainActive.Tip()->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.last_scanned_height, chainActive.Height());
+        BOOST_CHECK(result.last_failed_block.IsNull());
     }
 
     ~ListCoinsTestingSetup()
