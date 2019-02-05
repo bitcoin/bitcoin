@@ -113,13 +113,17 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            RPCHelpMan{"getrawtransaction",
+            RPCHelpMan{
+                "getrawtransaction",
+                "\nReturn the raw transaction data.\n"
+
                 "\nBy default this function only works for mempool transactions. When called with a blockhash\n"
                 "argument, getrawtransaction will return the transaction if the specified block is available and\n"
                 "the transaction is found in that block. When called without a blockhash argument, getrawtransaction\n"
                 "will return the transaction if it is in the mempool, or if -txindex is enabled and the transaction\n"
                 "is in a block in the blockchain.\n"
-            "\nReturn the raw transaction data.\n"
+            "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n"
+                "Or use gettransaction for wallet transactions.\n"
             "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
             "If verbose is 'false' or omitted, returns a string that is serialized, hex-encoded data for 'txid'.\n",
                 {
