@@ -1368,6 +1368,23 @@ bool AppInitParameterInteraction()
         return InitError("Difficulty and subsidy parameters may only be overridden on devnet.");
     }
 
+    if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
+        std::string llmqChainLocks = GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqChainLocks).name);
+        Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+        for (const auto& p : Params().GetConsensus().llmqs) {
+            if (p.second.name == llmqChainLocks) {
+                llmqType = p.first;
+                break;
+            }
+        }
+        if (llmqType == Consensus::LLMQ_NONE) {
+            return InitError("Invalid LLMQ type specified for -llmqchainlocks.");
+        }
+        UpdateDevnetLLMQChainLocks(llmqType);
+    } else if (IsArgSet("-llmqchainlocks")) {
+        return InitError("LLMQ type for ChainLocks can only be overridden on devnet.");
+    }
+
     return true;
 }
 

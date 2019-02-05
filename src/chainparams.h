@@ -162,4 +162,9 @@ void UpdateRegtestBudgetParameters(int nMasternodePaymentsStartBlock, int nBudge
  */
 void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
 
+/**
+ * Allows modifying the LLMQ type for ChainLocks.
+ */
+void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
+
 #endif // BITCOIN_CHAINPARAMS_H
