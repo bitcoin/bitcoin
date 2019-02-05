@@ -1007,14 +1007,14 @@ public:
         //! Hash and height of most recent block that was successfully scanned.
         //! Unset if no blocks were scanned due to read errors or the chain
         //! being empty.
-        uint256 stop_block;
-        Optional<int> stop_height;
+        uint256 last_scanned_block;
+        Optional<int> last_scanned_height;
 
         //! Height of the most recent block that could not be scanned due to
         //! read errors or pruning. Will be set if status is FAILURE, unset if
         //! status is SUCCESS, and may or may not be set if status is
         //! USER_ABORT.
-        uint256 failed_block;
+        uint256 last_failed_block;
     };
     ScanResult ScanForWalletTransactions(const uint256& first_block, const uint256& last_block, const WalletRescanReserver& reserver, bool fUpdate);
     void TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) override;

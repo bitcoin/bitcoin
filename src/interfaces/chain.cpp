@@ -123,7 +123,7 @@ class LockImpl : public Chain::Lock
         CBlockIndex* block = LookupBlockIndex(hash);
         return block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip();
     }
-    CBlockLocator getLocator() override { return ::ChainActive().GetLocator(); }
+    CBlockLocator getTipLocator() override { return ::ChainActive().GetLocator(); }
     Optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LockAnnotation lock(::cs_main);

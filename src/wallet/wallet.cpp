@@ -2145,7 +2145,7 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
         ScanResult result = ScanForWalletTransactions(start_block, {} /* stop_block */, reserver, update);
         if (result.status == ScanResult::FAILURE) {
             int64_t time_max;
-            if (!chain().findBlock(result.failed_block, nullptr /* block */, nullptr /* time */, &time_max)) {
+            if (!chain().findBlock(result.last_failed_block, nullptr /* block */, nullptr /* time */, &time_max)) {
                 throw std::logic_error("ScanForWalletTransactions returned invalid block hash");
             }
             return time_max + TIMESTAMP_WINDOW + 1;
@@ -2159,15 +2159,17 @@ int64_t CWallet::RescanFromTime(int64_t startTime, const WalletRescanReserver& r
  * from or to us. If fUpdate is true, found transactions that already
  * exist in the wallet will be updated.
  *
- * @param[in] start_block if not null, the scan will start at this block instead
- *            of the genesis block
- * @param[in] stop_block if not null, the scan will stop at this block instead
- *            of the chain tip
+ * @param[in] start_block Scan starting block. If block is not on the active
+ *                        chain, the scan will return SUCCESS immediately.
+ * @param[in] stop_block  Scan ending block. If block is not on the active
+ *                        chain, the scan will continue until it reaches the
+ *                        chain tip.
  *
- * @return ScanResult indicating success or failure of the scan. SUCCESS if
- * scan was successful. FAILURE if a complete rescan was not possible (due to
- * pruning or corruption). USER_ABORT if the rescan was aborted before it
- * could complete.
+ * @return ScanResult returning scan information and indicating success or
+ *         failure. Return status will be set to SUCCESS if scan was
+ *         successful. FAILURE if a complete rescan was not possible (due to
+ *         pruning or corruption). USER_ABORT if the rescan was aborted before
+ *         it could complete.
  *
  * @pre Caller needs to make sure start_block (and the optional stop_block) are on
  * the main chain after to the addition of any new keys you want to detect
@@ -2220,7 +2222,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     // marking transactions as coming from the wrong block.
                     // TODO: This should return success instead of failure, see
                     // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
-                    result.failed_block = block_hash;
+                    result.last_failed_block = block_hash;
                     result.status = ScanResult::FAILURE;
                     break;
                 }
@@ -2228,11 +2230,11 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                     SyncTransaction(block.vtx[posInBlock], block_hash, posInBlock, fUpdate);
                 }
                 // scan succeeded, record block as most recent successfully scanned
-                result.stop_block = block_hash;
-                result.stop_height = *block_height;
+                result.last_scanned_block = block_hash;
+                result.last_scanned_height = *block_height;
             } else {
                 // could not scan block, keep scanning but record this block as the most recent failure
-                result.failed_block = block_hash;
+                result.last_failed_block = block_hash;
                 result.status = ScanResult::FAILURE;
             }
             if (block_hash == stop_block) {
@@ -2262,10 +2264,10 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
         }
         ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
         if (block_height && fAbortRescan) {
-            WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", block_height.value_or(0), progress_current);
+            WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", *block_height, progress_current);
             result.status = ScanResult::USER_ABORT;
         } else if (block_height && ShutdownRequested()) {
-            WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", block_height.value_or(0), progress_current);
+            WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", *block_height, progress_current);
             result.status = ScanResult::USER_ABORT;
         }
     }
@@ -5019,7 +5021,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
 
         auto locked_chain = chain.assumeLocked();  // Temporary. Removed in upcoming lock cleanup
-        walletInstance->ChainStateFlushed(locked_chain->getLocator());
+        walletInstance->ChainStateFlushed(locked_chain->getTipLocator());
 
         // Try to create wallet backup right after new wallet was created
         std::string strBackupWarning;
@@ -5032,7 +5034,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
                 return error(strBackupError);
             }
         }
-
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
         InitError(strprintf(_("Error loading %s: Private keys can only be disabled during creation"), walletFile));
@@ -5186,7 +5187,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             }
         }
         walletInstance->WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - nStart);
-        walletInstance->ChainStateFlushed(locked_chain->getLocator());
+        walletInstance->ChainStateFlushed(locked_chain->getTipLocator());
         walletInstance->database->IncrementUpdateCounter();
 
         // Restore wallet transaction metadata after -zapwallettxes=1
