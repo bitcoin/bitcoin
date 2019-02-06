@@ -8,6 +8,7 @@
 
 #include "omnicore/activation.h"
 #include "omnicore/consensushash.h"
+#include "omnicore/dbtxlist.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/notifications.h"
@@ -90,6 +91,16 @@ std::vector<ConsensusCheckpoint> CConsensusParams::GetCheckpoints() const
 }
 
 /**
+ * Returns an empty vector of transaction checkpoints.
+ *
+ * This method should be overwriten by the child classes, if needed.
+ */
+std::vector<TransactionCheckpoint> CConsensusParams::GetTransactions() const
+{
+    return std::vector<TransactionCheckpoint>();
+}
+
+/**
  * Returns consensus checkpoints for mainnet, used to verify transaction processing.
  */
 std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
@@ -157,6 +168,50 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
     const size_t nSize = sizeof(vCheckpoints) / sizeof(vCheckpoints[0]);
 
     return std::vector<ConsensusCheckpoint>(vCheckpoints, vCheckpoints + nSize);
+}
+
+/**
+ * Returns transactions checkpoints for mainnet, used to verify DB consistency.
+ */
+std::vector<TransactionCheckpoint> CMainConsensusParams::GetTransactions() const
+{
+    // block height, transaction hash
+    const TransactionCheckpoint vTransactions[] = {
+        { 304952, uint256S("5c183d6c1c9b8a617dbdcd1afa876eec14b46a2aa45d471e8381b287ccba731d") },
+        { 306853, uint256S("0e0090b3951057ab01ae21fa6b17600b6ec053f1461ce544e8d18b79e16f8042") },
+        { 306906, uint256S("b7c66175a99ca0e7b1691905d50a46165adb7a8012d9ec5e1ecf8239f859df6d") },
+        { 306906, uint256S("a59ac18eda590dfe9f3671f99f3cec5679e95ea4d1478d5313e2b4706307537b") },
+        { 306912, uint256S("ce56ee84abd20bd1386d66e5ab9e3661a9bfad45a7d46490cae2241bbebf91df") },
+        { 306913, uint256S("bbdb911227c033697e92d6828d43b15f99bbc24c97147be0aed12dd98f362c28") },
+        { 307290, uint256S("69604c02f219136245d309b722816d6f4f77ccead60ded6976219f9a0becceff") },
+        { 307403, uint256S("201c38a5b819c870830ddd7583d446f05a12c6b01ec3690e3acf33e49fe8d91f") },
+        { 307620, uint256S("7ddac86217f6fc37a11f7de3b8edb78b6f7d10e93cece8f6bf0565ddc95acc76") },
+        { 307897, uint256S("22b4ee94c5a31a082e1b8bc77e79a54783262b19f957d6603f16876397546e58") },
+        { 308666, uint256S("84fc343c89218faa9f6f31a9ee266837e19d9bc1319737ae66fa2d1fd095d271") },
+        { 309030, uint256S("f3493671fe79a9dd5af871ac1f9b715db8e895c80584031091c626e43a73d4e0") },
+        { 309031, uint256S("eda3d2bbb8125397f4d4909ea25d845dc451e8a3206035bf0d736bb3ece5d758") },
+        { 309052, uint256S("a4abfc7a10a262bec4a9be830fa784cbb712cfa7d19fb28e854c3d7d7ea50719") },
+        { 310003, uint256S("6d373615f4938cc9dfacf213ba0f33ec1b63961a61b4869ea69e08c938671367") },
+        { 310114, uint256S("17e48d57fe979aa821b30c14edf76b5203f5dc72847ab9350c068870551d6a5d") },
+        { 310121, uint256S("a67609d7941c8e7dc33fd1e4a286f7407e6139c61bec3247d20f546e0b3c2e7f") },
+        { 310132, uint256S("21aa754a425c7748688a57bb409cf6942a3eb7b087b32e29254fae62e5dbbe71") },
+        { 310313, uint256S("18e955f7e8aa7efa2f07768c9916967cea1821c197a2d9f815a51358b82a549d") },
+        { 310502, uint256S("6ab48c227a3aed94df462ab2628a87b566d9bc985b27fd8d3e86f52794e3d735") },
+        { 310577, uint256S("1b9d32711dd896d18b083c1d3d12f2ba661c5cbcdc2122a224ecfb462a58eb92") },
+        { 310985, uint256S("1d8af5bfaf69b3cea356501f681c698017b60d1aef3d1dcdb2e72454ae682add") },
+        { 312967, uint256S("5b922dad64c5c4241c694401d627d6c0e33033215f1fb375aa21b435fa032fce") },
+        { 313118, uint256S("e152ffe783d54f7dbf2ab846d3c1904037b26788e48617621e1fdefe151be42a") },
+        { 313538, uint256S("b01d1594a7e2083ebcd428706045df003f290c4dc7bd6d77c93df9fcca68232f") },
+        { 314110, uint256S("189c959a37ecac2045ba3631b87e151e09506e6a492e867bbcc6c89e3bbc91e7") },
+        { 314126, uint256S("7244beac4e5165b3386728f2cd4c203dd6144b6676853e5012a87b75135468b0") },
+        { 315312, uint256S("8fbd96005aba5671daf8288f89df8026a7ce4782a0bb411937537933956b827b") },
+        { 420430, uint256S("64ab528aa6407033ac4925601f132d1ce3bca47ec140d27e7f5a9bad0f37cbc6") },
+        { 420551, uint256S("5b81b20508c98a9bda3de68d6b3872f52efd02ebe2cb9b114cfb3a3225f33dd1") },
+    };
+
+    const size_t nSize = sizeof(vTransactions) / sizeof(vTransactions[0]);
+
+    return std::vector<TransactionCheckpoint>(vTransactions, vTransactions + nSize);
 }
 
 /**
@@ -668,6 +723,31 @@ bool VerifyCheckpoint(int block, const uint256& blockHash)
     }
 
     // either checkpoint matched or we don't have a checkpoint for this block
+    return true;
+}
+
+/**
+ * Checks, if a specific transaction exists in the database.
+ */
+bool VerifyTransactionExistence(int block)
+{
+    PrintToLog("%s: verifying existence of historical transactions up to block %d..\n", __func__, block);
+
+    const std::vector<TransactionCheckpoint>& vTransactionss = ConsensusParams().GetTransactions();
+
+    for (std::vector<TransactionCheckpoint>::const_iterator it = vTransactionss.begin(); it != vTransactionss.end(); ++it) {
+        const TransactionCheckpoint& checkpoint = *it;
+        if (block < checkpoint.blockHeight) {
+            continue;
+        }
+
+        if (!mastercore::pDbTransactionList->exists(checkpoint.txHash)) {
+            PrintToLog("%s: ERROR: failed to find historical transaction %s in block %d\n",
+                    __func__, checkpoint.txHash.GetHex(), checkpoint.blockHeight);
+            return false;
+        }
+    }
+
     return true;
 }
 
