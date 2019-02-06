@@ -477,10 +477,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             for node in self.nodes:
                 node.wait_for_rpc_connection()
 
-            # For backward compatibility of the python scripts with previous
-            # versions of the cache, set mocktime to Jan 1,
-            # 2014 + (201 * 10 * 60)"""
-            self.mocktime = 1388534400 + (201 * 10 * 60)
+            # Create the blocks, spaced 10 minutes apart, starting now
+            self.mocktime = int(time.time())
 
             # Create a 200-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.

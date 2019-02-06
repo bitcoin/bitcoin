@@ -7,17 +7,23 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
+import time
 
 
 class CreateTxWalletTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
+        self.setup_clean_chain = True
         self.num_nodes = 1
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        # Create 200 old blocks (1 year old)
+        self.nodes[0].setmocktime(int(time.time()) - 3600*24*365)
+        self.nodes[0].generate(200)
+        self.nodes[0].setmocktime(0)
+
         self.log.info('Check that we have some (old) blocks and that anti-fee-sniping is disabled')
         assert_equal(self.nodes[0].getblockchaininfo()['blocks'], 200)
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
