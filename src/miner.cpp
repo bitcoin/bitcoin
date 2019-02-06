@@ -382,8 +382,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
             if (txCoinbase.vout.size() > 2)
                 nValueNodeRewards += txCoinbase.vout[SN_PMT_SLOT].nValue;
 
-            //Reduce PoS reward by the node rewards
-            txCoinStake.vout[0].nValue = GetBlockValue(nHeight, nFees) - nValueNodeRewards;
+            if (!(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight + 1)))
+            {
+                //Reduce PoS reward by the node rewards
+                txCoinStake.vout[0].nValue = GetBlockValue(nHeight, nFees) - nValueNodeRewards;
+            }
+            else
+            {
+                // Miner gets full block value in case of superblock
+                txCoinStake.vout[0].nValue = GetBlockValue(nHeight, nFees);
+            }
             pblock->vtx[1] = txCoinStake;
 
             // Make sure coinbase has null values
