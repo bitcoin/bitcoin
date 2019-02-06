@@ -441,12 +441,13 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     vTxHashes.emplace_back(hash, newit);
     newit->vTxHashesIdx = vTxHashes.size() - 1;
 
+    // Invalid ProTxes should never get this far because transactions should be
+    // fully checked by AcceptToMemoryPool() at this point, so we just assume that
+    // everything is fine here.
     if (tx.nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-            return false;
-        }
+        bool ok = GetTxPayload(tx, proTx);
+        assert(ok);
         if (!proTx.collateralOutpoint.hash.IsNull()) {
             mapProTxRefs.emplace(tx.GetHash(), proTx.collateralOutpoint.hash);
         }
@@ -458,36 +459,29 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-            return false;
-        }
+        bool ok = GetTxPayload(tx, proTx);
+        assert(ok);
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-            return false;
-        }
+        bool ok = GetTxPayload(tx, proTx);
+        assert(ok);
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
-
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
-        assert(dmn); // we should never get such a ProTx into the mempool
+        assert(dmn);
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
             newit->isKeyChangeProTx = true;
         }
     } else if (tx.nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         CProUpRevTx proTx;
-        if (!GetTxPayload(tx, proTx)) {
-            LogPrintf("%s: ERROR: Invalid transaction payload, tx: %s", __func__, tx.ToString());
-            return false;
-        }
+        bool ok = GetTxPayload(tx, proTx);
+        assert(ok);
         mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
-        assert(dmn); // we should never get such a ProTx into the mempool
+        assert(dmn);
         newit->validForProTxKey = ::SerializeHash(dmn->pdmnState->pubKeyOperator);
         if (dmn->pdmnState->pubKeyOperator != CBLSPublicKey()) {
             newit->isKeyChangeProTx = true;
@@ -1306,9 +1300,13 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             return true; // i.e. can't decode payload == conflict
         }
 
-        // only allow one operator key change in the mempool
+        // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
-        assert(dmn); // this method should only be called with validated ProTxs
+        if (!dmn) {
+            LogPrintf("%s: ERROR: Masternode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
+            return true; // i.e. failed to find validated ProTx == conflict
+        }
+        // only allow one operator key change in the mempool
         if (dmn->pdmnState->pubKeyOperator != proTx.pubKeyOperator) {
             if (hasKeyChangeInMempool(proTx.proTxHash)) {
                 return true;
@@ -1324,9 +1322,13 @@ bool CTxMemPool::existsProviderTxConflict(const CTransaction &tx) const {
             return true; // i.e. can't decode payload == conflict
         }
 
-        // only allow one operator key change in the mempool
+        // this method should only be called with validated ProTxs
         auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(proTx.proTxHash);
-        assert(dmn); // this method should only be called with validated ProTxs
+        if (!dmn) {
+            LogPrintf("%s: ERROR: Masternode is not in the list, proTxHash: %s", __func__, proTx.proTxHash.ToString());
+            return true; // i.e. failed to find validated ProTx == conflict
+        }
+        // only allow one operator key change in the mempool
         if (dmn->pdmnState->pubKeyOperator != CBLSPublicKey()) {
             if (hasKeyChangeInMempool(proTx.proTxHash)) {
                 return true;
