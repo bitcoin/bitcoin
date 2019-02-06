@@ -537,6 +537,9 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 
     // Process this block the same as if we had received it from another node
     CValidationState state;
+
+    //Lock main here to prevent deadlock with budgetmanager
+    LOCK(cs_main);
     if (!ProcessNewBlock(state, NULL, pblock))
         return error("CrownMiner : ProcessNewBlock, block not accepted");
 
