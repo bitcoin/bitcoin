@@ -203,7 +203,7 @@ class ImportMultiTest(BitcoinTestFramework):
                                "keys": [key.privkey]},
                               success=False,
                               error_code=-4,
-                              error_message='The wallet already contains the private key for this address or script')
+                              error_message='The wallet already contains the private key for this address or script ("' + key.p2pkh_script + '")')
 
         # Address + Private key + watchonly
         self.log.info("Should import an address with private key and with watchonly")
@@ -542,6 +542,89 @@ class ImportMultiTest(BitcoinTestFramework):
                      multisig.p2sh_p2wsh_addr,
                      solvable=True,
                      ismine=False)
+
+        # Test importing of a P2SH-P2WPKH address via descriptor + private key
+        key = get_key(self.nodes[0])
+        self.log.info("Should import a p2sh-p2wpkh address from descriptor and private key")
+        self.test_importmulti({"desc": "sh(wpkh(" + key.pubkey + "))",
+                               "timestamp": "now",
+                               "label": "Descriptor import test",
+                               "keys": [key.privkey]},
+                              success=True)
+        test_address(self.nodes[1],
+                     key.p2sh_p2wpkh_addr,
+                     solvable=True,
+                     ismine=True,
+                     label="Descriptor import test")
+
+        # Test ranged descriptor fails if range is not specified
+        xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
+        addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
+        desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
+        self.log.info("Ranged descriptor import should fail without a specified range")
+        self.test_importmulti({"desc": desc,
+                               "timestamp": "now"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Descriptor is ranged, please specify the range')
+
+        # Test importing of a ranged descriptor without keys
+        self.log.info("Should import the ranged descriptor with specified range as solvable")
+        self.test_importmulti({"desc": desc,
+                               "timestamp": "now",
+                               "range": {"end": 1}},
+                              success=True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+        for address in addresses:
+            test_address(self.nodes[1],
+                         key.p2sh_p2wpkh_addr,
+                         solvable=True)
+
+        # Test importing of a P2PKH address via descriptor
+        key = get_key(self.nodes[0])
+        self.log.info("Should import a p2pkh address from descriptor")
+        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+                               "timestamp": "now",
+                               "label": "Descriptor import test"},
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
+        test_address(self.nodes[1],
+                     key.p2pkh_addr,
+                     solvable=True,
+                     ismine=False,
+                     label="Descriptor import test")
+
+        # Test import fails if both desc and scriptPubKey are provided
+        key = get_key(self.nodes[0])
+        self.log.info("Import should fail if both scriptPubKey and desc are provided")
+        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+                               "scriptPubKey": {"address": key.p2pkh_addr},
+                               "timestamp": "now"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Both a descriptor and a scriptPubKey should not be provided.')
+
+        # Test import fails if neither desc nor scriptPubKey are present
+        key = get_key(self.nodes[0])
+        self.log.info("Import should fail if neither a descriptor nor a scriptPubKey are provided")
+        self.test_importmulti({"timestamp": "now"},
+                              success=False,
+                              error_code=-8,
+                              error_message='Either a descriptor or scriptPubKey must be provided.')
+
+        # Test importing of a multisig via descriptor
+        key1 = get_key(self.nodes[0])
+        key2 = get_key(self.nodes[0])
+        self.log.info("Should import a 1-of-2 bare multisig from descriptor")
+        self.test_importmulti({"desc": "multi(1," + key1.pubkey + "," + key2.pubkey + ")",
+                               "timestamp": "now"},
+                              success=True)
+        self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
+        test_address(self.nodes[1],
+                     key1.p2pkh_addr,
+                     ismine=False,
+                     iswatchonly=False)
+
 
 if __name__ == '__main__':
     ImportMultiTest().main()
