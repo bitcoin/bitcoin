@@ -94,7 +94,6 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
 
 static void WalletShowInfo(CWallet* wallet_instance)
 {
-    // lock required because of some AssertLockHeld()
     LOCK(wallet_instance->cs_wallet);
 
     fprintf(stdout, "Wallet info\n===========\n");
