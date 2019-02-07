@@ -95,6 +95,7 @@ void TestAddAddressesToSendBook()
     }
 
     auto check_addbook_size = [&wallet](int expected_size) {
+        LOCK(wallet->cs_wallet);
         QCOMPARE(static_cast<int>(wallet->mapAddressBook.size()), expected_size);
     };
 
