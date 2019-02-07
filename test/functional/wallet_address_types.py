@@ -54,6 +54,10 @@ from decimal import Decimal
 import itertools
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.descriptors import (
+    descsum_create,
+    descsum_check,
+)
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -167,24 +171,29 @@ class AddressTypeTest(BitcoinTestFramework):
             assert_equal(deriv['path'][0], 'm')
             key_descs[deriv['pubkey']] = '[' + deriv['master_fingerprint'] + deriv['path'][1:] + ']' + deriv['pubkey']
 
+        # Verify the descriptor checksum against the Python implementation
+        assert(descsum_check(info['desc']))
+        # Verify that stripping the checksum and recreating it using Python roundtrips
+        assert(info['desc'] == descsum_create(info['desc'][:-9]))
+
         if not multisig and typ == 'legacy':
             # P2PKH
-            assert_equal(info['desc'], "pkh(%s)" % key_descs[info['pubkey']])
+            assert_equal(info['desc'], descsum_create("pkh(%s)" % key_descs[info['pubkey']]))
         elif not multisig and typ == 'p2sh-segwit':
             # P2SH-P2WPKH
-            assert_equal(info['desc'], "sh(wpkh(%s))" % key_descs[info['pubkey']])
+            assert_equal(info['desc'], descsum_create("sh(wpkh(%s))" % key_descs[info['pubkey']]))
         elif not multisig and typ == 'bech32':
             # P2WPKH
-            assert_equal(info['desc'], "wpkh(%s)" % key_descs[info['pubkey']])
+            assert_equal(info['desc'], descsum_create("wpkh(%s)" % key_descs[info['pubkey']]))
         elif typ == 'legacy':
             # P2SH-multisig
-            assert_equal(info['desc'], "sh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]]))
+            assert_equal(info['desc'], descsum_create("sh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]])))
         elif typ == 'p2sh-segwit':
             # P2SH-P2WSH-multisig
-            assert_equal(info['desc'], "sh(wsh(multi(2,%s,%s)))" % (key_descs[info['embedded']['pubkeys'][0]], key_descs[info['embedded']['pubkeys'][1]]))
+            assert_equal(info['desc'], descsum_create("sh(wsh(multi(2,%s,%s)))" % (key_descs[info['embedded']['pubkeys'][0]], key_descs[info['embedded']['pubkeys'][1]])))
         elif typ == 'bech32':
             # P2WSH-multisig
-            assert_equal(info['desc'], "wsh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]]))
+            assert_equal(info['desc'], descsum_create("wsh(multi(2,%s,%s))" % (key_descs[info['pubkeys'][0]], key_descs[info['pubkeys'][1]])))
         else:
             # Unknown type
             assert(False)
