@@ -175,6 +175,8 @@ class AddressTypeTest(BitcoinTestFramework):
         assert(descsum_check(info['desc']))
         # Verify that stripping the checksum and recreating it using Python roundtrips
         assert(info['desc'] == descsum_create(info['desc'][:-9]))
+        # Verify that stripping the checksum and feeding it to getdescriptorinfo roundtrips
+        assert(info['desc'] == self.nodes[0].getdescriptorinfo(info['desc'][:-9])['descriptor'])
 
         if not multisig and typ == 'legacy':
             # P2PKH
