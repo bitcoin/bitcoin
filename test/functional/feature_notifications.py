@@ -72,17 +72,15 @@ class NotificationsTest(BitcoinTestFramework):
         self.sync_all()
 
         # Give bitcoind 10 seconds to write the alert notification
-        wait_until(lambda: len(os.listdir(self.alertnotify_dir)), timeout=10)
-
-        for notify_file in os.listdir(self.alertnotify_dir):
-            os.remove(os.path.join(self.alertnotify_dir, notify_file))
+        wait_until(lambda: 1 == len(os.listdir(self.alertnotify_dir)), timeout=10)
 
         # Mine more up-version blocks, should not get more alerts:
         self.nodes[1].generatetoaddress(2, ADDRESS_BCRT1_UNSPENDABLE)
         self.sync_all()
 
         self.log.info("-alertnotify should not continue notifying for more unknown version blocks")
-        assert_equal(len(os.listdir(self.alertnotify_dir)), 0)
+        assert_equal(len(os.listdir(self.alertnotify_dir)), 1)
+
 
 if __name__ == '__main__':
     NotificationsTest().main()
