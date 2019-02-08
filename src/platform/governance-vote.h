@@ -52,7 +52,10 @@ namespace Platform
             READWRITE(vote);
             READWRITE(candidate);
             READWRITE(keyId);
-            READWRITE(signature);
+            if (!(s.nType & SER_GETHASH))
+            {
+                READWRITE(signature);
+            }
         }
 
         std::string ToString() const;

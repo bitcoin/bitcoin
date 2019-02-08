@@ -46,7 +46,10 @@ namespace Platform
         {
             READWRITE(m_version);
             READWRITE(m_nfToken);
-            READWRITE(signature);
+            if (!(s.nType & SER_GETHASH))
+            {
+                READWRITE(signature);
+            }
         }
 
     public:
