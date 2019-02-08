@@ -158,6 +158,16 @@ Value getbestblockhash(const Array& params, bool fHelp)
     return pblockindex->phashBlock->GetHex();
 }
 
+Value estimatefee(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "estimatefee nblocks\n"
+            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin confirmation within nblocks blocks.");
+
+    return 0.01;
+}
+
 Value getblock(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 3)
