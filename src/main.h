@@ -26,6 +26,7 @@
 #include "sync.h"
 #include "tinyformat.h"
 #include "txmempool.h"
+#include "platform/nf-token/nf-token-tx-mem-pool-handler.h"
 #include "uint256.h"
 #include "undo.h"
 
@@ -121,6 +122,7 @@ struct BlockHasher
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
+extern Platform::NfTokenTxMemPoolHandler g_nfTokenTxMemPoolHandler;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;
 extern uint64_t nLastBlockTx;
