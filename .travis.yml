@@ -215,10 +215,11 @@ after_success:
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [no gui tests]'
+      name: 'Win64  [GOAL: deploy]  [no gui or functional tests]'
       env: >-
         HOST=x86_64-w64-mingw32
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
+        RUN_FUNCTIONAL_TESTS=false
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 

@@ -43,6 +43,7 @@ don't have test cases for.
     - `mining` for tests for mining features, eg `mining_prioritisetransaction.py`
     - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect_ban.py`
     - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
+    - `tool` for tests for tools, eg `tool_wallet.py`
     - `wallet` for tests for wallet features, eg `wallet_keypool.py`
 - use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
