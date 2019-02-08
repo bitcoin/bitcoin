@@ -54,5 +54,5 @@ test_script:
 - cmd: src\bench_bitcoin.exe -evals=1 -scaling=0 > NUL
 - ps:  python test\util\bitcoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
-- cmd: python test\functional\test_runner.py --ci --force --quiet --combinedlogslen=4000 --failfast
+- cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast
 deploy: off

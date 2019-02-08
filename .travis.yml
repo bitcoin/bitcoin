@@ -66,19 +66,21 @@ jobs:
         BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
 
     - stage: test
-      name: 'Win32  [GOAL: deploy]  [no gui tests]'
+      name: 'Win32  [GOAL: deploy]  [no gui or functional tests]'
       env: >-
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
         PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
+        RUN_FUNCTIONAL_TESTS=false
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 
     - stage: test
-      name: 'Win64  [GOAL: deploy]  [no gui tests]'
+      name: 'Win64  [GOAL: deploy]  [no gui or functional tests]'
       env: >-
         HOST=x86_64-w64-mingw32
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
+        RUN_FUNCTIONAL_TESTS=false
         GOAL="deploy"
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 
