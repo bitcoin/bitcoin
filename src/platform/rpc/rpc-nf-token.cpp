@@ -15,6 +15,8 @@ json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
 
     if (command == "register")
         return Platform::RegisterNfToken(params, fHelp);
+    else if (command == "list")
+        return Platform::ListNfTokenTxs(params, fHelp);
 
     throw std::runtime_error("Invalid command: " + command);
 }
@@ -77,11 +79,11 @@ namespace Platform
     {
         static std::string helpMessage =
                 "nftoken list\n"
-                "Lists all nftoken registration (for now) transactions on chain (or in your wallet:TODO)\n";
+                "Lists all nftoken registration (for now) transactions on chain (or in your wallet:TODO)\n"
                 "\nArguments:\n"
                 //"1. \"tx-id-or-nftoken-id\" (boolean, optional)\n"
-                "1. \"height\"              (numeric, optional) If height is not specified, it defaults to the current chain-tip\n"
-                "2. \"verbose\"             (boolean, optional, default=false) true for a detailed list, false for an array of transaction IDs\n";
+                "1. \"verbose\"             (boolean, optional, default=false) true for a detailed list, false for an array of transaction IDs\n"
+                "2. \"height\"              (numeric, optional) If height is not specified, it defaults to the current chain-tip\n";
         throw std::runtime_error(helpMessage);
     }
 
@@ -94,8 +96,8 @@ namespace Platform
         //nftJsonObj.push_back(json_spirit::Pair("timestamp", ));
         nftJsonObj.push_back(json_spirit::Pair("NFT protocol id", nftIndex.nfToken->tokenProtocolId));
         nftJsonObj.push_back(json_spirit::Pair("NFT id", nftIndex.nfToken->tokenId.GetHex()));
-        nftJsonObj.push_back(json_spirit::Pair("NFT owner address", nftIndex.nfToken->tokenOwnerKeyId.GetHex()));
-        nftJsonObj.push_back(json_spirit::Pair("Metadata amdin address", nftIndex.nfToken->metadataAdminKeyId.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("NFT owner address", CBitcoinAddress(nftIndex.nfToken->tokenOwnerKeyId).ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("Metadata amdin address", CBitcoinAddress(nftIndex.nfToken->metadataAdminKeyId).ToString()));
         //nftJsonObj.push_back(json_spirit::Pair("Metadata", nftIndex.nfToken->metadata));
         return nftJsonObj;
     }
@@ -105,11 +107,11 @@ namespace Platform
         if (fHelp || params.size() < 1 || params.size() > 3)
             ListNfTokenTxsHelp();
 
-        int height = (params.size() > 1) ? params[1].get_int() : chainActive.Height();
+        bool verbose = (params.size() > 1) ? ParseBoolV(params[1], "verbose") : false;
+
+        int height = (params.size() > 2) ? ParseInt32V(params[2], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
-
-        bool verbose = (params.size() > 2) ? ParseBoolV(params[2], "verbose") : false;
 
         json_spirit::Array nftList;
 
