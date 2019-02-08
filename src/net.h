@@ -210,7 +210,18 @@ public:
     CConnman(uint64_t seed0, uint64_t seed1);
     ~CConnman();
     bool Start(CScheduler& scheduler, const Options& options);
-    void Stop();
+
+    // TODO: Remove NO_THREAD_SAFETY_ANALYSIS. Lock cs_vNodes before reading the variable vNodes.
+    //
+    // When removing NO_THREAD_SAFETY_ANALYSIS be aware of the following lock order requirements:
+    // * CheckForStaleTipAndEvictPeers locks cs_main before indirectly calling GetExtraOutboundCount
+    //   which locks cs_vNodes.
+    // * ProcessMessage locks cs_main and g_cs_orphans before indirectly calling ForEachNode which
+    //   locks cs_vNodes.
+    //
+    // Thus the implicit locking order requirement is: (1) cs_main, (2) g_cs_orphans, (3) cs_vNodes.
+    void Stop() NO_THREAD_SAFETY_ANALYSIS;
+
     void Interrupt();
     bool GetNetworkActive() const { return fNetworkActive; };
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
@@ -561,7 +572,7 @@ private:
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumRelayMembers; // protected by cs_vPendingMasternodes
     std::set<uint256> masternodePendingProbes;
     mutable CCriticalSection cs_vPendingMasternodes;
-    std::vector<CNode*> vNodes;
+    std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
     std::list<CNode*> vNodesDisconnected;
     std::unordered_map<SOCKET, CNode*> mapSocketToNode;
     mutable CCriticalSection cs_vNodes;
