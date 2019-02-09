@@ -330,6 +330,7 @@ if test "x$enable_werror" = "xyes"; then
   ## isystem. See below for their non-werror equivalents.
   if test "x$use_isystem" = "xyes"; then
     AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Werror=shadow],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=shadow"],,[[$CXXFLAG_WERROR]])
   fi
 fi
 
@@ -358,6 +359,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   ## of isystem. See above for their werror equivalents.
   if test "x$use_isystem" = "xyes" && test "x$enable_werror" == "x"; then
     AX_CHECK_COMPILE_FLAG([-Wdocumentation],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Wshadow],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wshadow"],,[[$CXXFLAG_WERROR]])
   fi
 fi
 

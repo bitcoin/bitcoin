@@ -238,10 +238,10 @@ bool AskPassphraseDialog::event(QEvent *event)
 void AskPassphraseDialog::toggleShowPassword(bool show)
 {
     ui->toggleShowPasswordButton->setDown(show);
-    const auto mode = show ? QLineEdit::Normal : QLineEdit::Password;
-    ui->passEdit1->setEchoMode(mode);
-    ui->passEdit2->setEchoMode(mode);
-    ui->passEdit3->setEchoMode(mode);
+    const auto echo_mode = show ? QLineEdit::Normal : QLineEdit::Password;
+    ui->passEdit1->setEchoMode(echo_mode);
+    ui->passEdit2->setEchoMode(echo_mode);
+    ui->passEdit3->setEchoMode(echo_mode);
 }
 
 bool AskPassphraseDialog::eventFilter(QObject *object, QEvent *event)

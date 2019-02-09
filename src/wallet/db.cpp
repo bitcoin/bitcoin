@@ -577,8 +577,8 @@ BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bo
             // be implemented, so no equality checks are needed at all. (Newer
             // versions of BDB have an set_lk_exclusive method for this
             // purpose, but the older version we use does not.)
-            for (const auto& env : g_dbenvs) {
-                CheckUniqueFileid(*env.second.lock().get(), strFilename, *pdb_temp, this->env->m_fileids[strFilename]);
+            for (const auto& check_env : g_dbenvs) {
+                CheckUniqueFileid(*check_env.second.lock().get(), strFilename, *pdb_temp, this->env->m_fileids[strFilename]);
             }
 
             pdb = pdb_temp.release();

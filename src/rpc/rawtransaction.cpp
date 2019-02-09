@@ -1335,11 +1335,13 @@ UniValue decodepsbt(const JSONRPCRequest& request)
     result.pushKV("tx", tx_univ);
 
     // Unknown data
-    UniValue unknowns(UniValue::VOBJ);
-    for (auto entry : psbtx.unknown) {
-        unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+    {
+        UniValue unknowns(UniValue::VOBJ);
+        for (auto entry : psbtx.unknown) {
+            unknowns.pushKV(HexStr(entry.first), HexStr(entry.second));
+        }
+        result.pushKV("unknown", unknowns);
     }
-    result.pushKV("unknown", unknowns);
 
     // inputs
     CAmount total_in = 0;

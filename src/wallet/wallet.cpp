@@ -735,7 +735,6 @@ DBErrors CWallet::ReorderTransactions()
     // Probably a bad idea to change the output of this
 
     // First: get all CWalletTx into a sorted-by-time multimap.
-    typedef std::multimap<int64_t, CWalletTx*> TxItems;
     TxItems txByTime;
 
     for (auto& entry : mapWallet)
@@ -1013,6 +1012,13 @@ void CWallet::MarkInputsDirty(const CTransactionRef& tx)
     }
 }
 
+static CWalletTx& FetchTx(std::map<uint256, CWalletTx>& tx_map, const uint256& hash)
+{
+    auto it = tx_map.find(hash);
+    assert(it != tx_map.end());
+    return it->second;
+}
+
 bool CWallet::AbandonTransaction(interfaces::Chain::Lock& locked_chain, const uint256& hashTx)
 {
     auto locked_chain_recursive = chain().lock();  // Temporary. Removed in upcoming lock cleanup
@@ -1024,9 +1030,7 @@ bool CWallet::AbandonTransaction(interfaces::Chain::Lock& locked_chain, const ui
     std::set<uint256> done;
 
     // Can't mark abandoned if confirmed or in mempool
-    auto it = mapWallet.find(hashTx);
-    assert(it != mapWallet.end());
-    CWalletTx& origtx = it->second;
+    CWalletTx& origtx = FetchTx(mapWallet, hashTx);
     if (origtx.GetDepthInMainChain(locked_chain) != 0 || origtx.InMempool()) {
         return false;
     }
@@ -1037,9 +1041,7 @@ bool CWallet::AbandonTransaction(interfaces::Chain::Lock& locked_chain, const ui
         uint256 now = *todo.begin();
         todo.erase(now);
         done.insert(now);
-        auto it = mapWallet.find(now);
-        assert(it != mapWallet.end());
-        CWalletTx& wtx = it->second;
+        CWalletTx& wtx = FetchTx(mapWallet, now);
         int currentconfirm = wtx.GetDepthInMainChain(locked_chain);
         // If the orig tx was not in block, none of its spends can be
         assert(currentconfirm <= 0);
@@ -2689,11 +2691,11 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     int nBytes;
     {
         std::set<CInputCoin> setCoins;
-        auto locked_chain = chain().lock();
+        auto available_coins_locked_chain = chain().lock();
         LOCK(cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(*locked_chain, vAvailableCoins, true, &coin_control);
+            AvailableCoins(*available_coins_locked_chain, vAvailableCoins, true, &coin_control);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
             // Create change script that will be used if we need change

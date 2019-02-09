@@ -519,9 +519,11 @@ bool SelfTest() {
     }
 
     // Test TransformD64
-    unsigned char out[32];
-    TransformD64(out, data + 1);
-    if (!std::equal(out, out + 32, result_d64)) return false;
+    {
+        unsigned char out[32];
+        TransformD64(out, data + 1);
+        if (!std::equal(out, out + 32, result_d64)) return false;
+    }
 
     // Test TransformD64_2way, if available.
     if (TransformD64_2way) {

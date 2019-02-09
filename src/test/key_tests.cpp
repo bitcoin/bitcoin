@@ -30,6 +30,11 @@ static const std::string strAddressBad = "1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF";
 
 BOOST_FIXTURE_TEST_SUITE(key_tests, BasicTestingSetup)
 
+static uint256 SignMsg(const std::string& msg)
+{
+    return Hash(msg.begin(), msg.end());
+}
+
 BOOST_AUTO_TEST_CASE(key_test1)
 {
     CKey key1  = DecodeSecret(strSecret1);
@@ -75,8 +80,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
 
     for (int n=0; n<16; n++)
     {
-        std::string strMsg = strprintf("Very secret message %i: 11", n);
-        uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());
+        uint256 hashMsg = SignMsg(strprintf("Very secret message %i: 11", n));
 
         // normal signatures
 
@@ -132,8 +136,7 @@ BOOST_AUTO_TEST_CASE(key_test1)
     // test deterministic signing
 
     std::vector<unsigned char> detsig, detsigc;
-    std::string strMsg = "Very deterministic message";
-    uint256 hashMsg = Hash(strMsg.begin(), strMsg.end());
+    uint256 hashMsg = SignMsg("Very deterministic message");
     BOOST_CHECK(key1.Sign(hashMsg, detsig));
     BOOST_CHECK(key1C.Sign(hashMsg, detsigc));
     BOOST_CHECK(detsig == detsigc);
@@ -156,8 +159,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
 {
     // When entropy is specified, we should see at least one high R signature within 20 signatures
     CKey key = DecodeSecret(strSecret1);
-    std::string msg = "A message to be signed";
-    uint256 msg_hash = Hash(msg.begin(), msg.end());
+    uint256 msg_hash = SignMsg("A message to be signed");
     std::vector<unsigned char> sig;
     bool found = false;
 
@@ -177,8 +179,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     bool found_small = false;
     for (int i = 0; i < 256; ++i) {
         sig.clear();
-        std::string msg = "A message to be signed" + std::to_string(i);
-        msg_hash = Hash(msg.begin(), msg.end());
+        msg_hash = SignMsg("A message to be signed" + std::to_string(i));
         BOOST_CHECK(key.Sign(msg_hash, sig));
         found = sig[3] == 0x20;
         BOOST_CHECK(sig.size() <= 70);

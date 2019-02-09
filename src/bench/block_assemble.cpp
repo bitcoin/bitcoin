@@ -81,8 +81,8 @@ static void AssembleBlock(benchmark::State& state)
         thread_group.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
         LoadGenesisBlock(chainparams);
-        CValidationState state;
-        ActivateBestChain(state, chainparams);
+        CValidationState validation_state;
+        ActivateBestChain(validation_state, chainparams);
         assert(::chainActive.Tip() != nullptr);
         const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), chainparams.GetConsensus())};
         assert(witness_enabled);
@@ -103,8 +103,8 @@ static void AssembleBlock(benchmark::State& state)
         LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
 
         for (const auto& txr : txs) {
-            CValidationState state;
-            bool ret{::AcceptToMemoryPool(::mempool, state, txr, nullptr /* pfMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
+            CValidationState validation_state;
+            bool ret{::AcceptToMemoryPool(::mempool, validation_state, txr, nullptr /* pfMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
             assert(ret);
         }
     }
