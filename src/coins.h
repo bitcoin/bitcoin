@@ -1,21 +1,22 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_COINS_H
 #define SYSCOIN_COINS_H
 
-#include "compressor.h"
-#include "core_memusage.h"
-#include "hash.h"
-#include "memusage.h"
-#include "serialize.h"
-#include "uint256.h"
+#include <primitives/transaction.h>
+#include <compressor.h>
+#include <core_memusage.h>
+#include <hash.h>
+#include <memusage.h>
+#include <serialize.h>
+#include <uint256.h>
 
 #include <assert.h>
 #include <stdint.h>
+
 #include <unordered_map>
 
 /**
@@ -68,7 +69,7 @@ public:
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
         fCoinBase = code & 1;
-        ::Unserialize(s, REF(CTxOutCompressor(out)));
+        ::Unserialize(s, CTxOutCompressor(out));
     }
 
     bool IsSpent() const {
@@ -129,7 +130,6 @@ public:
 
     virtual bool GetKey(COutPoint &key) const = 0;
     virtual bool GetValue(Coin &coin) const = 0;
-    /* Don't care about GetKeySize here */
     virtual unsigned int GetValueSize() const = 0;
 
     virtual bool Valid() const = 0;
@@ -157,6 +157,12 @@ public:
     //! Retrieve the block hash whose state this CCoinsView currently represents
     virtual uint256 GetBestBlock() const;
 
+    //! Retrieve the range of blocks that may have been only partially written.
+    //! If the database is in a consistent state, the result is the empty vector.
+    //! Otherwise, a two-element vector is returned consisting of the new and
+    //! the old block hash, in that order.
+    virtual std::vector<uint256> GetHeadBlocks() const;
+
     //! Do a bulk modification (multiple Coin changes + BestBlock change).
     //! The passed mapCoins can be modified.
     virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
@@ -183,6 +189,7 @@ public:
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
     bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
+    std::vector<uint256> GetHeadBlocks() const override;
     void SetBackend(CCoinsView &viewIn);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor *Cursor() const override;
@@ -196,7 +203,7 @@ class CCoinsViewCache : public CCoinsViewBacked
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
-     * declared as "const".  
+     * declared as "const".
      */
     mutable uint256 hashBlock;
     mutable CCoinsMap cacheCoins;
@@ -206,6 +213,11 @@ protected:
 
 public:
     CCoinsViewCache(CCoinsView *baseIn);
+
+    /**
+     * By deleting the copy constructor, we prevent accidentally using it when one intends to create a cache on top of a base cache.
+     */
+    CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
@@ -268,8 +280,8 @@ public:
     //! Calculate the size of the cache (in bytes)
     size_t DynamicMemoryUsage() const;
 
-    /** 
-     * Amount of syscoin coming in to a transaction
+    /**
+     * Amount of syscoins coming in to a transaction
      * Note that lightweight clients may not know anything besides the hash of previous transactions,
      * so may not be able to calculate this.
      *
@@ -281,27 +293,17 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
-    /**
-     * Return priority of tx at height nHeight. Also calculate the sum of the values of the inputs
-     * that are already in the chain.  These are the inputs that will age and increase priority as
-     * new blocks are added to the chain.
-     */
-    double GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue) const;
-
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
-
-    /**
-     * By making the copy constructor private, we prevent accidentally using it when one intends to create a cache on top of a base cache.
-     */
-    CCoinsViewCache(const CCoinsViewCache &);
 };
 
 //! Utility function to add all of a transaction's outputs to a cache.
-// It assumes that overwrites are only possible for coinbase transactions,
+// When check is false, this assumes that overwrites are only possible for coinbase transactions.
+// When check is true, the underlying view may be queried to determine whether an addition is
+// an overwrite.
 // TODO: pass in a boolean to limit these possible overwrites to known
 // (pre-BIP34) cases.
-void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight);
+void AddCoins(CCoinsViewCache& cache, const CTransaction& tx, int nHeight, bool check = false);
 
 //! Utility function to find any unspent output with a given txid.
 // This function can be quite expensive because in the event of a transaction

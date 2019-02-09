@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@ static const int64_t DEFAULT_MAX_TIME_ADJUSTMENT = 70 * 60;
 
 class CNetAddr;
 
-/** 
+/**
  * Median filter over a stream of values.
  * Returns the median of the last N numbers
  */
@@ -27,9 +27,9 @@ private:
     unsigned int nSize;
 
 public:
-    CMedianFilter(unsigned int size, T initial_value) : nSize(size)
+    CMedianFilter(unsigned int _size, T initial_value) : nSize(_size)
     {
-        vValues.reserve(size);
+        vValues.reserve(_size);
         vValues.push_back(initial_value);
         vSorted = vValues;
     }
@@ -48,14 +48,14 @@ public:
 
     T median() const
     {
-        int size = vSorted.size();
-        assert(size > 0);
-        if (size & 1) // Odd number of elements
+        int vSortedSize = vSorted.size();
+        assert(vSortedSize > 0);
+        if (vSortedSize & 1) // Odd number of elements
         {
-            return vSorted[size / 2];
+            return vSorted[vSortedSize / 2];
         } else // Even number of elements
         {
-            return (vSorted[size / 2 - 1] + vSorted[size / 2]) / 2;
+            return (vSorted[vSortedSize / 2 - 1] + vSorted[vSortedSize / 2]) / 2;
         }
     }
 

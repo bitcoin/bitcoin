@@ -1,11 +1,11 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "bench.h"
-#include "coins.h"
-#include "policy/policy.h"
-#include "wallet/crypter.h"
+#include <bench/bench.h>
+#include <coins.h>
+#include <policy/policy.h>
+#include <wallet/crypter.h>
 
 #include <vector>
 
@@ -84,4 +84,4 @@ static void CCoinsCaching(benchmark::State& state)
     }
 }
 
-BENCHMARK(CCoinsCaching);
+BENCHMARK(CCoinsCaching, 170 * 1000);

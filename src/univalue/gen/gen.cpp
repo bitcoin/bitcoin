@@ -12,8 +12,6 @@
 #include <string.h>
 #include "univalue.h"
 
-using namespace std;
-
 static bool initEscapes;
 static std::string escapes[256];
 
@@ -41,8 +39,8 @@ static void initJsonEscape()
 static void outputEscape()
 {
 	printf(	"// Automatically generated file. Do not modify.\n"
-		"#ifndef SYSCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
-		"#define SYSCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
+		"#ifndef BITCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
+		"#define BITCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n"
 		"static const char *escapes[256] = {\n");
 
 	for (unsigned int i = 0; i < 256; i++) {
@@ -72,7 +70,7 @@ static void outputEscape()
 	}
 
 	printf(	"};\n"
-		"#endif // SYSCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n");
+		"#endif // BITCOIN_UNIVALUE_UNIVALUE_ESCAPES_H\n");
 }
 
 int main (int argc, char *argv[])

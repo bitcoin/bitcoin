@@ -1,17 +1,12 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2012-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "streams.h"
-#include "support/allocators/zeroafterfree.h"
-#include "test/test_syscoin.h"
+#include <streams.h>
+#include <support/allocators/zeroafterfree.h>
+#include <test/test_syscoin.h>
 
-#include <boost/assign/std/vector.hpp> // for 'operator+=()'
-#include <boost/assert.hpp>
 #include <boost/test/unit_test.hpp>
-
-using namespace boost::assign; // bring 'operator+=()' into scope
 
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
@@ -59,16 +54,16 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
     vch.clear();
 
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, FLATDATA(bytes));
+    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, bytes);
     BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, FLATDATA(bytes));
+    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, bytes);
     BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
     vch.clear();
 
     vch.resize(4, 8);
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, FLATDATA(bytes), b);
+    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, bytes, b);
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
-    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, FLATDATA(bytes), b);
+    CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, bytes, b);
     BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
     vch.clear();
 }
@@ -81,45 +76,51 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     CDataStream ds(in, 0, 0);
 
     // Degenerate case
-    
-    key += '\x00','\x00';
+
+    key.push_back('\x00');
+    key.push_back('\x00');
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()), 
+            std::string(expected_xor.begin(), expected_xor.end()),
             std::string(ds.begin(), ds.end()));
 
-    in += '\x0f','\xf0';
-    expected_xor += '\xf0','\x0f';
-    
+    in.push_back('\x0f');
+    in.push_back('\xf0');
+    expected_xor.push_back('\xf0');
+    expected_xor.push_back('\x0f');
+
     // Single character key
 
     ds.clear();
     ds.insert(ds.begin(), in.begin(), in.end());
     key.clear();
 
-    key += '\xff';
+    key.push_back('\xff');
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()), 
-            std::string(ds.begin(), ds.end())); 
-    
+            std::string(expected_xor.begin(), expected_xor.end()),
+            std::string(ds.begin(), ds.end()));
+
     // Multi character key
 
     in.clear();
     expected_xor.clear();
-    in += '\xf0','\x0f';
-    expected_xor += '\x0f','\x00';
-                        
+    in.push_back('\xf0');
+    in.push_back('\x0f');
+    expected_xor.push_back('\x0f');
+    expected_xor.push_back('\x00');
+
     ds.clear();
     ds.insert(ds.begin(), in.begin(), in.end());
 
     key.clear();
-    key += '\xff','\x0f';
+    key.push_back('\xff');
+    key.push_back('\x0f');
 
     ds.Xor(key);
     BOOST_CHECK_EQUAL(
-            std::string(expected_xor.begin(), expected_xor.end()), 
-            std::string(ds.begin(), ds.end()));  
-}         
+            std::string(expected_xor.begin(), expected_xor.end()),
+            std::string(ds.begin(), ds.end()));
+}
 
 BOOST_AUTO_TEST_SUITE_END()

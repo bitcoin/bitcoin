@@ -1,11 +1,10 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2015 The Syscoin Core developers
+// Copyright (c) 2012-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "limitedmap.h"
+#include <limitedmap.h>
 
-#include "test/test_syscoin.h"
+#include <test/test_syscoin.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -51,10 +50,10 @@ BOOST_AUTO_TEST_CASE(limitedmap_test)
         // use the iterator to check for the expected key and value
         BOOST_CHECK(it->first == i);
         BOOST_CHECK(it->second == i + 1);
-        
+
         // use find to check for the value
         BOOST_CHECK(map.find(i)->second == i + 1);
-        
+
         // update and recheck
         map.update(it, i + 2);
         BOOST_CHECK(map.find(i)->second == i + 2);

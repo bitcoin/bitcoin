@@ -1,7 +1,7 @@
 # /etc/conf.d/syscoind: config file for /etc/init.d/syscoind
 
 # Config file location
-#SYSCOIND_CONFIGFILE="/etc/syscoincore/syscoin.conf"
+#SYSCOIND_CONFIGFILE="/etc/syscoin/syscoin.conf"
 
 # What directory to write pidfile to?  (created and owned by $SYSCOIND_USER)
 #SYSCOIND_PIDDIR="/var/run/syscoind"
@@ -13,8 +13,8 @@
 #SYSCOIND_DATADIR="/var/lib/syscoind"
 
 # User and group to own syscoind process
-#SYSCOIND_USER="syscoincore"
-#SYSCOIND_GROUP="syscoincore"
+#SYSCOIND_USER="syscoin"
+#SYSCOIND_GROUP="syscoin"
 
 # Path to syscoind executable
 #SYSCOIND_BIN="/usr/bin/syscoind"
@@ -23,7 +23,7 @@
 #SYSCOIND_NICE=0
 
 # Additional options (avoid -conf and -datadir, use flags above)
-SYSCOIND_OPTS="-disablewallet"
+#SYSCOIND_OPTS=""
 
 # The timeout in seconds OpenRC will wait for syscoind to terminate
 # after a SIGTERM has been raised.

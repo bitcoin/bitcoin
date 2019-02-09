@@ -1,18 +1,23 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_QT_BANTABLEMODEL_H
 #define SYSCOIN_QT_BANTABLEMODEL_H
 
-#include "net.h"
+#include <net.h>
+
+#include <memory>
 
 #include <QAbstractTableModel>
 #include <QStringList>
 
 class ClientModel;
 class BanTablePriv;
+
+namespace interfaces {
+    class Node;
+}
 
 struct CCombinedBan {
     CSubNet subnet;
@@ -40,7 +45,7 @@ class BanTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit BanTableModel(ClientModel *parent = 0);
+    explicit BanTableModel(interfaces::Node& node, ClientModel *parent = 0);
     ~BanTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
@@ -66,6 +71,7 @@ public Q_SLOTS:
     void refresh();
 
 private:
+    interfaces::Node& m_node;
     ClientModel *clientModel;
     QStringList columns;
     std::unique_ptr<BanTablePriv> priv;

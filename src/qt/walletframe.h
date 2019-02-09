@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,7 +36,7 @@ public:
 
     void setClientModel(ClientModel *clientModel);
 
-    bool addWallet(const QString& name, WalletModel *walletModel);
+    bool addWallet(WalletModel *walletModel);
     bool setCurrentWallet(const QString& name);
     bool removeWallet(const QString &name);
     void removeAllWallets();
@@ -60,6 +59,7 @@ private:
 
     const PlatformStyle *platformStyle;
 
+public:
     WalletView *currentWalletView();
 
 public Q_SLOTS:
@@ -67,8 +67,8 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
-    void gotoMasternodePage();
+    /** SYSCOIN Switch to masternode page */
+    void gotoMasternodePage(); 
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -87,8 +87,6 @@ public Q_SLOTS:
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
-    /** Lock wallet */
-    void lockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();

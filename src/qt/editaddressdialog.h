@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,13 +25,12 @@ class EditAddressDialog : public QDialog
 
 public:
     enum Mode {
-        NewReceivingAddress,
         NewSendingAddress,
         EditReceivingAddress,
         EditSendingAddress
     };
 
-    explicit EditAddressDialog(Mode mode, QWidget *parent);
+    explicit EditAddressDialog(Mode mode, QWidget *parent = 0);
     ~EditAddressDialog();
 
     void setModel(AddressTableModel *model);
@@ -46,6 +44,9 @@ public Q_SLOTS:
 
 private:
     bool saveCurrentRow();
+
+    /** Return a descriptive string when adding an already-existing address fails. */
+    QString getDuplicateAddressWarning() const;
 
     Ui::EditAddressDialog *ui;
     QDataWidgetMapper *mapper;

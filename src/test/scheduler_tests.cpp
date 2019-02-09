@@ -1,16 +1,13 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2012-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "random.h"
-#include "scheduler.h"
+#include <random.h>
+#include <scheduler.h>
 
-#include "test/test_syscoin.h"
+#include <test/test_syscoin.h>
 
 #include <boost/bind.hpp>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
 #include <boost/thread.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -57,10 +54,10 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     boost::mutex counterMutex[10];
     int counter[10] = { 0 };
-    boost::random::mt19937 rng(42);
-    boost::random::uniform_int_distribution<> zeroToNine(0, 9);
-    boost::random::uniform_int_distribution<> randomMsec(-11, 1000);
-    boost::random::uniform_int_distribution<> randomDelta(-1000, 1000);
+    FastRandomContext rng(42);
+    auto zeroToNine = [](FastRandomContext& rc) -> int { return rc.randrange(10); }; // [0, 9]
+    auto randomMsec = [](FastRandomContext& rc) -> int { return -11 + (int)rc.randrange(1012); }; // [-11, 1000]
+    auto randomDelta = [](FastRandomContext& rc) -> int { return -1000 + (int)rc.randrange(2001); }; // [-1000, 1000]
 
     boost::chrono::system_clock::time_point start = boost::chrono::system_clock::now();
     boost::chrono::system_clock::time_point now = start;
@@ -68,7 +65,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
     size_t nTasks = microTasks.getQueueInfo(first, last);
     BOOST_CHECK(nTasks == 0);
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; ++i) {
         boost::chrono::system_clock::time_point t = now + boost::chrono::microseconds(randomMsec(rng));
         boost::chrono::system_clock::time_point tReschedule = now + boost::chrono::microseconds(500 + randomMsec(rng));
         int whichCounter = zeroToNine(rng);
@@ -113,6 +110,48 @@ BOOST_AUTO_TEST_CASE(manythreads)
         counterSum += counter[i];
     }
     BOOST_CHECK_EQUAL(counterSum, 200);
+}
+
+BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
+{
+    CScheduler scheduler;
+
+    // each queue should be well ordered with respect to itself but not other queues
+    SingleThreadedSchedulerClient queue1(&scheduler);
+    SingleThreadedSchedulerClient queue2(&scheduler);
+
+    // create more threads than queues
+    // if the queues only permit execution of one task at once then
+    // the extra threads should effectively be doing nothing
+    // if they don't we'll get out of order behaviour
+    boost::thread_group threads;
+    for (int i = 0; i < 5; ++i) {
+        threads.create_thread(boost::bind(&CScheduler::serviceQueue, &scheduler));
+    }
+
+    // these are not atomic, if SinglethreadedSchedulerClient prevents
+    // parallel execution at the queue level no synchronization should be required here
+    int counter1 = 0;
+    int counter2 = 0;
+
+    // just simply count up on each queue - if execution is properly ordered then
+    // the callbacks should run in exactly the order in which they were enqueued
+    for (int i = 0; i < 100; ++i) {
+        queue1.AddToProcessQueue([i, &counter1]() {
+            assert(i == counter1++);
+        });
+
+        queue2.AddToProcessQueue([i, &counter2]() {
+            assert(i == counter2++);
+        });
+    }
+
+    // finish up
+    scheduler.stop(true);
+    threads.join_all();
+
+    BOOST_CHECK_EQUAL(counter1, 100);
+    BOOST_CHECK_EQUAL(counter2, 100);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

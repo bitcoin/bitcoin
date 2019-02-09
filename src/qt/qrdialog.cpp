@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qrdialog.h"
-#include "ui_qrdialog.h"
+#include <qt/qrdialog.h>
+#include <qt/forms/ui_qrdialog.h>
 
 #include "syscoinunits.h"
 #include "guiconstants.h"

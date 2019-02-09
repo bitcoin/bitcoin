@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,8 +32,7 @@ public Q_SLOTS:
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
     void closeClicked();
-    void hideForever();
-    bool isLayerVisible() { return layerIsVisible; }
+    bool isLayerVisible() const { return layerIsVisible; }
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev);
@@ -46,7 +45,6 @@ private:
     QVector<QPair<qint64, double> > blockProcessTime;
     bool layerIsVisible;
     bool userClosed;
-    bool foreverHidden;
 };
 
 #endif // SYSCOIN_QT_MODALOVERLAY_H

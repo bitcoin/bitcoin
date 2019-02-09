@@ -6,7 +6,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-
+#include <utilstrencodings.h>
 CMasternodeConfig masternodeConfig;
 
 void CMasternodeConfig::add(const std::string& alias, const std::string& ip, const std::string& privKey, const std::string& txHash, const std::string& outputIndex) {
@@ -16,7 +16,7 @@ void CMasternodeConfig::add(const std::string& alias, const std::string& ip, con
 
 bool CMasternodeConfig::read(std::string& strErrRet) {
     int linenumber = 1;
-    boost::filesystem::path pathMasternodeConfigFile = GetMasternodeConfigFile();
+    const fs::path & pathMasternodeConfigFile = GetMasternodeConfigFile();
     boost::filesystem::ifstream streamConfig(pathMasternodeConfigFile);
 
     if (!streamConfig.good()) {
@@ -64,7 +64,8 @@ bool CMasternodeConfig::read(std::string& strErrRet) {
             streamConfig.close();
             return false;
         }
-        int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
+        const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+        int mainnetDefaultPort = chainParams->GetDefaultPort();
         if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
             if(port != mainnetDefaultPort) {
                 strErrRet = _("Invalid port detected in masternode.conf") + "\n" +

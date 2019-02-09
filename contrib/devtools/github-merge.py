@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2017 Bitcoin Core Developers
-# Copyright (c) 2016-2018 The Syscoin Core developers
+# Copyright (c) 2016-2017 Syscoin Core Developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -192,7 +191,7 @@ def main():
     merge_branch = 'pull/'+pull+'/merge'
     local_merge_branch = 'pull/'+pull+'/local-merge'
 
-    devnull = open(os.devnull,'w')
+    devnull = open(os.devnull, 'w', encoding="utf8")
     try:
         subprocess.check_call([GIT,'checkout','-q',branch])
     except subprocess.CalledProcessError:
@@ -329,3 +328,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

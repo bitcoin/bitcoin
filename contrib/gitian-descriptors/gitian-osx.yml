@@ -1,33 +1,32 @@
 ---
-name: "syscoin-osx-3.2"
+name: "syscoin-osx-4.0"
 enable_cache: true
 suites:
-- "trusty"
+- "bionic"
 architectures:
 - "amd64"
 packages:
-- "autoconf"
-- "automake"
-- "bsdmainutils"
 - "ca-certificates"
-- "cmake"
 - "curl"
-- "faketime"
-- "fonts-tuffy"
 - "g++"
-- "git-core"
-- "imagemagick"
-- "libcap-dev"
+- "git"
+- "pkg-config"
+- "autoconf"
 - "librsvg2-bin"
 - "libtiff-tools"
 - "libtool"
+- "automake"
+- "faketime"
+- "bsdmainutils"
+- "cmake"
+- "imagemagick"
+- "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
-- "pkg-config"
 - "python"
 - "python-dev"
 - "python-setuptools"
-reference_datetime: "2018-01-01 00:00:00"
+- "fonts-tuffy"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
@@ -35,12 +34,13 @@ files:
 - "MacOSX10.11.sdk.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-apple-darwin11"
+  HOSTS="x86_64-apple-darwin14"
   CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
   export QT_RCC_TEST=1
+  export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export GZIP="-9n"
   export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
   export TZ="UTC"
@@ -54,27 +54,34 @@ script: |
 
   export ZERO_AR_DATE=1
 
-  # Create global faketime wrappers
+  function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
-    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
+  }
 
-  # Create per-host faketime wrappers
+  function create_per-host_faketime_wrappers {
   for i in $HOSTS; do
     for prog in ${FAKETIME_HOST_PROGS}; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
+  }
+
+  # Faketime for depends so intermediate results are comparable
+  export PATH_orig=${PATH}
+  create_global_faketime_wrappers "2000-01-01 12:00:00"
+  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
   cd syscoin
@@ -88,19 +95,28 @@ script: |
     make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
   done
 
+  # Faketime for binaries
+  export PATH=${PATH_orig}
+  create_global_faketime_wrappers "${REFERENCE_DATETIME}"
+  create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
+  export PATH=${WRAP_DIR}:${PATH}
+
   # Create the release tarball using (arbitrarily) the first host
   ./autogen.sh
   CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
   make dist
-  SOURCEDIST=`echo syscoincore-*.tar.gz`
+  SOURCEDIST=`echo syscoin-*.tar.gz`
   DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
 
   # Correct tar file order
   mkdir -p temp
   pushd temp
   tar xf ../$SOURCEDIST
-  find syscoincore-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  find syscoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
   popd
+
+  # Workaround for tarball not building with the bare tag version (prep)
+  make -C src obj/build.h
 
   ORIGPATH="$PATH"
   # Extract the release tarball into a dir for each host and build
@@ -112,12 +128,20 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
+    # Workaround for tarball not building with the bare tag version
+    echo '#!/bin/true' >share/genbuild.sh
+    mkdir src/obj
+    cp ../src/obj/build.h src/obj/
+
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
     make install-strip DESTDIR=${INSTALLPATH}
 
+    make osx_volname
     make deploydir
+    OSX_VOLNAME="$(cat osx_volname)"
     mkdir -p unsigned-app-${i}
+    cp osx_volname unsigned-app-${i}/
     cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
     cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
     cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
@@ -129,7 +153,7 @@ script: |
     popd
 
     make deploy
-    ${WRAP_DIR}/dmg dmg Syscoin-Core.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+    ${WRAP_DIR}/dmg dmg "${OSX_VOLNAME}.dmg" ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
 
     cd installed
     find . -name "lib*.la" -delete

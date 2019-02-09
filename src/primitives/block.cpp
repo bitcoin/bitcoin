@@ -1,29 +1,26 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "primitives/block.h"
+#include <primitives/block.h>
 
-#include "hash.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-#include "crypto/common.h"
+#include <hash.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
+#include <crypto/common.h>
 
-// SYSCOIN setauxpow and remove gethash (moved to pureheader.cpp)
-void CBlockHeader::SetAuxpow(CAuxPow* apow)
+void CBlockHeader::SetAuxpow (std::unique_ptr<CAuxPow> apow)
 {
-	if (apow)
-	{
-		auxpow.reset(apow);
-		SetAuxpowVersion(true);
-	}
-	else
-	{
-		auxpow.reset();
-		SetAuxpowVersion(false);
-	}
+    if (apow != nullptr)
+    {
+        auxpow.reset(apow.release());
+        SetAuxpowVersion(true);
+    } else
+    {
+        auxpow.reset();
+        SetAuxpowVersion(false);
+    }
 }
 
 std::string CBlock::ToString() const
@@ -36,9 +33,8 @@ std::string CBlock::ToString() const
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,
         vtx.size());
-    for (unsigned int i = 0; i < vtx.size(); i++)
-    {
-        s << "  " << vtx[i]->ToString() << "\n";
+    for (const auto& tx : vtx) {
+        s << "  " << tx->ToString() << "\n";
     }
     return s.str();
 }

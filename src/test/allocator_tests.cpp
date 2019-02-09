@@ -1,12 +1,13 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2012-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util.h"
+#include <util.h>
 
-#include "support/allocators/secure.h"
-#include "test/test_syscoin.h"
+#include <support/allocators/secure.h>
+#include <test/test_syscoin.h>
+
+#include <memory>
 
 #include <boost/test/unit_test.hpp>
 
@@ -63,10 +64,10 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     BOOST_CHECK(b.stats().used == 128);
     b.free(a3);
     BOOST_CHECK(b.stats().used == 0);
-    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0);
+    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0U);
     BOOST_CHECK(b.stats().total == synth_size);
     BOOST_CHECK(b.stats().free == synth_size);
-    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1);
+    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1U);
 
     std::vector<void*> addr;
     BOOST_CHECK(b.alloc(0) == nullptr); // allocating 0 always returns nullptr
@@ -132,7 +133,7 @@ class TestLockedPageAllocator: public LockedPageAllocator
 {
 public:
     TestLockedPageAllocator(int count_in, int lockedcount_in): count(count_in), lockedcount(lockedcount_in) {}
-    void* AllocateLocked(size_t len, bool *lockingSuccess)
+    void* AllocateLocked(size_t len, bool *lockingSuccess) override
     {
         *lockingSuccess = false;
         if (count > 0) {
@@ -147,10 +148,10 @@ public:
         }
         return 0;
     }
-    void FreeLocked(void* addr, size_t len)
+    void FreeLocked(void* addr, size_t len) override
     {
     }
-    size_t GetLimit()
+    size_t GetLimit() override
     {
         return std::numeric_limits<size_t>::max();
     }

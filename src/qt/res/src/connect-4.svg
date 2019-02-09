@@ -61,5 +61,5 @@
   <path
      id="path4170"
      d="m 15.2,12 c 0,-0.84 -0.4,-1.65 -1,-2.24 C 13.7,9.12 12.9,8.8 12,8.8 c -0.9,0 -1.7,0.32 -2.2,0.96 -0.6,0.59 -1,1.4 -1,2.24 0,0.84 0.4,1.65 1,2.24 0.5,0.64 1.3,0.96 2.2,0.96 0.9,0 1.7,-0.32 2.2,-0.96 0.6,-0.59 1,-1.4 1,-2.24 z"
-     style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-miterlimit:4;stroke-syscoinarray:none;stroke-opacity:1" />
+     style="opacity:1;fill:#000000;fill-opacity:1;stroke:none;stroke-width:10;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
 </svg>

@@ -1,22 +1,25 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_QT_TRANSACTIONTABLEMODEL_H
 #define SYSCOIN_QT_TRANSACTIONTABLEMODEL_H
 
-#include "syscoinunits.h"
+#include <qt/syscoinunits.h>
 
 #include <QAbstractTableModel>
 #include <QStringList>
+
+#include <memory>
+
+namespace interfaces {
+class Handler;
+}
 
 class PlatformStyle;
 class TransactionRecord;
 class TransactionTablePriv;
 class WalletModel;
-
-class CWallet;
 
 /** UI model for the transaction table of a wallet.
  */
@@ -25,7 +28,7 @@ class TransactionTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit TransactionTableModel(const PlatformStyle *platformStyle, CWallet* wallet, WalletModel *parent = 0);
+    explicit TransactionTableModel(const PlatformStyle *platformStyle, WalletModel *parent = 0);
     ~TransactionTableModel();
 
     enum ColumnIndex {
@@ -57,8 +60,6 @@ public:
         LabelRole,
         /** Net amount of transaction */
         AmountRole,
-        /** Unique identifier */
-        TxIDRole,
         /** Transaction hash */
         TxHashRole,
         /** Transaction data, hex-encoded */
@@ -80,11 +81,12 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
-    bool processingQueuedTransactions() { return fProcessingQueuedTransactions; }
+    bool processingQueuedTransactions() const { return fProcessingQueuedTransactions; }
 
 private:
-    CWallet* wallet;
     WalletModel *walletModel;
+    std::unique_ptr<interfaces::Handler> m_handler_transaction_changed;
+    std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     QStringList columns;
     TransactionTablePriv *priv;
     bool fProcessingQueuedTransactions;

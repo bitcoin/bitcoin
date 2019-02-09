@@ -762,7 +762,7 @@
           <item>
            <widget class="QLabel" name="fallbackFeeWarningLabel">
             <property name="toolTip">
-             <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until your have validated the complete chain.</string>
+             <string>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</string>
             </property>
             <property name="font">
             <font>
@@ -846,32 +846,15 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFee13">
                  <item>
-                  <widget class="QRadioButton" name="radioCustomPerKilobyte">
+                  <widget class="QLabel" name="labelCustomPerKilobyte">
                    <property name="toolTip">
-                    <string>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee,&lt;br /&gt;while &quot;at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</string>
+                    <string>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</string>
                    </property>
                    <property name="text">
                     <string>per kilobyte</string>
                    </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                   <attribute name="buttonGroup">
-                    <string notr="true">groupCustomFee</string>
-                   </attribute>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QRadioButton" name="radioCustomAtLeast">
-                   <property name="toolTip">
-                    <string>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 satoshis in fee,&lt;br /&gt;while &quot;total at least&quot; pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</string>
-                   </property>
-                   <property name="text">
-                    <string>total at least</string>
-                   </property>
-                   <attribute name="buttonGroup">
-                    <string notr="true">groupCustomFee</string>
-                   </attribute>
                   </widget>
                  </item>
                  <item>
@@ -897,7 +880,7 @@
                  <item>
                   <widget class="QCheckBox" name="checkBoxMinimumFee">
                    <property name="toolTip">
-                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</string>
+                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</string>
                    </property>
                    <property name="text">
                     <string/>
@@ -910,7 +893,7 @@
                     <bool>true</bool>
                    </property>
                    <property name="toolTip">
-                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</string>
+                    <string>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</string>
                    </property>
                    <property name="text">
                     <string>(read the tooltip)</string>
@@ -1081,44 +1064,15 @@
                     <number>30</number>
                    </property>
                    <item>
-                    <widget class="QSlider" name="sliderSmartFee">
-                     <property name="minimum">
+                    <layout class="QHBoxLayout" name="horizontalLayoutConfTarget">
+                     <property name="bottomMargin">
                       <number>0</number>
                      </property>
-                     <property name="maximum">
-                      <number>23</number>
-                     </property>
-                     <property name="pageStep">
-                      <number>1</number>
-                     </property>
-                     <property name="value">
-                      <number>0</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                     <property name="invertedAppearance">
-                      <bool>false</bool>
-                     </property>
-                     <property name="invertedControls">
-                      <bool>false</bool>
-                     </property>
-                     <property name="tickPosition">
-                      <enum>QSlider::NoTicks</enum>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayoutFee10">
                      <item>
-                      <widget class="QLabel" name="labelSmartFeeNormal">
-                       <property name="text">
-                        <string>normal</string>
-                       </property>
-                      </widget>
+                      <widget class="QComboBox" name="confTargetSelector"/>
                      </item>
                      <item>
-                      <spacer name="horizontalSpacer_7">
+                      <spacer name="horizontalSpacerConfTarget">
                        <property name="orientation">
                         <enum>Qt::Horizontal</enum>
                        </property>
@@ -1129,33 +1083,6 @@
                         </size>
                        </property>
                       </spacer>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="confirmationTargetLabel">
-                       <property name="text">
-                        <string notr="true">(count)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_3">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                     <item>
-                      <widget class="QLabel" name="labelSmartFeeFast">
-                       <property name="text">
-                        <string>fast</string>
-                       </property>
-                      </widget>
                      </item>
                     </layout>
                    </item>
@@ -1180,6 +1107,16 @@
              </item>
             </layout>
            </item>
+           <item>
+            <widget class="QCheckBox" name="optInRBF">
+             <property name="text">
+              <string>Enable Replace-By-Fee</string>
+             </property>
+             <property name="toolTip">
+              <string>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </item>
@@ -1190,8 +1127,8 @@
           </property>
           <property name="sizeHint" stdset="0">
            <size>
-            <width>800</width>
-            <height>1</height>
+            <width>40</width>
+            <height>5</height>
            </size>
           </property>
          </spacer>
@@ -1217,11 +1154,15 @@
        <property name="text">
         <string>S&amp;end</string>
        </property>
+       <property name="icon">
+        <iconset resource="../syscoin.qrc">
+         <normaloff>:/icons/send</normaloff>:/icons/send</iconset>
+       </property>
        <property name="autoDefault">
         <bool>false</bool>
        </property>
        <property name="default">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -1239,6 +1180,10 @@
        <property name="text">
         <string>Clear &amp;All</string>
        </property>
+       <property name="icon">
+        <iconset resource="../syscoin.qrc">
+         <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
+       </property>
        <property name="autoDefault">
         <bool>false</bool>
        </property>
@@ -1251,6 +1196,10 @@
        </property>
        <property name="text">
         <string>Add &amp;Recipient</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../syscoin.qrc">
+         <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -1276,39 +1225,13 @@
         <number>3</number>
        </property>
        <item>
-        <widget class="QCheckBox" name="checkUsePrivateSend">
-         <property name="minimumSize">
-          <size>
-           <width>95</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>PrivateSend</string>
-         </property>
-         <property name="checked">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkUseInstantSend">
-         <property name="enabled">
-          <bool>true</bool>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>85</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>InstantSend</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QLabel" name="label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>Balance:</string>
          </property>
@@ -1343,12 +1266,12 @@
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qvalidatedlineedit.h</header>
+   <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
    <class>SyscoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>syscoinamountfield.h</header>
+   <header>qt/syscoinamountfield.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
@@ -1357,7 +1280,6 @@
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="groupCustomFee"/>
   <buttongroup name="groupFee"/>
  </buttongroups>
 </ui>

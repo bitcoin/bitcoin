@@ -29,7 +29,7 @@ Before every major release:
 
 ### First time / New builders
 
-If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
+If you're using the automated script (found in [contrib/gitian-build.py](/contrib/gitian-build.py)), then at this point you should run it with the "--setup" command. Otherwise ignore this.
 
 Check out the source code in the following directory hierarchy.
 
@@ -50,7 +50,7 @@ and sort them into categories based on labels)
 
 Generate list of authors:
 
-    git log --format='%aN' "$*" | sort -ui | sed -e 's/^/- /'
+    git log --format='- %aN' v(current version, e.g. 0.16.0)..v(new version, e.g. 0.16.1) | sort -fiu
 
 Tag version (or release candidate) in git
 
@@ -58,7 +58,7 @@ Tag version (or release candidate) in git
 
 ### Setup and perform Gitian builds
 
-If you're using the automated script (found in [contrib/gitian-build.sh](/contrib/gitian-build.sh)), then at this point you should run it with the "--build" command. Otherwise ignore this.
+If you're using the automated script (found in [contrib/gitian-build.py](/contrib/gitian-build.py)), then at this point you should run it with the "--build" command. Otherwise ignore this.
 
 Setup Gitian descriptors:
 
@@ -85,11 +85,11 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://syscoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+    wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
     wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     popd
 
-Create the OS X SDK tarball, see the [OS X readme](README_osx.md) for details, and copy it into the inputs directory.
+Create the macOS SDK tarball, see the [macOS readme](README_osx.md) for details, and copy it into the inputs directory.
 
 ### Optional: Seed the Gitian sources cache and offline git repositories
 
@@ -111,7 +111,7 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-### Build and sign Syscoin Core for Linux, Windows, and OS X:
+### Build and sign Syscoin Core for Linux, Windows, and macOS:
 
     pushd ./gitian-builder
     ./bin/gbuild --num-make 2 --memory 3000 --commit syscoin=v${VERSION} ../syscoin/contrib/gitian-descriptors/gitian-linux.yml
@@ -134,7 +134,7 @@ Build output expected:
   1. source tarball (`syscoin-${VERSION}.tar.gz`)
   2. linux 32-bit and 64-bit dist tarballs (`syscoin-${VERSION}-linux[32|64].tar.gz`)
   3. windows 32-bit and 64-bit unsigned installers and dist zips (`syscoin-${VERSION}-win[32|64]-setup-unsigned.exe`, `syscoin-${VERSION}-win[32|64].zip`)
-  4. OS X unsigned installer and dist tarball (`syscoin-${VERSION}-osx-unsigned.dmg`, `syscoin-${VERSION}-osx64.tar.gz`)
+  4. macOS unsigned installer and dist tarball (`syscoin-${VERSION}-osx-unsigned.dmg`, `syscoin-${VERSION}-osx64.tar.gz`)
   5. Gitian signatures (in `gitian.sigs/${VERSION}-<linux|{win,osx}-unsigned>/(your Gitian key)/`)
 
 ### Verify other gitian builders signatures to your own. (Optional)
@@ -157,17 +157,17 @@ Commit your signature to gitian.sigs:
     git add ${VERSION}-linux/"${SIGNER}"
     git add ${VERSION}-win-unsigned/"${SIGNER}"
     git add ${VERSION}-osx-unsigned/"${SIGNER}"
-    git commit -a
+    git commit -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
     git push  # Assuming you can push to the gitian.sigs tree
     popd
 
-Codesigner only: Create Windows/OS X detached signatures:
+Codesigner only: Create Windows/macOS detached signatures:
 - Only one person handles codesigning. Everyone else should skip to the next step.
-- Only once the Windows/OS X builds each have 3 matching signatures may they be signed with their respective release keys.
+- Only once the Windows/macOS builds each have 3 matching signatures may they be signed with their respective release keys.
 
-Codesigner only: Sign the osx binary:
+Codesigner only: Sign the macOS binary:
 
-    transfer syscoin-osx-unsigned.tar.gz to osx for signing
+    transfer syscoin-osx-unsigned.tar.gz to macOS for signing
     tar xf syscoin-osx-unsigned.tar.gz
     ./detached-sig-create.sh -s "Key ID"
     Enter the keychain password and authorize the signature
@@ -192,12 +192,12 @@ Codesigner only: Commit the detached codesign payloads:
     git tag -s v${VERSION} HEAD
     git push the current branch and new tag
 
-Non-codesigners: wait for Windows/OS X detached signatures:
+Non-codesigners: wait for Windows/macOS detached signatures:
 
-- Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
+- Once the Windows/macOS builds each have 3 matching signatures, they will be signed with their respective release keys.
 - Detached signatures will then be committed to the [syscoin-detached-sigs](https://github.com/syscoin-core/syscoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
-Create (and optionally verify) the signed OS X binary:
+Create (and optionally verify) the signed macOS binary:
 
     pushd ./gitian-builder
     ./bin/gbuild -i --commit signature=v${VERSION} ../syscoin/contrib/gitian-descriptors/gitian-osx-signer.yml
@@ -216,7 +216,7 @@ Create (and optionally verify) the signed Windows binaries:
     mv build/out/syscoin-*win32-setup.exe ../syscoin-${VERSION}-win32-setup.exe
     popd
 
-Commit your signature for the signed OS X/Windows binaries:
+Commit your signature for the signed macOS/Windows binaries:
 
     pushd gitian.sigs
     git add ${VERSION}-osx-signed/"${SIGNER}"
@@ -276,14 +276,14 @@ syscoin.org (see below for syscoin.org update instructions).
 - Update syscoin.org version
 
   - First, check to see if the Syscoin.org maintainers have prepared a
-    release: https://github.com/syscoin-dot-org/syscoin.org/labels/Releases
+    release: https://github.com/syscoin-dot-org/syscoin.org/labels/Core
 
       - If they have, it will have previously failed their Travis CI
         checks because the final release files weren't uploaded.
         Trigger a Travis CI rebuild---if it passes, merge.
 
   - If they have not prepared a release, follow the Syscoin.org release
-    instructions: https://github.com/syscoin-dot-org/syscoin.org#release-notes
+    instructions: https://github.com/syscoin-dot-org/syscoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
     as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
@@ -292,9 +292,9 @@ syscoin.org (see below for syscoin.org update instructions).
 
   - syscoin-dev and syscoin-core-dev mailing list
 
-  - Syscoin Core announcements list https://syscoincore.org/en/list/announcements/join/
+  - Syscoin Core announcements list https://syscoin.org/en/list/announcements/join/
 
-  - syscoincore.org blog post
+  - syscoin.org blog post
 
   - Update title of #syscoin on Freenode IRC
 

@@ -49,7 +49,7 @@ private:
 
 inline ThreadPoolOptions::ThreadPoolOptions()
     : m_thread_count(std::max<size_t>(1u, std::thread::hardware_concurrency()-1))
-    , m_queue_size(1024u)
+    , m_queue_size(65536u)
 {
 }
 

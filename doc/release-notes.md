@@ -1,115 +1,103 @@
-Syscoin Core version 0.12.1 is now available from:
+(note: this is a temporary file, to be added-to by anybody, and moved to
+release-notes at release time)
 
-  <https://www.syscoin.org/downloads/>
+Syscoin Core version 0.17.x is now available from:
 
+  <https://syscoin.org/bin/syscoin-core-0.17.x/>
 
+This is a new major version release, including new features, various bugfixes
+and performance improvements, as well as updated translations.
 
+Please report bugs using the issue tracker at GitHub:
 
-Older releases
---------------
+  <https://github.com/syscoin/syscoin/issues>
 
-Syscoin was previously known as Darkcoin.
+To receive security and update notifications, please subscribe to:
 
-Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
-which was first released on Jan/18/2014.
+  <https://syscoin.org/en/list/announcements/join/>
 
-### Downgrade to a version < 0.12.0
+How to Upgrade
+==============
 
-Because release 0.12.0 and later will obfuscate the chainstate on every
-fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-0.12 versions of Syscoin Core or other software.
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), then run the
+installer (on Windows) or just copy over `/Applications/Syscoin-Qt` (on Mac)
+or `syscoind`/`syscoin-qt` (on Linux).
 
-If you want to downgrade after you have done a reindex with 0.12.0 or later,
-you will need to reindex when you first start Syscoin Core version 0.11 or
-earlier.
+If your node has a txindex, the txindex db will be migrated the first time you run 0.17.0 or newer, which may take up to a few hours. Your node will not be functional until this migration completes.
+
+The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
+new format, which will take anywhere from a few minutes to half an hour,
+depending on the speed of your machine.
+
+Note that the block database format also changed in version 0.8.0 and there is no
+automatic upgrade code from before version 0.8 to version 0.15.0. Upgrading
+directly from 0.7.x and earlier without redownloading the blockchain is not supported.
+However, as usual, old wallet versions are still supported.
+
+Downgrading warning
+-------------------
+
+The chainstate database for this release is not compatible with previous
+releases, so if you run 0.15 and then decide to switch back to any
+older version, you will need to run the old release with the `-reindex-chainstate`
+option to rebuild the chainstate data structures in the old format.
+
+If your node has pruning enabled, this will entail re-downloading and
+processing the entire blockchain.
+
+Compatibility
+==============
+
+Syscoin Core is extensively tested on multiple operating systems using
+the Linux kernel, macOS 10.10+, and Windows 7 and newer (Windows XP is not supported).
+
+Syscoin Core should also work on most other Unix-like systems but is not
+frequently tested on them.
+
+From 0.17.0 onwards macOS <10.10 is no longer supported. 0.17.0 is built using Qt 5.9.x, which doesn't
+support versions of macOS older than 10.10.
+
+Known issues
+============
+
+...
 
 Notable changes
 ===============
 
-Example item
----------------------------------------
+...
 
-Example text.
-
-0.12.1 Change log
+0.17.x change log
 =================
 
-Detailed release notes follow. This overview includes changes that affect
-behavior, not code moves, refactors and string updates. For convenience in locating
-the code changes and accompanying discussion, both the pull request and
-git merge commit are mentioned.
+`listtransactions` label support
+--------------------------------
 
-### RPC and REST
+The `listtransactions` RPC `account` parameter which was deprecated in 0.17.0
+and renamed to `dummy` has been un-deprecated and renamed again to `label`.
 
-Asm script outputs replacements for OP_NOP2 and OP_NOP3
--------------------------------------------------------
+When syscoin is configured with the `-deprecatedrpc=accounts` setting, specifying
+a label/account/dummy argument will return both outgoing and incoming
+transactions. Without the `-deprecatedrpc=accounts` setting, it will only return
+incoming transactions (because it used to be possible to create transactions
+spending from specific accounts, but this is no longer possible with labels).
 
-OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
-65](https://github.com/syscoin/bips/blob/master/bip-0065.mediawiki)
-
-OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP 
-112](https://github.com/syscoin/bips/blob/master/bip-0112.mediawiki)
-
-The following outputs are affected by this change:
-- RPC `getrawtransaction` (in verbose mode)
-- RPC `decoderawtransaction`
-- RPC `decodescript`
-- REST `/rest/tx/` (JSON format)
-- REST `/rest/block/` (JSON format when including extended tx details)
-- `syscoin-tx -json`
-
-### ZMQ
-
-Each ZMQ notification now contains an up-counting sequence number that allows
-listeners to detect lost notifications.
-The sequence number is always the last element in a multi-part ZMQ notification and
-therefore backward compatible.
-Each message type has its own counter.
-(https://github.com/syscoin/syscoin/pull/7762)
-
-### Configuration and command-line options
-
-### Block and transaction handling
-
-### P2P protocol and network code
-
-### Validation
-
-### Build system
-
-### Wallet
-
-### GUI
-
-### Tests and QA
-
-### Miscellaneous
+When `-deprecatedrpc=accounts` is set, it's possible to pass the empty string ""
+to list transactions that don't have any label. Without
+`-deprecatedrpc=accounts`, passing the empty string is an error because returning
+only non-labeled transactions is not generally useful behavior and can cause
+confusion.
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+...
+
+And to those that reported security issues:
+
+...
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/syscoin/).
-
-Darkcoin tree 0.9.x was the open source implementation of masternodes based on
-the 0.8.x tree and was first released on Mar/13/2014.
-
-Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
-which was released open source on Sep/25/2014.
-
-Syscoin Core tree 0.11.x was a fork of Syscoin Core tree 0.9, Darkcoin was rebranded
-to Syscoin.
-
-Syscoin Core tree 0.12.0.x was a fork of Syscoin Core tree 0.10.
-
-These release are considered obsolete. Old changelogs can be found here:
-
-- [v0.12.0](release-notes/syscoin/release-notes-0.12.0.md) released ???/??/2015
-- [v0.11.2](release-notes/syscoin/release-notes-0.11.2.md) released Mar/25/2015
-- [v0.11.1](release-notes/syscoin/release-notes-0.11.1.md) released Feb/10/2015
-- [v0.11.0](release-notes/syscoin/release-notes-0.11.0.md) released Jan/15/2015
-- [v0.10.x](release-notes/syscoin/release-notes-0.10.0.md) released Sep/25/2014
-- [v0.9.x](release-notes/syscoin/release-notes-0.9.0.md) released Mar/13/2014
-

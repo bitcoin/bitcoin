@@ -60,13 +60,15 @@ Currently, the following notifications are supported:
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubassetallocation=address
+    -zmqpubassetrecord=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
 
 For instance:
 
-    $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
+    $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28370 \
                -zmqpubrawtx=ipc:///tmp/syscoind.tx.raw
 
 Each PUB notification has a topic and body, where the header

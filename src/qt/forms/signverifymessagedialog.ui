@@ -30,7 +30,7 @@
        <item>
         <widget class="QLabel" name="infoLabel_SM">
          <property name="text">
-          <string>You can sign messages/agreements with your addresses to prove you can receive Syscoin sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</string>
+          <string>You can sign messages/agreements with your addresses to prove you can receive syscoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</string>
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
@@ -60,6 +60,10 @@
            <property name="text">
             <string/>
            </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
+           </property>
            <property name="shortcut">
             <string>Alt+A</string>
            </property>
@@ -75,6 +79,10 @@
            </property>
            <property name="text">
             <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
            </property>
            <property name="shortcut">
             <string>Alt+P</string>
@@ -128,6 +136,10 @@
            <property name="text">
             <string/>
            </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
+           </property>
            <property name="autoDefault">
             <bool>false</bool>
            </property>
@@ -145,6 +157,10 @@
            <property name="text">
             <string>Sign &amp;Message</string>
            </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
+           </property>
            <property name="autoDefault">
             <bool>false</bool>
            </property>
@@ -157,6 +173,10 @@
            </property>
            <property name="text">
             <string>Clear &amp;All</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
@@ -250,6 +270,10 @@
            <property name="text">
             <string/>
            </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
+           </property>
            <property name="shortcut">
             <string>Alt+A</string>
            </property>
@@ -276,6 +300,10 @@
            <property name="text">
             <string>Verify &amp;Message</string>
            </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/transaction_0</normaloff>:/icons/transaction_0</iconset>
+           </property>
            <property name="autoDefault">
             <bool>false</bool>
            </property>
@@ -288,6 +316,10 @@
            </property>
            <property name="text">
             <string>Clear &amp;All</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../syscoin.qrc">
+             <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="autoDefault">
             <bool>false</bool>
@@ -348,7 +380,7 @@
   <customwidget>
    <class>QValidatedLineEdit</class>
    <extends>QLineEdit</extends>
-   <header>qvalidatedlineedit.h</header>
+   <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -1,30 +1,53 @@
+# Copyright (c) 2013-2016 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 ACLOCAL_AMFLAGS = -I build-aux/m4
 SUBDIRS = src
+if ENABLE_MAN
+SUBDIRS += doc/man
+endif
 .PHONY: deploy FORCE
 
-GZIP_ENV="-9n"
+export PYTHONPATH
 
 if BUILD_SYSCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsyscoinconsensus.pc
 endif
 
-SYSCOIND_BIN=$(top_builddir)/src/syscoind$(EXEEXT)
-SYSCOIN_QT_BIN=$(top_builddir)/src/qt/syscoin-qt$(EXEEXT)
-SYSCOIN_CLI_BIN=$(top_builddir)/src/syscoin-cli$(EXEEXT)
+SYSCOIND_BIN=$(top_builddir)/src/$(SYSCOIN_DAEMON_NAME)$(EXEEXT)
+SYSCOIN_QT_BIN=$(top_builddir)/src/qt/$(SYSCOIN_GUI_NAME)$(EXEEXT)
+SYSCOIN_CLI_BIN=$(top_builddir)/src/$(SYSCOIN_CLI_NAME)$(EXEEXT)
+SYSCOIN_TX_BIN=$(top_builddir)/src/$(SYSCOIN_TX_NAME)$(EXEEXT)
+SYSCOIN_BENCH_BIN=$(top_builddir)/src/$(SYSCOIN_BENCH_NAME)$(EXEEXT)
 SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win$(WINDOWS_BITS)-setup$(EXEEXT)
 
+empty :=
+space := $(empty) $(empty)
+
 OSX_APP=Syscoin-Qt.app
-OSX_DMG=Syscoin-Core.dmg
-OSX_BACKGROUND_IMAGE=background.png
+OSX_VOLNAME = $(subst $(space),-,$(PACKAGE_NAME))
+OSX_DMG = $(OSX_VOLNAME).dmg
+OSX_BACKGROUND_SVG=background.svg
+OSX_BACKGROUND_IMAGE=background.tiff
+OSX_BACKGROUND_IMAGE_DPIS=36 72
+OSX_DSSTORE_GEN=$(top_srcdir)/contrib/macdeploy/custom_dsstore.py
 OSX_DEPLOY_SCRIPT=$(top_srcdir)/contrib/macdeploy/macdeployqtplus
 OSX_FANCY_PLIST=$(top_srcdir)/contrib/macdeploy/fancy.plist
-OSX_BASE_LPROJ_DIR=$(top_srcdir)/contrib/macdeploy/Base.lproj/InfoPlist.strings
 OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/syscoin.icns
-OSX_PLIST=$(top_srcdir)/share/qt/Info.plist #not installed
+OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 OSX_QT_TRANSLATIONS = da,de,es,hu,ru,uk,zh_CN,zh_TW
 
 DIST_DOCS = $(wildcard doc/*.md) $(wildcard doc/release-notes/*.md)
+DIST_CONTRIB = $(top_srcdir)/contrib/syscoin-cli.bash-completion \
+	       $(top_srcdir)/contrib/syscoin-tx.bash-completion \
+	       $(top_srcdir)/contrib/syscoind.bash-completion \
+	       $(top_srcdir)/contrib/init \
+	       $(top_srcdir)/contrib/install_db4.sh
+DIST_SHARE = \
+  $(top_srcdir)/share/genbuild.sh \
+  $(top_srcdir)/share/rpcauth
 
 BIN_CHECKS=$(top_srcdir)/contrib/devtools/symbol-check.py \
            $(top_srcdir)/contrib/devtools/security-check.py
@@ -34,37 +57,30 @@ WINDOWS_PACKAGING = $(top_srcdir)/share/pixmaps/syscoin.ico \
   $(top_srcdir)/share/pixmaps/nsis-wizard.bmp \
   $(top_srcdir)/doc/README_windows.txt
 
-OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) $(OSX_BASE_LPROJ_DIR) \
-  $(top_srcdir)/contrib/macdeploy/$(OSX_BACKGROUND_IMAGE) \
-  $(top_srcdir)/contrib/macdeploy/DS_Store \
+OSX_PACKAGING = $(OSX_DEPLOY_SCRIPT) $(OSX_FANCY_PLIST) $(OSX_INSTALLER_ICONS) \
+  $(top_srcdir)/contrib/macdeploy/$(OSX_BACKGROUND_SVG) \
+  $(OSX_DSSTORE_GEN) \
   $(top_srcdir)/contrib/macdeploy/detached-sig-apply.sh \
   $(top_srcdir)/contrib/macdeploy/detached-sig-create.sh
 
-COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
-  leveldb_baseline.info test_syscoin_filtered.info total_coverage.info \
-  baseline_filtered.info block_test_filtered.info rpc_test.info rpc_test_filtered.info \
-  leveldb_baseline_filtered.info test_syscoin_coverage.info test_syscoin.info
+COVERAGE_INFO = baseline.info \
+  test_syscoin_filtered.info total_coverage.info \
+  baseline_filtered.info functional_test.info functional_test_filtered.info \
+  test_syscoin_coverage.info test_syscoin.info
 
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
-
-distcheck-hook:
-	$(MKDIR_P) $(top_distdir)/_build/src/leveldb
-	cp -rf $(top_srcdir)/src/leveldb/* $(top_distdir)/_build/src/leveldb/
-	-$(MAKE) -C $(top_distdir)/_build/src/leveldb clean
-
-distcleancheck:
-	@:
 
 $(SYSCOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIND_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_QT_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
+    STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_BENCH_BIN) $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
-
 
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
@@ -82,21 +98,31 @@ $(OSX_APP)/Contents/Resources/syscoin.icns: $(OSX_INSTALLER_ICONS)
 	$(MKDIR_P) $(@D)
 	$(INSTALL_DATA) $< $@
 
-$(OSX_APP)/Contents/MacOS/Syscoin-Qt: $(SYSCOIN_QT_BIN)
+$(OSX_APP)/Contents/MacOS/Syscoin-Qt: all-recursive
 	$(MKDIR_P) $(@D)
-	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $< $@
+	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $(SYSCOIN_QT_BIN) $@
 
-$(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings: $(OSX_BASE_LPROJ_DIR)
+$(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
 	$(MKDIR_P) $(@D)
-	$(INSTALL_DATA) $< $@
+	echo '{	CFBundleDisplayName = "$(PACKAGE_NAME)"; CFBundleName = "$(PACKAGE_NAME)"; }' > $@
 
 OSX_APP_BUILT=$(OSX_APP)/Contents/PkgInfo $(OSX_APP)/Contents/Resources/empty.lproj \
   $(OSX_APP)/Contents/Resources/syscoin.icns $(OSX_APP)/Contents/Info.plist \
   $(OSX_APP)/Contents/MacOS/Syscoin-Qt $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings
 
+osx_volname:
+	echo $(OSX_VOLNAME) >$@
+
 if BUILD_DARWIN
-$(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	$(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2
+$(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING) $(OSX_BACKGROUND_IMAGE)
+	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME)
+
+$(OSX_BACKGROUND_IMAGE).png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
+	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 36 -p 36 -o $@
+$(OSX_BACKGROUND_IMAGE)@2x.png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
+	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 72 -p 72 -o $@
+$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE).png $(OSX_BACKGROUND_IMAGE)@2x.png
+	tiffutil -cathidpicheck $^ -out $@
 
 deploydir: $(OSX_DMG)
 else
@@ -110,16 +136,20 @@ $(APP_DIST_DIR)/Applications:
 $(APP_DIST_EXTRAS): $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt
 
 $(OSX_DMG): $(APP_DIST_EXTRAS)
-	$(GENISOIMAGE) -no-cache-inodes -D -l -probe -V "Syscoin-Core" -no-pad -r -dir-mode 0755 -apple -o $@ dist
+	$(GENISOIMAGE) -no-cache-inodes -D -l -probe -V "$(OSX_VOLNAME)" -no-pad -r -dir-mode 0755 -apple -o $@ dist
 
-$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE): contrib/macdeploy/$(OSX_BACKGROUND_IMAGE)
+dpi%.$(OSX_BACKGROUND_IMAGE): contrib/macdeploy/$(OSX_BACKGROUND_SVG)
+	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d $* -p $* | $(IMAGEMAGICK_CONVERT) - $@
+OSX_BACKGROUND_IMAGE_DPIFILES := $(foreach dpi,$(OSX_BACKGROUND_IMAGE_DPIS),dpi$(dpi).$(OSX_BACKGROUND_IMAGE))
+$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE_DPIFILES)
 	$(MKDIR_P) $(@D)
-	$(INSTALL) $< $@
-$(APP_DIST_DIR)/.DS_Store: contrib/macdeploy/DS_Store
-	$(INSTALL) $< $@
+	$(TIFFCP) -c none $(OSX_BACKGROUND_IMAGE_DPIFILES) $@
+
+$(APP_DIST_DIR)/.DS_Store: $(OSX_DSSTORE_GEN)
+	$(PYTHON) $< "$@" "$(OSX_VOLNAME)"
 
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
+	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
 
 deploydir: $(APP_DIST_EXTRAS)
 endif
@@ -141,84 +171,138 @@ $(SYSCOIND_BIN): FORCE
 $(SYSCOIN_CLI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
+$(SYSCOIN_TX_BIN): FORCE
+	$(MAKE) -C src $(@F)
+
+$(SYSCOIN_BENCH_BIN): FORCE
+	$(MAKE) -C src $(@F)
+
 if USE_LCOV
+LCOV_FILTER_PATTERN=-p "/usr/include/" -p "src/leveldb/" -p "src/bench/" -p "src/univalue" -p "src/crypto/ctaes" -p "src/secp256k1"
 
 baseline.info:
 	$(LCOV) -c -i -d $(abs_builddir)/src -o $@
 
 baseline_filtered.info: baseline.info
-	$(LCOV) -r $< "/usr/include/*" -o $@
+	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
+	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-leveldb_baseline.info: baseline_filtered.info
-	$(LCOV) -c -i -d $(abs_builddir)/src/leveldb -b $(abs_builddir)/src/leveldb -o $@
-
-leveldb_baseline_filtered.info: leveldb_baseline.info
-	$(LCOV) -r $< "/usr/include/*" -o $@
-
-baseline_filtered_combined.info: leveldb_baseline_filtered.info baseline_filtered.info
-	$(LCOV) -a leveldb_baseline_filtered.info -a baseline_filtered.info -o $@
-
-test_syscoin.info: baseline_filtered_combined.info
+test_syscoin.info: baseline_filtered.info
 	$(MAKE) -C src/ check
-	$(LCOV) -c -d $(abs_builddir)/src -t test_syscoin -o $@
-	$(LCOV) -z -d $(abs_builddir)/src
-	$(LCOV) -z -d $(abs_builddir)/src/leveldb
+	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src -t test_syscoin -o $@
+	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
 test_syscoin_filtered.info: test_syscoin.info
-	$(LCOV) -r $< "/usr/include/*" -o $@
+	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
+	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-block_test.info: test_syscoin_filtered.info
-	$(MKDIR_P) qa/tmp
-	-@TIMEOUT=15 qa/pull-tester/run-syscoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS)
-	$(LCOV) -c -d $(abs_builddir)/src --t SyscoinJBlockTest -o $@
-	$(LCOV) -z -d $(abs_builddir)/src
-	$(LCOV) -z -d $(abs_builddir)/src/leveldb
+functional_test.info: test_syscoin_filtered.info
+	-@TIMEOUT=15 test/functional/test_runner.py $(EXTENDED_FUNCTIONAL_TESTS)
+	$(LCOV) -c $(LCOV_OPTS) -d $(abs_builddir)/src --t functional-tests -o $@
+	$(LCOV) -z $(LCOV_OPTS) -d $(abs_builddir)/src
 
-block_test_filtered.info: block_test.info
-	$(LCOV) -r $< "/usr/include/*" -o $@
+functional_test_filtered.info: functional_test.info
+	$(abs_builddir)/contrib/filter-lcov.py $(LCOV_FILTER_PATTERN) $< $@
+	$(LCOV) -a $@ $(LCOV_OPTS) -o $@
 
-rpc_test.info: test_syscoin_filtered.info
-	-@TIMEOUT=15 python qa/pull-tester/rpc-tests.py $(EXTENDED_RPC_TESTS)
-	$(LCOV) -c -d $(abs_builddir)/src --t rpc-tests -o $@
-	$(LCOV) -z -d $(abs_builddir)/src
-	$(LCOV) -z -d $(abs_builddir)/src/leveldb
+test_syscoin_coverage.info: baseline_filtered.info test_syscoin_filtered.info
+	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_syscoin_filtered.info -o $@
 
-rpc_test_filtered.info: rpc_test.info
-	$(LCOV) -r $< "/usr/include/*" -o $@
-
-test_syscoin_coverage.info: baseline_filtered_combined.info test_syscoin_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_syscoin_filtered.info -o $@
-
-total_coverage.info: baseline_filtered_combined.info test_syscoin_filtered.info block_test_filtered.info rpc_test_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_syscoin_filtered.info -a block_test_filtered.info -a rpc_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info: test_syscoin_filtered.info functional_test_filtered.info
+	$(LCOV) -a $(LCOV_OPTS) baseline_filtered.info -a test_syscoin_filtered.info -a functional_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
 test_syscoin.coverage/.dirstamp:  test_syscoin_coverage.info
-	$(GENHTML) -s $< -o $(@D)
+	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
 	@touch $@
 
 total.coverage/.dirstamp: total_coverage.info
-	$(GENHTML) -s $< -o $(@D)
+	$(GENHTML) -s $(LCOV_OPTS) $< -o $(@D)
 	@touch $@
 
 cov: test_syscoin.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
-# Syscoin: disable the test until upstream switches from convoluted comparison tool
-# Ref https://github.com/syscoin/syscoin/issues/4545
-if USE_COMPARISON_TOOL
-check-local:
-	## $(MKDIR_P) qa/tmp
-	## @qa/pull-tester/run-syscoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS) 2>&1
-endif
-
 dist_noinst_SCRIPTS = autogen.sh
 
-EXTRA_DIST = $(top_srcdir)/share/genbuild.sh qa/pull-tester/rpc-tests.py qa/rpc-tests $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
+EXTRA_DIST = $(DIST_SHARE) test/functional/test_runner.py test/functional $(DIST_CONTRIB) $(DIST_DOCS) $(WINDOWS_PACKAGING) $(OSX_PACKAGING) $(BIN_CHECKS)
+
+EXTRA_DIST += \
+    test/util/syscoin-util-test.py \
+    test/util/data/syscoin-util-test.json \
+    test/util/data/blanktxv1.hex \
+    test/util/data/blanktxv1.json \
+    test/util/data/blanktxv2.hex \
+    test/util/data/blanktxv2.json \
+    test/util/data/tt-delin1-out.hex \
+    test/util/data/tt-delin1-out.json \
+    test/util/data/tt-delout1-out.hex \
+    test/util/data/tt-delout1-out.json \
+    test/util/data/tt-locktime317000-out.hex \
+    test/util/data/tt-locktime317000-out.json \
+    test/util/data/tx394b54bb.hex \
+    test/util/data/txcreate1.hex \
+    test/util/data/txcreate1.json \
+    test/util/data/txcreate2.hex \
+    test/util/data/txcreate2.json \
+    test/util/data/txcreatedata1.hex \
+    test/util/data/txcreatedata1.json \
+    test/util/data/txcreatedata2.hex \
+    test/util/data/txcreatedata2.json \
+    test/util/data/txcreatedata_seq0.hex \
+    test/util/data/txcreatedata_seq0.json \
+    test/util/data/txcreatedata_seq1.hex \
+    test/util/data/txcreatedata_seq1.json \
+    test/util/data/txcreatemultisig1.hex \
+    test/util/data/txcreatemultisig1.json \
+    test/util/data/txcreatemultisig2.hex \
+    test/util/data/txcreatemultisig2.json \
+    test/util/data/txcreatemultisig3.hex \
+    test/util/data/txcreatemultisig3.json \
+    test/util/data/txcreatemultisig4.hex \
+    test/util/data/txcreatemultisig4.json \
+    test/util/data/txcreatemultisig5.json \
+    test/util/data/txcreateoutpubkey1.hex \
+    test/util/data/txcreateoutpubkey1.json \
+    test/util/data/txcreateoutpubkey2.hex \
+    test/util/data/txcreateoutpubkey2.json \
+    test/util/data/txcreateoutpubkey3.hex \
+    test/util/data/txcreateoutpubkey3.json \
+    test/util/data/txcreatescript1.hex \
+    test/util/data/txcreatescript1.json \
+    test/util/data/txcreatescript2.hex \
+    test/util/data/txcreatescript2.json \
+    test/util/data/txcreatescript3.hex \
+    test/util/data/txcreatescript3.json \
+    test/util/data/txcreatescript4.hex \
+    test/util/data/txcreatescript4.json \
+    test/util/data/txcreatesignv1.hex \
+    test/util/data/txcreatesignv1.json \
+    test/util/data/txcreatesignv2.hex \
+    test/util/rpcauth-test.py
 
 CLEANFILES = $(OSX_DMG) $(SYSCOIN_WIN_INSTALLER)
 
 .INTERMEDIATE: $(COVERAGE_INFO)
 
-clean-local:
-	rm -rf coverage_percent.txt test_syscoin.coverage/ total.coverage/ qa/tmp/ cache/ $(OSX_APP)
+DISTCHECK_CONFIGURE_FLAGS = --enable-man
+
+doc/doxygen/.stamp: doc/Doxyfile FORCE
+	$(MKDIR_P) $(@D)
+	$(DOXYGEN) $^
+	$(AM_V_at) touch $@
+
+if HAVE_DOXYGEN
+docs: doc/doxygen/.stamp
+else
+docs:
+	@echo "error: doxygen not found"
+endif
+
+clean-docs:
+	rm -rf doc/doxygen
+
+clean-local: clean-docs
+	rm -rf coverage_percent.txt test_syscoin.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
+	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache
+

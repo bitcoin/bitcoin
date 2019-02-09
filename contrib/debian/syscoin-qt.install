@@ -1,6 +1,0 @@
-usr/local/bin/syscoin-qt usr/bin
-share/pixmaps/syscoin32.xpm usr/share/pixmaps
-share/pixmaps/syscoin16.xpm usr/share/pixmaps
-share/pixmaps/syscoin128.png usr/share/pixmaps
-debian/syscoin-qt.desktop usr/share/applications
-debian/syscoin-qt.protocol usr/share/kde4/services/

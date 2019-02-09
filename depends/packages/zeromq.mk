@@ -6,14 +6,15 @@ $(package)_sha256_hash=8f1e2b2aade4dbfde98d82366d61baef2f62e812530160d2e6d0a5bb2
 $(package)_patches=0001-fix-build-with-older-mingw64.patch 0002-disable-pthread_set_name_np.patch
 
 define $(package)_set_vars
-  $(package)_config_opts=--without-docs --disable-shared --without-libsodium --disable-curve --disable-curve-keygen --disable-perf
+  $(package)_config_opts=--without-docs --disable-shared --without-libsodium --disable-curve --disable-curve-keygen --disable-perf --disable-Werror
   $(package)_config_opts_linux=--with-pic
   $(package)_cxxflags=-std=c++11
 endef
 
 define $(package)_preprocess_cmds
    patch -p1 < $($(package)_patch_dir)/0001-fix-build-with-older-mingw64.patch && \
-   patch -p1 < $($(package)_patch_dir)/0002-disable-pthread_set_name_np.patch
+   patch -p1 < $($(package)_patch_dir)/0002-disable-pthread_set_name_np.patch && \
+   cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub config
 endef
 
 define $(package)_config_cmds

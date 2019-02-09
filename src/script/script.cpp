@@ -1,13 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "script.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
-extern bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
+#include <script/script.h>
+
+#include <tinyformat.h>
+#include <utilstrencodings.h>
 const char* GetOpName(opcodetype opcode)
 {
     switch (opcode)
@@ -141,11 +140,6 @@ const char* GetOpName(opcodetype opcode)
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
-    // Note:
-    //  The template matching params OP_SMALLINTEGER/etc are defined in opcodetype enum
-    //  as kind of implementation hack, they are *NOT* real opcodes.  If found in real
-    //  Script, just let the default: case deal with them.
-
     default:
         return "OP_UNKNOWN";
     }
@@ -184,73 +178,86 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     // get the last item that the scriptSig
     // pushes onto the stack:
     const_iterator pc = scriptSig.begin();
-    std::vector<unsigned char> data;
+    std::vector<unsigned char> vData;
     while (pc < scriptSig.end())
     {
         opcodetype opcode;
-        if (!scriptSig.GetOp(pc, opcode, data))
+        if (!scriptSig.GetOp(pc, opcode, vData))
             return 0;
         if (opcode > OP_16)
             return 0;
     }
 
     /// ... and return its opcount:
-    CScript subscript(data.begin(), data.end());
+    CScript subscript(vData.begin(), vData.end());
     return subscript.GetSigOpCount(true);
 }
-
-bool CScript::IsPayToPublicKeyHash() const
+bool CScript::IsPayToWitnessPublicKeyHash() const
 {
-	// SYSCOIN
-	CScript scriptOut;
-	CScript scriptPubKeyOut;
-	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
-		scriptOut = scriptPubKeyOut;
-	else
-		scriptOut = *this;
-	// Extra-fast test for pay-to-pubkey-hash CScripts:
-	return (scriptOut.size() == 25 &&
-		scriptOut[0] == OP_DUP &&
-		scriptOut[1] == OP_HASH160 &&
-		scriptOut[2] == 0x14 &&
-		scriptOut[23] == OP_EQUALVERIFY &&
-		scriptOut[24] == OP_CHECKSIG);
+    // SYSCOIN
+    CScript scriptOut;
+    CScript scriptPubKeyOut;
+    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+        scriptOut = scriptPubKeyOut;
+    else
+        scriptOut = *this;
+    // Extra-fast test for pay-to-witness-pubkey-hash CScripts:
+    return (scriptOut.size() == 22 &&
+            scriptOut[0] == OP_0 &&
+            scriptOut[1] == 0x14);
 }
-
 bool CScript::IsPayToScriptHash() const
 {
-	// SYSCOIN
-	CScript scriptOut;
-	CScript scriptPubKeyOut;
-	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
-		scriptOut = scriptPubKeyOut;
-	else
-		scriptOut = *this;
-	// Extra-fast test for pay-to-script-hash CScripts:
-	return (scriptOut.size() == 23 &&
-		scriptOut[0] == OP_HASH160 &&
-		scriptOut[1] == 0x14 &&
-		scriptOut[22] == OP_EQUAL);
+    // SYSCOIN
+    CScript scriptOut;
+    CScript scriptPubKeyOut;
+    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+        scriptOut = scriptPubKeyOut;
+    else
+        scriptOut = *this;
+    // Extra-fast test for pay-to-script-hash CScripts:
+    return (scriptOut.size() == 23 &&
+            scriptOut[0] == OP_HASH160 &&
+            scriptOut[1] == 0x14 &&
+            scriptOut[22] == OP_EQUAL);
 }
 
-bool CScript::IsPayToPublicKey() const
+bool CScript::IsPayToWitnessScriptHash() const
 {
-	// SYSCOIN
-	CScript scriptOut;
-	CScript scriptPubKeyOut;
-	if (RemoveSyscoinScript(*this, scriptPubKeyOut))
-		scriptOut = scriptPubKeyOut;
-	else
-		scriptOut = *this;
-    // Test for pay-to-pubkey CScript with both
-    // compressed or uncompressed pubkey
-    if (scriptOut.size() == 35) {
-        return (scriptOut[1] == 0x02 || scriptOut[1] == 0x03) &&
-			scriptOut[34] == OP_CHECKSIG;
+    // SYSCOIN
+    CScript scriptOut;
+    CScript scriptPubKeyOut;
+    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+        scriptOut = scriptPubKeyOut;
+    else
+        scriptOut = *this;
+    // Extra-fast test for pay-to-witness-script-hash CScripts:
+    return (scriptOut.size() == 34 &&
+            scriptOut[0] == OP_0 &&
+            scriptOut[1] == 0x20);
+}
+
+// A witness program is any valid CScript that consists of a 1-byte push opcode
+// followed by a data push between 2 and 40 bytes.
+bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program) const
+{
+    // SYSCOIN
+    CScript scriptOut;
+    CScript scriptPubKeyOut;
+    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+        scriptOut = scriptPubKeyOut;
+    else
+        scriptOut = *this;
+    if (scriptOut.size() < 4 || scriptOut.size() > 42) {
+        return false;
     }
-    if (scriptOut.size() == 67) {
-        return scriptOut[1] == 0x04 &&
-			scriptOut[66] == OP_CHECKSIG;
+    if (scriptOut[0] != OP_0 && (scriptOut[0] < OP_1 || scriptOut[0] > OP_16)) {
+        return false;
+    }
+    if ((size_t)(scriptOut[1] + 2) == scriptOut.size()) {
+        version = DecodeOP_N((opcodetype)scriptOut[0]);
+        program = std::vector<unsigned char>(scriptOut.begin() + 2, scriptOut.end());
+        return true;
     }
     return false;
 }
@@ -275,4 +282,212 @@ bool CScript::IsPushOnly(const_iterator pc) const
 bool CScript::IsPushOnly() const
 {
     return this->IsPushOnly(begin());
+}
+
+std::string CScriptWitness::ToString() const
+{
+    std::string ret = "CScriptWitness(";
+    for (unsigned int i = 0; i < stack.size(); i++) {
+        if (i) {
+            ret += ", ";
+        }
+        ret += HexStr(stack[i]);
+    }
+    return ret + ")";
+}
+
+bool CScript::HasValidOps() const
+{
+    CScript::const_iterator it = begin();
+    while (it < end()) {
+        opcodetype opcode;
+        std::vector<unsigned char> item;
+        if (!GetOp(it, opcode, item) || opcode > MAX_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet)
+{
+    opcodeRet = OP_INVALIDOPCODE;
+    if (pvchRet)
+        pvchRet->clear();
+    if (pc >= end)
+        return false;
+
+    // Read instruction
+    if (end - pc < 1)
+        return false;
+    unsigned int opcode = *pc++;
+
+    // Immediate operand
+    if (opcode <= OP_PUSHDATA4)
+    {
+        unsigned int nSize = 0;
+        if (opcode < OP_PUSHDATA1)
+        {
+            nSize = opcode;
+        }
+        else if (opcode == OP_PUSHDATA1)
+        {
+            if (end - pc < 1)
+                return false;
+            nSize = *pc++;
+        }
+        else if (opcode == OP_PUSHDATA2)
+        {
+            if (end - pc < 2)
+                return false;
+            nSize = ReadLE16(&pc[0]);
+            pc += 2;
+        }
+        else if (opcode == OP_PUSHDATA4)
+        {
+            if (end - pc < 4)
+                return false;
+            nSize = ReadLE32(&pc[0]);
+            pc += 4;
+        }
+        if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
+            return false;
+        if (pvchRet)
+            pvchRet->assign(pc, pc + nSize);
+        pc += nSize;
+    }
+
+    opcodeRet = static_cast<opcodetype>(opcode);
+    return true;
+}
+// SYSCOIN
+bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
+{
+    if (!RemoveAssetAllocationScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+        if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+            return false;
+        return true;
+}
+
+bool DecodeAssetScript(const CScript& script, int& op,
+        std::vector<std::vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
+    opcodetype opcode;
+    vvch.clear();
+    if (!script.GetOp(pc, opcode)) return false;
+    if (opcode < OP_1 || opcode > OP_16) return false;
+    op = CScript::DecodeOP_N(opcode);
+    if (op != OP_SYSCOIN_ASSET)
+        return false;
+    if (!script.GetOp(pc, opcode))
+        return false;
+    if (opcode < OP_1 || opcode > OP_16)
+        return false;
+    op = CScript::DecodeOP_N(opcode);
+    if (!IsAssetOp(op))
+        return false;
+
+    bool found = false;
+    for (;;) {
+        std::vector<unsigned char> vch;
+        if (!script.GetOp(pc, opcode, vch))
+            return false;
+        if (opcode == OP_DROP || opcode == OP_2DROP)
+        {
+            found = true;
+            break;
+        }
+        if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
+            return false;
+        vvch.emplace_back(std::move(vch));
+    }
+
+    // move the pc to after any DROP or NOP
+    while (opcode == OP_DROP || opcode == OP_2DROP) {
+        if (!script.GetOp(pc, opcode))
+            break;
+    }
+
+    pc--;
+    return found;
+}
+bool DecodeAssetScript(const CScript& script, int& op,
+        std::vector<std::vector<unsigned char> > &vvch) {
+    CScript::const_iterator pc = script.begin();
+    return DecodeAssetScript(script, op, vvch, pc);
+}
+
+bool DecodeAssetAllocationScript(const CScript& script, int& op,
+        std::vector<std::vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
+    opcodetype opcode;
+    vvch.clear();
+    if (!script.GetOp(pc, opcode)) return false;
+    if (opcode < OP_1 || opcode > OP_16) return false;
+    op = CScript::DecodeOP_N(opcode);
+    if (op != OP_SYSCOIN_ASSET_ALLOCATION)
+        return false;
+    if (!script.GetOp(pc, opcode))
+        return false;
+    if (opcode < OP_1 || opcode > OP_16)
+        return false;
+    op = CScript::DecodeOP_N(opcode);
+    if (!IsAssetAllocationOp(op))
+        return false;
+
+    bool found = false;
+    for (;;) {
+        std::vector<unsigned char> vch;
+        if (!script.GetOp(pc, opcode, vch))
+            return false;
+        if (opcode == OP_DROP || opcode == OP_2DROP)
+        {
+            found = true;
+            break;
+        }
+        if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
+            return false;
+        vvch.emplace_back(std::move(vch));
+    }
+
+    // move the pc to after any DROP or NOP
+    while (opcode == OP_DROP || opcode == OP_2DROP) {
+        if (!script.GetOp(pc, opcode))
+            break;
+    }
+
+    pc--;
+    return found;
+}
+bool DecodeAssetAllocationScript(const CScript& script, int& op,
+        std::vector<std::vector<unsigned char> > &vvch) {
+    CScript::const_iterator pc = script.begin();
+    return DecodeAssetAllocationScript(script, op, vvch, pc);
+}
+bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
+    int op;
+    std::vector<std::vector<unsigned char> > vvch;
+    CScript::const_iterator pc = scriptIn.begin();
+
+    if (!DecodeAssetAllocationScript(scriptIn, op, vvch, pc))
+        return false;
+    scriptOut = CScript(pc, scriptIn.end());
+    return true;
+}
+bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
+    int op;
+    std::vector<std::vector<unsigned char> > vvch;
+    CScript::const_iterator pc = scriptIn.begin();
+
+    if (!DecodeAssetScript(scriptIn, op, vvch, pc))
+        return false;
+    scriptOut = CScript(pc, scriptIn.end());
+    return true;
+}
+bool IsAssetOp(int op) {
+    return op == OP_ASSET_ACTIVATE
+        || op == OP_ASSET_UPDATE
+        || op == OP_ASSET_TRANSFER
+        || op == OP_ASSET_SEND;
+}
+bool IsAssetAllocationOp(int op) {
+    return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_ALLOCATION_BURN;
 }

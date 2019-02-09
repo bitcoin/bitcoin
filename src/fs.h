@@ -17,8 +17,8 @@ namespace fs = boost::filesystem;
 
 /** Bridge operations to C stdio */
 namespace fsbridge {
-	FILE *fopen(const fs::path& p, const char *mode);
-	FILE *freopen(const fs::path& p, const char *mode, FILE *stream);
+    FILE *fopen(const fs::path& p, const char *mode);
+    FILE *freopen(const fs::path& p, const char *mode, FILE *stream);
 };
 
 #endif // SYSCOIN_FS_H

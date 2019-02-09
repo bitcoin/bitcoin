@@ -1,22 +1,44 @@
+# It is not recommended to modify this file in-place, because it will
+# be overwritten during package upgrades. If you want to add further
+# options or overwrite existing ones then use
+# $ systemctl edit syscoind.service
+# See "man systemd.service" for details.
+
+# Note that almost all daemon options could be specified in
+# /etc/syscoin/syscoin.conf
+
 [Unit]
-Description=Syscoin's distributed currency daemon
+Description=Syscoin daemon
 After=network.target
 
 [Service]
-User=syscoincore
-Group=syscoincore
-
+ExecStart=/usr/bin/syscoind -daemon -conf=/etc/syscoin/syscoin.conf -pid=/run/syscoind/syscoind.pid
+# Creates /run/syscoind owned by syscoin
+RuntimeDirectory=syscoind
+User=syscoin
 Type=forking
-PIDFile=/var/lib/syscoind/syscoind.pid
-ExecStart=/usr/bin/syscoind -daemon -pid=/var/lib/syscoind/syscoind.pid \
--conf=/etc/syscoincore/syscoin.conf -datadir=/var/lib/syscoind -disablewallet
+PIDFile=/run/syscoind/syscoind.pid
+Restart=on-failure
 
-Restart=always
+# Hardening measures
+####################
+
+# Provide a private /tmp and /var/tmp.
 PrivateTmp=true
-TimeoutStopSec=60s
-TimeoutStartSec=2s
-StartLimitInterval=120s
-StartLimitBurst=5
+
+# Mount /usr, /boot/ and /etc read-only for the process.
+ProtectSystem=full
+
+# Disallow the process and all of its children to gain
+# new privileges through execve().
+NoNewPrivileges=true
+
+# Use a new /dev namespace only populated with API pseudo devices
+# such as /dev/null, /dev/zero and /dev/random.
+PrivateDevices=true
+
+# Deny the creation of writable and executable memory mappings.
+MemoryDenyWriteExecute=true
 
 [Install]
 WantedBy=multi-user.target

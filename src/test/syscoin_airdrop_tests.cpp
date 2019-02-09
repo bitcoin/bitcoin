@@ -33,7 +33,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 	string assetName = "asset";
 	string aliasName = "alias";
 	string memo = assetName+"-AIRDROP";
-	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "assetinfo " + assetName + " true", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "assetinfo " + assetName, false));
 
 	if (!find_value(r.get_obj(), "inputs").get_array().empty())
 	{

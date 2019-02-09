@@ -9,7 +9,8 @@
 #include "timedata.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
-
+#include <validation.h>
+#include <key_io.h>
 #include <algorithm>
 
 const size_t MAX_DATA_SIZE  = 512;
@@ -152,13 +153,13 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    CSyscoinAddress address(strPaymentAddress);
-    if(!address.IsValid()) {
+    const CTxDestination &address = DecodeDestination(strPaymentAddress);
+    if(!IsValidDestination(address)) {
         strErrorMessages += "payment_address is invalid;";
         return false;
     }
 
-    if(address.IsScript()) {
+    if(boost::get<CScriptID>(&address) || boost::get<WitnessV0ScriptHash>(&address)) {
         strErrorMessages += "script addresses are not supported;";
         return false;
     }

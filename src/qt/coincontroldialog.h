@@ -1,12 +1,11 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_QT_COINCONTROLDIALOG_H
 #define SYSCOIN_QT_COINCONTROLDIALOG_H
 
-#include "amount.h"
+#include <amount.h>
 
 #include <QAbstractButton>
 #include <QAction>
@@ -21,7 +20,6 @@ class PlatformStyle;
 class WalletModel;
 
 class CCoinControl;
-class CTxMemPool;
 
 namespace Ui {
     class CoinControlDialog;
@@ -32,9 +30,9 @@ namespace Ui {
 class CCoinControlWidgetItem : public QTreeWidgetItem
 {
 public:
-    CCoinControlWidgetItem(QTreeWidget *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
-    CCoinControlWidgetItem(int type = Type) : QTreeWidgetItem(type) {}
-    CCoinControlWidgetItem(QTreeWidgetItem *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
+    explicit CCoinControlWidgetItem(QTreeWidget *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
+    explicit CCoinControlWidgetItem(int type = Type) : QTreeWidgetItem(type) {}
+    explicit CCoinControlWidgetItem(QTreeWidgetItem *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
 
     bool operator<(const QTreeWidgetItem &other) const;
 };
@@ -54,7 +52,7 @@ public:
     static void updateLabels(WalletModel*, QDialog*);
 
     static QList<CAmount> payAmounts;
-    static CCoinControl *coinControl;
+    static CCoinControl *coinControl();
     static bool fSubtractFeeFromAmount;
 
 private:
@@ -80,7 +78,6 @@ private:
         COLUMN_AMOUNT,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
-        COLUMN_PRIVATESEND_ROUNDS,
         COLUMN_DATE,
         COLUMN_CONFIRMATIONS,
         COLUMN_TXHASH,
@@ -109,7 +106,6 @@ private Q_SLOTS:
     void headerSectionClicked(int);
     void buttonBoxClicked(QAbstractButton*);
     void buttonSelectAllClicked();
-    void buttonToggleLockClicked();
     void updateLabelLocked();
 };
 

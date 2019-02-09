@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,9 @@
 #include <map>
 #include <stdlib.h>
 
-#include "support/events.h"
+#include <support/events.h>
 
-#include "test/test_syscoin.h"
+#include <test/test_syscoin.h>
 
 #include <vector>
 
@@ -41,19 +41,19 @@ BOOST_FIXTURE_TEST_SUITE(raii_event_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(raii_event_creation)
 {
     event_set_mem_functions(tag_malloc, realloc, tag_free);
-    
-    void* base_ptr = NULL;
+
+    void* base_ptr = nullptr;
     {
         auto base = obtain_event_base();
         base_ptr = (void*)base.get();
         BOOST_CHECK(tags[base_ptr] == 1);
     }
     BOOST_CHECK(tags[base_ptr] == 0);
-    
-    void* event_ptr = NULL;
+
+    void* event_ptr = nullptr;
     {
         auto base = obtain_event_base();
-        auto event = obtain_event(base.get(), -1, 0, NULL, NULL);
+        auto event = obtain_event(base.get(), -1, 0, nullptr, nullptr);
 
         base_ptr = (void*)base.get();
         event_ptr = (void*)event.get();
@@ -63,19 +63,19 @@ BOOST_AUTO_TEST_CASE(raii_event_creation)
     }
     BOOST_CHECK(tags[base_ptr] == 0);
     BOOST_CHECK(tags[event_ptr] == 0);
-    
+
     event_set_mem_functions(malloc, realloc, free);
 }
 
 BOOST_AUTO_TEST_CASE(raii_event_order)
 {
     event_set_mem_functions(tag_malloc, realloc, tag_free);
-    
-    void* base_ptr = NULL;
-    void* event_ptr = NULL;
+
+    void* base_ptr = nullptr;
+    void* event_ptr = nullptr;
     {
         auto base = obtain_event_base();
-        auto event = obtain_event(base.get(), -1, 0, NULL, NULL);
+        auto event = obtain_event(base.get(), -1, 0, nullptr, nullptr);
 
         base_ptr = (void*)base.get();
         event_ptr = (void*)event.get();

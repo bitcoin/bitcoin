@@ -9,16 +9,11 @@
 #include "messagesigner.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
-
+#include <key_io.h>
 bool CMessageSigner::GetKeysFromSecret(const std::string& strSecret, CKey& keyRet, CPubKey& pubkeyRet)
 {
-    CSyscoinSecret vchSecret;
-
-    if(!vchSecret.SetString(strSecret)) return false;
-
-    keyRet = vchSecret.GetKey();
+    keyRet = DecodeSecret(strSecret);
     pubkeyRet = keyRet.GetPubKey();
-
     return true;
 }
 

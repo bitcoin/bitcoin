@@ -1,30 +1,22 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h"
+#include <config/syscoin-config.h>
 #endif
 
-#include "optionsdialog.h"
-#include "ui_optionsdialog.h"
+#include <qt/optionsdialog.h>
+#include <qt/forms/ui_optionsdialog.h>
 
-#include "syscoinunits.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
+#include <qt/syscoinunits.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
 
-#include "validation.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
-#include "netbase.h"
-#include "txdb.h" // for -dbcache defaults
-
-#ifdef ENABLE_WALLET
-#include "wallet/wallet.h" // for CWallet::GetRequiredFee()
-
-#include "privatesend-client.h"
-#endif // ENABLE_WALLET
-
-#include <boost/thread.hpp>
+#include <interfaces/node.h>
+#include <validation.h> // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
+#include <netbase.h>
+#include <txdb.h> // for -dbcache defaults
 
 #include <QDataWidgetMapper>
 #include <QDir>
@@ -32,10 +24,6 @@
 #include <QLocale>
 #include <QMessageBox>
 #include <QTimer>
-
-#ifdef ENABLE_WALLET
-extern CWallet* pwalletMain;
-#endif // ENABLE_WALLET
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
@@ -48,8 +36,17 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
+    static const uint64_t GiB = 1024 * 1024 * 1024;
+    static const uint64_t nMinDiskSpace = MIN_DISK_SPACE_FOR_BLOCK_FILES / GiB +
+                          (MIN_DISK_SPACE_FOR_BLOCK_FILES % GiB) ? 1 : 0;
+    ui->pruneSize->setMinimum(nMinDiskSpace);
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
+    ui->pruneWarning->setVisible(false);
+    ui->pruneWarning->setStyleSheet("QLabel { color: red; }");
+
+    ui->pruneSize->setEnabled(false);
+    connect(ui->prune, SIGNAL(toggled(bool)), ui->pruneSize, SLOT(setEnabled(bool)));
 
     /* Network elements init */
 #ifndef USE_UPNP
@@ -84,58 +81,32 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     }
 
     /* Display elements init */
-    
-    /* Number of displayed decimal digits selector */
-    QString digits;
-    for(int index = 2; index <=8; index++){
-        digits.setNum(index);
-        ui->digits->addItem(digits, digits);
-    }
-    
-    /* Theme selector */
-    ui->theme->addItem(QString("SYS-light"), QVariant("light"));
-    ui->theme->addItem(QString("SYS-light-hires"), QVariant("light-hires"));
-    ui->theme->addItem(QString("SYS-blue"), QVariant("drkblue"));
-    ui->theme->addItem(QString("SYS-Crownium"), QVariant("crownium"));
-    ui->theme->addItem(QString("SYS-traditional"), QVariant("trad"));
-    
-    /* Language selector */
     QDir translations(":translations");
 
     ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
     ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(tr(PACKAGE_NAME)));
 
+    ui->openSyscoinConfButton->setToolTip(ui->openSyscoinConfButton->toolTip().arg(tr(PACKAGE_NAME)));
+
     ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
-    Q_FOREACH(const QString &langStr, translations.entryList())
+    for (const QString &langStr : translations.entryList())
     {
         QLocale locale(langStr);
 
         /** check if the locale name consists of 2 parts (language_country) */
         if(langStr.contains("_"))
         {
-#if QT_VERSION >= 0x040800
             /** display language strings as "native language - native country (locale name)", e.g. "Deutsch - Deutschland (de)" */
             ui->lang->addItem(locale.nativeLanguageName() + QString(" - ") + locale.nativeCountryName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
-#else
-            /** display language strings as "language - country (locale name)", e.g. "German - Germany (de)" */
-            ui->lang->addItem(QLocale::languageToString(locale.language()) + QString(" - ") + QLocale::countryToString(locale.country()) + QString(" (") + langStr + QString(")"), QVariant(langStr));
-#endif
         }
         else
         {
-#if QT_VERSION >= 0x040800
             /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
             ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
-#else
-            /** display language strings as "language (locale name)", e.g. "German (de)" */
-            ui->lang->addItem(QLocale::languageToString(locale.language()) + QString(" (") + langStr + QString(")"), QVariant(langStr));
-#endif
         }
     }
-#if QT_VERSION >= 0x040700
     ui->thirdPartyTxUrls->setPlaceholderText("https://example.com/tx/%s");
-#endif
 
     ui->unit->setModel(new SyscoinUnits(this));
 
@@ -143,6 +114,10 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
     mapper->setOrientation(Qt::Vertical);
+
+    GUIUtil::ItemDelegate* delegate = new GUIUtil::ItemDelegate(mapper);
+    connect(delegate, &GUIUtil::ItemDelegate::keyEscapePressed, this, &OptionsDialog::reject);
+    mapper->setItemDelegate(delegate);
 
     /* setup/change UI elements when proxy IPs are invalid/valid */
     ui->proxyIp->setCheckValidator(new ProxyAddressValidator(parent));
@@ -183,6 +158,9 @@ void OptionsDialog::setModel(OptionsModel *_model)
     /* warn when one of the following settings changes by user action (placed here so init via mapper doesn't trigger them) */
 
     /* Main */
+    connect(ui->prune, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->prune, SIGNAL(clicked(bool)), this, SLOT(togglePruneWarning(bool)));
+    connect(ui->pruneSize, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->databaseCache, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     connect(ui->threadsScriptVerif, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
     /* Wallet */
@@ -193,8 +171,6 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
-    connect(ui->digits, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
-    connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 }
@@ -205,16 +181,14 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->syscoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
-
+    mapper->addMapping(ui->prune, OptionsModel::Prune);
+    mapper->addMapping(ui->pruneSize, OptionsModel::PruneSize);
+    
+    
     /* Wallet */
-    mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
-    mapper->addMapping(ui->showAdvancedPSUI, OptionsModel::ShowAdvancedPSUI);
-    mapper->addMapping(ui->lowKeysWarning, OptionsModel::LowKeysWarning);
-    mapper->addMapping(ui->privateSendMultiSession, OptionsModel::PrivateSendMultiSession);
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
-    mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
-    mapper->addMapping(ui->privateSendAmount, OptionsModel::PrivateSendAmount);
+    mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -236,12 +210,9 @@ void OptionsDialog::setMapper()
 #endif
 
     /* Display */
-    mapper->addMapping(ui->digits, OptionsModel::Digits);
-    mapper->addMapping(ui->theme, OptionsModel::Theme);
     mapper->addMapping(ui->lang, OptionsModel::Language);
     mapper->addMapping(ui->unit, OptionsModel::DisplayUnit);
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
-
 }
 
 void OptionsDialog::setOkButtonState(bool fState)
@@ -267,14 +238,21 @@ void OptionsDialog::on_resetButton_clicked()
     }
 }
 
+void OptionsDialog::on_openSyscoinConfButton_clicked()
+{
+    /* explain the purpose of the config file */
+    QMessageBox::information(this, tr("Configuration options"),
+        tr("The configuration file is used to specify advanced user options which override GUI settings. "
+           "Additionally, any command-line options will override this configuration file."));
+
+    /* show an error if there was some problem opening the file */
+    if (!GUIUtil::openSyscoinConf())
+        QMessageBox::critical(this, tr("Error"), tr("The configuration file could not be opened."));
+}
+
 void OptionsDialog::on_okButton_clicked()
 {
     mapper->submit();
-#ifdef ENABLE_WALLET
-    privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
-    if(pwalletMain)
-        pwalletMain->MarkDirty();
-#endif // ENABLE_WALLET
     accept();
     updateDefaultProxyNets();
 }
@@ -295,6 +273,11 @@ void OptionsDialog::on_hideTrayIcon_stateChanged(int fState)
     {
         ui->minimizeToTray->setEnabled(true);
     }
+}
+
+void OptionsDialog::togglePruneWarning(bool enabled)
+{
+    ui->pruneWarning->setVisible(!ui->pruneWarning->isVisible());
 }
 
 void OptionsDialog::showRestartWarning(bool fPersistent)
@@ -345,17 +328,17 @@ void OptionsDialog::updateDefaultProxyNets()
     std::string strProxy;
     QString strDefaultProxyGUI;
 
-    GetProxy(NET_IPV4, proxy);
+    model->node().getProxy(NET_IPV4, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv4->setChecked(true) : ui->proxyReachIPv4->setChecked(false);
 
-    GetProxy(NET_IPV6, proxy);
+    model->node().getProxy(NET_IPV6, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachIPv6->setChecked(true) : ui->proxyReachIPv6->setChecked(false);
 
-    GetProxy(NET_TOR, proxy);
+    model->node().getProxy(NET_ONION, proxy);
     strProxy = proxy.proxy.ToStringIP() + ":" + proxy.proxy.ToStringPort();
     strDefaultProxyGUI = ui->proxyIp->text() + ":" + ui->proxyPort->text();
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
@@ -370,7 +353,7 @@ QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) cons
 {
     Q_UNUSED(pos);
     // Validate the proxy
-    CService serv(LookupNumeric(input.toStdString().c_str(), 9050));
+    CService serv(LookupNumeric(input.toStdString().c_str(), DEFAULT_GUI_PROXY_PORT));
     proxyType addrProxy = proxyType(serv, true);
     if (addrProxy.IsValid())
         return QValidator::Acceptable;

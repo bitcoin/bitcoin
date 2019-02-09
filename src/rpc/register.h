@@ -1,10 +1,9 @@
-// Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_RPCREGISTER_H
-#define SYSCOIN_RPCREGISTER_H
+#ifndef SYSCOIN_RPC_REGISTER_H
+#define SYSCOIN_RPC_REGISTER_H
 
 /** These are in one header file to avoid creating tons of single-function
  * headers for everything under src/rpc/ */
@@ -20,10 +19,6 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
-/** Register masternode RPC commands */
-void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
-/** Register governance RPC commands */
-void RegisterGovernanceRPCCommands(CRPCTable &tableRPC);
 
 static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
 {
@@ -32,8 +27,6 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t)
     RegisterMiscRPCCommands(t);
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
-    RegisterMasternodeRPCCommands(t);
-    RegisterGovernanceRPCCommands(t);
 }
 
-#endif
+#endif // SYSCOIN_RPC_REGISTER_H

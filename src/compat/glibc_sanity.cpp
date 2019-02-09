@@ -1,10 +1,9 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2015 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h"
+#include <config/syscoin-config.h>
 #endif
 
 #include <cstddef>
@@ -57,7 +56,7 @@ bool sanity_test_fdelt()
 }
 #endif
 
-} // anon namespace
+} // namespace
 
 bool glibc_sanity_test()
 {
