@@ -1,19 +1,22 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_QT_TRANSACTIONRECORD_H
 #define SYSCOIN_QT_TRANSACTIONRECORD_H
 
-#include "amount.h"
-#include "uint256.h"
+#include <amount.h>
+#include <uint256.h>
 
 #include <QList>
 #include <QString>
 
-class CWallet;
-class CWalletTx;
+namespace interfaces {
+class Node;
+class Wallet;
+struct WalletTx;
+struct WalletTxStatus;
+}
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
@@ -21,8 +24,8 @@ class TransactionStatus
 {
 public:
     TransactionStatus():
-        countsForBalance(false), lockedByInstantSend(false), sortKey(""),
-        matures_in(0), status(Offline), depth(0), open_for(0), cur_num_blocks(-1)
+        countsForBalance(false), sortKey(""),
+        matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1)
     { }
 
     enum Status {
@@ -30,21 +33,17 @@ public:
         /// Normal (sent/received) transactions
         OpenUntilDate,      /**< Transaction not yet final, waiting for date */
         OpenUntilBlock,     /**< Transaction not yet final, waiting for block */
-        Offline,            /**< Not sent to any other nodes **/
         Unconfirmed,        /**< Not yet mined into a block **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
         Abandoned,          /**< Abandoned from the wallet **/
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
-        MaturesWarning,     /**< Transaction will likely not mature because no nodes have confirmed */
         NotAccepted         /**< Mined but not accepted */
     };
 
     /// Transaction counts towards available balance
     bool countsForBalance;
-    /// Transaction was locked via InstantSend
-    bool lockedByInstantSend;
     /// Sorting key based on status
     std::string sortKey;
 
@@ -65,8 +64,7 @@ public:
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
 
-    //** Know when to update transaction for ix locks **/
-    int cur_num_ix_locks;
+    bool needsUpdate;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
@@ -83,13 +81,7 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf,
-        RecvWithPrivateSend,
-        PrivateSendDenominate,
-        PrivateSendCollateralPayment,
-        PrivateSendMakeCollaterals,
-        PrivateSendCreateDenominations,
-        PrivateSend
+        SendToSelf
     };
 
     /** Number of confirmation recommended for accepting a transaction */
@@ -116,8 +108,8 @@ public:
 
     /** Decompose CWallet transaction to model transaction records.
      */
-    static bool showTransaction(const CWalletTx &wtx);
-    static QList<TransactionRecord> decomposeTransaction(const CWallet *wallet, const CWalletTx &wtx);
+    static bool showTransaction();
+    static QList<TransactionRecord> decomposeTransaction(const interfaces::WalletTx& wtx);
 
     /** @name Immutable transaction attributes
       @{*/
@@ -139,18 +131,18 @@ public:
     bool involvesWatchAddress;
 
     /** Return the unique identifier for this transaction (part) */
-    QString getTxID() const;
+    QString getTxHash() const;
 
     /** Return the output index of the subtransaction  */
     int getOutputIndex() const;
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const CWalletTx &wtx);
+    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded();
+    bool statusUpdateNeeded(int numBlocks) const;
 };
 
 #endif // SYSCOIN_QT_TRANSACTIONRECORD_H

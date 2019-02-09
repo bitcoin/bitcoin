@@ -1,39 +1,40 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2018 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Server/client environment: argument handling, config file parsing,
- * logging, thread wrappers
+ * thread wrappers, startup time
  */
 #ifndef SYSCOIN_UTIL_H
 #define SYSCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h"
+#include <config/syscoin-config.h>
 #endif
 
-#include "compat.h"
-#include "tinyformat.h"
-#include "utiltime.h"
-#include "amount.h"
+#include <compat.h>
+#include <fs.h>
+#include <logging.h>
+#include <sync.h>
+#include <tinyformat.h>
+#include <utiltime.h>
+#include <utilmemory.h>
 
 #include <atomic>
 #include <exception>
 #include <map>
+#include <set>
 #include <stdint.h>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/signals2/signal.hpp>
-#include <boost/thread/exceptions.hpp>
-#include <pthread.h>
-// Debugging macros
-
+#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
+// SYSCOIN only features
+#include <amount.h>
 // Uncomment the following line to enable debugging messages
 // or enable on a per file basis prior to inclusion of util.h
 //#define ENABLE_SYS_DEBUG
@@ -42,20 +43,39 @@
 #else
 #define DBG( x ) 
 #endif
-
-//Syscoin only features
-
 extern bool fMasternodeMode;
 extern bool fUnitTest;
 extern bool fTPSTest;
 extern bool fTPSTestEnabled;
 extern bool fAssetAllocationIndex;
+extern bool fZMQAssetAllocation;
+extern bool fZMQAsset;
+extern bool fConcurrentProcessing;
 extern bool fLiteMode;
-extern int nWalletBackups;
-static const bool DEFAULT_LOGTIMEMICROS  = false;
-static const bool DEFAULT_LOGIPS         = false;
-static const bool DEFAULT_LOGTIMESTAMPS  = true;
-static const bool DEFAULT_LOGTHREADNAMES = false;
+extern uint32_t fGethSyncHeight;
+extern uint32_t fGethCurrentHeight;
+extern std::string fGethSyncStatus;
+extern bool fGethSynced;
+extern bool fLoaded;
+extern pid_t gethPID;
+extern pid_t relayerPID;
+typedef struct {
+    // Values from /proc/meminfo, in KiB or converted to MiB.
+    long MemTotalKiB;
+    int MemTotalMiB;
+    int MemAvailableMiB; // -1 means no data available
+    int SwapTotalMiB;
+    long SwapTotalKiB;
+    int SwapFreeMiB;
+    // Calculated percentages
+    int MemAvailablePercent; // percent of total memory that is available
+    int SwapFreePercent; // percent of total swap that is free
+} meminfo_t;
+
+meminfo_t parse_meminfo();
+
+// Application startup time (used for uptime calculation)
+int64_t GetStartupTime();
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -65,20 +85,11 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
-extern bool fDebug;
-extern bool fPrintToConsole;
-extern bool fPrintToDebugLog;
-
-extern bool fLogTimestamps;
-extern bool fLogTimeMicros;
-extern bool fLogThreadNames;
-extern bool fLogIPs;
-extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
 extern const char * const SYSCOIN_CONF_FILENAME;
 extern const char * const SYSCOIN_PID_FILENAME;
+
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
@@ -93,53 +104,62 @@ inline std::string _(const char* psz)
 void SetupEnvironment();
 bool SetupNetworking();
 
-/** Return true if log accepts specified category */
-bool LogAcceptCategory(const char* category);
-/** Send a string to the log output */
-int LogPrintStr(const std::string &str);
-
-#define LogPrint(category, ...) do { \
-    if (LogAcceptCategory((category))) { \
-        LogPrintStr(tinyformat::format(__VA_ARGS__)); \
-    } \
-} while(0)
-
-#define LogPrintf(...) do { \
-    LogPrintStr(tinyformat::format(__VA_ARGS__)); \
-} while(0)
-
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
 {
-    LogPrintStr("ERROR: " + tinyformat::format(fmt, args...) + "\n");
+    LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
     return false;
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-void ParseParameters(int argc, const char*const argv[]);
-void FileCommit(FILE *file);
+bool FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
-bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
-bool TryCreateDirectory(const boost::filesystem::path& p);
-boost::filesystem::path GetDefaultDataDir();
-const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
-boost::filesystem::path GetBackupsDir();
+bool RenameOver(fs::path src, fs::path dest);
+bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
+bool DirIsWritable(const fs::path& directory);
+
+/** Release all directory locks. This is used for unit testing only, at runtime
+ * the global destructor will take care of the locks.
+ */
+void ReleaseDirectoryLocks();
+
+bool TryCreateDirectories(const fs::path& p);
+fs::path GetDefaultDataDir();
+const fs::path &GetBlocksDir(bool fNetSpecific = true);
+const fs::path &GetDataDir(bool fNetSpecific = true);
+// SYSCOIN
+fs::path GetGethPidFile();
+void KillProcess(const pid_t& pid);
+std::string GetGethFilename();
+fs::path GetMasternodeConfigFile();
+bool StartGethNode(pid_t &pid, bool bGethTestnet = false, int websocketport=8546);
+bool StopGethNode(pid_t &pid);
+fs::path GetRelayerPidFile();
+std::string GeteRelayerFilename();
+bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, int websocketport=8546);
+bool StopRelayerNode(pid_t &pid);
 void ClearDatadirCache();
-boost::filesystem::path GetConfigFile(const std::string& confPath);
-boost::filesystem::path GetMasternodeConfigFile();
+fs::path GetConfigFile(const std::string& confPath);
 #ifndef WIN32
-boost::filesystem::path GetPidFile();
-void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
+fs::path GetPidFile();
+void CreatePidFile(const fs::path &path, pid_t pid);
 #endif
-void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
-boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
+fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-void OpenDebugLog();
-void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
+
+/**
+ * Most paths passed as configuration arguments are treated as relative to
+ * the datadir if they are not absolute.
+ *
+ * @param path The path to be conditionally prefixed with datadir.
+ * @param net_specific Forwarded to GetDataDir().
+ * @return The normalized path.
+ */
+fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
 
 inline bool IsSwitchChar(char c)
 {
@@ -150,63 +170,178 @@ inline bool IsSwitchChar(char c)
 #endif
 }
 
-/**
- * Return true if the given argument has been manually set
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @return true if the argument has been set
- */
-bool IsArgSet(const std::string& strArg);
+enum class OptionsCategory {
+    OPTIONS,
+    CONNECTION,
+    WALLET,
+    WALLET_DEBUG_TEST,
+    ZMQ,
+    DEBUG_TEST,
+    CHAINPARAMS,
+    NODE_RELAY,
+    BLOCK_CREATION,
+    RPC,
+    GUI,
+    COMMANDS,
+    REGISTER_COMMANDS,
+
+    HIDDEN // Always the last option to avoid printing these in the help
+};
+
+class ArgsManager
+{
+protected:
+    friend class ArgsManagerHelper;
+
+    struct Arg
+    {
+        std::string m_help_param;
+        std::string m_help_text;
+        bool m_debug_only;
+
+        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
+    };
+
+    mutable CCriticalSection cs_args;
+    std::map<std::string, std::vector<std::string>> m_override_args;
+    std::map<std::string, std::vector<std::string>> m_config_args;
+    std::string m_network;
+    std::set<std::string> m_network_only_args;
+    std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args;
+
+    bool ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys = false);
+
+public:
+    ArgsManager();
+
+    /**
+     * Select the network in use
+     */
+    void SelectConfigNetwork(const std::string& network);
+
+    bool ParseParameters(int argc, const char* const argv[], std::string& error);
+    bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
+
+    /**
+     * Log warnings for options in m_section_only_args when
+     * they are specified in the default section but not overridden
+     * on the command line or in a network-specific section in the
+     * config file.
+     */
+    void WarnForSectionOnlyArgs();
+
+    /**
+     * Return a vector of strings of the given argument
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return command-line arguments
+     */
+    std::vector<std::string> GetArgs(const std::string& strArg) const;
+
+    /**
+     * Return true if the given argument has been manually set
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return true if the argument has been set
+     */
+    bool IsArgSet(const std::string& strArg) const;
+
+    /**
+     * Return true if the argument was originally passed as a negated option,
+     * i.e. -nofoo.
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @return true if the argument was passed negated
+     */
+    bool IsArgNegated(const std::string& strArg) const;
+
+    /**
+     * Return string argument or default value
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @param strDefault (e.g. "1")
+     * @return command-line argument or default value
+     */
+    std::string GetArg(const std::string& strArg, const std::string& strDefault) const;
+
+    /**
+     * Return integer argument or default value
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @param nDefault (e.g. 1)
+     * @return command-line argument (0 if invalid number) or default value
+     */
+    int64_t GetArg(const std::string& strArg, int64_t nDefault) const;
+
+    /**
+     * Return boolean argument or default value
+     *
+     * @param strArg Argument to get (e.g. "-foo")
+     * @param fDefault (true or false)
+     * @return command-line argument or default value
+     */
+    bool GetBoolArg(const std::string& strArg, bool fDefault) const;
+
+    /**
+     * Set an argument if it doesn't already have a value
+     *
+     * @param strArg Argument to set (e.g. "-foo")
+     * @param strValue Value (e.g. "1")
+     * @return true if argument gets set, false if it already had a value
+     */
+    bool SoftSetArg(const std::string& strArg, const std::string& strValue);
+
+    /**
+     * Set a boolean argument if it doesn't already have a value
+     *
+     * @param strArg Argument to set (e.g. "-foo")
+     * @param fValue Value (e.g. false)
+     * @return true if argument gets set, false if it already had a value
+     */
+    bool SoftSetBoolArg(const std::string& strArg, bool fValue);
+
+    // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
+    // been set. Also called directly in testing.
+    void ForceSetArg(const std::string& strArg, const std::string& strValue);
+
+    /**
+     * Looks for -regtest, -testnet and returns the appropriate BIP70 chain name.
+     * @return CBaseChainParams::MAIN by default; raises runtime error if an invalid combination is given.
+     */
+    std::string GetChainName() const;
+
+    /**
+     * Add argument
+     */
+    void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
+
+    /**
+     * Add many hidden arguments
+     */
+    void AddHiddenArgs(const std::vector<std::string>& args);
+
+    /**
+     * Clear available arguments
+     */
+    void ClearArgs() { m_available_args.clear(); }
+
+    /**
+     * Get the help string
+     */
+    std::string GetHelpMessage() const;
+
+    /**
+     * Check whether we know of this arg
+     */
+    bool IsArgKnown(const std::string& key) const;
+};
+
+extern ArgsManager gArgs;
 
 /**
- * Return string argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (e.g. "1")
- * @return command-line argument or default value
+ * @return true if help has been requested via a command-line arg
  */
-std::string GetArg(const std::string& strArg, const std::string& strDefault);
-
-/**
- * Return integer argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (e.g. 1)
- * @return command-line argument (0 if invalid number) or default value
- */
-int64_t GetArg(const std::string& strArg, int64_t nDefault);
-
-/**
- * Return boolean argument or default value
- *
- * @param strArg Argument to get (e.g. "-foo")
- * @param default (true or false)
- * @return command-line argument or default value
- */
-bool GetBoolArg(const std::string& strArg, bool fDefault);
-
-/**
- * Set an argument if it doesn't already have a value
- *
- * @param strArg Argument to set (e.g. "-foo")
- * @param strValue Value (e.g. "1")
- * @return true if argument gets set, false if it already had a value
- */
-bool SoftSetArg(const std::string& strArg, const std::string& strValue);
-
-/**
- * Set a boolean argument if it doesn't already have a value
- *
- * @param strArg Argument to set (e.g. "-foo")
- * @param fValue Value (e.g. false)
- * @return true if argument gets set, false if it already had a value
- */
-bool SoftSetBoolArg(const std::string& strArg, bool fValue);
-
-// Forces a arg setting
-void ForceSetArg(const std::string& strArg, const std::string& strValue);
-void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
-void ForceRemoveArg(const std::string& strArg);
+bool HelpRequested(const ArgsManager& args);
 
 /**
  * Format a string to be used as group of options in help messages
@@ -226,14 +361,12 @@ std::string HelpMessageGroup(const std::string& message);
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 /**
- * Return the number of physical cores available on the current system.
- * @note This does not count virtual cores, such as those provided by HyperThreading
- * when boost is newer than 1.56.
+ * Return the number of cores available on the current system.
+ * @note This does count virtual cores, such as those provided by HyperThreading.
  */
 int GetNumCores();
 
 void RenameThread(const char* name);
-std::string GetThreadName();
 
 /**
  * .. and a wrapper that just calls func once
@@ -258,47 +391,33 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
     catch (...) {
-        PrintExceptionContinue(NULL, name);
+        PrintExceptionContinue(nullptr, name);
         throw;
     }
 }
 
-std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
-
+std::string CopyrightHolders(const std::string& strPrefix);
 /**
- * @brief Converts version strings to 4-byte unsigned integer
- * @param strVersion version in "x.x.x" format (decimal digits only)
- * @return 4-byte unsigned integer, most significant byte is always 0
- * Throws std::bad_cast if format doesn\t match.
+ * On platforms that support it, tell the kernel the calling thread is
+ * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
+ *
+ * @return The return value of sched_setschedule(), or 1 on systems without
+ * sched_setschedule().
  */
-uint32_t StringVersionToInt(const std::string& strVersion);
+int ScheduleBatchPriority(void);
 
+namespace util {
 
-/**
- * @brief Converts version as 4-byte unsigned integer to string
- * @param nVersion 4-byte unsigned integer, most significant byte is always 0
- * @return version string in "x.x.x" format (last 3 bytes as version parts)
- * Throws std::bad_cast if format doesn\t match.
- */
-std::string IntVersionToString(uint32_t nVersion);
+//! Simplification of std insertion
+template <typename Tdst, typename Tsrc>
+inline void insert(Tdst& dst, const Tsrc& src) {
+    dst.insert(dst.begin(), src.begin(), src.end());
+}
+template <typename TsetT, typename Tsrc>
+inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
+    dst.insert(src.begin(), src.end());
+}
 
-
-/**
- * @brief Copy of the IntVersionToString, that returns "Invalid version" string
- * instead of throwing std::bad_cast
- * @param nVersion 4-byte unsigned integer, most significant byte is always 0
- * @return version string in "x.x.x" format (last 3 bytes as version parts)
- * or "Invalid version" if can't cast the given value
- */
-std::string SafeIntVersionToString(uint32_t nVersion);
-
-/**
-+ * On platforms that support it, tell the kernel the calling thread is
-+ * CPU-intensive and non-interactive. See SCHED_BATCH in sched(7) for details.
-+ *
-+ * @return The return value of sched_setschedule(), or 1 on systems without
-+ * sched_setchedule().
-+ */
-int ScheduleBatchPriority(pthread_t thread);
+} // namespace util
 
 #endif // SYSCOIN_UTIL_H

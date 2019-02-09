@@ -1,40 +1,45 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
+// Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_KEY_H
 #define SYSCOIN_KEY_H
 
-#include "pubkey.h"
-#include "serialize.h"
-#include "support/allocators/secure.h"
-#include "uint256.h"
+#include <pubkey.h>
+#include <serialize.h>
+#include <support/allocators/secure.h>
+#include <uint256.h>
 
 #include <stdexcept>
 #include <vector>
 
 
 /**
- * secp256k1:
- * const unsigned int PRIVATE_KEY_SIZE = 279;
- * const unsigned int PUBLIC_KEY_SIZE  = 65;
- * const unsigned int SIGNATURE_SIZE   = 72;
- *
- * see www.keylength.com
- * script supports up to 75 for single byte push
- */
-
-/**
  * secure_allocator is defined in allocators.h
- * CPrivKey is a serialized private key, with all parameters included (279 bytes)
+ * CPrivKey is a serialized private key, with all parameters included
+ * (PRIVATE_KEY_SIZE bytes)
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
 /** An encapsulated private key. */
 class CKey
 {
+public:
+    /**
+     * secp256k1:
+     */
+    static const unsigned int PRIVATE_KEY_SIZE            = 279;
+    static const unsigned int COMPRESSED_PRIVATE_KEY_SIZE = 214;
+    /**
+     * see www.keylength.com
+     * script supports up to 75 for single byte push
+     */
+    static_assert(
+        PRIVATE_KEY_SIZE >= COMPRESSED_PRIVATE_KEY_SIZE,
+        "COMPRESSED_PRIVATE_KEY_SIZE is larger than PRIVATE_KEY_SIZE");
+
 private:
     //! Whether this private key is valid. We check for correctness when modifying the key
     //! data, so fValid should always correspond to the actual state.
@@ -46,7 +51,7 @@ private:
     //! The actual byte data
     std::vector<unsigned char, secure_allocator<unsigned char> > keydata;
 
-    //! Check whether the 32-byte array pointed to be vch is valid keydata.
+    //! Check whether the 32-byte array pointed to by vch is valid keydata.
     bool static Check(const unsigned char* vch);
 
 public:
@@ -55,11 +60,6 @@ public:
     {
         // Important: vch must be 32 bytes in length to not break serialization
         keydata.resize(32);
-    }
-
-    //! Destructor (again necessary because of memlocking).
-    ~CKey()
-    {
     }
 
     friend bool operator==(const CKey& a, const CKey& b)
@@ -95,9 +95,6 @@ public:
     //! Check whether the public key corresponding to this private key is (to be) compressed.
     bool IsCompressed() const { return fCompressed; }
 
-    //! Initialize from a CPrivKey (serialized OpenSSL private key data).
-    bool SetPrivKey(const CPrivKey& vchPrivKey, bool fCompressed);
-
     //! Generate a new private key using a cryptographic PRNG.
     void MakeNewKey(bool fCompressed);
 
@@ -117,7 +114,7 @@ public:
      * Create a DER-serialized signature.
      * The test_case parameter tweaks the deterministic nonce.
      */
-    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, uint32_t test_case = 0) const;
+    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
 
     /**
      * Create a compact signature (65 bytes), which allows reconstructing the used public key.
@@ -138,7 +135,7 @@ public:
     bool VerifyPubKey(const CPubKey& vchPubKey) const;
 
     //! Load private key and check that public key matches.
-    bool Load(CPrivKey& privkey, CPubKey& vchPubKey, bool fSkipCheck);
+    bool Load(const CPrivKey& privkey, const CPubKey& vchPubKey, bool fSkipCheck);
 };
 
 struct CExtKey {
@@ -161,7 +158,7 @@ struct CExtKey {
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     bool Derive(CExtKey& out, unsigned int nChild) const;
     CExtPubKey Neuter() const;
-    void SetMaster(const unsigned char* seed, unsigned int nSeedLen);
+    void SetSeed(const unsigned char* seed, unsigned int nSeedLen);
     template <typename Stream>
     void Serialize(Stream& s) const
     {
@@ -176,6 +173,8 @@ struct CExtKey {
     {
         unsigned int len = ::ReadCompactSize(s);
         unsigned char code[BIP32_EXTKEY_SIZE];
+        if (len != BIP32_EXTKEY_SIZE)
+            throw std::runtime_error("Invalid extended key size\n");
         s.read((char *)&code[0], len);
         Decode(code);
     }

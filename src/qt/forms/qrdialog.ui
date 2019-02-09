@@ -123,7 +123,7 @@
   <customwidget>
    <class>QRGeneralImageWidget</class>
    <extends>QLabel</extends>
-   <header>qrdialog.h</header>
+   <header>qt/qrdialog.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

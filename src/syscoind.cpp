@@ -1,31 +1,26 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h"
+#include <config/syscoin-config.h>
 #endif
 
-#include "chainparams.h"
-#include "clientversion.h"
-#include "compat.h"
-#include "rpc/server.h"
-#include "init.h"
-#include "noui.h"
-#include "scheduler.h"
-#include "util.h"
-#include "masternodeconfig.h"
-#include "httpserver.h"
-#include "httprpc.h"
-#include "utilstrencodings.h"
-
-#include <boost/algorithm/string/predicate.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/thread.hpp>
-
+#include <chainparams.h>
+#include <clientversion.h>
+#include <compat.h>
+#include <fs.h>
+#include <rpc/server.h>
+#include <init.h>
+#include <noui.h>
+#include <shutdown.h>
+#include <util.h>
+#include <httpserver.h>
+#include <httprpc.h>
+#include <utilstrencodings.h>
+#include <walletinitinterface.h>
+#include <masternodeconfig.h>
 #include <stdio.h>
 
 /* Introduction text for doxygen: */
@@ -34,64 +29,58 @@
  *
  * \section intro_sec Introduction
  *
- * This is the developer documentation of the reference client for an experimental new digital currency called Syscoin (https://www.syscoin.org/),
+ * This is the developer documentation of the reference client for an experimental new digital currency called Syscoin,
  * which enables instant payments to anyone, anywhere in the world. Syscoin uses peer-to-peer technology to operate
  * with no central authority: managing transactions and issuing money are carried out collectively by the network.
  *
  * The software is a community-driven open source project, released under the MIT license.
  *
+ * See https://github.com/syscoin/syscoin and https://syscoin.org/ for further information about the project.
+ *
  * \section Navigation
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-void WaitForShutdown(boost::thread_group* threadGroup)
+static void WaitForShutdown()
 {
-    bool fShutdown = ShutdownRequested();
-    // Tell the main threads to shutdown.
-    while (!fShutdown)
+    while (!ShutdownRequested())
     {
         MilliSleep(200);
-        fShutdown = ShutdownRequested();
     }
-    if (threadGroup)
-    {
-        Interrupt(*threadGroup);
-        threadGroup->join_all();
-    }
+    Interrupt();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //
 // Start
 //
-bool AppInit(int argc, char* argv[])
+static bool AppInit(int argc, char* argv[])
 {
-    boost::thread_group threadGroup;
-    CScheduler scheduler;
-
     bool fRet = false;
 
     //
     // Parameters
     //
     // If Qt is used, parameters/syscoin.conf are parsed in qt/syscoin.cpp's main()
-    ParseParameters(argc, argv);
+    SetupServerArgs();
+    std::string error;
+    if (!gArgs.ParseParameters(argc, argv, error)) {
+        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        return false;
+    }
 
     // Process help and version before taking care about datadir
-    if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
-    {
-        std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
+    if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+        std::string strUsage = PACKAGE_NAME " Daemon version " + FormatFullVersion() + "\n";
 
-        if (IsArgSet("-version"))
+        if (gArgs.IsArgSet("-version"))
         {
             strUsage += FormatParagraph(LicenseInfo());
         }
         else
         {
-            strUsage += "\n" + _("Usage:") + "\n" +
-                  "  syscoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
-
-            strUsage += "\n" + HelpMessage(HMM_SYSCOIND);
+            strUsage += "\nUsage:  syscoind [options]                     Start " PACKAGE_NAME " Daemon\n";
+            strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
@@ -100,102 +89,97 @@ bool AppInit(int argc, char* argv[])
 
     try
     {
-        bool datadirFromCmdLine = IsArgSet("-datadir");
-        if (datadirFromCmdLine && !boost::filesystem::is_directory(GetDataDir(false)))
+        if (!fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
+            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
-        try
-        {
-            ReadConfigFile(GetArg("-conf", SYSCOIN_CONF_FILENAME));
-        } catch (const std::exception& e) {
-            fprintf(stderr,"Error reading configuration file: %s\n", e.what());
+        if (!gArgs.ReadConfigFiles(error, true)) {
+            fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
             return false;
-        }
-        if (!datadirFromCmdLine && !boost::filesystem::is_directory(GetDataDir(false)))
-        {
-            fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", GetArg("-datadir", "").c_str());
-            return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
-            SelectParams(ChainNameFromCommandLine());
+            SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
             fprintf(stderr, "Error: %s\n", e.what());
             return false;
         }
 
-        // parse masternode.conf
+        // Error out when loose non-argument tokens are encountered on command line
+        for (int i = 1; i < argc; i++) {
+            if (!IsSwitchChar(argv[i][0])) {
+                fprintf(stderr, "Error: Command line contains unexpected token '%s', see syscoind -h for a list of options.\n", argv[i]);
+                return false;
+            }
+        }
+        // SYSCOIN parse masternode.conf
         std::string strErr;
         if(!masternodeConfig.read(strErr)) {
             fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
             return false;
         }
-
-        // Command-line RPC
-        bool fCommandLine = false;
-        for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "syscoin:"))
-                fCommandLine = true;
-
-        if (fCommandLine)
-        {
-            fprintf(stderr, "Error: There is no RPC client functionality in syscoind anymore. Use the syscoin-cli utility instead.\n");
-            exit(EXIT_FAILURE);
-        }
         // -server defaults to true for syscoind but not for the GUI so do this here
-        SoftSetBoolArg("-server", true);
+        gArgs.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
         if (!AppInitBasicSetup())
         {
             // InitError will have been called with detailed error, which ends up on console
-            exit(EXIT_FAILURE);
+            return false;
         }
         if (!AppInitParameterInteraction())
         {
             // InitError will have been called with detailed error, which ends up on console
-            exit(EXIT_FAILURE);
+            return false;
         }
         if (!AppInitSanityChecks())
         {
             // InitError will have been called with detailed error, which ends up on console
-            exit(EXIT_FAILURE);
+            return false;
         }
-        if (GetBoolArg("-daemon", false))
+        if (gArgs.GetBoolArg("-daemon", false))
         {
 #if HAVE_DECL_DAEMON
-            fprintf(stdout, "Syscoin Core server starting\n");
+#if defined(MAC_OSX)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+            fprintf(stdout, "Syscoin server starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
                 fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
                 return false;
             }
+#if defined(MAC_OSX)
+#pragma GCC diagnostic pop
+#endif
 #else
             fprintf(stderr, "Error: -daemon is not supported on this operating system\n");
             return false;
 #endif // HAVE_DECL_DAEMON
         }
-
-        fRet = AppInitMain(threadGroup, scheduler);
+        // Lock data directory after daemonization
+        if (!AppInitLockDataDirectory())
+        {
+            // If locking the data directory failed, exit immediately
+            return false;
+        }
+        fRet = AppInitMain();
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
     } catch (...) {
-        PrintExceptionContinue(NULL, "AppInit()");
+        PrintExceptionContinue(nullptr, "AppInit()");
     }
 
     if (!fRet)
     {
-        Interrupt(threadGroup);
-        // threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
-        // the startup-failure cases to make sure they don't result in a hang due to some
-        // thread-blocking-waiting-for-another-thread-during-startup case
+        Interrupt();
     } else {
-        WaitForShutdown(&threadGroup);
+        WaitForShutdown();
     }
     Shutdown();
 

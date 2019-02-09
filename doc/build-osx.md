@@ -41,14 +41,14 @@ from the root of the repository.
 Build Syscoin Core
 ------------------------
 
-1. Clone the syscoin source code and cd into `syscoin`
+1. Clone the Syscoin Core source code and cd into `syscoin`
 
         git clone https://github.com/syscoin/syscoin
         cd syscoin
 
-2.  Build syscoin-core:
+2.  Build Syscoin Core:
 
-    Configure and build the headless syscoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless Syscoin Core binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
 
@@ -56,7 +56,11 @@ Build Syscoin Core
         ./configure
         make
 
-3.  You can also create a .dmg that contains the .app bundle (optional):
+3.  It is recommended to build and run the unit tests:
+
+        make check
+
+4.  You can also create a .dmg that contains the .app bundle (optional):
 
         make deploy
 
@@ -65,11 +69,11 @@ Running
 
 Syscoin Core is now available at `./src/syscoind`
 
-Before running, it's recommended you create an RPC configuration file.
+Before running, it's recommended that you create an RPC configuration file.
 
-    echo -e "rpcuser=syscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/SyscoinCore/syscoin.conf"
+    echo -e "rpcuser=syscoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/Syscoin/syscoin.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/SyscoinCore/syscoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/Syscoin/syscoin.conf"
 
 The first time you run syscoind, it will start downloading the blockchain. This process could take several hours.
 

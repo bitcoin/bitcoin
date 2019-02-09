@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+﻿// Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -318,7 +318,7 @@ public:
     {
         LOCK(cs);
 
-        LogPrint("gobject", "Governance object manager was cleared\n");
+        LogPrint(BCLog::GOBJECT, "Governance object manager was cleared\n");
         mapObjects.clear();
         mapErasedGovernanceObjects.clear();
         cmapVoteToObject.Clear();

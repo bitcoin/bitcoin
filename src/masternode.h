@@ -10,6 +10,7 @@
 #include "validation.h"
 #include "spork.h"
 #include "clientversion.h"
+#include <net_processing.h>
 class CMasternode;
 class CMasternodeBroadcast;
 class CConnman;
@@ -28,7 +29,7 @@ static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 //
 
 // sentinel version before implementation of nSentinelVersion in CMasternodePing
-#define DEFAULT_SENTINEL_VERSION 0x010001
+#define DEFAULT_SENTINEL_VERSION CLIENT_SENTINEL_VERSION
 // daemon version before implementation of nDaemonVersion in CMasternodePing
 #define DEFAULT_DAEMON_VERSION CLIENT_MASTERNODE_VERSION
 
@@ -40,7 +41,7 @@ public:
     int64_t sigTime{}; //mnb message times
     std::vector<unsigned char> vchSig{};
     bool fSentinelIsCurrent = false; // true if last sentinel ping was current
-    // MSB is always 0, other 3 bits corresponds to x.x.x version scheme
+    // MSB is major version to control backwards compatibility, other 3 bits corresponds to miner x.x.x version scheme
     uint32_t nSentinelVersion{DEFAULT_SENTINEL_VERSION};
     uint32_t nDaemonVersion{DEFAULT_DAEMON_VERSION};
 
@@ -62,9 +63,15 @@ public:
             READWRITE(vchSig);
         }
         READWRITE(fSentinelIsCurrent);
-        READWRITE(nSentinelVersion);
+        if(s.GetType() & SER_GETHASH)
+            READWRITE(nSentinelVersion / 1000000);
+        else
+             READWRITE(nSentinelVersion);
         if (!(s.GetType() & SER_NETWORK)) {
-            READWRITE(nDaemonVersion);
+            if(s.GetType() & SER_GETHASH)
+                READWRITE(nDaemonVersion / 1000000);
+            else
+                READWRITE(nDaemonVersion);
         }
     }
 
@@ -124,7 +131,6 @@ struct masternode_info_t
     CPubKey pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
 
-    int64_t nLastDsq = 0; //the dsq count from the last dsq broadcast of this node
     int64_t nTimeLastChecked = 0;
     int64_t nTimeLastPaid = 0;
     int64_t nTimeLastPing = 0; //* not in CMN
@@ -132,7 +138,7 @@ struct masternode_info_t
 };
 
 //
-// The Masternode Class. For managing the Darksend process. It contains the input of the 100000SYS, signature to prove
+// The Masternode Class. It contains the input of the 100000SYS, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
 //
 class CMasternode : public masternode_info_t
@@ -168,8 +174,6 @@ public:
     int nBlockLastPaid{};
     int nPoSeBanScore{};
     int nPoSeBanHeight{};
-    bool fAllowMixingTx{};
-    bool fUnitTest = false;
 
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
     std::map<uint256, int> mapGovernanceObjectsVotedOn;
@@ -193,7 +197,6 @@ public:
         READWRITE(lastPing);
         READWRITE(vchSig);
         READWRITE(sigTime);
-        READWRITE(nLastDsq);
         READWRITE(nTimeLastChecked);
         READWRITE(nTimeLastPaid);
         READWRITE(nActiveState);
@@ -202,8 +205,6 @@ public:
         READWRITE(nProtocolVersion);
         READWRITE(nPoSeBanScore);
         READWRITE(nPoSeBanHeight);
-        READWRITE(fAllowMixingTx);
-        READWRITE(fUnitTest);
         READWRITE(mapGovernanceObjectsVotedOn);
     }
 
@@ -293,8 +294,6 @@ public:
         nBlockLastPaid = from.nBlockLastPaid;
         nPoSeBanScore = from.nPoSeBanScore;
         nPoSeBanHeight = from.nPoSeBanHeight;
-        fAllowMixingTx = from.fAllowMixingTx;
-        fUnitTest = from.fUnitTest;
         mapGovernanceObjectsVotedOn = from.mapGovernanceObjectsVotedOn;
         return *this;
     }

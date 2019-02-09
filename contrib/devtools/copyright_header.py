@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016 The Bitcoin Core developers
-# Copyright (c) 2017 The Syscoin Core developers
+# Copyright (c) 2016-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,9 +16,18 @@ import os
 
 EXCLUDE = [
     # libsecp256k1:
-    'src/secp256k1/*',
-    # auto generated:
+    'src/secp256k1/include/secp256k1.h',
+    'src/secp256k1/include/secp256k1_ecdh.h',
+    'src/secp256k1/include/secp256k1_recovery.h',
+    'src/secp256k1/include/secp256k1_schnorr.h',
+    'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.c',
+    'src/secp256k1/src/java/org_bitcoin_NativeSecp256k1.h',
+    'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.c',
+    'src/secp256k1/src/java/org_bitcoin_Secp256k1Context.h',
+    # univalue:
+    'src/univalue/test/object.cpp',
     'src/univalue/lib/univalue_escapes.h',
+    # auto generated:
     'src/qt/syscoinstrings.cpp',
     'src/chainparamsseeds.h',
     # other external copyrights:
@@ -29,7 +37,6 @@ EXCLUDE = [
     'test/functional/test_framework/bignum.py',
     # python init:
     '*__init__.py',
-    'contrib/devtools/fix-copyright-headers.py',
 ]
 EXCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in EXCLUDE]))
 
@@ -78,15 +85,11 @@ def compile_copyright_regex(copyright_style, year_style, name):
 
 EXPECTED_HOLDER_NAMES = [
     "Satoshi Nakamoto\n",
-    "The Bitcoin Core developers\n",
-    "The Bitcoin Core developers \n",
-    "Bitcoin Core Developers\n",
-    "the Bitcoin Core developers\n",
-    "The Bitcoin developers\n",
-    "The Dash Core developers\n",
-    "The Dash Core developers \n",
     "The Syscoin Core developers\n",
     "The Syscoin Core developers \n",
+    "Syscoin Core Developers\n",
+    "the Syscoin Core developers\n",
+    "The Syscoin developers\n",
     "The LevelDB Authors\. All rights reserved\.\n",
     "BitPay Inc\.\n",
     "BitPay, Inc\.\n",
@@ -104,16 +107,6 @@ EXPECTED_HOLDER_NAMES = [
     "Jan-Klaas Kollhof\n",
     "Sam Rushing\n",
     "ArtForz -- public domain half-a-node\n",
-    "Vince Durham\n",
-    "Daniel Kraft\n",
-    "Tomas Dzetkulic\n",
-    "Pavol Rusnak\n",
-    "MongoDB, Inc.\n",
-    "MongoDB Inc.\n",
-    "Google Inc. All Rights Reserved.\n",
-    "Martin Gieseking <martin.gieseking@uos.de>.\n",
-    "Projet RNRT SAPHIR",
-    "Alexander Chemeris",
 ]
 
 DOMINANT_STYLE_COMPILED = {}
@@ -153,7 +146,7 @@ def file_has_without_c_style_copyright_for_holder(contents, holder_name):
 ################################################################################
 
 def read_file(filename):
-    return open(os.path.abspath(filename), 'r').read()
+    return open(os.path.abspath(filename), 'r', encoding="utf8").read()
 
 def gather_file_info(filename):
     info = {}
@@ -293,7 +286,7 @@ Arguments:
 def report_cmd(argv):
     if len(argv) == 2:
         sys.exit(REPORT_USAGE)
-        
+
     base_directory = argv[2]
     if not os.path.exists(base_directory):
         sys.exit("*** bad <base_directory>: %s" % base_directory)
@@ -332,13 +325,13 @@ def get_most_recent_git_change_year(filename):
 ################################################################################
 
 def read_file_lines(filename):
-    f = open(os.path.abspath(filename), 'r')
+    f = open(os.path.abspath(filename), 'r', encoding="utf8")
     file_lines = f.readlines()
     f.close()
     return file_lines
 
 def write_file_lines(filename, file_lines):
-    f = open(os.path.abspath(filename), 'w')
+    f = open(os.path.abspath(filename), 'w', encoding="utf8")
     f.write(''.join(file_lines))
     f.close()
 
@@ -451,7 +444,7 @@ def print_file_action_message(filename, action):
 def update_cmd(argv):
     if len(argv) != 3:
         sys.exit(UPDATE_USAGE)
-    
+
     base_directory = argv[2]
     if not os.path.exists(base_directory):
         sys.exit("*** bad base_directory: %s" % base_directory)
@@ -470,7 +463,6 @@ CPP_HEADER = '''
 // Copyright (c) %s The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 '''
 
 def get_cpp_header_lines_to_insert(start_year, end_year):
@@ -480,7 +472,6 @@ PYTHON_HEADER = '''
 # Copyright (c) %s The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 '''
 
 def get_python_header_lines_to_insert(start_year, end_year):
@@ -515,7 +506,7 @@ def file_has_hashbang(file_lines):
 
 def insert_python_header(filename, file_lines, start_year, end_year):
     if file_has_hashbang(file_lines):
-        insert_idx = 1 
+        insert_idx = 1
     else:
         insert_idx = 0
     header_lines = get_python_header_lines_to_insert(start_year, end_year)
@@ -579,13 +570,13 @@ def insert_cmd(argv):
     _, extension = os.path.splitext(filename)
     if extension not in ['.h', '.cpp', '.cc', '.c', '.py']:
         sys.exit("*** cannot insert for file extension %s" % extension)
-   
-    if extension == '.py': 
+
+    if extension == '.py':
         style = 'python'
     else:
         style = 'cpp'
     exec_insert_header(filename, style)
-         
+
 ################################################################################
 # UI
 ################################################################################

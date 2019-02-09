@@ -1,11 +1,11 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_CONSENSUS_VERSIONBITS
-#define SYSCOIN_CONSENSUS_VERSIONBITS
+#ifndef SYSCOIN_VERSIONBITS_H
+#define SYSCOIN_VERSIONBITS_H
 
-#include "chain.h"
+#include <chain.h>
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -17,29 +17,38 @@ static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
 
-enum ThresholdState {
-    THRESHOLD_DEFINED,
-    THRESHOLD_STARTED,
-    THRESHOLD_LOCKED_IN,
-    THRESHOLD_ACTIVE,
-    THRESHOLD_FAILED,
+enum class ThresholdState {
+    DEFINED,
+    STARTED,
+    LOCKED_IN,
+    ACTIVE,
+    FAILED,
 };
 
 // A map that gives the state for blocks whose height is a multiple of Period().
 // The map is indexed by the block's parent, however, so all keys in the map
-// will either be NULL or a block with (height + 1) % Period() == 0.
+// will either be nullptr or a block with (height + 1) % Period() == 0.
 typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 
-struct BIP9DeploymentInfo {
+struct VBDeploymentInfo {
     /** Deployment name */
     const char *name;
     /** Whether GBT clients can safely ignore this rule in simplified usage */
     bool gbt_force;
+    // SYSCOIN
     /** Whether to check current MN protocol or not */
     bool check_mn_protocol;
 };
 
-extern const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[];
+struct BIP9Stats {
+    int period;
+    int threshold;
+    int elapsed;
+    int count;
+    bool possible;
+};
+
+extern const struct VBDeploymentInfo VersionBitsDeploymentInfo[];
 
 /**
  * Abstract class that implements BIP9-style threshold logic, and caches results.
@@ -53,6 +62,7 @@ protected:
     virtual int Threshold(const Consensus::Params& params) const =0;
 
 public:
+    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const;
     // Note that the functions below take a pindexPrev as input: they compute information for block B based on its parent.
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
@@ -66,7 +76,8 @@ struct VersionBitsCache
 };
 
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
+BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
-#endif
+#endif // SYSCOIN_VERSIONBITS_H

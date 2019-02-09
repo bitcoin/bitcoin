@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,16 +8,16 @@
 #include <iomanip>
 #include <limits>
 #include <cmath>
-#include "uint256.h"
-#include "arith_uint256.h"
+#include <uint256.h>
+#include <arith_uint256.h>
 #include <string>
-#include "version.h"
-#include "test/test_syscoin.h"
+#include <version.h>
+#include <test/test_syscoin.h>
 
 BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
 
 /// Convert vector to arith_uint256, via uint256 blob
-inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
+static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
 {
     return UintToArith256(uint256(vch));
 }
@@ -54,7 +53,7 @@ const unsigned char MaxArray[] =
 const arith_uint256 MaxL = arith_uint256V(std::vector<unsigned char>(MaxArray,MaxArray+32));
 
 const arith_uint256 HalfL = (OneL << 255);
-std::string ArrayToString(const unsigned char A[], unsigned int width)
+static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
     std::stringstream Stream;
     Stream << std::hex;
@@ -123,7 +122,7 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     tmpL = ~MaxL; BOOST_CHECK(tmpL == ~MaxL);
 }
 
-void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
+static void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
 {
     for (unsigned int T=0; T < arrayLength; ++T)
     {
@@ -137,7 +136,7 @@ void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int 
     }
 }
 
-void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
+static void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
 {
     for (unsigned int T=0; T < arrayLength; ++T)
     {
@@ -199,13 +198,6 @@ BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
 
 BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 {
-    BOOST_CHECK(!ZeroL);
-    BOOST_CHECK(!(!OneL));
-    for (unsigned int i = 0; i < 256; ++i)
-        BOOST_CHECK(!(!(OneL<<i)));
-    BOOST_CHECK(!(!R1L));
-    BOOST_CHECK(!(!MaxL));
-
     BOOST_CHECK(~ZeroL == MaxL);
 
     unsigned char TmpArray[32];
@@ -220,7 +212,7 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 
 
 // Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
-// element of Aarray and Barray, and then converting the result into a arith_uint256.
+// element of Aarray and Barray, and then converting the result into an arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
@@ -370,7 +362,7 @@ BOOST_AUTO_TEST_CASE( divide )
 }
 
 
-bool almostEqual(double d1, double d2)
+static bool almostEqual(double d1, double d2)
 {
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
 }

@@ -1,12 +1,10 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "trafficgraphwidget.h"
-#include "clientmodel.h"
-
-#include <boost/bind.hpp>
+#include <interfaces/node.h>
+#include <qt/trafficgraphwidget.h>
+#include <qt/clientmodel.h>
 
 #include <QPainter>
 #include <QColor>
@@ -14,30 +12,32 @@
 
 #include <cmath>
 
+#define DESIRED_SAMPLES         800
+
 #define XMARGIN                 10
 #define YMARGIN                 10
-
-#define DEFAULT_SAMPLE_HEIGHT    1.1f
 
 TrafficGraphWidget::TrafficGraphWidget(QWidget *parent) :
     QWidget(parent),
     timer(0),
-    fMax(DEFAULT_SAMPLE_HEIGHT),
+    fMax(0.0f),
     nMins(0),
-    clientModel(0),
-    trafficGraphData(TrafficGraphData::Range_30m)
+    vSamplesIn(),
+    vSamplesOut(),
+    nLastBytesIn(0),
+    nLastBytesOut(0),
+    clientModel(0)
 {
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), SLOT(updateRates()));
-    timer->setInterval(TrafficGraphData::SMALLEST_SAMPLE_PERIOD);
-    timer->start();
 }
 
 void TrafficGraphWidget::setClientModel(ClientModel *model)
 {
     clientModel = model;
     if(model) {
-        trafficGraphData.setLastBytes(model->getTotalBytesRecv(), model->getTotalBytesSent());
+        nLastBytesIn = model->node().getTotalBytesRecv();
+        nLastBytesOut = model->node().getTotalBytesSent();
     }
 }
 
@@ -46,31 +46,19 @@ int TrafficGraphWidget::getGraphRangeMins() const
     return nMins;
 }
 
-
-void TrafficGraphWidget::paintPath(QPainterPath &path, const TrafficGraphData::SampleQueue &queue, SampleChooser chooser)
+void TrafficGraphWidget::paintPath(QPainterPath &path, QQueue<float> &samples)
 {
-    int h = height() - YMARGIN * 2, w = width() - XMARGIN * 2;
-    int sampleCount = queue.size(), x = XMARGIN + w, y;
+    int sampleCount = samples.size();
     if(sampleCount > 0) {
+        int h = height() - YMARGIN * 2, w = width() - XMARGIN * 2;
+        int x = XMARGIN + w;
         path.moveTo(x, YMARGIN + h);
         for(int i = 0; i < sampleCount; ++i) {
-            x = XMARGIN + w - w * i / TrafficGraphData::DESIRED_DATA_SAMPLES;
-            y = YMARGIN + h - (int)(h * chooser(queue.at(i)) / fMax);
+            x = XMARGIN + w - w * i / DESIRED_SAMPLES;
+            int y = YMARGIN + h - (int)(h * samples.at(i) / fMax);
             path.lineTo(x, y);
         }
         path.lineTo(x, YMARGIN + h);
-    }
-}
-
-namespace
-{
-    float chooseIn(const TrafficSample& sample)
-    {
-        return sample.in;
-    }
-    float chooseOut(const TrafficSample& sample)
-    {
-        return sample.out;
     }
 }
 
@@ -82,7 +70,6 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     if(fMax <= 0.0f) return;
 
     QColor axisCol(Qt::gray);
-    QColor axisCol2;
     int h = height() - YMARGIN * 2;
     painter.setPen(axisCol);
     painter.drawLine(XMARGIN, YMARGIN + h, width() - XMARGIN, YMARGIN + h);
@@ -90,24 +77,25 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     // decide what order of magnitude we are
     int base = floor(log10(fMax));
     float val = pow(10.0f, base);
-    float val2;
 
     const QString units     = tr("KB/s");
     const float yMarginText = 2.0;
-    
+
     // draw lines
     painter.setPen(axisCol);
+    painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
     for(float y = val; y < fMax; y += val) {
         int yy = YMARGIN + h - h * y / fMax;
         painter.drawLine(XMARGIN, yy, width() - XMARGIN, yy);
     }
     // if we drew 3 or fewer lines, break them up at the next lower order of magnitude
     if(fMax / val <= 3.0f) {
-        axisCol2 = axisCol.darker();
-        val2 = pow(10.0f, base - 1);
-        painter.setPen(axisCol2);
+        axisCol = axisCol.darker();
+        val = pow(10.0f, base - 1);
+        painter.setPen(axisCol);
+        painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
         int count = 1;
-        for(float y = val2; y < fMax; y += val2, count++) {
+        for(float y = val; y < fMax; y += val, count++) {
             // don't overwrite lines drawn above
             if(count % 10 == 0)
                 continue;
@@ -116,34 +104,19 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
         }
     }
 
-    const TrafficGraphData::SampleQueue& queue = trafficGraphData.getCurrentRangeQueueWithAverageBandwidth();
-
-    if(!queue.empty()) {
-        QPainterPath pIn;
-        paintPath(pIn, queue, boost::bind(chooseIn,_1));
-        painter.fillPath(pIn, QColor(0, 255, 0, 128));
+    if(!vSamplesIn.empty()) {
+        QPainterPath p;
+        paintPath(p, vSamplesIn);
+        painter.fillPath(p, QColor(0, 255, 0, 128));
         painter.setPen(Qt::green);
-        painter.drawPath(pIn);
-
-        QPainterPath pOut;
-        paintPath(pOut, queue, boost::bind(chooseOut,_1));
-        painter.fillPath(pOut, QColor(255, 0, 0, 128));
-        painter.setPen(Qt::red);
-        painter.drawPath(pOut);
+        painter.drawPath(p);
     }
-
-    // draw text on top of everything else
-    QRect textRect = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
-    textRect.translate(0, -textRect.height());
-    painter.fillRect(textRect, Qt::black);
-    painter.setPen(axisCol);
-    painter.drawText(textRect, Qt::AlignLeft, QString("%1 %2").arg(val).arg(units));
-    if(fMax / val <= 3.0f) {
-        QRect textRect2 = painter.boundingRect(QRect(XMARGIN, YMARGIN + h - (h * val2 / fMax) - yMarginText, 0, 0), Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
-        textRect2.translate(0, -textRect2.height());
-        painter.fillRect(textRect2, Qt::black);
-        painter.setPen(axisCol2);
-        painter.drawText(textRect2, Qt::AlignLeft, QString("%1 %2").arg(val2).arg(units));
+    if(!vSamplesOut.empty()) {
+        QPainterPath p;
+        paintPath(p, vSamplesOut);
+        painter.fillPath(p, QColor(255, 0, 0, 128));
+        painter.setPen(Qt::red);
+        painter.drawPath(p);
     }
 }
 
@@ -151,31 +124,54 @@ void TrafficGraphWidget::updateRates()
 {
     if(!clientModel) return;
 
-    bool updated = trafficGraphData.update(clientModel->getTotalBytesRecv(),clientModel->getTotalBytesSent());
+    quint64 bytesIn = clientModel->node().getTotalBytesRecv(),
+            bytesOut = clientModel->node().getTotalBytesSent();
+    float inRate = (bytesIn - nLastBytesIn) / 1024.0f * 1000 / timer->interval();
+    float outRate = (bytesOut - nLastBytesOut) / 1024.0f * 1000 / timer->interval();
+    vSamplesIn.push_front(inRate);
+    vSamplesOut.push_front(outRate);
+    nLastBytesIn = bytesIn;
+    nLastBytesOut = bytesOut;
 
-    if (updated){
-        float tmax = DEFAULT_SAMPLE_HEIGHT;
-        Q_FOREACH(const TrafficSample& sample, trafficGraphData.getCurrentRangeQueueWithAverageBandwidth()) {
-            if(sample.in > tmax) tmax = sample.in;
-            if(sample.out > tmax) tmax = sample.out;
-        }
-        fMax = tmax;
-        update();
+    while(vSamplesIn.size() > DESIRED_SAMPLES) {
+        vSamplesIn.pop_back();
     }
+    while(vSamplesOut.size() > DESIRED_SAMPLES) {
+        vSamplesOut.pop_back();
+    }
+
+    float tmax = 0.0f;
+    for (float f : vSamplesIn) {
+        if(f > tmax) tmax = f;
+    }
+    for (float f : vSamplesOut) {
+        if(f > tmax) tmax = f;
+    }
+    fMax = tmax;
+    update();
 }
 
-void TrafficGraphWidget::setGraphRangeMins(int value)
+void TrafficGraphWidget::setGraphRangeMins(int mins)
 {
-    trafficGraphData.switchRange(static_cast<TrafficGraphData::GraphRange>(value));
-    update();
+    nMins = mins;
+    int msecsPerSample = nMins * 60 * 1000 / DESIRED_SAMPLES;
+    timer->stop();
+    timer->setInterval(msecsPerSample);
+
+    clear();
 }
 
 void TrafficGraphWidget::clear()
 {
-    trafficGraphData.clear();
-    fMax = DEFAULT_SAMPLE_HEIGHT;
+    timer->stop();
+
+    vSamplesOut.clear();
+    vSamplesIn.clear();
+    fMax = 0.0f;
+
     if(clientModel) {
-        trafficGraphData.setLastBytes(clientModel->getTotalBytesRecv(), clientModel->getTotalBytesSent());
+        nLastBytesIn = clientModel->node().getTotalBytesRecv();
+        nLastBytesOut = clientModel->node().getTotalBytesSent();
     }
-    update();
+    timer->start();
 }

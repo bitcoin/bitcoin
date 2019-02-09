@@ -1,5 +1,4 @@
 # Copyright (c) 2015-2016 The Syscoin Core developers
-# Copyright (c) 2014-2017 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,31 +6,36 @@ bin_PROGRAMS += bench/bench_syscoin
 BENCH_SRCDIR = bench
 BENCH_BINARY = bench/bench_syscoin$(EXEEXT)
 
-RAW_TEST_FILES = \
-  bench/data/block813851.raw
-GENERATED_TEST_FILES = $(RAW_TEST_FILES:.raw=.raw.h)
+RAW_BENCH_FILES = \
+  bench/data/block413567.raw
+GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_syscoin_SOURCES = \
+  $(RAW_BENCH_FILES) \
   bench/bench_syscoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
+  bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
-  bench/Examples.cpp \
+  bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
+  bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/verify_script.cpp \
   bench/base58.cpp \
+  bench/bech32.cpp \
   bench/lockedpool.cpp \
-  bench/perf.cpp \
-  bench/perf.h
+  bench/prevector.cpp
 
-nodist_bench_bench_syscoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_bench_bench_syscoin_SOURCES = $(GENERATED_BENCH_FILES)
 
 bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_syscoin_LDADD = \
+  $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_UTIL) \
@@ -41,7 +45,8 @@ bench_bench_syscoin_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBUNIVALUE)
+  $(LIBUNIVALUE) \
+  $(LIBETHEREUM)
 
 if ENABLE_ZMQ
 bench_bench_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
@@ -55,11 +60,11 @@ endif
 bench_bench_syscoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 bench_bench_syscoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
-CLEAN_SYSCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_TEST_FILES)
+CLEAN_SYSCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
 CLEANFILES += $(CLEAN_SYSCOIN_BENCH)
 
-bench/checkblock.cpp: bench/data/block813851.raw.h
+bench/checkblock.cpp: bench/data/block413567.raw.h
 
 syscoin_bench: $(BENCH_BINARY)
 
@@ -69,12 +74,11 @@ bench: $(BENCH_BINARY) FORCE
 syscoin_bench_clean : FORCE
 	rm -f $(CLEAN_SYSCOIN_BENCH) $(bench_bench_syscoin_OBJECTS) $(BENCH_BINARY)
 
-bench/data/%.raw.h: bench/data/%.raw
+%.raw.h: %.raw
 	@$(MKDIR_P) $(@D)
 	@{ \
-	 echo "namespace raw_bench{" && \
 	 echo "static unsigned const char $(*F)[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
-	 echo "};};"; \
+	 echo "};"; \
 	} > "$@.new" && mv -f "$@.new" "$@"
 	@echo "Generated $@"

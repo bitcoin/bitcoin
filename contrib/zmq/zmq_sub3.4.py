@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2017 The Bitcoin Core developers
 # Copyright (c) 2014-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,12 +6,14 @@
 """
     ZMQ example using python3's asyncio
 
-    Bitcoin should be started with the command line arguments:
+    Syscoin should be started with the command line arguments:
         syscoind -testnet -daemon \
-                -zmqpubrawtx=tcp://127.0.0.1:28332 \
-                -zmqpubrawblock=tcp://127.0.0.1:28332 \
-                -zmqpubhashtx=tcp://127.0.0.1:28332 \
-                -zmqpubhashblock=tcp://127.0.0.1:28332
+                -zmqpubrawtx=tcp://127.0.0.1:28370 \
+                -zmqpubrawblock=tcp://127.0.0.1:28370 \
+                -zmqpubhashtx=tcp://127.0.0.1:28370 \
+                -zmqpubhashblock=tcp://127.0.0.1:28370 \
+                -zmqpubassetallocation=tcp://127.0.0.1:28370 \
+                -zmqpubassetrecord=tcp://127.0.0.1:28370               
 
     We use the asyncio library here.  `self.handle()` installs itself as a
     future at the end of the function.  Since it never returns with the event
@@ -35,11 +36,11 @@ import signal
 import struct
 import sys
 
-if not (sys.version_info.major >= 3 and sys.version_info.minor >= 4):
+if (sys.version_info.major, sys.version_info.minor) < (3, 4):
     print("This example only works with Python 3.4 and greater")
     sys.exit(1)
 
-port = 28332
+port = 28370
 
 class ZMQHandler():
     def __init__(self):
@@ -51,6 +52,8 @@ class ZMQHandler():
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "assetallocation")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "assetrecord")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % port)
 
     @asyncio.coroutine
@@ -74,6 +77,12 @@ class ZMQHandler():
         elif topic == b"rawtx":
             print('- RAW TX ('+sequence+') -')
             print(binascii.hexlify(body))
+        elif topic == b"assetallocation":
+            print('- ASSET ALLOCATION TX ('+sequence+') -')
+            print(body.decode("utf-8")) 
+        elif topic == b"rawtx":
+            print('- ASSET TX ('+sequence+') -')
+            print(body.decode("utf-8"))           
         # schedule ourselves to receive the next message
         asyncio.ensure_future(self.handle())
 

@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +16,7 @@ public:
     explicit CoinControlTreeWidget(QWidget *parent = 0);
 
 protected:
-    virtual void keyPressEvent(QKeyEvent *event) override;
+    virtual void keyPressEvent(QKeyEvent *event);
 };
 
 #endif // SYSCOIN_QT_COINCONTROLTREEWIDGET_H

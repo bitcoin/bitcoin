@@ -1,16 +1,16 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "peertablemodel.h"
+#include <qt/peertablemodel.h>
 
-#include "clientmodel.h"
-#include "guiconstants.h"
-#include "guiutil.h"
+#include <qt/clientmodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
 
-#include "validation.h" // for cs_main
-#include "sync.h"
+#include <interfaces/node.h>
+#include <validation.h> // for cs_main
+#include <sync.h>
 
 #include <QDebug>
 #include <QList>
@@ -34,6 +34,10 @@ bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombine
         return pLeft->cleanSubVer.compare(pRight->cleanSubVer) < 0;
     case PeerTableModel::Ping:
         return pLeft->dMinPing < pRight->dMinPing;
+    case PeerTableModel::Sent:
+        return pLeft->nSendBytes < pRight->nSendBytes;
+    case PeerTableModel::Received:
+        return pLeft->nRecvBytes < pRight->nRecvBytes;
     }
 
     return false;
@@ -53,35 +57,21 @@ public:
     std::map<NodeId, int> mapNodeRows;
 
     /** Pull a full list of peers from vNodes into our cache */
-    void refreshPeers()
+    void refreshPeers(interfaces::Node& node)
     {
         {
             cachedNodeStats.clear();
-            std::vector<CNodeStats> vstats;
-            if(g_connman)
-                g_connman->GetNodeStats(vstats);
-#if QT_VERSION >= 0x040700
-            cachedNodeStats.reserve(vstats.size());
-#endif
-            Q_FOREACH (const CNodeStats& nodestats, vstats)
+
+            interfaces::Node::NodesStats nodes_stats;
+            node.getNodesStats(nodes_stats);
+            cachedNodeStats.reserve(nodes_stats.size());
+            for (auto& node_stats : nodes_stats)
             {
                 CNodeCombinedStats stats;
-                stats.nodeStateStats.nMisbehavior = 0;
-                stats.nodeStateStats.nSyncHeight = -1;
-                stats.nodeStateStats.nCommonHeight = -1;
-                stats.fNodeStateStatsAvailable = false;
-                stats.nodeStats = nodestats;
+                stats.nodeStats = std::get<0>(node_stats);
+                stats.fNodeStateStatsAvailable = std::get<1>(node_stats);
+                stats.nodeStateStats = std::get<2>(node_stats);
                 cachedNodeStats.append(stats);
-            }
-        }
-
-        // Try to retrieve the CNodeStateStats for each node.
-        {
-            TRY_LOCK(cs_main, lockMain);
-            if (lockMain)
-            {
-                BOOST_FOREACH(CNodeCombinedStats &stats, cachedNodeStats)
-                    stats.fNodeStateStatsAvailable = GetNodeStateStats(stats.nodeStats.nodeid, stats.nodeStateStats);
             }
         }
 
@@ -92,7 +82,7 @@ public:
         // build index map
         mapNodeRows.clear();
         int row = 0;
-        Q_FOREACH (const CNodeCombinedStats& stats, cachedNodeStats)
+        for (const CNodeCombinedStats& stats : cachedNodeStats)
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
@@ -110,12 +100,13 @@ public:
     }
 };
 
-PeerTableModel::PeerTableModel(ClientModel *parent) :
+PeerTableModel::PeerTableModel(interfaces::Node& node, ClientModel *parent) :
     QAbstractTableModel(parent),
+    m_node(node),
     clientModel(parent),
     timer(0)
 {
-    columns << tr("NodeId") << tr("Node/Service") << tr("User Agent") << tr("Ping");
+    columns << tr("NodeId") << tr("Node/Service") << tr("Ping") << tr("Sent") << tr("Received") << tr("User Agent");
     priv.reset(new PeerTablePriv());
     // default to unsorted
     priv->sortColumn = -1;
@@ -169,15 +160,26 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         case NetNodeId:
             return (qint64)rec->nodeStats.nodeid;
         case Address:
-            return QString::fromStdString(rec->nodeStats.addrName);
+            // prepend to peer address down-arrow symbol for inbound connection and up-arrow for outbound connection
+            return QString(rec->nodeStats.fInbound ? "↓ " : "↑ ") + QString::fromStdString(rec->nodeStats.addrName);
         case Subversion:
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         case Ping:
             return GUIUtil::formatPingTime(rec->nodeStats.dMinPing);
+        case Sent:
+            return GUIUtil::formatBytes(rec->nodeStats.nSendBytes);
+        case Received:
+            return GUIUtil::formatBytes(rec->nodeStats.nRecvBytes);
         }
     } else if (role == Qt::TextAlignmentRole) {
-        if (index.column() == Ping)
-            return (QVariant)(Qt::AlignRight | Qt::AlignVCenter);
+        switch (index.column()) {
+            case Ping:
+            case Sent:
+            case Received:
+                return QVariant(Qt::AlignRight | Qt::AlignVCenter);
+            default:
+                return QVariant();
+        }
     }
 
     return QVariant();
@@ -222,7 +224,7 @@ const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)
 void PeerTableModel::refresh()
 {
     Q_EMIT layoutAboutToBeChanged();
-    priv->refreshPeers();
+    priv->refreshPeers(m_node);
     Q_EMIT layoutChanged();
 }
 

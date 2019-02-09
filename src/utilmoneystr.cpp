@@ -1,14 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "utilmoneystr.h"
+#include <utilmoneystr.h>
 
-#include "primitives/transaction.h"
-#include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <primitives/transaction.h>
+#include <tinyformat.h>
+#include <utilstrencodings.h>
 
 std::string FormatMoney(const CAmount& n)
 {

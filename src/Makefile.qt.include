@@ -1,5 +1,4 @@
-# Copyright (c) 2013-2016 The Bitcoin Core developers
-# Copyright (c) 2014-2018 The Syscoin Core developers
+# Copyright (c) 2013-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,28 +7,97 @@ EXTRA_LIBRARIES += qt/libsyscoinqt.a
 
 # syscoin qt core #
 QT_TS = \
+  qt/locale/syscoin_af.ts \
+  qt/locale/syscoin_af_ZA.ts \
+  qt/locale/syscoin_ar.ts \
+  qt/locale/syscoin_be_BY.ts \
+  qt/locale/syscoin_bg_BG.ts \
   qt/locale/syscoin_bg.ts \
+  qt/locale/syscoin_ca_ES.ts \
+  qt/locale/syscoin_ca.ts \
+  qt/locale/syscoin_ca@valencia.ts \
+  qt/locale/syscoin_cs.ts \
+  qt/locale/syscoin_cy.ts \
+  qt/locale/syscoin_da.ts \
   qt/locale/syscoin_de.ts \
+  qt/locale/syscoin_el_GR.ts \
+  qt/locale/syscoin_el.ts \
+  qt/locale/syscoin_en_GB.ts \
   qt/locale/syscoin_en.ts \
+  qt/locale/syscoin_eo.ts \
+  qt/locale/syscoin_es_AR.ts \
+  qt/locale/syscoin_es_CL.ts \
+  qt/locale/syscoin_es_CO.ts \
+  qt/locale/syscoin_es_DO.ts \
+  qt/locale/syscoin_es_ES.ts \
+  qt/locale/syscoin_es_MX.ts \
   qt/locale/syscoin_es.ts \
+  qt/locale/syscoin_es_UY.ts \
+  qt/locale/syscoin_es_VE.ts \
+  qt/locale/syscoin_et_EE.ts \
+  qt/locale/syscoin_et.ts \
+  qt/locale/syscoin_eu_ES.ts \
+  qt/locale/syscoin_fa_IR.ts \
+  qt/locale/syscoin_fa.ts \
   qt/locale/syscoin_fi.ts \
+  qt/locale/syscoin_fr_CA.ts \
+  qt/locale/syscoin_fr_FR.ts \
   qt/locale/syscoin_fr.ts \
+  qt/locale/syscoin_gl.ts \
+  qt/locale/syscoin_he.ts \
+  qt/locale/syscoin_hi_IN.ts \
+  qt/locale/syscoin_hr.ts \
+  qt/locale/syscoin_hu.ts \
+  qt/locale/syscoin_id_ID.ts \
+  qt/locale/syscoin_it_IT.ts \
   qt/locale/syscoin_it.ts \
   qt/locale/syscoin_ja.ts \
+  qt/locale/syscoin_ka.ts \
+  qt/locale/syscoin_kk_KZ.ts \
+  qt/locale/syscoin_ko_KR.ts \
+  qt/locale/syscoin_ku_IQ.ts \
+  qt/locale/syscoin_ky.ts \
+  qt/locale/syscoin_la.ts \
+  qt/locale/syscoin_lt.ts \
+  qt/locale/syscoin_lv_LV.ts \
+  qt/locale/syscoin_mk_MK.ts \
+  qt/locale/syscoin_mn.ts \
+  qt/locale/syscoin_ms_MY.ts \
+  qt/locale/syscoin_nb.ts \
+  qt/locale/syscoin_ne.ts \
+  qt/locale/syscoin_nl.ts \
+  qt/locale/syscoin_pam.ts \
   qt/locale/syscoin_pl.ts \
-  qt/locale/syscoin_pt.ts \
+  qt/locale/syscoin_pt_BR.ts \
+  qt/locale/syscoin_pt_PT.ts \
+  qt/locale/syscoin_ro_RO.ts \
+  qt/locale/syscoin_ro.ts \
+  qt/locale/syscoin_ru_RU.ts \
   qt/locale/syscoin_ru.ts \
   qt/locale/syscoin_sk.ts \
+  qt/locale/syscoin_sl_SI.ts \
+  qt/locale/syscoin_sq.ts \
+  qt/locale/syscoin_sr@latin.ts \
+  qt/locale/syscoin_sr.ts \
   qt/locale/syscoin_sv.ts \
+  qt/locale/syscoin_ta.ts \
+  qt/locale/syscoin_th_TH.ts \
+  qt/locale/syscoin_tr_TR.ts \
+  qt/locale/syscoin_tr.ts \
+  qt/locale/syscoin_uk.ts \
+  qt/locale/syscoin_ur_PK.ts \
+  qt/locale/syscoin_uz@Cyrl.ts \
   qt/locale/syscoin_vi.ts \
+  qt/locale/syscoin_vi_VN.ts \
   qt/locale/syscoin_zh_CN.ts \
+  qt/locale/syscoin_zh_HK.ts \
+  qt/locale/syscoin_zh.ts \
   qt/locale/syscoin_zh_TW.ts
 
 QT_FORMS_UI = \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
-  qt/forms/darksendconfig.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
@@ -56,11 +124,11 @@ QT_MOC_CPP = \
   qt/moc_syscoinamountfield.cpp \
   qt/moc_syscoingui.cpp \
   qt/moc_syscoinunits.cpp \
+  qt/moc_callback.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
   qt/moc_csvmodelwriter.cpp \
-  qt/moc_darksendconfig.cpp \
   qt/moc_editaddressdialog.cpp \
   qt/moc_guiutil.cpp \
   qt/moc_intro.cpp \
@@ -104,6 +172,7 @@ SYSCOIN_MM = \
 QT_MOC = \
   qt/syscoin.moc \
   qt/syscoinamountfield.moc \
+  qt/callback.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
@@ -126,11 +195,11 @@ SYSCOIN_QT_H = \
   qt/syscoinamountfield.h \
   qt/syscoingui.h \
   qt/syscoinunits.h \
+  qt/callback.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
   qt/csvmodelwriter.h \
-  qt/darksendconfig.h \
   qt/editaddressdialog.h \
   qt/guiconstants.h \
   qt/guiutil.h \
@@ -160,7 +229,6 @@ SYSCOIN_QT_H = \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
   qt/splashscreen.h \
-  qt/trafficgraphdata.h \
   qt/trafficgraphwidget.h \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
@@ -176,227 +244,63 @@ SYSCOIN_QT_H = \
   qt/winshutdownmonitor.h
 
 RES_ICONS = \
+  qt/res/icons/add.png \
+  qt/res/icons/address-book.png \
+  qt/res/icons/about.png \
+  qt/res/icons/about_qt.png \
   qt/res/icons/syscoin.ico \
   qt/res/icons/syscoin_testnet.ico \
   qt/res/icons/syscoin.png \
   qt/res/icons/chevron.png \
+  qt/res/icons/clock1.png \
+  qt/res/icons/clock2.png \
+  qt/res/icons/clock3.png \
+  qt/res/icons/clock4.png \
+  qt/res/icons/clock5.png \
+  qt/res/icons/configure.png \
+  qt/res/icons/connect0.png \
+  qt/res/icons/connect1.png \
+  qt/res/icons/connect2.png \
+  qt/res/icons/connect3.png \
+  qt/res/icons/connect4.png \
+  qt/res/icons/debugwindow.png \
+  qt/res/icons/edit.png \
+  qt/res/icons/editcopy.png \
+  qt/res/icons/editpaste.png \
+  qt/res/icons/export.png \
+  qt/res/icons/eye.png \
+  qt/res/icons/eye_minus.png \
+  qt/res/icons/eye_plus.png \
+  qt/res/icons/filesave.png \
+  qt/res/icons/fontbigger.png \
+  qt/res/icons/fontsmaller.png \
+  qt/res/icons/hd_disabled.png \
+  qt/res/icons/hd_enabled.png \
+  qt/res/icons/history.png \
+  qt/res/icons/info.png \
+  qt/res/icons/key.png \
+  qt/res/icons/lock_closed.png \
+  qt/res/icons/lock_open.png \
+  qt/res/icons/network_disabled.png \
+  qt/res/icons/open.png \
+  qt/res/icons/overview.png \
+  qt/res/icons/masternodes.png \
+  qt/res/icons/proxy.png \
+  qt/res/icons/quit.png \
+  qt/res/icons/receive.png \
+  qt/res/icons/remove.png \
+  qt/res/icons/send.png \
+  qt/res/icons/synced.png \
+  qt/res/icons/transaction0.png \
+  qt/res/icons/transaction2.png \
+  qt/res/icons/transaction_abandoned.png \
+  qt/res/icons/transaction_conflicted.png \
+  qt/res/icons/tx_inout.png \
+  qt/res/icons/tx_input.png \
+  qt/res/icons/tx_output.png \
+  qt/res/icons/tx_mined.png \
   qt/res/icons/warning.png \
-  qt/res/icons/drkblue/add.png \
-  qt/res/icons/drkblue/address-book.png \
-  qt/res/icons/drkblue/browse.png \
-  qt/res/icons/drkblue/clock1.png \
-  qt/res/icons/drkblue/clock2.png \
-  qt/res/icons/drkblue/clock3.png \
-  qt/res/icons/drkblue/clock4.png \
-  qt/res/icons/drkblue/clock5.png \
-  qt/res/icons/drkblue/configure.png \
-  qt/res/icons/drkblue/connect0_16.png \
-  qt/res/icons/drkblue/connect1_16.png \
-  qt/res/icons/drkblue/connect2_16.png \
-  qt/res/icons/drkblue/connect3_16.png \
-  qt/res/icons/drkblue/connect4_16.png \
-  qt/res/icons/drkblue/debugwindow.png \
-  qt/res/icons/drkblue/drkblue_editpaste.png \
-  qt/res/icons/drkblue/drkblue_address-book.png \
-  qt/res/icons/drkblue/drkblue_editcopy.png \
-  qt/res/icons/drkblue/drkblue_remove.png \
-  qt/res/icons/drkblue/edit.png \
-  qt/res/icons/drkblue/editcopy.png \
-  qt/res/icons/drkblue/editpaste.png \
-  qt/res/icons/drkblue/export.png \
-  qt/res/icons/drkblue/eye.png \
-  qt/res/icons/drkblue/eye_minus.png \
-  qt/res/icons/drkblue/eye_plus.png \
-  qt/res/icons/drkblue/filesave.png \
-  qt/res/icons/drkblue/hd_disabled.png \
-  qt/res/icons/drkblue/hd_enabled.png \
-  qt/res/icons/drkblue/history.png \
-  qt/res/icons/drkblue/key.png \
-  qt/res/icons/drkblue/lock_closed.png \
-  qt/res/icons/drkblue/lock_open.png \
-  qt/res/icons/drkblue/masternodes.png \
-  qt/res/icons/drkblue/overview.png \
-  qt/res/icons/drkblue/quit.png \
-  qt/res/icons/drkblue/receive.png \
-  qt/res/icons/drkblue/remove.png \
-  qt/res/icons/drkblue/send.png \
-  qt/res/icons/drkblue/synced.png \
-  qt/res/icons/drkblue/transaction0.png \
-  qt/res/icons/drkblue/transaction2.png \
-  qt/res/icons/drkblue/transaction_abandoned.png \
-  qt/res/icons/drkblue/transaction_conflicted.png \
-  qt/res/icons/drkblue/tx_inout.png \
-  qt/res/icons/drkblue/tx_input.png \
-  qt/res/icons/drkblue/tx_output.png \
-  qt/res/icons/drkblue/tx_mined.png \
-  qt/res/icons/drkblue/about.png \
-  qt/res/icons/drkblue/about_qt.png \
-  qt/res/icons/drkblue/verify.png \
-  qt/res/icons/drkblue/fontbigger.png \
-  qt/res/icons/drkblue/fontsmaller.png \
-  qt/res/icons/drkblue/network_disabled.png \
-  qt/res/icons/crownium/add.png \
-  qt/res/icons/crownium/address-book.png \
-  qt/res/icons/crownium/browse.png \
-  qt/res/icons/crownium/clock1.png \
-  qt/res/icons/crownium/clock2.png \
-  qt/res/icons/crownium/clock3.png \
-  qt/res/icons/crownium/clock4.png \
-  qt/res/icons/crownium/clock5.png \
-  qt/res/icons/crownium/configure.png \
-  qt/res/icons/crownium/connect0_16.png \
-  qt/res/icons/crownium/connect1_16.png \
-  qt/res/icons/crownium/connect2_16.png \
-  qt/res/icons/crownium/connect3_16.png \
-  qt/res/icons/crownium/connect4_16.png \
-  qt/res/icons/crownium/debugwindow.png \
-  qt/res/icons/crownium/drkblue_editpaste.png \
-  qt/res/icons/crownium/drkblue_address-book.png \
-  qt/res/icons/crownium/drkblue_editcopy.png \
-  qt/res/icons/crownium/drkblue_remove.png \
-  qt/res/icons/crownium/edit.png \
-  qt/res/icons/crownium/editcopy.png \
-  qt/res/icons/crownium/editpaste.png \
-  qt/res/icons/crownium/export.png \
-  qt/res/icons/crownium/eye.png \
-  qt/res/icons/crownium/eye_minus.png \
-  qt/res/icons/crownium/eye_plus.png \
-  qt/res/icons/crownium/filesave.png \
-  qt/res/icons/crownium/hd_disabled.png \
-  qt/res/icons/crownium/hd_enabled.png \
-  qt/res/icons/crownium/history.png \
-  qt/res/icons/crownium/key.png \
-  qt/res/icons/crownium/lock_closed.png \
-  qt/res/icons/crownium/lock_open.png \
-  qt/res/icons/crownium/masternodes.png \
-  qt/res/icons/crownium/overview.png \
-  qt/res/icons/crownium/quit.png \
-  qt/res/icons/crownium/receive.png \
-  qt/res/icons/crownium/remove.png \
-  qt/res/icons/crownium/send.png \
-  qt/res/icons/crownium/synced.png \
-  qt/res/icons/crownium/transaction0.png \
-  qt/res/icons/crownium/transaction2.png \
-  qt/res/icons/crownium/transaction_abandoned.png \
-  qt/res/icons/crownium/transaction_conflicted.png \
-  qt/res/icons/crownium/tx_inout.png \
-  qt/res/icons/crownium/tx_input.png \
-  qt/res/icons/crownium/tx_output.png \
-  qt/res/icons/crownium/tx_mined.png \
-  qt/res/icons/crownium/about.png \
-  qt/res/icons/crownium/about_qt.png \
-  qt/res/icons/crownium/verify.png \
-  qt/res/icons/crownium/fontbigger.png \
-  qt/res/icons/crownium/fontsmaller.png \
-  qt/res/icons/crownium/network_disabled.png \
-  qt/res/icons/light/add.png \
-  qt/res/icons/light/address-book.png \
-  qt/res/icons/light/browse.png \
-  qt/res/icons/light/clock1.png \
-  qt/res/icons/light/clock2.png \
-  qt/res/icons/light/clock3.png \
-  qt/res/icons/light/clock4.png \
-  qt/res/icons/light/clock5.png \
-  qt/res/icons/light/configure.png \
-  qt/res/icons/light/connect0_16.png \
-  qt/res/icons/light/connect1_16.png \
-  qt/res/icons/light/connect2_16.png \
-  qt/res/icons/light/connect3_16.png \
-  qt/res/icons/light/connect4_16.png \
-  qt/res/icons/light/debugwindow.png \
-  qt/res/icons/light/drkblue_editpaste.png \
-  qt/res/icons/light/drkblue_address-book.png \
-  qt/res/icons/light/drkblue_editcopy.png \
-  qt/res/icons/light/drkblue_remove.png \
-  qt/res/icons/light/edit.png \
-  qt/res/icons/light/editcopy.png \
-  qt/res/icons/light/editpaste.png \
-  qt/res/icons/light/export.png \
-  qt/res/icons/light/eye.png \
-  qt/res/icons/light/eye_minus.png \
-  qt/res/icons/light/eye_plus.png \
-  qt/res/icons/light/filesave.png \
-  qt/res/icons/light/hd_disabled.png \
-  qt/res/icons/light/hd_enabled.png \
-  qt/res/icons/light/history.png \
-  qt/res/icons/light/key.png \
-  qt/res/icons/light/lock_closed.png \
-  qt/res/icons/light/lock_open.png \
-  qt/res/icons/light/masternodes.png \
-  qt/res/icons/light/overview.png \
-  qt/res/icons/light/quit.png \
-  qt/res/icons/light/receive.png \
-  qt/res/icons/light/remove.png \
-  qt/res/icons/light/send.png \
-  qt/res/icons/light/synced.png \
-  qt/res/icons/light/transaction0.png \
-  qt/res/icons/light/transaction2.png \
-  qt/res/icons/light/transaction_conflicted.png \
-  qt/res/icons/light/tx_inout.png \
-  qt/res/icons/light/tx_input.png \
-  qt/res/icons/light/tx_output.png \
-  qt/res/icons/light/tx_mined.png \
-  qt/res/icons/light/about.png \
-  qt/res/icons/light/about_qt.png \
-  qt/res/icons/light/verify.png \
-  qt/res/icons/light/fontbigger.png \
-  qt/res/icons/light/fontsmaller.png \
-  qt/res/icons/light/transaction_abandoned.png \
-  qt/res/icons/light/network_disabled.png \
-  qt/res/icons/trad/add.png \
-  qt/res/icons/trad/address-book.png \
-  qt/res/icons/trad/browse.png \
-  qt/res/icons/trad/clock1.png \
-  qt/res/icons/trad/clock2.png \
-  qt/res/icons/trad/clock3.png \
-  qt/res/icons/trad/clock4.png \
-  qt/res/icons/trad/clock5.png \
-  qt/res/icons/trad/configure.png \
-  qt/res/icons/trad/connect0_16.png \
-  qt/res/icons/trad/connect1_16.png \
-  qt/res/icons/trad/connect2_16.png \
-  qt/res/icons/trad/connect3_16.png \
-  qt/res/icons/trad/connect4_16.png \
-  qt/res/icons/trad/debugwindow.png \
-  qt/res/icons/trad/drkblue_editpaste.png \
-  qt/res/icons/trad/drkblue_address-book.png \
-  qt/res/icons/trad/drkblue_editcopy.png \
-  qt/res/icons/trad/drkblue_remove.png \
-  qt/res/icons/trad/edit.png \
-  qt/res/icons/trad/editcopy.png \
-  qt/res/icons/trad/editpaste.png \
-  qt/res/icons/trad/export.png \
-  qt/res/icons/trad/eye.png \
-  qt/res/icons/trad/eye_minus.png \
-  qt/res/icons/trad/eye_plus.png \
-  qt/res/icons/trad/filesave.png \
-  qt/res/icons/trad/hd_disabled.png \
-  qt/res/icons/trad/hd_enabled.png \
-  qt/res/icons/trad/history.png \
-  qt/res/icons/trad/key.png \
-  qt/res/icons/trad/lock_closed.png \
-  qt/res/icons/trad/lock_open.png \
-  qt/res/icons/trad/masternodes.png \
-  qt/res/icons/trad/overview.png \
-  qt/res/icons/trad/quit.png \
-  qt/res/icons/trad/receive.png \
-  qt/res/icons/trad/remove.png \
-  qt/res/icons/trad/send.png \
-  qt/res/icons/trad/synced.png \
-  qt/res/icons/trad/transaction0.png \
-  qt/res/icons/trad/transaction2.png \
-  qt/res/icons/trad/transaction_abandoned.png \
-  qt/res/icons/trad/transaction_conflicted.png \
-  qt/res/icons/trad/tx_inout.png \
-  qt/res/icons/trad/tx_input.png \
-  qt/res/icons/trad/tx_output.png \
-  qt/res/icons/trad/tx_mined.png \
-  qt/res/icons/trad/about.png \
-  qt/res/icons/trad/about_qt.png \
-  qt/res/icons/trad/verify.png \
-  qt/res/icons/trad/fontbigger.png \
-  qt/res/icons/trad/fontsmaller.png \
-  qt/res/icons/trad/network_disabled.png
+  qt/res/icons/verify.png
 
 SYSCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
@@ -419,7 +323,6 @@ SYSCOIN_QT_BASE_CPP = \
   qt/qvaluecombobox.cpp \
   qt/rpcconsole.cpp \
   qt/splashscreen.cpp \
-  qt/trafficgraphdata.cpp \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp
 
@@ -431,7 +334,6 @@ SYSCOIN_QT_WALLET_CPP = \
   qt/askpassphrasedialog.cpp \
   qt/coincontroldialog.cpp \
   qt/coincontroltreewidget.cpp \
-  qt/darksendconfig.cpp \
   qt/editaddressdialog.cpp \
   qt/masternodelist.cpp \
   qt/openuridialog.cpp \
@@ -464,78 +366,21 @@ if ENABLE_WALLET
 SYSCOIN_QT_CPP += $(SYSCOIN_QT_WALLET_CPP)
 endif
 
-RES_IMAGES = \
-  qt/res/images/drkblue/about.png \
-  qt/res/images/drkblue/splash.png \
-  qt/res/images/drkblue/splash_testnet.png \
-  qt/res/images/drkblue/syscoin_logo_horizontal.png \
-  qt/res/images/drkblue/unchecked.png \
-  qt/res/images/drkblue/checked.png \
-  qt/res/images/drkblue/drkblue_downArrow.png \
-  qt/res/images/drkblue/drkblue_downArrow_small.png \
-  qt/res/images/drkblue/drkblue_upArrow_small.png \
-  qt/res/images/drkblue/drkblue_leftArrow_small.png \
-  qt/res/images/drkblue/drkblue_rightArrow_small.png \
-  qt/res/images/drkblue/drkblue_qtreeview_selected.png \
-  qt/res/images/drkblue/drkblue_walletFrame_bg.png \
-  qt/res/images/crownium/about.png \
-  qt/res/images/crownium/splash.png \
-  qt/res/images/crownium/splash_testnet.png \
-  qt/res/images/crownium/syscoin_logo_horizontal.png \
-  qt/res/images/crownium/unchecked.png \
-  qt/res/images/crownium/checked.png \
-  qt/res/images/crownium/drkblue_downArrow.png \
-  qt/res/images/crownium/drkblue_downArrow_small.png \
-  qt/res/images/crownium/drkblue_upArrow_small.png \
-  qt/res/images/crownium/drkblue_leftArrow_small.png \
-  qt/res/images/crownium/drkblue_rightArrow_small.png \
-  qt/res/images/crownium/drkblue_qtreeview_selected.png \
-  qt/res/images/crownium/drkblue_walletFrame_bg.png \
-  qt/res/images/light/about.png \
-  qt/res/images/light/splash.png \
-  qt/res/images/light/splash_testnet.png \
-  qt/res/images/light/syscoin_logo_horizontal.png \
-  qt/res/images/light/unchecked.png \
-  qt/res/images/light/checked.png \
-  qt/res/images/light/drkblue_downArrow.png \
-  qt/res/images/light/drkblue_downArrow_small.png \
-  qt/res/images/light/drkblue_upArrow_small.png \
-  qt/res/images/light/drkblue_leftArrow_small.png \
-  qt/res/images/light/drkblue_rightArrow_small.png \
-  qt/res/images/light/drkblue_qtreeview_selected.png \
-  qt/res/images/light/drkblue_walletFrame_bg.png \
-  qt/res/images/trad/about.png \
-  qt/res/images/trad/splash.png \
-  qt/res/images/trad/splash_testnet.png \
-  qt/res/images/trad/syscoin_logo_horizontal.png \
-  qt/res/images/trad/drkblue_downArrow.png \
-  qt/res/images/trad/drkblue_downArrow_small.png \
-  qt/res/images/trad/drkblue_upArrow_small.png \
-  qt/res/images/trad/drkblue_leftArrow_small.png \
-  qt/res/images/trad/drkblue_rightArrow_small.png \
-  qt/res/images/trad/drkblue_qtreeview_selected.png \
-  qt/res/images/trad/drkblue_walletFrame_bg.png
-
-RES_CSS = \
-  qt/res/css/drkblue.css \
-  qt/res/css/crownium.css \
-  qt/res/css/light.css \
-  qt/res/css/light-hires.css \
-  qt/res/css/trad.css
+RES_IMAGES =
 
 RES_MOVIES = $(wildcard $(srcdir)/qt/res/movies/spinner-*.png)
 
 SYSCOIN_RC = qt/res/syscoin-qt-res.rc
 
-SYSCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
-  -I$(builddir)/qt/forms -DQT_NO_KEYWORDS
+SYSCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
 
 qt_libsyscoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 qt_libsyscoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_libsyscoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libsyscoinqt_a_SOURCES = $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
 nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
@@ -567,16 +412,16 @@ if TARGET_WINDOWS
 endif
 qt_syscoin_qt_LDADD = qt/libsyscoinqt.a $(LIBSYSCOIN_SERVER)
 if ENABLE_WALLET
-qt_syscoin_qt_LDADD += $(LIBSYSCOIN_WALLET)
+qt_syscoin_qt_LDADD += $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_WALLET)
 endif
 if ENABLE_ZMQ
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
-  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBETHEREUM)
 qt_syscoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_syscoin_qt_LIBTOOLFLAGS = --tag CXX
+qt_syscoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
@@ -594,16 +439,16 @@ translate: $(srcdir)/qt/syscoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(SYSCO
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@cp -f $< $(@D)/temp_$(<F)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) $(RCCFLAGS) -name syscoin_locale $(@D)/temp_$(<F) | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin_locale $(@D)/temp_$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) $(RCCFLAGS) -name syscoin $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libsyscoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
+CLEAN_QT = $(nodist_qt_libsyscoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_syscoin_locale.qrc
 
 CLEANFILES += $(CLEAN_QT)
 

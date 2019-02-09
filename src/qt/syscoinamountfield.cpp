@@ -1,13 +1,12 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "syscoinamountfield.h"
+#include <qt/syscoinamountfield.h>
 
-#include "syscoinunits.h"
-#include "guiconstants.h"
-#include "qvaluecombobox.h"
+#include <qt/syscoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/qvaluecombobox.h>
 
 #include <QApplication>
 #include <QAbstractSpinBox>
@@ -189,7 +188,7 @@ Q_SIGNALS:
     void valueChanged();
 };
 
-#include "syscoinamountfield.moc"
+#include <qt/syscoinamountfield.moc>
 
 SyscoinAmountField::SyscoinAmountField(QWidget *parent) :
     QWidget(parent),
@@ -198,7 +197,7 @@ SyscoinAmountField::SyscoinAmountField(QWidget *parent) :
     amount = new AmountSpinBox(this);
     amount->setLocale(QLocale::c());
     amount->installEventFilter(this);
-    amount->setMaximumWidth(170);
+    amount->setMaximumWidth(240);
 
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->addWidget(amount);

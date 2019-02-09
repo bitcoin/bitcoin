@@ -1,12 +1,10 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "syscoinaddressvalidator.h"
+#include <qt/syscoinaddressvalidator.h>
 
-#include "base58.h"
+#include <key_io.h>
 
 /* Base58 characters are:
      "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
@@ -69,7 +67,7 @@ QValidator::State SyscoinAddressEntryValidator::validate(QString &input, int &po
         if (((ch >= '0' && ch<='9') ||
             (ch >= 'a' && ch<='z') ||
             (ch >= 'A' && ch<='Z')) &&
-            ch != 'l' && ch != 'I' && ch != '0' && ch != 'O')
+            ch != 'I' && ch != 'O') // Characters invalid in both Base58 and Bech32
         {
             // Alphanumeric and not a 'forbidden' character
         }
@@ -91,9 +89,9 @@ QValidator::State SyscoinAddressCheckValidator::validate(QString &input, int &po
 {
     Q_UNUSED(pos);
     // Validate the passed Syscoin address
-    CSyscoinAddress addr(input.toStdString());
-    if (addr.IsValid())
+    if (IsValidDestinationString(input.toStdString())) {
         return QValidator::Acceptable;
+    }
 
     return QValidator::Invalid;
 }

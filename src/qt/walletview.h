@@ -1,14 +1,12 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_QT_WALLETVIEW_H
 #define SYSCOIN_QT_WALLETVIEW_H
 
-#include "amount.h"
-#include "masternodelist.h"
-
+#include <amount.h>
+#include <qt/masternodelist.h>
 #include <QStackedWidget>
 
 class SyscoinGUI;
@@ -23,7 +21,6 @@ class WalletModel;
 class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
-class QLabel;
 class QModelIndex;
 class QProgressDialog;
 QT_END_NAMESPACE
@@ -47,6 +44,7 @@ public:
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
+    WalletModel *getWalletModel() { return walletModel; }
     /** Set the wallet model.
         The wallet model represents a syscoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
@@ -67,12 +65,11 @@ private:
     SendCoinsDialog *sendCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
+    // SYSCOIN
     MasternodeList *masternodeListPage;
-
     TransactionView *transactionView;
 
     QProgressDialog *progressDialog;
-    QLabel *transactionSum;
     const PlatformStyle *platformStyle;
 
 public Q_SLOTS:
@@ -80,6 +77,7 @@ public Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
+    // SYSCOIN
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
@@ -104,9 +102,7 @@ public Q_SLOTS:
     /** Change encrypted wallet passphrase */
     void changePassphrase();
     /** Ask for passphrase to unlock wallet temporarily */
-    void unlockWallet(bool fAnonymizeOnly=false);
-    /** Lock wallet */
-    void lockWallet();
+    void unlockWallet();
 
     /** Show used sending addresses */
     void usedSendingAddresses();
@@ -122,20 +118,17 @@ public Q_SLOTS:
     /** User has requested more information about the out of sync state */
     void requestedSyncWarningInfo();
 
-
-    /** Update selected SYS amount from transactionview */
-    void trxAmount(QString amount);
 Q_SIGNALS:
     /** Signal that we want to show the main window */
     void showNormalIfMinimized();
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
     /** Encryption status of wallet changed */
-    void encryptionStatusChanged(int status);
+    void encryptionStatusChanged();
     /** HD-Enabled status of wallet changed (only possible during startup) */
-    void hdEnabledStatusChanged(int hdEnabled);
+    void hdEnabledStatusChanged();
     /** Notify that a new transaction appeared */
-    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+    void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
 };

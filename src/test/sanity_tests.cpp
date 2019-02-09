@@ -1,11 +1,10 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2012-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "compat/sanity.h"
-#include "key.h"
-#include "test/test_syscoin.h"
+#include <compat/sanity.h>
+#include <key.h>
+#include <test/test_syscoin.h>
 
 #include <boost/test/unit_test.hpp>
 

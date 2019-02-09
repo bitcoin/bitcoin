@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+﻿// Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -80,7 +80,7 @@ vote_signal_enum_t CGovernanceVoting::ConvertVoteSignal(const std::string& strVo
 
     const auto& it = mapStrVoteSignals.find(strVoteSignal);
     if (it == mapStrVoteSignals.end()) {
-        LogPrintf("CGovernanceVoting::%s -- ERROR: Unknown signal %s\n", __func__, strVoteSignal);
+        LogPrint(BCLog::GOBJECT, "CGovernanceVoting::%s -- ERROR: Unknown signal %s\n", __func__, strVoteSignal);
         return VOTE_SIGNAL_NONE;
     }
     return it->second;
@@ -124,12 +124,12 @@ void CGovernanceVote::Relay(CConnman& connman) const
 {
     // Do not relay until fully synced
     if(!masternodeSync.IsSynced()) {
-        LogPrint("gobject", "CGovernanceVote::Relay -- won't relay until fully synced\n");
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::Relay -- won't relay until fully synced\n");
         return;
     }
 
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
-    connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
+    g_connman->RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
 }
 
 void CGovernanceVote::UpdateHash() const
@@ -163,12 +163,12 @@ bool CGovernanceVote::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMaste
         uint256 hash = GetSignatureHash();
 
         if(!CHashSigner::SignHash(hash, keyMasternode, vchSig)) {
-            LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
+            LogPrint(BCLog::GOBJECT, "CGovernanceVote::Sign -- SignHash() failed\n");
             return false;
         }
 
         if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
-            LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed, error: %s\n", strError);
+            LogPrint(BCLog::GOBJECT, "CGovernanceVote::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } 
@@ -183,7 +183,7 @@ bool CGovernanceVote::CheckSignature(const CPubKey& pubKeyMasternode) const
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
         if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
-            LogPrint("gobject", "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
+            LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
             return false;  
         }
     } 
@@ -193,27 +193,27 @@ bool CGovernanceVote::CheckSignature(const CPubKey& pubKeyMasternode) const
 bool CGovernanceVote::IsValid(bool fSignatureCheck) const
 {
     if(nTime > GetAdjustedTime() + (60*60)) {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60*60));
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetAdjustedTime() + (60*60));
         return false;
     }
 
     // support up to MAX_SUPPORTED_VOTE_SIGNAL, can be extended
     if(nVoteSignal > MAX_SUPPORTED_VOTE_SIGNAL)
     {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n", nVoteSignal, GetHash().ToString());
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid signal(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
 
     // 0=none, 1=yes, 2=no, 3=abstain. Beyond that reject votes
     if(nVoteOutcome > 3)
     {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Client attempted to vote on invalid outcome(%d) - %s\n", nVoteSignal, GetHash().ToString());
         return false;
     }
 
     masternode_info_t infoMn;
     if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
+        LogPrint(BCLog::GOBJECT, "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
     }
 

@@ -1,16 +1,17 @@
-#!/bin/bash
-# Copyright (c) 2016 The Bitcoin Core developers
+#!/usr/bin/env bash
+# Copyright (c) 2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 ###   This script attempts to download the signature file SHA256SUMS.asc from
-###   syscoincore.org and syscoin.org and compares them.
+###   syscoin.org and syscoin.org and compares them.
 ###   It first checks if the signature passes, and then downloads the files specified in
 ###   the file, and checks if the hashes of these files match those that are specified
 ###   in the signature file.
 ###   The script returns 0 if everything passes the checks. It returns 1 if either the
 ###   signature check or the hash check doesn't pass. If an error occurs the return value is 2
 
+export LC_ALL=C
 function clean_up {
    for file in $*
    do
@@ -23,8 +24,8 @@ TMPFILE="hashes.tmp"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test"
-HOST1="https://syscoincore.org"
-HOST2="https://syscoin.org"
+HOST1="https://bitcoincore.org"
+HOST2="https://bitcoin.org"
 BASEDIR="/bin/"
 VERSIONPREFIX="syscoin-core-"
 RCVERSIONSTRING="rc"
@@ -95,7 +96,7 @@ fi
 
 WGETOUT=$(wget -N -O "$SIGNATUREFILENAME.2" "$HOST2$BASEDIR$SIGNATUREFILENAME" 2>&1)
 if [ $? -ne 0 ]; then
-   echo "syscoin.org failed to provide signature file, but syscoincore.org did?"
+   echo "syscoin.org failed to provide signature file, but syscoin.org did?"
    echo "wget output:"
    echo "$WGETOUT"|sed 's/^/\t/g'
    clean_up $SIGNATUREFILENAME
@@ -104,7 +105,7 @@ fi
 
 SIGFILEDIFFS="$(diff $SIGNATUREFILENAME $SIGNATUREFILENAME.2)"
 if [ "$SIGFILEDIFFS" != "" ]; then
-   echo "syscoin.org and syscoincore.org signature files were not equal?"
+   echo "syscoin.org and syscoin.org signature files were not equal?"
    clean_up $SIGNATUREFILENAME $SIGNATUREFILENAME.2
    exit 4
 fi
@@ -123,7 +124,7 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the Bitcoin Core binary release signing key installed?"
+      echo "gpg error. Do you have the Syscoin Core binary release signing key installed?"
    fi
 
    echo "gpg output:"

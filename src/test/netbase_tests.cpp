@@ -1,15 +1,13 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+﻿// Copyright (c) 2012-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "netbase.h"
-#include "test/test_syscoin.h"
+#include <netbase.h>
+#include <test/test_syscoin.h>
+#include <utilstrencodings.h>
 
 #include <string>
 
-#include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(netbase_tests, BasicTestingSetup)
@@ -28,13 +26,21 @@ static CSubNet ResolveSubNet(const char* subnet)
     return ret;
 }
 
+static CNetAddr CreateInternal(const char* host)
+{
+    CNetAddr addr;
+    addr.SetInternal(host);
+    return addr;
+}
+
 BOOST_AUTO_TEST_CASE(netbase_networks)
 {
     BOOST_CHECK(ResolveIP("127.0.0.1").GetNetwork()                              == NET_UNROUTABLE);
     BOOST_CHECK(ResolveIP("::1").GetNetwork()                                    == NET_UNROUTABLE);
     BOOST_CHECK(ResolveIP("8.8.8.8").GetNetwork()                                == NET_IPV4);
     BOOST_CHECK(ResolveIP("2001::8888").GetNetwork()                             == NET_IPV6);
-    BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetNetwork() == NET_TOR);
+    BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetNetwork() == NET_ONION);
+    BOOST_CHECK(CreateInternal("foo.com").GetNetwork()                           == NET_INTERNAL);
 
 }
 
@@ -61,6 +67,8 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(ResolveIP("8.8.8.8").IsRoutable());
     BOOST_CHECK(ResolveIP("2001::1").IsRoutable());
     BOOST_CHECK(ResolveIP("127.0.0.1").IsValid());
+    BOOST_CHECK(CreateInternal("FD6B:88C0:8724:edb1:8e4:3588:e546:35ca").IsInternal());
+    BOOST_CHECK(CreateInternal("bar.com").IsInternal());
 
 }
 
@@ -106,6 +114,11 @@ BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
     BOOST_CHECK(TestParse("[::]:8369", "[::]:8369"));
     BOOST_CHECK(TestParse("[127.0.0.1]", "127.0.0.1:65535"));
     BOOST_CHECK(TestParse(":::", "[::]:0"));
+
+    // verify that an internal address fails to resolve
+    BOOST_CHECK(TestParse("[fd6b:88c0:8724:1:2:3:4:5]", "[::]:0"));
+    // and that a one-off resolves correctly
+    BOOST_CHECK(TestParse("[fd6c:88c0:8724:1:2:3:4:5]", "[fd6c:88c0:8724:1:2:3:4:5]:65535"));
 }
 
 BOOST_AUTO_TEST_CASE(onioncat_test)
@@ -271,19 +284,22 @@ BOOST_AUTO_TEST_CASE(subnet_test)
 BOOST_AUTO_TEST_CASE(netbase_getgroup)
 {
 
-    BOOST_CHECK(ResolveIP("127.0.0.1").GetGroup() == boost::assign::list_of(0)); // Local -> !Routable()
-    BOOST_CHECK(ResolveIP("257.0.0.1").GetGroup() == boost::assign::list_of(0)); // !Valid -> !Routable()
-    BOOST_CHECK(ResolveIP("10.0.0.1").GetGroup() == boost::assign::list_of(0)); // RFC1918 -> !Routable()
-    BOOST_CHECK(ResolveIP("169.254.1.1").GetGroup() == boost::assign::list_of(0)); // RFC3927 -> !Routable()
-    BOOST_CHECK(ResolveIP("1.2.3.4").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV4)(1)(2)); // IPv4
-    BOOST_CHECK(ResolveIP("::FFFF:0:102:304").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV4)(1)(2)); // RFC6145
-    BOOST_CHECK(ResolveIP("64:FF9B::102:304").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV4)(1)(2)); // RFC6052
-    BOOST_CHECK(ResolveIP("2002:102:304:8369:8369:8369:8369:8369").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV4)(1)(2)); // RFC3964
-    BOOST_CHECK(ResolveIP("2001:0:8369:8369:8369:8369:FEFD:FCFB").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV4)(1)(2)); // RFC4380
-    BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == boost::assign::list_of((unsigned char)NET_TOR)(239)); // Tor
-    BOOST_CHECK(ResolveIP("2001:470:abcd:8369:8369:8369:8369:8369").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV6)(32)(1)(4)(112)(175)); //he.net
-    BOOST_CHECK(ResolveIP("2001:2001:8369:8369:8369:8369:8369:8369").GetGroup() == boost::assign::list_of((unsigned char)NET_IPV6)(32)(1)(32)(1)); //IPv6
+    BOOST_CHECK(ResolveIP("127.0.0.1").GetGroup() == std::vector<unsigned char>({0})); // Local -> !Routable()
+    BOOST_CHECK(ResolveIP("257.0.0.1").GetGroup() == std::vector<unsigned char>({0})); // !Valid -> !Routable()
+    BOOST_CHECK(ResolveIP("10.0.0.1").GetGroup() == std::vector<unsigned char>({0})); // RFC1918 -> !Routable()
+    BOOST_CHECK(ResolveIP("169.254.1.1").GetGroup() == std::vector<unsigned char>({0})); // RFC3927 -> !Routable()
+    BOOST_CHECK(ResolveIP("1.2.3.4").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // IPv4
+    BOOST_CHECK(ResolveIP("::FFFF:0:102:304").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC6145
+    BOOST_CHECK(ResolveIP("64:FF9B::102:304").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC6052
+    BOOST_CHECK(ResolveIP("2002:102:304:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC3964
+    BOOST_CHECK(ResolveIP("2001:0:9999:9999:9999:9999:FEFD:FCFB").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV4, 1, 2})); // RFC4380
+    BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_ONION, 239})); // Tor
+    BOOST_CHECK(ResolveIP("2001:470:abcd:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 4, 112, 175})); //he.net
+    BOOST_CHECK(ResolveIP("2001:2001:9999:9999:9999:9999:9999:9999").GetGroup() == std::vector<unsigned char>({(unsigned char)NET_IPV6, 32, 1, 32, 1})); //IPv6
 
+    // baz.net sha256 hash: 12929400eb4607c4ac075f087167e75286b179c693eb059a01774b864e8fe505
+    std::vector<unsigned char> internal_group = {NET_INTERNAL, 0x12, 0x92, 0x94, 0x00, 0xeb, 0x46, 0x07, 0xc4, 0xac, 0x07};
+    BOOST_CHECK(CreateInternal("baz.net").GetGroup() == internal_group);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

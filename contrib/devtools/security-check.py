@@ -1,29 +1,32 @@
-#!/usr/bin/python2
+#!/usr/bin/env python3
+# Copyright (c) 2015-2018 The Syscoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Perform basic ELF security checks on a series of executables.
-Exit status will be 0 if succesful, and the program will be silent.
+Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 Needs `readelf` (for ELF) and `objdump` (for PE).
 '''
-from __future__ import division,print_function
 import subprocess
 import sys
 import os
 
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
+NONFATAL = {} # checks which are non-fatal for now but only generate a warning
 
 def check_ELF_PIE(executable):
     '''
     Check for position independent executable (PIE), allowing for address space randomization.
     '''
-    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen([READELF_CMD, '-h', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
 
     ok = False
-    for line in stdout.split('\n'):
+    for line in stdout.splitlines():
         line = line.split()
         if len(line)>=2 and line[0] == 'Type:' and line[1] == 'DYN':
             ok = True
@@ -31,14 +34,14 @@ def check_ELF_PIE(executable):
 
 def get_ELF_program_headers(executable):
     '''Return type and flags for ELF program headers'''
-    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen([READELF_CMD, '-l', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
     in_headers = False
     count = 0
     headers = []
-    for line in stdout.split('\n'):
+    for line in stdout.splitlines():
         if line.startswith('Program Headers:'):
             in_headers = True
         if line == '':
@@ -88,13 +91,13 @@ def check_ELF_RELRO(executable):
             have_gnu_relro = True
 
     have_bindnow = False
-    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen([READELF_CMD, '-d', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
-    for line in stdout.split('\n'):
+    for line in stdout.splitlines():
         tokens = line.split()
-        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2]):
+        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2:]):
             have_bindnow = True
     return have_gnu_relro and have_bindnow
 
@@ -102,38 +105,62 @@ def check_ELF_Canary(executable):
     '''
     Check for use of stack canary
     '''
-    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen([READELF_CMD, '--dyn-syms', '-W', executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
     ok = False
-    for line in stdout.split('\n'):
+    for line in stdout.splitlines():
         if '__stack_chk_fail' in line:
             ok = True
     return ok
 
 def get_PE_dll_characteristics(executable):
     '''
-    Get PE DllCharacteristics bits
+    Get PE DllCharacteristics bits.
+    Returns a tuple (arch,bits) where arch is 'i386:x86-64' or 'i386'
+    and bits is the DllCharacteristics value.
     '''
-    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    p = subprocess.Popen([OBJDUMP_CMD, '-x',  executable], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
     (stdout, stderr) = p.communicate()
     if p.returncode:
         raise IOError('Error opening file')
-    for line in stdout.split('\n'):
+    arch = ''
+    bits = 0
+    for line in stdout.splitlines():
         tokens = line.split()
+        if len(tokens)>=2 and tokens[0] == 'architecture:':
+            arch = tokens[1].rstrip(',')
         if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
-            return int(tokens[1],16)
-    return 0
+            bits = int(tokens[1],16)
+    return (arch,bits)
 
+IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
+IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
+IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
 
-def check_PE_PIE(executable):
+def check_PE_DYNAMIC_BASE(executable):
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    return bool(get_PE_dll_characteristics(executable) & 0x40)
+    (arch,bits) = get_PE_dll_characteristics(executable)
+    reqbits = IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
+    return (bits & reqbits) == reqbits
+
+# On 64 bit, must support high-entropy 64-bit address space layout randomization in addition to DYNAMIC_BASE
+# to have secure ASLR.
+def check_PE_HIGH_ENTROPY_VA(executable):
+    '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
+    (arch,bits) = get_PE_dll_characteristics(executable)
+    if arch == 'i386:x86-64':
+        reqbits = IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
+    else: # Unnecessary on 32-bit
+        assert(arch == 'i386')
+        reqbits = 0
+    return (bits & reqbits) == reqbits
 
 def check_PE_NX(executable):
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    return bool(get_PE_dll_characteristics(executable) & 0x100)
+    (arch,bits) = get_PE_dll_characteristics(executable)
+    return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
 CHECKS = {
 'ELF': [
@@ -143,7 +170,8 @@ CHECKS = {
     ('Canary', check_ELF_Canary)
 ],
 'PE': [
-    ('PIE', check_PE_PIE),
+    ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
+    ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_PE_NX)
 ]
 }
@@ -168,14 +196,20 @@ if __name__ == '__main__':
                 continue
 
             failed = []
+            warning = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
-                    failed.append(name)
+                    if name in NONFATAL:
+                        warning.append(name)
+                    else:
+                        failed.append(name)
             if failed:
                 print('%s: failed %s' % (filename, ' '.join(failed)))
                 retval = 1
+            if warning:
+                print('%s: warning %s' % (filename, ' '.join(warning)))
         except IOError:
             print('%s: cannot open' % filename)
             retval = 1
-    exit(retval)
+    sys.exit(retval)
 

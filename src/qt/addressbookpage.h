@@ -1,5 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +7,8 @@
 
 #include <QDialog>
 
+class AddressBookSortFilterProxyModel;
 class AddressTableModel;
-class OptionsModel;
 class PlatformStyle;
 
 namespace Ui {
@@ -20,8 +19,6 @@ QT_BEGIN_NAMESPACE
 class QItemSelection;
 class QMenu;
 class QModelIndex;
-class QSortFilterProxyModel;
-class QTableView;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of sending or receiving addresses.
@@ -41,7 +38,7 @@ public:
         ForEditing  /**< Open address book for editing */
     };
 
-    explicit AddressBookPage(const PlatformStyle *platformStyle, Mode mode, Tabs tab, QWidget *parent);
+    explicit AddressBookPage(const PlatformStyle *platformStyle, Mode mode, Tabs tab, QWidget *parent = 0);
     ~AddressBookPage();
 
     void setModel(AddressTableModel *model);
@@ -56,7 +53,7 @@ private:
     Mode mode;
     Tabs tab;
     QString returnValue;
-    QSortFilterProxyModel *proxyModel;
+    AddressBookSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newAddressToSelect;

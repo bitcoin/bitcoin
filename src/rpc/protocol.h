@@ -1,17 +1,17 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_RPCPROTOCOL_H
-#define SYSCOIN_RPCPROTOCOL_H
+#ifndef SYSCOIN_RPC_PROTOCOL_H
+#define SYSCOIN_RPC_PROTOCOL_H
+
+#include <fs.h>
 
 #include <list>
 #include <map>
 #include <stdint.h>
 #include <string>
-#include <boost/filesystem.hpp>
 
 #include <univalue.h>
 
@@ -28,19 +28,24 @@ enum HTTPStatusCode
     HTTP_SERVICE_UNAVAILABLE   = 503,
 };
 
-//! Syscoin Core RPC error codes
+//! Syscoin RPC error codes
 enum RPCErrorCode
 {
     //! Standard JSON-RPC 2.0 errors
+    // RPC_INVALID_REQUEST is internally mapped to HTTP_BAD_REQUEST (400).
+    // It should not be used for application-layer errors.
     RPC_INVALID_REQUEST  = -32600,
+    // RPC_METHOD_NOT_FOUND is internally mapped to HTTP_NOT_FOUND (404).
+    // It should not be used for application-layer errors.
     RPC_METHOD_NOT_FOUND = -32601,
     RPC_INVALID_PARAMS   = -32602,
+    // RPC_INTERNAL_ERROR should only be used for genuine errors in syscoind
+    // (for example datadir corruption).
     RPC_INTERNAL_ERROR   = -32603,
     RPC_PARSE_ERROR      = -32700,
 
     //! General application defined errors
     RPC_MISC_ERROR                  = -1,  //!< std::exception thrown in command handling
-    RPC_FORBIDDEN_BY_SAFE_MODE      = -2,  //!< Server is in safe mode, and command is not allowed in safe mode
     RPC_TYPE_ERROR                  = -3,  //!< Unexpected type was passed as parameter
     RPC_INVALID_ADDRESS_OR_KEY      = -5,  //!< Invalid address or key
     RPC_OUT_OF_MEMORY               = -7,  //!< Ran out of memory during operation
@@ -51,6 +56,7 @@ enum RPCErrorCode
     RPC_VERIFY_REJECTED             = -26, //!< Transaction or block was rejected by network rules
     RPC_VERIFY_ALREADY_IN_CHAIN     = -27, //!< Transaction already in chain
     RPC_IN_WARMUP                   = -28, //!< Client still warming up
+    RPC_METHOD_DEPRECATED           = -32, //!< RPC method is deprecated
 
     //! Aliases for backward compatibility
     RPC_TRANSACTION_ERROR           = RPC_VERIFY_ERROR,
@@ -69,13 +75,21 @@ enum RPCErrorCode
     //! Wallet errors
     RPC_WALLET_ERROR                = -4,  //!< Unspecified problem with wallet (key not found etc.)
     RPC_WALLET_INSUFFICIENT_FUNDS   = -6,  //!< Not enough funds in wallet or account
-    RPC_WALLET_INVALID_ACCOUNT_NAME = -11, //!< Invalid account name
+    RPC_WALLET_INVALID_LABEL_NAME   = -11, //!< Invalid label name
     RPC_WALLET_KEYPOOL_RAN_OUT      = -12, //!< Keypool ran out, call keypoolrefill first
     RPC_WALLET_UNLOCK_NEEDED        = -13, //!< Enter the wallet passphrase with walletpassphrase first
     RPC_WALLET_PASSPHRASE_INCORRECT = -14, //!< The wallet passphrase entered was incorrect
     RPC_WALLET_WRONG_ENC_STATE      = -15, //!< Command given in wrong wallet encryption state (encrypting an encrypted wallet etc.)
     RPC_WALLET_ENCRYPTION_FAILED    = -16, //!< Failed to encrypt the wallet
     RPC_WALLET_ALREADY_UNLOCKED     = -17, //!< Wallet is already unlocked
+    RPC_WALLET_NOT_FOUND            = -18, //!< Invalid wallet specified
+    RPC_WALLET_NOT_SPECIFIED        = -19, //!< No wallet specified (error when there are multiple wallets loaded)
+
+    //! Backwards compatible aliases
+    RPC_WALLET_INVALID_ACCOUNT_NAME = RPC_WALLET_INVALID_LABEL_NAME,
+
+    //! Unused reserved codes, kept around for backwards compatibility. Do not reuse.
+    RPC_FORBIDDEN_BY_SAFE_MODE      = -2,  //!< Server is in safe mode, and command is not allowed in safe mode
 };
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
@@ -83,13 +97,13 @@ UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const Un
 std::string JSONRPCReply(const UniValue& result, const UniValue& error, const UniValue& id);
 UniValue JSONRPCError(int code, const std::string& message);
 
-/** Get name of RPC authentication cookie file */
-boost::filesystem::path GetAuthCookieFile();
 /** Generate a new RPC authentication cookie and write it to disk */
 bool GenerateAuthCookie(std::string *cookie_out);
 /** Read the RPC authentication cookie from disk */
 bool GetAuthCookie(std::string *cookie_out);
 /** Delete RPC authentication cookie from disk */
 void DeleteAuthCookie();
+/** Parse JSON-RPC batch reply into a vector */
+std::vector<UniValue> JSONRPCProcessBatchReply(const UniValue &in, size_t num);
 
-#endif // SYSCOIN_RPCPROTOCOL_H
+#endif // SYSCOIN_RPC_PROTOCOL_H

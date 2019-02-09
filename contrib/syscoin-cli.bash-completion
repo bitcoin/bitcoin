@@ -1,6 +1,5 @@
 # bash programmable completion for syscoin-cli(1)
-# Copyright (c) 2012-2016 The Bitcoin Core developers
-# Copyright (c) 2014-2018 The Syscoin Core developers
+# Copyright (c) 2012-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -92,42 +91,6 @@ _syscoin_cli() {
         esac
     fi
 
-    if ((cword > 1)); then
-        case ${words[cword-1]} in
-            gobject)
-                COMPREPLY=( $( compgen -W "check prepare submit deserialize count get getvotes getcurrentvotes list diff vote-name vote-conf vote-many" -- "$cur" ) )
-                return 0
-                ;;
-            masternode)
-                COMPREPLY=( $( compgen -W "count current genkey outputs initialize start-all start-missing start-disabled status list list-conf winner winners" -- "$cur" ) )
-                return 0
-                ;;
-            masternodelist)
-                COMPREPLY=( $( compgen -W "activeseconds addr daemon full info json lastpaidblock lastpaidtime lastseen payee protocol pubkey rank sentinel status" -- "$cur" ) )
-                return 0
-                ;;
-            masternodebroadcast)
-                COMPREPLY=( $( compgen -W "create-name create-all decode relay" -- "$cur" ) )
-                return 0
-                ;;
-            mnsync)
-                COMPREPLY=( $( compgen -W "status next reset" -- "$cur" ) )
-                return 0
-                ;;
-            privatesend)
-                COMPREPLY=( $( compgen -W "start stop reset" -- "$cur" ) )
-                return 0
-                ;;
-            *)
-                printf "\n\n"
-                "$syscoin_cli" help ${words[1]}
-                printf ">"
-                printf " %s" "${words[@]}"
-                return 0
-                ;;
-        esac
-    fi
-
     case "$prev" in
         backupwallet|dumpwallet|importwallet)
             _filedir
@@ -154,7 +117,7 @@ _syscoin_cli() {
             _filedir -d
             return 0
             ;;
-        -*=*) # prevent nonsense completions
+        -*=*)	# prevent nonsense completions
             return 0
             ;;
         *)

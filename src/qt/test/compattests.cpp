@@ -1,12 +1,12 @@
-// Copyright (c) 2016 The Bitcoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "paymentrequestplus.h" // this includes protobuf's port.h which defines its own bswap macos
+#include <qt/paymentrequestplus.h> // this includes protobuf's port.h which defines its own bswap macos
 
-#include "compattests.h"
+#include <qt/test/compattests.h>
 
-#include "compat/byteswap.h"
+#include <compat/byteswap.h>
 
 void CompatTests::bswapTests()
 {

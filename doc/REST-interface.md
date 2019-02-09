@@ -3,8 +3,8 @@ Unauthenticated REST Interface
 
 The REST API can be enabled with the `-rest` option.
 
-The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet,
-and port 18443 for regtest.
+The interface runs on the same port as the JSON-RPC interface, by default port 8370 for mainnet, port 18370 for testnet,
+and port 18470 for regtest.
 
 Supported API
 -------------
@@ -58,7 +58,7 @@ https://github.com/syscoin/bips/blob/master/bip-0064.mediawiki
 
 Example:
 ```
-$ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
+$ curl localhost:18369/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff7627ff72e5e8b0f71210f92ea7a4000c5d75-0.json 2>/dev/null | json_pp
 {
    "chainHeight" : 325347,
    "chaintipHash" : "00000000fb01a7f3745a717f8caebee056c484e6e0bfe4a9591c235bb70506fb",
@@ -91,7 +91,7 @@ Only supports JSON as output format.
 * bytes : (numeric) size of the TX mempool in bytes
 * usage : (numeric) total TX mempool memory usage
 * maxmempool : (numeric) maximum memory usage for the mempool in bytes
-* mempoolminfee : (numeric) minimum feerate (BTC per KB) for tx to be accepted
+* mempoolminfee : (numeric) minimum feerate (SYS per KB) for tx to be accepted
 
 `GET /rest/mempool/contents.json`
 
@@ -100,4 +100,4 @@ Only supports JSON as output format.
 
 Risks
 -------------
-Running a web browser on the same node with a REST enabled syscoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.
+Running a web browser on the same node with a REST enabled syscoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8369/rest/tx/1234567890.json">` which might break the nodes privacy.

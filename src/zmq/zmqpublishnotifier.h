@@ -1,11 +1,11 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 #define SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 
-#include "zmqabstractnotifier.h"
+#include <zmq/zmqabstractnotifier.h>
 
 class CBlockIndex;
 
@@ -40,12 +40,6 @@ public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
 
-class CZMQPublishHashTransactionLockNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyTransactionLock(const CTransaction &transaction) override;
-};
-
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
@@ -57,15 +51,10 @@ class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier
 public:
     bool NotifyTransaction(const CTransaction &transaction) override;
 };
-
-class CZMQPublishRawTransactionLockNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyTransactionLock(const CTransaction &transaction) override;
-};
+// SYSCOIN
 class CZMQPublishRawSyscoinNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-	bool NotifySyscoinUpdate(const char *value, const char *topic) override;
+    bool NotifySyscoinUpdate(const char *value, const char *topic) override;
 };
 #endif // SYSCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

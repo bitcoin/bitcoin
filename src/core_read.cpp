@@ -1,25 +1,25 @@
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "core_io.h"
+#include <core_io.h>
 
-#include "primitives/block.h"
-#include "primitives/transaction.h"
-#include "script/script.h"
-#include "serialize.h"
-#include "streams.h"
+#include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <script/script.h>
+#include <script/sign.h>
+#include <serialize.h>
+#include <streams.h>
 #include <univalue.h>
-#include "util.h"
-#include "utilstrencodings.h"
-#include "version.h"
+#include <util.h>
+#include <utilstrencodings.h>
+#include <version.h>
 
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/assign/list_of.hpp>
+
+#include <algorithm>
 
 CScript ParseScript(const std::string& s)
 {
@@ -29,20 +29,20 @@ CScript ParseScript(const std::string& s)
 
     if (mapOpNames.empty())
     {
-        for (int op = 0; op <= OP_NOP10; op++)
+        for (unsigned int op = 0; op <= MAX_OPCODE; op++)
         {
             // Allow OP_RESERVED to get into mapOpNames
             if (op < OP_NOP && op != OP_RESERVED)
                 continue;
 
-            const char* name = GetOpName((opcodetype)op);
+            const char* name = GetOpName(static_cast<opcodetype>(op));
             if (strcmp(name, "OP_UNKNOWN") == 0)
                 continue;
             std::string strName(name);
-            mapOpNames[strName] = (opcodetype)op;
+            mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
             boost::algorithm::replace_first(strName, "OP_", "");
-            mapOpNames[strName] = (opcodetype)op;
+            mapOpNames[strName] = static_cast<opcodetype>(op);
         }
     }
 
@@ -55,20 +55,20 @@ CScript ParseScript(const std::string& s)
         {
             // Empty string, ignore. (boost::split given '' will return one word)
         }
-        else if (all(*w, boost::algorithm::is_digit()) ||
-            (boost::algorithm::starts_with(*w, "-") && all(std::string(w->begin()+1, w->end()), boost::algorithm::is_digit())))
+        else if (std::all_of(w->begin(), w->end(), ::IsDigit) ||
+            (w->front() == '-' && w->size() > 1 && std::all_of(w->begin()+1, w->end(), ::IsDigit)))
         {
             // Number
             int64_t n = atoi64(*w);
             result << n;
         }
-        else if (boost::algorithm::starts_with(*w, "0x") && (w->begin()+2 != w->end()) && IsHex(std::string(w->begin()+2, w->end())))
+        else if (w->substr(0,2) == "0x" && w->size() > 2 && IsHex(std::string(w->begin()+2, w->end())))
         {
             // Raw hex data, inserted NOT pushed onto stack:
             std::vector<unsigned char> raw = ParseHex(std::string(w->begin()+2, w->end()));
             result.insert(result.end(), raw.begin(), raw.end());
         }
-        else if (w->size() >= 2 && boost::algorithm::starts_with(*w, "'") && boost::algorithm::ends_with(*w, "'"))
+        else if (w->size() >= 2 && w->front() == '\'' && w->back() == '\'')
         {
             // Single-quoted string, pushed as data. NOTE: this is poor-man's
             // parsing, spaces/tabs/newlines in single-quoted strings won't work.
@@ -89,23 +89,60 @@ CScript ParseScript(const std::string& s)
     return result;
 }
 
-bool DecodeHexTx(CMutableTransaction& tx, const std::string& strHexTx)
+// Check that all of the input and output scripts of a transaction contains valid opcodes
+static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
 {
-    if (!IsHex(strHexTx))
-        return false;
-
-    std::vector<unsigned char> txData(ParseHex(strHexTx));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-    try {
-        ssData >> tx;
-        if (!ssData.empty())
-            return false;
+    // Check input scripts for non-coinbase txs
+    if (!CTransaction(tx).IsCoinBase()) {
+        for (unsigned int i = 0; i < tx.vin.size(); i++) {
+            if (!tx.vin[i].scriptSig.HasValidOps() || tx.vin[i].scriptSig.size() > MAX_SCRIPT_SIZE) {
+                return false;
+            }
+        }
     }
-    catch (const std::exception&) {
-        return false;
+    // Check output scripts
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        if (!tx.vout[i].scriptPubKey.HasValidOps() || tx.vout[i].scriptPubKey.size() > MAX_SCRIPT_SIZE) {
+            return false;
+        }
     }
 
     return true;
+}
+
+bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness, bool try_witness)
+{
+    if (!IsHex(hex_tx)) {
+        return false;
+    }
+
+    std::vector<unsigned char> txData(ParseHex(hex_tx));
+
+    if (try_no_witness) {
+        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+        try {
+            ssData >> tx;
+            if (ssData.eof() && (!try_witness || CheckTxScriptsSanity(tx))) {
+                return true;
+            }
+        } catch (const std::exception& e) {
+            // Fall through.
+        }
+    }
+
+    if (try_witness) {
+        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ssData >> tx;
+            if (ssData.empty()) {
+                return true;
+            }
+        } catch (const std::exception& e) {
+            // Fall through.
+        }
+    }
+
+    return false;
 }
 
 bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
@@ -125,12 +162,21 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
     return true;
 }
 
-uint256 ParseHashUV(const UniValue& v, const std::string& strName)
+bool DecodePSBT(PartiallySignedTransaction& psbt, const std::string& base64_tx, std::string& error)
 {
-    std::string strHex;
-    if (v.isStr())
-        strHex = v.getValStr();
-    return ParseHashStr(strHex, strName);  // Note: ParseHashStr("") throws a runtime_error
+    std::vector<unsigned char> tx_data = DecodeBase64(base64_tx.c_str());
+    CDataStream ss_data(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+    try {
+        ss_data >> psbt;
+        if (!ss_data.empty()) {
+            error = "extra data after PSBT";
+            return false;
+        }
+    } catch (const std::exception& e) {
+        error = e.what();
+        return false;
+    }
+    return true;
 }
 
 uint256 ParseHashStr(const std::string& strHex, const std::string& strName)
@@ -151,4 +197,27 @@ std::vector<unsigned char> ParseHexUV(const UniValue& v, const std::string& strN
     if (!IsHex(strHex))
         throw std::runtime_error(strName + " must be hexadecimal string (not '" + strHex + "')");
     return ParseHex(strHex);
+}
+
+int ParseSighashString(const UniValue& sighash)
+{
+    int hash_type = SIGHASH_ALL;
+    if (!sighash.isNull()) {
+        static std::map<std::string, int> map_sighash_values = {
+            {std::string("ALL"), int(SIGHASH_ALL)},
+            {std::string("ALL|ANYONECANPAY"), int(SIGHASH_ALL|SIGHASH_ANYONECANPAY)},
+            {std::string("NONE"), int(SIGHASH_NONE)},
+            {std::string("NONE|ANYONECANPAY"), int(SIGHASH_NONE|SIGHASH_ANYONECANPAY)},
+            {std::string("SINGLE"), int(SIGHASH_SINGLE)},
+            {std::string("SINGLE|ANYONECANPAY"), int(SIGHASH_SINGLE|SIGHASH_ANYONECANPAY)},
+        };
+        std::string strHashType = sighash.get_str();
+        const auto& it = map_sighash_values.find(strHashType);
+        if (it != map_sighash_values.end()) {
+            hash_type = it->second;
+        } else {
+            throw std::runtime_error(strHashType + " is not a valid sighash parameter.");
+        }
+    }
+    return hash_type;
 }

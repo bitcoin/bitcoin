@@ -1,11 +1,10 @@
-// Copyright (c) 2013-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2013-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "hash.h"
-#include "utilstrencodings.h"
-#include "test/test_syscoin.h"
+#include <hash.h>
+#include <utilstrencodings.h>
+#include <test/test_syscoin.h>
 
 #include <vector>
 
@@ -26,22 +25,22 @@ BOOST_AUTO_TEST_CASE(murmurhash3)
     //
     // The magic number 0xFBA4C795 comes from CBloomFilter::Hash()
 
-    T(0x00000000, 0x00000000, "");
-    T(0x6a396f08, 0xFBA4C795, "");
-    T(0x81f16f39, 0xffffffff, "");
+    T(0x00000000U, 0x00000000, "");
+    T(0x6a396f08U, 0xFBA4C795, "");
+    T(0x81f16f39U, 0xffffffff, "");
 
-    T(0x514e28b7, 0x00000000, "00");
-    T(0xea3f0b17, 0xFBA4C795, "00");
-    T(0xfd6cf10d, 0x00000000, "ff");
+    T(0x514e28b7U, 0x00000000, "00");
+    T(0xea3f0b17U, 0xFBA4C795, "00");
+    T(0xfd6cf10dU, 0x00000000, "ff");
 
-    T(0x16c6b7ab, 0x00000000, "0011");
-    T(0x8eb51c3d, 0x00000000, "001122");
-    T(0xb4471bf8, 0x00000000, "00112233");
-    T(0xe2301fa8, 0x00000000, "0011223344");
-    T(0xfc2e4a15, 0x00000000, "001122334455");
-    T(0xb074502c, 0x00000000, "00112233445566");
-    T(0x8034d2a0, 0x00000000, "0011223344556677");
-    T(0xb4698def, 0x00000000, "001122334455667788");
+    T(0x16c6b7abU, 0x00000000, "0011");
+    T(0x8eb51c3dU, 0x00000000, "001122");
+    T(0xb4471bf8U, 0x00000000, "00112233");
+    T(0xe2301fa8U, 0x00000000, "0011223344");
+    T(0xfc2e4a15U, 0x00000000, "001122334455");
+    T(0xb074502cU, 0x00000000, "00112233445566");
+    T(0x8034d2a0U, 0x00000000, "0011223344556677");
+    T(0xb4698defU, 0x00000000, "001122334455667788");
 
 #undef T
 }
@@ -128,14 +127,14 @@ BOOST_AUTO_TEST_CASE(siphash)
     // and the test would be affected by default tx version bumps if not fixed.
     tx.nVersion = 1;
     ss << tx;
+    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
 
     // Check consistency between CSipHasher and SipHashUint256[Extra].
-    // TODO reenable when backporting Syscoin #10321
-    /*FastRandomContext ctx;
+    FastRandomContext ctx;
     for (int i = 0; i < 16; ++i) {
         uint64_t k1 = ctx.rand64();
         uint64_t k2 = ctx.rand64();
-        uint256 x = GetRandHash();
+        uint256 x = InsecureRand256();
         uint32_t n = ctx.rand32();
         uint8_t nb[4];
         WriteLE32(nb, n);
@@ -145,9 +144,7 @@ BOOST_AUTO_TEST_CASE(siphash)
         sip288.Write(nb, 4);
         BOOST_CHECK_EQUAL(SipHashUint256(k1, k2, x), sip256.Finalize());
         BOOST_CHECK_EQUAL(SipHashUint256Extra(k1, k2, x, n), sip288.Finalize());
-    }*/
-
-    BOOST_CHECK_EQUAL(SipHashUint256(1, 2, ss.GetHash()), 0x79751e980c2a0a35ULL);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

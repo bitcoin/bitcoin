@@ -1,20 +1,35 @@
-// Copyright (c) 2015 The Syscoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2017-2017 The Syscoin Core developers
+// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_TEST_TEST_SYS_H
-#define SYSCOIN_TEST_TEST_SYS_H
+#ifndef SYSCOIN_TEST_TEST_SYSCOIN_H
+#define SYSCOIN_TEST_TEST_SYSCOIN_H
 
-#include "chainparamsbase.h"
-#include "key.h"
-#include "pubkey.h"
-#include "txdb.h"
-#include "txmempool.h"
+#include <chainparamsbase.h>
+#include <fs.h>
+#include <key.h>
+#include <pubkey.h>
+#include <random.h>
+#include <scheduler.h>
+#include <txdb.h>
+#include <txmempool.h>
 
-#include <boost/filesystem.hpp>
+#include <memory>
+
 #include <boost/thread.hpp>
+
+extern FastRandomContext g_insecure_rand_ctx;
+
+static inline void SeedInsecureRand(bool fDeterministic = false)
+{
+    g_insecure_rand_ctx = FastRandomContext(fDeterministic);
+}
+
+static inline uint32_t InsecureRand32() { return g_insecure_rand_ctx.rand32(); }
+static inline uint256 InsecureRand256() { return g_insecure_rand_ctx.rand256(); }
+static inline uint64_t InsecureRandBits(int bits) { return g_insecure_rand_ctx.randbits(bits); }
+static inline uint64_t InsecureRandRange(uint64_t range) { return g_insecure_rand_ctx.randrange(range); }
+static inline bool InsecureRandBool() { return g_insecure_rand_ctx.randbool(); }
 
 /** Basic testing setup.
  * This just configures logging and chain parameters.
@@ -22,21 +37,33 @@
 struct BasicTestingSetup {
     ECCVerifyHandle globalVerifyHandle;
 
-    BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    explicit BasicTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~BasicTestingSetup();
+
+    fs::path SetDataDir(const std::string& name);
+
+private:
+    const fs::path m_path_root;
 };
 
 /** Testing setup that configures a complete environment.
  * Included are data directory, coins database, script check threads setup.
  */
 class CConnman;
+class CNode;
+struct CConnmanTest {
+    static void AddNode(CNode& node);
+    static void ClearNodes();
+};
+
+class PeerLogicValidation;
 struct TestingSetup: public BasicTestingSetup {
-    CCoinsViewDB *pcoinsdbview;
-    boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
+    CScheduler scheduler;
+    std::unique_ptr<PeerLogicValidation> peerLogic;
 
-    TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
+    explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
     ~TestingSetup();
 };
 
@@ -58,37 +85,45 @@ struct TestChain100Setup : public TestingSetup {
 
     ~TestChain100Setup();
 
-    std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
+    std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
 
 class CTxMemPoolEntry;
-class CTxMemPool;
 
 struct TestMemPoolEntryHelper
 {
     // Default values
     CAmount nFee;
     int64_t nTime;
-    double dPriority;
     unsigned int nHeight;
     bool spendsCoinbase;
-    unsigned int sigOpCount;
+    unsigned int sigOpCost;
     LockPoints lp;
 
     TestMemPoolEntryHelper() :
-        nFee(0), nTime(0), dPriority(0.0), nHeight(1),
-        spendsCoinbase(false), sigOpCount(4) { }
-    
-    CTxMemPoolEntry FromTx(const CMutableTransaction &tx, CTxMemPool *pool = NULL);
-    CTxMemPoolEntry FromTx(const CTransaction &tx, CTxMemPool *pool = NULL);
+        nFee(0), nTime(0), nHeight(1),
+        spendsCoinbase(false), sigOpCost(4) { }
+
+    CTxMemPoolEntry FromTx(const CMutableTransaction& tx);
+    CTxMemPoolEntry FromTx(const CTransactionRef& tx);
 
     // Change the default value
     TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
     TestMemPoolEntryHelper &Time(int64_t _time) { nTime = _time; return *this; }
-    TestMemPoolEntryHelper &Priority(double _priority) { dPriority = _priority; return *this; }
     TestMemPoolEntryHelper &Height(unsigned int _height) { nHeight = _height; return *this; }
     TestMemPoolEntryHelper &SpendsCoinbase(bool _flag) { spendsCoinbase = _flag; return *this; }
-    TestMemPoolEntryHelper &SigOps(unsigned int _sigops) { sigOpCount = _sigops; return *this; }
+    TestMemPoolEntryHelper &SigOpsCost(unsigned int _sigopsCost) { sigOpCost = _sigopsCost; return *this; }
 };
+
+CBlock getBlock13b8a();
+
+// define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
+std::ostream& operator<<(std::ostream& os, const uint256& num);
+
+/* This is defined in merkle_tests.cpp, but also used by auxpow_tests.cpp.  */
+namespace merkle_tests {
+std::vector<uint256> BlockMerkleBranch(const CBlock& block, uint32_t position);
+}
+
 #endif

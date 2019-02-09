@@ -1,11 +1,10 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#include "arith_uint256.h"
-#include "uint256.h"
-#include "version.h"
-#include "test/test_syscoin.h"
+#include <arith_uint256.h>
+#include <uint256.h>
+#include <version.h>
+#include <test/test_syscoin.h>
 
 #include <boost/test/unit_test.hpp>
 #include <stdint.h>
@@ -49,7 +48,7 @@ const unsigned char MaxArray[] =
 const uint256 MaxL = uint256(std::vector<unsigned char>(MaxArray,MaxArray+32));
 const uint160 MaxS = uint160(std::vector<unsigned char>(MaxArray,MaxArray+20));
 
-std::string ArrayToString(const unsigned char A[], unsigned int width)
+static std::string ArrayToString(const unsigned char A[], unsigned int width)
 {
     std::stringstream Stream;
     Stream << std::hex;
@@ -265,6 +264,19 @@ BOOST_AUTO_TEST_CASE( conversion )
     BOOST_CHECK(arith_uint256(R2L.GetHex()) == UintToArith256(R2L));
     BOOST_CHECK(R1L.GetHex() == UintToArith256(R1L).GetHex());
     BOOST_CHECK(R2L.GetHex() == UintToArith256(R2L).GetHex());
+}
+
+BOOST_AUTO_TEST_CASE( operator_with_self )
+{
+    arith_uint256 v = UintToArith256(uint256S("02"));
+    v *= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("04")));
+    v /= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("01")));
+    v += v;
+    BOOST_CHECK(v == UintToArith256(uint256S("02")));
+    v -= v;
+    BOOST_CHECK(v == UintToArith256(uint256S("0")));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

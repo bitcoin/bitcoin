@@ -1,115 +1,72 @@
-# Copyright (c) 2013-2016 The Bitcoin Core developers
-# Copyright (c) 2014-2018 The Syscoin Core developers
+# Copyright (c) 2013-2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_syscoin
 bin_PROGRAMS += test/test_syscoin
 TEST_SRCDIR = test
 TEST_BINARY=test/test_syscoin$(EXEEXT)
 
-
-EXTRA_DIST += \
-	test/bctest.py \
-	test/syscoin-util-test.py \
-	test/data/syscoin-util-test.json \
-	test/data/blanktxv1.hex \
-	test/data/blanktxv1.json \
-	test/data/blanktxv2.hex \
-	test/data/blanktxv2.json \
-	test/data/tt-delin1-out.hex \
-	test/data/tt-delin1-out.json \
-	test/data/tt-delout1-out.hex \
-	test/data/tt-delout1-out.json \
-	test/data/tt-locktime317000-out.hex \
-	test/data/tt-locktime317000-out.json \
-	test/data/tx394b54bb.hex \
-	test/data/txcreate1.hex \
-	test/data/txcreate1.json \
-	test/data/txcreate2.hex \
-	test/data/txcreate2.json \
-	test/data/txcreatedata1.hex \
-	test/data/txcreatedata1.json \
-	test/data/txcreatedata2.hex \
-	test/data/txcreatedata2.json \
-	test/data/txcreatedata_seq0.hex \
-	test/data/txcreatedata_seq0.json \
-	test/data/txcreatedata_seq1.hex \
-	test/data/txcreatedata_seq1.json \
-	test/data/txcreatemultisig1.hex \
-	test/data/txcreatemultisig1.json \
-	test/data/txcreatemultisig2.hex \
-	test/data/txcreatemultisig2.json \
-	test/data/txcreateoutpubkey1.hex \
-	test/data/txcreateoutpubkey1.json \
-	test/data/txcreatescript1.hex \
-	test/data/txcreatescript1.json \
-	test/data/txcreatescript2.hex \
-	test/data/txcreatescript2.json \
-	test/data/txcreatesignv1.hex \
-	test/data/txcreatesignv1.json \
-	test/data/txcreatesignv2.hex \
-	test/node1/syscoin.conf \
-	test/node2/syscoin.conf \
-	test/node3/syscoin.conf
-
 JSON_TEST_FILES = \
-  test/data/script_tests.json \
-  test/data/base58_keys_valid.json \
   test/data/base58_encode_decode.json \
-  test/data/base58_keys_invalid.json \
-  test/data/bip39_vectors.json \
-  test/data/proposals_valid.json \
-  test/data/proposals_invalid.json \
+  test/data/key_io_valid.json \
+  test/data/key_io_invalid.json \
+  test/data/script_tests.json \
+  test/data/sighash.json \
   test/data/tx_invalid.json \
   test/data/tx_valid.json \
-  test/data/sighash.json \
-  test/data/utxo.json
+  test/data/proposals_valid.json \
+  test/data/proposals_invalid.json \
+  test/data/utxo.json \
+  test/data/ethspv_valid.json \
+  test/data/ethspv_invalid.json
 
-RAW_TEST_FILES = test/data/alertTests.raw
+RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
+SYSCOIN_TEST_SUITE = \
+  test/test_syscoin_main.cpp \
+  test/test_syscoin.h \
+  test/test_syscoin.cpp
+
+# test_syscoin binary #
 SYSCOIN_TESTS =\
   test/syscoin_asset_tests.cpp \
   test/syscoin_asset_allocation_tests.cpp \
-  test/syscoin_alias_tests.cpp \
-  test/syscoin_offer_tests.cpp \
-  test/syscoin_cert_tests.cpp \
-  test/syscoin_escrow_tests.cpp \
   test/test_syscoin_services.cpp \
   test/test_syscoin_services.h \
-  test/auxpow_tests.cpp \
+  test/ethereum_tests.cpp \
+  test/governance_validators_tests.cpp \
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
   test/amount_tests.cpp \
   test/allocator_tests.cpp \
+  test/auxpow_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
+  test/bech32_tests.cpp \
   test/bip32_tests.cpp \
-  test/bip39_tests.cpp \
+  test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
-  test/cachemap_tests.cpp \
-  test/cachemultimap_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
-  test/DoS_tests.cpp \
+  test/denialofservice_tests.cpp \
+  test/descriptor_tests.cpp \
   test/getarg_tests.cpp \
-  test/governance_validators_tests.cpp \
   test/hash_tests.cpp \
-  test/key_tests.cpp \
   test/limitedmap_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/main_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
+  test/merkleblock_tests.cpp \
   test/multisig_tests.cpp \
   test/net_tests.cpp \
   test/netbase_tests.cpp \
@@ -118,59 +75,71 @@ SYSCOIN_TESTS =\
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
   test/raii_event_tests.cpp \
-  test/ratecheck_tests.cpp \
+  test/random_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
-  test/script_P2SH_tests.cpp \
-  test/script_P2PK_tests.cpp \
-  test/script_P2PKH_tests.cpp \
   test/script_tests.cpp \
+  test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
   test/serialize_tests.cpp \
   test/sighash_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
-  test/subsidy_tests.cpp \
-  test/test_syscoin.cpp \
-  test/test_syscoin.h \
-  test/test_random.h \
-  test/testutil.cpp \
-  test/testutil.h \
   test/timedata_tests.cpp \
+  test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
-  test/txvalidationcache_tests.cpp \
-  test/versionbits_tests.cpp \
+  test/txindex_tests.cpp \
+  test/txvalidation_tests.cpp \
   test/uint256_tests.cpp \
-  test/univalue_tests.cpp \
-  test/util_tests.cpp
+  test/util_tests.cpp \
+  test/versionbits_tests.cpp
+# FIXME: Update and re-enable these tests:
+#   miner_tests
 
 if ENABLE_WALLET
 SYSCOIN_TESTS += \
-  wallet/test/wallet_test_fixture.cpp \
-  wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
+  wallet/test/psbt_wallet_tests.cpp \
   wallet/test/wallet_tests.cpp \
-  wallet/test/crypto_tests.cpp
+  wallet/test/wallet_crypto_tests.cpp \
+  wallet/test/coinselector_tests.cpp
+
+SYSCOIN_TEST_SUITE += \
+  wallet/test/wallet_test_fixture.cpp \
+  wallet/test/wallet_test_fixture.h
 endif
 
-test_test_syscoin_SOURCES = $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_syscoin_LDADD = $(LIBSYSCOIN_SERVER) $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS)
-test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_syscoin_SOURCES = $(SYSCOIN_TEST_SUITE) $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_syscoin_LDADD =
 if ENABLE_WALLET
 test_test_syscoin_LDADD += $(LIBSYSCOIN_WALLET)
 endif
 
-test_test_syscoin_LDADD += $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+test_test_syscoin_LDADD += $(LIBSYSCOIN_SERVER) $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) \
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(LIBETHEREUM) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
+test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+
+test_test_syscoin_LDADD += $(LIBSYSCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 test_test_syscoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
 test_test_syscoin_LDADD += $(ZMQ_LIBS)
 endif
+#
+
+# test_syscoin_fuzzy binary #
+test_test_syscoin_fuzzy_SOURCES = test/test_syscoin_fuzzy.cpp
+test_test_syscoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+test_test_syscoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_syscoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+test_test_syscoin_fuzzy_LDADD = $(test_test_syscoin_LDADD)
+
+#
 
 nodist_test_test_syscoin_SOURCES = $(GENERATED_TEST_FILES)
 
@@ -180,9 +149,6 @@ CLEAN_SYSCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
 
 CLEANFILES += $(CLEAN_SYSCOIN_TEST)
 
-# This file is problematic for out-of-tree builds if it exists.
-DISTCLEANFILES += test/buildenv.pyc
-
 syscoin_test: $(TEST_BINARY)
 
 syscoin_test_check: $(TEST_BINARY) FORCE
@@ -191,28 +157,24 @@ syscoin_test_check: $(TEST_BINARY) FORCE
 syscoin_test_clean : FORCE
 	rm -f $(CLEAN_SYSCOIN_TEST) $(test_test_syscoin_OBJECTS) $(TEST_BINARY)
 
-check-local:
-	@echo "Running test/syscoin-util-test.py..."
-	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(PYTHON) $(srcdir)/test/syscoin-util-test.py
+check-local: $(SYSCOIN_TESTS:.cpp=.cpp.test)
+	@echo "Running test/util/syscoin-util-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/syscoin-util-test.py
+	@echo "Running test/util/rpcauth-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
 
-test/data/%.json.h: test/data/%.json
+%.cpp.test: %.cpp
+	@echo Running tests: `cat $< | grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1` from $<
+	$(AM_V_at)$(TEST_BINARY) -l test_suite -t "`cat $< | grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1`" > $<.log 2>&1 || (cat $<.log && false)
+
+%.json.h: %.json
 	@$(MKDIR_P) $(@D)
 	@{ \
 	 echo "namespace json_tests{" && \
-	 echo "static unsigned const char $(*F)[] = {" && \
-	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
-	 echo "};};"; \
-	} > "$@.new" && mv -f "$@.new" "$@"
-	@echo "Generated $@"
-
-test/data/%.raw.h: test/data/%.raw
-	@$(MKDIR_P) $(@D)
-	@{ \
-	 echo "namespace raw_tests{" && \
 	 echo "static unsigned const char $(*F)[] = {" && \
 	 $(HEXDUMP) -v -e '8/1 "0x%02x, "' -e '"\n"' $< | $(SED) -e 's/0x  ,//g' && \
 	 echo "};};"; \

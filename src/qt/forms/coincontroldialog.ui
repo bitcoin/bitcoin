@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>954</width>
+    <width>1000</width>
     <height>500</height>
    </rect>
   </property>
@@ -319,7 +319,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0">
+       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0">
         <property name="spacing">
          <number>14</number>
         </property>
@@ -333,22 +333,6 @@
           </property>
           <property name="text">
            <string>(un)select all</string>
-          </property>
-          <property name="autoDefault">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButtonToggleLock">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>toggle lock state</string>
           </property>
           <property name="autoDefault">
            <bool>false</bool>
@@ -387,7 +371,7 @@
         <item>
          <widget class="QLabel" name="labelLocked">
           <property name="text">
-           <string>(1 locked)</string>
+           <string notr="true">(1 locked)</string>
           </property>
          </widget>
         </item>
@@ -418,7 +402,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>11</number>
+      <number>10</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>
@@ -444,11 +428,6 @@
      <column>
       <property name="text">
        <string>Received with address</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>PS Rounds</string>
       </property>
      </column>
      <column>
@@ -508,7 +487,7 @@
   <customwidget>
    <class>CoinControlTreeWidget</class>
    <extends>QTreeWidget</extends>
-   <header>coincontroltreewidget.h</header>
+   <header>qt/coincontroltreewidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

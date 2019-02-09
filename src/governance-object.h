@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+﻿// Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -36,7 +36,7 @@ static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
 static const int GOVERNANCE_OBJECT_WATCHDOG = 3;
 
-static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (100.0*COIN);
+static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (250.0*COIN);
 
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS = 1;
@@ -141,13 +141,12 @@ private:
 
     /// time this object was marked for deletion
     int64_t nDeletionTime;
-
-    /// fee-tx
-    uint256 nCollateralHash;
-
+    
+    /// transaction collateral for the fee
+    CTransactionRef txCollateral;
+    
     /// Data field - can be used for anything
     std::vector<unsigned char> vchData;
-
     /// Masternode info for signed objects
     COutPoint masternodeOutpoint;
     std::vector<unsigned char> vchSig;
@@ -191,13 +190,13 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTime, const uint256& nCollateralHashIn, const std::string& strDataHexIn);
+    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nHeight, const CTransactionRef& txCollateralIn, const std::string& strDataHexIn);
 
     CGovernanceObject(const CGovernanceObject& other);
 
     // Public Getter methods
 
-    int64_t GetCreationTime() const {
+     int64_t GetCreationTime() const {
         return nTime;
     }
 
@@ -208,11 +207,15 @@ public:
     int GetObjectType() const {
         return nObjectType;
     }
-
-    const uint256& GetCollateralHash() const {
-        return nCollateralHash;
+    const uint256 GetCollateralHash() const {
+        if(!txCollateral->IsNull())
+            return txCollateral->GetHash();
+        else
+            return uint256();
+    }   
+    const CTransactionRef& GetCollateral() const {
+        return txCollateral;
     }
-
     const COutPoint& GetMasternodeOutpoint() const {
         return masternodeOutpoint;
     }
@@ -307,7 +310,7 @@ public:
         READWRITE(nHashParent);
         READWRITE(nRevision);
         READWRITE(nTime);
-        READWRITE(nCollateralHash);
+        READWRITE(txCollateral);
         // using new format directly
         READWRITE(vchData);
         
@@ -321,12 +324,12 @@ public:
         }
         if(s.GetType() & SER_DISK) {
             // Only include these for the disk file format
-            LogPrint("gobject", "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
             READWRITE(nDeletionTime);
             READWRITE(fExpired);
             READWRITE(mapCurrentMNVotes);
             READWRITE(fileVotes);
-            LogPrint("gobject", "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
         }
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY

@@ -1,14 +1,11 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "syscoinunits.h"
-#include "chainparams.h"
-#include "primitives/transaction.h"
+#include <qt/syscoinunits.h>
 
-#include <QSettings>
+#include <primitives/transaction.h>
+
 #include <QStringList>
 
 SyscoinUnits::SyscoinUnits(QObject *parent):
@@ -23,7 +20,7 @@ QList<SyscoinUnits::Unit> SyscoinUnits::availableUnits()
     unitlist.append(SYS);
     unitlist.append(mSYS);
     unitlist.append(uSYS);
-    unitlist.append(satoshis);
+    unitlist.append(SAT);
     return unitlist;
 }
 
@@ -34,62 +31,44 @@ bool SyscoinUnits::valid(int unit)
     case SYS:
     case mSYS:
     case uSYS:
-    case satoshis:
+    case SAT:
         return true;
     default:
         return false;
     }
 }
 
-QString SyscoinUnits::name(int unit)
+QString SyscoinUnits::longName(int unit)
 {
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
+    switch(unit)
     {
-        switch(unit)
-        {
-            case SYS: return QString("SYS");
-            case mSYS: return QString("mSYS");
-            case uSYS: return QString::fromUtf8("μSYS");
-            case satoshis: return QString("satoshis");
-            default: return QString("???");
-        }
+    case SYS: return QString("SYS");
+    case mSYS: return QString("mSYS");
+    case uSYS: return QString::fromUtf8("µSYS (bits)");
+    case SAT: return QString("Satoshi (sat)");
+    default: return QString("???");
     }
-    else
+}
+
+QString SyscoinUnits::shortName(int unit)
+{
+    switch(unit)
     {
-        switch(unit)
-        {
-            case SYS: return QString("tSYS");
-            case mSYS: return QString("mtSYS");
-            case uSYS: return QString::fromUtf8("μtSYS");
-            case satoshis: return QString("tsatoshis");
-            default: return QString("???");
-        }
+    case uSYS: return QString::fromUtf8("bits");
+    case SAT: return QString("sat");
+    default: return longName(unit);
     }
 }
 
 QString SyscoinUnits::description(int unit)
 {
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
+    switch(unit)
     {
-        switch(unit)
-        {
-            case SYS: return QString("Syscoin");
-            case mSYS: return QString("Milli-Syscoin (1 / 1" THIN_SP_UTF8 "000)");
-            case uSYS: return QString("Micro-Syscoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-            case satoshis: return QString("Ten Nano-Syscoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-            default: return QString("???");
-        }
-    }
-    else
-    {
-        switch(unit)
-        {
-            case SYS: return QString("TestSyscoins");
-            case mSYS: return QString("Milli-TestSyscoin (1 / 1" THIN_SP_UTF8 "000)");
-            case uSYS: return QString("Micro-TestSyscoin (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-            case satoshis: return QString("Ten Nano-TestSyscoin (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-            default: return QString("???");
-        }
+    case SYS: return QString("Syscoins");
+    case mSYS: return QString("Milli-Syscoins (1 / 1" THIN_SP_UTF8 "000)");
+    case uSYS: return QString("Micro-Syscoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    default: return QString("???");
     }
 }
 
@@ -97,11 +76,11 @@ qint64 SyscoinUnits::factor(int unit)
 {
     switch(unit)
     {
-    case SYS:  return 100000000;
+    case SYS: return 100000000;
     case mSYS: return 100000;
     case uSYS: return 100;
-    case satoshis: return 1;
-    default:   return 100000000;
+    case SAT: return 1;
+    default: return 100000000;
     }
 }
 
@@ -112,7 +91,7 @@ int SyscoinUnits::decimals(int unit)
     case SYS: return 8;
     case mSYS: return 5;
     case uSYS: return 2;
-    case satoshis: return 0;
+    case SAT: return 0;
     default: return 0;
     }
 }
@@ -128,9 +107,7 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
     int num_decimals = decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
     qint64 quotient = n_abs / coin;
-    qint64 remainder = n_abs % coin;
     QString quotient_str = QString::number(quotient);
-    QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
 
     // Use SI-style thin space separators as these are locale independent and can't be
     // confused with the decimal marker.
@@ -145,10 +122,13 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
     else if (fPlus && n > 0)
         quotient_str.insert(0, '+');
 
-    if (num_decimals <= 0)
+    if (num_decimals > 0) {
+        qint64 remainder = n_abs % coin;
+        QString remainder_str = QString::number(remainder).rightJustified(num_decimals, '0');
+        return quotient_str + QString(".") + remainder_str;
+    } else {
         return quotient_str;
-
-    return quotient_str + QString(".") + remainder_str;
+    }
 }
 
 
@@ -162,7 +142,7 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 
 QString SyscoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
-    return format(unit, amount, plussign, separators) + QString(" ") + name(unit);
+    return format(unit, amount, plussign, separators) + QString(" ") + shortName(unit);
 }
 
 QString SyscoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
@@ -172,23 +152,6 @@ QString SyscoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool p
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }
 
-QString SyscoinUnits::floorWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
-{
-    QSettings settings;
-    int digits = settings.value("digits").toInt();
-
-    QString result = format(unit, amount, plussign, separators);
-    if(decimals(unit) > digits) result.chop(decimals(unit) - digits);
-
-    return result + QString(" ") + name(unit);
-}
-
-QString SyscoinUnits::floorHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
-{
-    QString str(floorWithUnit(unit, amount, plussign, separators));
-    str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
-    return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
-}
 
 bool SyscoinUnits::parse(int unit, const QString &value, CAmount *val_out)
 {
@@ -234,7 +197,7 @@ QString SyscoinUnits::getAmountColumnTitle(int unit)
     QString amountTitle = QObject::tr("Amount");
     if (SyscoinUnits::valid(unit))
     {
-        amountTitle += " ("+SyscoinUnits::name(unit) + ")";
+        amountTitle += " ("+SyscoinUnits::shortName(unit) + ")";
     }
     return amountTitle;
 }
@@ -255,7 +218,7 @@ QVariant SyscoinUnits::data(const QModelIndex &index, int role) const
         {
         case Qt::EditRole:
         case Qt::DisplayRole:
-            return QVariant(name(unit));
+            return QVariant(longName(unit));
         case Qt::ToolTipRole:
             return QVariant(description(unit));
         case UnitRole:

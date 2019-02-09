@@ -1,9 +1,13 @@
-<TS language="sv" version="2.0">
+<TS language="sv" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Högerklicka för att redigera adressen eller etiketten.</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
-        <translation>Skapa en ny adress</translation>
+        <translation>Skapa ny adress</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -11,39 +15,43 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Kopiera den valda adressen till systemurklippet</translation>
+        <translation>Kopiera den markerade adressen till systemets Urklipp</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
         <translation>&amp;Kopiera</translation>
     </message>
     <message>
-        <source>Delete the currently selected address from the list</source>
-        <translation>Radera den valda adressen från listan</translation>
+        <source>C&amp;lose</source>
+        <translation>S&amp;täng</translation>
     </message>
     <message>
-        <source>&amp;Delete</source>
-        <translation>&amp;Radera</translation>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Ta bort den valda adressen från listan</translation>
+    </message>
+    <message>
+        <source>Enter address or label to search</source>
+        <translation>Ange en adress eller etikett att söka efter</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportera datan från fliken till en fil</translation>
+        <translation>Exportera informationen i aktuell flik till en fil</translation>
     </message>
     <message>
         <source>&amp;Export</source>
         <translation>&amp;Exportera</translation>
     </message>
     <message>
-        <source>C&amp;lose</source>
-        <translation>S&amp;täng</translation>
+        <source>&amp;Delete</source>
+        <translation>&amp;Radera</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Välj en adress att skicka mynt till</translation>
+        <translation>Välj en adress att skicka transaktionen till</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Välj adressen att motta mynt från</translation>
+        <translation>Välj en adress att ta emot transaktionen med</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -59,11 +67,11 @@
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>De här är dina Syscoin-adresser för att skicka betalningar. Kontrollera alltid mängden och mottagaradressen innan du skickar mynt.</translation>
+        <translation>Detta är dina Syscoin-adresser för att skicka betalningar. Kontrollera alltid summan och den mottagande adressen innan du skickar syscoin.</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>De här är dina Syscoin-adresser för betalningsmottagningar. Det rekommenderas att använda en ny mottagaradress för varje transaktion.</translation>
+        <translation>Detta är dina Syscoin-adresser för att ta emot betalningar. Det rekommenderas att använda en ny mottagningsadress för varje transaktion.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -79,7 +87,7 @@
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Exportera adresslistan</translation>
+        <translation>Exportera adresslista</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -87,9 +95,14 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Exporteringen misslyckades</translation>
+        <translation>Export misslyckades</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Ett fel inträffade när adresslistan skulle sparas till %1.
+Var vänlig och försök igen.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -109,27 +122,27 @@
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Lösenfrasdialog</translation>
+        <translation>Lösenordsdialog</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
-        <translation>Ange lösenfras</translation>
+        <translation>Ange lösenord</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Ny lösenfras</translation>
+        <translation>Nytt lösenord</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Upprepa ny lösenfras</translation>
+        <translation>Upprepa nytt lösenord</translation>
     </message>
     <message>
-        <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
-        <translation>Arbetar för att inaktivera de triviala sändpengarna när OS-kontot är komprometterat. Ger ingen reell säkerhet.</translation>
+        <source>Show password</source>
+        <translation>Visa lösenord</translation>
     </message>
     <message>
-        <source>For anonymization only</source>
-        <translation>Endast för anonymisering</translation>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Ange plånbokens nya lösenord. &lt;br/&gt; Använd ett lösenord på &lt;b&gt;tio eller fler slumpmässiga tecken,&lt;/b&gt; eller &lt;b&gt;åtta eller fler ord.&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -137,7 +150,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Denna handling kräver din plånboks lösenfras för att låsa upp plånboken.</translation>
+        <translation>Denna operation behöver din plånboks lösenord för att låsa upp plånboken.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -145,7 +158,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Denna handling kräver din plånboks lösenfras för att dekryptera plånboken.</translation>
+        <translation>Denna operation behöver din plånboks lösenord för att dekryptera plånboken.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
@@ -153,19 +166,19 @@
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Ändra lösenfras</translation>
+        <translation>Ändra lösenord</translation>
     </message>
     <message>
-        <source>Enter the old and new passphrase to the wallet.</source>
-        <translation>Skriv in den gamla och den nya lösenfrasen för plånboken.</translation>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Ge det gamla lösenordet och det nya lösenordet för plånboken.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Bekräfta plånbokskryptering</translation>
+        <translation>Bekräfta kryptering av plånbok</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYS&lt;/b&gt;!</source>
-        <translation>Varning: Om du krypterar din plånbok och förlorar din lösenfras kommer du att &lt;b&gt;FÖRLORA ALLA DINA SYS&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYSCOINS&lt;/b&gt;!</source>
+        <translation>VARNING: Om du krypterar din plånbok och glömmer ditt lösenord, kommer du att &lt;b&gt;FÖRLORA ALLA DINA SYSCOIN&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -176,84 +189,78 @@
         <translation>Plånbok krypterad</translation>
     </message>
     <message>
-        <source>Syscoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>Syscoin kommer nu att färdigställa krypteringsprocessen. Kom ihåg att krypteringen av din plånbok inte kan skydda dig helt och hållet från att dina Syscoin stjäls av skadeprogram som har infekterat din dator.</translation>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 kommer nu att stänga ner för att slutföra krypteringen. Tänk på att en krypterad plånbok inte skyddar mot stöld om din dator är infekterad med en keylogger.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>VIKTIGT: Alla tidigare säkerhetskopior du har gjort av plånboksfilen bör ersättas med den nygenererade krypterade plånboksfilen. Av säkerhetsskäl kommer tidigare säkerhetskopior av den okrypterade plånboksfilen bli oanvändbara så fort du använder den nya krypterade plånboken.</translation>
+        <translation>VIKTIGT: Alla tidigare säkerhetskopior du har skapat av plånboksfilen ska ersättas med den nyss skapade, krypterade plånboksfilen. Av säkerhetsskäl kommer tidigare säkerhetskopior av den okrypterade plånboksfilen att bli oanvändbara när du börjar använda den nya, krypterade plånboken.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Plånbokskrypteringen misslyckades</translation>
+        <translation>Kryptering av plånbok misslyckades</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
-        <translation>Plånbokskrypteringen misslyckades på grund av ett internt fel. Din plånbok krypterades inte.</translation>
+        <translation>Kryptering av plånbok misslyckades på grund av ett internt fel. Din plånbok krypterades inte.</translation>
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>Den angivna lösenfrasen överensstämmer inte.</translation>
+        <translation>De angivna lösenorden överensstämmer inte.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
-        <translation>Plånboksupplåsning misslyckades</translation>
+        <translation>Misslyckades låsa upp plånboken</translation>
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Den inmatade lösenfrasen för plånboksdekrypteringen var felaktig.</translation>
+        <translation>Lösenordet för dekryptering av plånboken var felaktigt.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Plånboksdekryptering misslyckades.</translation>
+        <translation>Dekryptering av plånbok misslyckades</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
-        <translation>Plånbokens lösenfras ändrades framgångsrikt.</translation>
+        <translation>Plånbokens lösenord ändrades.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Varning: Caps Lock är aktiverat!</translation>
+        <translation>Varning: Caps Lock är påslaget!</translation>
+    </message>
+</context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/nätmask</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Bannad tills</translation>
     </message>
 </context>
 <context>
     <name>SyscoinGUI</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core
-</translation>
+        <source>Sign &amp;message...</source>
+        <translation>Signera &amp;meddelande...</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Plånbok</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nod</translation>
+        <source>Synchronizing with network...</source>
+        <translation>Synkroniserar med nätverk...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Översikt</translation>
     </message>
     <message>
+        <source>Node</source>
+        <translation>Nod</translation>
+    </message>
+    <message>
         <source>Show general overview of wallet</source>
-        <translation>Visa allmän plånboksöversikt</translation>
-    </message>
-    <message>
-        <source>&amp;Send</source>
-        <translation>&amp;Skicka</translation>
-    </message>
-    <message>
-        <source>Send coins to a Syscoin address</source>
-        <translation>Skicka mynt till en Syscoin-adress</translation>
-    </message>
-    <message>
-        <source>&amp;Receive</source>
-        <translation>&amp;Motta</translation>
-    </message>
-    <message>
-        <source>Request payments (generates QR codes and syscoin: URIs)</source>
-        <translation>Begär betalningar (genererar QR-koder och Syscoin:-URI:s)</translation>
+        <translation>Visa generell översikt av plånboken</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -261,19 +268,23 @@
     </message>
     <message>
         <source>Browse transaction history</source>
-        <translation>Bläddra i transaktionshistoriken</translation>
+        <translation>Bläddra i transaktionshistorik</translation>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>A&amp;vsluta</translation>
+        <translation>&amp;Avsluta</translation>
     </message>
     <message>
         <source>Quit application</source>
-        <translation>Avsluta applikationen</translation>
+        <translation>Avsluta programmet</translation>
     </message>
     <message>
-        <source>&amp;About Syscoin Core</source>
-        <translation>&amp;Om Syscoin Core</translation>
+        <source>&amp;About %1</source>
+        <translation>&amp;Om %1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>Visa information om %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -288,144 +299,120 @@
         <translation>&amp;Alternativ...</translation>
     </message>
     <message>
-        <source>Modify configuration options for Syscoin</source>
-        <translation>Anpassa konfigurationsalternatv för Syscoin</translation>
-    </message>
-    <message>
-        <source>&amp;Show / Hide</source>
-        <translation>&amp;Visa/göm</translation>
-    </message>
-    <message>
-        <source>Show or hide the main Window</source>
-        <translation>Visa eller göm huvudfönstret</translation>
+        <source>Modify configuration options for %1</source>
+        <translation>Ändra konfigurationsalternativ för %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Kryptera plånbok...</translation>
     </message>
     <message>
-        <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Kryptera de privata nycklarna vilka tillhör din plånbok</translation>
-    </message>
-    <message>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;Säkerhetskopiera plånbok...</translation>
     </message>
     <message>
-        <source>Backup wallet to another location</source>
-        <translation>Säkerhetskopiera plånboken till en annan plats</translation>
-    </message>
-    <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Ändra lösenfras...</translation>
-    </message>
-    <message>
-        <source>Change the passphrase used for wallet encryption</source>
-        <translation>Ändra lösenfrasen som används för plånbokskryptering</translation>
-    </message>
-    <message>
-        <source>&amp;Unlock Wallet...</source>
-        <translation>&amp;Lås upp plånbok...</translation>
-    </message>
-    <message>
-        <source>Unlock wallet</source>
-        <translation>Lås upp plånbok</translation>
-    </message>
-    <message>
-        <source>&amp;Lock Wallet</source>
-        <translation>&amp;Lås plånbok</translation>
-    </message>
-    <message>
-        <source>Sign &amp;message...</source>
-        <translation>Signera &amp;meddelande...</translation>
-    </message>
-    <message>
-        <source>Sign messages with your Syscoin addresses to prove you own them</source>
-        <translation>Signera meddelanden med dina Syscoin-adresser för att bevisa att du äger dem</translation>
-    </message>
-    <message>
-        <source>&amp;Verify message...</source>
-        <translation>&amp;Bekräfta meddelande...</translation>
-    </message>
-    <message>
-        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
-        <translation>Bekräfta meddelanden för att garantera att de signerades med de angivna Syscoin-adresserna</translation>
-    </message>
-    <message>
-        <source>&amp;Information</source>
-        <translation>&amp;Information</translation>
-    </message>
-    <message>
-        <source>Show diagnostic information</source>
-        <translation>Visa diagnostisk information</translation>
-    </message>
-    <message>
-        <source>&amp;Debug console</source>
-        <translation>&amp;Avsökningskonsol</translation>
-    </message>
-    <message>
-        <source>Open debugging console</source>
-        <translation>Öppna avsökningskonsol</translation>
-    </message>
-    <message>
-        <source>&amp;Network Monitor</source>
-        <translation>&amp;Nätverksövervakare</translation>
-    </message>
-    <message>
-        <source>Show network monitor</source>
-        <translation>Visa nätverksövervakare</translation>
-    </message>
-    <message>
-        <source>Open &amp;Configuration File</source>
-        <translation>Öppna &amp;Konfigurationsfil</translation>
-    </message>
-    <message>
-        <source>Open configuration file</source>
-        <translation>Öppna konfigurationsfil</translation>
+        <translation>&amp;Ändra lösenord...</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Avsändaradresser...</translation>
-    </message>
-    <message>
-        <source>Show the list of used sending addresses and labels</source>
-        <translation>Visa listan för redan använda avsändaradresser och etiketter</translation>
+        <translation>Av&amp;sändaradresser...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Mottagaradresser...</translation>
-    </message>
-    <message>
-        <source>Show the list of used receiving addresses and labels</source>
-        <translation>Visa listan för redan använda mottagaradresser och etiketter</translation>
+        <translation>Mottaga&amp;radresser...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Öppna &amp;URI...</translation>
     </message>
     <message>
-        <source>Open a syscoin: URI or payment request</source>
-        <translation>Öppna en Syscoin-URI eller betalningsbegäran</translation>
+        <source>Click to disable network activity.</source>
+        <translation>Klicka för att inaktivera nätverksaktivitet.</translation>
     </message>
     <message>
-        <source>&amp;Command-line options</source>
-        <translation>&amp;Kommandoradalternativ</translation>
+        <source>Network activity disabled.</source>
+        <translation>Nätverksaktivitet inaktiverad.</translation>
     </message>
     <message>
-        <source>Show the Syscoin Core help message to get a list with possible Syscoin command-line options</source>
-        <translation>Visa Syscoin Core-hjälpmeddelandet för att få en lista med möjliga Syscoin-kommandoradalternativ</translation>
+        <source>Click to enable network activity again.</source>
+        <translation>Klicka för att aktivera nätverksaktivitet igen.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Synkar huvuden (%1%)...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Återindexerar block på disken...</translation>
+    </message>
+    <message>
+        <source>Send coins to a Syscoin address</source>
+        <translation>Skicka syscoin till en Syscoin-adress</translation>
+    </message>
+    <message>
+        <source>Backup wallet to another location</source>
+        <translation>Säkerhetskopiera plånboken till en annan plats</translation>
+    </message>
+    <message>
+        <source>Change the passphrase used for wallet encryption</source>
+        <translation>Byt lösenfras för kryptering av plånbok</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Debug-fönster</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Öppna debug- och diagnostikkonsolen</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;Verifiera meddelande...</translation>
+    </message>
+    <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Plånbok</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;Skicka</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Ta emot</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Visa / Göm</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>Visa eller göm huvudfönstret</translation>
+    </message>
+    <message>
+        <source>Encrypt the private keys that belong to your wallet</source>
+        <translation>Kryptera de privata nycklar som tillhör din plånbok</translation>
+    </message>
+    <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Signera meddelanden med dina Syscoin-adresser för att bevisa att du äger dem</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Verifiera meddelanden för att vara säker på att de signerades med angivna Syscoin-adresser</translation>
     </message>
     <message>
         <source>&amp;File</source>
-        <translation>&amp;Fil</translation>
+        <translation>&amp;Arkiv</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
         <translation>&amp;Inställningar</translation>
-    </message>
-    <message>
-        <source>&amp;Tools</source>
-        <translation>&amp;Verktyg</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -436,44 +423,52 @@
         <translation>Verktygsfält för tabbar</translation>
     </message>
     <message>
-        <source>Synchronizing with network...</source>
-        <translation>Synkroniserar med nätverk...</translation>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Begär betalningar (skapar QR-koder och syscoin: -URIer)</translation>
     </message>
     <message>
-        <source>Importing blocks from disk...</source>
-        <translation>Importerar block från disk...</translation>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>Visa listan med använda avsändaradresser och etiketter</translation>
     </message>
     <message>
-        <source>Reindexing blocks on disk...</source>
-        <translation>Återindexerar block på disk...</translation>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>Visa listan med använda mottagningsadresser och etiketter</translation>
     </message>
     <message>
-        <source>No block source available...</source>
-        <translation>Ingen tillgänglig blockkälla...</translation>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Öppna en syscoin: URI eller betalningsbegäran</translation>
     </message>
     <message>
-        <source>Up to date</source>
-        <translation>Aktuell</translation>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Kommandoradsalternativ</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n aktiva anslutningar till Syscoin-nätverket.</numerusform><numerusform>%n aktiva anslutningar till Syscoin-nätverket.</numerusform></translation>
     </message>
     <message>
-        <source>%1 and %2</source>
-        <translation>%1 och %2</translation>
+        <source>Indexing blocks on disk...</source>
+        <translation>Indexerar block på disken...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Bearbetar block på disken...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Bearbetade %n block av transaktionshistoriken.</numerusform><numerusform>Bearbetade %n block av transaktionshistoriken.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 bakom</translation>
-    </message>
-    <message>
-        <source>Catching up...</source>
-        <translation>Knappar in...</translation>
+        <translation>%1 efter</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Senast mottagna block genererades för %1 sedan.</translation>
+        <translation>Senast mottagna block skapades för %1 sedan.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Transaktioner efter denna kommer ännu inte vara synliga.</translation>
+        <translation>Transaktioner efter denna kommer inte ännu vara synliga.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -488,66 +483,109 @@
         <translation>Information</translation>
     </message>
     <message>
+        <source>Up to date</source>
+        <translation>Uppdaterad</translation>
+    </message>
+    <message>
+        <source>Show the %1 help message to get a list with possible Syscoin command-line options</source>
+        <translation>Visa %1 hjälpmeddelande för att få en lista med möjliga Syscoin kommandoradsalternativ.</translation>
+    </message>
+    <message>
+        <source>%1 client</source>
+        <translation>%1-klient</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Ansluter till noder...</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>Hämtar senaste...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Datum: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Belopp: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Typ: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Etikett: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adress: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
-        <translation>Skickad transaktion</translation>
+        <translation>Transaktion skickad</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
         <translation>Inkommande transaktion</translation>
     </message>
     <message>
-        <source>Date: %1
-Amount: %2
-Type: %3
-Address: %4
-</source>
-        <translation>Datum: %1
-Mängd: %2
-Typ: %3
-Adress: %4
-</translation>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>HD-nyckelgenerering är &lt;b&gt;aktiverad&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>HD-nyckelgenerering är &lt;b&gt;inaktiverad&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
-        <translation>Plånboken är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;olåst&lt;/b&gt;</translation>
-    </message>
-    <message>
-        <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
-        <translation>Plånboken är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;olåst&lt;/b&gt; endast för anonymisering</translation>
+        <translation>Denna plånbok är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;olåst&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
-        <translation>Plånboken är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;låst&lt;/b&gt;</translation>
+        <translation>Denna plånbok är &lt;b&gt;krypterad&lt;/b&gt; och för närvarande &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
-</context>
-<context>
-    <name>ClientModel</name>
     <message>
-        <source>Network Alert</source>
-        <translation>Nätverkslarm</translation>
+        <source>A fatal error occurred. Syscoin can no longer continue safely and will quit.</source>
+        <translation>Ett kritiskt fel uppstod. Syscoin kan inte fortsätta att köra säkert och kommer att avslutas.</translation>
     </message>
 </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Myntval</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
-        <translation>Antal:</translation>
+        <translation>Kvantitet:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation>Antal byte:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Mängd:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritet:</translation>
+        <translation>Belopp:</translation>
     </message>
     <message>
         <source>Fee:</source>
         <translation>Avgift:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Damm:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -559,23 +597,27 @@ Adress: %4
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(av)markera alla</translation>
+        <translation>(av)markera allt</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Trädmetod</translation>
+        <translation>Trädvy</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Listmetod</translation>
-    </message>
-    <message>
-        <source>(1 locked)</source>
-        <translation>(1 låst)</translation>
+        <translation>Listvy</translation>
     </message>
     <message>
         <source>Amount</source>
         <translation>Mängd</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Mottagen med etikett</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Mottagen med adress</translation>
     </message>
     <message>
         <source>Date</source>
@@ -583,16 +625,11 @@ Adress: %4
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Bekräftelser
-</translation>
+        <translation>Bekräftelser</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>Bekräftad</translation>
-    </message>
-    <message>
-        <source>Priority</source>
-        <translation>Prioritet</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -604,11 +641,11 @@ Adress: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopiera mängd</translation>
+        <translation>Kopiera belopp</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Kopiera transaktions-id</translation>
+        <translation>Kopiera transaktions-ID</translation>
     </message>
     <message>
         <source>Lock unspent</source>
@@ -620,7 +657,7 @@ Adress: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Kopiera antal</translation>
+        <translation>Kopiera kvantitet</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -632,63 +669,19 @@ Adress: %4
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Kopiera bytes</translation>
+        <translation>Kopiera byte</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Kopiera prioritet</translation>
+        <source>Copy dust</source>
+        <translation>Kopiera damm</translation>
     </message>
     <message>
         <source>Copy change</source>
         <translation>Kopiera växel</translation>
     </message>
     <message>
-        <source>highest</source>
-        <translation>högst</translation>
-    </message>
-    <message>
-        <source>higher</source>
-        <translation>högre</translation>
-    </message>
-    <message>
-        <source>high</source>
-        <translation>hög</translation>
-    </message>
-    <message>
-        <source>medium-high</source>
-        <translation>medelhög</translation>
-    </message>
-    <message>
-        <source>n/a</source>
-        <translation>E/t</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>medel</translation>
-    </message>
-    <message>
-        <source>low-medium</source>
-        <translation>medellåg</translation>
-    </message>
-    <message>
-        <source>low</source>
-        <translation>låg</translation>
-    </message>
-    <message>
-        <source>lower</source>
-        <translation>lägre</translation>
-    </message>
-    <message>
-        <source>lowest</source>
-        <translation>lägst</translation>
-    </message>
-    <message>
         <source>(%1 locked)</source>
         <translation>(%1 låst)</translation>
-    </message>
-    <message>
-        <source>none</source>
-        <translation>inga</translation>
     </message>
     <message>
         <source>yes</source>
@@ -699,28 +692,12 @@ Adress: %4
         <translation>nej</translation>
     </message>
     <message>
-        <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Denna etikett blir röd om transaktionsstorleken är större än 1000 bytes.</translation>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Denna etikett blir röd om någon mottagare får en betalning som är mindre än aktuell dammtröskel.</translation>
     </message>
     <message>
-        <source>This means a fee of at least %1 per kB is required.</source>
-        <translation>Detta innebär att en avgift om åtminstone %1 krävs per kB.</translation>
-    </message>
-    <message>
-        <source>Can vary +/- 1 byte per input.</source>
-        <translation>Kan variera +/- 1 byte per indata.</translation>
-    </message>
-    <message>
-        <source>Transactions with higher priority are more likely to get included into a block.</source>
-        <translation>Transaktioner med högre prioritet är mer benägna att inkluderas i ett block.</translation>
-    </message>
-    <message>
-        <source>This label turns red, if the priority is smaller than "medium".</source>
-        <translation>Denna etikett blir röd om prioriteten är mindre än "medel".</translation>
-    </message>
-    <message>
-        <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
-        <translation>Denna etikett blir röd om en mottagare mottar en mängd mindre än %1.</translation>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Kan variera +/- %1 satoshi per inmatning.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -736,77 +713,10 @@ Adress: %4
     </message>
 </context>
 <context>
-    <name>DarksendConfig</name>
-    <message>
-        <source>Configure Darksend</source>
-        <translation>Konfigurera Darksend</translation>
-    </message>
-    <message>
-        <source>Basic Privacy</source>
-        <translation>Grundläggande integritet</translation>
-    </message>
-    <message>
-        <source>High Privacy</source>
-        <translation>Hög integritet</translation>
-    </message>
-    <message>
-        <source>Maximum Privacy</source>
-        <translation>Maximal integritet</translation>
-    </message>
-    <message>
-        <source>Please select a privacy level.</source>
-        <translation>Vänligen välj en integritetsnivå.</translation>
-    </message>
-    <message>
-        <source>Use 2 separate masternodes to mix funds up to 100000 SYS</source>
-        <translation>Använd 2 enskilda masternoder för att mixa medel upp till 100000 SYS</translation>
-    </message>
-    <message>
-        <source>Use 8 separate masternodes to mix funds up to 100000 SYS</source>
-        <translation>Använd 8 enskilda masternoder för att mixa medel upp till 100000 SYS.</translation>
-    </message>
-    <message>
-        <source>Use 16 separate masternodes</source>
-        <translation>Använd 16 enskilda masternoder</translation>
-    </message>
-    <message>
-        <source>This option is the quickest and will cost about ~0.025 SYS to anonymize 100000 SYS</source>
-        <translation>Detta alternativ är det snabbaste och kommer att kosta omkring ~0,025 SYS för att anonymisera 100000 SYS</translation>
-    </message>
-    <message>
-        <source>This option is moderately fast and will cost about 0.05 SYS to anonymize 100000 SYS</source>
-        <translation>Detta alternativ är relativt snabbt och kommer att kosta omkring 0,05 SYS för att anonymisera 100000 SYS</translation>
-    </message>
-    <message>
-        <source>0.1 SYS per 100000 SYS you anonymize.</source>
-        <translation>0,1 SYS per 100000 SYS du anonymiserar.</translation>
-    </message>
-    <message>
-        <source>This is the slowest and most secure option. Using maximum anonymity will cost</source>
-        <translation>Detta är det långsammaste och det säkraste alternativet. Användning av maximal anonymitet kommer att kosta</translation>
-    </message>
-    <message>
-        <source>Darksend Configuration</source>
-        <translation>Darksend-konfiguration</translation>
-    </message>
-    <message>
-        <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Syscoin's configuration screen.</source>
-        <translation>Darksend ställdes framgångsrikt om till grundläggande (%1 och 2 omgångar). Du kan ändra detta när som helst genom att öppna Syscoin:s konfigurationsskärm.</translation>
-    </message>
-    <message>
-        <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Syscoin's configuration screen.</source>
-        <translation>Darksend ställdes framgångsrikt in på hög (%1 och 8 omgångar). Du kan ändra detta när som helst genom att öppna Syscoin:s konfigurationsskärm.</translation>
-    </message>
-    <message>
-        <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Syscoin's configuration screen.</source>
-        <translation>Darksend ställdes framgångsrikt in på maximal (%1 och 16 omgångar). Du kan ändra detta när som helst genom att öppna Syscoin:s konfigurationsskärm</translation>
-    </message>
-</context>
-<context>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Redigera Adress</translation>
+        <translation>Redigera adress</translation>
     </message>
     <message>
         <source>&amp;Label</source>
@@ -814,19 +724,15 @@ Adress: %4
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Den associerade etiketten med den här adresslistans inmatning</translation>
+        <translation>Etiketten associerad med denna post i adresslistan</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>Adressen associerad med denna post i adresslistan. Den kan bara ändras för sändningsadresser.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
         <translation>&amp;Adress</translation>
-    </message>
-    <message>
-        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>Den associerade adressen med den här adresslistans post. Detta kan endast ändras för avsändaradresser.</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Ny mottagaradress</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -845,16 +751,12 @@ Adress: %4
         <translation>Den angivna adressen "%1" är inte en giltig Syscoin-adress.</translation>
     </message>
     <message>
-        <source>The entered address "%1" is already in the address book.</source>
-        <translation>Den angivna adressen "%1" finns redan i adressboken.</translation>
-    </message>
-    <message>
         <source>Could not unlock wallet.</source>
-        <translation>Plånboken kunde inte låsas upp.</translation>
+        <translation>Kunde inte låsa upp plånboken.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>Nygenerering av nyckel misslyckades.</translation>
+        <translation>Misslyckades med generering av ny nyckel.</translation>
     </message>
 </context>
 <context>
@@ -869,59 +771,34 @@ Adress: %4
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Katalogen finns redan. Lägg till %1 om du tänker skapa en ny katalog här.</translation>
+        <translation>Katalogen finns redan. Lägg till %1 om du vill skapa en ny katalog här.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Sökvägen finns redan och är inte en katalog.</translation>
+        <translation>Sökvägen finns redan, och är inte en katalog.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Kan inte skapa en datakatalog här.</translation>
+        <translation>Kan inte skapa datakatalog här.</translation>
     </message>
 </context>
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core
-</translation>
-    </message>
-    <message>
         <source>version</source>
         <translation>version</translation>
     </message>
     <message>
-        <source>Usage:</source>
-        <translation>Användning:</translation>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
     </message>
     <message>
-        <source>command-line options</source>
-        <translation>kommandoradalternativ</translation>
+        <source>About %1</source>
+        <translation>Om %1</translation>
     </message>
     <message>
-        <source>UI options</source>
-        <translation>UI-alternativ</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Välj datakatalog vid uppstart (standardvärde: 0)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Ställ in språk, till exempel "de_DE" (standardvärde: system locale)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Starta minimerat</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ställ in SSL-root-certifikat för betalningsbegäranden (standardvärde: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Visa startbilden vid uppstart (standardvärde: 1)</translation>
+        <source>Command-line options</source>
+        <translation>Kommandoradsalternativ</translation>
     </message>
 </context>
 <context>
@@ -931,16 +808,20 @@ Adress: %4
         <translation>Välkommen</translation>
     </message>
     <message>
-        <source>Welcome to Syscoin Core.</source>
-        <translation>Välkommen till Syscoin Core.</translation>
+        <source>Welcome to %1.</source>
+        <translation>Välkommen till %1.</translation>
     </message>
     <message>
-        <source>As this is the first time the program is launched, you can choose where Syscoin Core will store its data.</source>
-        <translation>Då detta är första gången programmet startas kan du välja var Syscoin Core ska lagra sin data.</translation>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Eftersom detta är första gången programmet startas får du välja var %1 skall lagra sitt data.</translation>
     </message>
     <message>
-        <source>Syscoin Core will download and store a copy of the Syscoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Syscoin Core kommer att laddas ned och lagra en kopia av Syscoin:s blockkedja. Minst %1 GB data kommer att lagras i denna katalog och den kommer att växa med tiden. Plånboken kommer också att lagras i denna katalog.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>När du trycker OK kommer %1 påbörja nedladdning och bearbetning av den fulla %4-blockkedjan (%2GB), med start vid de första transaktionerna i %3 när %4 först lanserades.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Denna första synkronisering är väldigt krävande, och kan påvisa hårdvaruproblem med din dator som tidigare inte visats sig. Varje gång du kör %1, kommer nerladdningen att fortsätta där den avslutades.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -951,10 +832,93 @@ Adress: %4
         <translation>Använd en anpassad datakatalog:</translation>
     </message>
     <message>
+        <source>Syscoin</source>
+        <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Minst %1 GB data kommer att lagras i den här katalogen, och den växer över tiden.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Ungefär %1 GB data kommer att lagras i den här katalogen.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Syscoin block chain.</source>
+        <translation>%1 kommer att ladda ner och lagra en kopia av Syscoin-blockkedjan.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Plånboken lagras också i den här katalogen.</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory "%1" cannot be created.</source>
+        <translation>Fel: Angiven datakatalog "%1" kan inte skapas.</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Fel</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB fritt utrymme kvar</numerusform><numerusform>%n GB fritt utrymme kvar</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(av %n GB behövs)</numerusform><numerusform>(av %n GB behövs)</numerusform></translation>
+    </message>
+</context>
+<context>
+    <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>Formulär</translation>
+    </message>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the syscoin network, as detailed below.</source>
+        <translation>Nyligen gjorda transaktioner visas inte korrekt och därför kan din plånboks saldo visas felaktigt. Denna information kommer att visas korrekt så snart din plånbok har synkroniserat klart med Syscoin-nätverket enligt detaljer nedan.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend syscoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Att försöka spendera syscoin som påverkas av transaktioner som ännu inte visas kommer inte accepteras av nätverket. </translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation>Antal block kvar</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Okänt...</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Sista blocktid</translation>
+    </message>
+    <message>
+        <source>Progress</source>
+        <translation>Förlopp</translation>
+    </message>
+    <message>
+        <source>Progress increase per hour</source>
+        <translation>Framstegssökning per timme</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>beräknar...</translation>
+    </message>
+    <message>
+        <source>Estimated time left until synced</source>
+        <translation>Beräknad tid kvar tills synkroniserad</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Göm</translation>
+    </message>
+    <message>
+        <source>Unknown. Syncing Headers (%1)...</source>
+        <translation>Okänd. Synkar huvuden (%1)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -971,11 +935,11 @@ Adress: %4
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation>Välj betalningsbegäranfil</translation>
+        <translation>Välj betalningsbegäransfil</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
-        <translation>Välj en betalningsbegäranfil att öppna</translation>
+        <translation>Välj betalningsbegäransfil som ska öppnas</translation>
     </message>
 </context>
 <context>
@@ -986,19 +950,19 @@ Adress: %4
     </message>
     <message>
         <source>&amp;Main</source>
-        <translation>&amp;Huvud</translation>
+        <translation>&amp;Allmänt</translation>
     </message>
     <message>
-        <source>Automatically start Syscoin after logging in to the system.</source>
-        <translation>Starta Syscoin automatiskt efter systeminloggning.</translation>
+        <source>Automatically start %1 after logging in to the system.</source>
+        <translation>Starta %1 automatiskt efter inloggningen.</translation>
     </message>
     <message>
-        <source>&amp;Start Syscoin on system login</source>
-        <translation>&amp;Starta Syscoin vid systeminloggning</translation>
+        <source>&amp;Start %1 on system login</source>
+        <translation>&amp;Starta %1 vid systemlogin</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>
-        <translation>Storlek på &amp;databascache</translation>
+        <translation>Storleken på &amp;databascache</translation>
     </message>
     <message>
         <source>MB</source>
@@ -1006,63 +970,111 @@ Adress: %4
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Antal skript&amp;bekräftelsestrådar</translation>
+        <translation>Antalet skript&amp;verifikationstrådar</translation>
     </message>
     <message>
-        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = lämna så många kärnor lediga)</translation>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>Proxyns IP-adress (t.ex.  IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
-        <source>Darksend rounds to use</source>
-        <translation>Darksend-omgångar att använda</translation>
+        <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Visas, om den angivna standard-SOCKS5-proxyn används för att nå noder via den här nätverkstypen.</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off Darksend once it's reached.</source>
-        <translation>Denna mängd fungerar som en tröskel att stänga av Darksend då det har uppnåtts.</translation>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Använd separata SOCKS&amp;5-proxy för att nå noder via Tors dolda tjänster:</translation>
     </message>
     <message>
-        <source>Amount of Syscoin to keep anonymized</source>
-        <translation>Mängd Syscoin att bibehålla anonymiserade</translation>
+        <source>Hide the icon from the system tray.</source>
+        <translation>Göm ikonen från aktivitetsfältet.</translation>
     </message>
     <message>
-        <source>W&amp;allet</source>
-        <translation>P&amp;lånbok</translation>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;Göm ikonen</translation>
     </message>
     <message>
-        <source>Expert</source>
-        <translation>Expert</translation>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
+        <translation>Minimera istället för att stänga programmet när fönstret stängs. När detta alternativ är aktiverat stängs programmet endast genom att välja Stäng i menyn.</translation>
     </message>
     <message>
-        <source>Whether to show coin control features or not.</source>
-        <translation>Om myntkontrollfunktioner ska visas eller inte</translation>
+        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
+        <translation>Tredjeparts URL:er (t.ex. en blockutforskare) som finns i transaktionstabben som ett menyval i sammanhanget. %s i URL:en ersätts med tansaktionshashen. Flera URL:er är separerade med vertikala streck |.</translation>
     </message>
     <message>
-        <source>Enable coin &amp;control features</source>
-        <translation>Aktivera mynt&amp;kontrollfunktioner</translation>
+        <source>Active command-line options that override above options:</source>
+        <translation>Aktiva kommandoradsalternativ som ersätter alternativen ovan:</translation>
     </message>
     <message>
-        <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Spendera obekräftad växel</translation>
+        <source>Open the %1 configuration file from the working directory.</source>
+        <translation>Öppna konfigurationsfilen %1 från arbetskatalogen.</translation>
+    </message>
+    <message>
+        <source>Open Configuration File</source>
+        <translation>Öppna Konfigurationsfil</translation>
+    </message>
+    <message>
+        <source>Reset all client options to default.</source>
+        <translation>Återställ alla klientinställningar till förvalen.</translation>
+    </message>
+    <message>
+        <source>&amp;Reset Options</source>
+        <translation>&amp;Återställ alternativ</translation>
     </message>
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Nätverk</translation>
     </message>
     <message>
+        <source>(0 = auto, &lt;0 = leave that many cores free)</source>
+        <translation>(0 = auto, &lt;0 = lämna så många kärnor lediga)</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>&amp;Plånbok</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation>Expert</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Aktivera mynt&amp;kontrollfunktioner</translation>
+    </message>
+    <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
+        <translation>Om du avaktiverar spendering av obekräftad växel, kan inte växeln från en transaktion användas förrän transaktionen har minst en bekräftelse. Detta påverkar också hur ditt saldo beräknas.</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>&amp;Spendera obekräftad växel</translation>
+    </message>
+    <message>
         <source>Automatically open the Syscoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Öppna Syscoin:s klientport automatiskt på routern. Detta fungerar bara om din router stöder UPnP och är aktiverad.</translation>
+        <translation>Öppna automatiskt Syscoin-klientens port på routern. Detta fungerar endast om din router stödjer UPnP och det är är aktiverat.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
-        <translation>Kartlägg port med hjälp av &amp;UPnP</translation>
+        <translation>Tilldela port med hjälp av &amp;UPnP</translation>
+    </message>
+    <message>
+        <source>Accept connections from outside.</source>
+        <translation>Acceptera anslutningar utifrån.</translation>
+    </message>
+    <message>
+        <source>Allow incomin&amp;g connections</source>
+        <translation>Tillåt ankommande anslutningar</translation>
+    </message>
+    <message>
+        <source>Connect to the Syscoin network through a SOCKS5 proxy.</source>
+        <translation>Anslut till Syscoin-nätverket genom en SOCKS5-proxy.</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation>&amp;Anslut genom SOCKS5-proxy (förvald proxy):</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
         <translation>Proxy-&amp;IP: </translation>
-    </message>
-    <message>
-        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>Proxyns IP-adress (t.ex. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
@@ -1073,20 +1085,36 @@ Adress: %4
         <translation>Proxyns port (t.ex. 9050)</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Används för att nå noder via:</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Syscoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Anslut till Syscoin-nätverket genom en separat SOCKS5-proxy för dolda tjänster i Tor.</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Fönster</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
-        <translation>Visa endast en systemfältikon vid fönsterminimering.</translation>
+        <translation>Visa endast en systemfältsikon vid minimering.</translation>
     </message>
     <message>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
-        <translation>&amp;Minimera till systemfältet istället för till aktivitetsfältet</translation>
-    </message>
-    <message>
-        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
-        <translation>Minimera applikationen istället för att stänga ner den när fönstret stängs. När detta alternativ är aktiverat kommer applikationen endast att stängas efter att man väljer Avsluta i menyn.</translation>
+        <translation>&amp;Minimera till systemfältet istället för aktivitetsfältet</translation>
     </message>
     <message>
         <source>M&amp;inimize on close</source>
@@ -1098,45 +1126,27 @@ Adress: %4
     </message>
     <message>
         <source>User Interface &amp;language:</source>
-        <translation>Användargränssnitt&amp;språk: </translation>
+        <translation>Användargränssnittets &amp;språk: </translation>
     </message>
     <message>
-        <source>The user interface language can be set here. This setting will take effect after restarting Syscoin.</source>
-        <translation>Användargränssnittspråket kan ställas in här. Denna inställning träder i kraft efter att Syscoin startats om.</translation>
-    </message>
-    <message>
-        <source>Language missing or translation incomplete? Help contributing translations here:
-https://www.transifex.com/projects/p/syscoin/</source>
-        <translation>Fattas språk eller är det en ofullständig översättning? Hjälp till att bidra med översättningar här:
-https://www.transifex.com/projects/p/syscoin/</translation>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>Användargränssnittets språk kan ställas in här. Denna inställning träder i kraft efter en omstart av %1.</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Enhet att visa mängder i: </translation>
+        <translation>&amp;Måttenhet att visa belopp i: </translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Välj standardindelningenheten som ska visas i gränssnittet och när mynt skickas.</translation>
+        <translation>Välj en måttenhet att visa i gränssnittet och när du skickar mynt.</translation>
     </message>
     <message>
-        <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Tredjeparts-URL:er (t.ex. en blockutforskare) som finns i transaktionstabben som ett menyval i sammanhanget. %s i URL:en ersätts med transaktionshashen. Flera URL:er är avskilda med det vertikala strecket: |.</translation>
+        <source>Whether to show coin control features or not.</source>
+        <translation>Om myntkontrollfunktioner skall visas eller inte</translation>
     </message>
     <message>
-        <source>Third party transaction URLs</source>
-        <translation>Tredjeparttransaktion-URL:er</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktiva kommandoradalternativ som åsidosätter alternativen ovan:</translation>
-    </message>
-    <message>
-        <source>Reset all client options to default.</source>
-        <translation>Återställ alla klientinställningar till standardvärden.</translation>
-    </message>
-    <message>
-        <source>&amp;Reset Options</source>
-        <translation>&amp;Återställ Alternativ</translation>
+        <source>&amp;Third party transaction URLs</source>
+        <translation>&amp;URL:er för tredjepartstransaktioner</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1148,7 +1158,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>default</source>
-        <translation>standardvärde</translation>
+        <translation>standard</translation>
     </message>
     <message>
         <source>none</source>
@@ -1156,23 +1166,39 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Bekräfta alternativåterställning</translation>
+        <translation>Bekräfta att alternativen ska återställs</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
-        <translation>Klientomstart krävs för att aktivera ändringar.</translation>
+        <translation>Klientomstart är nödvändig för att aktivera ändringarna.</translation>
     </message>
     <message>
-        <source>Client will be shutdown, do you want to proceed?</source>
-        <translation>Klienten kommer att stängas ned, vill du fortsätta?</translation>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <translation>Programmet kommer att stängas. Vill du fortsätta?</translation>
+    </message>
+    <message>
+        <source>Configuration options</source>
+        <translation>Konfigurationsalternativ</translation>
+    </message>
+    <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <translation>Konfigurationsfilen används för att ange avancerade användaralternativ som överskrider GUI-inställningarna. Dessutom kommer alla kommandoradsalternativ att överskrida denna konfigurationsfil.</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Fel</translation>
+    </message>
+    <message>
+        <source>The configuration file could not be opened.</source>
+        <translation>Konfigurationsfilen kunde inte öppnas.</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
-        <translation>Denna ändring kommer att kräva en klientomstart.</translation>
+        <translation>Denna ändring kräver en klientomstart.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Den angivna proxyadressen är ogiltig.</translation>
+        <translation>Den angivna proxy-adressen är ogiltig.</translation>
     </message>
 </context>
 <context>
@@ -1183,7 +1209,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Syscoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Den visade informationen kan vara utdaterad. Din plånbok synkroniseras automatiskt med Syscoin-nätverket efter att en anslutning har etablerats men denna process har ännu inte slutförts.</translation>
+        <translation>Den visade informationen kan vara inaktuell. Plånboken synkroniseras automatiskt med Syscoin-nätverket efter att anslutningen är upprättad, men denna process har inte slutförts ännu.</translation>
+    </message>
+    <message>
+        <source>Watch-only:</source>
+        <translation>Granska-bara:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1191,7 +1221,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Your current spendable balance</source>
-        <translation>Ditt nuvarande spenderbara saldo</translation>
+        <translation>Ditt tillgängliga saldo</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -1199,7 +1229,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
-        <translation>Totala antalet transaktioner som ännu inte har bekräftats och som ännu inte räknas med i spenderbart saldo.</translation>
+        <translation>Totalt antal transaktioner som ännu inte bekräftats, och som ännu inte räknas med i aktuellt saldo</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -1207,7 +1237,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Det utvunna saldot som ännu inte har mognat</translation>
+        <translation>Genererat saldo som ännu inte har mognat</translation>
+    </message>
+    <message>
+        <source>Balances</source>
+        <translation>Saldon</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1215,117 +1249,31 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>Ditt totalsaldo för närvarande</translation>
+        <translation>Ditt aktuella totala saldo</translation>
     </message>
     <message>
-        <source>Status:</source>
-        <translation>Status:</translation>
+        <source>Your current balance in watch-only addresses</source>
+        <translation>Ditt aktuella saldo i granska-bara adresser</translation>
     </message>
     <message>
-        <source>Enabled/Disabled</source>
-        <translation>Aktiverad/inaktiverad</translation>
+        <source>Spendable:</source>
+        <translation>Spenderbar:</translation>
     </message>
     <message>
-        <source>Completion:</source>
-        <translation>Förlopp:</translation>
+        <source>Recent transactions</source>
+        <translation>Nyligen genomförda transaktioner</translation>
     </message>
     <message>
-        <source>Darksend Balance:</source>
-        <translation>Darksend-medel:</translation>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation>Obekräftade transaktioner till granska-bara adresser</translation>
     </message>
     <message>
-        <source>Amount and Rounds:</source>
-        <translation>Mängd och omgångar:</translation>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation>Genererat saldo i granska-bara adresser som ännu inte har mognat</translation>
     </message>
     <message>
-        <source>0 SYS / 0 Rounds</source>
-        <translation>0 SYS/0 omgångar</translation>
-    </message>
-    <message>
-        <source>Submitted Denom:</source>
-        <translation>Inmatad denom:</translation>
-    </message>
-    <message>
-        <source>n/a</source>
-        <translation>E/t</translation>
-    </message>
-    <message>
-        <source>Darksend</source>
-        <translation>Darksend</translation>
-    </message>
-    <message>
-        <source>Start/Stop Mixing</source>
-        <translation>Starta/stoppa mixning</translation>
-    </message>
-    <message>
-        <source>(Last Message)</source>
-        <translation>(Senaste meddelande)</translation>
-    </message>
-    <message>
-        <source>Try to manually submit a Darksend request.</source>
-        <translation>Försök att lämna in en Darksend-begäran manuellt.</translation>
-    </message>
-    <message>
-        <source>Try Mix</source>
-        <translation>Försök att mixa</translation>
-    </message>
-    <message>
-        <source>Reset the current status of Darksend (can interrupt Darksend if it's in the process of Mixing, which can cost you money!)</source>
-        <translation>Återställ den nuvarande Darksend-statusen (kan störa Darksend om den håller på att mixa vilket kan kosta dig pengar!)</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation>Återställ</translation>
-    </message>
-    <message>
-        <source>out of sync</source>
-        <translation>osynkroniserad</translation>
-    </message>
-    <message>
-        <source>Disabled</source>
-        <translation>Inaktiverad</translation>
-    </message>
-    <message>
-        <source>Start Darksend Mixing</source>
-        <translation>Påbörja Darksend-mixning</translation>
-    </message>
-    <message>
-        <source>Stop Darksend Mixing</source>
-        <translation>Stoppa Darksend-mixning</translation>
-    </message>
-    <message>
-        <source>No inputs detected</source>
-        <translation>Inga inmatningar hittades</translation>
-    </message>
-    <message>
-        <source>Enabled</source>
-        <translation>Aktiverad</translation>
-    </message>
-    <message>
-        <source>Last Darksend message:
-</source>
-        <translation>Senaste Darksend-meddelande:
-
-
-
-
-</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>E/t</translation>
-    </message>
-    <message>
-        <source>Darksend was successfully reset.</source>
-        <translation>Darksend återställdes framgångsrikt.</translation>
-    </message>
-    <message>
-        <source>Darksend requires at least %1 to use.</source>
-        <translation>Darksend kräver åtminstone %1 att använda.</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
-        <translation>Plånboken är låst och användaren avböjde upplåsning. Inaktiverar Darksend.</translation>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Aktuellt totalt saldo i granska-bara adresser</translation>
     </message>
 </context>
 <context>
@@ -1336,7 +1284,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Cannot start syscoin: click-to-pay handler</source>
-        <translation>Kan inte starta syscoin: klicka-för-att-betala hanterare</translation>
+        <translation>Kan inte starta syscoin: klicka-och-betala hanteraren</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1344,47 +1292,210 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>Betalningsbegäran för att hämta-URL är ogiltig: %1</translation>
+        <translation>Hämtningsadressen för betalningsbegäran är ogiltig: %1</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Ogiltig betalningsadress %1</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
+        <translation>URI kan inte parsas! Detta kan orsakas av en ogiltig Syscoin-adress eller felaktiga URI-parametrar.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
-        <translation>Hantering av betalningsbegäranfil</translation>
+        <translation>Hantering av betalningsbegäransfil</translation>
+    </message>
+    <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>Betalningsbegäransfilen kan inte läsas! Detta kan orsakas av en ogiltig betalningsbegäransfil.</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Betalningsbegäran avslogs</translation>
+    </message>
+    <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Betalningsbegärans nätverk matchar inte klientens nätverk.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Betalningsbegäran löpte ut.</translation>
+    </message>
+    <message>
+        <source>Payment request is not initialized.</source>
+        <translation>Betalningsbegäran är inte initierad.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Obekräftade betalningsbegäranden till anpassade betalningsskript stöds inte.</translation>
+        <translation>Overifierade betalningsbegäranden till anpassade betalningsskript stöds inte.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Ogiltig betalningsbegäran.</translation>
     </message>
     <message>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Den begärda betalningsmängden om %1 är för smått (anses vara damm).</translation>
+        <translation>Begärd betalning av %1 är för liten (betraktas som damm).</translation>
     </message>
     <message>
         <source>Refund from %1</source>
         <translation>Återbetalning från %1</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Betalningsbegäran %1 är för stor (%2 bytes, tillåten %3 bytes).</translation>
+    </message>
+    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Kommunikationsfel med %1: %2</translation>
     </message>
     <message>
+        <source>Payment request cannot be parsed!</source>
+        <translation>Betalningsbegäran kan inte parsas!</translation>
+    </message>
+    <message>
         <source>Bad response from server %1</source>
-        <translation>Dålig respons från server %1</translation>
+        <translation>Felaktigt svar från server %1</translation>
     </message>
     <message>
         <source>Network request error</source>
-        <translation>Fel vid närverksbegäran</translation>
+        <translation>Fel vid nätverksbegäran</translation>
     </message>
     <message>
         <source>Payment acknowledged</source>
-        <translation>Betalning erkänd</translation>
+        <translation>Betalningen bekräftad</translation>
     </message>
 </context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>User Agent</source>
+        <translation>Användaragent</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>Nod/Tjänst</translation>
+    </message>
+    <message>
+        <source>NodeId</source>
+        <translation>Nod-ID</translation>
+    </message>
+    <message>
+        <source>Ping</source>
+        <translation>Ping</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Skickad</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Mottagen</translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
-    </context>
+    <message>
+        <source>Amount</source>
+        <translation>Mängd</translation>
+    </message>
+    <message>
+        <source>Enter a Syscoin address (e.g. %1)</source>
+        <translation>Ange en Syscoin-adress (t.ex. %1)</translation>
+    </message>
+    <message>
+        <source>%1 d</source>
+        <translation>%1 d</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 h</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 s</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Ingen</translation>
+    </message>
+    <message>
+        <source>N/A</source>
+        <translation>ej tillgänglig</translation>
+    </message>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n sekund</numerusform><numerusform>%n sekunder</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minut</numerusform><numerusform>%n minuter</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n timme</numerusform><numerusform>%n timmar</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dag</numerusform><numerusform>%n dagar</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n vecka</numerusform><numerusform>%n veckor</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 och %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n år</numerusform><numerusform>%n år</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 B</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 KB</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 MB</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>%1 didn't yet exit safely...</source>
+        <translation>%1 avslutades inte ännu säkert...</translation>
+    </message>
+    <message>
+        <source>unknown</source>
+        <translation>okänd</translation>
+    </message>
+</context>
+<context>
+    <name>QObject::QObject</name>
+    <message>
+        <source>Error: Specified data directory "%1" does not exist.</source>
+        <translation>Fel: Angiven datakatalog "%1" finns inte.</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>Fel: %1</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1407,96 +1518,192 @@ https://www.transifex.com/projects/p/syscoin/</translation>
 <context>
     <name>RPCConsole</name>
     <message>
-        <source>Tools window</source>
-        <translation>Verktygsfönster</translation>
+        <source>N/A</source>
+        <translation>ej tillgänglig</translation>
+    </message>
+    <message>
+        <source>Client version</source>
+        <translation>Klient-version</translation>
     </message>
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Information</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>Debug fönster</translation>
+    </message>
+    <message>
         <source>General</source>
-        <translation>Allmänt</translation>
+        <translation>Generell</translation>
     </message>
     <message>
-        <source>Name</source>
-        <translation>Namn</translation>
+        <source>Using BerkeleyDB version</source>
+        <translation>Använder BerkeleyDB versionen</translation>
     </message>
     <message>
-        <source>Client name</source>
-        <translation>Klientnamn</translation>
-    </message>
-    <message>
-        <source>N/A</source>
-        <translation>E/t</translation>
-    </message>
-    <message>
-        <source>Number of connections</source>
-        <translation>Antal anslutningar</translation>
-    </message>
-    <message>
-        <source>Open the Syscoin debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Öppna Syscoins avsökningsloggfil från den nuvarande datakatalogen. Detta kan ta ett par sekunder för stora loggfiler.</translation>
-    </message>
-    <message>
-        <source>&amp;Open</source>
-        <translation>&amp;Öppna</translation>
+        <source>Datadir</source>
+        <translation>Datakatalog</translation>
     </message>
     <message>
         <source>Startup time</source>
-        <translation>Uppstarttid</translation>
+        <translation>Uppstartstid</translation>
     </message>
     <message>
         <source>Network</source>
         <translation>Nätverk</translation>
     </message>
     <message>
-        <source>Last block time</source>
-        <translation>Senaste blocktid</translation>
+        <source>Name</source>
+        <translation>Namn</translation>
     </message>
     <message>
-        <source>Debug log file</source>
-        <translation>Avsökningsloggfil</translation>
-    </message>
-    <message>
-        <source>Using OpenSSL version</source>
-        <translation>Använder OpenSSL-version</translation>
-    </message>
-    <message>
-        <source>Build date</source>
-        <translation>Kompileringsdatum</translation>
-    </message>
-    <message>
-        <source>Current number of blocks</source>
-        <translation>Nuvarande antal block</translation>
-    </message>
-    <message>
-        <source>Client version</source>
-        <translation>Klientversion</translation>
+        <source>Number of connections</source>
+        <translation>Antalet anslutningar</translation>
     </message>
     <message>
         <source>Block chain</source>
         <translation>Blockkedja</translation>
     </message>
     <message>
-        <source>&amp;Console</source>
-        <translation>&amp;Konsol</translation>
+        <source>Current number of blocks</source>
+        <translation>Aktuellt antal block</translation>
     </message>
     <message>
-        <source>Clear console</source>
-        <translation>Rensa konsollen</translation>
+        <source>Memory Pool</source>
+        <translation>Minnespool</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Aktuellt antal transaktioner</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Minnesåtgång</translation>
+    </message>
+    <message>
+        <source>&amp;Reset</source>
+        <translation>&amp;Återställ</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Mottagen</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Skickad</translation>
+    </message>
+    <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;Klienter</translation>
+    </message>
+    <message>
+        <source>Banned peers</source>
+        <translation>Bannade noder</translation>
+    </message>
+    <message>
+        <source>Select a peer to view detailed information.</source>
+        <translation>Välj en klient för att se detaljerad information.</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>Vitlistad</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <translation>Riktning</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Version</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>Startblock</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>Synkade huvuden</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Synkade block</translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>Användaragent</translation>
+    </message>
+    <message>
+        <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Öppna %1 debug-loggfilen från aktuell datakatalog. Detta kan ta några sekunder för stora loggfiler.</translation>
+    </message>
+    <message>
+        <source>Decrease font size</source>
+        <translation>Minska fontstorleken</translation>
+    </message>
+    <message>
+        <source>Increase font size</source>
+        <translation>Öka fontstorleken</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>Tjänster</translation>
+    </message>
+    <message>
+        <source>Ban Score</source>
+        <translation>Banpoäng</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>Anslutningstid</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>Senast sänt</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>Senast mottagen</translation>
+    </message>
+    <message>
+        <source>Ping Time</source>
+        <translation>Pingtid</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>Tidsåtgången för en aktuell utestående ping.</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Pingväntetid</translation>
+    </message>
+    <message>
+        <source>Min Ping</source>
+        <translation>Min Ping</translation>
+    </message>
+    <message>
+        <source>Time Offset</source>
+        <translation>Tidsförskjutning</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>Sista blocktid</translation>
+    </message>
+    <message>
+        <source>&amp;Open</source>
+        <translation>&amp;Öppna</translation>
+    </message>
+    <message>
+        <source>&amp;Console</source>
+        <translation>&amp;Konsol</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
         <translation>&amp;Nätverkstrafik</translation>
     </message>
     <message>
-        <source>&amp;Clear</source>
-        <translation>&amp;Rensa</translation>
-    </message>
-    <message>
         <source>Totals</source>
-        <translation>Sammanlagt</translation>
+        <translation>Totalt:</translation>
     </message>
     <message>
         <source>In:</source>
@@ -1507,71 +1714,127 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Ut:</translation>
     </message>
     <message>
-        <source>Welcome to the Syscoin RPC console.</source>
-        <translation>Välkommen till Syscoins RPC-konsol.</translation>
+        <source>Debug log file</source>
+        <translation>Debugloggfil</translation>
     </message>
     <message>
-        <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
-        <translation>Använd upp- och ner-pilarna för att navigera i historiken och &lt;b&gt;Ctrl-L&lt;/b&gt; för att rensa skärmen.</translation>
+        <source>Clear console</source>
+        <translation>Rensa konsollen</translation>
     </message>
     <message>
-        <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
-        <translation>Skriv &lt;b&gt;help&lt;/b&gt; för en översikt av alla tillgängliga kommandon.</translation>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;timme</translation>
     </message>
     <message>
-        <source>%1 B</source>
-        <translation>%1 B</translation>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;dag</translation>
     </message>
     <message>
-        <source>%1 KB</source>
-        <translation>%1 KB</translation>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;vecka</translation>
     </message>
     <message>
-        <source>%1 MB</source>
-        <translation>%1 MB</translation>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;år</translation>
     </message>
     <message>
-        <source>%1 GB</source>
-        <translation>%1 GB</translation>
+        <source>&amp;Disconnect</source>
+        <translation>&amp;Koppla ner</translation>
     </message>
-    </context>
+    <message>
+        <source>Ban for</source>
+        <translation>Blockera i</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation>&amp;Ta bort blockering</translation>
+    </message>
+    <message>
+        <source>Welcome to the %1 RPC console.</source>
+        <translation>Välkommen till %1 RPC-konsolen.</translation>
+    </message>
+    <message>
+        <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
+        <translation>Använd upp- och ner-pilarna för att navigera i historiken, och %1 för att rensa skärmen.</translation>
+    </message>
+    <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Skriv %1 för att få en överblick över tillgängliga kommandon.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>För mer information om att använda denna konsol, skriv %1.</translation>
+    </message>
+    <message>
+        <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
+        <translation>VARNING: Bedragare är kända för att be användare skriva olika kommandon här, varpå de stjäl plånböckernas innehåll. Använd inte konsolen utan att fullt ut förstå konsekvenserna av ett visst kommando.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled</source>
+        <translation>Nätverksaktivitet inaktiverad</translation>
+    </message>
+    <message>
+        <source>(node id: %1)</source>
+        <translation>(nod-id: %1)</translation>
+    </message>
+    <message>
+        <source>via %1</source>
+        <translation>via %1</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>aldrig</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>Inkommande</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>Utgående</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nej</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Okänd</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
-        <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>Åt&amp;eranvänd en befintlig mottagaradress (rekommenderas inte)</translation>
-    </message>
-    <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Syscoin network.</source>
-        <translation>Ett valfritt meddelande att bifoga betalningsbegärandet vilket kommer att visas när begärandet öppnas. Observera: Meddelandet kommer inte att skickas med betalningen över Syscoin-nätverket.</translation>
-    </message>
-    <message>
-        <source>&amp;Message:</source>
-        <translation>&amp;Meddelande:</translation>
-    </message>
-    <message>
-        <source>An optional label to associate with the new receiving address.</source>
-        <translation>En valfri etikett att kopplas samman med den nya mottagaradressen.</translation>
-    </message>
-    <message>
-        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation>Använd detta formulär för att begära betalningar. Alla fält är &lt;b&gt;valfria&lt;/b&gt;.</translation>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Belopp:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etikett:</translation>
     </message>
     <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;Meddelande:</translation>
+    </message>
+    <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Syscoin network.</source>
+        <translation>Ett valfritt meddelande att bifoga betalningsbegäran, vilket visas när begäran öppnas. Obs: Meddelandet kommer inte att sändas med betalningen över Syscoin-nätverket.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address.</source>
+        <translation>En valfri etikett att associera med den nya mottagningsadressen.</translation>
+    </message>
+    <message>
+        <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
+        <translation>Använd detta formulär för att begära betalningar. Alla fält är  &lt;b&gt;valfria&lt;/b&gt;.</translation>
+    </message>
+    <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation>En valfri summa att begära. Lämna denna tom eller nollad för att inte begära en specifik summa.</translation>
-    </message>
-    <message>
-        <source>&amp;Amount:</source>
-        <translation>&amp;Mängd:</translation>
-    </message>
-    <message>
-        <source>&amp;Request payment</source>
-        <translation>&amp;Begär betalning</translation>
+        <translation>En valfri summa att begära. Lämna denna tom eller noll för att inte begära en specifik summa.</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -1583,11 +1846,15 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Requested payments history</source>
-        <translation>Begärd betalningshistorik</translation>
+        <translation>Historik för begärda betalningar</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>Begä&amp;r betalning</translation>
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Visa de valda begäranden (gör samma som vid ett dubbelklick på en inmatning)</translation>
+        <translation>Visa valda begäranden (gör samma som att dubbelklicka på en post)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1595,11 +1862,15 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation>Ta bort de valda inmatningarna från listan</translation>
+        <translation>Ta bort valda poster från listan</translation>
     </message>
     <message>
         <source>Remove</source>
         <translation>Ta bort</translation>
+    </message>
+    <message>
+        <source>Copy URI</source>
+        <translation>Kopiera URI</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1611,7 +1882,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopiera mängd</translation>
+        <translation>Kopiera belopp</translation>
     </message>
 </context>
 <context>
@@ -1638,7 +1909,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Payment information</source>
-        <translation>Betalningsinformation</translation>
+        <translation>Betalinformaton</translation>
     </message>
     <message>
         <source>URI</source>
@@ -1650,7 +1921,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Mängd</translation>
+        <translation>Belopp</translation>
     </message>
     <message>
         <source>Label</source>
@@ -1661,12 +1932,16 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Meddelande</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Plånbok</translation>
+    </message>
+    <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
-        <translation>Den slutgiltiga URI:n är för lång, försök att korta ned texten för etiketten/meddelandet.</translation>
+        <translation>URI:n är för lång, försöka minska texten för etikett / meddelande.</translation>
     </message>
     <message>
         <source>Error encoding URI into QR Code.</source>
-        <translation>Fel vid kodning av URI till QR-kod.</translation>
+        <translation>Fel vid skapande av QR-kod från URI.</translation>
     </message>
 </context>
 <context>
@@ -1684,27 +1959,27 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Meddelande</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Mängd</translation>
-    </message>
-    <message>
         <source>(no label)</source>
-        <translation>(ingen etikett)</translation>
+        <translation>(Ingen etikett)</translation>
     </message>
     <message>
         <source>(no message)</source>
         <translation>(inget meddelande)</translation>
     </message>
     <message>
-        <source>(no amount)</source>
-        <translation>(ingen mängd)</translation>
+        <source>(no amount requested)</source>
+        <translation>(inget belopp begärt)</translation>
+    </message>
+    <message>
+        <source>Requested</source>
+        <translation>Begärt</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Skicka mynt</translation>
+        <translation>Skicka pengar</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -1712,7 +1987,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Inputs...</source>
-        <translation>Indatan...</translation>
+        <translation>Inmatningar...</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -1724,31 +1999,19 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Quantity:</source>
-        <translation>Antal:</translation>
+        <translation>Kvantitet:</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Bytes:</translation>
+        <translation>Antal Byte:</translation>
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Mängd:</translation>
-    </message>
-    <message>
-        <source>Priority:</source>
-        <translation>Prioritet:</translation>
-    </message>
-    <message>
-        <source>medium</source>
-        <translation>medel</translation>
+        <translation>Belopp:</translation>
     </message>
     <message>
         <source>Fee:</source>
         <translation>Avgift:</translation>
-    </message>
-    <message>
-        <source>no</source>
-        <translation>nej</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -1760,27 +2023,59 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Om denna är aktiverad men växeladressen är tom eller ogiltig kommer växeln att skickas till en nygenererad adress.</translation>
+        <translation>Om denna är aktiverad men växeladressen är tom eller ogiltig kommer växeln att sändas till en nyss skapad adress.</translation>
     </message>
     <message>
         <source>Custom change address</source>
-        <translation>Specialväxeladress</translation>
+        <translation>Anpassad växeladress</translation>
     </message>
     <message>
-        <source>Confirm the send action</source>
-        <translation>Bekräfta sändningshandlingen</translation>
+        <source>Transaction Fee:</source>
+        <translation>Transaktionsavgift:</translation>
     </message>
     <message>
-        <source>S&amp;end</source>
-        <translation>S&amp;kicka</translation>
+        <source>Choose...</source>
+        <translation>Välj...</translation>
     </message>
     <message>
-        <source>Clear all fields of the form.</source>
-        <translation>Rensa alla formulärfälten</translation>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>Med standardavgiften riskerar en transaktion ta timmar eller dagar för att bekräftas, om den ens gör det. Överväg att själv välja avgift alternativt vänta tills du har validerat hela kedjan.</translation>
     </message>
     <message>
-        <source>Clear &amp;All</source>
-        <translation>Rensa &amp;alla</translation>
+        <source>Warning: Fee estimation is currently not possible.</source>
+        <translation>Varning: Avgiftsberäkning är för närvarande inte möjlig.</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>Fäll ihop avgiftsinställningarna</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>per kilobyte</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Göm</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
+        <translation>Att bara betala den minsta avgiften är helt ok så länge transaktionsvolymen är mindre än ledigt utrymme i blocken. Men tänk på att det kan bli en en transaktion som aldrig bekräftas om efterfrågan på syscoin-transaktioner är större än vad nätverket kan hantera.</translation>
+    </message>
+    <message>
+        <source>(read the tooltip)</source>
+        <translation>(läs verktygstips)</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>Rekommenderad:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>Anpassad:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Smartavgiften är inte initierad än. Detta tar vanligen några block...)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1791,24 +2086,48 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Lägg till &amp;mottagare</translation>
     </message>
     <message>
-        <source>Darksend</source>
-        <translation>Darksend</translation>
+        <source>Clear all fields of the form.</source>
+        <translation>Rensa alla formulärfälten</translation>
     </message>
     <message>
-        <source>InstantX</source>
-        <translation>InstantX</translation>
+        <source>Dust:</source>
+        <translation>Damm:</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation>Bekräftelsestidsmål:</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Möjliggör ersättande avgift</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Med ersättande avgift (BIP-125) kan du höja transaktionsavgiften efter att transaktionen redan skickats. Om du väljer bort det kan en högre avgift rekommenderas för att kompensera för ökad risk för förhöjd transaktionstid.</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation>Rensa &amp;alla</translation>
     </message>
     <message>
         <source>Balance:</source>
         <translation>Saldo:</translation>
     </message>
     <message>
+        <source>Confirm the send action</source>
+        <translation>Bekräfta sändåtgärden</translation>
+    </message>
+    <message>
+        <source>S&amp;end</source>
+        <translation>&amp;Skicka</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
-        <translation>Kopiera antal</translation>
+        <translation>Kopiera kvantitet</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopiera mängd</translation>
+        <translation>Kopiera belopp</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -1820,35 +2139,19 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Kopiera bytes</translation>
+        <translation>Kopiera byte</translation>
     </message>
     <message>
-        <source>Copy priority</source>
-        <translation>Kopiera prioritet</translation>
+        <source>Copy dust</source>
+        <translation>Kopiera damm</translation>
     </message>
     <message>
         <source>Copy change</source>
         <translation>Kopiera växel</translation>
     </message>
     <message>
-        <source>using</source>
-        <translation>använder</translation>
-    </message>
-    <message>
-        <source>anonymous funds</source>
-        <translation>anonyma medel</translation>
-    </message>
-    <message>
-        <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation>(darksend kräver att denna mängd avrundas uppåt till närmaste %1)</translation>
-    </message>
-    <message>
-        <source>any available funds (not recommended)</source>
-        <translation>vilka tillgängliga medel som helst (rekommenderas inte)</translation>
-    </message>
-    <message>
-        <source>and InstantX</source>
-        <translation>och InstantX</translation>
+        <source>%1 (%2 blocks)</source>
+        <translation>%1 (%2 block)</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -1859,44 +2162,68 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Är du säker på att du vill skicka?</translation>
     </message>
     <message>
-        <source>are added as transaction fee</source>
-        <translation>läggs till som en transaktionsavgift</translation>
+        <source>or</source>
+        <translation>eller</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Du kan välja att höja avgiften senare (med ersättande avgift, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Transaktionsavgift</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Använder inte ersättande avgift, BIP-125.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Bekräfta myntsändning</translation>
+        <translation>Bekräfta att mynt ska skickas</translation>
     </message>
     <message>
-        <source>The recipient address is not valid, please recheck.</source>
-        <translation>Mottagaradressen är inte giltig, vänligen kontrollera igen.</translation>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Mottagarens adress är ogiltig. Kontrollera igen.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
-        <translation>Betalningsmängden måste vara större än 0.</translation>
+        <translation>Det betalade beloppet måste vara större än 0.</translation>
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>Mängden överstiger ditt saldo.</translation>
+        <translation>Beloppet överstiger ditt saldo.</translation>
     </message>
     <message>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>Totalsumman överstiger ditt saldo när transaktionsavgiften %1 inkluderas.</translation>
+        <translation>Totalbeloppet överstiger ditt saldo när transaktionsavgiften %1 är pålagd.</translation>
     </message>
     <message>
-        <source>Duplicate address found, can only send to each address once per send operation.</source>
-        <translation>Dubblettadress hittad, kan endast skicka till en adress åt gången vid varje sändningshandling.</translation>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Dubblettadress hittades: adresser skall endast användas en gång var.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>Transaktionsskapandet misslyckades!</translation>
+        <translation>Transaktionen gick inte att skapa!</translation>
     </message>
     <message>
-        <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>Transaktionen avslogs! Detta kan hända om några av mynten i din plånbok redan har spenderats, t.ex. om du har använt en kopia av wallet.dat och mynt spenderades i kopian men inte har markerats som spenderade här.</translation>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>Transaktionen avvisades med följande orsak: %1</translation>
     </message>
     <message>
-        <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation>Fel: Plånboken låstes upp enbart för att anonymisera mynt.</translation>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>En avgift högre än %1 anses vara en absurd hög avgift.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Betalningsbegäran löpte ut.</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Betala endast den nödvändiga avgiften på %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Uppskattas till att påbörja bekräftelse inom %n block.</numerusform><numerusform>Uppskattas till att påbörja bekräftelse inom %n block.</numerusform></translation>
     </message>
     <message>
         <source>Warning: Invalid Syscoin address</source>
@@ -1907,23 +2234,43 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Varning: Okänd växeladress</translation>
     </message>
     <message>
+        <source>Confirm custom change address</source>
+        <translation>Bekräfta anpassad växeladress</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>Den adress du valt för växel ingår inte i denna plånbok. Eventuella eller alla pengar i din plånbok kan komma att skickas till den här adressen. Är du säker?</translation>
+    </message>
+    <message>
         <source>(no label)</source>
-        <translation>(Ingen etikett)</translation>
+        <translation>(ingen etikett)</translation>
     </message>
 </context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>Detta är en vanlig betalning.</translation>
+        <source>A&amp;mount:</source>
+        <translation>&amp;Belopp:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
         <translation>Betala &amp;Till:</translation>
     </message>
     <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Etikett:</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
-        <translation>Välj en tidigare använd adress</translation>
+        <translation>Välj tidigare använda adresser</translation>
+    </message>
+    <message>
+        <source>This is a normal payment.</source>
+        <translation>Detta är en normal betalning.</translation>
+    </message>
+    <message>
+        <source>The Syscoin address to send the payment to</source>
+        <translation>Syscoin-adress att sända betalning till</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1931,7 +2278,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Klistra in adressen från urklippet</translation>
+        <translation>Klistra in adress från Urklipp</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -1939,31 +2286,39 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Remove this entry</source>
-        <translation>Ta bort denna inmatning</translation>
+        <translation>Radera denna post</translation>
     </message>
     <message>
-        <source>&amp;Label:</source>
-        <translation>&amp;Etikett:</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less syscoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Avgiften dras från beloppet som skickas. Mottagaren kommer att ta emot mindre syscoin än du angivit i beloppsfältet. Om flera mottagare valts kommer avgiften att fördelas jämt.</translation>
     </message>
     <message>
-        <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Ange en etikett för denna adress att läggas till i listan för använda adresser</translation>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>S&amp;ubtrahera avgiften från beloppet</translation>
     </message>
     <message>
-        <source>A&amp;mount:</source>
-        <translation>M&amp;ängd:</translation>
+        <source>Use available balance</source>
+        <translation>Använd tillgängligt saldo</translation>
     </message>
     <message>
         <source>Message:</source>
         <translation>Meddelande:</translation>
     </message>
     <message>
-        <source>A message that was attached to the syscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Syscoin network.</source>
-        <translation>Ett meddelande som bifogades till Syscoin: URI vilket kommer att lagras med transaktionen så att du vet. Observera: Meddelandet kommer inte att skickas över Syscoin-nätverket.</translation>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Detta är en oautentiserad betalningsbegäran.</translation>
     </message>
     <message>
-        <source>This is an unverified payment request.</source>
-        <translation>Detta är en obekräftad betalningsbegäran.</translation>
+        <source>This is an authenticated payment request.</source>
+        <translation>Detta är en autentiserad betalningsbegäran.</translation>
+    </message>
+    <message>
+        <source>Enter a label for this address to add it to the list of used addresses</source>
+        <translation>Ange en etikett för denna adress för att lägga till den i listan med använda adresser</translation>
+    </message>
+    <message>
+        <source>A message that was attached to the syscoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Syscoin network.</source>
+        <translation>Ett meddelande som bifogades syscoin: -URIn och som lagras med transaktionen som referens. NB: Meddelandet kommer inte att sändas över Syscoin-nätverket.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1974,42 +2329,49 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>PM:</translation>
     </message>
     <message>
-        <source>This is a verified payment request.</source>
-        <translation>Detta är en bekräftad betalningsbegäran.</translation>
-    </message>
-    <message>
         <source>Enter a label for this address to add it to your address book</source>
         <translation>Ange en etikett för denna adress för att lägga till den i din adressbok</translation>
     </message>
 </context>
 <context>
+    <name>SendConfirmationDialog</name>
+    <message>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+</context>
+<context>
     <name>ShutdownWindow</name>
     <message>
-        <source>Syscoin Core is shutting down...</source>
-        <translation>Syscoin Core stängs ned...</translation>
+        <source>%1 is shutting down...</source>
+        <translation>%1 stängs av...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
-        <translation>Stäng inte av datorn förrän detta fönster försvinner.</translation>
+        <translation>Stäng inte av datorn förrän denna ruta försvinner.</translation>
     </message>
 </context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
         <source>Signatures - Sign / Verify a Message</source>
-        <translation>Signaturer - Signera/bekräfta ett Meddelande</translation>
+        <translation>Signaturer - Signera / Verifiera ett Meddelande</translation>
     </message>
     <message>
         <source>&amp;Sign Message</source>
         <translation>&amp;Signera Meddelande</translation>
     </message>
     <message>
-        <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Du kan signera meddelanden med dina adresser för att bevisa att du äger dem. Var försiktig med att inte skriva på någonting oklart då phishing-attacker kan försöka lura dig till att skriva över din identitet till dem. Signera endast väldetaljerade uppgifter du samtycker till.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive syscoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Du kan signera meddelanden/avtal med dina adresser för att bevisa att du kan ta emot syscoin som skickats till dem. Var försiktig så du inte signerar något oklart eller konstigt, eftersom phishing-angrepp kan försöka få dig att signera över din identitet till dem. Signera endast väldetaljerade meddelanden som du godkänner.</translation>
+    </message>
+    <message>
+        <source>The Syscoin address to sign the message with</source>
+        <translation>Syscoin-adress att signera meddelandet med</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Välj en tidigare använd adress</translation>
+        <translation>Välj tidigare använda adresser</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2017,7 +2379,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Paste address from clipboard</source>
-        <translation>Klistra in adressen från urklippet</translation>
+        <translation>Klistra in adress från Urklipp</translation>
     </message>
     <message>
         <source>Alt+P</source>
@@ -2033,7 +2395,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Kopiera den nuvarande valda signaturen till systemurklippet</translation>
+        <translation>Kopiera signaturen till systemets Urklipp</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Syscoin address</source>
@@ -2045,7 +2407,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Reset all sign message fields</source>
-        <translation>Återställ alla fält för signaturmeddelanden</translation>
+        <translation>Rensa alla fält</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2053,27 +2415,31 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>&amp;Bekräfta Meddelande</translation>
+        <translation>&amp;Verifiera Meddelande</translation>
     </message>
     <message>
-        <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation>Skriv in signeringsadressen, meddelandet, (försäkra dig om att du kopierar linjeavbrott, mellanslag, flikar med mera) och signera nedtill för att verifiera meddelandet. Var försiktig med att inte läsa in mer i signaturen än vad som finns i det signerade meddelandet för att undvika att bli lurad av en mellanhandattack.</translation>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Ange mottagarens adress, meddelande (kopiera radbrytningar, mellanslag, TAB-tecken, osv. exakt) och signatur nedan, för att verifiera meddelandet. Undvik att läsa in mera information i signaturen än vad som stod i själva det signerade meddelandet, för att undvika ett man-in-the-middle-angrepp. Notera att detta endast bevisar att den signerande parten tar emot med adressen, det bevisar inte vem som skickat transaktionen!</translation>
+    </message>
+    <message>
+        <source>The Syscoin address the message was signed with</source>
+        <translation>Syscoin-adress som meddelandet signerades med</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Syscoin address</source>
-        <translation>Bekräfta meddelandet för att försäkra dig om att den signerades med den angivna Syscoin-adressen</translation>
+        <translation>Verifiera meddelandet för att vara säker på att det signerades med angiven Syscoin-adress</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Bekräfta &amp;Meddelande</translation>
+        <translation>Verifiera &amp;Meddelande</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
-        <translation>Återställ alla fält för bekräftelsemeddelanden</translation>
+        <translation>Rensa alla fält</translation>
     </message>
     <message>
         <source>Click "Sign Message" to generate signature</source>
-        <translation>Klicka på "Signera Meddelande" för att generera en signatur</translation>
+        <translation>Klicka "Signera Meddelande" för att skapa en signatur</translation>
     </message>
     <message>
         <source>The entered address is invalid.</source>
@@ -2081,7 +2447,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Vänligen kontrollera adressen och försök igen.</translation>
+        <translation>Vad god kontrollera adressen och försök igen.</translation>
     </message>
     <message>
         <source>The entered address does not refer to a key.</source>
@@ -2089,19 +2455,19 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation>Plånboksupplåsningen avbröts.</translation>
+        <translation>Upplåsningen av plånboken avbröts.</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
-        <translation>Privatnyckeln för den inmatade adressen är inte tillgänglig.</translation>
+        <translation>Den privata nyckeln för den angivna adressen är inte tillgänglig.</translation>
     </message>
     <message>
         <source>Message signing failed.</source>
-        <translation>Meddelandesignering misslyckades.</translation>
+        <translation>Signeringen av meddelandet misslyckades.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation>Meddelandet signerades.</translation>
+        <translation>Meddelande signerat.</translation>
     </message>
     <message>
         <source>The signature could not be decoded.</source>
@@ -2109,40 +2475,23 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
-        <translation>Vänligen kontrollera signaturen och försök igen.</translation>
+        <translation>Kontrollera signaturen och försök igen.</translation>
     </message>
     <message>
         <source>The signature did not match the message digest.</source>
-        <translation>Signaturen överensstämde inte med meddelandesammandraget.</translation>
+        <translation>Signaturen matchade inte meddelandesammanfattningen.</translation>
     </message>
     <message>
         <source>Message verification failed.</source>
-        <translation>Meddelandebekräftelsen misslyckades.</translation>
+        <translation>Meddelandeverifikation misslyckades.</translation>
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Meddelandet bekräftades.</translation>
+        <translation>Meddelande verifierat.</translation>
     </message>
 </context>
 <context>
     <name>SplashScreen</name>
-    <message>
-        <source>Syscoin Core</source>
-        <translation>Syscoin Core
-</translation>
-    </message>
-    <message>
-        <source>Version %1</source>
-        <translation>Version %1</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoin Core-utvecklarna</translation>
-    </message>
-    <message>
-        <source>The Syscoin Core developers</source>
-        <translation>Syscoin Core-utvecklarna</translation>
-    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -2157,29 +2506,33 @@ https://www.transifex.com/projects/p/syscoin/</translation>
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Öppet för %n mer block</numerusform><numerusform>Öppet för %n mer block</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
-        <translation>Öppen till %1</translation>
+        <translation>Öppet till %1</translation>
     </message>
     <message>
-        <source>conflicted</source>
-        <translation>konflikterad</translation>
+        <source>conflicted with a transaction with %1 confirmations</source>
+        <translation>konflikt med en transaktion med %1 konfirmationer</translation>
     </message>
     <message>
-        <source>%1/offline (verified via instantx)</source>
-        <translation>%1/offline (bekräftad genom instantx)</translation>
+        <source>0/unconfirmed, %1</source>
+        <translation>0/obekräftade, %1</translation>
     </message>
     <message>
-        <source>%1/confirmed (verified via instantx)</source>
-        <translation>%1/bekräftad (bekräftad genom instantx)</translation>
+        <source>in memory pool</source>
+        <translation>i minnespoolen</translation>
     </message>
     <message>
-        <source>%1 confirmations (verified via instantx)</source>
-        <translation>%1/bekräftelser (bekräftad genom instantx)</translation>
+        <source>not in memory pool</source>
+        <translation>ej i minnespoolen</translation>
     </message>
     <message>
-        <source>%1/offline</source>
-        <translation>%1/offline</translation>
+        <source>abandoned</source>
+        <translation>övergiven</translation>
     </message>
     <message>
         <source>%1/unconfirmed</source>
@@ -2190,32 +2543,8 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>%1 bekräftelser</translation>
     </message>
     <message>
-        <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation>%1/offline (InstantX-bekräftelse under behandling - %2 av %3 signaturer)</translation>
-    </message>
-    <message>
-        <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation>%1/bekräftad (InstantX-bekräftelse under behandling - %2 av %3 signaturer)</translation>
-    </message>
-    <message>
-        <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation>%1 bekräftelser (InstantX-bekräftelse under behandling - %2 av %3 signaturer)</translation>
-    </message>
-    <message>
-        <source>%1/offline (InstantX verification failed)</source>
-        <translation>%1/offline (InstantX-bekräftelse misslyckades)</translation>
-    </message>
-    <message>
-        <source>%1/confirmed (InstantX verification failed)</source>
-        <translation>%1/bekräftad (InstantX-bekräftelse misslyckades)</translation>
-    </message>
-    <message>
         <source>Status</source>
         <translation>Status</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>,har ännu inte framgångsrikt utsänts.</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2246,6 +2575,10 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>egen adress</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>granska-bara</translation>
+    </message>
+    <message>
         <source>label</source>
         <translation>etikett</translation>
     </message>
@@ -2253,13 +2586,25 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <source>Credit</source>
         <translation>Kredit</translation>
     </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>mognar om %n mer block</numerusform><numerusform>mognar om %n fler block</numerusform></translation>
+    </message>
     <message>
         <source>not accepted</source>
         <translation>inte accepterad</translation>
     </message>
     <message>
         <source>Debit</source>
-        <translation>Debet</translation>
+        <translation>Belasta</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Total debet</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Total kredit</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -2267,7 +2612,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Net amount</source>
-        <translation>Nettomängd</translation>
+        <translation>Nettobelopp</translation>
     </message>
     <message>
         <source>Message</source>
@@ -2282,16 +2627,24 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Transaktions-ID</translation>
     </message>
     <message>
+        <source>Transaction total size</source>
+        <translation>Transaktionens totala storlek</translation>
+    </message>
+    <message>
+        <source>Output index</source>
+        <translation>Utmatningsindex</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Handlare</translation>
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Genererade mynt måste vänta %1 block innan de kan användas. När du genererade detta block utsändes det till nätverket för att läggas till i blockkedjan. Om blocket inte kommer in i kedjan kommer dess tillstånd att ändras till "ej accepterad" och kommer inte att kunna spenderas. Detta kan ibland hända om en annan nod genererar ett block inom ett par sekunder från ditt.</translation>
+        <translation>Skapade mynt måste mogna i %1 block innan de kan spenderas. När du skapade detta block sändes det till nätverket för att läggas till i blockkedjan. Om blocket inte kommer in i kedjan kommer dess status att ändras till "ej accepterat" och går inte att spendera. Detta kan ibland hända om en annan nod skapar ett block nästan samtidigt som dig.</translation>
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Avsökningsinformation</translation>
+        <translation>Debug information</translation>
     </message>
     <message>
         <source>Transaction</source>
@@ -2299,11 +2652,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Indatan</translation>
+        <translation>Inmatningar</translation>
     </message>
     <message>
         <source>Amount</source>
-        <translation>Mängd</translation>
+        <translation>Belopp:</translation>
     </message>
     <message>
         <source>true</source>
@@ -2311,18 +2664,18 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>false</source>
-        <translation>falskt</translation>
+        <translation>falsk</translation>
     </message>
 </context>
 <context>
     <name>TransactionDescDialog</name>
     <message>
-        <source>Transaction details</source>
-        <translation>Transaktionsdetaljer</translation>
+        <source>This pane shows a detailed description of the transaction</source>
+        <translation>Den här panelen visar en detaljerad beskrivning av transaktionen</translation>
     </message>
     <message>
-        <source>This pane shows a detailed description of the transaction</source>
-        <translation>Den här panelen visar en detaljerad transaktionsbeskrivning</translation>
+        <source>Details for %1</source>
+        <translation>Detaljer för %1</translation>
     </message>
 </context>
 <context>
@@ -2336,44 +2689,44 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Typ</translation>
     </message>
     <message>
-        <source>Address</source>
-        <translation>Adress</translation>
+        <source>Label</source>
+        <translation>Etikett</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Öppet för %n mer block</numerusform><numerusform>Öppet för %n fler block</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
-        <translation>Öppen till %1</translation>
-    </message>
-    <message>
-        <source>Offline</source>
-        <translation>Offline</translation>
+        <translation>Öppet till %1</translation>
     </message>
     <message>
         <source>Unconfirmed</source>
-        <translation>Obekräftad</translation>
+        <translation>Obekräftade</translation>
+    </message>
+    <message>
+        <source>Abandoned</source>
+        <translation>Övergiven</translation>
     </message>
     <message>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation>Bekräftar (%1 of %2 rekommenderade bekräftelser)</translation>
+        <translation>Bekräftar (%1 av %2 rekommenderade bekräftelser)</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
-        <translation>Bekräftat (%1 bekräftelser)</translation>
+        <translation>Bekräftad (%1 bekräftelser)</translation>
     </message>
     <message>
         <source>Conflicted</source>
-        <translation>Konflikterad</translation>
+        <translation>Konflikt</translation>
     </message>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation>Omogen (%1 bekräftelser, kommer att bli tillgänglig efter %2)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Det här blocket togs inte emot av några andra noder och kommer troligtvis inte att accepteras!</translation>
+        <translation>Omogen (%1 bekräftelser, blir tillgänglig efter %2)</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
-        <translation>Genererad men inte accepterad</translation>
+        <translation>Skapad men inte accepterad</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2381,11 +2734,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Received from</source>
-        <translation>Mottagen från</translation>
-    </message>
-    <message>
-        <source>Received via Darksend</source>
-        <translation>Mottagen genom Darksend</translation>
+        <translation>Mottaget från</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -2397,35 +2746,23 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Utvunnen</translation>
+        <translation>Genererade</translation>
     </message>
     <message>
-        <source>Darksend Denominate</source>
-        <translation>Darksend-denomination</translation>
-    </message>
-    <message>
-        <source>Darksend Collateral Payment</source>
-        <translation>Darskends-säkerhetsbetalning</translation>
-    </message>
-    <message>
-        <source>Darksend Make Collateral Inputs</source>
-        <translation>Darksend-skapa säkerhetsinmatningar</translation>
-    </message>
-    <message>
-        <source>Darksend Create Denominations</source>
-        <translation>Darksend-skapa denominationer</translation>
-    </message>
-    <message>
-        <source>Darksent</source>
-        <translation>Darksent-(skickat)</translation>
+        <source>watch-only</source>
+        <translation>granska-bara</translation>
     </message>
     <message>
         <source>(n/a)</source>
-        <translation>(e/t)</translation>
+        <translation>(n/a)</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(ingen etikett)</translation>
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>Transaktionsstatus. Håll muspekaren över detta fält för att se bekräftelseantal.</translation>
+        <translation>Transaktionsstatus. Håll muspekaren över för att se antal bekräftelser.</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
@@ -2436,12 +2773,16 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Transaktionstyp.</translation>
     </message>
     <message>
-        <source>Destination address of transaction.</source>
-        <translation>Transaktionens destinationsadress.</translation>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Anger om en granska-bara--adress är involverad i denna transaktion.</translation>
+    </message>
+    <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Användardefinierat syfte/ändamål för transaktionen.</translation>
     </message>
     <message>
         <source>Amount removed from or added to balance.</source>
-        <translation>Mängd draget eller tillagt till saldot.</translation>
+        <translation>Belopp draget eller tillagt till saldo.</translation>
     </message>
 </context>
 <context>
@@ -2464,11 +2805,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Last month</source>
-        <translation>Förra månaden</translation>
+        <translation>Föregående månad</translation>
     </message>
     <message>
         <source>This year</source>
-        <translation>Detta år</translation>
+        <translation>Det här året</translation>
     </message>
     <message>
         <source>Range...</source>
@@ -2483,44 +2824,32 @@ https://www.transifex.com/projects/p/syscoin/</translation>
         <translation>Skickad till</translation>
     </message>
     <message>
-        <source>Darksent</source>
-        <translation>Darksent-(skickat)</translation>
-    </message>
-    <message>
-        <source>Darksend Make Collateral Inputs</source>
-        <translation>Darksend-skapa säkerhetsinmatningar</translation>
-    </message>
-    <message>
-        <source>Darksend Create Denominations</source>
-        <translation>Darksend-skapa denominationer</translation>
-    </message>
-    <message>
-        <source>Darksend Denominate</source>
-        <translation>Darksend-denomination</translation>
-    </message>
-    <message>
-        <source>Darksend Collateral Payment</source>
-        <translation>Darskends-säkerhetsbetalning</translation>
-    </message>
-    <message>
         <source>To yourself</source>
         <translation>Till dig själv</translation>
     </message>
     <message>
         <source>Mined</source>
-        <translation>Utvunnen</translation>
+        <translation>Genererade</translation>
     </message>
     <message>
         <source>Other</source>
-        <translation>Andra</translation>
+        <translation>Övriga</translation>
     </message>
     <message>
-        <source>Enter address or label to search</source>
-        <translation>Skriv in en adress eller etikett för att söka</translation>
+        <source>Enter address, transaction id, or label to search</source>
+        <translation>Ange adress, transaktions-id eller etikett för att söka</translation>
     </message>
     <message>
         <source>Min amount</source>
-        <translation>Minsta mängd</translation>
+        <translation>Minsta belopp</translation>
+    </message>
+    <message>
+        <source>Abandon transaction</source>
+        <translation>Avbryt transaktionen</translation>
+    </message>
+    <message>
+        <source>Increase transaction fee</source>
+        <translation>Öka transaktionsavgift</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -2532,11 +2861,19 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Kopiera mängd</translation>
+        <translation>Kopiera belopp</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
         <translation>Kopiera transaktions-ID</translation>
+    </message>
+    <message>
+        <source>Copy raw transaction</source>
+        <translation>Kopiera rå transaktion</translation>
+    </message>
+    <message>
+        <source>Copy full transaction details</source>
+        <translation>Kopiera alla transaktionsdetaljerna</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2552,11 +2889,15 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Kommaseparerad fil (*. csv)</translation>
+        <translation>Kommaseparerad fil (*.csv)</translation>
     </message>
     <message>
         <source>Confirmed</source>
         <translation>Bekräftad</translation>
+    </message>
+    <message>
+        <source>Watch-only</source>
+        <translation>Enbart granskning</translation>
     </message>
     <message>
         <source>Date</source>
@@ -2580,11 +2921,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Exporteringen misslyckades</translation>
+        <translation>Export misslyckades</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation>Det inträffade ett fel vid försöket med att spara transaktionshistoriken till %1.</translation>
+        <translation>Ett fel inträffade när transaktionshistoriken skulle sparas till %1.</translation>
     </message>
     <message>
         <source>Exporting Successful</source>
@@ -2592,11 +2933,11 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
-        <translation>Transaktionshistoriken sparades framgångsrikt till %1.</translation>
+        <translation>Transaktionshistoriken sparades till %1.</translation>
     </message>
     <message>
         <source>Range:</source>
-        <translation>Period:</translation>
+        <translation>Räckvidd:</translation>
     </message>
     <message>
         <source>to</source>
@@ -2605,21 +2946,57 @@ https://www.transifex.com/projects/p/syscoin/</translation>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
-    </context>
+    <message>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation>&amp;Enhet att visa belopp i. Klicka för att välja annan enhet.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation>Ingen plånbok har fyllts på.</translation>
+        <translation>Ingen plånbok har lästs in.</translation>
     </message>
 </context>
 <context>
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>Skicka mynt</translation>
+        <translation>Skicka Syscoins</translation>
     </message>
-    </context>
+    <message>
+        <source>Increasing transaction fee failed</source>
+        <translation>Ökning av avgiften lyckades inte</translation>
+    </message>
+    <message>
+        <source>Do you want to increase the fee?</source>
+        <translation>Vill du öka avgiften?</translation>
+    </message>
+    <message>
+        <source>Current fee:</source>
+        <translation>Aktuell avgift:</translation>
+    </message>
+    <message>
+        <source>Increase:</source>
+        <translation>Öka:</translation>
+    </message>
+    <message>
+        <source>New fee:</source>
+        <translation>Ny avgift:</translation>
+    </message>
+    <message>
+        <source>Confirm fee bump</source>
+        <translation>Bekräfta avgiftshöjning</translation>
+    </message>
+    <message>
+        <source>Can't sign transaction.</source>
+        <translation>Kan ej signera transaktion.</translation>
+    </message>
+    <message>
+        <source>Could not commit transaction</source>
+        <translation>Kunde inte skicka transaktion</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2628,7 +3005,7 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Exportera datan i den nuvarande fliken till en fil</translation>
+        <translation>Exportera informationen i aktuell flik till en fil</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -2636,15 +3013,15 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation>Plånboksdata (*.dat)</translation>
+        <translation>Plånboks-data (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
-        <translation>Säkerhetskopieringen misslyckades</translation>
+        <translation>Säkerhetskopiering misslyckades</translation>
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Det inträffade ett fel vid försöket att spara plånboksdatan till %1.</translation>
+        <translation>Ett fel inträffade när plånbokens data skulle sparas till %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -2652,522 +3029,342 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation>Plånbokens data sparades utan problem till %1.</translation>
+        <translation>Plånbokens data sparades till %1.</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>syscoin-core</name>
     <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Sammanbind till fastställd adress och avlyssna alltid den. Använd [host]:port-notation för IPv6</translation>
+        <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
+        <translation>Distribuerad under MIT mjukvarulicens, se den bifogade filen %s eller %s</translation>
     </message>
     <message>
-        <source>Cannot obtain a lock on data directory %s. Syscoin Core is probably already running.</source>
-        <translation>Kan inte erhålla ett lås på datakatalog %s. Syscoin Core körs förmodligen redan.</translation>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Beskärning konfigurerad under miniminivån %d MiB. Vänligen använd ett högre värde.</translation>
     </message>
     <message>
-        <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation>Darksend använder exakta denominationsmängder för att skicka medel, du kanske måste anonymisera fler mynt.</translation>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Beskärning: sista plånbokssynkroniseringen ligger utanför beskuren data. Du måste använda -reindex (ladda ner hela blockkedjan igen eftersom noden beskurits)</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Gå in i regressionstestläget, vilken använder en särskild kedja i vilken block kan lösas direkt.</translation>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Omskanningar kan inte göras i beskuret läge. Du måste använda -reindex vilket kommer ladda ner hela blockkedjan igen.</translation>
     </message>
     <message>
-        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation>Fel: Lyssnande på inkommande anslutningar misslyckades (avlyssna återkommande fel %s)</translation>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Fel: Ett kritiskt internt fel uppstod, se debug.log för detaljer</translation>
     </message>
     <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Exekvera kommandot när ett viktigt larm mottas eller vi ser en jättelång förgrening (%s i cmd ersätts av ett meddelande)</translation>
+        <source>Pruning blockstore...</source>
+        <translation>Rensar blockstore...</translation>
     </message>
     <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Exekvera kommandot när en plånbokstransaktion ändras (%s i cmd ersätts av TxID) </translation>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>Kunde inte starta HTTP-server. Se avlusningsloggen för detaljer.</translation>
     </message>
     <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Exekvera kommandot när det bästa blocket ändras (%s i cmd ersätts av blockhash)</translation>
+        <source>Syscoin Core</source>
+        <translation>Syscoin Core</translation>
     </message>
     <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>I detta läge kontrollerar -genproclimit hur många block som genereras omedelbart.</translation>
+        <source>The %s developers</source>
+        <translation>%s-utvecklarna</translation>
     </message>
     <message>
-        <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation>InstantX kräver indatan med åtminstone 6 bekräftelser. Du kanske måste vänta ett par minuter och försöka igen.</translation>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Kan inte låsa data-mappen %s. %s körs förmodligen redan.</translation>
     </message>
     <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Namnge för att skapa en url för en KeePass-inmatning som lagrar plånbokslösenfrasen.</translation>
+        <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Fel vid läsning av %s! Alla nycklar lästes korrekt, men transaktionsdata eller poster i adressboken kanske saknas eller är felaktiga.</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation>Förfrågan till peer-adresser via DNS-lookup, om det är brist på adresser (standardvärde:1 unless -connect)</translation>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
+        <translation>Vänligen kolla så att din dators datum och tid är korrekt! Om din klocka går fel kommer %s inte att fungera korrekt.</translation>
     </message>
     <message>
-        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation>Ställ in en maximal storlek för högprioriterade/lågavgiftstransaktioner i byte (standard: %d)</translation>
+        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
+        <translation>Var snäll och bidra om du finner %s användbar. Besök %s för mer information om mjukvaran.</translation>
     </message>
     <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Ställ in antalet skriptbekräftelsetrådar till (%u till %d, 0 = auto, &lt;0 = lämna så många kärnor fria, standard: %d)</translation>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>Blockdatabasen innehåller ett block som verkar vara från framtiden. Detta kan vara på grund av att din dators datum och tid är felaktiga. Bygg bara om blockdatabasen om du är säker på att datorns datum och tid är korrekt</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation>Detta är en förhandsutgiven testkompilering - använd på egen risk - använd inte för utvinning eller handlarapplikationer.</translation>
+        <translation>Detta är ett förhandstestbygge - använd på egen risk - använd inte för brytning eller handelsapplikationer</translation>
     </message>
     <message>
-        <source>Unable to bind to %s on this computer. Syscoin Core is probably already running.</source>
-        <translation>Det går inte att binda till %s till denna dator. Syscoin Core körs förmodligen redan.</translation>
+        <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
+        <translation>Kunde inte spela om block. Du kommer att behöva bygga om databasen med -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation>Kunde inte hitta tillräckliga Darksend-denominationsmedel för denna transaktion.</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 100000 SYS.</source>
-        <translation>Kunde inte hitta tillräckliga Darksend-icke-denominationsmedel för denna transaktion som inte är likvärdiga 100000 SYS.</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Varning: -paytxfee är väldigt högt satt! Detta är transaktionsavgiften du kommer att få betala om du skickar en transaktion.</translation>
+        <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
+        <translation>Kan inte spola tillbaka databasen till obeskärt läge. Du måste ladda ner blockkedjan igen</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>Varning: Nätverket verkar inte hålla med helt och hållet! Några utvinnare verkar uppleva problem.</translation>
+        <translation>Varning: Nätverket verkar inte vara helt överens! Några brytare verkar ha problem.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation>Varning: Vi verkar inte överensstämma med våra peers! Du kanske måste uppgradera eller så måste andra noder uppgradera.</translation>
+        <translation>Varning: Vi verkar inte helt överens med våra peers! Du kan behöva uppgradera, eller andra noder kan behöva uppgradera.</translation>
     </message>
     <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Varning: Fel vid läsning av wallet.dat! Alla nycklar lästes korrekt men transaktionsdatan eller adressbokposterna kanske saknas eller är felaktiga.</translation>
+        <source>%d of last 100 blocks have unexpected version</source>
+        <translation>%d av de senaste 100 blocken har oväntad version</translation>
     </message>
     <message>
-        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Varning: wallet.dat är korrumperad, data räddad! Den ursprungliga wallet.dat är sparad som wallet.{timestamp}.bak i %s; om ditt saldo eller transaktioner är felaktiga kanske du måste återställa från en säkerhetskopia.</translation>
+        <source>%s corrupt, salvage failed</source>
+        <translation>%s är korrupt, räddning misslyckades</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Du måste specificera en masternodepriv-nyckel i konfigurationen. Vänligen se dokumentationen för hjälp.</translation>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempool måste vara minst %d MB</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standardvärde: 1)</translation>
+        <source>Cannot resolve -%s address: '%s'</source>
+        <translation>Kan inte matcha -%s adress: '%s'</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Acceptera kommandorad och JSON-RPC-kommandon</translation>
+        <source>Change index out of range</source>
+        <translation>Förändringsindexet utanför tillåtet intervall</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Acceptera anslutningar utifrån (standardvärde: 1 om ingen -proxy eller -connect)</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open</source>
-        <translation>Lägg till en nod att ansluta till och försök att hålla anslutningen öppen</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Tillåt DNS-lookup för -addnode, -seednode och -connect</translation>
-    </message>
-    <message>
-        <source>Already have that input.</source>
-        <translation>Har redan den indatan.</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Försök att återskapa privatnycklar från en korrumperad wallet.dat</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Blockskapandealternativ:</translation>
-    </message>
-    <message>
-        <source>Can't denominate: no compatible inputs left.</source>
-        <translation>Kan inte denominera: Inga kompatibla indatan kvar.</translation>
-    </message>
-    <message>
-        <source>Cannot downgrade wallet</source>
-        <translation>Kan inte nedgradera plånboken</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -bind address: '%s'</source>
-        <translation>Kan inte lösa -bind address: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot resolve -externalip address: '%s'</source>
-        <translation>Kan inte lösa -externalip address: '%s'</translation>
-    </message>
-    <message>
-        <source>Cannot write default address</source>
-        <translation>Kan inte skriva standardadress</translation>
-    </message>
-    <message>
-        <source>Collateral not valid.</source>
-        <translation>Säkerhetsåtgärd ej giltig.</translation>
-    </message>
-    <message>
-        <source>Connect only to the specified node(s)</source>
-        <translation>Anslut endast till specifik(a) nod(er)</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Anslut till en nod för att återfå peer-adresser och koppla från</translation>
-    </message>
-    <message>
-        <source>Connection options:</source>
-        <translation>Anslutningsalternativ:</translation>
+        <source>Copyright (C) %i-%i</source>
+        <translation>Copyright (C) %i-%i</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
-        <translation>Korrumperad blockdatabas upptäcktes</translation>
-    </message>
-    <message>
-        <source>Darksend options:</source>
-        <translation>Darksend-alternativ:</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Avsöknings-/testalternativ:</translation>
-    </message>
-    <message>
-        <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation>Upptäck din egen IP-adress (standardvärde: 1 vid avlyssning och no -externalip)</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Ladda inte plånboken och inaktivera plånboks-RPC-anrop</translation>
+        <translation>Korrupt blockdatabas har upptäckts</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
-        <translation>Vill du återuppbygga blockdatabasen nu?</translation>
-    </message>
-    <message>
-        <source>Done loading</source>
-        <translation>Laddning färdig</translation>
-    </message>
-    <message>
-        <source>Entries are full.</source>
-        <translation>Inmatningarna är fyllda.</translation>
+        <translation>Vill du bygga om blockdatabasen nu?</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
-        <translation>Fel vid initialisering av blockadatabas</translation>
+        <translation>Fel vid initiering av blockdatabasen</translation>
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Fel vid initialisering av plånbokdatabasmiljö %s!</translation>
+        <translation>Fel vid initiering av plånbokens databasmiljö %s!</translation>
+    </message>
+    <message>
+        <source>Error loading %s</source>
+        <translation>Fel vid inläsning av %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet corrupted</source>
+        <translation>Fel vid inläsning av %s: Plånboken är korrupt</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Wallet requires newer version of %s</source>
+        <translation>Fel vid inläsning av %s: Plånboken kräver en senare version av %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
-        <translation>Fel vid laddning av blockdatabas</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat</source>
-        <translation>Fel vid laddning av wallet.dat</translation>
-    </message>
-    <message>
-        <source>Error loading wallet.dat: Wallet corrupted</source>
-        <translation>Fel vid laddning av wallet.dat: Plånboken är korrumperad</translation>
+        <translation>Fel vid inläsning av blockdatabasen</translation>
     </message>
     <message>
         <source>Error opening block database</source>
-        <translation>Fel vid öppnande av blockdatabas</translation>
-    </message>
-    <message>
-        <source>Error reading from database, shutting down.</source>
-        <translation>Fel vid läsning från databas, stänger ned.</translation>
-    </message>
-    <message>
-        <source>Error recovering public key.</source>
-        <translation>Fel vid återhämtning av publik nyckel.</translation>
-    </message>
-    <message>
-        <source>Error</source>
-        <translation>Fel</translation>
+        <translation>Fel vid öppning av blockdatabasen</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
-        <translation>Fel: Diskutrymmet är lågt!</translation>
-    </message>
-    <message>
-        <source>Error: Wallet locked, unable to create transaction!</source>
-        <translation>Fel: Plånbok låst, kan inte skapa en transaktion!</translation>
-    </message>
-    <message>
-        <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation>Fel: Du har redan väntande inmatningar i Darksend-poolen</translation>
+        <translation>Fel: Hårddiskutrymme är lågt!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation>Kunde inte avlyssna någon port. Använd -listen=0 om du vill detta.</translation>
+        <translation>Misslyckades att lyssna på någon port. Använd -listen=0 om du vill detta.</translation>
     </message>
     <message>
-        <source>Failed to read block</source>
-        <translation>Kunde inte läsa block</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>Om &lt;category&gt; inte finns, lägg ut all avsökningsinformation.</translation>
-    </message>
-    <message>
-        <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation>Hittade obekräftade denominationsutdatan, kommer att vänta tills de bekräftar att fortsätta.</translation>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Misslyckades med att skanna om plånboken under initiering.</translation>
     </message>
     <message>
         <source>Importing...</source>
         <translation>Importerar...</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importerar block från den externa blok000??.dat-fil-en</translation>
-    </message>
-    <message>
-        <source>Incompatible mode.</source>
-        <translation>Inkompatibelt läge.</translation>
-    </message>
-    <message>
-        <source>Incompatible version.</source>
-        <translation>Inkompatibel version.</translation>
-    </message>
-    <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation>Felaktig eller så hittades inget Genesis-block. Fel datadir för nätverket?</translation>
+        <translation>Felaktig eller inget genesisblock hittades. Fel datadir för nätverket?</translation>
+    </message>
+    <message>
+        <source>Initialization sanity check failed. %s is shutting down.</source>
+        <translation>Initieringschecken fallerade. %s stängs av.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -%s=&lt;amount&gt;:'%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -discardfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -discardfee=&lt;amount&gt;:'%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
+        <translation>Ogiltigt belopp för -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>Läser in P2P-adresser...</translation>
+    </message>
+    <message>
+        <source>Loading banlist...</source>
+        <translation>Läser in svarta listan...</translation>
+    </message>
+    <message>
+        <source>Not enough file descriptors available.</source>
+        <translation>Inte tillräckligt med filbeskrivningar tillgängliga.</translation>
+    </message>
+    <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>Beskärning kan inte konfigureras med ett negativt värde.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>Beskärningsläge är inkompatibel med -txindex.</translation>
+    </message>
+    <message>
+        <source>Replaying blocks...</source>
+        <translation>Spelar om block...</translation>
+    </message>
+    <message>
+        <source>Rewinding blocks...</source>
+        <translation>Spolar tillbaka blocken...</translation>
+    </message>
+    <message>
+        <source>The source code is available from %s.</source>
+        <translation>Källkoden är tillgänglig från %s.</translation>
+    </message>
+    <message>
+        <source>Transaction fee and change calculation failed</source>
+        <translation>Beräkning av transaktionsavgift och växel mislyckades</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. %s is probably already running.</source>
+        <translation>Det går inte att binda till %s på den här datorn. %s är förmodligen redan igång.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Argumentet -benchmark stöds inte och ignoreras, använd -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Argumentet -debugnet stöds inte och ignoreras, använd -debug=net.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Argumentet -tor hittades men stöds inte, använd -onion.</translation>
+    </message>
+    <message>
+        <source>Unsupported logging category %s=%s.</source>
+        <translation>Saknar stöd för loggningskategori %s=%s.</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation>Uppgraderar UTXO-databasen</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>Kommentaren i användaragent (%s) innehåller osäkra tecken.</translation>
+    </message>
+    <message>
+        <source>Verifying blocks...</source>
+        <translation>Verifierar block...</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart %s to complete</source>
+        <translation>Plånboken behöver sparas om: Starta om %s för att fullfölja</translation>
+    </message>
+    <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Fel: Avlyssning av inkommande anslutningar misslyckades (Avlyssningen returnerade felkod %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Ogiltigt belopp för -maxtxfee=&lt;amount&gt;: '%s' (måste vara åtminstone minrelay avgift %s för att förhindra stoppade transaktioner)</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>Transaktionen är för liten att skicka efter det att avgiften har dragits</translation>
+    </message>
+    <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation>Du måste bygga om databasen genom att använda -reindex för att återgå till obeskärt läge. Detta kommer att ladda ner hela blockkedjan på nytt.</translation>
+    </message>
+    <message>
+        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
+        <translation>Fel vid inläsning av %s: Du kan inte avaktivera HD på en redan existerande HD-plånbok</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Fel vid läsning från databas, avslutar.</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation>Fel vid uppgradering av blockdatabasen</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Information</translation>
     </message>
     <message>
-        <source>Initialization sanity check failed. Syscoin Core is shutting down.</source>
-        <translation>Initialiseringstillståndkontroll misslyckades. Syscoin Core stängs ned.</translation>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Ogiltig -onion adress eller värdnamn: '%s'</translation>
     </message>
     <message>
-        <source>Input is not valid.</source>
-        <translation>Indata är inte giltig.</translation>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Ogiltig -proxy adress eller värdnamn: '%s'</translation>
     </message>
     <message>
-        <source>InstantX options:</source>
-        <translation>InstantX-alternativ:</translation>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>Ogiltigt belopp för -paytxfee=&lt;amount&gt;:'%s' (måste vara minst %s)</translation>
     </message>
     <message>
-        <source>Insufficient funds.</source>
-        <translation>Otillräckliga medel!</translation>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation>Ogiltig nätmask angiven i -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Ogiltig -onion-adress: '%s'</translation>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Port måste anges med -whitelist: '%s'</translation>
     </message>
     <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Ogiltig -proxy-adress: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ogiltig mängd för -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ogiltig mängd för -mintxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Ogiltig mängd för -paytxfee=&lt;amount&gt;: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Ogiltig masternodepriv-nyckel. Vänligen se dokumentationen.</translation>
-    </message>
-    <message>
-        <source>Invalid private key.</source>
-        <translation>Ogiltig privatnyckel.</translation>
-    </message>
-    <message>
-        <source>Invalid script detected.</source>
-        <translation>Ogiltigt skript hittades.</translation>
-    </message>
-    <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>KeePassHttp-id för den etablerade kopplingen</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePassHttp-nyckel för AES-krypterad kommunikation med KeePass</translation>
-    </message>
-    <message>
-        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation>Bibehåll som mest &lt;n&gt; icke-anslutningsbara transaktioner i minnet (standardvärde: %u)</translation>
-    </message>
-    <message>
-        <source>Last Darksend was too recent.</source>
-        <translation>Senaste Darksend gjordes för inte alltför länge sedan.</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Laddar adresser...</translation>
-    </message>
-    <message>
-        <source>Loading block index...</source>
-        <translation>Laddar blockindex...</translation>
-    </message>
-    <message>
-        <source>Loading wallet... (%3.2f %%)</source>
-        <translation>Laddar plånbok... (%3.2f %%)</translation>
-    </message>
-    <message>
-        <source>Loading wallet...</source>
-        <translation>Laddar plånbok...</translation>
-    </message>
-    <message>
-        <source>Masternode options:</source>
-        <translation>Masternode-alternativ:</translation>
-    </message>
-    <message>
-        <source>Masternode queue is full.</source>
-        <translation>Masternode-kön är uppfylld.</translation>
-    </message>
-    <message>
-        <source>Masternode:</source>
-        <translation>Masternode:</translation>
-    </message>
-    <message>
-        <source>Missing input transaction information.</source>
-        <translation>Indatatransaktionsinformation fattas.</translation>
-    </message>
-    <message>
-        <source>No funds detected in need of denominating.</source>
-        <translation>Inga medel hittades som är i behov denominering.</translation>
-    </message>
-    <message>
-        <source>No matching denominations found for mixing.</source>
-        <translation>Inga matchande denominationer hittades för mixning.</translation>
-    </message>
-    <message>
-        <source>Non-standard public key detected.</source>
-        <translation>Icke-standard publik nyckel hittades.</translation>
-    </message>
-    <message>
-        <source>Not compatible with existing transactions.</source>
-        <translation>Inte kompatibel med nuvarande transaktioner.</translation>
-    </message>
-    <message>
-        <source>Not enough file descriptors available.</source>
-        <translation>Inte tillräckligt många tillgängliga fildeskriptorer.</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>Alternativ:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Lösenord för JSON-RPC-anslutningar</translation>
-    </message>
-    <message>
-        <source>RPC SSL options: (see the Syscoin Wiki for SSL setup instructions)</source>
-        <translation>RPC SSL-alternativ: (Se Syscoin Wiki för SSL-inställningsinstruktioner)</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>RPC-serveralternativ:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Släpp 1 av varje &lt;n&gt; nätverksmeddelande slumpmässigt</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Ludda 1 av varje &lt;n&gt; nätverksmeddelande slumpmässigt</translation>
-    </message>
-    <message>
-        <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation>Återuppbygg blockkedjeindexet från den aktuella blk000??.dat-filen</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Omskanna blockkedjan efter försvunna plånbokstransaktioner</translation>
-    </message>
-    <message>
-        <source>Rescanning...</source>
-        <translation>Omskannar...</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Kör i bakgrunden som daemon och acceptera kommandon</translation>
-    </message>
-    <message>
-        <source>Session not complete!</source>
-        <translation>Sessionen är inte fullständig!</translation>
-    </message>
-    <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Ställ in databascachens storlek i megabytes (%d till %d, standardvärde: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Ställ in maximal blockstorlek i bytes (standardvärde: %d)</translation>
-    </message>
-    <message>
-        <source>Set the masternode private key</source>
-        <translation>Ställ in masternodprivatnyckeln</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Visa alla avsökningsalternativ (usage: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Förminska debug.log-filen vid klientuppstart (standardvärde 1 vid ingen -debug)</translation>
-    </message>
-    <message>
-        <source>Signing failed.</source>
-        <translation>Signering misslyckades.</translation>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>Minskar -maxconnections från %d till %d, på grund av systembegränsningar.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation>Transaktionssigneringen misslyckades</translation>
+        <translation>Signering av transaktion misslyckades</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>Specificera datakatalog</translation>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Angiven -walletdir "%s" finns inte</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Specificera plånboksfil (inom datakatologen)</translation>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Angiven -walletdir "%s" är en relativ sökväg</translation>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>Specificera din egen publika adress</translation>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Angiven -walletdir "%s" är inte en katalog</translation>
     </message>
     <message>
-        <source>This help message</source>
-        <translation>Detta hjälpmeddelande</translation>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>Transaktionen är för liten för att betala avgiften</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Detta är ämnat för regressionstestverktyg och apputveckling.</translation>
+        <source>This is experimental software.</source>
+        <translation>Detta är experimentmjukvara.</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Transaktionsmängden är för liten</translation>
+        <translation>Transaktions belopp för liten</translation>
     </message>
     <message>
-        <source>Transaction amounts must be positive</source>
-        <translation>Transaktionsmängder måste vara positiva</translation>
-    </message>
-    <message>
-        <source>Transaction created successfully.</source>
-        <translation>Transaktionen skapades utan problem.</translation>
-    </message>
-    <message>
-        <source>Transaction fees are too high.</source>
-        <translation>Transaktionsavgifter är för höga.</translation>
-    </message>
-    <message>
-        <source>Transaction not valid.</source>
-        <translation>Transaktionen är inte giltig.</translation>
+        <source>Transaction too large for fee policy</source>
+        <translation>Transaktionen är för stor för avgiftspolicyn</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3175,83 +3372,131 @@ https://www.transifex.com/projects/p/syscoin/</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation>Kan inte binda %s till denna dator (bindande återgav ett fel %s)</translation>
+        <translation>Det går inte att binda till %s på den här datorn (bind returnerade felmeddelande %s)</translation>
     </message>
     <message>
-        <source>Unable to sign spork message, wrong key?</source>
-        <translation>Kan inte sporka meddelandet, fel nyckel?</translation>
+        <source>Unable to generate initial keys</source>
+        <translation>Det gick inte att skapa ursprungliga nycklar</translation>
     </message>
     <message>
-        <source>Unknown network specified in -onlynet: '%s'</source>
-        <translation>Okänt specificerat nätverk i -onlynet: '%s'</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Uppgradera plånboken till det senaste formatet</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Använd OpenSSL (https) för JSON-RPC-anslutningar</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Använd UPnP för att kartlägga avlyssningsporten (standardvärde: 1 vid avlyssning)</translation>
-    </message>
-    <message>
-        <source>Use the test network</source>
-        <translation>Använd testnätverket</translation>
-    </message>
-    <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Användarnamn för JSON-RPC-anslutningar</translation>
-    </message>
-    <message>
-        <source>Value more than Darksend pool maximum allows.</source>
-        <translation>Värdera mer än vad Darksends poolmaximum tillåter.</translation>
-    </message>
-    <message>
-        <source>Verifying blocks...</source>
-        <translation>Bekräftar block...</translation>
-    </message>
-    <message>
-        <source>Verifying wallet...</source>
-        <translation>Bekräftar plånbok...</translation>
-    </message>
-    <message>
-        <source>Wallet %s resides outside data directory %s</source>
-        <translation>Plånboken %s återfinns utanför datakatalogen %s</translation>
-    </message>
-    <message>
-        <source>Wallet is locked.</source>
-        <translation>Plånboken är låst.</translation>
-    </message>
-    <message>
-        <source>Wallet options:</source>
-        <translation>Plånboksalternativ:</translation>
+        <source>Verifying wallet(s)...</source>
+        <translation>Verifierar plånbok(er)...</translation>
     </message>
     <message>
         <source>Warning</source>
         <translation>Varning</translation>
     </message>
     <message>
-        <source>Warning: This version is obsolete, upgrade required!</source>
-        <translation>Varning: Versionen är förlegad, uppgradering krävs!</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Du måste återuppbygga databasen med -reindex för att ändra -txindex</translation>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>Varning: okända nya regler aktiverade (versionsbit %i)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
-        <translation>Zappar alla transaktioner från plånboken...</translation>
+        <translation>Töm plånboken på alla transaktioner...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>vid uppstart</translation>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee är väldigt högt satt! Så höga avgifter kan komma att betalas för en enstaka transaktion.</translation>
     </message>
     <message>
-        <source>wallet.dat corrupt, salvage failed</source>
-        <translation>wallet.dat är korrumperad, räddning misslyckades</translation>
+        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
+        <translation>Fel vid inläsning av %s: Du kan inte aktivera HD på en existerande icke-HD plånbok</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>Detta är transaktionsavgiften du kan komma att betala om uppskattad avgift inte finns tillgänglig.</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Denna produkten innehåller mjukvara utvecklad av OpenSSL Project för användning i OpenSSL Toolkit %s och kryptografisk mjukvara utvecklad av Eric Young samt UPnP-mjukvara skriven av Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Total längd på strängen för nätverksversion (%i) överskrider maxlängden (%i). Minska numret eller storleken på uacomments.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Argumentet -socks hittades och stöds inte. Det är inte längre möjligt att sätta SOCKS-version längre, bara SOCKS5-proxy stöds.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
+        <translation>Argumentet -whitelistalwaysrelay stöds inte utan ignoreras, använd -whitelistrelay och/eller -whitelistforcerelay.</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
+        <translation>Varning: Okända blockversioner bryts! Det är möjligt att okända regler används</translation>
+    </message>
+    <message>
+        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>Varning: Plånboksfilen var korrupt, data har räddats! Den ursprungliga %s har sparas som %s i %s. Om ditt saldo eller transaktioner är felaktiga bör du återställa från en säkerhetskopia.</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation>%s är satt väldigt högt!</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation>Fel vid inläsningen av plånbok %s. Dublett -wallet filnamn angavs.</translation>
+    </message>
+    <message>
+        <source>Starting network threads...</source>
+        <translation>Startar nätverkstrådar...</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation>Plånboken undviker att betala mindre än lägsta reläavgift.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>Det här är minimum avgiften du kommer betala för varje transaktion. </translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Det här är transaktionsavgiften du kommer betala om du skickar en transaktion. </translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation>Transaktionens belopp får ej vara negativ</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>Transaktionen har för lång mempool-kedja</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>Transaktionen måste ha minst en mottagare</translation>
+    </message>
+    <message>
+        <source>Unknown network specified in -onlynet: '%s'</source>
+        <translation>Okänt nätverk angavs i -onlynet: '%s'</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation>Otillräckligt med syscoins</translation>
+    </message>
+    <message>
+        <source>Loading block index...</source>
+        <translation>Laddar blockindex...</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>Laddar plånbok...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>Kan inte nedgradera plånboken</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>Söker igen...</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation>Klar med laddning</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Fel</translation>
     </message>
 </context>
 </TS>
