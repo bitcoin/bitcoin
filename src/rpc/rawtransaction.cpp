@@ -1050,7 +1050,14 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
 
     bool allowhighfees = false;
     if (!request.params[1].isNull()) allowhighfees = request.params[1].get_bool();
-    return BroadcastTransaction(tx, allowhighfees).GetHex();
+    uint256 txid;
+    TransactionError err;
+    std::string err_string;
+    if (!BroadcastTransaction(tx, txid, err, err_string, allowhighfees)) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
+
+    return txid.GetHex();
 }
 
 static UniValue testmempoolaccept(const JSONRPCRequest& request)

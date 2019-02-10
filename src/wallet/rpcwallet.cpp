@@ -13,6 +13,7 @@
 #include <validation.h>
 #include <key_io.h>
 #include <net.h>
+#include <node/transaction.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -4003,7 +4004,11 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? false : request.params[3].get_bool();
-    bool complete = FillPSBT(pwallet, psbtx, nHashType, sign, bip32derivs);
+    bool complete = true;
+    TransactionError err;
+    if (!FillPSBT(pwallet, psbtx, err, complete, nHashType, sign, bip32derivs)) {
+        throw JSONRPCTransactionError(err);
+    }
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
@@ -4117,7 +4122,11 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
-    FillPSBT(pwallet, psbtx, 1, false, bip32derivs);
+    bool complete = true;
+    TransactionError err;
+    if (!FillPSBT(pwallet, psbtx, err, complete, 1, false, bip32derivs)) {
+        throw JSONRPCTransactionError(err);
+    }
 
     // Serialize the PSBT
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);

@@ -6,6 +6,7 @@
 #define BITCOIN_PSBT_H
 
 #include <attributes.h>
+#include <node/transaction.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
