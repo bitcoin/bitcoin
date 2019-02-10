@@ -580,12 +580,7 @@ bool WalletModel::privateKeysDisabled() const
 
 bool WalletModel::canGetAddresses() const
 {
-    // The wallet can provide a fresh address if:
-    // * hdEnabled(): an HD seed is present; or
-    // * it is a legacy wallet, because:
-    //     * !hdEnabled(): an HD seed is not present; and
-    //     * !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS): private keys have not been disabled (which results in hdEnabled() == true)
-    return m_wallet->hdEnabled() || (!m_wallet->hdEnabled() && !m_wallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    return m_wallet->canGetAddresses();
 }
 
 QString WalletModel::getWalletName() const
