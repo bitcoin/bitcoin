@@ -4,6 +4,7 @@
 
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
+#include "platform/platform-utils.h"
 #include "platform/nf-token/nf-token-reg-tx-builder.h"
 #include "platform/nf-token/nf-tokens-manager.h"
 #include "specialtx-rpc-utils.h"
@@ -94,8 +95,9 @@ namespace Platform
         nftJsonObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
         nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.height));
         //nftJsonObj.push_back(json_spirit::Pair("timestamp", ));
-        nftJsonObj.push_back(json_spirit::Pair("NFT protocol id", nftIndex.nfToken->tokenProtocolId));
-        nftJsonObj.push_back(json_spirit::Pair("NFT id", nftIndex.nfToken->tokenId.GetHex()));
+
+        nftJsonObj.push_back(json_spirit::Pair("NFT protocol ID", ProtocolName{nftIndex.nfToken->tokenProtocolId}.ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("NFT ID", nftIndex.nfToken->tokenId.GetHex()));
         nftJsonObj.push_back(json_spirit::Pair("NFT owner address", CBitcoinAddress(nftIndex.nfToken->tokenOwnerKeyId).ToString()));
         nftJsonObj.push_back(json_spirit::Pair("Metadata amdin address", CBitcoinAddress(nftIndex.nfToken->metadataAdminKeyId).ToString()));
         //nftJsonObj.push_back(json_spirit::Pair("Metadata", nftIndex.nfToken->metadata));
