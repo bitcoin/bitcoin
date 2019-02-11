@@ -1277,20 +1277,20 @@ void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &en
             const string& strReceiver = amountTuple.first.ToString();
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             oAssetAllocationReceiversObj.pushKV("address", strReceiver);
-            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(bSending? -amountTuple.second:amountTuple.second, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);          
         }
     }
     entry.pushKV("allocations", oAssetAllocationReceiversArray);
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
-    entry.pushKV("confirmed", nHeight > 0: true: false);  
+    entry.pushKV("confirmed", nHeight > 0);  
     
 }
 void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, string& strSender)
 {
     CAssetAllocation assetallocation(tx);
     if(assetallocation.assetAllocationTuple.IsNull() || dbAsset.IsNull())
-        return false;
+        return;
     strSender = assetallocation.assetAllocationTuple.witnessAddress.ToString();
     entry.pushKV("txtype", assetAllocationFromOp(op));
     entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
@@ -1307,7 +1307,7 @@ void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset
             const string& strReceiver = amountTuple.first.ToString();
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             oAssetAllocationReceiversObj.pushKV("address", strReceiver);
-            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(bSending? -amountTuple.second:amountTuple.second, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);          
         }
     }
@@ -1343,7 +1343,7 @@ void AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     
         entry.pushKV("allocations", oAssetAllocationReceiversArray); 
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.pushKV("confirmed", nHeight > 0: true: false);                                          
+        entry.pushKV("confirmed", nHeight > 0);                                          
     }                    
 }
 void AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry){
