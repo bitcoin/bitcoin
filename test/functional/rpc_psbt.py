@@ -166,6 +166,9 @@ class PSBTTest(BitcoinTestFramework):
             combined = self.nodes[2].combinepsbt(combiner['combine'])
             assert_equal(combined, combiner['result'])
 
+        # Empty combiner test
+        assert_raises_rpc_error(-8, "Parameter 'txs' cannot be empty", self.nodes[0].combinepsbt, [])
+
         # Finalizer test
         for finalizer in finalizers:
             finalized = self.nodes[2].finalizepsbt(finalizer['finalize'], False)['psbt']
