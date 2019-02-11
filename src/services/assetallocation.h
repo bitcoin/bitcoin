@@ -20,7 +20,7 @@ bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, std::vector<std::v
 bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeAssetAllocationScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 
-bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, std::string& strSender);
+void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, std::string& strSender);
 void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry);
 void AssetMintTxToJson(const CTransaction& tx, UniValue &entry);
 void AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry);

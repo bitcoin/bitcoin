@@ -293,7 +293,6 @@ void PrepareShutdown()
     FlushSyscoinDBs();
     passetdb.reset();
     passetallocationdb.reset();
-    passetallocationtransactionsdb.reset();
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
     if (threadpool)
@@ -1578,7 +1577,6 @@ bool AppInitMain()
                 
                 passetdb.reset();
                 passetallocationdb.reset();
-                passetallocationtransactionsdb.reset();
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
                 
