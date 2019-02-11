@@ -274,6 +274,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
         self.import_deterministic_coinbase_privkeys()
+        if not self.setup_clean_chain:
+            for n in self.nodes:
+                assert_equal(n.getblockchaininfo()["blocks"], 199)
+            self.log.debug('Generate a block with current time to finalize the cache and assert we are out of IBD')
+            block_hash = self.nodes[0].generate(1)[0]
+            block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
+            for n in self.nodes:
+                n.submitblock(block)
+                chain_info = n.getblockchaininfo()
+                assert_equal(chain_info["blocks"], 200)
+                assert_equal(chain_info["initialblockdownload"], False)
 
     def import_deterministic_coinbase_privkeys(self):
         for n in self.nodes:
@@ -433,7 +444,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def _initialize_chain(self):
         """Initialize a pre-mined blockchain for use by the test.
 
-        Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
+        Create a cache of a 199-block-long chain (with wallet) for MAX_NODES
         Afterward, create num_nodes copies from the cache."""
 
         assert self.num_nodes <= MAX_NODES
@@ -476,14 +487,23 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             for node in self.nodes:
                 node.wait_for_rpc_connection()
 
-            # Create a 200-block-long chain; each of the 4 first nodes
+            # Create a 199-block-long chain; each of the 4 first nodes
             # gets 25 mature blocks and 25 immature.
+            # The 4th node gets only 24 immature blocks so that the very last
+            # block in the cache does not age too much (have an old tip age).
+            # This is needed so that we are out of IBD when the test starts,
+            # see the tip age check in IsInitialBlockDownload().
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
+                        if i == 1 and peer == 3 and j == 24:
+                            break
                         self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key().address)
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
+
+            for n in self.nodes:
+                assert_equal(n.getblockchaininfo()["blocks"], 199)
 
             # Shut them down, and clean up cache directories:
             self.stop_nodes()
