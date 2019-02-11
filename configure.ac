@@ -1628,7 +1628,7 @@ AC_CONFIG_LINKS([test/functional/test_runner.py:test/functional/test_runner.py])
 AC_CONFIG_LINKS([test/fuzz/test_runner.py:test/fuzz/test_runner.py])
 AC_CONFIG_LINKS([test/util/bitcoin-util-test.py:test/util/bitcoin-util-test.py])
 AC_CONFIG_LINKS([test/util/rpcauth-test.py:test/util/rpcauth-test.py])
-AM_COND_IF([WITH_XDG], [AC_CONFIG_FILES([share/qt/org.bitcoin.bitcoin-qt.desktop])])
+AM_COND_IF([WITH_XDG], [AC_CONFIG_FILES([share/qt/org.bitcoin.bitcoin_qt.desktop])])
 
 dnl boost's m4 checks do something really nasty: they export these vars. As a
 dnl result, they leak into secp256k1's configure and crazy things happen.

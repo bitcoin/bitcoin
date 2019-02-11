@@ -80,7 +80,7 @@ icondir = $(datadir)/icons/hicolor/scalable/apps
 icon_DATA = $(BITCOIN_SVG)
 
 desktopdir = $(datadir)/applications
-desktop_in_files = share/qt/org.bitcoin.bitcoin-qt.desktop.in
+desktop_in_files = share/qt/org.bitcoin.bitcoin_qt.desktop.in
 desktop_DATA = $(desktop_in_files:.desktop.in=.desktop)
 
 DIST_SHARE += $(BITCOIN_SVG) $(desktop_in_files)
