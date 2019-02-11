@@ -390,7 +390,7 @@ add_library(crown_platform
   platform/nf-token/nf-token-tx-mem-pool-handler.cpp
   platform/nf-token/nf-token-reg-tx.cpp
   platform/nf-token/nf-token-protocol-reg-tx.cpp
-)
+  platform/platform-utils.h)
 target_include_directories(crown_platform
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
