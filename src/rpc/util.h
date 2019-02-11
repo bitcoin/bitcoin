@@ -28,6 +28,9 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
+//! Parse a confirm target option and raise an RPC error if it is invalid.
+unsigned int ParseConfirmTarget(const UniValue& value);
+
 struct RPCArg {
     enum class Type {
         OBJ,
