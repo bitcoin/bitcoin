@@ -28,7 +28,6 @@ extern ArrivalTimesMapImpl arrivalTimesMap;
 unsigned int MAX_UPDATES_PER_BLOCK = 2;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
-std::unique_ptr<CAssetAllocationTransactionsDB> passetallocationtransactionsdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 // SYSCOIN service rpc functions
@@ -193,21 +192,6 @@ bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
 bool FlushSyscoinDBs() {
     bool ret = true;
 	 {
-        LogPrintf("Flushing Asset Allocation Index...size %d\n", AssetAllocationIndex.size());
-		LOCK(cs_assetallocationindex);
-		if (passetallocationtransactionsdb != nullptr)
-		{
-			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
-			if (!passetallocationtransactionsdb->Flush()) {
-				LogPrintf("Failed to write to asset allocation transactions database!");
-                ret = false;
-			}
-            if (!passetallocationtransactionsdb->Flush()) {
-                LogPrintf("Failed to write to asset allocation transactions database!");
-                ret = false;
-            }           
-            AssetAllocationIndex.clear();
-		}
         if (passetallocationmempooldb != nullptr)
         {
             ResyncAssetAllocationStates();

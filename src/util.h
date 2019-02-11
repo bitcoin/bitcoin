@@ -47,7 +47,6 @@ extern bool fMasternodeMode;
 extern bool fUnitTest;
 extern bool fTPSTest;
 extern bool fTPSTestEnabled;
-extern bool fAssetAllocationIndex;
 extern bool fZMQAssetAllocation;
 extern bool fZMQAsset;
 extern bool fConcurrentProcessing;

@@ -85,7 +85,6 @@ bool fMasternodeMode = false;
 bool fUnitTest = false;
 bool fTPSTest = false;
 bool fTPSTestEnabled = false;
-bool fAssetAllocationIndex = false;
 bool fConcurrentProcessing = true;
 bool fLiteMode = false;
 bool fZMQAssetAllocation = false;

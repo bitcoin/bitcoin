@@ -135,9 +135,6 @@ typedef std::unordered_map<std::string, CAmount> AssetBalanceMap;
 typedef std::unordered_map<uint256, int64_t,SaltedTxidHasher> ArrivalTimesMap;
 typedef std::unordered_map<std::string, ArrivalTimesMap> ArrivalTimesMapImpl;
 typedef std::vector<std::pair<CWitnessAddress, CAmount > > RangeAmountTuples;
-typedef std::map<std::string, std::string> AssetAllocationIndexItem;
-typedef std::map<int, AssetAllocationIndexItem> AssetAllocationIndexItemMap;
-extern AssetAllocationIndexItemMap AssetAllocationIndex;
 static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
@@ -145,7 +142,6 @@ static const int ONE_MONTH_IN_BLOCKS = 43800;
 static sorted_vector<std::string> assetAllocationConflicts;
 static CCriticalSection cs_assetallocation;
 static CCriticalSection cs_assetallocationarrival;
-static CCriticalSection cs_assetallocationindex;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
@@ -208,20 +204,7 @@ public:
     void WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight);
 	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
-class CAssetAllocationTransactionsDB : public CDBWrapper {
-public:
-	CAssetAllocationTransactionsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationtransactions", nCacheSize, fMemory, fWipe) {
-		
-	}
 
-	bool WriteAssetAllocationWalletIndex(const AssetAllocationIndexItemMap &valueMap) {
-		return Write(std::string("assetallocationtxi"), valueMap, true);
-	}
-	bool ReadAssetAllocationWalletIndex(AssetAllocationIndexItemMap &valueMap) {
-		return Read(std::string("assetallocationtxi"), valueMap);
-	}
-	bool ScanAssetAllocationIndex(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
-};
 class CAssetAllocationMempoolDB : public CDBWrapper {
 public:
     CAssetAllocationMempoolDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetallocationmempoolbalances", nCacheSize, fMemory, fWipe) {
