@@ -10,36 +10,10 @@
 #include "platform/governance-vote.h"
 #include "platform/governance.h"
 #include "platform/specialtx.h"
+#include "platform/rpc/specialtx-rpc-utils.h"
 
-namespace
+namespace Platform
 {
-    std::string GetCommand(const json_spirit::Array& params)
-    {
-        if (params.empty())
-            throw std::runtime_error("wrong format");
-
-        return params[0].get_str();
-    }
-
-    std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
-    {
-        LOCK(cs_main);
-        CValidationState state;
-        if (!Platform::CheckSpecialTx(tx, nullptr, state))
-            throw std::runtime_error(FormatStateMessage(state));
-
-        CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
-        ds << tx;
-
-        json_spirit::Array signReqeust;
-        signReqeust.push_back(HexStr(ds.begin(), ds.end()));
-        json_spirit::Value signResult = signrawtransaction(signReqeust, false);
-
-        json_spirit::Array sendRequest;
-        sendRequest.push_back(json_spirit::find_value(signResult.get_obj(), "hex").get_str());
-        return sendrawtransaction(sendRequest, false).get_str();
-    }
-
     json_spirit::Object SendVotingTransaction(
         const CPubKey& pubKeyMasternode,
         const CKey& keyMasternode,
@@ -123,7 +97,7 @@ namespace
 
 json_spirit::Value agents(const json_spirit::Array& params, bool fHelp)
 {
-    auto command = GetCommand(params);
+    auto command = Platform::GetCommand(params, "usage: agents vote|list");
 
     if (command == "vote")
         return detail::vote(params, fHelp);
@@ -139,7 +113,7 @@ json_spirit::Value detail::vote(const json_spirit::Array& params, bool fHelp)
         throw std::runtime_error("Correct usage is 'mnbudget vote proposal-hash yes|no'");
 
     auto hash = ParseHashV(params[1], "parameter 1");
-    auto nVote = ParseVote(params[2].get_str());
+    auto nVote = Platform::ParseVote(params[2].get_str());
 
     auto success = 0;
     auto failed = 0;
