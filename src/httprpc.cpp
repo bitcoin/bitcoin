@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -77,6 +77,9 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
         nStatus = HTTP_BAD_REQUEST;
     else if (code == RPC_METHOD_NOT_FOUND)
         nStatus = HTTP_NOT_FOUND;
+
+    if (gArgs.GetBoolArg("-rpcerrorhttpok", false))
+        nStatus = HTTP_OK;
 
     std::string strReply = JSONRPCReply(NullUniValue, objError, id);
 
