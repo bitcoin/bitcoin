@@ -413,7 +413,7 @@ void SetupServerArgs()
     const auto testnetChainParams = CreateChainParams(CBaseChainParams::TESTNET);
 
     // SYSCOIN Hidden Options   
-    std::vector<std::string> hidden_args = {"-masternode","-unittest","-tpstest","-concurrentprocessing","-assetallocationindex", "-rpcssl", "-benchmark", "-h", "-help", "-socks", "-tor", "-debugnet", "-whitelistalwaysrelay",
+    std::vector<std::string> hidden_args = {"-masternode","-unittest","-tpstest","-concurrentprocessing", "-rpcssl", "-benchmark", "-h", "-help", "-socks", "-tor", "-debugnet", "-whitelistalwaysrelay",
         "-prematurewitness", "-walletprematurewitness", "-promiscuousmempoolflags", "-blockminsize", "-dbcrashratio", "-forcecompactdb", "-usehd",
         // GUI args. These will be overwritten by SetupUIArgs for the GUI
         "-allowselfsignedrootcertificates", "-choosedatadir", "-lang=<lang>", "-min", "-resetguisettings", "-rootcertificates=<file>", "-splash", "-uiplatform"};
@@ -1584,7 +1584,6 @@ bool AppInitMain()
                 
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset));
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset));
-                passetallocationtransactionsdb.reset(new CAssetAllocationTransactionsDB(0, false, fReset));
                 passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset));
                 {
                     LOCK(cs_assetallocation);
@@ -1814,7 +1813,6 @@ bool AppInitMain()
     fTPSTest = gArgs.GetBoolArg("-tpstest", false);
     fConcurrentProcessing = gArgs.GetBoolArg("-concurrentprocessing", true);
     fLogThreadpool = LogAcceptCategory(BCLog::THREADPOOL);
-    fAssetAllocationIndex = gArgs.GetBoolArg("-assetallocationindex", false);
     fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
     fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
 

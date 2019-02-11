@@ -237,7 +237,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 bool DecodeAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch);
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
-extern std::unique_ptr<CAssetAllocationTransactionsDB> passetallocationtransactionsdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 #endif // ASSET_H
