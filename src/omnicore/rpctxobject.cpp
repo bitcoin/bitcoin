@@ -307,8 +307,13 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, UniValue& txobj, bool 
 void populateRPCTypeSendAll(CMPTransaction& omniObj, UniValue& txobj, int confirmations)
 {
     UniValue subSends(UniValue::VARR);
-    if (omniObj.getEcosystem() == 1) txobj.push_back(Pair("ecosystem", "main"));
-    if (omniObj.getEcosystem() == 2) txobj.push_back(Pair("ecosystem", "test"));
+    if (omniObj.getEcosystem() == 1)
+        txobj.push_back(Pair("ecosystem", "main"));
+    else if (omniObj.getEcosystem() == 2)
+        txobj.push_back(Pair("ecosystem", "test"));
+    else
+        txobj.push_back(Pair("ecosystem", "all"));
+
     if (confirmations > 0) {
         if (populateRPCSendAllSubSends(omniObj.getHash(), subSends) > 0) txobj.push_back(Pair("subsends", subSends));
     }
