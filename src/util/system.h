@@ -295,6 +295,9 @@ extern ArgsManager gArgs;
  */
 bool HelpRequested(const ArgsManager& args);
 
+/** Add help options to the args manager */
+void SetupHelpOptions(ArgsManager& args);
+
 /**
  * Format a string to be used as group of options in help messages
  *
