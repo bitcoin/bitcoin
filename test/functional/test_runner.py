@@ -250,10 +250,6 @@ def main():
     # Create base test directory
     tmpdir = "%s/test_runner_₿_🏃_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
 
-    # If we fixed the command-line and filename encoding issue on Windows, these two lines could be removed
-    if config["environment"]["EXEEXT"] == ".exe":
-        tmpdir = "%s/test_runner_%s" % (args.tmpdirprefix, datetime.datetime.now().strftime("%Y%m%d_%H%M%S"))
-
     os.makedirs(tmpdir)
 
     logging.debug("Temporary test directory at %s" % tmpdir)
