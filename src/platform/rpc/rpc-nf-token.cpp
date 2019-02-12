@@ -91,10 +91,11 @@ namespace Platform
     json_spirit::Object BuildNftRecord(const NfTokenIndex & nftIndex)
     {
         json_spirit::Object nftJsonObj;
-        nftJsonObj.push_back(json_spirit::Pair("block hash", nftIndex.blockHash.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("block hash", nftIndex.blockIndex->phashBlock->GetHex()));
         nftJsonObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
-        nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.height));
-        //nftJsonObj.push_back(json_spirit::Pair("timestamp", ));
+        nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.blockIndex->nHeight));
+        auto blockTime = static_cast<time_t>(nftIndex.blockIndex->nTime);
+        nftJsonObj.push_back(json_spirit::Pair("timestamp", asctime(gmtime(&blockTime))));
 
         nftJsonObj.push_back(json_spirit::Pair("NFT protocol ID", ProtocolName{nftIndex.nfToken->tokenProtocolId}.ToString()));
         nftJsonObj.push_back(json_spirit::Pair("NFT ID", nftIndex.nfToken->tokenId.GetHex()));
