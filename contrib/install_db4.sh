@@ -6,7 +6,7 @@ export LC_ALL=C
 set -e
 
 if [ -z "${1}" ]; then
-  echo "Usage: ./install_db4.sh <base-dir> [<extra-bdb-configure-flag> ...]"
+  echo "Usage: $0 <base-dir> [<extra-bdb-configure-flag> ...]"
   echo
   echo "Must specify a single argument: the directory in which db4 will be built."
   echo "This is probably \`pwd\` if you're at the root of the bitcoin repository."
