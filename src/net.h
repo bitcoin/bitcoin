@@ -310,12 +310,10 @@ public:
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     void RelayTransaction(const CTransaction& tx);
-    void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
     void RelayInv(CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     void RelayInvFiltered(CInv &inv, const CTransaction &relatedTx, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     // This overload will not update node filters,  so use it only for the cases when other messages will update related transaction data in filters
     void RelayInvFiltered(CInv &inv, const uint256 &relatedTxHash, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-    void RelayInvToQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash, CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
     void RemoveAskFor(const uint256& hash);
 
     // Addrman functions
@@ -325,7 +323,6 @@ public:
     void AddNewAddress(const CAddress& addr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     void AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     std::vector<CAddress> GetAddresses();
-    void AddressCurrentlyConnected(const CService& addr);
 
     // Denial-of-service detection/prevention
     // The idea is to detect peers that are behaving
