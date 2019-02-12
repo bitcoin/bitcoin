@@ -6,6 +6,7 @@
 #include "main.h"
 
 #include "primitives/transaction.h"
+#include "platform/platform-utils.h"
 #include "platform/specialtx.h"
 #include "nf-tokens-manager.h"
 #include "nf-token-reg-tx.h"
@@ -91,5 +92,16 @@ namespace Platform
 
         auto nfToken = nfTokenRegTx.GetNfToken();
         return NfTokensManager::Instance().Delete(nfToken.tokenProtocolId, nfToken.tokenId, pindex->nHeight);
+    }
+
+    std::string NfTokenRegTx::ToString() const
+    {
+        std::ostringstream out;
+        out << "NfTokenRegTx(nft protocol ID=" << ProtocolName{m_nfToken.tokenProtocolId}.ToString()
+            << ", nft ID=" << m_nfToken.tokenId.ToString()
+            << ", nft owner address=" << CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()
+            << ", metadata admin address=" << CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString() << ")";
+            //TODO: << ", metadata" << m_nfToken.metadata << ")";
+        return out.str();
     }
 }

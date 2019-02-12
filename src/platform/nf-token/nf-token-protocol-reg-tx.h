@@ -19,9 +19,7 @@ namespace Platform
     class NfTokenProtocolRegTx //TODO: create common nf token tx interface
     {
     public:
-        NfTokenProtocolRegTx()
-        {}
-
+        NfTokenProtocolRegTx() = default;
         explicit NfTokenProtocolRegTx(NfTokenProtocol nfTokenProtocol)
             : m_nfTokenProtocol(std::move(nfTokenProtocol))
         {}
@@ -39,7 +37,10 @@ namespace Platform
         {
             READWRITE(m_version);
             READWRITE(m_nfTokenProtocol);
-            READWRITE(signature);
+            if (!(s.nType & SER_GETHASH))
+            {
+                READWRITE(signature);
+            }
         }
 
     public:

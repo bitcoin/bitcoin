@@ -19,9 +19,7 @@ namespace Platform
     class NfTokenRegTx
     {
     public:
-        NfTokenRegTx()
-        {}
-
+        NfTokenRegTx() = default;
         explicit NfTokenRegTx(NfToken nfToken)
             : m_nfToken(std::move(nfToken))
         {}
