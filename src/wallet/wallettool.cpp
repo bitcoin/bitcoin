@@ -17,7 +17,7 @@ namespace WalletTool {
 static void WalletToolReleaseWallet(CWallet* wallet)
 {
     wallet->WalletLogPrintf("Releasing wallet\n");
-    wallet->Flush();
+    wallet->Flush(true);
     delete wallet;
 }
 
@@ -112,7 +112,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);
         if (wallet_instance) {
             WalletShowInfo(wallet_instance.get());
-            wallet_instance->Flush();
+            wallet_instance->Flush(true);
         }
     } else if (command == "info") {
         if (!fs::exists(path)) {
@@ -127,7 +127,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
         if (!wallet_instance) return false;
         WalletShowInfo(wallet_instance.get());
-        wallet_instance->Flush();
+        wallet_instance->Flush(true);
     } else {
         fprintf(stderr, "Invalid command: %s\n", command.c_str());
         return false;
