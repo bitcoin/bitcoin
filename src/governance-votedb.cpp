@@ -89,23 +89,6 @@ std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidProposalVotes(const CO
     return removedVotes;
 }
 
-std::vector<uint256> CGovernanceObjectVoteFile::RemoveOldVotes(unsigned int nMinTime)
-{
-    std::vector<uint256> removed;
-    vote_l_it it = listVotes.begin();
-    while (it != listVotes.end()) {
-        if (it->GetTimestamp() < nMinTime) {
-            --nMemoryVotes;
-            removed.emplace_back(it->GetHash());
-            mapVoteIndex.erase(it->GetHash());
-            listVotes.erase(it++);
-        } else {
-            ++it;
-        }
-    }
-    return removed;
-}
-
 void CGovernanceObjectVoteFile::RebuildIndex()
 {
     mapVoteIndex.clear();

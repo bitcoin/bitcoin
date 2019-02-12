@@ -39,7 +39,7 @@ from test_framework.siphash import siphash256
 import dash_hash
 
 BIP0031_VERSION = 60000
-MY_VERSION = 70210  # MIN_PEER_PROTO_VERSION
+MY_VERSION = 70213  # MIN_PEER_PROTO_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
