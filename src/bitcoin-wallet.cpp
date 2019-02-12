@@ -20,9 +20,9 @@ const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupWalletToolArgs()
 {
+    SetupHelpOptions(gArgs);
     SetupChainParamsBaseOptions();
 
-    gArgs.AddArg("-?", "This help message", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-datadir=<dir>", "Specify data directory", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-wallet=<wallet-name>", "Specify wallet name", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-debug=<category>", "Output debugging information (default: 0).", false, OptionsCategory::DEBUG_TEST);
@@ -30,10 +30,6 @@ static void SetupWalletToolArgs()
 
     gArgs.AddArg("info", "Get wallet info", false, OptionsCategory::COMMANDS);
     gArgs.AddArg("create", "Create new wallet file", false, OptionsCategory::COMMANDS);
-
-    // Hidden
-    gArgs.AddArg("-h", "", false, OptionsCategory::HIDDEN);
-    gArgs.AddArg("-help", "", false, OptionsCategory::HIDDEN);
 }
 
 static bool WalletAppInit(int argc, char* argv[])
