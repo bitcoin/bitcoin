@@ -202,6 +202,7 @@ public:
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
     bool havePrivKey(const CKeyID &address) const;
+    bool havePrivKey(const CScript& script) const;
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
@@ -211,6 +212,8 @@ public:
     void lockCoin(COutPoint& output);
     void unlockCoin(COutPoint& output);
     void listLockedCoins(std::vector<COutPoint>& vOutpts);
+
+    void listProTxCoins(std::vector<COutPoint>& vOutpts);
 
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);

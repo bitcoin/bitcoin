@@ -16,6 +16,7 @@ class CBasicKeyStore;
 class CWallet;
 class uint256;
 class CBlockIndex;
+class CDeterministicMNList;
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -87,9 +88,6 @@ public:
 
     /** Network activity state changed. */
     boost::signals2::signal<void (bool networkActive)> NotifyNetworkActiveChanged;
-
-    /** Number of masternodes changed. */
-    boost::signals2::signal<void (int newNumMasternodes)> NotifyStrMasternodeCountChanged;
 
     /**
      * New, updated or cancelled alert.

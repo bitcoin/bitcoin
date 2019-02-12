@@ -34,7 +34,9 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     QWidget(parent),
     ui(new Ui::MasternodeList),
     clientModel(0),
-    walletModel(0)
+    walletModel(0),
+    fFilterUpdatedDIP3(true),
+    nTimeFilterUpdatedDIP3(0)
 {
     ui->setupUi(this);
 
@@ -74,12 +76,8 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     connect(copyCollateralOutpointAction, SIGNAL(triggered()), this, SLOT(copyCollateralOutpoint_clicked()));
 
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3List()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateDIP3ListScheduled()));
     timer->start(1000);
-
-    fFilterUpdatedDIP3 = false;
-    nTimeFilterUpdatedDIP3 = GetTime();
-    updateDIP3List();
 }
 
 MasternodeList::~MasternodeList()
@@ -92,7 +90,7 @@ void MasternodeList::setClientModel(ClientModel* model)
     this->clientModel = model;
     if (model) {
         // try to update list when masternode count changes
-        connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
+        connect(clientModel, SIGNAL(masternodeListChanged()), this, SLOT(updateDIP3ListForced()));
     }
 }
 
@@ -107,40 +105,36 @@ void MasternodeList::showContextMenuDIP3(const QPoint& point)
     if (item) contextMenuDIP3->exec(QCursor::pos());
 }
 
-static bool CheckWalletOwnsScript(const CScript& script)
+void MasternodeList::updateDIP3ListScheduled()
 {
-    CTxDestination dest;
-    if (ExtractDestination(script, dest)) {
-        if ((boost::get<CKeyID>(&dest) && pwalletMain->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && pwalletMain->HaveCScript(*boost::get<CScriptID>(&dest)))) {
-            return true;
-        }
-    }
-    return false;
+    updateDIP3List(false);
 }
 
-void MasternodeList::updateDIP3List()
+void MasternodeList::updateDIP3ListForced()
 {
-    if (ShutdownRequested()) {
+    updateDIP3List(true);
+}
+
+void MasternodeList::updateDIP3List(bool fForce)
+{
+    if (!clientModel || ShutdownRequested()) {
         return;
     }
 
     TRY_LOCK(cs_dip3list, fLockAcquired);
     if (!fLockAcquired) return;
 
-    static int64_t nTimeListUpdated = GetTime();
+    // To prevent high cpu usage update only once in MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds
+    // after filter was last changed unless we want to force the update.
+    if (!fForce) {
+        if (!fFilterUpdatedDIP3) return;
 
-    // to prevent high cpu usage update only once in MASTERNODELIST_UPDATE_SECONDS seconds
-    // or MASTERNODELIST_FILTER_COOLDOWN_SECONDS seconds after filter was last changed
-    int64_t nSecondsToWait = fFilterUpdatedDIP3
-                             ? nTimeFilterUpdatedDIP3 - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS
-                             : nTimeListUpdated - GetTime() + MASTERNODELIST_UPDATE_SECONDS;
-
-    if (fFilterUpdatedDIP3) {
+        int64_t nSecondsToWait = nTimeFilterUpdatedDIP3 - GetTime() + MASTERNODELIST_FILTER_COOLDOWN_SECONDS;
         ui->countLabelDIP3->setText(QString::fromStdString(strprintf("Please wait... %d", nSecondsToWait)));
-    }
-    if (nSecondsToWait > 0) return;
 
-    nTimeListUpdated = GetTime();
+        if (nSecondsToWait > 0) return;
+    }
+
     fFilterUpdatedDIP3 = false;
 
     QString strToFilter;
@@ -149,7 +143,7 @@ void MasternodeList::updateDIP3List()
     ui->tableWidgetMasternodesDIP3->clearContents();
     ui->tableWidgetMasternodesDIP3->setRowCount(0);
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mnList = clientModel->getMasternodeList();
     auto projectedPayees = mnList.GetProjectedMNPayees(mnList.GetValidMNsCount());
     std::map<uint256, int> nextPayments;
     for (size_t i = 0; i < projectedPayees.size(); i++) {
@@ -158,23 +152,21 @@ void MasternodeList::updateDIP3List()
     }
 
     std::set<COutPoint> setOutpts;
-    if (pwalletMain && ui->checkBoxMyMasternodesOnly->isChecked()) {
-        LOCK(pwalletMain->cs_wallet);
+    if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
         std::vector<COutPoint> vOutpts;
-        pwalletMain->ListProTxCoins(vOutpts);
+        walletModel->listProTxCoins(vOutpts);
         for (const auto& outpt : vOutpts) {
             setOutpts.emplace(outpt);
         }
     }
 
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-        if (pwalletMain && ui->checkBoxMyMasternodesOnly->isChecked()) {
-            LOCK(pwalletMain->cs_wallet);
+        if (walletModel && ui->checkBoxMyMasternodesOnly->isChecked()) {
             bool fMyMasternode = setOutpts.count(dmn->collateralOutpoint) ||
-                pwalletMain->HaveKey(dmn->pdmnState->keyIDOwner) ||
-                pwalletMain->HaveKey(dmn->pdmnState->keyIDVoting) ||
-                CheckWalletOwnsScript(dmn->pdmnState->scriptPayout) ||
-                CheckWalletOwnsScript(dmn->pdmnState->scriptOperatorPayout);
+                walletModel->havePrivKey(dmn->pdmnState->keyIDOwner) ||
+                walletModel->havePrivKey(dmn->pdmnState->keyIDVoting) ||
+                walletModel->havePrivKey(dmn->pdmnState->scriptPayout) ||
+                walletModel->havePrivKey(dmn->pdmnState->scriptOperatorPayout);
             if (!fMyMasternode) return;
         }
         // populate list
@@ -261,6 +253,10 @@ void MasternodeList::on_checkBoxMyMasternodesOnly_stateChanged(int state)
 
 CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
 {
+    if (!clientModel) {
+        return nullptr;
+    }
+
     std::string strProTxHash;
     {
         LOCK(cs_dip3list);
@@ -278,7 +274,7 @@ CDeterministicMNCPtr MasternodeList::GetSelectedDIP3MN()
     uint256 proTxHash;
     proTxHash.SetHex(strProTxHash);
 
-    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto mnList = clientModel->getMasternodeList();
     return mnList.GetMN(proTxHash);
 }
 

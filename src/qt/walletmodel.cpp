@@ -645,6 +645,17 @@ bool WalletModel::havePrivKey(const CKeyID &address) const
     return wallet->HaveKey(address);
 }
 
+bool WalletModel::havePrivKey(const CScript& script) const
+{
+    CTxDestination dest;
+    if (ExtractDestination(script, dest)) {
+        if ((boost::get<CKeyID>(&dest) && wallet->HaveKey(*boost::get<CKeyID>(&dest))) || (boost::get<CScriptID>(&dest) && wallet->HaveCScript(*boost::get<CScriptID>(&dest)))) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool WalletModel::getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const
 {
     return wallet->GetKey(address, vchPrivKeyOut);
@@ -730,6 +741,12 @@ void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
 {
     LOCK2(cs_main, wallet->cs_wallet);
     wallet->ListLockedCoins(vOutpts);
+}
+
+void WalletModel::listProTxCoins(std::vector<COutPoint>& vOutpts)
+{
+    LOCK2(cs_main, wallet->cs_wallet);
+    wallet->ListProTxCoins(vOutpts);
 }
 
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)

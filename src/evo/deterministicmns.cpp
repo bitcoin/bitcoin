@@ -9,6 +9,7 @@
 #include "chainparams.h"
 #include "core_io.h"
 #include "script/standard.h"
+#include "ui_interface.h"
 #include "validation.h"
 #include "validationinterface.h"
 

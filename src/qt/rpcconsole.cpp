@@ -556,8 +556,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateNetworkState();
         connect(model, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
 
-        setMasternodeCount(model->getMasternodeCountString());
-        connect(model, SIGNAL(strMasternodesChanged(QString)), this, SLOT(setMasternodeCount(QString)));
+        connect(model, SIGNAL(masternodeListChanged()), this, SLOT(updateMasternodeCount()));
+        clientModel->refreshMasternodeList();
 
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
@@ -884,9 +884,16 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
 }
 
-void RPCConsole::setMasternodeCount(const QString &strMasternodes)
+void RPCConsole::updateMasternodeCount()
 {
-    ui->masternodeCount->setText(strMasternodes);
+    if (!clientModel) {
+        return;
+    }
+    auto mnList = clientModel->getMasternodeList();
+    QString strMasternodeCount = tr("Total: %1 (Enabled: %2)")
+        .arg(QString::number(mnList.GetAllMNsCount()))
+        .arg(QString::number(mnList.GetValidMNsCount()));
+    ui->masternodeCount->setText(strMasternodeCount);
 }
 
 void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
