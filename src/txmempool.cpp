@@ -581,8 +581,6 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx)
         removeConflicts(*tx);
         ClearPrioritisation(tx->GetHash());
     }
-    lastRollingFeeUpdate = GetTime();
-    blockSinceLastRollingFeeBump = true;
 }
 
 void CTxMemPool::_clear()
@@ -592,9 +590,6 @@ void CTxMemPool::_clear()
     mapNextTx.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
-    lastRollingFeeUpdate = GetTime();
-    blockSinceLastRollingFeeBump = false;
-    rollingMinimumFeeRate = 0;
     ++nTransactionsUpdated;
 }
 
@@ -794,7 +789,7 @@ void CTxMemPool::queryHashes(std::vector<uint256>& vtxid)
 }
 
 static TxMempoolInfo GetInfo(CTxMemPool::indexed_transaction_set::const_iterator it) {
-    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), CFeeRate(it->GetFee(), it->GetTxSize()), it->GetModifiedFee() - it->GetFee()};
+    return TxMempoolInfo{it->GetSharedTx(), it->GetTime(), it->GetFee(), it->GetModifiedFee() - it->GetFee()};
 }
 
 std::vector<TxMempoolInfo> CTxMemPool::infoAll() const
@@ -977,54 +972,12 @@ const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) cons
     return it->second.children;
 }
 
-CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
-    LOCK(cs);
-    if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
-        return CFeeRate(llround(rollingMinimumFeeRate));
-
-    int64_t time = GetTime();
-    if (time > lastRollingFeeUpdate + 10) {
-        double halflife = ROLLING_FEE_HALFLIFE;
-        if (DynamicMemoryUsage() < sizelimit / 4)
-            halflife /= 4;
-        else if (DynamicMemoryUsage() < sizelimit / 2)
-            halflife /= 2;
-
-        rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
-        lastRollingFeeUpdate = time;
-
-        if (rollingMinimumFeeRate < (double)incrementalRelayFee.GetFeePerK() / 2) {
-            rollingMinimumFeeRate = 0;
-            return CFeeRate(0);
-        }
-    }
-    return std::max(CFeeRate(llround(rollingMinimumFeeRate)), incrementalRelayFee);
-}
-
-void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
-    AssertLockHeld(cs);
-    if (rate.GetFeePerK() > rollingMinimumFeeRate) {
-        rollingMinimumFeeRate = rate.GetFeePerK();
-        blockSinceLastRollingFeeBump = false;
-    }
-}
-
 void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining) {
     LOCK(cs);
 
     unsigned nTxnRemoved = 0;
-    CFeeRate maxFeeRateRemoved(0);
     while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
         indexed_transaction_set::index<descendant_score>::type::iterator it = mapTx.get<descendant_score>().begin();
-
-        // We set the new mempool min fee to the feerate of the removed set, plus the
-        // "minimum reasonable fee rate" (ie some value under which we consider txn
-        // to have 0 fee). This way, we don't allow txn to enter mempool with feerate
-        // equal to txn which were removed with no block in between.
-        CFeeRate removed(it->GetModFeesWithDescendants(), it->GetSizeWithDescendants());
-        removed += incrementalRelayFee;
-        trackPackageRemoved(removed);
-        maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);
 
         setEntries stage;
         CalculateDescendants(mapTx.project<0>(it), stage);
@@ -1045,10 +998,6 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
                 }
             }
         }
-    }
-
-    if (maxFeeRateRemoved > CFeeRate(0)) {
-        LogPrint(BCLog::MEMPOOL, "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
     }
 }
 

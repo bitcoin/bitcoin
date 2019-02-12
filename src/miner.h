@@ -134,7 +134,6 @@ private:
     // Configuration parameters for the block size
     bool fIncludeWitness;
     unsigned int nBlockMaxWeight;
-    CFeeRate blockMinFeeRate;
 
     // Information on the current status of the block
     uint64_t nBlockWeight;
@@ -152,7 +151,6 @@ public:
     struct Options {
         Options();
         size_t nBlockMaxWeight;
-        CFeeRate blockMinFeeRate;
     };
 
     explicit BlockAssembler(const CChainParams& params);

@@ -935,7 +935,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             "\nAlso see createrawtransaction and signrawtransaction calls.\n"
             "\nArguments:\n"
             "1. \"hexstring\"    (string, required) The hex string of the raw transaction)\n"
-            "2. allowhighfees    (boolean, optional, default=false) Allow high fees\n"
             "\nResult:\n"
             "\"hex\"             (string) The transaction hash in hex\n"
             "\nExamples:\n"
@@ -962,10 +961,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     const uint256& hashTx = tx->GetHash();
 
-    CAmount nMaxRawTxFee = maxTxFee;
-    if (!request.params[1].isNull() && request.params[1].get_bool())
-        nMaxRawTxFee = 0;
-
     { // cs_main scope
     LOCK(cs_main);
     CCoinsViewCache &view = *pcoinsTip;
@@ -979,8 +974,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         // push to local node and sync with wallets
         CValidationState state;
         bool fMissingInputs;
-        if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, nMaxRawTxFee)) {
+        if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs, false /* bypass_limits */)) {
             if (state.IsInvalid()) {
                 throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
             } else {
@@ -1030,7 +1024,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   {"inputs","outputs","locktime"} },
     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   {"hexstring","iswitness"} },
     { "rawtransactions",    "decodescript",           &decodescript,           {"hexstring"} },
-    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring","allowhighfees"} },
+    { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     {"hexstring"} },
     { "rawtransactions",    "combinerawtransaction",  &combinerawtransaction,  {"txs"} },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     {"hexstring","prevtxs","privkeys","sighashtype"} }, /* uses wallet if enabled */
 

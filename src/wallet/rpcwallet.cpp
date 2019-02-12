@@ -11,7 +11,6 @@
 #include <httpserver.h>
 #include <validation.h>
 #include <net.h>
-#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <rpc/mining.h>
 #include <rpc/safemode.h>
@@ -2706,37 +2705,6 @@ UniValue listlockunspent(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue settxfee(const JSONRPCRequest& request)
-{
-    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1 || AmountFromValue(request.params[0]) < MIN_TX_FEE)
-        throw std::runtime_error(
-            "settxfee amount\n"
-            "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
-            "Minimum and default transaction fee per KB is 1 cent\n"
-            "\nArguments:\n"
-            "1. amount         (numeric or string, required) The transaction fee in " + CURRENCY_UNIT + "/kB\n"
-            "\nResult\n"
-            "true|false        (boolean) Returns true if successful\n"
-            "\nExamples:\n"
-            + HelpExampleCli("settxfee", "0.00001")
-            + HelpExampleRpc("settxfee", "0.00001")
-        );
-
-    LOCK2(cs_main, pwallet->cs_wallet);
-
-    // Amount
-    CAmount nAmount = AmountFromValue(request.params[0]);
-    nAmount = (nAmount / CENT) * CENT;
-
-    payTxFee = CFeeRate(nAmount, 1000);
-    return true;
-}
-
 UniValue getwalletinfo(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -2794,7 +2762,6 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     if (pwallet->IsCrypted()) {
         obj.push_back(Pair("unlocked_until", pwallet->nRelockTime));
     }
-    obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
     if (!masterKeyID.IsNull())
          obj.push_back(Pair("hdmasterkeyid", masterKeyID.GetHex()));
     return obj;
@@ -3061,7 +3028,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "     \"change_type\"            (string, optional) The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Default is set by -changetype.\n"
                             "     \"includeWatching\"        (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"           (boolean, optional, default false) Lock selected unspent outputs\n"
-                            "     \"feeRate\"                (numeric, optional, default not set: makes wallet determine the fee) Set a specific fee rate in " + CURRENCY_UNIT + "/kB\n"
                             "     \"subtractFeeFromOutputs\" (array, optional) A json array of integers.\n"
                             "                              The fee will be equally deducted from the amount of each specified output.\n"
                             "                              The outputs are specified by their zero-based index, before any change output is added.\n"
@@ -3123,7 +3089,6 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
                 {"includeWatching", UniValueType(UniValue::VBOOL)},
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
                 {"reserveChangeKey", UniValueType(UniValue::VBOOL)}, // DEPRECATED (and ignored), should be removed in 0.16 or so.
-                {"feeRate", UniValueType()}, // will be checked below
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
@@ -3159,19 +3124,10 @@ UniValue fundrawtransaction(const JSONRPCRequest& request)
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
 
-        if (options.exists("feeRate"))
-        {
-            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
-            coinControl.fOverrideFeeRate = true;
-        }
-
         if (options.exists("subtractFeeFromOutputs"))
             subtractFeeFromOutputs = options["subtractFeeFromOutputs"].get_array();
 
         if (options.exists("conf_target")) {
-            if (options.exists("feeRate")) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and feeRate");
-            }
             coinControl.m_confirm_target = ParseConfirmTarget(options["conf_target"]);
         }
       }
@@ -3596,7 +3552,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "sendmany",                 &sendmany,                 {"fromaccount","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target"} },
     { "wallet",             "sendtoaddress",            &sendtoaddress,            {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target"} },
     { "wallet",             "setaccount",               &setaccount,               {"address","account"} },
-    { "wallet",             "settxfee",                 &settxfee,                 {"amount"} },
     { "wallet",             "signmessage",              &signmessage,              {"address","message"} },
     { "wallet",             "walletlock",               &walletlock,               {} },
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   {"oldpassphrase","newpassphrase"} },

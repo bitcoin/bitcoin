@@ -17,9 +17,10 @@
 #include <init.h>
 #include <policy/policy.h>
 #include <validation.h> // For mempool
-#include <wallet/fees.h>
 #include <wallet/wallet.h>
+
 #include <kernel.h>
+#include <consensus/tx_verify.h>
 
 #include <QApplication>
 #include <QCheckBox>
@@ -425,7 +426,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
     // nPayAmount
     CAmount nPayAmount = 0;
-    bool fDust = false;
     CMutableTransaction txDummy;
     for (const CAmount &amount : CoinControlDialog::payAmounts)
     {
@@ -435,7 +435,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         {
             CTxOut txout(amount, (CScript)std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
-            fDust |= IsDust(txout, ::dustRelayFee);
         }
     }
 
@@ -514,7 +513,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytes -= 34;
 
         // Fee
-        nPayFee = GetMinimumFee(nBytes, *coinControl(), ::mempool);
+        nPayFee = GetMinFee(nBytes, GetAdjustedTime());
         //ppcTODO maybe add this instead?:
         //nPayFee = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
 
@@ -594,7 +593,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
     l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
     l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
-    l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
     if (nPayFee > 0)
     {
@@ -603,9 +601,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         if (nChange > 0 && !CoinControlDialog::fSubtractFeeFromAmount)
             l8->setText(ASYMP_UTF8 + l8->text());
     }
-
-    // turn label red when dust
-    l7->setStyleSheet((fDust) ? "color:red;" : "");
 
     // tool tips
     QString toolTipDust = tr("This label turns red if any recipient receives an amount smaller than the current dust threshold.");

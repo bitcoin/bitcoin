@@ -16,7 +16,6 @@
 #include <amount.h>
 #include <coins.h>
 #include <indirectmap.h>
-#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <random.h>
@@ -327,7 +326,7 @@ struct TxMempoolInfo
     int64_t nTime;
 
     /** Feerate of the transaction. */
-    CFeeRate feeRate;
+    CAmount fee;
 
     /** The fee delta. */
     int64_t nFeeDelta;
@@ -436,12 +435,6 @@ private:
 
     uint64_t totalTxSize;      //!< sum of all mempool tx's virtual sizes. Differs from serialized tx size since witness data is discounted. Defined in BIP 141.
     uint64_t cachedInnerUsage; //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
-
-    mutable int64_t lastRollingFeeUpdate;
-    mutable bool blockSinceLastRollingFeeBump;
-    mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
-
-    void trackPackageRemoved(const CFeeRate& rate);
 
 public:
 
@@ -591,14 +584,6 @@ public:
      *  Assumes that setDescendants includes all in-mempool descendants of anything
      *  already in it.  */
     void CalculateDescendants(txiter it, setEntries &setDescendants);
-
-    /** The minimum fee to get into the mempool, which may itself not be enough
-      *  for larger-sized transactions.
-      *  The incrementalRelayFee policy variable is used to bound the time it
-      *  takes the fee rate to go back down all the way to 0. When the feerate
-      *  would otherwise be half of this, it is set to 0 instead.
-      */
-    CFeeRate GetMinFee(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
       *  pvNoSpendsRemaining, if set, will be populated with the list of outpoints

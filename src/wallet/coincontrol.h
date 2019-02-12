@@ -5,7 +5,6 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
-#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <wallet/wallet.h>
 
@@ -23,10 +22,6 @@ public:
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
     bool fAllowWatchOnly;
-    //! Override automatic min/max checks on fee, m_feerate must be set if true
-    bool fOverrideFeeRate;
-    //! Override the default payTxFee if set
-    boost::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
 
@@ -42,8 +37,6 @@ public:
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
-        m_feerate.reset();
-        fOverrideFeeRate = false;
         m_confirm_target.reset();
     }
 

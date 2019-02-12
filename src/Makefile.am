@@ -119,7 +119,6 @@ BITCOIN_CORE_H = \
   netbase.h \
   netmessagemaker.h \
   noui.h \
-  policy/feerate.h \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
@@ -163,7 +162,6 @@ BITCOIN_CORE_H = \
   wallet/coincontrol.h \
   wallet/crypter.h \
   wallet/db.h \
-  wallet/fees.h \
   wallet/init.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
@@ -245,7 +243,6 @@ libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   wallet/crypter.cpp \
   wallet/db.cpp \
-  wallet/fees.cpp \
   wallet/init.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
@@ -331,7 +328,6 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \
-  policy/feerate.cpp \
   protocol.cpp \
   scheduler.cpp \
   script/sign.cpp \

@@ -2177,7 +2177,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::list<CTransactionRef> lRemovedTxn;
 
         if (!AlreadyHave(inv) &&
-            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, false /* bypass_limits */)) {
             mempool.check(pcoinsTip.get());
             RelayTransaction(tx, connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -2215,7 +2215,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
                     if (setMisbehaving.count(fromPeer))
                         continue;
-                    if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+                    if (AcceptToMemoryPool(mempool, stateDummy, porphanTx, &fMissingInputs2, false /* bypass_limits */)) {
                         LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
                         RelayTransaction(orphanTx, connman);
                         for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
@@ -2994,7 +2994,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LOCK(pfrom->cs_feeFilter);
                 pfrom->minFeeFilter = newFeeFilter;
             }
-            LogPrint(BCLog::NET, "received: feefilter of %s from peer=%d\n", CFeeRate(newFeeFilter).ToString(), pfrom->GetId());
+            LogPrint(BCLog::NET, "received: feefilter of %d satoshi from peer=%d\n", newFeeFilter, pfrom->GetId());
         }
     }
 
@@ -3629,7 +3629,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     CInv inv(MSG_TX, hash);
                     pto->setInventoryTxToSend.erase(hash);
                     if (filterrate) {
-                        if (txinfo.feeRate.GetFeePerK() < filterrate)
+                        if (txinfo.fee < filterrate)
                             continue;
                     }
                     if (pto->pfilter) {
@@ -3683,7 +3683,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
                     if (!txinfo.tx) {
                         continue;
                     }
-                    if (filterrate && txinfo.feeRate.GetFeePerK() < filterrate) {
+                    if (filterrate && txinfo.fee < filterrate) {
                         continue;
                     }
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
@@ -3828,12 +3828,10 @@ bool PeerLogicValidation::SendMessages(CNode* pto, std::atomic<bool>& interruptM
         // We don't want white listed peers to filter txs to us if we have -whitelistforcerelay
         if (pto->nVersion >= FEEFILTER_VERSION && gArgs.GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
             !(pto->fWhitelisted && gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY))) {
-            CAmount currentFilter = mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+            CAmount currentFilter = MIN_TX_FEE;
             int64_t timeNow = GetTimeMicros();
             if (timeNow > pto->nextSendTimeFeeFilter) {
-                static CFeeRate default_feerate(DEFAULT_MIN_RELAY_TX_FEE);
-                // We always have a fee filter of at least minRelayTxFee
-                CAmount filterToSend = std::max(default_feerate.GetFeePerK(), ::minRelayTxFee.GetFeePerK());
+                CAmount filterToSend = MIN_TX_FEE;
                 if (filterToSend != pto->lastSentFeeFilter) {
                     connman->PushMessage(pto, msgMaker.Make(NetMsgType::FEEFILTER, filterToSend));
                     pto->lastSentFeeFilter = filterToSend;

@@ -7,7 +7,6 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include <amount.h>
-#include <policy/feerate.h>
 #include <streams.h>
 #include <tinyformat.h>
 #include <ui_interface.h>
@@ -36,24 +35,11 @@ extern std::vector<CWalletRef> vpwallets;
 /**
  * Settings
  */
-extern CFeeRate payTxFee;
 extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fWalletUnlockMintOnly;
 
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
-//! -paytxfee default
-//ppcTODO: from 0.7: int64 nTransactionFee = PERKB_TX_FEE;
-static const CAmount DEFAULT_TRANSACTION_FEE = MIN_TX_FEE; //0;
-//! -fallbackfee default
-static const CAmount DEFAULT_FALLBACK_FEE = MIN_TX_FEE; //20000;
-//! -m_discard_rate default
-static const CAmount DEFAULT_DISCARD_FEE = MIN_TX_FEE; //10000;
-//! -mintxfee default
-//ppcTODO: from 0.7: int64 CTransaction::nMinTxFee = PERKB_TX_FEE;  // Override with -mintxfee
-static const CAmount DEFAULT_TRANSACTION_MINFEE = MIN_TX_FEE; //1000;
-//! minimum recommended increment for BIP 125 replacement txs
-static const CAmount WALLET_INCREMENTAL_RELAY_FEE = 5*MIN_TX_FEE; //5000;
 //! target minimum change amount
 static const CAmount MIN_CHANGE = MIN_TXOUT_AMOUNT;
 //! final minimum change amount after paying for fees
@@ -481,8 +467,8 @@ public:
     // RelayWalletTransaction may only be called if fBroadcastTransactions!
     bool RelayWalletTransaction(CConnman* connman);
 
-    /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
-    bool AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state);
+    /** Pass this transaction to the mempool. */
+    bool AcceptToMemoryPool(CValidationState& state);
 
     std::set<uint256> GetConflicts() const;
 };
@@ -988,10 +974,6 @@ public:
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB *pwalletdb);
     template <typename ContainerType>
     bool DummySignTx(CMutableTransaction &txNew, const ContainerType &coins) const;
-
-    static CFeeRate minTxFee;
-    static CFeeRate fallbackFee;
-    static CFeeRate m_discard_rate;
 
     bool NewKeyPool();
     size_t KeypoolCountExternalKeys();

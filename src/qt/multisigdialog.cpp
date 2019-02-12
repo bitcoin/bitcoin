@@ -350,7 +350,7 @@ void MultisigDialog::on_transaction_textChanged()
         return;
     transactionSize += ui->inputs->count() * 73; // Future ECDSA signatures in DER format
     int64_t fee = (int64_t ) (ui->fee->text().toDouble() * COIN);
-    int64_t minFee = minFee = (int64_t)(transactionSize * (PERKB_TX_FEE / 1000));
+    int64_t minFee = (int64_t)(transactionSize * (PERKB_TX_FEE / 1000));
     if(fee < minFee)
     {
         ui->fee->setStyleSheet("color:red;");
@@ -527,8 +527,7 @@ void MultisigDialog::on_sendTransactionButton_clicked()
     // Send the transaction to the local node
     bool fMissingInputs = false;
     CValidationState state;
-    std::list<CTransactionRef> lRemovedTxn;
-    if (!AcceptToMemoryPool(mempool, state, tx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */))
+    if (!AcceptToMemoryPool(mempool, state, tx, &fMissingInputs, false /* bypass_limits */))
         return;
 
     CInv inv(MSG_TX, tx->GetHash());

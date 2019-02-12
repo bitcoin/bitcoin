@@ -13,7 +13,6 @@
 #include <consensus/validation.h>
 #include <validation.h>
 #include <core_io.h>
-#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/server.h>
@@ -1317,8 +1316,6 @@ UniValue mempoolInfoToJSON()
     ret.push_back(Pair("usage", (int64_t) mempool.DynamicMemoryUsage()));
     size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     ret.push_back(Pair("maxmempool", (int64_t) maxmempool));
-    ret.push_back(Pair("mempoolminfee", ValueFromAmount(std::max(mempool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK())));
-    ret.push_back(Pair("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK())));
 
     return ret;
 }
@@ -1336,7 +1333,6 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
             "  \"usage\": xxxxx,              (numeric) Total memory usage for the mempool\n"
             "  \"maxmempool\": xxxxx,         (numeric) Maximum memory usage for the mempool\n"
             "  \"mempoolminfee\": xxxxx       (numeric) Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee\n"
-            "  \"minrelaytxfee\": xxxxx       (numeric) Current minimum relay fee for transactions\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmempoolinfo", "")

@@ -27,7 +27,6 @@
 #include <txmempool.h>
 #include <util.h>
 #include <utilmoneystr.h>
-#include <wallet/fees.h>
 
 #include <kernel.h>
 #include <bignum.h>
@@ -40,8 +39,6 @@
 #include <boost/thread.hpp>
 
 std::vector<CWalletRef> vpwallets;
-/** Transaction fee set by the user */
-CFeeRate payTxFee(DEFAULT_TRANSACTION_FEE);
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = DEFAULT_SPEND_ZEROCONF_CHANGE;
 OutputType g_address_type = OUTPUT_TYPE_NONE;
@@ -49,20 +46,6 @@ OutputType g_change_type = OUTPUT_TYPE_NONE;
 
 const char * DEFAULT_WALLET_DAT = "wallet.dat";
 const uint32_t BIP32_HARDENED_KEY_LIMIT = 0x80000000;
-
-/**
- * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
- * Override with -mintxfee
- */
-CFeeRate CWallet::minTxFee = CFeeRate(DEFAULT_TRANSACTION_MINFEE);
-/**
- * If fee estimation does not have enough data to provide estimates, use this fee instead.
- * Has no effect if not using fee estimation
- * Override with -fallbackfee
- */
-CFeeRate CWallet::fallbackFee = CFeeRate(DEFAULT_FALLBACK_FEE);
-
-CFeeRate CWallet::m_discard_rate = CFeeRate(DEFAULT_DISCARD_FEE);
 
 const uint256 CMerkleTx::ABANDON_HASH(uint256S("0000000000000000000000000000000000000000000000000000000000000001"));
 
@@ -1720,7 +1703,7 @@ void CWallet::ReacceptWalletTransactions()
     for (std::pair<const int64_t, CWalletTx*>& item : mapSorted) {
         CWalletTx& wtx = *(item.second);
         CValidationState state;
-        wtx.AcceptToMemoryPool(maxTxFee, state);
+        wtx.AcceptToMemoryPool(state);
     }
 }
 
@@ -1731,7 +1714,7 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman)
     {
         CValidationState state;
         /* GetDepthInMainChain already catches known conflicts. */
-        if (InMempool() || AcceptToMemoryPool(maxTxFee, state)) {
+        if (InMempool() || AcceptToMemoryPool(state)) {
             LogPrintf("Relaying wtx %s\n", GetHash().ToString());
             if (connman) {
                 CInv inv(MSG_TX, GetHash());
@@ -2791,7 +2774,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
             CTxOut change_prototype_txout(0, scriptChange);
             size_t change_prototype_size = GetSerializeSize(change_prototype_txout, SER_DISK, 0);
 
-            CFeeRate discard_rate = GetDiscardRate();
             bool fNewFees = IsProtocolV07(txNew.nTime);
             nFeeRet = (fNewFees ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
             bool pick_new_inputs = true;
@@ -2823,20 +2805,6 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                             fFirst = false;
                             txout.nValue -= nFeeRet % nSubtractFeeFromAmount;
                         }
-                    }
-
-                    if (IsDust(txout, ::dustRelayFee))
-                    {
-                        if (recipient.fSubtractFeeFromAmount && nFeeRet > 0)
-                        {
-                            if (txout.nValue < 0)
-                                strFailReason = _("The transaction amount is too small to pay the fee");
-                            else
-                                strFailReason = _("The transaction amount is too small to send after the fee has been deducted");
-                        }
-                        else
-                            strFailReason = _("Transaction amount too small");
-                        return false;
                     }
                     txNew.vout.push_back(txout);
                 }
@@ -2879,29 +2847,19 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     // Fill a vout to ourself
                     CTxOut newTxOut(nChange, scriptChange);
 
-                    // Never create dust outputs; if we would, just
-                    // add the dust to the fee.
-                    if (IsDust(newTxOut, discard_rate))
+                    if (nChangePosInOut == -1)
                     {
-                        nChangePosInOut = -1;
-                        nFeeRet += nChange;
+                        // Insert change txn at random position:
+                        nChangePosInOut = GetRandInt(txNew.vout.size()+1);
                     }
-                    else
+                    else if ((unsigned int)nChangePosInOut > txNew.vout.size())
                     {
-                        if (nChangePosInOut == -1)
-                        {
-                            // Insert change txn at random position:
-                            nChangePosInOut = GetRandInt(txNew.vout.size()+1);
-                        }
-                        else if ((unsigned int)nChangePosInOut > txNew.vout.size())
-                        {
-                            strFailReason = _("Change index out of range");
-                            return false;
-                        }
+                        strFailReason = _("Change index out of range");
+                        return false;
+                    }
 
-                        std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
-                        txNew.vout.insert(position, newTxOut);
-                    }
+                    std::vector<CTxOut>::iterator position = txNew.vout.begin()+nChangePosInOut;
+                    txNew.vout.insert(position, newTxOut);
                 } else {
                     nChangePosInOut = -1;
                 }
@@ -2936,16 +2894,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
 //                else
 //                    nPayFee = nTransactionFee * (1 + (int64)nBytes / 1000);
 
-                nFeeNeeded = GetMinimumFee(nBytes, coin_control, ::mempool);
-
-                // If we made it here and we aren't even able to meet the relay fee on the next pass, give up
-                // because we must be at the maximum allowed fee.
-                if (nFeeNeeded < ::minRelayTxFee.GetFee(nBytes))
-                {
-                    strFailReason = _("Transaction too large for fee policy");
-                    return false;
-                }
-
+                nFeeNeeded = GetMinFee(nBytes, txNew.nTime);
                 if (nFeeRet >= nFeeNeeded) {
                     // Reduce fee to only the needed amount if possible. This
                     // prevents potential overpayment in fees if the coins
@@ -2959,8 +2908,8 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     // change output. Only try this once.
                     if (nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
                         unsigned int tx_size_with_change = nBytes + change_prototype_size + 2; // Add 2 as a buffer in case increasing # of outputs changes compact size
-                        CAmount fee_needed_with_change = GetMinimumFee(tx_size_with_change, coin_control, ::mempool);
-                        CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
+                        CAmount fee_needed_with_change = GetMinFee(tx_size_with_change, txNew.nTime);
+                        CAmount minimum_value_for_change = MIN_TXOUT_AMOUNT;  //ppcTODO - is this correct?
                         if (nFeeRet >= fee_needed_with_change + minimum_value_for_change) {
                             pick_new_inputs = false;
                             nFeeRet = fee_needed_with_change;
@@ -3096,7 +3045,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey, CCon
         if (fBroadcastTransactions)
         {
             // Broadcast
-            if (!wtx.AcceptToMemoryPool(maxTxFee, state)) {
+            if (!wtx.AcceptToMemoryPool(state)) {
                 LogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", state.GetRejectReason());
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
             } else {
@@ -4185,7 +4134,7 @@ int CMerkleTx::GetBlocksToMaturity() const
 }
 
 
-bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& state)
+bool CWalletTx::AcceptToMemoryPool(CValidationState& state)
 {
     // Quick check to avoid re-setting fInMempool to false
     if (mempool.exists(tx->GetHash())) {
@@ -4197,8 +4146,7 @@ bool CWalletTx::AcceptToMemoryPool(const CAmount& nAbsurdFee, CValidationState& 
     // user could call sendmoney in a loop and hit spurious out of funds errors
     // because we think that the transaction they just generated's change is
     // unavailable as we're not yet aware its in mempool.
-    bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, nAbsurdFee);
+    bool ret = ::AcceptToMemoryPool(mempool, state, tx, nullptr /* pfMissingInputs */, false /* bypass_limits */);
     fInMempool = ret;
     return ret;
 }

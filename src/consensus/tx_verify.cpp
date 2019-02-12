@@ -281,9 +281,13 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
 CAmount GetMinFee(const CTransaction& tx)
 {
     size_t nBytes = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    return GetMinFee(nBytes, tx.nTime);
+}
 
+CAmount GetMinFee(size_t nBytes, uint32_t nTime)
+{
     CAmount nMinFee;
-    if (IsProtocolV07(tx.nTime)) // RFC-0007
+    if (IsProtocolV07(nTime)) // RFC-0007
         nMinFee = (nBytes < 100) ? MIN_TX_FEE : (CAmount)(nBytes * (PERKB_TX_FEE / 1000));
     else
         nMinFee = (1 + (CAmount)nBytes / 1000) * PERKB_TX_FEE;

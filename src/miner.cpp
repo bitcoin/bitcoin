@@ -16,7 +16,6 @@
 #include <hash.h>
 #include <validation.h>
 #include <net.h>
-#include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
@@ -63,13 +62,11 @@ int64_t UpdateTime(CBlockHeader* pblock)
 }
 
 BlockAssembler::Options::Options() {
-    blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
 }
 
 BlockAssembler::BlockAssembler(const CChainParams& params, const Options& options) : chainparams(params)
 {
-    blockMinFeeRate = options.blockMinFeeRate;
     // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
     nBlockMaxWeight = std::max<size_t>(4000, std::min<size_t>(MAX_BLOCK_WEIGHT - 4000, options.nBlockMaxWeight));
 }
@@ -80,13 +77,6 @@ static BlockAssembler::Options DefaultOptions(const CChainParams& params)
     // If -blockmaxweight is not given, limit to DEFAULT_BLOCK_MAX_WEIGHT
     BlockAssembler::Options options;
     options.nBlockMaxWeight = gArgs.GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT);
-    if (gArgs.IsArgSet("-blockmintxfee")) {
-        CAmount n = 0;
-        ParseMoney(gArgs.GetArg("-blockmintxfee", ""), n);
-        options.blockMinFeeRate = CFeeRate(n);
-    } else {
-        options.blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
-    }
     return options;
 }
 
@@ -283,8 +273,8 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 
     bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
     if (fPrintPriority) {
-        LogPrintf("fee %s txid %s\n",
-                  CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
+        LogPrintf("fee %d satoshi txid %s\n",
+                  iter->GetModifiedFee(),
                   iter->GetTx().GetHash().ToString());
     }
 }
@@ -413,17 +403,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         assert(!inBlock.count(iter));
 
         uint64_t packageSize = iter->GetSizeWithAncestors();
-        CAmount packageFees = iter->GetModFeesWithAncestors();
         int64_t packageSigOpsCost = iter->GetSigOpCostWithAncestors();
         if (fUsingModified) {
             packageSize = modit->nSizeWithAncestors;
-            packageFees = modit->nModFeesWithAncestors;
             packageSigOpsCost = modit->nSigOpCostWithAncestors;
-        }
-
-        if (packageFees < blockMinFeeRate.GetFee(packageSize)) {
-            // Everything else we might consider has a lower fee rate
-            return;
         }
 
         if (!TestPackage(packageSize, packageSigOpsCost)) {

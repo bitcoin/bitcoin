@@ -250,14 +250,6 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
     return ret;
 }
 
-bool isDust(const QString& address, const CAmount& amount)
-{
-    CTxDestination dest = DecodeDestination(address.toStdString());
-    CScript script = GetScriptForDestination(dest);
-    CTxOut txOut(amount, script);
-    return IsDust(txOut, ::dustRelayFee);
-}
-
 QString HtmlEscape(const QString& str, bool fMultiLine)
 {
 #if QT_VERSION < 0x050000
