@@ -49,6 +49,7 @@ class CWallet;
 fs::path GetWalletDir();
 std::vector<fs::path> ListWalletDir();
 std::vector<std::shared_ptr<CWallet>> GetWallets();
+std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning);
 
 namespace interfaces {
 
@@ -378,6 +379,11 @@ public:
         }
         return wallets;
     }
+    std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) override
+    {
+        return MakeWallet(LoadWallet(*m_interfaces.chain, name, error, warning));
+    }
+
     EVO& evo() override { return m_evo; }
     LLMQ& llmq() override { return m_llmq; }
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }

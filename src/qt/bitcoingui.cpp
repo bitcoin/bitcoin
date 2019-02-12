@@ -427,6 +427,10 @@ void BitcoinGUI::createActions()
     openAction = new QAction(tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a dash: URI or payment request"));
 
+    m_open_wallet_action = new QAction(tr("Open Wallet"), this);
+    m_open_wallet_action->setMenu(new QMenu(this));
+    m_open_wallet_action->setStatusTip(tr("Open a wallet"));
+
     showHelpMessageAction = new QAction(tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Dash command-line options").arg(tr(PACKAGE_NAME)));
@@ -475,6 +479,37 @@ void BitcoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &BitcoinGUI::openClicked);
+        connect(m_open_wallet_action->menu(), &QMenu::aboutToShow, [this] {
+            m_open_wallet_action->menu()->clear();
+            for (std::string path : m_wallet_controller->getWalletsAvailableToOpen()) {
+                QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+                QAction* action = m_open_wallet_action->menu()->addAction(name);
+                connect(action, &QAction::triggered, [this, name, path] {
+                    OpenWalletActivity* activity = m_wallet_controller->openWallet(path);
+
+                    QProgressDialog* dialog = new QProgressDialog(this);
+                    dialog->setLabelText(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
+                    dialog->setRange(0, 0);
+                    dialog->setCancelButton(nullptr);
+                    dialog->setWindowModality(Qt::ApplicationModal);
+                    dialog->show();
+
+                    connect(activity, &OpenWalletActivity::message, this, [this] (QMessageBox::Icon icon, QString text) {
+                        QMessageBox box;
+                        box.setIcon(icon);
+                        box.setText(tr("Open Wallet Failed"));
+                        box.setInformativeText(text);
+                        box.setStandardButtons(QMessageBox::Ok);
+                        box.setDefaultButton(QMessageBox::Ok);
+                        connect(this, &QObject::destroyed, &box, &QDialog::accept);
+                        box.exec();
+                    });
+                    connect(activity, &OpenWalletActivity::opened, this, &BitcoinGUI::setCurrentWallet);
+                    connect(activity, &OpenWalletActivity::finished, activity, &QObject::deleteLater);
+                    connect(activity, &OpenWalletActivity::finished, dialog, &QObject::deleteLater);
+                });
+            }
+        });
     }
 #endif // ENABLE_WALLET
 
@@ -499,6 +534,8 @@ void BitcoinGUI::createMenuBar()
     QMenu *file = appMenuBar->addMenu(tr("&File"));
     if(walletFrame)
     {
+        file->addAction(m_open_wallet_action);
+        file->addSeparator();
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
