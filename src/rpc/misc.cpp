@@ -203,7 +203,7 @@ static UniValue validateaddress(const JSONRPCRequest& request)
             RPCHelpMan{"validateaddress",
                 "\nReturn information about the given dash address.\n",
                 {
-                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The dash address to validate"},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The dash address to validate"},
                 },
                 RPCResult{
             "{\n"
@@ -247,10 +247,10 @@ static UniValue createmultisig(const JSONRPCRequest& request)
                 "\nCreates a multi-signature address with n signature of m keys required.\n"
                 "It returns a json object with the address and redeemScript.\n",
                 {
-                    {"nrequired", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "The number of required signatures out of the n keys."},
-                    {"keys", RPCArg::Type::ARR, /* opt */ false, /* default_val */ "", "A json array of hex-encoded public keys.",
+                    {"nrequired", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of required signatures out of the n keys."},
+                    {"keys", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of hex-encoded public keys.",
                         {
-                            {"key", RPCArg::Type::STR_HEX, /* opt */ false, /* default_val */ "", "The hex-encoded public key"},
+                            {"key", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The hex-encoded public key"},
                         }},
                 },
                 RPCResult{
@@ -429,9 +429,9 @@ static UniValue verifymessage(const JSONRPCRequest& request)
             RPCHelpMan{"verifymessage",
                 "\nVerify a signed message\n",
                 {
-                    {"address", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The dash address to use for the signature."},
-                    {"signature", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The signature provided by the signer in base 64 encoding (see signmessage)."},
-                    {"message", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The message that was signed."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The dash address to use for the signature."},
+                    {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "The signature provided by the signer in base 64 encoding (see signmessage)."},
+                    {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message that was signed."},
                 },
                 RPCResult{
             "true|false   (boolean) If the signature is verified or not.\n"
@@ -488,8 +488,8 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             RPCHelpMan{"signmessagewithprivkey",
                 "\nSign a message with the private key of an address\n",
                 {
-                    {"privkey", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The private key to sign the message with."},
-                    {"message", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "The message to create a signature of."},
+                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The private key to sign the message with."},
+                    {"message", RPCArg::Type::STR, RPCArg::Optional::NO, "The message to create a signature of."},
                 },
                 RPCResult{
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -530,7 +530,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
             RPCHelpMan{"setmocktime",
                 "\nSet the local time to given timestamp (-regtest only)\n",
                 {
-                    {"timestamp", RPCArg::Type::NUM, /* opt */ false, /* default_val */ "", "Unix seconds-since-epoch timestamp\n"
+                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, "Unix seconds-since-epoch timestamp\n"
             "   Pass 0 to go back to using the system time."},
                 },
                 RPCResults{},
@@ -1121,7 +1121,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getmemoryinfo",
                 "Returns an object containing information about memory usage.\n",
                 {
-                    {"mode", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "determines what kind of information is returned. This argument is optional, the default mode is \"stats\".\n"
+                    {"mode", RPCArg::Type::STR, /* default */ "\"stats\"", "determines what kind of information is returned.\n"
             "  - \"stats\" returns general statistics about memory usage in the daemon.\n"
             "  - \"mallocinfo\" returns an XML string describing low-level heap state (only available if compiled with glibc 2.10+)."},
                 },
@@ -1200,13 +1200,13 @@ static UniValue logging(const JSONRPCRequest& request)
             "  - \"none\", \"0\" : even if other logging categories are specified, ignore all of them.\n"
             ,
                 {
-                    {"include", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of categories to add debug logging",
+                    {"include", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array of categories to add debug logging",
                         {
-                            {"include_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
+                            {"include_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
-                    {"exclude", RPCArg::Type::ARR, /* opt */ true, /* default_val */ "", "A json array of categories to remove debug logging",
+                    {"exclude", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "A json array of categories to remove debug logging",
                         {
-                            {"exclude_category", RPCArg::Type::STR, /* opt */ false, /* default_val */ "", "the valid logging category"},
+                            {"exclude_category", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "the valid logging category"},
                         }},
                 },
                 RPCResult{

@@ -276,8 +276,8 @@ UniValue help(const JSONRPCRequest& jsonRequest)
             RPCHelpMan{"help",
                 "\nList all commands, or get help for a specified command.\n",
                 {
-                    {"command", RPCArg::Type::STR, /* opt */ true, /* default_val */ "all commands", "The command to get help on"},
-                    {"subcommand", RPCArg::Type::STR, /* opt */ true, /* default_val */ "", "The subcommand to get help on. Please note that not all subcommands support this at the moment"},
+                    {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
+                    {"subcommand", RPCArg::Type::STR, /* default */ "all subcommands", "The subcommand to get help on. Please note that not all subcommands support this at the moment"},
                 },
                 RPCResult{
             "\"text\"     (string) The help text\n"
