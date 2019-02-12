@@ -119,25 +119,27 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     AssertLockHeld(cs_main);
     mnListDiffRet = CSimplifiedMNListDiff();
 
-    BlockMap::iterator baseBlockIt = mapBlockIndex.begin();
+    const CBlockIndex* baseBlockIndex = chainActive.Genesis();
     if (!baseBlockHash.IsNull()) {
-        baseBlockIt = mapBlockIndex.find(baseBlockHash);
+        auto it = mapBlockIndex.find(baseBlockHash);
+        if (it == mapBlockIndex.end()) {
+            errorRet = strprintf("block %s not found", baseBlockHash.ToString());
+            return false;
+        }
+        baseBlockIndex = it->second;
     }
     auto blockIt = mapBlockIndex.find(blockHash);
-    if (baseBlockIt == mapBlockIndex.end()) {
-        errorRet = strprintf("block %s not found", baseBlockHash.ToString());
-        return false;
-    }
     if (blockIt == mapBlockIndex.end()) {
         errorRet = strprintf("block %s not found", blockHash.ToString());
         return false;
     }
+    const CBlockIndex* blockIndex = blockIt->second;
 
-    if (!chainActive.Contains(baseBlockIt->second) || !chainActive.Contains(blockIt->second)) {
+    if (!chainActive.Contains(baseBlockIndex) || !chainActive.Contains(blockIndex)) {
         errorRet = strprintf("block %s and %s are not in the same chain", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }
-    if (baseBlockIt->second->nHeight > blockIt->second->nHeight) {
+    if (baseBlockIndex->nHeight > blockIndex->nHeight) {
         errorRet = strprintf("base block %s is higher then block %s", baseBlockHash.ToString(), blockHash.ToString());
         return false;
     }
@@ -150,7 +152,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
 
     // TODO store coinbase TX in CBlockIndex
     CBlock block;
-    if (!ReadBlockFromDisk(block, blockIt->second, Params().GetConsensus())) {
+    if (!ReadBlockFromDisk(block, blockIndex, Params().GetConsensus())) {
         errorRet = strprintf("failed to read block %s from disk", blockHash.ToString());
         return false;
     }
