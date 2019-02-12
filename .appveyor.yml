@@ -17,6 +17,7 @@ install:
 - cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
+- cmd: vcpkg remove --outdated --recurse
 - cmd: vcpkg install --triplet %PLATFORM%-windows-static %PACKAGES% > NUL
 - cmd: del /s /q C:\Tools\vcpkg\installed\%PLATFORM%-windows-static\debug # Remove unused debug library
 before_build:
