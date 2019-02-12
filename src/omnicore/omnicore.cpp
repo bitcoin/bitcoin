@@ -1664,6 +1664,12 @@ int mastercore_init()
         nWaterlineBlock = -1; // force a clear_all_state and parse from start
     }
 
+    // consistency check
+    bool inconsistentDb = !VerifyTransactionExistence(nWaterlineBlock);
+    if (inconsistentDb) {
+        nWaterlineBlock = -1; // force a clear_all_state and parse from start
+    }
+
     if (nWaterlineBlock > 0) {
         PrintToConsole("Loading persistent state: OK [block %d]\n", nWaterlineBlock);
     } else {
@@ -1671,12 +1677,24 @@ int mastercore_init()
         if (wrongDBVersion) strReason = "client version changed";
         if (noPreviousState) strReason = "no usable previous state found";
         if (startClean) strReason = "-startclean parameter used";
+        if (inconsistentDb) strReason = "INCONSISTENT DB DETECTED!\n"
+                "\n!!! WARNING !!!\n\n"
+                "IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS\n"
+                "ALL OMNI TRANSACTIONS TO AVOID INCONSISTENCIES!\n"
+                "\n!!! WARNING !!!";
         PrintToConsole("Loading persistent state: NONE (%s)\n", strReason);
     }
 
     if (nWaterlineBlock < 0) {
         // persistence says we reparse!, nuke some stuff in case the partial loads left stale bits
         clear_all_state();
+    }
+
+    if (inconsistentDb) {
+        std::string strAlert("INCONSISTENT DB DETECTED! IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS"
+                "ALL OMNI TRANSACTIONS TO AVOID INCONSISTENCIES!");
+        AddAlert("omnicore", ALERT_CLIENT_VERSION_EXPIRY, std::numeric_limits<uint32_t>::max(), strAlert);
+        AlertNotify(strAlert);
     }
 
     // legacy code, setting to pre-genesis-block

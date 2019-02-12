@@ -63,6 +63,14 @@ struct ConsensusCheckpoint
     uint256 consensusHash;
 };
 
+/** A structure to represent a specific transaction checkpoint.
+ */
+struct TransactionCheckpoint
+{
+    int blockHeight;
+    uint256 txHash;
+};
+
 // TODO: rename allcaps variable names
 // TODO: remove remaining global heights
 // TODO: add Exodus addresses to params
@@ -140,6 +148,9 @@ public:
     /** Returns an empty vector of consensus checkpoints. */
     virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
 
+    /** Returns an empty vector of transaction checkpoints. */
+    virtual std::vector<TransactionCheckpoint> GetTransactions() const;
+
     /** Destructor. */
     virtual ~CConsensusParams() {}
 
@@ -160,6 +171,9 @@ public:
 
     /** Returns consensus checkpoints for mainnet, used to verify transaction processing. */
     virtual std::vector<ConsensusCheckpoint> GetCheckpoints() const;
+
+    /** Returns transactions checkpoints for mainnet, used to verify DB consistency. */
+    virtual std::vector<TransactionCheckpoint> GetTransactions() const;
 };
 
 /** Consensus parameters for testnet.
@@ -211,6 +225,8 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
 
 /** Compares a supplied block, block hash and consensus hash against a hardcoded list of checkpoints. */
 bool VerifyCheckpoint(int block, const uint256& blockHash);
+/** Checks, if a specific transaction exists in the database. */
+bool VerifyTransactionExistence(int block);
 }
 
 #endif // OMNICORE_RULES_H
