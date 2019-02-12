@@ -182,12 +182,12 @@ struct Sections {
                 left += outer_type == OuterType::OBJ ? arg.ToStringObj(/* oneline */ false) : arg.ToString(/* oneline */ false);
             }
             left += ",";
-            PushSection({left, arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR)});
+            PushSection({left, arg.ToDescriptionString()});
             break;
         }
         case RPCArg::Type::OBJ:
         case RPCArg::Type::OBJ_USER_KEYS: {
-            const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR);
+            const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString();
             PushSection({indent + "{", right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::OBJ);
@@ -202,7 +202,7 @@ struct Sections {
             auto left = indent;
             left += outer_type == OuterType::OBJ ? "\"" + arg.m_name + "\": " : "";
             left += "[";
-            const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString(/* implicitly_required */ outer_type == OuterType::ARR);
+            const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString();
             PushSection({left, right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::ARR);
@@ -295,8 +295,14 @@ std::string RPCHelpMan::ToString() const
     ret += m_name;
     bool was_optional{false};
     for (const auto& arg : m_args) {
+        bool optional;
+        if (arg.m_fallback.which() == 1) {
+            optional = true;
+        } else {
+            optional = RPCArg::Optional::NO != boost::get<RPCArg::Optional>(arg.m_fallback);
+        }
         ret += " ";
-        if (arg.m_optional) {
+        if (optional) {
             if (!was_optional) ret += "( ";
             was_optional = true;
         } else {
@@ -336,7 +342,7 @@ std::string RPCHelpMan::ToString() const
     return ret;
 }
 
-std::string RPCArg::ToDescriptionString(const bool implicitly_required) const
+std::string RPCArg::ToDescriptionString() const
 {
     std::string ret;
     ret += "(";
@@ -374,19 +380,24 @@ std::string RPCArg::ToDescriptionString(const bool implicitly_required) const
             // no default case, so the compiler can warn about missing cases
         }
     }
-    if (!implicitly_required) {
-        ret += ", ";
-        if (m_optional) {
-            ret += "optional";
-            if (!m_default_value.empty()) {
-                ret += ", default=" + m_default_value;
-            } else {
-                // TODO enable this assert, when all optional parameters have their default value documented
-                //assert(false);
-            }
-        } else {
-            ret += "required";
-            assert(m_default_value.empty()); // Default value is ignored, and must not be present
+    if (m_fallback.which() == 1) {
+        ret += ", optional, default=" + boost::get<std::string>(m_fallback);
+    } else {
+        switch (boost::get<RPCArg::Optional>(m_fallback)) {
+        case RPCArg::Optional::OMITTED: {
+            // nothing to do. Element is treated as if not present and has no default value
+            break;
+        }
+        case RPCArg::Optional::OMITTED_NAMED_ARG: {
+            ret += ", optional"; // Default value is "null"
+            break;
+        }
+        case RPCArg::Optional::NO: {
+            ret += ", required";
+            break;
+        }
+
+            // no default case, so the compiler can warn about missing cases
         }
     }
     ret += ")";
