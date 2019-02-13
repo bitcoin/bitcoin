@@ -3878,7 +3878,7 @@ LogPrintf("ContextualCheckBlock\n");
     if (nHeight >= consensusParams.BIP16Height) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
-    LogPrintf("ContextualCheckBlock1 %d\n", pindexPrev == nullptr? 0: 1);
+    LogPrintf("ContextualCheckBlock1\n");
     int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
@@ -3889,7 +3889,7 @@ LogPrintf("ContextualCheckBlock\n");
         if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
         }
-         LogPrintf("ContextualCheckBlock1b donenHeight %d\n", nHeight);
+         LogPrintf("ContextualCheckBlock1b done nHeight %d\n", nHeight);
     }
     LogPrintf("ContextualCheckBlock2\n");
     // Enforce rule that the coinbase starts with serialized block height
