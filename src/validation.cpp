@@ -4054,7 +4054,6 @@ static CDiskBlockPos SaveBlockToDisk(const CBlock& block, int nHeight, const CCh
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
 bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const CDiskBlockPos* dbp, bool* fNewBlock)
 {
-    LogPrintf("AcceptBlock\n");
     const CBlock& block = *pblock;
 
     if (fNewBlock) *fNewBlock = false;
@@ -4062,7 +4061,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 
     CBlockIndex *pindexDummy = nullptr;
     CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
-    LogPrintf("AcceptBlockHeader\n");
     if (!AcceptBlockHeader(block, state, chainparams, &pindex))
         return false;
 
@@ -4097,7 +4095,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
         // request; don't process these.
         if (pindex->nChainWork < nMinimumChainWork) return true;
     }
-    LogPrintf("AcceptBlockHeader1\n");
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
@@ -4106,12 +4103,10 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
         }
         return error("%s: %s", __func__, FormatStateMessage(state));
     }
-    LogPrintf("AcceptBlockHeader2\n");
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
     // (but if it does not build on our best tip, let the SendMessages loop relay it)
     if (!IsInitialBlockDownload() && chainActive.Tip() == pindex->pprev)
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
-        LogPrintf("AcceptBlockHeader3\n");
     // Write block to history file
     if (fNewBlock) *fNewBlock = true;
     try {
@@ -4124,16 +4119,12 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     } catch (const std::runtime_error& e) {
         return AbortNode(state, std::string("System error: ") + e.what());
     }
-    LogPrintf("AcceptBlockHeader4\n");
     FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
-    LogPrintf("AcceptBlockHeader5\n");
     CheckBlockIndex(chainparams.GetConsensus());
-    LogPrintf("AcceptBlockHeader6\n");
     return true;
 }
 bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool *fNewBlock)
 {
-LogPrintf("ProcessNewBlock\n");
     AssertLockNotHeld(cs_main);
 
     {
@@ -4155,12 +4146,10 @@ LogPrintf("ProcessNewBlock\n");
             return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
         }
     }
-    LogPrintf("ProcessNewBlock2\n");
     CValidationState state;
     NotifyHeaderTip();
     if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
-        LogPrintf("ProcessNewBlock3\n");
     return true;
 }
 
