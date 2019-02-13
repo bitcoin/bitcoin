@@ -21,6 +21,7 @@ FUZZ_TARGETS = \
   test/fuzz/inv_deserialize \
   test/fuzz/messageheader_deserialize \
   test/fuzz/netaddr_deserialize \
+  test/fuzz/script_flags \
   test/fuzz/service_deserialize \
   test/fuzz/transaction_deserialize \
   test/fuzz/txoutcompressor_deserialize \
@@ -357,6 +358,23 @@ test_fuzz_netaddr_deserialize_LDADD = \
  $(LIBBITCOIN_CRYPTO_SHANI) \
  $(LIBSECP256K1)
 test_fuzz_netaddr_deserialize_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+
+test_fuzz_script_flags_SOURCES = $(FUZZ_SUITE) test/fuzz/script_flags.cpp
+test_fuzz_script_flags_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_flags_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_script_flags_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_script_flags_LDADD = \
+ $(LIBUNIVALUE) \
+ $(LIBBITCOIN_SERVER) \
+ $(LIBBITCOIN_COMMON) \
+ $(LIBBITCOIN_UTIL) \
+ $(LIBBITCOIN_CONSENSUS) \
+ $(LIBBITCOIN_CRYPTO) \
+ $(LIBBITCOIN_CRYPTO_SSE41) \
+ $(LIBBITCOIN_CRYPTO_AVX2) \
+ $(LIBBITCOIN_CRYPTO_SHANI) \
+ $(LIBSECP256K1)
+test_fuzz_script_flags_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 
 test_fuzz_service_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
 test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
