@@ -404,27 +404,6 @@ UniValue syscointxfund_helper(const string &vchWitness, vector<CRecipient> &vecS
 	return paramsFund;
 }
 
-CWallet* GetDefaultWallet() {
-	const std::vector<std::shared_ptr<CWallet>>& vecWallets = GetWallets();
-	if (vecWallets.empty())
-		return nullptr;
-	std::shared_ptr<CWallet> const wallet = vecWallets[0];
-	CWallet* const pwallet = wallet.get();
-	return pwallet;
-}
-CAmount GetFee(const size_t nBytes) {
-    CWallet* const pwallet = GetDefaultWallet();
-	FeeCalculation feeCalc;
-	CFeeRate feeRate = ::feeEstimator.estimateSmartFee(1, &feeCalc, true);
-	CAmount minFee=0;
-	if (feeRate != CFeeRate(0)) {
-		minFee = feeRate.GetFeePerK()*nBytes / 1000;
-	}
-	else if(pwallet != nullptr){
-		minFee = GetRequiredFee(*pwallet, nBytes);
-	}
-	return minFee;
-}
 
 class CCountSigsVisitor : public boost::static_visitor<void> {
 private:
