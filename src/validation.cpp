@@ -3863,7 +3863,6 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
  */
 static bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-LogPrintf("ContextualCheckBlock\n");
     const int nHeight = pindexPrev == nullptr ? 0 : pindexPrev->nHeight + 1;
 
     // Start enforcing BIP113 (Median Time Past) together with P2SH.
@@ -3871,20 +3870,16 @@ LogPrintf("ContextualCheckBlock\n");
     if (nHeight >= consensusParams.BIP16Height) {
         nLockTimeFlags |= LOCKTIME_MEDIAN_TIME_PAST;
     }
-    LogPrintf("ContextualCheckBlock1 %d\n", pindexPrev == nullptr? 0: 1);
     int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
-                               LogPrintf("ContextualCheckBlock1a\n");
+                     
     // Check that all transactions are finalized
     for (const auto& tx : block.vtx) {
-     LogPrintf("ContextualCheckBlock1b nHeight %d\n", nHeight);
         if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
         }
-         LogPrintf("ContextualCheckBlock1b donenHeight %d\n", nHeight);
     }
-    LogPrintf("ContextualCheckBlock2\n");
     // Enforce rule that the coinbase starts with serialized block height
     if (nHeight >= consensusParams.BIP34Height)
     {
@@ -3894,7 +3889,6 @@ LogPrintf("ContextualCheckBlock\n");
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
         }
     }
-    LogPrintf("ContextualCheckBlock4\n");
     // Validation for witness commitments.
     // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
     //   coinbase (where 0x0000....0000 is used instead).
@@ -3922,7 +3916,6 @@ LogPrintf("ContextualCheckBlock\n");
             fHaveWitness = true;
         }
     }
-    LogPrintf("ContextualCheckBlock5\n");
     // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
     if (!fHaveWitness) {
       for (const auto& tx : block.vtx) {
@@ -3931,7 +3924,7 @@ LogPrintf("ContextualCheckBlock\n");
             }
         }
     }
-    LogPrintf("ContextualCheckBlock6\n");
+
     // After the coinbase witness reserved value and commitment are verified,
     // we can check if the block weight passes (before we've checked the
     // coinbase witness, it would be possible for the weight to be too
@@ -3941,7 +3934,6 @@ LogPrintf("ContextualCheckBlock\n");
     if (GetBlockWeight(block) > MAX_BLOCK_WEIGHT) {
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-weight", false, strprintf("%s : weight limit failed", __func__));
     }
-    LogPrintf("ContextualCheckBlock7\n");
     return true;
 }
 
