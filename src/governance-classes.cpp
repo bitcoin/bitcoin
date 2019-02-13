@@ -527,6 +527,117 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     }
     // bootstrapping period
     else {
+        switch(nSuperblock)
+        {
+            case 1:
+                nPaymentsLimit = 2000000*COIN;
+                break;
+            case 2:
+                nPaymentsLimit = 1900000*COIN;
+                break;
+            case 3:
+                nPaymentsLimit = 1805000*COIN;
+                break; 
+            case 4:
+                nPaymentsLimit = 1714750*COIN;
+                break;
+            case 5:
+                nPaymentsLimit = 1629012.50*COIN;
+                break;
+            case 6:
+                nPaymentsLimit = 1547561.88*COIN;
+                break;
+            case 7:
+                nPaymentsLimit = 1470183.78*COIN;
+                break; 
+            case 8:
+                nPaymentsLimit = 1396674.59*COIN;
+                break; 
+            case 9:
+                nPaymentsLimit = 1326840.86*COIN;
+                break;
+            case 10:
+                nPaymentsLimit = 1260498.82*COIN;
+                break;
+            case 11:
+                nPaymentsLimit = 1197473.88*COIN;
+                break; 
+            case 12:
+                nPaymentsLimit = 1137600.18*COIN;
+                break; 
+            case 13:
+                nPaymentsLimit = 1080720.18*COIN;
+                break;
+            case 14:
+                nPaymentsLimit = 1026684.17*COIN;
+                break;
+            case 15:
+                nPaymentsLimit = 975349.96*COIN;
+                break; 
+            case 16:
+                nPaymentsLimit = 926582.46*COIN;
+                break; 
+            case 17:
+                nPaymentsLimit = 880253.34*COIN;
+                break;
+            case 18:
+                nPaymentsLimit = 836240.67*COIN;
+                break;
+            case 19:
+                nPaymentsLimit = 794428.64*COIN;
+                break; 
+            case 20:
+                nPaymentsLimit = 754707.21*COIN;
+                break; 
+            case 21:
+                nPaymentsLimit = 716971.84*COIN;
+                break;
+            case 22:
+                nPaymentsLimit = 681123.25*COIN;
+                break;
+            case 23:
+                nPaymentsLimit = 647067.09*COIN;
+                break; 
+            case 24:
+                nPaymentsLimit = 614713.74*COIN;
+                break;
+            case 25:
+                nPaymentsLimit = 583978.05*COIN;
+                break;
+            case 26:
+                nPaymentsLimit = 554779.15*COIN;
+                break;
+            case 27:
+                nPaymentsLimit = 527040.19*COIN;
+                break; 
+            case 28:
+                nPaymentsLimit = 500688.18*COIN;
+                break;
+            case 29:
+                nPaymentsLimit = 475653.77*COIN;
+                break; 
+            case 30:
+                nPaymentsLimit = 451871.08*COIN;
+                break;
+            case 31:
+                nPaymentsLimit = 429277.53*COIN;
+                break;
+            case 32:
+                nPaymentsLimit = 407813.65*COIN;
+                break; 
+            case 33:
+                nPaymentsLimit = 387422.97*COIN;
+                break;
+            case 34:
+                nPaymentsLimit = 368051.82*COIN;
+                break;
+            case 35:
+                nPaymentsLimit = 349649.23*COIN;
+                break;    
+            case 36:
+                nPaymentsLimit = 332166.77*COIN;
+                break;                                                                                                                                                       
+        }
         /*  
             A = Accrued Amount (principal + interest)
             P = Principal Amount
