@@ -32,15 +32,34 @@
 #include <algorithm>
 #include <assert.h>
 #include <future>
-// SYSCOIN
-#include <services/asset.h>
 #include <boost/algorithm/string/replace.hpp>
 
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
-
+// SYSCOIN
+CWallet* GetDefaultWallet() {
+    const std::vector<std::shared_ptr<CWallet>>& vecWallets = GetWallets();
+    if (vecWallets.empty())
+        return nullptr;
+    std::shared_ptr<CWallet> const wallet = vecWallets[0];
+    CWallet* const pwallet = wallet.get();
+    return pwallet;
+}
+CAmount GetFee(const size_t nBytes) {
+    CWallet* const pwallet = GetDefaultWallet();
+    FeeCalculation feeCalc;
+    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(1, &feeCalc, true);
+    CAmount minFee=0;
+    if (feeRate != CFeeRate(0)) {
+        minFee = feeRate.GetFeePerK()*nBytes / 1000;
+    }
+    else if(pwallet != nullptr){
+        minFee = GetRequiredFee(*pwallet, nBytes);
+    }
+    return minFee;
+}
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallets);

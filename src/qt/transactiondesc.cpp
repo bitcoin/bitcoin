@@ -22,8 +22,6 @@
 
 #include <stdint.h>
 #include <string>
-// SYSCOIN
-#include <services/asset.h>
 QString TransactionDesc::FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks, int64_t adjustedTime)
 {
     if (!status.is_final)

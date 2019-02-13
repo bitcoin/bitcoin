@@ -112,17 +112,18 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight){
     if (fZMQAssetAllocation) {
         UniValue output(UniValue::VOBJ);
-        AssetMintTxToJson(tx, mintSyscoin, nHeight, output);
-        GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
+        if(AssetMintTxToJson(tx, mintSyscoin, nHeight, output))
+            GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
     }
 }
 void CAssetAllocationDB::WriteAssetAllocationIndex(const int& op, const CTransaction &tx, const CAsset& dbAsset, const bool& confirmed, int nHeight) {
 	if (fZMQAssetAllocation) {
 		UniValue oName(UniValue::VOBJ);
         string strSender;
-        AssetAllocationTxToJSON(op, tx, dbAsset, nHeight, confirmed, oName, strSender);
-        const string& strObj = oName.write();
-        GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
+        if(AssetAllocationTxToJSON(op, tx, dbAsset, nHeight, confirmed, oName, strSender)){
+            const string& strObj = oName.write();
+            GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
+        }
 	}
 
 }
@@ -1249,11 +1250,11 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
 	return true;
 }
 
-void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry)
+bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry)
 {
     CAssetAllocation assetallocation(tx);
     if(assetallocation.assetAllocationTuple.IsNull())
-        return;
+        return false;
     CAsset dbAsset;
     GetAsset(assetallocation.assetAllocationTuple.nAsset, dbAsset);
     int nHeight = 0;
@@ -1284,13 +1285,13 @@ void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &en
     entry.pushKV("allocations", oAssetAllocationReceiversArray);
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.pushKV("confirmed", nHeight > 0);  
-    
+    return true;
 }
-void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, string& strSender)
+bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, string& strSender)
 {
     CAssetAllocation assetallocation(tx);
     if(assetallocation.assetAllocationTuple.IsNull() || dbAsset.IsNull())
-        return;
+        return false;
     strSender = assetallocation.assetAllocationTuple.witnessAddress.ToString();
     entry.pushKV("txtype", assetAllocationFromOp(op));
     entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
@@ -1315,9 +1316,9 @@ void AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.pushKV("confirmed", confirmed);   
 
-
+    return true;
 }
-void AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
+bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     CMintSyscoin mintsyscoin(tx);
     if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         int nHeight = 0;
@@ -1343,17 +1344,26 @@ void AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     
         entry.pushKV("allocations", oAssetAllocationReceiversArray); 
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.pushKV("confirmed", nHeight > 0);                                          
-    }                    
+        entry.pushKV("confirmed", nHeight > 0);   
+        UniValue oSPVProofObj(UniValue::VOBJ);
+        oSPVProofObj.pushKV("value", HexStr(mintsyscoin.vchValue));   
+        oSPVProofObj.pushKV("parentnodes", HexStr(mintsyscoin.vchParentNodes)); 
+        oSPVProofObj.pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
+        oSPVProofObj.pushKV("path", HexStr(mintsyscoin.vchPath));  
+        oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
+        entry.pushKV("spv_proof", oSPVProofObj); 
+        return true;                                        
+    } 
+    return false;                   
 }
-void AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry){
+bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry){
     if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         entry.pushKV("txtype", "assetallocationmint");
         entry.pushKV("_id", mintsyscoin.assetAllocationTuple.ToString());
         entry.pushKV("txid", tx.GetHash().GetHex());
         entry.pushKV("height", nHeight);       
         entry.pushKV("asset", (int)mintsyscoin.assetAllocationTuple.nAsset);
-        entry.pushKV("address", "");
+        entry.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAsset dbAsset;
         GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
@@ -1362,11 +1372,20 @@ void AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
         oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-    
+        
         entry.pushKV("allocations", oAssetAllocationReceiversArray);
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.pushKV("confirmed", true);                                         
-    }                    
+        entry.pushKV("confirmed", true);  
+        UniValue oSPVProofObj(UniValue::VOBJ);
+        oSPVProofObj.pushKV("value", HexStr(mintsyscoin.vchValue));   
+        oSPVProofObj.pushKV("parentnodes", HexStr(mintsyscoin.vchParentNodes)); 
+        oSPVProofObj.pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
+        oSPVProofObj.pushKV("path", HexStr(mintsyscoin.vchPath));  
+        oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
+        entry.pushKV("spv_proof", oSPVProofObj); 
+        return true;                                                  
+    }   
+    return false;                
 }
 std::vector<std::string> vecIntersection(std::vector<std::string> &v1,
                                       std::vector<std::string> &v2){

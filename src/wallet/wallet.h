@@ -33,7 +33,9 @@
 #include <string>
 #include <utility>
 #include <vector>
-
+// SYSCOIN
+CWallet* GetDefaultWallet();
+CAmount GetFee(const size_t nBytes);
 bool AddWallet(const std::shared_ptr<CWallet>& wallet);
 bool RemoveWallet(const std::shared_ptr<CWallet>& wallet);
 bool HasWallets();
