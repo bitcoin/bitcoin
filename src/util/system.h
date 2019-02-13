@@ -35,6 +35,8 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 
+class UniValue;
+
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
@@ -79,6 +81,16 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
+#endif
+#ifdef HAVE_BOOST_PROCESS
+/**
+ * Execute a command with returns JSON, and parse the result.
+ *
+ * @param strCommand The command to execute, including any arguments
+ * @param strStdIn string to pass to stdin
+ * @return parsed JSON
+ */
+UniValue runCommandParseJSON(const std::string& strCommand, const std::string& strStdIn="");
 #endif
 
 /**

@@ -362,6 +362,40 @@ static UniValue setmocktime(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+#ifdef HAVE_BOOST_PROCESS
+static UniValue runcommand(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.empty() || request.params.size() > 2)
+        throw std::runtime_error(
+            RPCHelpMan{"runcommand",
+                "\nRun command and parse JSON from stdout (-regtest only)\n",
+                {
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "Command must return JSON"},
+                    {"stdin", RPCArg::Type::STR,  /* default */ "", "Pass via stdin"},
+                },
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString()
+        );
+
+    if (!Params().MineBlocksOnDemand())
+        throw std::runtime_error("runcommand for regression testing (-regtest mode) only");
+
+    RPCTypeCheck(request.params, {UniValue::VSTR});
+
+    std::string command = request.params[0].get_str();
+
+    std::string stdinStr = "";
+    if (request.params.size() > 1 && request.params[1].isStr()) {
+        stdinStr = request.params[1].get_str();
+    }
+
+    UniValue result = runCommandParseJSON(command, stdinStr);
+
+    return result;
+}
+#endif
+
 static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
@@ -565,6 +599,9 @@ static const CRPCCommand commands[] =
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+#ifdef HAVE_BOOST_PROCESS
+    { "hidden",             "runcommand",             &runcommand,            { "command", "stdin"}},
+#endif
 };
 // clang-format on
 

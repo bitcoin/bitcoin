@@ -5,7 +5,12 @@
 
 #include <util/system.h>
 
+#ifdef HAVE_BOOST_PROCESS
+#include <boost/process.hpp>
+#endif
+
 #include <chainparamsbase.h>
+#include <univalue.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
@@ -1128,6 +1133,38 @@ void runCommand(const std::string& strCommand)
 #endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
+}
+#endif
+
+#ifdef HAVE_BOOST_PROCESS
+UniValue runCommandParseJSON(const std::string& strCommand, const std::string& strStdIn)
+{
+    UniValue resultJSON;
+
+    if (strCommand.empty()) return UniValue::VNULL;
+
+    namespace bp = boost::process;
+
+    bp::opstream stdinStream;
+    bp::ipstream stdoutStream;
+
+    bp::child c(
+        strCommand,
+        bp::std_out > stdoutStream,
+        bp::std_in < stdinStream
+    );
+
+    stdinStream << strStdIn << std::endl;
+    stdinStream.pipe().close();
+
+    std::string result;
+    std::getline(stdoutStream, result);
+
+    c.wait();
+
+    if (!resultJSON.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
+
+    return resultJSON;
 }
 #endif
 
