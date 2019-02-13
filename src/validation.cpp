@@ -3882,12 +3882,14 @@ LogPrintf("ContextualCheckBlock\n");
     int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
                               ? pindexPrev->GetMedianTimePast()
                               : block.GetBlockTime();
-
+                               LogPrintf("ContextualCheckBlock1a\n");
     // Check that all transactions are finalized
     for (const auto& tx : block.vtx) {
+     LogPrintf("ContextualCheckBlock1b nHeight %d\n", nHeight);
         if (!IsFinalTx(*tx, nHeight, nLockTimeCutoff)) {
             return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
         }
+         LogPrintf("ContextualCheckBlock1b done nHeight %d\n", nHeight);
     }
     LogPrintf("ContextualCheckBlock2\n");
     // Enforce rule that the coinbase starts with serialized block height
