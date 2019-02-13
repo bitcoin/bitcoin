@@ -20,6 +20,7 @@ from test_framework.script import (
     OP_NOP,
 )
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
@@ -545,8 +546,19 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Test importing of a P2SH-P2WPKH address via descriptor + private key
         key = get_key(self.nodes[0])
-        self.log.info("Should import a p2sh-p2wpkh address from descriptor and private key")
+        self.log.info("Should not import a p2sh-p2wpkh address from descriptor without checksum and private key")
         self.test_importmulti({"desc": "sh(wpkh(" + key.pubkey + "))",
+                               "timestamp": "now",
+                               "label": "Descriptor import test",
+                               "keys": [key.privkey]},
+                              success=False,
+                              error_code=-5,
+                              error_message="Descriptor is invalid")
+
+        # Test importing of a P2SH-P2WPKH address via descriptor + private key
+        key = get_key(self.nodes[0])
+        self.log.info("Should import a p2sh-p2wpkh address from descriptor and private key")
+        self.test_importmulti({"desc": descsum_create("sh(wpkh(" + key.pubkey + "))"),
                                "timestamp": "now",
                                "label": "Descriptor import test",
                                "keys": [key.privkey]},
@@ -562,7 +574,7 @@ class ImportMultiTest(BitcoinTestFramework):
         addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
         desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
         self.log.info("Ranged descriptor import should fail without a specified range")
-        self.test_importmulti({"desc": desc,
+        self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now"},
                               success=False,
                               error_code=-8,
@@ -570,7 +582,7 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Test importing of a ranged descriptor without keys
         self.log.info("Should import the ranged descriptor with specified range as solvable")
-        self.test_importmulti({"desc": desc,
+        self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
                                "range": {"end": 1}},
                               success=True,
@@ -583,7 +595,7 @@ class ImportMultiTest(BitcoinTestFramework):
         # Test importing of a P2PKH address via descriptor
         key = get_key(self.nodes[0])
         self.log.info("Should import a p2pkh address from descriptor")
-        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+        self.test_importmulti({"desc": descsum_create("pkh(" + key.pubkey + ")"),
                                "timestamp": "now",
                                "label": "Descriptor import test"},
                               True,
@@ -597,7 +609,7 @@ class ImportMultiTest(BitcoinTestFramework):
         # Test import fails if both desc and scriptPubKey are provided
         key = get_key(self.nodes[0])
         self.log.info("Import should fail if both scriptPubKey and desc are provided")
-        self.test_importmulti({"desc": "pkh(" + key.pubkey + ")",
+        self.test_importmulti({"desc": descsum_create("pkh(" + key.pubkey + ")"),
                                "scriptPubKey": {"address": key.p2pkh_addr},
                                "timestamp": "now"},
                               success=False,
@@ -616,7 +628,7 @@ class ImportMultiTest(BitcoinTestFramework):
         key1 = get_key(self.nodes[0])
         key2 = get_key(self.nodes[0])
         self.log.info("Should import a 1-of-2 bare multisig from descriptor")
-        self.test_importmulti({"desc": "multi(1," + key1.pubkey + "," + key2.pubkey + ")",
+        self.test_importmulti({"desc": descsum_create("multi(1," + key1.pubkey + "," + key2.pubkey + ")"),
                                "timestamp": "now"},
                               success=True)
         self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
@@ -635,7 +647,7 @@ class ImportMultiTest(BitcoinTestFramework):
         pub_fpr = info['hdmasterfingerprint']
         result = self.nodes[0].importmulti(
             [{
-                'desc' : "wpkh([" + pub_fpr + pub_keypath[1:] +"]" + pub + ")",
+                'desc' : descsum_create("wpkh([" + pub_fpr + pub_keypath[1:] +"]" + pub + ")"),
                 "timestamp": "now",
             }]
         )
@@ -653,7 +665,7 @@ class ImportMultiTest(BitcoinTestFramework):
         priv_fpr = info['hdmasterfingerprint']
         result = self.nodes[0].importmulti(
             [{
-                'desc' : "wpkh([" + priv_fpr + priv_keypath[1:] + "]" + priv + ")",
+                'desc' : descsum_create("wpkh([" + priv_fpr + priv_keypath[1:] + "]" + priv + ")"),
                 "timestamp": "now",
             }]
         )
@@ -701,12 +713,12 @@ class ImportMultiTest(BitcoinTestFramework):
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
             [{
-                'desc': 'wpkh(' + pub1 + ')',
+                'desc': descsum_create('wpkh(' + pub1 + ')'),
                 'keypool': True,
                 "timestamp": "now",
             },
             {
-                'desc': 'wpkh(' + pub2 + ')',
+                'desc': descsum_create('wpkh(' + pub2 + ')'),
                 'keypool': True,
                 "timestamp": "now",
             }]
@@ -727,13 +739,13 @@ class ImportMultiTest(BitcoinTestFramework):
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
             [{
-                'desc': 'wpkh(' + pub1 + ')',
+                'desc': descsum_create('wpkh(' + pub1 + ')'),
                 'keypool': True,
                 'internal': True,
                 "timestamp": "now",
             },
             {
-                'desc': 'wpkh(' + pub2 + ')',
+                'desc': descsum_create('wpkh(' + pub2 + ')'),
                 'keypool': True,
                 'internal': True,
                 "timestamp": "now",
@@ -755,7 +767,7 @@ class ImportMultiTest(BitcoinTestFramework):
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
             [{
-                'desc': 'wsh(multi(2,' + pub1 + ',' + pub2 + '))',
+                'desc': descsum_create('wsh(multi(2,' + pub1 + ',' + pub2 + '))'),
                 'keypool': True,
                 "timestamp": "now",
             }]
@@ -769,7 +781,7 @@ class ImportMultiTest(BitcoinTestFramework):
         assert wrpc.getwalletinfo()['private_keys_enabled']
         result = wrpc.importmulti(
             [{
-                'desc': 'wpkh(' + pub1 + ')',
+                'desc': descsum_create('wpkh(' + pub1 + ')'),
                 'keypool': True,
                 "timestamp": "now",
             }]
@@ -792,7 +804,7 @@ class ImportMultiTest(BitcoinTestFramework):
         ]
         result = wrpc.importmulti(
             [{
-                'desc': 'wpkh([80002067/0h/0h]' + xpub + '/*)',
+                'desc': descsum_create('wpkh([80002067/0h/0h]' + xpub + '/*)'),
                 'keypool': True,
                 'timestamp': 'now',
                 'range' : {'start': 0, 'end': 4}
