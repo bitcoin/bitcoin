@@ -577,7 +577,7 @@ syscoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # syscoin-tx binary #
-syscoin_tx_SOURCES = syscoin-tx.cpp
+syscoin_tx_SOURCES = syscoin-tx.cpp $(SYSCOIN_CORE_H)
 syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
