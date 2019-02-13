@@ -15,7 +15,8 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
-
+// SYSCOIN
+#include <services/asset.h>
 UniValue ValueFromAmount(const CAmount& amount)
 {
     bool sign = amount < 0;
@@ -228,7 +229,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         vout.push_back(out);
     }
     entry.pushKV("vout", vout);
-
+    UniValue output(UniValue::VOBJ);
+    if(DecodeSyscoinRawtransaction(tx, output))
+        entry.pushKV("systx", output);
     if (!hashBlock.IsNull())
         entry.pushKV("blockhash", hashBlock.GetHex());
 

@@ -39,8 +39,6 @@
 
 #include <functional>
 // SYSCOIN
-using namespace std;
-#include <services/assetallocation.h>
 #include <services/asset.h>
 #include <rpc/governance.cpp>
 #include <rpc/masternode.cpp>
@@ -1804,11 +1802,7 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
     bool fAllAccounts = (strAccount == std::string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
     // SYSCOIN
-    map<uint256, bool> mapSysTx = map<uint256, bool>();
-    vector<vector<unsigned char> > vvchArgs;
-    int op;
-    string strResponse = "";
-    char type;
+    std::map<uint256, bool> mapSysTx = std::map<uint256, bool>();
     bool list_sent = fAllAccounts;
 
     if (IsDeprecatedRPCEnabled("accounts")) {
@@ -1837,71 +1831,12 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
             entry.pushKV("abandoned", wtx.isAbandoned());
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
-            if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))
-            {
-                UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-                string ownerName = "";
-                if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                    continue;
-                mapSysTx[tx.GetHash()] = true;
-                string strResponseEnglish = "";
-                string strResponseGUID = "";
-                strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, type, strResponseGUID);
-                if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_ALLOCATION_BURN || op == OP_ASSET_SEND) {
-                    
-                    CAssetAllocation assetallocation(tx);
-       
-                    CCoinsViewCache inputs(pcoinsTip.get());
-
-                    ownerName = assetallocation.assetAllocationTuple.witnessAddress.ToString();
-                    CAsset dbAsset;
-                    GetAsset(assetallocation.assetAllocationTuple.nAsset, dbAsset);
-                    strResponse = strResponseEnglish;
-                    if (!assetallocation.listSendingAllocationAmounts.empty()) {
-                        for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-                            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-                            // update to owner
-                            oAssetAllocationReceiversObj.pushKV("address", amountTuple.first.ToString());
-                            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
-                            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-                        }
-
-                    }
-                    
-                }
-                entry.pushKV("systx", strResponse);
-                entry.pushKV("systype", strResponseEnglish);
-                entry.pushKV("sysguid", strResponseGUID);
-                entry.pushKV("sysallocations", oAssetAllocationReceiversArray);
-                entry.pushKV("sysaddress", ownerName);
-            }
-            else if(tx.nVersion == SYSCOIN_TX_VERSION_MINT_ASSET){
-                if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                    continue;
-                mapSysTx[tx.GetHash()] = true;
-                CMintSyscoin mintsyscoin(tx);
-                if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
-                    UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-                    string strResponseEnglish = "";
-                    string strResponseGUID = "";
-                    strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, type, strResponseGUID);
-                    const string& strAddress = mintsyscoin.assetAllocationTuple.witnessAddress.ToString();
-                    CAsset dbAsset;
-                    GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-                   
-                    UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-                    // update to owner
-                    oAssetAllocationReceiversObj.pushKV("address", strAddress);
-                    oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-                    oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-                      
-                    entry.pushKV("systx", strResponse);
-                    entry.pushKV("systype", strResponseEnglish);
-                    entry.pushKV("sysguid", strResponseGUID); 
-                    entry.pushKV("sysallocations", oAssetAllocationReceiversArray);
-                    entry.pushKV("sysaddress", strAddress);                                           
-                }                    
-            }             
+            UniValue output(UniValue::VOBJ);
+            if(DecodeSyscoinRawtransaction(tx, output))
+                entry.pushKV("systx", output);
+            if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
+                continue;
+            mapSysTx[tx.GetHash()] = true;       
             ret.push_back(entry);
         }
     }
@@ -1945,68 +1880,12 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
                     WalletTxToJSON(wtx, entry);
                 // SYSCOIN
                 const CTransaction& tx = *wtx.tx;
-                if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET && DecodeAndParseSyscoinTx(tx, op, vvchArgs, type))
-                {
-                    UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-                    string ownerName = "";
-                    if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                        continue;
-                    mapSysTx[tx.GetHash()] = true;
-                    string strResponseEnglish = "";
-                    string strResponseGUID = "";
-                    strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, type, strResponseGUID);
-                    entry.pushKV("systx", strResponse);
-                    entry.pushKV("systype", strResponseEnglish);
-                    entry.pushKV("sysguid", strResponseGUID);
-                    if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_ALLOCATION_BURN || op == OP_ASSET_SEND) {
-                        
-                        CAssetAllocation assetallocation(tx);
-                      
-                        CCoinsViewCache inputs(pcoinsTip.get());
-                        ownerName = assetallocation.assetAllocationTuple.witnessAddress.ToString();
-                        CAsset dbAsset;
-                        GetAsset(assetallocation.assetAllocationTuple.nAsset, dbAsset);
-                        if (!assetallocation.listSendingAllocationAmounts.empty()) {
-                            for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-                                UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-                                // update to owner
-                                oAssetAllocationReceiversObj.pushKV("address", amountTuple.first.ToString());
-                                oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
-                                oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-                            }
-                        }
-                        
-                    }             
-                    entry.pushKV("sysallocations", oAssetAllocationReceiversArray);
-                    entry.pushKV("sysaddress", ownerName);
-                } 
-                 else if(tx.nVersion == SYSCOIN_TX_VERSION_MINT_ASSET){
-                    if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                        continue;
-                    mapSysTx[tx.GetHash()] = true;
-                    CMintSyscoin mintsyscoin(tx);
-                    if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
-                        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-                        string strResponseEnglish = "";
-                        string strResponseGUID = "";
-                        strResponse = GetSyscoinTransactionDescription(tx, op, strResponseEnglish, type, strResponseGUID);
-                        const string& strAddress = mintsyscoin.assetAllocationTuple.witnessAddress.ToString();
-                        CAsset dbAsset;
-                        GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-                       
-                        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-                        // update to owner
-                        oAssetAllocationReceiversObj.pushKV("address", strAddress);
-                        oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-                        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-                          
-                        entry.pushKV("systx", strResponse);
-                        entry.pushKV("systype", strResponseEnglish);
-                        entry.pushKV("sysguid", strResponseGUID); 
-                        entry.pushKV("sysallocations", oAssetAllocationReceiversArray);
-                        entry.pushKV("sysaddress", strAddress);                                           
-                    }                    
-                }                      
+                UniValue output(UniValue::VOBJ);
+                if(DecodeSyscoinRawtransaction(tx, output))
+                    entry.pushKV("systx", output);
+                if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
+                    continue;
+                mapSysTx[tx.GetHash()] = true;                        
                 ret.push_back(entry);
             }
         }

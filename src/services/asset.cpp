@@ -783,31 +783,35 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
         DecodeHexTx(tx, hexstring, true, true);
 	CTransaction rawTx(tx);
 	if (rawTx.IsNull())
-	{
 		throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5512 - " + _("Could not decode transaction"));
-	}
-	vector<unsigned char> vchData;
-	int nOut;
-	int op;
-	vector<vector<unsigned char> > vvch;
-
-	int type;
-	char ctype;
-	GetSyscoinData(rawTx, vchData, nOut, type);
-	UniValue output(UniValue::VOBJ);
-	if (DecodeAndParseSyscoinTx(rawTx, op, vvch, ctype))
-		SysTxToJSON(op, rawTx, output, ctype);
-    else if(rawTx.nVersion == SYSCOIN_TX_VERSION_MINT_ASSET)
-        AssetMintTxToJson(rawTx, output);
-
+	
+    UniValue output(UniValue::VOBJ);
+    if(!DecodeSyscoinRawtransaction(rawTx, output))
+        throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5512 - " + _("Not a Syscoin transaction"));
 	return output;
 }
-void SysTxToJSON(const int &op, const CTransaction &tx, UniValue &entry, const char& type)
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
+    int op;
+    vector<vector<unsigned char> > vvch;
+    char ctype;
+    bool found = false;
+    if (rawTx.nVersion == SYSCOIN_TX_VERSION_ASSET && DecodeAndParseSyscoinTx(rawTx, op, vvch, ctype)){
+        found = SysTxToJSON(op, rawTx, output, ctype);
+   }
+    else if(rawTx.nVersion == SYSCOIN_TX_VERSION_MINT_ASSET){
+        found = AssetMintTxToJson(rawTx, output);
+    }
+
+    return found;
+}
+bool SysTxToJSON(const int &op, const CTransaction &tx, UniValue &entry, const char& type)
 {
+    bool found = false;
 	if (type == OP_SYSCOIN_ASSET)
-		AssetTxToJSON(op, tx, entry);
+		found = AssetTxToJSON(op, tx, entry);
 	else if (type == OP_SYSCOIN_ASSET_ALLOCATION)
-		AssetAllocationTxToJSON(op, tx, entry);
+		found = AssetAllocationTxToJSON(op, tx, entry);
+    return found;
 }
 int GenerateSyscoinGuid()
 {
@@ -992,8 +996,8 @@ void CMintSyscoin::Serialize( vector<unsigned char> &vchData) {
 void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& op, const int& nHeight) {
 	if (fZMQAsset) {
 		UniValue oName(UniValue::VOBJ);
-        AssetTxToJSON(op, tx, dbAsset, nHeight, oName);
-        GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+        if(AssetTxToJSON(op, tx, dbAsset, nHeight, oName))
+            GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
 	}
 }
 bool GetAsset(const int &nAsset,
@@ -1813,11 +1817,11 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.pushKV("precision", (int)asset.nPrecision);
 	return true;
 }
-void AssetTxToJSON(const int &op, const CTransaction& tx, UniValue &entry)
+bool AssetTxToJSON(const int &op, const CTransaction& tx, UniValue &entry)
 {
 	CAsset asset(tx);
 	if(!asset.IsNull())
-		return;
+		return false;
 
 	CAsset dbAsset;
 	GetAsset(asset.nAsset, dbAsset);
@@ -1852,12 +1856,17 @@ void AssetTxToJSON(const int &op, const CTransaction& tx, UniValue &entry)
               
 	if (op == OP_ASSET_ACTIVATE || asset.nBalance != dbAsset.nBalance)
 		entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+    if (op == OP_ASSET_ACTIVATE){
+        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
+        entry.pushKV("precision", asset.nPrecision);  
+    }         
+     return true;
 }
-void AssetTxToJSON(const int &op, const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry)
+bool AssetTxToJSON(const int &op, const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry)
 {
     CAsset asset(tx);
     if(asset.IsNull() || dbAsset.IsNull())
-        return;
+        return false;
 
     entry.pushKV("txtype", assetFromOp(op));
     entry.pushKV("_id", (int)asset.nAsset);
@@ -1881,6 +1890,11 @@ void AssetTxToJSON(const int &op, const CTransaction& tx, const CAsset& dbAsset,
               
     if (op == OP_ASSET_ACTIVATE || asset.nBalance != dbAsset.nBalance)
         entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+    if (op == OP_ASSET_ACTIVATE){
+        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
+        entry.pushKV("precision", asset.nPrecision);  
+    }  
+    return true;
 }
 UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
 {
@@ -2215,11 +2229,13 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
     return true;
 }
 bool CEthereumTxRootsDB::Init(){
+    bool highestHeight = false;
     {
         LOCK(cs_ethsyncheight);
-        ReadHighestHeight(fGethSyncHeight);
+        highestHeight = ReadHighestHeight(fGethSyncHeight);
     }
-    ReadCurrentHeight(fGethCurrentHeight);
+    return highestHeight && ReadCurrentHeight(fGethCurrentHeight);
+    
 }
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     if(vecHeightKeys.empty())

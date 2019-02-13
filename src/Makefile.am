@@ -586,13 +586,8 @@ if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
 
-syscoin_tx_LDADD = \
-  $(LIBUNIVALUE) \
-  $(LIBSYSCOIN_COMMON) \
-  $(LIBSYSCOIN_UTIL) \
-  $(LIBSYSCOIN_CONSENSUS) \
-  $(LIBSYSCOIN_CRYPTO) \
-  $(LIBSECP256K1)
+syscoin_tx_LDADD = $(syscoind_LDADD)
+
 
 syscoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #

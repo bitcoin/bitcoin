@@ -11,8 +11,6 @@
 #include <validation.h>
 
 #include <stdint.h>
-// SYSCOIN
-#include <services/asset.h>
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction()
