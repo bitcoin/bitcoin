@@ -38,7 +38,7 @@ The instructions below use `vcpkg` to install the dependencies.
 - Install the required packages (replace x64 with x86 as required):
 
 ```
-    PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb rapidcheck
+    PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-process boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb rapidcheck
 ```
 
 - Use Python to generate *.vcxproj from Makefile

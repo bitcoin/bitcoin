@@ -49,6 +49,9 @@
 /* define if the Boost::Filesystem library is available */
 #define HAVE_BOOST_FILESYSTEM /**/
 
+/* define if the Boost::Process library is available */
+#define HAVE_BOOST_PROCESS /**/
+
 /* define if the Boost::PROGRAM_OPTIONS library is available */
 #define HAVE_BOOST_PROGRAM_OPTIONS /**/
 
