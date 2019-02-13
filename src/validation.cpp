@@ -177,7 +177,7 @@ public:
 
     // Manual block validity manipulation:
     bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
-    bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex);
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
@@ -2789,7 +2789,7 @@ bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIn
 
 bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
-    AssertLockHeld(cs_main);
+    LOCK(cs_main);
 
     // We first disconnect backwards and then mark the blocks as invalid.
     // This prevents a case where pruned nodes may fail to invalidateblock
