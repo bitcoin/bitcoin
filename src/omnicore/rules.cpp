@@ -179,8 +179,6 @@ std::vector<TransactionCheckpoint> CMainConsensusParams::GetTransactions() const
 {
     // block height, transaction hash
     const TransactionCheckpoint vTransactions[] = {
-        { 304952, uint256S("5c183d6c1c9b8a617dbdcd1afa876eec14b46a2aa45d471e8381b287ccba731d") },
-        { 306853, uint256S("0e0090b3951057ab01ae21fa6b17600b6ec053f1461ce544e8d18b79e16f8042") },
         { 306906, uint256S("b7c66175a99ca0e7b1691905d50a46165adb7a8012d9ec5e1ecf8239f859df6d") },
         { 306906, uint256S("a59ac18eda590dfe9f3671f99f3cec5679e95ea4d1478d5313e2b4706307537b") },
         { 306912, uint256S("ce56ee84abd20bd1386d66e5ab9e3661a9bfad45a7d46490cae2241bbebf91df") },
