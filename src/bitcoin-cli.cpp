@@ -441,6 +441,45 @@ static int CommandLineRPC(int argc, char *argv[])
             method = args[0];
             args.erase(args.begin()); // Remove trailing method name from arguments vector
         }
+        // Get wallet encryption passphrases from command line
+        if (method == "encryptwallet" && args.empty()) {
+            std::string passphrase, verification;
+            fprintf(stdout, "Enter passphrase to encrypt the wallet : ");
+            if(!std::getline(std::cin, passphrase)) {
+                throw std::runtime_error("Failed to read passphrase");
+            }
+            fprintf(stdout, "Re-enter passphrase : ");
+            if(!std::getline(std::cin, verification) || passphrase != verification) {
+                throw std::runtime_error("Passphrases do not match");
+            }
+            args.push_back(passphrase);
+        }
+        else if (method == "walletpassphrase" && args.size() == 1) {
+            std::string passphrase;
+            fprintf(stderr, "Enter passphrase to unlock the wallet : ");
+            fflush(stderr);
+            if(!std::getline(std::cin, passphrase)) {
+                throw std::runtime_error("Failed to read the passphrase");
+            }
+            args.insert(args.begin(), passphrase); // Second parameter is timeout
+        }
+        else if (method == "walletpassphrasechange" && args.empty()) {
+            std::string currentPassphrase, newPassphrase, verification;
+            fprintf(stdout, "Enter current passphrase : ");
+            if(!std::getline(std::cin, currentPassphrase)) {
+                throw std::runtime_error("Failed to read the passphrase");
+            }
+            fprintf(stdout, "Enter new passphrase : ");
+            if(!std::getline(std::cin, newPassphrase)) {
+                throw std::runtime_error("Failed to read the passphrase");
+            }
+            fprintf(stdout, "Repeat new passphrase : ");
+            if(!std::getline(std::cin, verification) || newPassphrase != verification) {
+                throw std::runtime_error("Passphrases do not match");
+            }
+            args.push_back(currentPassphrase);
+            args.push_back(newPassphrase);
+        }
 
         // Execute and handle connection failures with -rpcwait
         const bool fWait = gArgs.GetBoolArg("-rpcwait", false);
