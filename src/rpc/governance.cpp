@@ -196,7 +196,10 @@ UniValue gobject(const JSONRPCRequest& request)
         if(!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
-
+        if(tx->GetTotalSize() > 500u){
+            std::string strError = strprintf("tx collateral too big (limit is 500 bytes), try reducing number of inputs used, size in bytes %d", tx->GetTotalSize());
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strError);
+        }
         // -- make our change address
         CReserveKey reservekey(pwallet);
         // -- send the tx to the network
