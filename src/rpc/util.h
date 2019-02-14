@@ -5,6 +5,7 @@
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/transaction.h>
 #include <pubkey.h>
 #include <script/standard.h>
 #include <univalue.h>
@@ -32,6 +33,9 @@ UniValue DescribeAddress(const CTxDestination& dest);
 
 //! Parse a confirm target option and raise an RPC error if it is invalid.
 unsigned int ParseConfirmTarget(const UniValue& value);
+
+RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
+UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
 
 struct RPCArg {
     enum class Type {
