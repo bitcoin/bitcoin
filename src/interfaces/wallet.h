@@ -266,6 +266,9 @@ public:
 
     virtual CoinJoin::Client& coinJoin() = 0;
 
+    // Remove wallet.
+    virtual void remove() = 0;
+
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleUnload(UnloadFn fn) = 0;
