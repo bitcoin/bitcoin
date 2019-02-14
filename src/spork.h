@@ -23,6 +23,7 @@ static const int SPORK_5_INSTANTSEND_MAX_VALUE                          = 10004;
 static const int SPORK_6_NEW_SIGS                                       = 10005;
 static const int SPORK_9_SUPERBLOCKS_ENABLED                            = 10008;
 static const int SPORK_12_RECONSIDER_BLOCKS                             = 10011;
+static const int SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014;
 static const int SPORK_16_INSTANTSEND_AUTOLOCKS                         = 10015;
 static const int SPORK_17_QUORUM_DKG_ENABLED                            = 10016;
 static const int SPORK_18_QUORUM_DEBUG_ENABLED                          = 10017;
