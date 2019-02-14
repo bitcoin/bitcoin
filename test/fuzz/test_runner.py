@@ -72,17 +72,22 @@ def main():
         logging.error("No fuzz targets selected")
     logging.info("Fuzz targets selected: {}".format(test_list_selection))
 
-    help_output = subprocess.run(
-        args=[
-            os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', test_list_selection[0]),
-            '-help=1',
-        ],
-        check=True,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
-    ).stderr
-    if "libFuzzer" not in help_output:
-        logging.error("Must be built with libFuzzer")
+    try:
+        help_output = subprocess.run(
+            args=[
+                os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', test_list_selection[0]),
+                '-help=1',
+            ],
+            timeout=1,
+            check=True,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+        ).stderr
+        if "libFuzzer" not in help_output:
+            logging.error("Must be built with libFuzzer")
+            sys.exit(1)
+    except subprocess.TimeoutExpired:
+        logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
     run_once(
