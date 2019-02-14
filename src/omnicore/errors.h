@@ -31,7 +31,7 @@ enum MPRPCErrorCode
     MP_BLOCK_NOT_IN_CHAIN =         -3333,  // Transaction not part of the active chain.   (pBlockIndex is NULL)
     MP_CROWDSALE_WITHOUT_PROPERTY = -3334,  // Potential database corruption: "Crowdsale Purchase" without valid property identifier.
     MP_INVALID_TX_IN_DB_FOUND     = -3335,  // Potential database corruption: Invalid transaction found.
-    MP_TX_IS_NOT_MASTER_PROTOCOL  = -3336,  // Not a Master Protocol transaction.
+    MP_TX_IS_NOT_OMNI_PROTOCOL    = -3336,  // No Omni Layer Protocol transaction.
 };
 
 inline std::string error_str(int ec) {
@@ -46,7 +46,7 @@ inline std::string error_str(int ec) {
           ec_str = "Not enough funds in user address due to PENDING/UNCONFIRMED transactions";
           break;
       case MP_INPUT_NOT_IN_RANGE:
-          ec_str = "Input value supplied larger than supported in Master Protocol";
+          ec_str = "Input value supplied larger than supported in Omni Layer Protocol";
           break;
       case MP_INPUTS_INVALID:
           ec_str = "Error choosing inputs for the send transaction";

@@ -79,8 +79,8 @@ void PopulateFailure(int error)
                                                   \"Crowdsale Purchase\" without valid property identifier");
         case MP_INVALID_TX_IN_DB_FOUND:
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Potential database corruption: Invalid transaction found");
-        case MP_TX_IS_NOT_MASTER_PROTOCOL:
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Not a Master Protocol transaction");
+        case MP_TX_IS_NOT_OMNI_PROTOCOL:
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No Omni Layer Protocol transaction");
     }
     throw JSONRPCError(RPC_INTERNAL_ERROR, "Generic transaction population failure");
 }
@@ -546,7 +546,7 @@ UniValue omni_getpayload(const UniValue& params, bool fHelp)
 
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
-    if (parseRC < 0) PopulateFailure(MP_TX_IS_NOT_MASTER_PROTOCOL);
+    if (parseRC < 0) PopulateFailure(MP_TX_IS_NOT_OMNI_PROTOCOL);
 
     UniValue payloadObj(UniValue::VOBJ);
     payloadObj.push_back(Pair("payload", mp_obj.getPayload()));
