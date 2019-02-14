@@ -6,9 +6,9 @@ sudo apt-get install -qqy devscripts debhelper
 #not sure why these are only needed when packaging and not for the compile
 sudo apt-get install -qqy bash-completion libevent-dev qttools5-dev libqrencode-dev
 
-
+sudo apt-get install -qqy libzmq3-dev
 #need to replace by script so not incompatible bdb
-sudo apt-get install -qqy libdb-dev
+sudo apt-get install -qqy libdb4.8++-dev
 
 
 export DEB_BUILD_OPTIONS="parallel=$(nproc)"
