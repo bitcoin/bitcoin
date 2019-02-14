@@ -2797,6 +2797,7 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
 {
     CBlockIndex* to_mark_failed = pindex;
     bool pindex_was_in_chain = false;
+    int disconnected = 0;
 
     // Disconnect (descendants of) pindex, and mark them invalid.
     while (true) {
@@ -2816,8 +2817,10 @@ bool CChainState::InvalidateBlock(CValidationState& state, const CChainParams& c
         bool ret = DisconnectTip(state, chainparams, &disconnectpool);
         // DisconnectTip will add transactions to disconnectpool.
         // Adjust the mempool to be consistent with the new tip, adding
-        // transactions back to the mempool if disconnecting was succesful.
-        UpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ ret);
+        // transactions back to the mempool if disconnecting was succesful,
+        // and we're not doing a very deep invalidation (in which case
+        // keeping the mempool up to date is probably futile anyway).
+        UpdateMempoolForReorg(disconnectpool, /* fAddToMempool = */ (++disconnected <= 10) && ret);
         if (!ret) return false;
         assert(invalid_walk_tip->pprev == chainActive.Tip());
 
