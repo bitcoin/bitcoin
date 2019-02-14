@@ -8,8 +8,11 @@ sudo apt-get install -qqy bash-completion libevent-dev qttools5-dev libqrencode-
 
 sudo apt-get install -qqy libzmq3-dev
 #need to replace by script so not incompatible bdb
-sudo apt-get install -qqy libdb++-dev
-
+#sudo apt-get install -qqy libdb++-dev
+./contrib/install_db4.sh `pwd`
+#flags arent being picked up, so need to link
+sudo ln -sf `pwd`/db4/include /usr/local/include/bdb4.8
+sudo ln -sf `pwd`/db4/lib/*.a /usr/local/lib
 
 export DEB_BUILD_OPTIONS="parallel=$(nproc)"
 
