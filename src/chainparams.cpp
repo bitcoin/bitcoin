@@ -133,7 +133,7 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};          //ppcTODO: leave it as is?
 
         // human readable prefix to bench32 address
-        bech32_hrp = "xpc";
+        bech32_hrp = "pc";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
