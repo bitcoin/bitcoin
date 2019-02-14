@@ -94,6 +94,30 @@ std::unique_ptr<BanMan> g_banman;
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 
+/**
+ * The PID file facilities.
+ */
+#ifndef WIN32
+static const char* BITCOIN_PID_FILENAME = "bitcoind.pid";
+
+static fs::path GetPidFile()
+{
+    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
+}
+
+NODISCARD static bool CreatePidFile()
+{
+    FILE* file = fsbridge::fopen(GetPidFile(), "w");
+    if (file) {
+        fprintf(file, "%d\n", getpid());
+        fclose(file);
+        return true;
+    } else {
+        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
+    }
+}
+#endif
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -1193,20 +1217,6 @@ bool AppInitLockDataDirectory()
     }
     return true;
 }
-
-#ifndef WIN32
-NODISCARD static bool CreatePidFile()
-{
-    FILE* file = fsbridge::fopen(GetPidFile(), "w");
-    if (file) {
-        fprintf(file, "%d\n", getpid());
-        fclose(file);
-        return true;
-    } else {
-        return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
-    }
-}
-#endif
 
 bool AppInitMain(InitInterfaces& interfaces)
 {
