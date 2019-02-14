@@ -102,7 +102,7 @@ class BIP66Test(BitcoinTestFramework):
         # rejected from the mempool for exactly that reason.
         assert_equal(
             [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': '64: non-mandatory-script-verify-flag (Non-canonical DER signature)'}],
-            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], allowhighfees=True)
+            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0)
         )
 
         # Now we verify that a block with this transaction is also invalid.
