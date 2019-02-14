@@ -72,10 +72,10 @@ matrix:
       #  script:
       #    - travis_wait 60 ./scripts/windows-crosscompile/compile-peercoin.sh
       #osx     
-      - os: osx
-        osx_image: xcode9.2
-        before_script:
-          - ./scripts/dependencies-osx.sh 
-        script:
-          - ./scripts/install-osx.sh
+      #- os: osx
+      #  osx_image: xcode9.2
+      #  before_script:
+      #    - ./scripts/dependencies-osx.sh
+      #  script:
+      #    - ./scripts/install-osx.sh
 
