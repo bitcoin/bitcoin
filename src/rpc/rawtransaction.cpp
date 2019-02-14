@@ -28,9 +28,10 @@
 #include <script/standard.h>
 #include <txmempool.h>
 #include <uint256.h>
+#include <util/bip32.h>
 #include <util/moneystr.h>
-#include <util/validation.h>
 #include <util/strencodings.h>
+#include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>
 

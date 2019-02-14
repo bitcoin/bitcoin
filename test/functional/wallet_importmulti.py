@@ -57,6 +57,7 @@ class ImportMultiTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
+        self.extra_args = [['-usehd=1']] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -560,13 +561,77 @@ class ImportMultiTest(BitcoinTestFramework):
         self.log.info("Should import a 1-of-2 bare multisig from descriptor")
         self.test_importmulti({"desc": descsum_create("multi(1," + key1.pubkey + "," + key2.pubkey + ")"),
                                "timestamp": "now"},
-                              success=True)
+                              True,
+                              warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
         self.log.info("Should not treat individual keys from the imported bare multisig as watchonly")
         self.test_address(key1.p2pkh_addr,
                          ismine=False,
                          iswatchonly=False)
 
+        # Import pubkeys with key origin info
+        self.log.info("Addresses should have hd keypath and master key id after import with key origin")
+        pub_addr = self.nodes[1].getnewaddress()
+        pub_addr = self.nodes[1].getnewaddress()
+        info = self.nodes[1].getaddressinfo(pub_addr)
+        pub = info['pubkey']
+        pub_keypath = info['hdkeypath']
+        pub_fpr = info['hdmasterfingerprint']
+        result = self.nodes[0].importmulti(
+            [{
+                'desc' : descsum_create("pkh([" + pub_fpr + pub_keypath[1:] +"]" + pub + ")"),
+                "timestamp": "now",
+            }]
+        )
+        assert result[0]['success']
+        pub_import_info = self.nodes[0].getaddressinfo(pub_addr)
+        assert_equal(pub_import_info['hdmasterfingerprint'], pub_fpr)
+        assert_equal(pub_import_info['pubkey'], pub)
+        assert_equal(pub_import_info['hdkeypath'], pub_keypath)
 
+        # Import privkeys with key origin info
+        priv_addr = self.nodes[1].getnewaddress()
+        info = self.nodes[1].getaddressinfo(priv_addr)
+        priv = self.nodes[1].dumpprivkey(priv_addr)
+        priv_keypath = info['hdkeypath']
+        priv_fpr = info['hdmasterfingerprint']
+        result = self.nodes[0].importmulti(
+            [{
+                'desc' : descsum_create("pkh([" + priv_fpr + priv_keypath[1:] + "]" + priv + ")"),
+                "timestamp": "now",
+            }]
+        )
+        assert result[0]['success']
+        priv_import_info = self.nodes[0].getaddressinfo(priv_addr)
+        assert_equal(priv_import_info['hdmasterfingerprint'], priv_fpr)
+        assert_equal(priv_import_info['hdkeypath'], priv_keypath)
+
+        # Make sure the key origin info are still there after a restart
+        self.stop_nodes()
+        self.start_nodes()
+        import_info = self.nodes[0].getaddressinfo(pub_addr)
+        assert_equal(import_info['hdmasterfingerprint'], pub_fpr)
+        assert_equal(import_info['hdkeypath'], pub_keypath)
+        import_info = self.nodes[0].getaddressinfo(priv_addr)
+        assert_equal(import_info['hdmasterfingerprint'], priv_fpr)
+        assert_equal(import_info['hdkeypath'], priv_keypath)
+
+        # Check legacy import does not import key origin info
+        self.log.info("Legacy imports don't have key origin info")
+        pub_addr = self.nodes[1].getnewaddress()
+        info = self.nodes[1].getaddressinfo(pub_addr)
+        pub = info['pubkey']
+        result = self.nodes[0].importmulti(
+            [{
+                'scriptPubKey': {'address': pub_addr},
+                'pubkeys': [pub],
+                "timestamp": "now",
+            }]
+        )
+        assert result[0]['success']
+        pub_import_info = self.nodes[0].getaddressinfo(pub_addr)
+        assert_equal(pub_import_info['pubkey'], pub)
+        assert 'hdmasterfingerprint' not in pub_import_info
+        assert 'hdkeypath' not in pub_import_info
 
 if __name__ == '__main__':
     ImportMultiTest().main()
