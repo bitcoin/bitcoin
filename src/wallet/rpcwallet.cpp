@@ -13,6 +13,7 @@
 #include <validation.h>
 #include <key_io.h>
 #include <net.h>
+#include <node/transaction.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -30,6 +31,7 @@
 #include <util/moneystr.h>
 #include <wallet/coincontrol.h>
 #include <wallet/feebumper.h>
+#include <wallet/psbtwallet.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
@@ -3938,60 +3940,6 @@ void AddKeypathToMap(const CWallet* pwallet, const CKeyID& keyID, std::map<CPubK
     hd_keypaths.emplace(vchPubKey, std::move(info));
 }
 
-bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, int sighash_type, bool sign, bool bip32derivs)
-{
-    LOCK(pwallet->cs_wallet);
-    // Get all of the previous transactions
-    bool complete = true;
-    for (unsigned int i = 0; i < psbtx.tx->vin.size(); ++i) {
-        const CTxIn& txin = psbtx.tx->vin[i];
-        PSBTInput& input = psbtx.inputs.at(i);
-
-        if (PSBTInputSigned(input)) {
-            continue;
-        }
-
-        // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
-        if (!input.IsSane()) {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "PSBT input is not sane.");
-        }
-
-        // If we have no utxo, grab it from the wallet.
-        if (!input.non_witness_utxo && input.witness_utxo.IsNull()) {
-            const uint256& txhash = txin.prevout.hash;
-            const auto it = pwallet->mapWallet.find(txhash);
-            if (it != pwallet->mapWallet.end()) {
-                const CWalletTx& wtx = it->second;
-                // We only need the non_witness_utxo, which is a superset of the witness_utxo.
-                //   The signing code will switch to the smaller witness_utxo if this is ok.
-                input.non_witness_utxo = wtx.tx;
-            }
-        }
-
-        // Get the Sighash type
-        if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
-            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Specified Sighash and sighash in PSBT do not match.");
-        }
-
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psbtx, i, sighash_type);
-    }
-
-    // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
-    for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        const CTxOut& out = psbtx.tx->vout.at(i);
-        PSBTOutput& psbt_out = psbtx.outputs.at(i);
-
-        // Fill a SignatureData with output info
-        SignatureData sigdata;
-        psbt_out.FillSignatureData(sigdata);
-
-        MutableTransactionSignatureCreator creator(psbtx.tx.get_ptr(), 0, out.nValue, 1);
-        ProduceSignature(HidingSigningProvider(pwallet, true, !bip32derivs), creator, out.scriptPubKey, sigdata);
-        psbt_out.FromSignatureData(sigdata);
-    }
-    return complete;
-}
-
 UniValue walletprocesspsbt(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -4036,7 +3984,7 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     // Unserialize the transaction
     PartiallySignedTransaction psbtx;
     std::string error;
-    if (!DecodePSBT(psbtx, request.params[0].get_str(), error)) {
+    if (!DecodeBase64PSBT(psbtx, request.params[0].get_str(), error)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
@@ -4046,7 +3994,11 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     // Fill transaction with our data and also sign
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? false : request.params[3].get_bool();
-    bool complete = FillPSBT(pwallet, psbtx, nHashType, sign, bip32derivs);
+    bool complete = true;
+    TransactionError err;
+    if (!FillPSBT(pwallet, psbtx, err, complete, nHashType, sign, bip32derivs)) {
+        throw JSONRPCTransactionError(err);
+    }
 
     UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
@@ -4160,7 +4112,11 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
 
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
-    FillPSBT(pwallet, psbtx, 1, false, bip32derivs);
+    bool complete = true;
+    TransactionError err;
+    if (!FillPSBT(pwallet, psbtx, err, complete, 1, false, bip32derivs)) {
+        throw JSONRPCTransactionError(err);
+    }
 
     // Serialize the PSBT
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
