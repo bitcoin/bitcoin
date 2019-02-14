@@ -114,6 +114,7 @@ struct COrphanTx {
     CTransactionRef tx;
     NodeId fromPeer;
     int64_t nTimeExpire;
+    size_t list_pos;
     size_t nTxSize;
 };
 CCriticalSection g_cs_orphans;
@@ -212,6 +213,8 @@ namespace {
         }
     };
     std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+
+    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans); //! For random eviction
 
     static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
     static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
@@ -956,8 +959,9 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
         return false;
     }
 
-    auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, sz});
+    auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, g_orphan_list.size(), sz});
     assert(ret.second);
+    g_orphan_list.push_back(ret.first);
     for (const CTxIn& txin : tx->vin) {
         mapOrphanTransactionsByPrev[txin.prevout].insert(ret.first);
     }
@@ -987,6 +991,18 @@ int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
         if (itPrev->second.empty())
             mapOrphanTransactionsByPrev.erase(itPrev);
     }
+
+    size_t old_pos = it->second.list_pos;
+    assert(g_orphan_list[old_pos] == it);
+    if (old_pos + 1 != g_orphan_list.size()) {
+        // Unless we're deleting the last entry in g_orphan_list, move the last
+        // entry to the position we're deleting.
+        auto it_last = g_orphan_list.back();
+        g_orphan_list[old_pos] = it_last;
+        it_last->second.list_pos = old_pos;
+    }
+    g_orphan_list.pop_back();
+
     assert(nMapOrphanTransactionsSize >= it->second.nTxSize);
     nMapOrphanTransactionsSize -= it->second.nTxSize;
     mapOrphanTransactions.erase(it);
@@ -1040,11 +1056,8 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphansSize)
     while (!mapOrphanTransactions.empty() && nMapOrphanTransactionsSize > nMaxOrphansSize)
     {
         // Evict a random orphan:
-        uint256 randomhash = GetRandHash();
-        std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.lower_bound(randomhash);
-        if (it == mapOrphanTransactions.end())
-            it = mapOrphanTransactions.begin();
-        EraseOrphanTx(it->first);
+        size_t randompos = rng.randrange(g_orphan_list.size());
+        EraseOrphanTx(g_orphan_list[randompos]->first);
         ++nEvicted;
     }
     return nEvicted;
