@@ -1210,6 +1210,18 @@ void CConnman::ThreadSocketHandler()
         SOCKET hSocketMax = 0;
         bool have_fds = false;
 
+#ifndef WIN32
+        // We add a pipe to the read set so that the select() call can be woken up from the outside
+        // This is done when data is available for sending and at the same time optimistic sending was disabled
+        // when pushing the data.
+        // This is currently only implemented for POSIX compliant systems. This means that Windows will fall back to
+        // timing out after 50ms and then trying to send. This is ok as we assume that heavy-load daemons are usually
+        // run on Linux and friends.
+        FD_SET(wakeupPipe[0], &fdsetRecv);
+        hSocketMax = std::max(hSocketMax, (SOCKET)wakeupPipe[0]);
+        have_fds = true;
+#endif
+
         BOOST_FOREACH(const ListenSocket& hListenSocket, vhListenSocket) {
             FD_SET(hListenSocket.socket, &fdsetRecv);
             hSocketMax = std::max(hSocketMax, hListenSocket.socket);
@@ -1275,6 +1287,20 @@ void CConnman::ThreadSocketHandler()
             if (!interruptNet.sleep_for(std::chrono::milliseconds(timeout.tv_usec/1000)))
                 return;
         }
+
+#ifndef WIN32
+        // drain the wakeup pipe
+        if (FD_ISSET(wakeupPipe[0], &fdsetRecv)) {
+            LogPrint("net", "woke up select()\n");
+            char buf[128];
+            while (true) {
+                int r = read(wakeupPipe[0], buf, sizeof(buf));
+                if (r <= 0) {
+                    break;
+                }
+            }
+        }
+#endif
 
         //
         // Accept new connections
@@ -1426,6 +1452,21 @@ void CConnman::WakeMessageHandler()
     condMsgProc.notify_one();
 }
 
+void CConnman::WakeSelect()
+{
+#ifndef WIN32
+    if (wakeupPipe[1] == -1) {
+        return;
+    }
+
+    LogPrint("net", "waking up select()\n");
+
+    char buf[1];
+    if (write(wakeupPipe[1], buf, 1) != 1) {
+        LogPrint("net", "write to wakeupPipe failed\n");
+    }
+#endif
+}
 
 
 
@@ -2387,6 +2428,12 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
         fMsgProcWake = false;
     }
 
+#ifndef WIN32
+    if (pipe2(wakeupPipe, O_NONBLOCK) != 0) {
+        wakeupPipe[0] = wakeupPipe[1] = -1;
+    }
+#endif
+
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
 
@@ -2512,6 +2559,12 @@ void CConnman::Stop()
     semAddnode = NULL;
     delete semMasternodeOutbound;
     semMasternodeOutbound = NULL;
+
+#ifndef WIN32
+    if (wakeupPipe[0] != -1) close(wakeupPipe[0]);
+    if (wakeupPipe[1] != -1) close(wakeupPipe[1]);
+    wakeupPipe[0] = wakeupPipe[1] = -1;
+#endif
 }
 
 void CConnman::DeleteNode(CNode* pnode)
