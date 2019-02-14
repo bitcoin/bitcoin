@@ -1,0 +1,373 @@
+.TH PEERCOIND "1" "January 2019" "peercoind 0.7.0"
+.SH NAME
+peercoind \- peer-to-peer network based digital currency
+.SH SYNOPSIS
+.nf
+peercoind [options]
+peercoind [options] <command> [params] - Send command to peercoind
+peercoind [options] help - List commands
+peercoind [options] help <command> - Get help for a command
+.fi
+.SH DESCRIPTION
+This  manual page documents the peercoind program. Peercoin is a peer-to-peer digital currency. Peer-to-peer (P2P) means that there is no central authority to issue new money or keep track of transactions. Instead, these tasks are managed collectively by the nodes of the network. Advantages:
+
+Peercoins can be sent easily through the Internet, without having to trust middlemen. Transactions are designed to be irreversible. Be safe from instability caused by fractional reserve banking and central banks. The limited inflation of the Peercoin system’s money supply is distributed evenly (by held coins) throughout the network, not monopolized by banks.
+
+.SH OPTIONS
+.TP
+\fB\-conf=\fR<file>
+Specify configuration file (default: peercoin.conf)
+.TP
+\fB\-pid=\fR<file>
+Specify pid file (default: peercoind.pid)
+.TP
+\fB\-gen\fR
+Generate coins
+.TP
+\fB\-gen\fR=\fI0\fR
+Don't generate coins
+.TP
+\fB\-min\fR
+Start minimized - only applicable to the GUI version
+.TP
+\fB\-splash\fR
+Show splash screen on startup - only applicable to the GUI version
+.TP
+\fB\-datadir=\fR<dir>
+Specify data directory (default: $HOME/.peercoin)
+.TP
+\fB\-dbcache=\fR<n>
+Set database cache size in megabytes (default: 25)
+.TP
+\fB\-dblogsize=\fR<n>
+Set database disk log size in megabytes (default: 100)
+.TP
+\fB\-timeout=\fR<n>
+Specify connection timeout (in milliseconds)
+.TP
+\fB\-proxy=\fR<ip:port>
+Connect through socks4 proxy
+.TP
+\fB\-dns\fR
+Allow DNS lookups for addnode and connect
+.TP
+\fB\-port=\fR<port>
+Listen for connections on <port> (default: 9901 or testnet: 9903)
+.TP
+\fB\-maxconnections=\fR<n>
+Maintain at most <n> connections to peers (default: 125)
+.TP
+\fB\-addnode=\fR<ip>[:port]
+Add a node to connect to and attempt to keep the connection open
+.TP
+\fB\-connect=\fR<ip>[:port]
+Connect only to the specified node
+.TP
+\fB\-listen\fR
+Accept connections from outside (default: 1)
+.TP
+\fB\-dnsseed\fR
+Find peers using DNS lookup (default: 1)
+.TP
+\fB\-banscore=\fR<n>
+Threshold for disconnecting misbehaving peers (default: 100)
+.TP
+\fB\-bantime=\fR<n>
+Number of seconds to keep misbehaving peers from reconnecting (default: 86400)
+.TP
+\fB\-maxreceivebuffer=\fR<n>
+Maximum per-connection receive buffer, <n>*1000 bytes (default: 10000)
+.TP
+\fB\-maxsendbuffer=\fR<n>
+Maximum per-connection send buffer, <n>*1000 bytes (default: 10000)
+.TP
+\fB\-paytxfee=\fR<amt>
+Fee per KB to add to transactions you send
+.TP
+\fB\-server\fR
+Accept command line and JSON\-RPC commands - always enabled on command line client
+.TP
+\fB\-daemon\fR
+Run in the background as a daemon and accept commands
+.TP
+\fB\-testnet\fR
+Use the test network
+.TP
+\fB\-debug\fR
+Output extra debugging information
+.TP
+\fB\-logtimestamps\fR
+Prepend debug output with timestamp
+.TP
+\fB\-printtoconsole\fR
+Send trace/debug info to console instead of debug.log file
+.TP
+\fB\-rpcuser=\fR<user>
+Username for JSON\-RPC connections
+.TP
+\fB\-rpcpassword=\fR<pw>
+Password for JSON\-RPC connections
+.TP
+\fB\-rpcport=\fR<port>
+Listen for JSON\-RPC connections on <port> (default: 9902)
+.TP
+\fB\-rpcallowip=\fR<ip>
+Allow JSON\-RPC connections from specified IP address
+.TP
+\fB\-rpcconnect=\fR<ip>[:port]
+Send commands to node running on <ip> (default: 127.0.0.1)
+.TP
+\fB\-blocknotify=\fR<cmd>
+Execute command when the best block changes (%s in cmd is replaced by block hash)
+.TP
+\fB\-upgradewallet\fR
+Upgrade wallet to latest format
+\fB\-keypool=\fR<n>
+Set key pool size to <n> (default: 100)
+.TP
+\fB\-rescan\fR
+Rescan the block chain for missing wallet transactions
+.TP
+\fB\-checkblocks=\fR<n>
+How many blocks to check at startup (default: 2500, 0 = all)
+.TP
+\fB\-checklevel=\fR<n>
+How thorough the block verification is (0-6, default: 1)
+.PP
+SSL options: (see the Bitcoin Wiki for SSL setup instructions)
+.TP
+\fB\-rpcssl\fR=\fI1\fR
+Use OpenSSL (https) for JSON\-RPC connections
+.TP
+\fB\-rpcsslcertificatchainfile=\fR<file.cert>
+Server certificate file (default: server.cert)
+.TP
+\fB\-rpcsslprivatekeyfile=\fR<file.pem>
+Server private key (default: server.pem)
+.TP
+\fB\-rpcsslciphers=\fR<ciphers>
+Acceptable ciphers (default: TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!AH:!3DES:@STRENGTH)
+.TP
+\-?
+This help message
+.SH COMMANDS
+.TP
+\fBaddmultisigaddress 'nrequired' '["key","key",...]' ['account']\fR
+Add a nrequired-to-sign multisignature address to the wallet.
+Each key is a peercoin address or hex-encoded public key.
+If ['account'] is specified, assign address to ['account'].
+.TP
+\fBbackupwallet 'destination'\fR
+Safely copies *wallet.dat* to 'destination', which can be a directory or a path with filename.
+.TP
+\fBcheckwallet\FR
+Check wallet for integrity.
+.TP
+\fBdumpprivkey 'peercoinaddress'\fR
+Reveals the private key corresponding to 'peercoinaddress'.
+.TP
+\fBencryptwallet 'passphrase'\fR
+Encrypts the wallet with 'passphrase'.
+.TP
+\fBgetaccount 'peercoinaddress'\fR
+Returns the account associated with the given address.
+.TP
+\fBsetaccount 'peercoinaddress' ['account']\fR
+Sets the ['account'] associated with the given address. ['account'] may be omitted to remove an address from ['account'].
+.TP
+\fBgetaccountaddress 'account'\fR
+Returns a new peercoin address for 'account'.
+.TP
+\fBgetaddressesbyaccount 'account'\fR
+Returns the list of addresses associated with the given 'account'.
+.TP
+\fBgetbalance ['account'] ['minconf=1']\fR
+Returns the server's available balance, or the balance for 'account'.
+.TP
+\fBgetblock 'hash' [txinfo]\fR
+txinfo optional to print more detailed tx info
+Returns details of a block with given block-hash.
+.TP
+\fBgetblockcount\fR
+Returns the number of blocks in the longest block chain.
+.TP
+\fBgetblockhash 'index'\fR
+Returns hash of block in best-block-chain at 'index'.
+.TP
+\fBgetblocktemplate ['params']\fR
+Returns data needed to construct a block to work on:
+
+   "version"    : block version
+   "previousblockhash" : hash of current highest block
+   "transactions" : contents of non-coinbase transactions that should be included in the next block
+   "coinbaseaux" : data that should be included in coinbase
+   "coinbasevalue" : maximum allowable input to coinbase transaction, including the generation award and transaction fees
+   "target"     : hash target
+   "mintime"    : minimum timestamp appropriate for next block
+   "curtime"    : current timestamp
+   "mutable"    : list of ways the block template may be changed
+   "noncerange" : range of valid nonces
+   "sigoplimit" : limit of sigops in blocks
+   "sizelimit"  : limit of block size
+   "bits"       : compressed target of next block
+   "height"     : height of the next block
+
+See https://en.bitcoin.it/wiki/BIP_0022 for full specification.
+.TP
+\fBgetcheckpoint\fR
+Show info of synchronized checkpoint.
+.TP
+\fBgetconnectioncount\fR
+Returns the number of connections to other nodes.
+.TP
+\fBgetdifficulty\fR
+Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
+.TP
+\fBgetgenerate\fR
+Returns boolean true if server is trying to generate peercoins, false otherwise.
+.TP
+\fBsetgenerate 'generate' ['genproclimit']\fR
+Generation is limited to ['genproclimit'] processors, -1 is unlimited.
+.TP
+\fBgethashespersec\fR
+Returns a recent hashes per second performance measurement while generating.
+.TP
+\fBgetinfo\fR
+Returns an object containing server information.
+.TP
+\fBgetmininginfo\fR
+Returns an object containing mining-related information.
+.TP
+\fBgetnetworkghps\fR
+Returns a recent Ghash/second network mining estimate.
+.TP
+\fBgetnewaddress 'account'\fR
+Returns a new peercoin address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
+.TP
+\fBgetreceivedbyaccount 'account' ['minconf=1']\fR
+Returns the total amount received by addresses associated with 'account' in transactions with at least ['minconf'] confirmations.
+.TP
+\fBgetreceivedbyaddress 'peercoinaddress' ['minconf=1']\fR
+Returns the total amount received by 'peercoinaddress' in transactions with at least ['minconf'] confirmations.
+.TP
+\fBgettransaction 'txid'\fR
+Returns information about a specific transaction, given hexadecimal transaction ID.
+.TP
+\fBgetwork ['data']\fR
+If 'data' is specified, tries to solve the block and returns true if it was successful. If 'data' is not specified, returns formatted hash 'data' to work on:
+
+    "midstate" : precomputed hash state after hashing the first half of the data.
+    "data"     : block data.
+    "hash1"    : formatted hash buffer for second hash.
+    "target"   : little endian hash target.
+.TP
+\fBhelp ['command']\fR
+List commands, or get help for a command.
+.TP
+\fBimportprivkey 'peercoinprivkey' ['label']\fR
+Adds a private key (as returned by dumpprivkey) to your wallet.
+.TP
+\fBkeypoolrefill\fR
+Fills the keypool.
+.TP
+\fBlistaccounts ['minconf=1']\fR
+List accounts and their current balances.
+.TP
+\fBlistreceivedbyaccount ['minconf=1'] ['includeempty=false']\fR
+['minconf'] is the minimum number of confirmations before payments are included. ['includeempty'] whether to include addresses that haven't received any payments. Returns an array of objects containing:
+
+    "account"       : the account of the receiving address.
+    "amount"        : total amount received by the address.
+    "confirmations" : number of confirmations of the most recent transaction included.
+.TP
+\fBlistreceivedbyaddress ['minconf=1'] ['includeempty=false']\fR
+['minconf'] is the minimum number of confirmations before payments are included. ['includeempty'] whether to include addresses that haven't received any payments. Returns an array of objects containing:
+
+    "address"       : receiving address.
+    "account"       : the account of the receiving address.
+    "amount"        : total amount received by the address.
+    "confirmations" : number of confirmations of the most recent transaction included.
+.TP
+\fBlistsinceblock ['blockhash'] ['target-confirmations']\fR
+Get all transactions in blocks since block ['blockhash'], or all transactions if omitted
+.TP
+\fBlisttransactions ['account'] ['count=10'] ['from=0']\fR
+Returns a list of the last ['count'] transactions skipping the first ['from'] transactions for ['account'] - for all accounts if ['account'] is not specified or is "*". Each entry in the list may contain:
+
+    "category"      : will be generate, send, receive, or move.
+    "amount"        : amount of transaction.
+    "fee"           : Fee (if any) paid (only for send transactions).
+    "confirmations" : number of confirmations (only for generate/send/receive).
+    "txid"          : transaction ID (only for generate/send/receive).
+    "otheraccount"  : account funds were moved to or from (only for move).
+    "message"       : message associated with transaction (only for send).
+    "to"            : message-to associated with transaction (only for send).
+.TP
+\fBmakekeypair ['prefix']\fR
+Make a public/private key pair.
+['prefix'] is optional preferred prefix for the public key.
+.TP
+\fBmove <'fromaccount'> <'toaccount'> <'amount'> ['minconf=1'] ['comment']\fR
+Moves funds between accounts.
+.TP
+\fBrepairwallet\fR
+Repair wallet if checkwallet reports any problem.
+.TP
+\fBreservebalance [<reserve> ['amount']]\fR
+<reserve> is true or false to turn balance reserve on or off. 'amount' is a real and rounded to cent.
+Set reserve amount not participating in network protection.
+If no parameters provided current setting is printed.
+.TP
+\fBsendalert 'message' 'privatekey' 'minver' 'maxver' 'priority' 'id' ['cancelupto']\fR
+  'message' is the alert text message
+  'privatekey' is hex string of alert master private key
+  'minver' is the minimum applicable internal client version
+  'maxver' is the maximum applicable internal client version
+  'priority' is integer priority number
+  'id' is the alert id
+  ['cancelupto'] cancels all alert id's up to this number
+Returns true or false.
+.TP
+\fBsendfrom <'account'> <'topeercoinaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
+Sends amount from account's balance to 'topeercoinaddress'. This method will fail if there is less than amount peercoins with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
+.TP
+\fBsendmany 'fromaccount' {'address':'amount',...} ['minconf=1'] ['comment']\fR
+amounts are double-precision floating point numbers
+.TP
+\fBsendtoaddress 'peercoinaddress' 'amount' ['comment'] ['comment-to']\fR
+Sends amount from the server's available balance to 'peercoinaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
+.TP
+\fBsettxfee 'amount'\fR
+'amount' is a real and is rounded to 0.01 (cent)
+Minimum and default transaction fee per KB is 1 cent
+.TP
+\fBsignmessage 'peercoinaddress' 'message'\fR
+Sign a message with the private key of an address
+.TP
+\fBstop\fR
+Stops the peercoin server.
+.TP
+\fBsubmitblock 'hex data' [optional-params-obj]\fR
+[optional-params-obj] parameter is currently ignored.
+Attempts to submit new block to network.
+See https://en.bitcoin.it/wiki/BIP_0022 for full specification.
+.TP
+\fBvalidateaddress 'peercoinaddress'\fR
+Checks that 'peercoinaddress' looks like a proper peercoin address. Returns an object containing:
+
+    "isvalid" : true or false.
+    "ismine"  : true if the address is in the server's wallet.
+    "address" : peercoinaddress.
+
+    *note: ismine and address are only returned if the address is valid.
+.TP
+\fBverifymessage 'peercoinaddress' 'signature' 'message'
+Verify a signed message
+.TP
+
+.SH "SEE ALSO"
+peercoin.conf(5)
+.SH AUTHOR
+This manual page was written by Zvonimir Mostarac <peerchemist@protonmail.ch> based on work by Micah Anderson <micah@debian.org> for the Debian system (but may be used by others). Permission is granted to copy, distribute and/or modify this document under the terms of the GNU General Public License, Version 3 or any later version published by the Free Software Foundation.
+
+On Debian systems, the complete text of the GNU General Public License can be found in /usr/share/common-licenses/GPL.
