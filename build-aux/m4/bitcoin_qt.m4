@@ -116,24 +116,6 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   if test "x$bitcoin_cv_static_qt" = xyes; then
     _BITCOIN_QT_FIND_STATIC_PLUGINS
     AC_DEFINE(QT_STATICPLUGIN, 1, [Define this symbol if qt plugins are static])
-    AC_CACHE_CHECK(for Qt < 5.4, bitcoin_cv_need_acc_widget,[
-      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-          #include <QtCore/qconfig.h>
-          #ifndef QT_VERSION
-          #  include <QtCore/qglobal.h>
-          #endif
-        ]],
-        [[
-          #if QT_VERSION >= 0x050400
-          choke
-          #endif
-        ]])],
-      [bitcoin_cv_need_acc_widget=yes],
-      [bitcoin_cv_need_acc_widget=no])
-    ])
-    if test "x$bitcoin_cv_need_acc_widget" = xyes; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(AccessibleFactory)], [-lqtaccessiblewidgets])
-    fi
     _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin)],[-lqminimal])
     AC_DEFINE(QT_QPA_PLATFORM_MINIMAL, 1, [Define this symbol if the minimal qt platform exists])
     if test "x$TARGET_OS" = xwindows; then
@@ -279,7 +261,7 @@ dnl All macros below are internal and should _not_ be used from the main
 dnl configure.ac.
 dnl ----
 
-dnl Internal. Check if the included version of Qt is Qt5.
+dnl Internal. Check included version of Qt against minimum specified in doc/dependencies.md
 dnl Requires: INCLUDES must be populated as necessary.
 dnl Output: bitcoin_cv_qt5=yes|no
 AC_DEFUN([_BITCOIN_QT_CHECK_QT5],[
@@ -291,7 +273,7 @@ AC_DEFUN([_BITCOIN_QT_CHECK_QT5],[
       #endif
     ]],
     [[
-      #if QT_VERSION < 0x050200 || QT_VERSION_MAJOR < 5
+      #if QT_VERSION < 0x050501
       choke
       #endif
     ]])],
@@ -360,9 +342,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
      PKG_CHECK_MODULES([QTPLATFORM], [Qt5PlatformSupport], [QT_LIBS="$QTPLATFORM_LIBS $QT_LIBS"])
      if test "x$TARGET_OS" = xlinux; then
        PKG_CHECK_MODULES([X11XCB], [x11-xcb], [QT_LIBS="$X11XCB_LIBS $QT_LIBS"])
-       if ${PKG_CONFIG} --exists "Qt5Core >= 5.5" 2>/dev/null; then
-         PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
-       fi
+       PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
      elif test "x$TARGET_OS" = xdarwin; then
        PKG_CHECK_MODULES([QTPRINT], [Qt5PrintSupport], [QT_LIBS="$QTPRINT_LIBS $QT_LIBS"])
      fi
