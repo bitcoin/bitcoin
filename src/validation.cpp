@@ -4243,7 +4243,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
 
     CValidationState state;
     // Loop until the tip is below nHeight, or we reach a pruned block.
-    while (true) {
+    while (!ShutdownRequested()) {
         {
             LOCK(cs_main);
             // Make sure nothing changed from under us (this won't happen because RewindBlockIndex runs before importing/network are active)
