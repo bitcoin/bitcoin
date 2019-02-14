@@ -421,6 +421,9 @@ static int CommandLineRPC(int argc, char *argv[])
             if (!std::getline(std::cin, rpcPass)) {
                 throw std::runtime_error("-stdinrpcpass specified but failed to read from standard input");
             }
+            if (StdinTerminal()) {
+                fputc('\n', stdout);
+            }
             gArgs.ForceSetArg("-rpcpassword", rpcPass);
         }
         std::vector<std::string> args = std::vector<std::string>(&argv[1], &argv[argc]);
@@ -437,6 +440,9 @@ static int CommandLineRPC(int argc, char *argv[])
             if (!std::getline(std::cin, walletPass)) {
                 throw std::runtime_error("-stdinwalletpassphrase specified but failed to read from standard input");
             }
+            if (StdinTerminal()) {
+                fputc('\n', stdout);
+            }
             args.insert(args.begin() + 1, walletPass);
         }
         if (gArgs.GetBoolArg("-stdin", false)) {
@@ -444,6 +450,9 @@ static int CommandLineRPC(int argc, char *argv[])
             std::string line;
             while (std::getline(std::cin, line)) {
                 args.push_back(line);
+            }
+            if (StdinTerminal()) {
+                fputc('\n', stdout);
             }
         }
         std::unique_ptr<BaseRequestHandler> rh;
