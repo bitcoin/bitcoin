@@ -84,7 +84,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     // attempt to parse the transaction
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
-    if (parseRC < 0) return MP_TX_IS_NOT_MASTER_PROTOCOL;
+    if (parseRC < 0) return MP_TX_IS_NOT_OMNI_PROTOCOL;
 
     const uint256& txid = tx.GetHash();
 
@@ -117,7 +117,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     if (!filterAddress.empty() && mp_obj.getSender() != filterAddress && mp_obj.getReceiver() != filterAddress) return -1;
 
     // parse packet and populate mp_obj
-    if (!mp_obj.interpret_Transaction()) return MP_TX_IS_NOT_MASTER_PROTOCOL;
+    if (!mp_obj.interpret_Transaction()) return MP_TX_IS_NOT_OMNI_PROTOCOL;
 
     // obtain validity - only confirmed transactions can be valid
     bool valid = false;
