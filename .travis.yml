@@ -85,12 +85,12 @@ jobs:
         BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
 
     - stage: test
-      name: '32-bit + dash  [GOAL: install]'
+      name: '32-bit + dash  [GOAL: install]  [GUI: no BIP70]'
       env: >-
         HOST=i686-pc-linux-gnu
         PACKAGES="g++-multilib python3-zmq"
         GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+        BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
 
     - stage: test
@@ -131,15 +131,6 @@ jobs:
         NO_DEPENDS=1
         GOAL="install"
         BITCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
-
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [no BIP70]'
-      env: >-
-        HOST=x86_64-unknown-linux-gnu
-        PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev"
-        NO_DEPENDS=1
-        GOAL="install"
-        BITCOIN_CONFIG="--enable-zmq --disable-bip70 --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
