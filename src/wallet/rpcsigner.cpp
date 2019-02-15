@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparamsbase.h>
+#include <key_io.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
@@ -108,6 +109,55 @@ UniValue signerdissociate(const JSONRPCRequest& request)
     if (position != pwallet->m_external_signers.end()) pwallet->m_external_signers.erase(position);
 
     return NullUniValue;
+}
+
+static UniValue signerdisplayaddress(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.empty() || request.params.size() > 2) {
+        throw std::runtime_error(
+            RPCHelpMan{"signerdisplayaddress",
+            "Display address on an external signer for verification.\n",
+                {
+                    {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "bitcoin address to display"},
+                    {"fingerprint", RPCArg::Type::STR, /* default_val */ "", "master key fingerprint of signer"},
+                },
+                RPCResult{"null"},
+                RPCExamples{""}
+            }.ToString()
+        );
+    }
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    ExternalSigner *signer = GetSignerForJSONRPCRequest(request, 1, pwallet);
+
+    LOCK(pwallet->cs_wallet);
+
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    auto descriptor = InferDescriptor(scriptPubKey, *pwallet);
+
+    if (!descriptor->IsSolvable()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Key is not solvable");
+    }
+
+    // TODO: check that fingerprint and BIP32 path is present (new Descriptor method?)
+    // TODO: check that fingerprint matches signer
+
+    signer->displayAddress(descriptor->ToString());
+
+    return UniValue(UniValue::VNULL);
 }
 
 std::unique_ptr<Descriptor> ParseDescriptor(const UniValue &descriptor_val, bool must_be_solveable = true, bool must_be_ranged = false) {
@@ -305,6 +355,7 @@ static const CRPCCommand commands[] =
     //  --------------------- ------------------------          -----------------------         ----------
     { "signer",             "enumeratesigners",                 &enumeratesigners,              {} },
     { "signer",             "signerdissociate",                 &signerdissociate,              {"fingerprint"} },
+    { "signer",             "signerdisplayaddress",             &signerdisplayaddress,          {"address", "fingerprint"} },
     { "signer",             "signerfetchkeys",                  &signerfetchkeys,               {"account", "fingerprint"} },
 };
 // clang-format on
