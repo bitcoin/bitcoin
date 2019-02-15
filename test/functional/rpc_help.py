@@ -37,11 +37,12 @@ class HelpRpcTest(BitcoinTestFramework):
 
         if self.is_wallet_compiled():
             components.append('Wallet')
+            components.append('Signer')
 
         if self.is_zmq_compiled():
             components.append('Zmq')
 
-        assert_equal(titles, components)
+        assert_equal(titles, sorted(components))
 
     def dump_help(self):
         dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
