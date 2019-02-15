@@ -1571,11 +1571,10 @@ void CMasternodeMan::CheckMasternode(const CPubKey& pubKeyMasternode, bool fForc
     }
 }
 
-bool CMasternodeMan::IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt)
+bool CMasternodeMan::IsMasternodePingedWithin(const CMasternode* pmn, const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt) const
 {
     LOCK(cs);
-    CMasternode* pmn = Find(outpoint);
-    return pmn ? pmn->IsPingedWithin(nSeconds, nTimeToCheckAt) : false;
+    return pmn && pmn->lastPing? pmn->IsPingedWithin(nSeconds, nTimeToCheckAt) : false;
 }
 
 void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp)

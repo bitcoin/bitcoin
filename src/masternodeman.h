@@ -78,8 +78,6 @@ private:
     int64_t nLastSentinelPingTime;
 
     friend class CMasternodeSync;
-    /// Find an entry
-    CMasternode* Find(const COutPoint& outpoint);
 
     bool GetMasternodeScores(const uint256& nBlockHash, score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol = 0);
 
@@ -127,7 +125,9 @@ public:
     }
 
     CMasternodeMan();
-
+    /// Find an entry
+    CMasternode* Find(const COutPoint& outpoint);
+    
     /// Add an entry
     bool Add(CMasternode &mn);
 
@@ -228,7 +228,7 @@ public:
 
     void CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce);
 
-    bool IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1);
+    bool IsMasternodePingedWithin(const CMasternode* pmn, const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1) const;
     void SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);

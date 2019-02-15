@@ -77,9 +77,7 @@ public:
 
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
-    void SetNull() { masternodeOutpoint.SetNull(); }
-    bool IsNull() const { masternodeOutpoint.IsNull(); }
-    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_SENTINEL_PING_MAX_SECONDS && nPingRetries >= MASTERNODE_SENTINEL_PING_EXPIRED_NEW_START_REQUIRED_ATTEMPTS; }
+    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_SENTINEL_PING_MAX_SECONDS;}
 
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool CheckSignature(const CPubKey& pubKeyMasternode, int &nDos) const;
@@ -175,7 +173,7 @@ public:
     int nBlockLastPaid{};
     int nPoSeBanScore{};
     int nPoSeBanHeight{};
-
+    int nPingRetries{};
     // KEEP TRACK OF GOVERNANCE ITEMS EACH MASTERNODE HAS VOTE UPON FOR RECALCULATION
     std::map<uint256, int> mapGovernanceObjectsVotedOn;
 
@@ -191,7 +189,7 @@ public:
         LOCK(cs);
         // using new format directly
         READWRITE(outpoint);
-        
+        READWRITE(nPingRetries);
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
@@ -220,7 +218,7 @@ public:
 
     bool IsBroadcastedWithin(int nSeconds) { return GetAdjustedTime() - sigTime < nSeconds; }
 
-    bool IsPingedWithin(int nSeconds, int64_t nTimeToCheckAt = -1)
+    bool IsPingedWithin(int nSeconds, int64_t nTimeToCheckAt = -1) const
     {
         if(!lastPing) return false;
 
