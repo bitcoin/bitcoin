@@ -17,6 +17,7 @@
 
 #include <attributes.h>
 #include <compat.h>
+#include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
