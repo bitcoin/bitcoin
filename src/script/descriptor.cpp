@@ -176,6 +176,9 @@ public:
     /** Get the descriptor string form. */
     virtual std::string ToString() const = 0;
 
+    /** Get the origin fingerprint. */
+    virtual std::string Fingerprint() const = 0;
+
     /** Get the descriptor string form including private data (if available in arg). */
     virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
 
@@ -188,9 +191,14 @@ class OriginPubkeyProvider final : public PubkeyProvider
     KeyOriginInfo m_origin;
     std::unique_ptr<PubkeyProvider> m_provider;
 
+    std::string FingerprintString() const
+    {
+        return HexStr(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint));
+    }
+
     std::string OriginString() const
     {
-        return HexStr(std::begin(m_origin.fingerprint), std::end(m_origin.fingerprint)) + FormatHDKeypath(m_origin.path);
+        return FingerprintString() + FormatHDKeypath(m_origin.path);
     }
 
 public:
@@ -205,6 +213,9 @@ public:
     bool IsRange() const override { return m_provider->IsRange(); }
     size_t GetSize() const override { return m_provider->GetSize(); }
     std::string ToString() const override { return "[" + OriginString() + "]" + m_provider->ToString(); }
+
+    std::string Fingerprint() const override { return FingerprintString(); }
+
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         std::string sub;
@@ -235,7 +246,8 @@ public:
     }
     bool IsRange() const override { return false; }
     size_t GetSize() const override { return m_pubkey.size(); }
-    std::string ToString() const override { return HexStr(m_pubkey.begin(), m_pubkey.end()); }
+    std::string ToString() const final { return HexStr(m_pubkey.begin(), m_pubkey.end()); }
+    std::string Fingerprint() const override { return ""; }
     bool ToPrivateString(const SigningProvider& arg, std::string& ret) const override
     {
         CKey key;
@@ -375,6 +387,7 @@ public:
         }
         return ret;
     }
+    std::string Fingerprint() const override { return ""; }
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const override
     {
         CExtKey key;
@@ -449,6 +462,12 @@ public:
         return false;
     }
 
+    std::string Fingerprint() const override
+    {
+        if (m_pubkey_args.empty()) return "";
+        return m_pubkey_args[0]->Fingerprint();
+    }
+
     bool ToStringHelper(const SigningProvider* arg, std::string& out, bool priv) const
     {
         std::string extra = ToStringExtra();
@@ -480,6 +499,7 @@ public:
         ToStringHelper(nullptr, ret, false);
         return AddChecksum(ret);
     }
+
 
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final
     {
