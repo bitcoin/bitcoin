@@ -56,6 +56,10 @@ struct Descriptor {
     /** Whether this descriptor or its sub-descriptors use SegWit. */
     virtual bool IsSegWit() const = 0;
 
+    /** Origin fingerprint **/
+    // Return array (e.g. for multi())
+    virtual std::string Fingerprint() const = 0;
+
     /** Expand a descriptor at a specified position.
      *
      * @param[in] pos The position at which to expand the descriptor. If IsRange() is false, this is ignored.
