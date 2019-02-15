@@ -79,6 +79,37 @@ ExternalSigner *GetSignerForJSONRPCRequest(const JSONRPCRequest& request, int in
     throw JSONRPCError(RPC_WALLET_ERROR, "Signer fingerprint not found");
 }
 
+UniValue signerdissociate(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"signerdissociate",
+                "Disossociates external signer from the wallet.\n",
+                {
+                    {"fingerprint", RPCArg::Type::STR, /* default_val */ "", "Master key fingerprint of signer"},
+                },
+                RPCResult{"null"},
+                RPCExamples{""}
+            }.ToString()
+        );
+    }
+
+    ExternalSigner *signer = GetSignerForJSONRPCRequest(request, 0, pwallet);
+
+    assert(signer != nullptr);
+    std::vector<ExternalSigner>::iterator position = std::find(pwallet->m_external_signers.begin(), pwallet->m_external_signers.end(), *signer);
+    if (position != pwallet->m_external_signers.end()) pwallet->m_external_signers.erase(position);
+
+    return NullUniValue;
+}
+
 std::unique_ptr<Descriptor> ParseDescriptor(const UniValue &descriptor_val, bool must_be_solveable = true, bool must_be_ranged = false) {
     if (!descriptor_val.isStr()) JSONRPCError(RPC_WALLET_ERROR, "Unexpect result");
     FlatSigningProvider provider;
@@ -273,6 +304,7 @@ static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
     { "signer",             "enumeratesigners",                 &enumeratesigners,              {} },
+    { "signer",             "signerdissociate",                 &signerdissociate,              {"fingerprint"} },
     { "signer",             "signerfetchkeys",                  &signerfetchkeys,               {"account", "fingerprint"} },
 };
 // clang-format on

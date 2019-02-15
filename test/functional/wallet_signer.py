@@ -87,11 +87,6 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(result, [{'success': True}, {'success': True}])
         assert_equal(hww1.getwalletinfo()["keypoolsize"], 1)
 
-        assert_raises_rpc_error(-4, "First call enumeratesigners", hww3.signerfetchkeys)
-        hww3.enumeratesigners()
-
-        assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", hww3.signerfetchkeys)
-
         # Handle error thrown by script
         self.set_mock_result(self.nodes[1], "2")
         assert_raises_rpc_error(-1, 'Unable to parse JSON',
@@ -106,6 +101,9 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], False)
         assert_equal(address_info['hdkeypath'], "m/84'/1'/0'/0/0")
 
+        assert_raises_rpc_error(-4, "First call enumeratesigners", hww3.signerfetchkeys)
+        hww3.enumeratesigners()
+
         result = hww2.signerfetchkeys(0, "00000001")
         assert_equal(result, [{'success': True}, {'success': True}])
         assert_equal(hww2.getwalletinfo()["keypoolsize"], 1)
@@ -117,7 +115,10 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], False)
         assert_equal(address_info['hdkeypath'], "m/49'/1'/0'/0/0")
 
-        result = hww3.signerfetchkeys(0, "00000001")
+        assert_raises_rpc_error(-4, "Multiple signers found, please specify which to use", hww3.signerfetchkeys)
+        hww3.signerdissociate("00000002")
+        hww3.signerfetchkeys()
+
         assert_equal(result, [{'success': True}, {'success': True}])
         assert_equal(hww3.getwalletinfo()["keypoolsize"], 1)
 
