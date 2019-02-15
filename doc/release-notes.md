@@ -263,6 +263,9 @@ in the Low-level Changes section below.
 
 - See the [Mining](#mining) section for changes to `getblocktemplate`.
 
+- The `getmininginfo` RPC now omits `currentblockweight` and `currentblocktx`
+  when a block was never assembled via RPC on this node.
+
 - The `getrawtransaction` RPC & REST endpoints no longer check the
   unspent UTXO set for a transaction. The remaining behaviors are as
   follows: 1. If a blockhash is provided, check the corresponding block.
