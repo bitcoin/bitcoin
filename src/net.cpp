@@ -2429,8 +2429,18 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     }
 
 #ifndef WIN32
-    if (pipe2(wakeupPipe, O_NONBLOCK) != 0) {
+    if (pipe(wakeupPipe) != 0) {
         wakeupPipe[0] = wakeupPipe[1] = -1;
+        LogPrint("net", "pipe() for wakeupPipe failed\n");
+    } else {
+        int fFlags = fcntl(wakeupPipe[0], F_GETFL, 0);
+        if (fcntl(wakeupPipe[0], F_SETFL, fFlags | O_NONBLOCK) == -1) {
+            LogPrint("net", "fcntl for O_NONBLOCK on wakeupPipe failed\n");
+        }
+        fFlags = fcntl(wakeupPipe[1], F_GETFL, 0);
+        if (fcntl(wakeupPipe[1], F_SETFL, fFlags | O_NONBLOCK) == -1) {
+            LogPrint("net", "fcntl for O_NONBLOCK on wakeupPipe failed\n");
+        }
     }
 #endif
 
