@@ -73,10 +73,12 @@ static void AssembleBlock(benchmark::State& state)
     boost::thread_group thread_group;
     CScheduler scheduler;
     {
+        LOCK(cs_main);
         ::pblocktree.reset(new CBlockTreeDB(1 << 20, true));
         ::pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
         ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
-
+    }
+    {
         const CChainParams& chainparams = Params();
         thread_group.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
         GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
