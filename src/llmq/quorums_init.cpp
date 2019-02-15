@@ -29,16 +29,17 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
     quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(unitTests);
     chainLocksHandler = new CChainLocksHandler(scheduler);
+}
 
-    quorumSigSharesManager->StartWorkerThread();
+void InterruptLLMQSystem()
+{
+    if (quorumSigSharesManager) {
+        quorumSigSharesManager->InterruptWorkerThread();
+    }
 }
 
 void DestroyLLMQSystem()
 {
-    if (quorumSigSharesManager) {
-        quorumSigSharesManager->StopWorkerThread();
-    }
-
     delete chainLocksHandler;
     chainLocksHandler = nullptr;
     delete quorumSigningManager;

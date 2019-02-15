@@ -97,6 +97,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 TestingSetup::~TestingSetup()
 {
         UnregisterNodeSignals(GetNodeSignals());
+        llmq::InterruptLLMQSystem();
         threadGroup.interrupt_all();
         threadGroup.join_all();
         UnloadBlockIndex();

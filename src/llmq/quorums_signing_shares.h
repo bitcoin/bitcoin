@@ -194,7 +194,7 @@ private:
     CCriticalSection cs;
 
     std::thread workThread;
-    std::atomic<bool> stopWorkThread{false};
+    CThreadInterrupt workInterrupt;
 
     std::map<SigShareKey, CSigShare> sigShares;
     std::map<uint256, int64_t> firstSeenForSessions;
@@ -214,8 +214,7 @@ public:
     CSigSharesManager();
     ~CSigSharesManager();
 
-    void StartWorkerThread();
-    void StopWorkerThread();
+    void InterruptWorkerThread();
 
 public:
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
@@ -224,6 +223,9 @@ public:
     void Sign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
 
 private:
+    void StartWorkerThread();
+    void StopWorkerThread();
+
     void ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);

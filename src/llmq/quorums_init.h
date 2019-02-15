@@ -15,6 +15,7 @@ namespace llmq
 static const bool DEFAULT_WATCH_QUORUMS = false;
 
 void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests);
+void InterruptLLMQSystem();
 void DestroyLLMQSystem();
 
 }

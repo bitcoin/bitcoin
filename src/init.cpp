@@ -211,6 +211,7 @@ void Interrupt(boost::thread_group& threadGroup)
     InterruptRPC();
     InterruptREST();
     InterruptTorControl();
+    llmq::InterruptLLMQSystem();
     if (g_connman)
         g_connman->Interrupt();
     threadGroup.interrupt_all();
