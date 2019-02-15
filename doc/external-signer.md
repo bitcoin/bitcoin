@@ -62,9 +62,9 @@ $ bitcoin-cli -rpcwallet=<wallet> signerdisplayaddress <address>
 
 Replace `<address>` with the result of `getnewaddress`.
 
-### Spending
+### Spending the hard way
 
-In order to send coins you need to create and sign a [Partially Signed Bitcoin Transaction](psbt.md).
+In order to send coins you need to create and sign a [Partially Signed Bitcoin Transaction](psbt.md), or use the convenience method `signersend` explained in the next section.
 
 ```sh
 $ bitcoin-cli -rpcwallet=<wallet> walletcreatefundedpsbt '[]' '[{"<address>": <amount>}]' 0 '{"includeWatching": true}' true
@@ -81,6 +81,18 @@ $ bitcoin-cli sendrawtransaction <tx>
 ```
 
 Alternatively, if the transaction requires additional signatures, `walletprocesspsbt` will return a PSBT.
+
+### Spending the easy way
+
+Plug in your device.
+
+```sh
+$ bitcoin-cli -rpcwallet=<wallet> signerspend '[]' '[{"<address>": <amount>}]'
+```
+
+Confirm the transaction on your device.
+
+If successful, the transaction is broadcast. If not, e.g. if it requires additional signatures, a PSBT is returned.
 
 ## Signer API
 

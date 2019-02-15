@@ -9,6 +9,8 @@ Verify that a bitcoind node can use an external signer command
 import os
 import platform
 
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -218,6 +220,10 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(hww4.getwalletinfo()["keypoolsize"], 1)
 
         result = hww5.importmulti(importmulti)
+        assert_equal(result[0], {'success': True})
+        assert_equal(result[1], {'success': True})
+        assert_equal(hww5.getwalletinfo()["txcount"], 1)
+        assert_equal(hww5.getwalletinfo()["keypoolsize"], 1)
 
         assert(hww4.testmempoolaccept([mock_tx])[0]["allowed"])
 
@@ -235,6 +241,18 @@ class SignerTest(BitcoinTestFramework):
         tx = psbt_final["hex"]
         assert_equal(tx, mock_tx)
         assert(hww4.testmempoolaccept([tx])[0]["allowed"])
+
+        self.log.info('Test signersend')
+
+        res = hww5.signersend([], {dest:0.5}, 0, None, "00000001")
+        assert_equal(res['complete'], True)
+        txid = res["txid"]
+
+        self.sync_all()
+        self.nodes[0].generate(1)
+        node0_tx = self.nodes[0].gettransaction(txid)
+        assert_equal(node0_tx['hex'], tx)
+        assert_equal(self.nodes[0].getreceivedbyaddress(dest), Decimal("0.5"))
 
         # Handle error thrown by script
         self.set_mock_result(self.nodes[4], "2")

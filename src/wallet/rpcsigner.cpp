@@ -5,17 +5,33 @@
 #include <chainparamsbase.h>
 #include <core_io.h>
 #include <key_io.h>
+#include <node/transaction.h>
 #include <psbt.h>
+#include <rpc/rawtransaction_util.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <wallet/psbtwallet.h>
 #include <wallet/rpcdump.h>
 #include <wallet/rpcsigner.h>
 #include <wallet/rpcwallet.h>
 
 #ifdef HAVE_BOOST_PROCESS
+
+UniValue getsigners(CWallet *pwallet) {
+    const std::string command = gArgs.GetArg("-signer", DEFAULT_EXTERNAL_SIGNER);
+    if (command == "") throw JSONRPCError(RPC_WALLET_ERROR, "Error: restart bitcoind with -signer=<cmd>");
+    std::string chain = gArgs.GetChainName();
+    const bool mainnet = chain == CBaseChainParams::MAIN;
+    UniValue signers;
+    try {
+        return ExternalSigner::Enumerate(command, pwallet->m_external_signers, mainnet);
+    } catch (const ExternalSignerException& e) {
+        throw JSONRPCError(RPC_WALLET_ERROR, e.what());
+    }
+}
 
 static UniValue enumeratesigners(const JSONRPCRequest& request)
 {
@@ -47,16 +63,7 @@ static UniValue enumeratesigners(const JSONRPCRequest& request)
         );
     }
 
-    const std::string command = gArgs.GetArg("-signer", DEFAULT_EXTERNAL_SIGNER);
-    if (command == "") throw JSONRPCError(RPC_WALLET_ERROR, "Error: restart bitcoind with -signer=<cmd>");
-    std::string chain = gArgs.GetChainName();
-    const bool mainnet = chain == CBaseChainParams::MAIN;
-    UniValue signers;
-    try {
-        signers = ExternalSigner::Enumerate(command, pwallet->m_external_signers, mainnet);
-    } catch (const ExternalSignerException& e) {
-        throw JSONRPCError(RPC_WALLET_ERROR, e.what());
-    }
+    UniValue signers = getsigners(pwallet);
     UniValue result(UniValue::VOBJ);
     result.pushKV("signers", signers);
     return result;
@@ -425,6 +432,165 @@ UniValue signerprocesspsbt(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue signersend(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
+        throw std::runtime_error(
+            RPCHelpMan{"signersend",
+                "Creates, funds and broadcasts a transaction.\n",
+                {
+                    {"inputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json array of json objects",
+                        {
+                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                {
+                                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id"},
+                                    {"vout", RPCArg::Type::NUM, RPCArg::Optional::NO, "The output number"},
+                                    {"sequence", RPCArg::Type::NUM, RPCArg::Optional::NO, "The sequence number"},
+                                },
+                            },
+                        },
+                        },
+                    {"outputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "a json array with outputs (key-value pairs), where none of the keys are duplicated.\n"
+                            "That is, each address can only appear once and there can only be one 'data' object.\n"
+                            "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
+                            "                             accepted as second parameter.",
+                        {
+                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                {
+                                    {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the bitcoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
+                                },
+                                },
+                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                                {
+                                    {"data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "A key-value pair. The key must be \"data\", the value is hex-encoded data"},
+                                },
+                            },
+                        },
+                    },
+                    {"locktime", RPCArg::Type::NUM, /* default */ "0", "Raw locktime. Non-0 value also locktime-activates inputs"},
+                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                        {
+                            {"add_inputs", RPCArg::Type::BOOL, /* default */ "false", "If inputs are specified, automatically include more if they are not enough."},
+                            {"changeAddress", RPCArg::Type::STR_HEX, /* default */ "pool address", "The bitcoin address to receive the change"},
+                            {"changePosition", RPCArg::Type::NUM, /* default */ "random", "The index of the change output"},
+                            {"change_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                            {"lockUnspents", RPCArg::Type::BOOL, /* default */ "false", "Lock selected unspent outputs"},
+                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
+                            {"subtractFeeFromOutputs", RPCArg::Type::ARR, /* default */ "empty array", "A json array of integers.\n"
+                            "                              The fee will be equally deducted from the amount of each specified output.\n"
+                            "                              Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+                            "                              If no outputs are specified here, the sender pays the fee.",
+                                {
+                                    {"vout_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The zero-based output index, before a change output is added."},
+                                },
+                            },
+                            {"replaceable", RPCArg::Type::BOOL, /* default */ "fallback to wallet's default", "Marks this transaction as BIP125 replaceable.\n"
+                            "                              Allows this transaction to be replaced by a transaction with higher fees"},
+                            {"conf_target", RPCArg::Type::NUM, /* default */ "Fallback to wallet's confirmation target", "Confirmation target (in blocks)"},
+                            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
+                            "         \"UNSET\"\n"
+                            "         \"ECONOMICAL\"\n"
+                            "         \"CONSERVATIVE\""},
+                        },
+                        "options"},
+                    {"fingerprint", RPCArg::Type::STR, /* default_val */ "", "master key fingerprint of signer"}
+                },
+                RPCResult{
+                    "{\n"
+                    "  \"psbt\": \"value\",        (string)  The resulting raw transaction (base64-encoded string)\n"
+                    "  \"fee\":       n,         (numeric) Fee in " + CURRENCY_UNIT + " the resulting transaction pays\n"
+                    "  \"changepos\": n          (numeric) The position of the added change output, or -1\n"
+                    "}\n"
+                },
+                RPCExamples{
+                    "\nSend 0.1 BTC\n"
+                    + HelpExampleCli("signersend", "\"[]\" \"[{\\\"bc1qkallence7tjawwvy0dwt4twc62qjgaw8f4vlhyd006d99f09\\\": 0.1}]\"")
+                }
+            }.ToString()
+        );
+
+    RPCTypeCheck(request.params, {
+        UniValue::VARR,
+        UniValueType(), // ARR or OBJ, checked later
+        UniValue::VNUM,
+        UniValue::VOBJ
+        }, true
+    );
+
+    // No need to call enumerate first:
+    if (pwallet->m_external_signers.empty()) {
+        getsigners(pwallet);
+    }
+
+    CAmount fee;
+    int change_position;
+    bool rbf = pwallet->m_signal_rbf;
+    if (!request.params[3]["replaceable"].isNull()) {
+        rbf = request.params[3]["replaceable"].isTrue();
+    }
+    CMutableTransaction rawTx = ConstructTransaction(request.params[0], request.params[1], request.params[2], rbf);
+
+    CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = true;
+    // Automatically select coins, unless at least one is manually selected. Can
+    // be overriden by options.add_inputs.
+    coin_control.m_add_inputs = rawTx.vin.size() == 0;
+    FundTransaction(pwallet, rawTx, fee, change_position, request.params[3], coin_control);
+
+    // Make a blank psbt
+    PartiallySignedTransaction psbtx(rawTx);
+
+    // Fill transaction with out data but don't sign
+    bool complete_dummy;
+
+    TransactionError fill_psbt_error = FillPSBT(pwallet, psbtx, complete_dummy, 1, false, true);
+    if (fill_psbt_error != TransactionError::OK) {
+        throw JSONRPCTransactionError(fill_psbt_error);
+    }
+
+    // TODO: if more than one signer is known and no fingerprint argument is present,
+    //       loop through inputs to find a matching fingerprint.
+    ExternalSigner *signer = GetSignerForJSONRPCRequest(request, 4, pwallet);
+
+    // Send to signer and process result
+    std::string error;
+    if( !signer->signTransaction(psbtx, error)) throw JSONRPCError(RPC_WALLET_ERROR, error);
+
+    CMutableTransaction mtx;
+    bool complete = FinalizeAndExtractPSBT(psbtx, mtx);
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+
+    UniValue result(UniValue::VOBJ);
+
+    if (complete) {
+        CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+        std::string err_string;
+        UniValue err;
+        bool success = pwallet->chain().broadcastTransaction(tx, err_string, DEFAULT_MAX_RAW_TX_FEE, /*relay*/ true);
+        if (!success)throw err_string;
+        result.pushKV("txid", tx->GetHash().GetHex());
+    } else {
+        // Add PSBT to result so the user can pass it on
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    }
+
+    result.pushKV("fee", ValueFromAmount(fee));
+    result.pushKV("changepos", change_position);
+    result.pushKV("complete", complete);
+
+    return result;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -434,6 +600,7 @@ static const CRPCCommand commands[] =
     { "signer",             "signerdisplayaddress",             &signerdisplayaddress,          {"address", "fingerprint"} },
     { "signer",             "signerfetchkeys",                  &signerfetchkeys,               {"account", "fingerprint"} },
     { "signer",             "signerprocesspsbt",                &signerprocesspsbt,             {"psbt", "fingerprint"} },
+    { "signer",             "signersend",                       &signersend,                    {"inputs","outputs","locktime","options"} },
 };
 // clang-format on
 

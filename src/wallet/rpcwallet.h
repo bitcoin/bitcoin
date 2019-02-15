@@ -37,4 +37,5 @@ bool EnsureWalletIsAvailable(const CWallet*, bool avoidException);
 
 UniValue getaddressinfo(const JSONRPCRequest& request);
 UniValue signrawtransactionwithwallet(const JSONRPCRequest& request);
+void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, UniValue options, CCoinControl& coinControl);
 #endif //BITCOIN_WALLET_RPCWALLET_H
