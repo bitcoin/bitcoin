@@ -24,11 +24,11 @@
 #include <outputtype.h>
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()}
+    masternode_info_t{ MASTERNODE_PRE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()}
 {}
 
 CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
-    masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
+    masternode_info_t{ MASTERNODE_PRE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
                        outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode}
 {}
 
@@ -250,18 +250,7 @@ void CMasternode::Check(bool fForce)
             return;
         }
     }
-
-    // We require MNs to be in PRE_ENABLED until they either start to expire or receive a ping and go into ENABLED state
-    // Works on mainnet/testnet only and not the case on regtest
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {
-        if (lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {
-            nActiveState = MASTERNODE_PRE_ENABLED;
-            if (nActiveStatePrev != nActiveState) {
-                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
-            }
-            return;
-        }
-    }
+    
 
     if(!fWaitForPing || fOurMasternode) {
         // part 2: expire based on sentinel info
@@ -279,8 +268,10 @@ void CMasternode::Check(bool fForce)
             return;
         }
     }
-
-    nActiveState = MASTERNODE_ENABLED; // OK
+    // by default we are in preenabled state waiting for first ping sent with broadcast
+    // once the broadcast happens it sets it to enabled to we don't want it to auto switch back to preenabled from enabled specifically
+    if(nActiveState != MASTERNODE_ENABLED)
+        nActiveState = MASTERNODE_PRE_ENABLED; // OK
     if(nActiveStatePrev != nActiveState) {
         LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
     }
@@ -799,6 +790,11 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if (pmn == NULL) {
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Couldn't find Masternode entry, masternode=%s\n", masternodeOutpoint.ToStringShort());
         return false;
+    }
+    // when ping comes from broadcast and newstart/update is not flagged then enable the masternode
+    if(fFromNewBroadcast && !pmn->IsUpdateRequired() && !pmn->IsNewStartRequired()) {
+        pmn->nActiveState = MASTERNODE_ENABLED;
+        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode %s is in %s state now\n", pmn->outpoint.ToStringShort(), pmn->GetStateString());
     }
     // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
     const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
