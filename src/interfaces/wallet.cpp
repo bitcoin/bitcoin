@@ -20,6 +20,7 @@
 #include <wallet/ismine.h>
 #include <wallet/load.h>
 #include <wallet/psbtwallet.h>
+#include <wallet/rpcsigner.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
@@ -523,7 +524,10 @@ public:
     void registerRpcs() override
     {
         g_rpc_chain = &m_chain;
-        return RegisterWalletRPCCommands(m_chain, m_rpc_handlers);
+        RegisterWalletRPCCommands(m_chain, m_rpc_handlers);
+#ifdef ENABLE_EXTERNAL_SIGNER
+        RegisterSignerRPCCommands(m_chain, m_rpc_handlers);
+#endif
     }
     bool verify() override { return VerifyWallets(m_chain, m_wallet_filenames); }
     bool load() override { return LoadWallets(m_chain, m_wallet_filenames); }
