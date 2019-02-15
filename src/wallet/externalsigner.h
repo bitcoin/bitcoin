@@ -35,6 +35,12 @@ public:
     //! Bitcoin mainnet or testnet
     bool m_mainnet;
 
+    //! Two signers with the same master key fingerprint are considered the same
+    friend inline bool operator==( const ExternalSigner &a, const ExternalSigner &b )
+    {
+         return a.m_fingerprint == b.m_fingerprint;
+    }
+
 #ifdef HAVE_BOOST_PROCESS
     //! Obtain a list of signers. Calls `<command> enumerate`.
     //! @param[in]              command the command which handles interaction with the external signer
