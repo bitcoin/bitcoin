@@ -129,5 +129,16 @@ class SignerTest(BitcoinTestFramework):
         assert_equal(address_info['ismine'], False)
         assert_equal(address_info['hdkeypath'], "m/44'/1'/0'/0/0")
 
+        self.log.info('Test signerdisplayaddress')
+        hww1.signerdisplayaddress(address1, "00000001")
+        hww3.signerdisplayaddress(address3)
+
+        # Handle error thrown by script
+        self.set_mock_result(self.nodes[3], "2")
+        assert_raises_rpc_error(-1, 'Unable to parse JSON',
+            hww3.signerdisplayaddress, address3
+        )
+        self.clear_mock_result(self.nodes[3])
+
 if __name__ == '__main__':
     SignerTest().main()
