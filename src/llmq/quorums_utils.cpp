@@ -99,8 +99,6 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
 
 bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
-    AssertLockHeld(cs_main);
-
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     // sig shares and recovered sigs are only accepted from recent/active quorums

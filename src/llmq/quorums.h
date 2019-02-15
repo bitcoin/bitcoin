@@ -91,20 +91,24 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
 
-public:
     bool HasQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash);
 
-    // all these methods will lock cs_main
-    CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType,const uint256& quorumHash);
+    // all these methods will lock cs_main for a short period of time
+    CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const uint256& quorumHash);
     CQuorumCPtr GetNewestQuorum(Consensus::LLMQType llmqType);
     std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, size_t maxCount);
-    std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, const uint256& startBlock, size_t maxCount);
+
+    // this one is cs_main-free
+    std::vector<CQuorumCPtr> ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart, size_t maxCount);
 
 private:
+    // all private methods here are cs_main-free
     void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew);
 
-    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, std::shared_ptr<CQuorum>& quorum) const;
+    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const;
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
+
+    CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
 };
 
 extern CQuorumManager* quorumManager;

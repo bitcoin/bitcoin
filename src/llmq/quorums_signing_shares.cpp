@@ -347,31 +347,26 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(NodeId nodeId, const CBatchedS
         return false;
     }
 
-    CQuorumCPtr quorum;
-    {
-        LOCK(cs_main);
-
-        quorum = quorumManager->GetQuorum(llmqType, batchedSigShares.quorumHash);
-        if (!quorum) {
-            // TODO should we ban here?
-            LogPrintf("CSigSharesManager::%s -- quorum %s not found, node=%d\n", __func__,
-                      batchedSigShares.quorumHash.ToString(), nodeId);
-            return false;
-        }
-        if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->quorumHash)) {
-            // quorum is too old
-            return false;
-        }
-        if (!quorum->IsMember(activeMasternodeInfo.proTxHash)) {
-            // we're not a member so we can't verify it (we actually shouldn't have received it)
-            return false;
-        }
-        if (quorum->quorumVvec == nullptr) {
-            // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
-            LogPrintf("CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible. node=%d\n", __func__,
-                      batchedSigShares.quorumHash.ToString(), nodeId);
-            return false;
-        }
+    CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, batchedSigShares.quorumHash);
+    if (!quorum) {
+        // TODO should we ban here?
+        LogPrintf("CSigSharesManager::%s -- quorum %s not found, node=%d\n", __func__,
+                  batchedSigShares.quorumHash.ToString(), nodeId);
+        return false;
+    }
+    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->quorumHash)) {
+        // quorum is too old
+        return false;
+    }
+    if (!quorum->IsMember(activeMasternodeInfo.proTxHash)) {
+        // we're not a member so we can't verify it (we actually shouldn't have received it)
+        return false;
+    }
+    if (quorum->quorumVvec == nullptr) {
+        // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
+        LogPrintf("CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible. node=%d\n", __func__,
+                  batchedSigShares.quorumHash.ToString(), nodeId);
+        return false;
     }
 
     std::set<uint16_t> dupMembers;
@@ -994,17 +989,15 @@ void CSigSharesManager::Cleanup()
         }
     }
 
-    {
-        // Find quorums which became inactive
-        LOCK(cs_main);
-        for (auto it = quorumsToCheck.begin(); it != quorumsToCheck.end(); ) {
-            if (CLLMQUtils::IsQuorumActive(it->first, it->second)) {
-                it = quorumsToCheck.erase(it);
-            } else {
-                ++it;
-            }
+    // Find quorums which became inactive
+    for (auto it = quorumsToCheck.begin(); it != quorumsToCheck.end(); ) {
+        if (CLLMQUtils::IsQuorumActive(it->first, it->second)) {
+            it = quorumsToCheck.erase(it);
+        } else {
+            ++it;
         }
     }
+
     {
         // Now delete sessions which are for inactive quorums
         LOCK(cs);
