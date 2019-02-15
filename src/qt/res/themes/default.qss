@@ -228,6 +228,7 @@ QFrame QLabel#labelBalanceText,
 QFrame QLabel#titleNumTransactions,
 QFrame QLabel#labelImmatureText,
 QFrame QLabel#labelUnconfirmedText,
+QFrame QLabel#labelPendingText,
 QFrame QLabel#labelTotalText {
     color: #3cb054;
     font-size: 20px;
