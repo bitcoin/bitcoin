@@ -17,9 +17,15 @@ def perform_pre_checks():
             sys.stdout.write(mock_result[2:])
             sys.exit(int(mock_result[0]))
 
+def enumerate(args):
+  sys.stdout.write(json.dumps([{"fingerprint": "00000001", "type": "trezor", "model": "trezor_t"}, {"fingerprint": "00000002"}]))
+
 parser = argparse.ArgumentParser(prog='./signer.py', description='External signer mock')
 subparsers = parser.add_subparsers(description='Commands', dest='command')
 subparsers.required = True
+
+parser_enumerate = subparsers.add_parser('enumerate', help='list available signers')
+parser_enumerate.set_defaults(func=enumerate)
 
 args = parser.parse_args()
 

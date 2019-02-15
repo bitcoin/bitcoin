@@ -48,5 +48,36 @@ class SignerTest(BitcoinTestFramework):
     def run_test(self):
         self.log.debug(f"-signer={self.mock_signer_path()}")
 
+        assert_raises_rpc_error(-4, 'Error: restart bitcoind with -signer=<cmd>',
+            self.nodes[0].enumeratesigners
+        )
+
+        # Handle script missing:
+        assert_raises_rpc_error(-1, 'execve failed: No such file or directory',
+            self.nodes[2].enumeratesigners
+        )
+
+        # Handle error thrown by script
+        self.set_mock_result(self.nodes[1], "2")
+        assert_raises_rpc_error(-1, 'RunCommandParseJSON error',
+            self.nodes[1].enumeratesigners
+        )
+        self.clear_mock_result(self.nodes[1])
+
+        self.set_mock_result(self.nodes[1], '0 [{"type": "trezor", "model": "trezor_t", "error": "fingerprint not found"}]')
+        assert_raises_rpc_error(-4, 'fingerprint not found',
+            self.nodes[1].enumeratesigners
+        )
+        self.clear_mock_result(self.nodes[1])
+
+        # Create new wallets with private keys disabled:
+        self.nodes[1].createwallet(wallet_name='hww', disable_private_keys=True, descriptors=True)
+        hww = self.nodes[1].get_wallet_rpc('hww')
+
+        result = hww.enumeratesigners()
+        assert_equal(len(result['signers']), 2)
+        assert_equal(result['signers'][0]["fingerprint"], "00000001")
+        assert_equal(result['signers'][0]["name"], "trezor_t")
+
 if __name__ == '__main__':
     SignerTest().main()
