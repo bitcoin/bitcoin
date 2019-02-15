@@ -896,6 +896,8 @@ void CSigSharesManager::SendMessages()
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
     }
 
+    bool didSend = false;
+
     g_connman->ForEachNode([&](CNode* pnode) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
@@ -905,7 +907,8 @@ void CSigSharesManager::SendMessages()
                 assert(p.second.CountSet() != 0);
                 LogPrint("llmq", "CSigSharesManager::SendMessages -- QGETSIGSHARES inv={%s}, node=%d\n",
                          p.second.ToString(), pnode->id);
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QGETSIGSHARES, p.second));
+                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QGETSIGSHARES, p.second), false);
+                didSend = true;
             }
         }
 
@@ -915,7 +918,8 @@ void CSigSharesManager::SendMessages()
                 assert(!p.second.sigShares.empty());
                 LogPrint("llmq", "CSigSharesManager::SendMessages -- QBSIGSHARES inv={%s}, node=%d\n",
                          p.second.ToInv().ToString(), pnode->id);
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, p.second));
+                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QBSIGSHARES, p.second), false);
+                didSend = true;
             }
         }
 
@@ -925,12 +929,17 @@ void CSigSharesManager::SendMessages()
                 assert(p.second.CountSet() != 0);
                 LogPrint("llmq", "CSigSharesManager::SendMessages -- QSIGSHARESINV inv={%s}, node=%d\n",
                          p.second.ToString(), pnode->id);
-                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARESINV, p.second));
+                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSHARESINV, p.second), false);
+                didSend = true;
             }
         }
 
         return true;
     });
+
+    if (didSend) {
+        g_connman->WakeSelect();
+    }
 }
 
 void CSigSharesManager::Cleanup()
