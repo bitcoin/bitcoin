@@ -135,7 +135,16 @@ struct masternode_info_t
     int64_t nTimeLastPing = 0; //* not in CMN
     bool fInfoValid = false; //* not in CMN
 };
-
+enum state {
+    MASTERNODE_PRE_ENABLED,
+    MASTERNODE_ENABLED,
+    MASTERNODE_EXPIRED,
+    MASTERNODE_OUTPOINT_SPENT,
+    MASTERNODE_UPDATE_REQUIRED,
+    MASTERNODE_SENTINEL_PING_EXPIRED,
+    MASTERNODE_NEW_START_REQUIRED,
+    MASTERNODE_POSE_BAN
+};
 //
 // The Masternode Class. It contains the input of the 100000SYS, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
@@ -147,16 +156,6 @@ private:
     mutable CCriticalSection cs;
 
 public:
-    enum state {
-        MASTERNODE_PRE_ENABLED,
-        MASTERNODE_ENABLED,
-        MASTERNODE_EXPIRED,
-        MASTERNODE_OUTPOINT_SPENT,
-        MASTERNODE_UPDATE_REQUIRED,
-        MASTERNODE_SENTINEL_PING_EXPIRED,
-        MASTERNODE_NEW_START_REQUIRED,
-        MASTERNODE_POSE_BAN
-    };
 
     enum CollateralStatus {
         COLLATERAL_OK,
