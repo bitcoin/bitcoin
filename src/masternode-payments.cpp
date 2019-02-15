@@ -388,7 +388,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 		LogPrint(BCLog::MNPAYMENT, "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, new\n",
 			nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
 
-        if(AddOrUpdatePaymentVote(vote)){
+        if(AddOrUpdatePaymentVote(vote, connman)){
             vote.Relay(connman);
             masternodeSync.BumpAssetLastTime("MASTERNODEPAYMENTVOTE");
         }
@@ -467,7 +467,7 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
     return false;
 }
 
-bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote)
+bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote, CConnman& connman)
 {
     uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, vote.nBlockHeight - 101)) return false;
@@ -481,7 +481,7 @@ bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& v
     mapMasternodePaymentVotes[nVoteHash] = vote;
 
     auto it = mapMasternodeBlocks.emplace(vote.nBlockHeight, CMasternodeBlockPayees(vote.nBlockHeight)).first;
-    it->second.AddPayee(vote);
+    it->second.AddPayee(vote, connman);
 
     LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::AddOrUpdatePaymentVote -- added, hash=%s\n", nVoteHash.ToString());
 
@@ -495,7 +495,7 @@ bool CMasternodePayments::HasVerifiedPaymentVote(const uint256& hashIn) const
     return it != mapMasternodePaymentVotes.end() && it->second.IsVerified();
 }
 
-void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote)
+void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote, CConnman& connman)
 {
     LOCK(cs_vecPayees);
 
@@ -505,10 +505,10 @@ void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote)
         if (payee.GetPayee() == vote.payee) {
             payee.AddVoteHash(nVoteHash);
             // if we have MNPAYMENTS_SIGNATURES_REQUIRED votes on the active masternode start timer by sending a ping
-            if(vote.outpoint == activeMasternode.outpoint && payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED){
+            if(vote.masternodeOutpoint == activeMasternode.outpoint && payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED){
                 // send a ping if you are the active masternode adding this payee
                 // first time you add to payees you should start the timer to track when to kick them out (ban policy)
-                activeMasternode.SendMasternodePing(conman);
+                activeMasternode.SendMasternodePing(connman);
             }
             return;
         }
@@ -809,7 +809,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
     if (voteNew.Sign()) {
         LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- AddOrUpdatePaymentVote()\n");
 
-        if (AddOrUpdatePaymentVote(voteNew)) {
+        if (AddOrUpdatePaymentVote(voteNew, connman)) {
             voteNew.Relay(connman);
             return true;
         }

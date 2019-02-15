@@ -100,7 +100,7 @@ public:
         READWRITE(vecPayees);
     }
 
-    void AddPayee(const CMasternodePaymentVote& vote);
+    void AddPayee(const CMasternodePaymentVote& vote, CConnman& connman);
     bool GetBestPayee(CScript& payeeRet) const;
 	bool GetBestPayee(CScript& payeeRet, int &nStartHeightBlock) const;
     bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq, CMasternodePayee& payee) const;
@@ -201,7 +201,7 @@ public:
 
     void Clear();
 
-    bool AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote);
+    bool AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote, CConnman& connman);
     bool HasVerifiedPaymentVote(const uint256& hashIn) const;
     bool ProcessBlock(int nBlockHeight, CConnman& connman);
     void CheckBlockVotes(int nBlockHeight);
