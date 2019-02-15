@@ -51,7 +51,18 @@ public:
 
     CBLSWrapper()
     {
-        UpdateHash();
+        struct NullHash {
+            uint256 hash;
+            NullHash() {
+                char buf[_SerSize];
+                memset(buf, 0, _SerSize);
+                CHashWriter ss(SER_GETHASH, 0);
+                ss.write(buf, _SerSize);
+                hash = ss.GetHash();
+            }
+        };
+        static NullHash nullHash;
+        cachedHash = nullHash.hash;
     }
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
