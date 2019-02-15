@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <univalue.h>
+#include <util/system.h>
 
 class ExternalSignerException : public std::runtime_error {
 public:
@@ -25,10 +26,24 @@ private:
 public:
     //! @param[in] command      the command which handles interaction with the external signer
     //! @param[in] fingerprint  master key fingerprint of the signer
-    ExternalSigner(const std::string& command, const std::string& fingerprint);
+    //! @param[in] mainnet      Bitcoin mainnet or testnet
+    ExternalSigner(const std::string& command, const std::string& fingerprint, bool mainnet);
 
     //! Master key fingerprint of the signer
     std::string m_fingerprint;
+
+    //! Bitcoin mainnet or testnet
+    bool m_mainnet;
+
+#ifdef HAVE_BOOST_PROCESS
+    //! Obtain a list of signers. Calls `<command> enumerate`.
+    //! @param[in]              command the command which handles interaction with the external signer
+    //! @param[in,out] signers  vector to which new signers (with a unique master key fingerprint) are added
+    //! @param mainnet          Bitcoin mainnet or testnet
+    //! @param[out]  UniValue   see doc/external-signer.md
+    static UniValue Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, bool mainnet = true);
+
+#endif
 };
 
 #endif // BITCOIN_WALLET_EXTERNALSIGNER_H
