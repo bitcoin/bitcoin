@@ -11,6 +11,7 @@
 #include <util/system.h>
 #include <crypto/hmac_sha256.h>
 
+#include <chrono>
 #include <vector>
 #include <deque>
 #include <set>
@@ -20,6 +21,9 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#ifdef HAVE_BOOST_PROCESS
+#include <boost/process.hpp>
+#endif
 
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
@@ -29,6 +33,7 @@
 
 /** Default control port */
 const std::string DEFAULT_TOR_CONTROL = "127.0.0.1:9051";
+const std::string DEFAULT_TOR_EXECUTE = "tor";
 /** Tor cookie size (from control-spec.txt) */
 static const int TOR_COOKIE_SIZE = 32;
 /** Size of client/server nonce for SAFECOOKIE */
@@ -73,6 +78,7 @@ class TorControlConnection
 public:
     typedef std::function<void(TorControlConnection&)> ConnectionCB;
     typedef std::function<void(TorControlConnection &,const TorControlReply &)> ReplyHandlerCB;
+    static void IgnoreReplyHandler(TorControlConnection &, const TorControlReply &);
 
     /** Create a new TorControlConnection.
      */
@@ -97,7 +103,7 @@ public:
      * A trailing CRLF is automatically added.
      * Return true on success.
      */
-    bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler);
+    bool Command(const std::string &cmd, const ReplyHandlerCB& reply_handler = IgnoreReplyHandler);
 
     /** Response handlers for async replies */
     boost::signals2::signal<void(TorControlConnection &,const TorControlReply &)> async_handler;
@@ -129,6 +135,10 @@ TorControlConnection::~TorControlConnection()
 {
     if (b_conn)
         bufferevent_free(b_conn);
+}
+
+void TorControlConnection::IgnoreReplyHandler(TorControlConnection &a, const TorControlReply &b)
+{
 }
 
 void TorControlConnection::readcb(struct bufferevent *bev, void *ctx)
@@ -410,7 +420,7 @@ static bool WriteBinaryFile(const fs::path &filename, const std::string &data)
 class TorController
 {
 public:
-    TorController(struct event_base* base, const std::string& target);
+    TorController(struct event_base* base, const std::string& target, const std::string& execute);
     ~TorController();
 
     /** Get name of file to store private key in */
@@ -420,13 +430,19 @@ public:
     void Reconnect();
 private:
     struct event_base* base;
-    std::string target;
+    std::string m_connect_target;
+    std::string m_current_target;
     TorControlConnection conn;
     std::string private_key;
     std::string service_id;
+    bool m_try_exec{true};
     bool reconnect;
     struct event *reconnect_ev;
     float reconnect_timeout;
+    std::string m_execute{DEFAULT_TOR_EXECUTE};
+#ifdef HAVE_BOOST_PROCESS
+    boost::process::child *m_process{nullptr};
+#endif
     CService service;
     /** Cookie for SAFECOOKIE auth */
     std::vector<uint8_t> cookie;
@@ -448,17 +464,21 @@ private:
 
     /** Callback for reconnect timer */
     static void reconnect_cb(evutil_socket_t fd, short what, void *arg);
+
+    std::string LaunchTor();
 };
 
-TorController::TorController(struct event_base* _base, const std::string& _target):
+TorController::TorController(struct event_base* _base, const std::string& _target, const std::string& execute):
     base(_base),
-    target(_target), conn(base), reconnect(true), reconnect_ev(0),
-    reconnect_timeout(RECONNECT_TIMEOUT_START)
+    m_connect_target(_target), conn(base), reconnect(true), reconnect_ev(0),
+    reconnect_timeout(RECONNECT_TIMEOUT_START),
+    m_execute(execute)
 {
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     if (!reconnect_ev)
         LogPrintf("tor: Failed to create event for reconnection: out of memory?\n");
     // Start connection attempts immediately
+    m_current_target = _target;
     if (!conn.Connect(_target, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
          std::bind(&TorController::disconnected_cb, this, std::placeholders::_1) )) {
         LogPrintf("tor: Initiating connection to Tor control port %s failed\n", _target);
@@ -480,6 +500,12 @@ TorController::~TorController()
     if (service.IsValid()) {
         RemoveLocal(service);
     }
+#ifdef HAVE_BOOST_PROCESS
+    if (m_process) {
+        conn.Command("SIGNAL SHUTDOWN");
+        delete m_process;
+    }
+#endif
 }
 
 void TorController::add_onion_cb(TorControlConnection& _conn, const TorControlReply& reply)
@@ -522,9 +548,20 @@ void TorController::auth_cb(TorControlConnection& _conn, const TorControlReply& 
     if (reply.code == 250) {
         LogPrint(BCLog::TOR, "tor: Authentication successful\n");
 
+#ifdef HAVE_BOOST_PROCESS
+        if (m_process) {
+            _conn.Command("TAKEOWNERSHIP");
+        }
+#endif
+
         // Now that we know Tor is running setup the proxy for onion addresses
         // if -onion isn't set to something else.
-        if (gArgs.GetArg("-onion", "") == "") {
+        // NOTE: Our own private Tor doesn't do SOCKS, so don't configure it
+        if (gArgs.GetArg("-onion", "") == ""
+#ifdef HAVE_BOOST_PROCESS
+            && !m_process
+#endif
+        ) {
             CService resolved(LookupNumeric("127.0.0.1", 9050));
             proxyType addrOnion = proxyType(resolved, true);
             SetProxy(NET_ONION, addrOnion);
@@ -681,10 +718,63 @@ void TorController::protocolinfo_cb(TorControlConnection& _conn, const TorContro
 
 void TorController::connected_cb(TorControlConnection& _conn)
 {
+    m_try_exec = false;
     reconnect_timeout = RECONNECT_TIMEOUT_START;
     // First send a PROTOCOLINFO command to figure out what authentication is expected
     if (!_conn.Command("PROTOCOLINFO 1", std::bind(&TorController::protocolinfo_cb, this, std::placeholders::_1, std::placeholders::_2)))
         LogPrintf("tor: Error sending initial protocolinfo command\n");
+}
+
+std::string TorController::LaunchTor()
+{
+#ifdef HAVE_BOOST_PROCESS
+    fs::path tor_datadir = GetDataDir() / "tor";
+    std::string controlport_env_filepath = (tor_datadir / "controlport.env").string();
+    std::remove(controlport_env_filepath.c_str());
+
+    if (m_process) {
+        m_process->terminate();
+        delete m_process;
+        m_process = nullptr;
+    }
+
+    boost::process::opstream in;
+    try {
+        m_process = new boost::process::child(m_execute + " -f -", boost::process::std_in < in);
+    } catch (...) {
+        LogPrint(BCLog::TOR, "tor: Failed to execute Tor process\n");
+        throw;
+    }
+    in << "SOCKSPort 0" << std::endl;
+    in << "DataDirectory " << tor_datadir.string() << std::endl;
+    in << "ControlPort auto" << std::endl;
+    in << "ControlPortWriteToFile " << controlport_env_filepath << std::endl;
+    in << "CookieAuthentication 1" << std::endl;
+    in.pipe().close();
+
+    while (!fs::exists(controlport_env_filepath)) {
+        if (!m_process->running()) {
+            LogPrint(BCLog::TOR, "tor: Tor process died before making control port file\n");
+            throw std::runtime_error("tor process died");
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    std::ifstream controlport_file(controlport_env_filepath);
+    std::string portline;
+    controlport_file >> portline;
+    if (portline.compare(0, 5, "PORT=")) {
+        LogPrint(BCLog::TOR, "tor: Unrecognized control port line in file\n");
+        m_process->terminate();
+        delete m_process;
+        m_process = nullptr;
+        throw std::runtime_error("port line unrecognized");
+    }
+
+    return portline.substr(5);
+#else
+    throw std::runtime_error("not supported");
+#endif
 }
 
 void TorController::disconnected_cb(TorControlConnection& _conn)
@@ -693,10 +783,26 @@ void TorController::disconnected_cb(TorControlConnection& _conn)
     if (service.IsValid())
         RemoveLocal(service);
     service = CService();
+
+#ifdef HAVE_BOOST_PROCESS
+    if (m_try_exec && !m_execute.empty()) {
+        LogPrint(BCLog::TOR, "tor: Not connected to Tor control port %s, trying to launch via %s\n", m_current_target, m_execute);
+        try {
+            m_current_target = LaunchTor();
+            Reconnect();
+            return;
+        } catch (...) {
+            // fall through to normal reconnect logic
+        }
+    }
+#endif
+
     if (!reconnect)
         return;
 
-    LogPrint(BCLog::TOR, "tor: Not connected to Tor control port %s, trying to reconnect\n", target);
+    LogPrint(BCLog::TOR, "tor: Not connected to Tor control port %s, trying to reconnect in %s seconds\n", m_current_target, reconnect_timeout);
+    m_current_target = m_connect_target;
+    m_try_exec = true;  // if this fails
 
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
@@ -710,9 +816,9 @@ void TorController::Reconnect()
     /* Try to reconnect and reestablish if we get booted - for example, Tor
      * may be restarting.
      */
-    if (!conn.Connect(target, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
+    if (!conn.Connect(m_current_target, std::bind(&TorController::connected_cb, this, std::placeholders::_1),
          std::bind(&TorController::disconnected_cb, this, std::placeholders::_1) )) {
-        LogPrintf("tor: Re-initiating connection to Tor control port %s failed\n", target);
+        LogPrintf("tor: Re-initiating connection to Tor control port %s failed\n", m_current_target);
     }
 }
 
@@ -733,7 +839,13 @@ static std::thread torControlThread;
 
 static void TorControlThread()
 {
-    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL));
+    std::string execute_command = gArgs.GetArg("-torexecute", DEFAULT_TOR_EXECUTE);
+    if (execute_command == "1") {
+        execute_command = DEFAULT_TOR_EXECUTE;
+    } else if (execute_command == "0") {
+        execute_command.clear();
+    }
+    TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), execute_command);
 
     event_base_dispatch(gBase);
 }

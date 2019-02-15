@@ -10,6 +10,7 @@
 
 
 extern const std::string DEFAULT_TOR_CONTROL;
+extern const std::string DEFAULT_TOR_EXECUTE;
 static const bool DEFAULT_LISTEN_ONION = true;
 
 void StartTorControl();
