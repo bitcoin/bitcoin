@@ -250,6 +250,7 @@ BITCOIN_CORE_H = \
   wallet/fees.h \
   wallet/ismine.h \
   wallet/load.h \
+  wallet/rpcsigner.h \
   wallet/rpcwallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
@@ -362,6 +363,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/fees.cpp \
   wallet/load.cpp \
   wallet/rpcdump.cpp \
+  wallet/rpcsigner.cpp \
   wallet/rpcwallet.cpp \
   wallet/salvage.cpp \
   wallet/scriptpubkeyman.cpp \
