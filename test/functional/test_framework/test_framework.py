@@ -20,6 +20,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from .authproxy import JSONRPCException
+from test_framework.blocktools import TIME_GENESIS_BLOCK
 from . import coverage
 from .messages import (
     CTransaction,
@@ -63,7 +64,6 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_FAILED = 1
 TEST_EXIT_SKIPPED = 77
 
-GENESISTIME = 1417713337
 TMPDIR_PREFIX = "dash_func_test_"
 
 class SkipTest(Exception):
@@ -507,12 +507,12 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # For backwared compatibility of the python scripts
         # with previous versions of the cache, set MOCKTIME
         # to regtest genesis time + (201 * 156)
-        self.mocktime = GENESISTIME + (201 * 156)
+        self.mocktime = TIME_GENESIS_BLOCK + (201 * 156)
         for node in self.nodes:
             node.mocktime = self.mocktime
 
     def set_genesis_mocktime(self):
-        self.mocktime = GENESISTIME
+        self.mocktime = TIME_GENESIS_BLOCK
         for node in self.nodes:
             node.mocktime = self.mocktime
 
@@ -571,7 +571,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             self.set_genesis_mocktime()
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(self.options.cachedir, i, self.chain)
-                args = [self.options.bitcoind, "-datadir=" + datadir, "-mocktime="+str(GENESISTIME), '-disablewallet']
+                args = [self.options.bitcoind, "-datadir=" + datadir, "-mocktime="+str(TIME_GENESIS_BLOCK), '-disablewallet']
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 if extra_args is not None:
@@ -598,7 +598,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             #
             # blocks are created with timestamps 10 minutes apart
             # starting from 2010 minutes in the past
-            block_time = GENESISTIME
+            block_time = TIME_GENESIS_BLOCK
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):

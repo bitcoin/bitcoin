@@ -10,16 +10,16 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/consensus.h>
-#include <consensus/tx_verify.h>
 #include <consensus/merkle.h>
+#include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
 #include <timedata.h>
-#include <util/system.h>
 #include <util/moneystr.h>
+#include <util/system.h>
 #include <util/validation.h>
 
 #include <evo/specialtx.h>
@@ -32,14 +32,6 @@
 
 #include <algorithm>
 #include <utility>
-
-// Unconfirmed transactions in the memory pool often depend on other
-// transactions in the memory pool. When we select transactions from the
-// pool, we select by highest fee rate of a transaction combined with all
-// its ancestors.
-
-uint64_t nLastBlockTx = 0;
-uint64_t nLastBlockSize = 0;
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
@@ -99,6 +91,9 @@ void BlockAssembler::resetBlock()
     nBlockTx = 0;
     nFees = 0;
 }
+
+Optional<int64_t> BlockAssembler::m_last_block_num_txs{nullopt};
+Optional<int64_t> BlockAssembler::m_last_block_size{nullopt};
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {
@@ -160,8 +155,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     int64_t nTime1 = GetTimeMicros();
 
-    nLastBlockTx = nBlockTx;
-    nLastBlockSize = nBlockSize;
+    m_last_block_num_txs = nBlockTx;
+    m_last_block_size = nBlockSize;
     LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
 
     // Create coinbase transaction.

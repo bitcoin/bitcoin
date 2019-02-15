@@ -46,7 +46,7 @@ from decimal import Decimal
 from itertools import product
 from io import BytesIO
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction
+from test_framework.blocktools import create_coinbase, create_block, create_transaction, TIME_GENESIS_BLOCK
 from test_framework.messages import ToHex, CTransaction
 from test_framework.mininode import P2PDataStore
 from test_framework.script import (
@@ -54,7 +54,7 @@ from test_framework.script import (
     OP_CHECKSEQUENCEVERIFY,
     OP_DROP,
 )
-from test_framework.test_framework import (BitcoinTestFramework, GENESISTIME)
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     get_bip9_status,
@@ -186,9 +186,9 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.coinbase_blocks = self.nodes[0].generate(1 + 16 + 2 * 32 + 1)  # 82 blocks generated for inputs
         # set time so that there was enough time to build up to 1000 blocks 10 minutes apart on top of the last one
         # without worrying about getting into the future
-        self.nodes[0].setmocktime(GENESISTIME + 600 * 1000 + 100)
+        self.nodes[0].setmocktime(TIME_GENESIS_BLOCK + 600 * 1000 + 100)
         self.tipheight = 82  # height of the next block to build
-        self.last_block_time = GENESISTIME
+        self.last_block_time = TIME_GENESIS_BLOCK
         self.tip = int(self.nodes[0].getbestblockhash(), 16)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
@@ -261,7 +261,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         self.nodes[0].setmocktime(self.last_block_time + 600)
         inputblockhash = self.nodes[0].generate(1)[0]  # 1 block generated for inputs to be in chain at height 572
-        self.nodes[0].setmocktime(GENESISTIME + 600 * 1000 + 100)
+        self.nodes[0].setmocktime(TIME_GENESIS_BLOCK + 600 * 1000 + 100)
         self.tip = int(inputblockhash, 16)
         self.tipheight += 1
         self.last_block_time += 600
