@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <qt/pairingpage.h>
 #include <qt/walletframe.h>
 #include <qt/walletmodel.h>
 
@@ -31,6 +32,9 @@ WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) 
     QLabel *noWallet = new QLabel(tr("No wallet has been loaded."));
     noWallet->setAlignment(Qt::AlignCenter);
     walletStack->addWidget(noWallet);
+
+    m_page_pairing = new PairingPage(this);
+    m_global_stack->addWidget(m_page_pairing);
 }
 
 WalletFrame::~WalletFrame()
@@ -132,6 +136,11 @@ void WalletFrame::gotoOverviewPage()
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoOverviewPage();
     m_global_stack->setCurrentWidget(walletStack);
+}
+
+void WalletFrame::gotoPairingPage()
+{
+    m_global_stack->setCurrentWidget(m_page_pairing);
 }
 
 void WalletFrame::gotoHistoryPage()
