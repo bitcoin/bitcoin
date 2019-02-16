@@ -52,6 +52,7 @@ Q_SIGNALS:
     void currentWalletSet();
 
 private:
+    QStackedWidget *m_global_stack;
     QStackedWidget *walletStack;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
