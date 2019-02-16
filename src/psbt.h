@@ -389,9 +389,19 @@ struct PartiallySignedTransaction
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
     NODISCARD bool Merge(const PartiallySignedTransaction& psbt);
     bool IsSane() const;
+    bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
+    bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
     PartiallySignedTransaction() {}
     PartiallySignedTransaction(const PartiallySignedTransaction& psbt_in) : tx(psbt_in.tx), inputs(psbt_in.inputs), outputs(psbt_in.outputs), unknown(psbt_in.unknown) {}
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
+    /**
+     * Finds the UTXO for a given input index
+     *
+     * @param[out] utxo The UTXO of the input if found
+     * @param[in] input_index Index of the input to retrieve the UTXO of
+     * @return Whether the UTXO for the specified input was found
+     */
+    bool GetInputUTXO(CTxOut& utxo, int input_index) const;
 
     template <typename Stream>
     inline void Serialize(Stream& s) const {
@@ -542,7 +552,7 @@ struct PartiallySignedTransaction
 bool PSBTInputSigned(PSBTInput& input);
 
 /** Signs a PSBTInput, verifying that all provided data matches what is being signed. */
-bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash = SIGHASH_ALL);
+bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool use_dummy = false);
 
 /**
  * Finalizes a PSBT if possible, combining partial signatures.
