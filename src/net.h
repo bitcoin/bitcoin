@@ -201,7 +201,7 @@ public:
 
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
-    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
+    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOptimisticSend = true);
 
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
@@ -408,6 +408,8 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler();
+    void WakeSelect();
+
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -524,6 +526,11 @@ private:
     std::atomic<bool> flagInterruptMsgProc;
 
     CThreadInterrupt interruptNet;
+
+#ifndef WIN32
+    /** a pipe which is added to select() calls to wakeup before the timeout */
+    int wakeupPipe[2]{-1,-1};
+#endif
 
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;
