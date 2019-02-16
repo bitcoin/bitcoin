@@ -265,6 +265,10 @@ void ClientModel::subscribeToCoreSignals()
         [this](bool network_active) {
             Q_EMIT networkActiveChanged(network_active);
         }));
+    m_event_handlers.emplace_back(m_node.handleNotifyNetworkLocalChanged(
+        [this]() {
+            Q_EMIT networkLocalChanged();
+        }));
     m_event_handlers.emplace_back(m_node.handleNotifyAlertChanged(
         [this]() {
             qDebug() << "ClientModel: NotifyAlertChanged";
