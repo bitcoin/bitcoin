@@ -37,6 +37,64 @@ QRImageWidget::QRImageWidget(QWidget *parent):
     contextMenu->addAction(copyImageAction);
 }
 
+bool QRImageWidget::setQR(const QString& data, const QString& text)
+{
+#ifdef USE_QRCODE
+    setText("");
+    if (data.isEmpty()) return false;
+
+    // limit length
+    if (data.length() > MAX_URI_LENGTH) {
+        setText(tr("Resulting URI too long, try to reduce the text for label / message."));
+        return false;
+    }
+
+    QRcode *code = QRcode_encodeString(data.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
+
+    if (!code) {
+        setText(tr("Error encoding URI into QR Code."));
+        return false;
+    }
+
+    QImage qrImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
+    qrImage.fill(0xffffff);
+    unsigned char *p = code->data;
+    for (int y = 0; y < code->width; ++y) {
+        for (int x = 0; x < code->width; ++x) {
+            qrImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
+            ++p;
+        }
+    }
+    QRcode_free(code);
+
+    QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE + (text.isEmpty() ? 0 : 20), QImage::Format_RGB32);
+    qrAddrImage.fill(0xffffff);
+    QPainter painter(&qrAddrImage);
+    painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
+
+    if (!text.isEmpty()) {
+        QFont font = GUIUtil::fixedPitchFont();
+        QRect paddedRect = qrAddrImage.rect();
+
+        // calculate ideal font size
+        qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, text, font);
+        font.setPointSizeF(font_size);
+
+        painter.setFont(font);
+        paddedRect.setHeight(QR_IMAGE_SIZE+12);
+        painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, text);
+    }
+
+    painter.end();
+    setPixmap(QPixmap::fromImage(qrAddrImage));
+
+    return true;
+#else
+    setText(tr("QR code support not available."));
+    return false;
+#endif
+}
+
 QImage QRImageWidget::exportImage()
 {
     if(!pixmap())
@@ -150,55 +208,9 @@ void ReceiveRequestDialog::update()
     }
     ui->outUri->setText(html);
 
-#ifdef USE_QRCODE
-    ui->lblQRCode->setText("");
-    if(!uri.isEmpty())
-    {
-        // limit URI length
-        if (uri.length() > MAX_URI_LENGTH)
-        {
-            ui->lblQRCode->setText(tr("Resulting URI too long, try to reduce the text for label / message."));
-        } else {
-            QRcode *code = QRcode_encodeString(uri.toUtf8().constData(), 0, QR_ECLEVEL_L, QR_MODE_8, 1);
-            if (!code)
-            {
-                ui->lblQRCode->setText(tr("Error encoding URI into QR Code."));
-                return;
-            }
-            QImage qrImage = QImage(code->width + 8, code->width + 8, QImage::Format_RGB32);
-            qrImage.fill(0xffffff);
-            unsigned char *p = code->data;
-            for (int y = 0; y < code->width; y++)
-            {
-                for (int x = 0; x < code->width; x++)
-                {
-                    qrImage.setPixel(x + 4, y + 4, ((*p & 1) ? 0x0 : 0xffffff));
-                    p++;
-                }
-            }
-            QRcode_free(code);
-
-            QImage qrAddrImage = QImage(QR_IMAGE_SIZE, QR_IMAGE_SIZE+20, QImage::Format_RGB32);
-            qrAddrImage.fill(0xffffff);
-            QPainter painter(&qrAddrImage);
-            painter.drawImage(0, 0, qrImage.scaled(QR_IMAGE_SIZE, QR_IMAGE_SIZE));
-            QFont font = GUIUtil::fixedPitchFont();
-            QRect paddedRect = qrAddrImage.rect();
-
-            // calculate ideal font size
-            qreal font_size = GUIUtil::calculateIdealFontSize(paddedRect.width() - 20, info.address, font);
-            font.setPointSizeF(font_size);
-
-            painter.setFont(font);
-            paddedRect.setHeight(QR_IMAGE_SIZE+12);
-            painter.drawText(paddedRect, Qt::AlignBottom|Qt::AlignCenter, info.address);
-            painter.end();
-
-            ui->lblQRCode->setPixmap(QPixmap::fromImage(qrAddrImage));
-            ui->btnSaveAs->setEnabled(true);
-        }
+    if (ui->lblQRCode->setQR(uri, info.address)) {
+        ui->btnSaveAs->setEnabled(true);
     }
-#endif
 }
 
 void ReceiveRequestDialog::on_btnCopyURI_clicked()
