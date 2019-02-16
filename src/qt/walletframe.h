@@ -50,6 +50,7 @@ Q_SIGNALS:
     void createWalletButtonClicked();
 
 private:
+    QStackedWidget *m_global_stack;
     QStackedWidget *walletStack;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
