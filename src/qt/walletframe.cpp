@@ -23,8 +23,10 @@ WalletFrame::WalletFrame(const PlatformStyle *_platformStyle, BitcoinGUI *_gui) 
     QHBoxLayout *walletFrameLayout = new QHBoxLayout(this);
     setContentsMargins(0,0,0,0);
     walletStack = new QStackedWidget(this);
+    m_global_stack = new QStackedWidget(this);
+    m_global_stack->addWidget(walletStack);
     walletFrameLayout->setContentsMargins(0,0,0,0);
-    walletFrameLayout->addWidget(walletStack);
+    walletFrameLayout->addWidget(m_global_stack);
 
     QLabel *noWallet = new QLabel(tr("No wallet has been loaded."));
     noWallet->setAlignment(Qt::AlignCenter);
@@ -129,6 +131,7 @@ void WalletFrame::gotoOverviewPage()
     QMap<WalletModel*, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoOverviewPage();
+    m_global_stack->setCurrentWidget(walletStack);
 }
 
 void WalletFrame::gotoHistoryPage()
@@ -136,6 +139,7 @@ void WalletFrame::gotoHistoryPage()
     QMap<WalletModel*, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoHistoryPage();
+    m_global_stack->setCurrentWidget(walletStack);
 }
 
 void WalletFrame::gotoReceiveCoinsPage()
@@ -143,6 +147,7 @@ void WalletFrame::gotoReceiveCoinsPage()
     QMap<WalletModel*, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoReceiveCoinsPage();
+    m_global_stack->setCurrentWidget(walletStack);
 }
 
 void WalletFrame::gotoSendCoinsPage(QString addr)
@@ -150,6 +155,7 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
     QMap<WalletModel*, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoSendCoinsPage(addr);
+    m_global_stack->setCurrentWidget(walletStack);
 }
 
 void WalletFrame::gotoSignMessageTab(QString addr)
