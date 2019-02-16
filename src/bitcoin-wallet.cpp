@@ -42,12 +42,12 @@ static bool WalletAppInit(int argc, char* argv[])
     }
     if (argc < 2 || HelpRequested(gArgs)) {
         std::string usage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "wallet-tool is an offline tool for creating and interacting with Bitcoin Core wallet files.\n" +
-                                      "By default wallet-tool will act on wallets in the default mainnet wallet directory in the datadir.\n" +
-                                      "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
-                                      "Usage:\n" +
-                                     "  bitcoin-wallet [options] <command>\n\n" +
-                                     gArgs.GetHelpMessage();
+                            "wallet-tool is an offline tool for creating and interacting with Bitcoin Core wallet files.\n" +
+                            "By default wallet-tool will act on wallets in the default mainnet wallet directory in the datadir.\n" +
+                            "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
+                            "Usage:\n" +
+                            "  bitcoin-wallet [options] <method>\n\n" +
+                            gArgs.GetHelpMessage();
 
         fprintf(stdout, "%s", usage.c_str());
         return false;
@@ -85,13 +85,14 @@ int main(int argc, char* argv[])
     }
 
     std::string method {};
+    std::vector<std::string> arguments{};
     for(int i = 1; i < argc; ++i) {
         if (!IsSwitchChar(argv[i][0])) {
-            if (!method.empty()) {
-                fprintf(stderr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method.c_str(), argv[i]);
-                return EXIT_FAILURE;
+            if (method.empty()) {
+                method = argv[i];
+            } else {
+                arguments.push_back(argv[i]);
             }
-            method = argv[i];
         }
     }
 
@@ -100,9 +101,12 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // A name must be provided when creating a file
-    if (method == "create" && !gArgs.IsArgSet("-wallet")) {
-        fprintf(stderr, "Wallet name must be provided when creating a new wallet.\n");
+    const std::set<std::string> methods = {
+        "create",
+        "info"};
+
+    if (methods.find(method) == methods.end()) { // Use contains() as of c++20
+        fprintf(stderr, "Invalid method: %s\n", method.c_str());
         return EXIT_FAILURE;
     }
 
@@ -110,8 +114,27 @@ int main(int argc, char* argv[])
 
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::ExecuteWalletToolFunc(method, name))
-        return EXIT_FAILURE;
+    // A name must be provided when creating a file
+    if (method == "create") {
+        if (!gArgs.IsArgSet("-wallet")) {
+            fprintf(stderr, "Wallet name must be provided when creating a new wallet.\n");
+            return EXIT_FAILURE;
+        }
+        if (!arguments.empty()) {
+            fprintf(stderr, "Error: unexpected argument(s)\n");
+            return EXIT_FAILURE;
+        }
+        if (!WalletTool::ExecuteCreateWallet(name)) return EXIT_FAILURE;
+    } else if (method == "info") {
+        if (!arguments.empty()) {
+            fprintf(stderr, "Error: unexpected argument(s)\n");
+            return EXIT_FAILURE;
+        }
+        if (!WalletTool::ExecuteWalletInfo(name)) return EXIT_FAILURE;
+    } else {
+        assert(false);
+    }
+
     ECC_Stop();
     return EXIT_SUCCESS;
 }

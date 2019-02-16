@@ -51,7 +51,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
 static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path)
 {
     if (!fs::exists(path)) {
-        fprintf(stderr, "Error: Wallet files does not exist\n");
+        fprintf(stderr, "Error: no wallet file at %s\n", name.c_str());
         return nullptr;
     }
 
@@ -104,35 +104,24 @@ static void WalletShowInfo(CWallet* wallet_instance)
     fprintf(stdout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
 }
 
-bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
+bool ExecuteCreateWallet(const std::string& name)
 {
     fs::path path = fs::absolute(name, GetWalletDir());
-
-    if (command == "create") {
-        std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);
-        if (wallet_instance) {
-            WalletShowInfo(wallet_instance.get());
-            wallet_instance->Flush(true);
-        }
-    } else if (command == "info") {
-        if (!fs::exists(path)) {
-            fprintf(stderr, "Error: no wallet file at %s\n", name.c_str());
-            return false;
-        }
-        std::string error;
-        if (!WalletBatch::VerifyEnvironment(path, error)) {
-            fprintf(stderr, "Error loading %s. Is wallet being used by other process?\n", name.c_str());
-            return false;
-        }
-        std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
-        if (!wallet_instance) return false;
+    std::shared_ptr<CWallet> wallet_instance = CreateWallet(name, path);
+    if (wallet_instance) {
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Flush(true);
-    } else {
-        fprintf(stderr, "Invalid command: %s\n", command.c_str());
-        return false;
     }
+    return true;
+}
 
+bool ExecuteWalletInfo(const std::string& name)
+{
+    fs::path path = fs::absolute(name, GetWalletDir());
+    std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
+    if (wallet_instance == nullptr) return false;
+    WalletShowInfo(wallet_instance.get());
+    wallet_instance->Flush(true);
     return true;
 }
 } // namespace WalletTool
