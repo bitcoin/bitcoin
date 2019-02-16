@@ -51,7 +51,18 @@ public:
 
     CBLSWrapper()
     {
-        UpdateHash();
+        struct NullHash {
+            uint256 hash;
+            NullHash() {
+                char buf[_SerSize];
+                memset(buf, 0, _SerSize);
+                CHashWriter ss(SER_GETHASH, 0);
+                ss.write(buf, _SerSize);
+                hash = ss.GetHash();
+            }
+        };
+        static NullHash nullHash;
+        cachedHash = nullHash.hash;
     }
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
@@ -295,6 +306,45 @@ public:
 protected:
     bool InternalSetBuf(const void* buf);
     bool InternalGetBuf(void* buf) const;
+};
+
+class CBLSLazySignature
+{
+private:
+    mutable char buf[BLS_CURVE_SIG_SIZE];
+    mutable bool bufValid{false};
+
+    mutable CBLSSignature sig;
+    mutable bool sigInitialized{false};
+
+public:
+    template<typename Stream>
+    inline void Serialize(Stream& s) const
+    {
+        if (!sigInitialized && !bufValid) {
+            throw std::ios_base::failure("sig and buf not initialized");
+        }
+        if (!bufValid) {
+            sig.GetBuf(buf, sizeof(buf));
+            bufValid = true;
+        }
+        s.write(buf, sizeof(buf));
+    }
+
+    template<typename Stream>
+    inline void Unserialize(Stream& s)
+    {
+        s.read(buf, sizeof(buf));
+        bufValid = true;
+        sigInitialized = false;
+    }
+
+public:
+    CBLSLazySignature() = default;
+    CBLSLazySignature(CBLSSignature& _sig);
+
+    void SetSig(const CBLSSignature& _sig);
+    const CBLSSignature& GetSig() const;
 };
 
 typedef std::vector<CBLSId> BLSIdVector;

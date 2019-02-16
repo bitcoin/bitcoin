@@ -423,6 +423,34 @@ bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::v
     return true;
 }
 
+CBLSLazySignature::CBLSLazySignature(CBLSSignature& _sig) :
+    bufValid(false),
+    sigInitialized(true),
+    sig(_sig)
+{
+
+}
+
+void CBLSLazySignature::SetSig(const CBLSSignature& _sig)
+{
+    bufValid = false;
+    sigInitialized = true;
+    sig = _sig;
+}
+
+const CBLSSignature& CBLSLazySignature::GetSig() const
+{
+    if (!bufValid && !sigInitialized) {
+        static CBLSSignature invalidSig;
+        return invalidSig;
+    }
+    if (!sigInitialized) {
+        sig.SetBuf(buf, sizeof(buf));
+        sigInitialized = true;
+    }
+    return sig;
+}
+
 #ifndef BUILD_BITCOIN_INTERNAL
 
 static std::once_flag init_flag;
