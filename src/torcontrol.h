@@ -140,6 +140,8 @@ private:
     std::vector<uint8_t> clientNonce;
 
 public:
+    /** Callback for GETINFO net/listeners/socks result */
+    void get_socks_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for ADD_ONION result */
     void add_onion_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for AUTHENTICATE result */
