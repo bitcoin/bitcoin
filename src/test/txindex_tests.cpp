@@ -69,7 +69,13 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
         }
     }
 
-    txindex.Stop(); // Stop thread before calling destructor
+    // shutdown sequence (c.f. Shutdown() in init.cpp)
+    txindex.Stop();
+
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+
+    // Rest of shutdown sequence and destructors happen in ~TestingSetup()
 }
 
 BOOST_AUTO_TEST_SUITE_END()
