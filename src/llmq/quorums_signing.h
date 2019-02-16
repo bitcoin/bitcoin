@@ -10,6 +10,19 @@
 #include "net.h"
 #include "chainparams.h"
 
+#include <unordered_map>
+
+namespace std {
+    template <>
+    struct hash<std::pair<Consensus::LLMQType, uint256>>
+    {
+        std::size_t operator()(const std::pair<Consensus::LLMQType, uint256>& k) const
+        {
+            return (std::size_t)((k.first + 1) * k.second.GetCheapHash());
+        }
+    };
+}
+
 namespace llmq
 {
 
@@ -66,8 +79,15 @@ public:
 // TODO implement caching to speed things up
 class CRecoveredSigsDb
 {
+    static const size_t MAX_CACHE_SIZE = 30000;
+    static const size_t MAX_CACHE_TRUNCATE_THRESHOLD = 50000;
+
 private:
     CDBWrapper db;
+
+    CCriticalSection cs;
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::pair<bool, int64_t>> hasSigForIdCache;
+    std::unordered_map<uint256, std::pair<bool, int64_t>> hasSigForSessionCache;
 
 public:
     CRecoveredSigsDb(bool fMemory);
