@@ -221,7 +221,8 @@ class AcceptBlockTest(BitcoinTestFramework):
                     headers_message.headers.append(CBlockHeader(next_block))
                 tips[j] = next_block
 
-        time.sleep(2)
+        set_mocktime(get_mocktime() + 2)
+        set_node_times(self.nodes, get_mocktime())
         # Blocks 1-287 should be accepted, block 288 should be ignored because it's too far ahead
         for x in all_blocks[:-1]:
             self.nodes[0].getblock(x.hash)
