@@ -421,14 +421,14 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
     }
 }
 
-void CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
+bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 {
     std::map<NodeId, std::list<CRecoveredSig>> recSigsByNode;
     std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr> quorums;
 
     CollectPendingRecoveredSigsToVerify(32, recSigsByNode, quorums);
     if (recSigsByNode.empty()) {
-        return;
+        return false;
     }
 
     // It's ok to perform insecure batched verification here as we verify against the quorum public keys, which are not
@@ -474,6 +474,8 @@ void CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
             ProcessRecoveredSig(nodeId, recSig, quorum, connman);
         }
     }
+
+    return true;
 }
 
 // signature must be verified already

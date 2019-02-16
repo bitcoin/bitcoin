@@ -454,14 +454,14 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
     }
 }
 
-void CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
+bool CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
 {
     std::map<NodeId, std::vector<CSigShare>> sigSharesByNodes;
     std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr> quorums;
 
     CollectPendingSigSharesToVerify(32, sigSharesByNodes, quorums);
     if (sigSharesByNodes.empty()) {
-        return;
+        return false;
     }
 
     // It's ok to perform insecure batched verification here as we verify against the quorum public key shares,
@@ -521,6 +521,8 @@ void CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
 
         ProcessPendingSigSharesFromNode(nodeId, v, quorums, connman);
     }
+
+    return true;
 }
 
 // It's ensured that no duplicates are passed to this method
@@ -881,7 +883,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::map<NodeId, std::map<uin
     this->sigSharesToAnnounce.clear();
 }
 
-void CSigSharesManager::SendMessages()
+bool CSigSharesManager::SendMessages()
 {
     std::multimap<CService, NodeId> nodesByAddress;
     g_connman->ForEachNode([&nodesByAddress](CNode* pnode) {
@@ -943,6 +945,8 @@ void CSigSharesManager::SendMessages()
     if (didSend) {
         g_connman->WakeSelect();
     }
+
+    return didSend;
 }
 
 void CSigSharesManager::Cleanup()
@@ -1110,6 +1114,8 @@ void CSigSharesManager::WorkThreadMain()
 {
     workInterrupt.reset();
 
+    int64_t lastSendTime = 0;
+
     while (!workInterrupt) {
         if (!quorumSigningManager || !g_connman || !quorumSigningManager) {
             if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
@@ -1118,17 +1124,26 @@ void CSigSharesManager::WorkThreadMain()
             continue;
         }
 
+        bool didWork = false;
+
         RemoveBannedNodeStates();
-        quorumSigningManager->ProcessPendingRecoveredSigs(*g_connman);
-        ProcessPendingSigShares(*g_connman);
-        SignPendingSigShares();
-        SendMessages();
+        didWork |= quorumSigningManager->ProcessPendingRecoveredSigs(*g_connman);
+        didWork |= ProcessPendingSigShares(*g_connman);
+        didWork |= SignPendingSigShares();
+
+        if (GetTimeMillis() - lastSendTime > 100) {
+            SendMessages();
+            lastSendTime = GetTimeMillis();
+        }
+
         Cleanup();
         quorumSigningManager->Cleanup();
 
         // TODO Wakeup when pending signing is needed?
-        if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
-            return;
+        if (!didWork) {
+            if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+                return;
+            }
         }
     }
 }
@@ -1139,7 +1154,7 @@ void CSigSharesManager::AsyncSign(const CQuorumCPtr& quorum, const uint256& id, 
     pendingSigns.emplace_back(quorum, id, msgHash);
 }
 
-void CSigSharesManager::SignPendingSigShares()
+bool CSigSharesManager::SignPendingSigShares()
 {
     std::vector<std::tuple<const CQuorumCPtr, uint256, uint256>> v;
     {
@@ -1150,6 +1165,8 @@ void CSigSharesManager::SignPendingSigShares()
     for (auto& t : v) {
         Sign(std::get<0>(t), std::get<1>(t), std::get<2>(t));
     }
+
+    return !v.empty();
 }
 
 void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
