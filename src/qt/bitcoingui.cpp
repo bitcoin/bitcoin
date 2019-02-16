@@ -280,6 +280,13 @@ void BitcoinGUI::createActions()
     historyAction->setShortcut(QKeySequence(QStringLiteral("Alt+4")));
     tabGroup->addAction(historyAction);
 
+    m_action_pairing = new QAction(platformStyle->SingleColorIcon(":/icons/connect_1"), tr("&Pairing"), this);
+    m_action_pairing->setStatusTip(tr("Pair other software or devices with your node"));
+    m_action_pairing->setToolTip(m_action_pairing->statusTip());
+    m_action_pairing->setCheckable(true);
+    m_action_pairing->setShortcut(QKeySequence(QStringLiteral("Alt+5")));
+    tabGroup->addAction(m_action_pairing);
+
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
@@ -291,6 +298,8 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsAction, &QAction::triggered, this, &BitcoinGUI::gotoReceiveCoinsPage);
     connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
     connect(historyAction, &QAction::triggered, this, &BitcoinGUI::gotoHistoryPage);
+    connect(m_action_pairing, &QAction::triggered, this, [this]{ showNormalIfMinimized(); });
+    connect(m_action_pairing, &QAction::triggered, this, &BitcoinGUI::gotoPairingPage);
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(tr("E&xit"), this);
@@ -615,6 +624,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        toolbar->addAction(m_action_pairing);
         overviewAction->setChecked(true);
 
 #ifdef ENABLE_WALLET
@@ -839,7 +849,6 @@ void BitcoinGUI::removeAllWallets()
 
 void BitcoinGUI::setWalletActionsEnabled(bool enabled)
 {
-    overviewAction->setEnabled(enabled);
     sendCoinsAction->setEnabled(enabled);
     receiveCoinsAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
@@ -1020,6 +1029,12 @@ void BitcoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
     if (walletFrame) walletFrame->gotoOverviewPage();
+}
+
+void BitcoinGUI::gotoPairingPage()
+{
+    m_action_pairing->setChecked(true);
+    if (walletFrame) walletFrame->gotoPairingPage();
 }
 
 void BitcoinGUI::gotoHistoryPage()
