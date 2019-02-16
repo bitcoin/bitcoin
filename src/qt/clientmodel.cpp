@@ -115,6 +115,11 @@ void ClientModel::updateNetworkActive(bool networkActive)
     Q_EMIT networkActiveChanged(networkActive);
 }
 
+void ClientModel::updateNetworkLocal()
+{
+    Q_EMIT networkLocalChanged();
+}
+
 void ClientModel::updateAlert()
 {
     Q_EMIT alertsChanged(getStatusBarWarnings());
@@ -209,6 +214,11 @@ static void NotifyNetworkActiveChanged(ClientModel *clientmodel, bool networkAct
                               Q_ARG(bool, networkActive));
 }
 
+static void NotifyNetworkLocalChanged(ClientModel *clientmodel)
+{
+    QMetaObject::invokeMethod(clientmodel, "updateNetworkLocal", Qt::QueuedConnection);
+}
+
 static void NotifyAlertChanged(ClientModel *clientmodel)
 {
     qDebug() << "NotifyAlertChanged";
@@ -255,6 +265,7 @@ void ClientModel::subscribeToCoreSignals()
     m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2));
     m_handler_notify_num_connections_changed = m_node.handleNotifyNumConnectionsChanged(std::bind(NotifyNumConnectionsChanged, this, std::placeholders::_1));
     m_handler_notify_network_active_changed = m_node.handleNotifyNetworkActiveChanged(std::bind(NotifyNetworkActiveChanged, this, std::placeholders::_1));
+    m_handler_notify_network_local_changed = m_node.handleNotifyNetworkLocalChanged(std::bind(NotifyNetworkLocalChanged, this));
     m_handler_notify_alert_changed = m_node.handleNotifyAlertChanged(std::bind(NotifyAlertChanged, this));
     m_handler_banned_list_changed = m_node.handleBannedListChanged(std::bind(BannedListChanged, this));
     m_handler_notify_block_tip = m_node.handleNotifyBlockTip(std::bind(BlockTipChanged, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, false));
@@ -267,6 +278,7 @@ void ClientModel::unsubscribeFromCoreSignals()
     m_handler_show_progress->disconnect();
     m_handler_notify_num_connections_changed->disconnect();
     m_handler_notify_network_active_changed->disconnect();
+    m_handler_notify_network_local_changed->disconnect();
     m_handler_notify_alert_changed->disconnect();
     m_handler_banned_list_changed->disconnect();
     m_handler_notify_block_tip->disconnect();

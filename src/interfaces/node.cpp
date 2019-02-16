@@ -280,6 +280,10 @@ public:
     {
         return MakeHandler(::uiInterface.NotifyNetworkActiveChanged_connect(fn));
     }
+    std::unique_ptr<Handler> handleNotifyNetworkLocalChanged(NotifyNetworkLocalChangedFn fn) override
+    {
+        return MakeHandler(::uiInterface.NotifyNetworkLocalChanged_connect(fn));
+    }
     std::unique_ptr<Handler> handleNotifyAlertChanged(NotifyAlertChangedFn fn) override
     {
         return MakeHandler(::uiInterface.NotifyAlertChanged_connect(fn));
