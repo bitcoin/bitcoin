@@ -68,23 +68,26 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
     }
 
     if (load_wallet_ret != DBErrors::LOAD_OK) {
-        wallet_instance = nullptr;
         if (load_wallet_ret == DBErrors::CORRUPT) {
-            fprintf(stderr, "Error loading %s: Wallet corrupted", name.c_str());
+            fprintf(stderr, "Error loading %s: Wallet corrupted\n", name.c_str());
+            wallet_instance = nullptr;
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NONCRITICAL_ERROR) {
             fprintf(stderr, "Error reading %s! All keys read correctly, but transaction data"
-                            " or address book entries might be missing or incorrect.",
+                            " or address book entries might be missing or incorrect.\n",
                 name.c_str());
         } else if (load_wallet_ret == DBErrors::TOO_NEW) {
-            fprintf(stderr, "Error loading %s: Wallet requires newer version of %s",
+            fprintf(stderr, "Error loading %s: Wallet requires newer version of %s\n",
                 name.c_str(), PACKAGE_NAME);
+            wallet_instance = nullptr;
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_REWRITE) {
-            fprintf(stderr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
+            fprintf(stderr, "Wallet needed to be rewritten: restart %s to complete\n", PACKAGE_NAME);
+            wallet_instance = nullptr;
             return nullptr;
         } else {
-            fprintf(stderr, "Error loading %s", name.c_str());
+            fprintf(stderr, "Error loading %s\n", name.c_str());
+            wallet_instance = nullptr;
             return nullptr;
         }
     }
