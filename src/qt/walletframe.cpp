@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <qt/pairingpage.h>
 #include <qt/walletframe.h>
 
 #include <node/interface_ui.h>
@@ -55,6 +56,9 @@ WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
     no_wallet_group->setLayout(no_wallet_layout);
 
     walletStack->addWidget(no_wallet_group);
+
+    m_page_pairing = new PairingPage(this);
+    m_global_stack->addWidget(m_page_pairing);
 }
 
 WalletFrame::~WalletFrame() = default;
@@ -156,6 +160,11 @@ void WalletFrame::gotoOverviewPage()
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoOverviewPage();
     m_global_stack->setCurrentWidget(walletStack);
+}
+
+void WalletFrame::gotoPairingPage()
+{
+    m_global_stack->setCurrentWidget(m_page_pairing);
 }
 
 void WalletFrame::gotoHistoryPage()
