@@ -23,6 +23,7 @@
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 
 UniValue assetallocationsend(const JSONRPCRequest& request);
+UniValue assetallocationsendmany(const JSONRPCRequest& request);
 UniValue assetallocationmint(const JSONRPCRequest& request);
 UniValue assetallocationburn(const JSONRPCRequest& request);
 UniValue assetallocationinfo(const JSONRPCRequest& request);
@@ -956,7 +957,37 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
        
     return syscointxfund_helper(strWitness, vecSend, SYSCOIN_TX_VERSION_MINT_ASSET);
 }
+
 UniValue assetallocationsend(const JSONRPCRequest& request) {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 4)
+        throw runtime_error(
+            "assetallocationsend [asset] [addressfrom] [addressTo] [amount]\n"
+            "Send an asset allocation you own to another address.\n"
+            "<asset> Asset guid.\n"
+            "<addressfrom> Address that owns this asset allocation.\n"
+            "<addressTo> Address to transfer to.\n"
+            "<amount> Quantity of asset to send.\n"
+            + HelpRequiringPassphrase(pwallet));
+            
+    UniValue output(UniValue::VARR);
+    UniValue outputObj(UniValue::VOBJ);
+    outputObj.pushKV("address", params[2]);
+    outputObj.pushKV("amount", params[3]);
+    output.push_back(output);
+    UniValue paramsFund(UniValue::VARR);
+    paramsFund.push_back(params[0]);
+    paramsFund.push_back(params[1]);
+    paramsFund.push_back(output);
+    paramsFund.push_back("");
+    JSONRPCRequest requestMany;
+    requestMany.params = paramsFund;
+    return assetallocationsendmany(requestMany);          
+}
+
+UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
