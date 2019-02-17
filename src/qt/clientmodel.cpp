@@ -294,3 +294,14 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
     }
     return false;
 }
+
+bool ClientModel::getTorInfo(QString& out_onion) const
+{
+    for (const auto& addr : m_node.getNetLocalAddresses()) {
+        if (addr.IsTor()) {
+            out_onion = QString::fromStdString(addr.ToStringIP());
+            return true;
+        }
+    }
+    return false;
+}
