@@ -79,6 +79,7 @@ public:
     QString blocksDir() const;
 
     bool getProxyInfo(std::string& ip_port) const;
+    bool getTorInfo(QString& out_onion) const;
 
     // caches for the best header: hash, number of blocks and block time
     mutable std::atomic<int> cachedBestHeaderHeight;

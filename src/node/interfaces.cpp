@@ -103,6 +103,15 @@ public:
     bool shutdownRequested() override { return ShutdownRequested(); }
     void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
+    std::vector<CNetAddr> getNetLocalAddresses() override
+    {
+        std::vector<CNetAddr> ret;
+        LOCK(cs_mapLocalHost);
+        for (const std::pair<const CNetAddr, LocalServiceInfo> &item : mapLocalHost) {
+            ret.emplace_back(item.first);
+        }
+        return ret;
+    }
     size_t getNodeCount(ConnectionDirection flags) override
     {
         return m_context->connman ? m_context->connman->GetNodeCount(flags) : 0;

@@ -25,6 +25,7 @@
 class BanMan;
 class CCoinControl;
 class CFeeRate;
+class CNetAddr;
 class CNodeStats;
 class Coin;
 class RPCTimerInterface;
@@ -88,6 +89,9 @@ public:
 
     //! Get proxy.
     virtual bool getProxy(Network net, proxyType& proxy_info) = 0;
+
+    //! Get local network addresses.
+    virtual std::vector<CNetAddr> getNetLocalAddresses() = 0;
 
     //! Get number of connections.
     virtual size_t getNodeCount(ConnectionDirection flags) = 0;
