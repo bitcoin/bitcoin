@@ -4924,6 +4924,7 @@ extern UniValue assetallocationsend(const JSONRPCRequest& request);
 extern UniValue assetallocationmint(const JSONRPCRequest& request);
 extern UniValue assetallocationburn(const JSONRPCRequest& request);
 extern UniValue assetallocationinfo(const JSONRPCRequest& request);
+extern UniValue assetallocationbalance(const JSONRPCRequest& request);
 extern UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
 extern UniValue listassetallocations(const JSONRPCRequest& request);
 extern UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request);
@@ -5034,6 +5035,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
     { "syscoin",            "assetallocationsend",              &assetallocationsend,           {"asset","address","inputs","witness"}},
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset"}},
+    { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset"}},
     { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset"}},
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
