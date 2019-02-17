@@ -28,7 +28,6 @@ before_build:
            ${content} = (Get-Content ${files}[${i}]);
            ${content} = ${content}.Replace("</RuntimeLibrary>", "</RuntimeLibrary><DebugInformationFormat>None</DebugInformationFormat>");
            ${content} = ${content}.Replace("<WholeProgramOptimization>true", "<WholeProgramOptimization>false");
-           ${content} = ${content}.Replace("NDEBUG;", "");
            Set-Content ${files}[${i}] ${content};
        }
 - ps:  Start-Process clcache-server
