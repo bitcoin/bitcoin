@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
                 unfoundedAccountIndex = 0;
         }
 
-        BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + vecAssets[i] + " " + vecFundedAddresses[i] + " \"[" + assetAllocationSendMany + "]\" ''"));
+        BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + vecAssets[i] + " " + vecFundedAddresses[i] + " \"[" + assetAllocationSendMany + "]\" ''"));
         UniValue arr = r.get_array();
         r = CallRPC("node1", "syscointxfund " + arr[0].get_str() + " " + vecFundedAddresses[i] );
         arr = r.get_array();
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
     // because allocation is empty it should have been erased
     BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress), runtime_error);
     // make sure you can't move coins from burn recipient
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetguid + " burn " + "\"[{\\\"address\\\":\\\"" + useraddress + "\\\",\\\"amount\\\":0.5}]\"" + " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + assetguid + " burn " + "\"[{\\\"address\\\":\\\"" + useraddress + "\\\",\\\"amount\\\":0.5}]\"" + " ''"));
     arr = r.get_array();
     BOOST_CHECK_THROW(r = CallRPC("node1", "syscointxfund " + arr[0].get_str() + " burn"), runtime_error);
 
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     BurnAssetAllocation("node1", assetguid, useraddress1, "0.8", false);
     MilliSleep(1000);
     // try xfer more than we own
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetguid + " " + useraddress1 + " " + "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.4}]\"" + " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + assetguid + " " + useraddress1 + " " + "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.4}]\"" + " ''"));
     UniValue arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + arr[0].get_str() + " " + useraddress1));
     arr = r.get_array();
@@ -752,7 +752,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool()); 
     
     // asset xfer
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsend " + assetguid + " " + useraddress1 + " \"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.8}]\"" + " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsendmany " + assetguid + " " + useraddress1 + " \"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.8}]\"" + " ''"));
     arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscointxfund " + arr[0].get_str() + " " + useraddress1+ " 1"));
     arr = r.get_array();

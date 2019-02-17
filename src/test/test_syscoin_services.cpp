@@ -853,8 +853,8 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
     catch(...){
         newfromamount = 0;
     }
-	// "assetallocationsend [asset] [addressfrom] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsend " + guid + " " + fromaddress + " " + inputs + " " + witness));
+	// "assetallocationsendmany [asset] [addressfrom] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsendmany " + guid + " " + fromaddress + " " + inputs + " " + witness));
     UniValue arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + fromaddress));
     arr = r.get_array();
