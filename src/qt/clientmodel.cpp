@@ -308,6 +308,17 @@ bool ClientModel::getProxyInfo(std::string& ip_port) const
     return false;
 }
 
+bool ClientModel::getTorInfo(QString& out_onion) const
+{
+    for (const auto& [addr, info] : m_node.getNetLocalAddresses()) {
+        if (addr.IsTor()) {
+            out_onion = QString::fromStdString(addr.ToStringAddr());
+            return true;
+        }
+    }
+    return false;
+}
+
 mempoolSamples_t ClientModel::getMempoolStatsInRange(QDateTime &from, QDateTime &to)
 {
     // get stats from the core stats model
