@@ -188,6 +188,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetallocationmint", 2, "amount" },
     { "assetallocationmint", 3, "blocknumber" },
     { "assetallocationinfo", 0, "asset" },
+    { "assetallocationbalance", 0, "asset" },
     { "assetallocationsenderstatus", 0, "asset" },
     { "listassetallocations", 0, "count" },
     { "listassetallocations", 1, "from" },

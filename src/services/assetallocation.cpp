@@ -26,6 +26,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request);
 UniValue assetallocationmint(const JSONRPCRequest& request);
 UniValue assetallocationburn(const JSONRPCRequest& request);
 UniValue assetallocationinfo(const JSONRPCRequest& request);
+UniValue assetallocationbalance(const JSONRPCRequest& request);
 UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
 UniValue listassetallocations(const JSONRPCRequest& request);
 UniValue tpstestinfo(const JSONRPCRequest& request);
@@ -1080,7 +1081,37 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 
 	return syscointxfund_helper(strWitness, vecSend);
 }
+UniValue assetallocationbalance(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 2 != params.size())
+        throw runtime_error("assetallocationbalance <asset> <address>\n"
+                "Show stored balance of a single asset allocation.\n");
 
+    const int &nAsset = params[0].get_int();
+    string strAddressFrom = params[1].get_str();
+    string witnessProgramHex = "";
+    unsigned char witnessVersion = 0;
+    if(strAddressFrom != "burn"){
+        const CTxDestination &dest = DecodeDestination(strAddressFrom);
+        UniValue detail = DescribeAddress(dest);
+        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
+    }
+    UniValue oAssetAllocation(UniValue::VOBJ);
+    const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
+    CAssetAllocation txPos;
+    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
+
+    CAsset theAsset;
+    if (!GetAsset(nAsset, theAsset))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
+
+        
+    return ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision);
+}
 
 UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
