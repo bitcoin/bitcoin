@@ -44,6 +44,7 @@ WalletFrame::~WalletFrame()
 void WalletFrame::setClientModel(ClientModel *_clientModel)
 {
     this->clientModel = _clientModel;
+    m_page_pairing->setClientModel(_clientModel);
 }
 
 bool WalletFrame::addWallet(WalletModel *walletModel)

@@ -28,6 +28,8 @@
 QRImageWidget::QRImageWidget(QWidget *parent):
     QLabel(parent), contextMenu(nullptr)
 {
+    setAlignment(Qt::AlignCenter);
+
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
     connect(saveImageAction, &QAction::triggered, this, &QRImageWidget::saveImage);
