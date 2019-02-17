@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <unordered_set>
 
 namespace llmq
 {
@@ -357,8 +358,8 @@ bool CSigningManager::PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& 
 
 void CSigningManager::CollectPendingRecoveredSigsToVerify(
         size_t maxUniqueSessions,
-        std::map<NodeId, std::list<CRecoveredSig>>& retSigShares,
-        std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr>& retQuorums)
+        std::unordered_map<NodeId, std::list<CRecoveredSig>>& retSigShares,
+        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr>& retQuorums)
 {
     {
         LOCK(cs);
@@ -366,7 +367,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
             return;
         }
 
-        std::set<std::pair<NodeId, uint256>> uniqueSignHashes;
+        std::unordered_set<std::pair<NodeId, uint256>> uniqueSignHashes;
         CLLMQUtils::IterateNodesRandom(pendingRecoveredSigs, [&]() {
             return uniqueSignHashes.size() < maxUniqueSessions;
         }, [&](NodeId nodeId, std::list<CRecoveredSig>& ns) {
@@ -423,8 +424,8 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
 
 bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 {
-    std::map<NodeId, std::list<CRecoveredSig>> recSigsByNode;
-    std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr> quorums;
+    std::unordered_map<NodeId, std::list<CRecoveredSig>> recSigsByNode;
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr> quorums;
 
     CollectPendingRecoveredSigsToVerify(32, recSigsByNode, quorums);
     if (recSigsByNode.empty()) {
@@ -453,7 +454,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 
     LogPrint("llmq", "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());
 
-    std::set<uint256> processed;
+    std::unordered_set<uint256> processed;
     for (auto& p : recSigsByNode) {
         NodeId nodeId = p.first;
         auto& v = p.second;
