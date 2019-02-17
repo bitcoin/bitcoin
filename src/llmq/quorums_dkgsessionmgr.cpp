@@ -25,17 +25,25 @@ CDKGSessionManager::CDKGSessionManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker) :
     evoDb(_evoDb),
     blsWorker(_blsWorker)
 {
+}
+
+CDKGSessionManager::~CDKGSessionManager()
+{
+}
+
+void CDKGSessionManager::StartMessageHandlerPool()
+{
     for (const auto& qt : Params().GetConsensus().llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
                 std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, _evoDb, messageHandlerPool, blsWorker, *this));
+                std::forward_as_tuple(qt.second, evoDb, messageHandlerPool, blsWorker, *this));
     }
 
     messageHandlerPool.resize(2);
     RenameThreadPool(messageHandlerPool, "quorum-msg");
 }
 
-CDKGSessionManager::~CDKGSessionManager()
+void CDKGSessionManager::StopMessageHandlerPool()
 {
     messageHandlerPool.stop(true);
 }

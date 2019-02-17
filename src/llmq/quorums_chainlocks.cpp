@@ -28,10 +28,18 @@ std::string CChainLockSig::ToString() const
 CChainLocksHandler::CChainLocksHandler(CScheduler* _scheduler) :
     scheduler(_scheduler)
 {
-    quorumSigningManager->RegisterRecoveredSigsListener(this);
 }
 
 CChainLocksHandler::~CChainLocksHandler()
+{
+}
+
+void CChainLocksHandler::RegisterAsRecoveredSigsListener()
+{
+    quorumSigningManager->RegisterRecoveredSigsListener(this);
+}
+
+void CChainLocksHandler::UnregisterAsRecoveredSigsListener()
 {
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }

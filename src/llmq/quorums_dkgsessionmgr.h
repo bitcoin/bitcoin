@@ -50,6 +50,9 @@ public:
     CDKGSessionManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker);
     ~CDKGSessionManager();
 
+    void StartMessageHandlerPool();
+    void StopMessageHandlerPool();
+
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);

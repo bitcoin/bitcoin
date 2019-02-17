@@ -68,7 +68,9 @@ public:
     CChainLocksHandler(CScheduler* _scheduler);
     ~CChainLocksHandler();
 
-public:
+    void RegisterAsRecoveredSigsListener();
+    void UnregisterAsRecoveredSigsListener();
+
     bool AlreadyHave(const CInv& inv);
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
 

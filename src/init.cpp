@@ -236,6 +236,7 @@ void PrepareShutdown()
     StopREST();
     StopRPC();
     StopHTTPServer();
+    llmq::StopLLMQSystem();
 
     // fRPCInWarmup should be `false` if we completed the loading sequence
     // before a shutdown request was received
@@ -2065,6 +2066,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             scheduler.scheduleEvery(boost::bind(&CPrivateSendClientManager::DoMaintenance, boost::ref(privateSendClient), boost::ref(*g_connman)), 1);
 #endif // ENABLE_WALLET
     }
+
+    llmq::StartLLMQSystem();
 
     // ********************************************************* Step 12: start node
 

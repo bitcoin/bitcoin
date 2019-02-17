@@ -361,6 +361,8 @@ public:
     CSigSharesManager();
     ~CSigSharesManager();
 
+    void StartWorkerThread();
+    void StopWorkerThread();
     void InterruptWorkerThread();
 
 public:
@@ -370,9 +372,6 @@ public:
     void Sign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
 
 private:
-    void StartWorkerThread();
-    void StopWorkerThread();
-
     void ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);

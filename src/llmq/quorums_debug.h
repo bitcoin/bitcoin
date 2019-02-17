@@ -158,6 +158,8 @@ private:
 public:
     CDKGDebugManager(CScheduler* _scheduler);
 
+    void StartScheduler();
+
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     bool PreVerifyDebugStatusMessage(const uint256& hash, CDKGDebugStatus& status, bool& retBan);
     void ScheduleProcessPending();

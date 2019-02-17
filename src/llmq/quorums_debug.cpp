@@ -111,6 +111,10 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
 CDKGDebugManager::CDKGDebugManager(CScheduler* _scheduler) :
     scheduler(_scheduler)
 {
+}
+
+void CDKGDebugManager::StartScheduler()
+{
     if (scheduler) {
         scheduler->scheduleEvery([&]() {
             SendLocalStatus();

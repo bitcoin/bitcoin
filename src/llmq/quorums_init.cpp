@@ -31,13 +31,6 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
     chainLocksHandler = new CChainLocksHandler(scheduler);
 }
 
-void InterruptLLMQSystem()
-{
-    if (quorumSigSharesManager) {
-        quorumSigSharesManager->InterruptWorkerThread();
-    }
-}
-
 void DestroyLLMQSystem()
 {
     delete chainLocksHandler;
@@ -54,6 +47,42 @@ void DestroyLLMQSystem()
     quorumBlockProcessor = nullptr;
     delete quorumDKGDebugManager;
     quorumDKGDebugManager = nullptr;
+}
+
+void StartLLMQSystem()
+{
+    if (quorumDKGDebugManager) {
+        quorumDKGDebugManager->StartScheduler();
+    }
+    if (quorumDKGSessionManager) {
+        quorumDKGSessionManager->StartMessageHandlerPool();
+    }
+    if (quorumSigSharesManager) {
+        quorumSigSharesManager->StartWorkerThread();
+    }
+    if (chainLocksHandler) {
+        chainLocksHandler->RegisterAsRecoveredSigsListener();
+    }
+}
+
+void StopLLMQSystem()
+{
+    if (chainLocksHandler) {
+        chainLocksHandler->UnregisterAsRecoveredSigsListener();
+    }
+    if (quorumSigSharesManager) {
+        quorumSigSharesManager->StopWorkerThread();
+    }
+    if (quorumDKGSessionManager) {
+        quorumDKGSessionManager->StopMessageHandlerPool();
+    }
+}
+
+void InterruptLLMQSystem()
+{
+    if (quorumSigSharesManager) {
+        quorumSigSharesManager->InterruptWorkerThread();
+    }
 }
 
 }
