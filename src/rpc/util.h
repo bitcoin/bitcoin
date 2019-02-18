@@ -7,6 +7,7 @@
 
 #include <node/transaction.h>
 #include <pubkey.h>
+#include <rpc/protocol.h>
 #include <script/standard.h>
 #include <univalue.h>
 
