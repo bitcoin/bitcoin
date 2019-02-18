@@ -526,6 +526,8 @@ void CWallet::UpgradeKeyMetadata()
     masterKey.SetSeed(vchSeed.data(), vchSeed.size());
     CKeyID master_id = masterKey.key.GetPubKey().GetID();
 
+    std::unique_ptr<WalletBatch> batch = MakeUnique<WalletBatch>(*database);
+    size_t cnt = 0;
     for (auto& meta_pair : mapKeyMetadata) {
         const CKeyID& keyid = meta_pair.first;
         CKeyMetadata& meta = meta_pair.second;
@@ -546,9 +548,14 @@ void CWallet::UpgradeKeyMetadata()
             }
 
             // Write meta to wallet
-            WriteKeyMetadata(meta, mi->second.extPubKey.pubkey, true);
+            batch->WriteKeyMetadata(meta, mi->second.extPubKey.pubkey, true);
+            if (++cnt % 1000 == 0) {
+                // avoid creating overlarge in-memory batches in case the wallet contains large amounts of keys
+                batch.reset(new WalletBatch(*database));
+            }
         }
     }
+    batch.reset(); //write before setting the flag
     SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
