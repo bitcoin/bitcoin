@@ -133,10 +133,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CLTV] = DeploymentAtFixedHeight<388381>(); // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
 
         // Deployment of BIP68, BIP112, and BIP113.
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV] = DeploymentByBIP9<0, 1462060800, 1493596800>(); // May 1st, 2016 - May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV] = DeploymentAtFixedHeight<419328>(); // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT] = DeploymentByBIP9<1, 1479168000, 1510704000>(); // November 15th, 2016 - November 15th, 2017.
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT] = DeploymentAtFixedHeight<481824>(); // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000051dc8b82f450202ecb3d471");
@@ -248,10 +248,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CLTV] = DeploymentAtFixedHeight<581885>(); // 00000000007f6655f22f98e72ed80d8b06dc761d5da09df0fa1dc4be4f861eb6
 
         // Deployment of BIP68, BIP112, and BIP113.
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV] = DeploymentByBIP9<0, 1456790400, 1493596800>(); // March 1st, 2016 - May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV] = DeploymentAtFixedHeight<770112>(); // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT] = DeploymentByBIP9<1, 1462060800, 1493596800>(); // May 1st 2016 - May 1st 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT] = DeploymentAtFixedHeight<834624>(); // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000007dbe94253893cbd463");
