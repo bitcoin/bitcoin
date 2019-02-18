@@ -1,10 +1,10 @@
-# bash programmable completion for bitcoin-cli(1)
+# bash programmable completion for peercoin-cli(1)
 # Copyright (c) 2012-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# call $bitcoin-cli for RPC
-_bitcoin_rpc() {
+# call $peercoin-cli for RPC
+_peercoin_rpc() {
     # determine already specified args necessary for RPC
     local rpcargs=()
     for i in ${COMP_LINE}; do
@@ -14,23 +14,23 @@ _bitcoin_rpc() {
                 ;;
         esac
     done
-    $bitcoin_cli "${rpcargs[@]}" "$@"
+    $peercoin_cli "${rpcargs[@]}" "$@"
 }
 
 # Add wallet accounts to COMPREPLY
-_bitcoin_accounts() {
+_peercoin_accounts() {
     local accounts
-    accounts=$(_bitcoin_rpc listaccounts | awk -F '"' '{ print $2 }')
+    accounts=$(_peercoin_rpc listaccounts | awk -F '"' '{ print $2 }')
     COMPREPLY=( "${COMPREPLY[@]}" $( compgen -W "$accounts" -- "$cur" ) )
 }
 
-_bitcoin_cli() {
+_peercoin_cli() {
     local cur prev words=() cword
-    local bitcoin_cli
+    local peercoin_cli
 
-    # save and use original argument to invoke bitcoin-cli for -help, help and RPC
-    # as bitcoin-cli might not be in $PATH
-    bitcoin_cli="$1"
+    # save and use original argument to invoke peercoin-cli for -help, help and RPC
+    # as peercoin-cli might not be in $PATH
+    peercoin_cli="$1"
 
     COMPREPLY=()
     _get_comp_words_by_ref -n = cur prev words cword
@@ -60,7 +60,7 @@ _bitcoin_cli() {
     if ((cword > 3)); then
         case ${words[cword-3]} in
             addmultisigaddress)
-                _bitcoin_accounts
+                _peercoin_accounts
                 return 0
                 ;;
             getbalance|gettxout|importaddress|importpubkey|importprivkey|listreceivedbyaccount|listreceivedbyaddress|listsinceblock)
@@ -85,7 +85,7 @@ _bitcoin_cli() {
                 return 0
                 ;;
             move|setaccount)
-                _bitcoin_accounts
+                _peercoin_accounts
                 return 0
                 ;;
         esac
@@ -101,7 +101,7 @@ _bitcoin_cli() {
             return 0
             ;;
         getaccountaddress|getaddressesbyaccount|getbalance|getnewaddress|getreceivedbyaccount|listtransactions|move|sendfrom|sendmany)
-            _bitcoin_accounts
+            _peercoin_accounts
             return 0
             ;;
     esac
@@ -125,12 +125,12 @@ _bitcoin_cli() {
 
             # only parse -help if senseful
             if [[ -z "$cur" || "$cur" =~ ^- ]]; then
-                helpopts=$($bitcoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
+                helpopts=$($peercoin_cli -help 2>&1 | awk '$1 ~ /^-/ { sub(/=.*/, "="); print $1 }' )
             fi
 
             # only parse help if senseful
             if [[ -z "$cur" || "$cur" =~ ^[a-z] ]]; then
-                commands=$(_bitcoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
+                commands=$(_peercoin_rpc help 2>/dev/null | awk '$1 ~ /^[a-z]/ { print $1; }')
             fi
 
             COMPREPLY=( $( compgen -W "$helpopts $commands" -- "$cur" ) )
@@ -143,7 +143,7 @@ _bitcoin_cli() {
             ;;
     esac
 } &&
-complete -F _bitcoin_cli bitcoin-cli
+complete -F _peercoin_cli peercoin-cli
 
 # Local variables:
 # mode: shell-script
