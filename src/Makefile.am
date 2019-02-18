@@ -120,7 +120,6 @@ BITCOIN_CORE_H = \
   netmessagemaker.h \
   noui.h \
   policy/policy.h \
-  policy/rbf.h \
   pow.h \
   protocol.h \
   random.h \
