@@ -28,7 +28,7 @@ import struct
 import time
 
 from test_framework.siphash import siphash256
-from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, assert_equal
+from test_framework.util import hex_str_to_bytes, assert_equal
 
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70014  # past bip-31 for ping/pong
@@ -181,7 +181,7 @@ def FromHex(obj, hex_string):
 
 # Convert a binary-serializable object to hex (eg for submission via RPC)
 def ToHex(obj):
-    return bytes_to_hex_str(obj.serialize())
+    return obj.serialize().hex()
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 
@@ -319,7 +319,7 @@ class CTxIn:
 
     def __repr__(self):
         return "CTxIn(prevout=%s scriptSig=%s nSequence=%i)" \
-            % (repr(self.prevout), bytes_to_hex_str(self.scriptSig),
+            % (repr(self.prevout), self.scriptSig.hex(),
                self.nSequence)
 
 
@@ -343,7 +343,7 @@ class CTxOut:
     def __repr__(self):
         return "CTxOut(nValue=%i.%08i scriptPubKey=%s)" \
             % (self.nValue // COIN, self.nValue % COIN,
-               bytes_to_hex_str(self.scriptPubKey))
+               self.scriptPubKey.hex())
 
 
 class CScriptWitness:
@@ -355,7 +355,7 @@ class CScriptWitness:
 
     def __repr__(self):
         return "CScriptWitness(%s)" % \
-               (",".join([bytes_to_hex_str(x) for x in self.stack]))
+               (",".join([x.hex() for x in self.stack]))
 
     def is_null(self):
         if self.stack:

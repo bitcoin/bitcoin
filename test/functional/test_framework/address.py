@@ -5,7 +5,7 @@
 """Encode and decode BASE58, P2PKH and P2SH addresses."""
 
 from .script import hash256, hash160, sha256, CScript, OP_0
-from .util import bytes_to_hex_str, hex_str_to_bytes
+from .util import hex_str_to_bytes
 
 from . import segwit_addr
 
@@ -16,9 +16,9 @@ chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 def byte_to_base58(b, version):
     result = ''
-    str = bytes_to_hex_str(b)
-    str = bytes_to_hex_str(chr(version).encode('latin-1')) + str
-    checksum = bytes_to_hex_str(hash256(hex_str_to_bytes(str)))
+    str = b.hex()
+    str = chr(version).encode('latin-1').hex() + str
+    checksum = hash256(hex_str_to_bytes(str)).hex()
     str += checksum[:8]
     value = int('0x'+str,0)
     while value > 0:

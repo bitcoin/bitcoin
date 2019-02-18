@@ -10,7 +10,7 @@ from test_framework.blocktools import create_block, create_coinbase, add_witness
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, ToHex
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, bytes_to_hex_str, get_bip9_status, satoshi_round, sync_blocks
+from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, get_bip9_status, satoshi_round, sync_blocks
 
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
@@ -372,7 +372,7 @@ class BIP68Test(BitcoinTestFramework):
         add_witness_commitment(block)
         block.solve()
 
-        self.nodes[0].submitblock(bytes_to_hex_str(block.serialize(True)))
+        self.nodes[0].submitblock(block.serialize(True).hex())
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
     def activateCSV(self):

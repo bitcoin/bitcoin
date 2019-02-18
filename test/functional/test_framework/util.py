@@ -5,7 +5,7 @@
 """Helpful routines for regression testing."""
 
 from base64 import b64encode
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 from decimal import Decimal, ROUND_DOWN
 import hashlib
 import inspect
@@ -182,8 +182,8 @@ def check_json_precision():
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def bytes_to_hex_str(byte_str):
-    return hexlify(byte_str).decode('ascii')
+def b_2_x(byte_str):
+    return byte_str.hex()
 
 def hash256(byte_str):
     sha256 = hashlib.sha256()
