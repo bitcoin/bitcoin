@@ -6,9 +6,17 @@
 
 #include <consensus/params.h>
 
-const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+const struct VBDeploymentInfo VersionBitsDeploymentInfo[] = {
     {
         /*.name =*/ "testdummy",
+        /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "strictder",
+        /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "cltv",
         /*.gbt_force =*/ true,
     },
     {
@@ -20,3 +28,4 @@ const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_B
         /*.gbt_force =*/ true,
     }
 };
+static_assert(sizeof(VersionBitsDeploymentInfo) == Consensus::MAX_VERSION_BITS_DEPLOYMENTS * sizeof(VersionBitsDeploymentInfo[0]), "Must specify names for all deployments");

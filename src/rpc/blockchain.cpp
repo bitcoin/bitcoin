@@ -1225,6 +1225,8 @@ static UniValue verifychain(const JSONRPCRequest& request)
 }
 
 /** Implementation of IsSuperMajority with better feedback */
+static VersionBitsCache vbcache GUARDED_BY(cs_main);
+
 static UniValue SoftForkMajorityDesc(int version, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
     UniValue rv(UniValue::VOBJ);
@@ -1235,10 +1237,10 @@ static UniValue SoftForkMajorityDesc(int version, const CBlockIndex* pindex, con
             activated = pindex->nHeight >= consensusParams.BIP34Height;
             break;
         case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
+            activated = DeploymentActive(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_STRICTDER, vbcache);
             break;
         case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
+            activated = DeploymentActive(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CLTV, vbcache);
             break;
     }
     rv.pushKV("status", activated);
