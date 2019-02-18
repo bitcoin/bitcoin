@@ -942,6 +942,20 @@ void CSigSharesManager::Cleanup()
     {
         LOCK(cs);
 
+        // Remove sessions which were succesfully recovered
+        std::unordered_set<uint256> doneSessions;
+        sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
+            if (doneSessions.count(sigShare.GetSignHash())) {
+                return;
+            }
+            if (quorumSigningManager->HasRecoveredSigForSession(sigShare.GetSignHash())) {
+                doneSessions.emplace(sigShare.GetSignHash());
+            }
+        });
+        for (auto& signHash : doneSessions) {
+            RemoveSigSharesForSession(signHash);
+        }
+
         // Remove sessions which timed out
         std::unordered_set<uint256> timeoutSessions;
         for (auto& p : firstSeenForSessions) {
@@ -966,20 +980,6 @@ void CSigSharesManager::Cleanup()
                 LogPrintf("CSigSharesManager::%s -- signing session timed out. signHash=%s, sigShareCount=%d\n", __func__,
                           signHash.ToString(), count);
             }
-            RemoveSigSharesForSession(signHash);
-        }
-
-        // Remove sessions which were succesfully recovered
-        std::unordered_set<uint256> doneSessions;
-        sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
-            if (doneSessions.count(sigShare.GetSignHash())) {
-                return;
-            }
-            if (quorumSigningManager->HasRecoveredSigForSession(sigShare.GetSignHash())) {
-                doneSessions.emplace(sigShare.GetSignHash());
-            }
-        });
-        for (auto& signHash : doneSessions) {
             RemoveSigSharesForSession(signHash);
         }
 
