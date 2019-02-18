@@ -1290,11 +1290,12 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
 
 static void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
-    // Deployments with timeout value of 0 are hidden.
+    // Deployments with timeout value of 0 (DISABLED) are hidden.
     // A timeout value of 0 guarantees a softfork will never be activated.
     // This is used when softfork codes are merged without specifying the deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout > 0)
+    if (consensusParams.vDeployments[id].nTimeout != Consensus::Deployment::DISABLED) {
         bip9_softforks.pushKV(VersionBitsDeploymentInfo[id].name, BIP9SoftForkDesc(consensusParams, id));
+    }
 }
 
 UniValue getblockchaininfo(const JSONRPCRequest& request)
