@@ -419,9 +419,9 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 "                   (since latest issued \"masternode start/start-many/initialize\")\n"
                 "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
                 "  daemon         - Print daemon version of a masternode (can be additionally filtered, exact match)\n"
-                "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
+                "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP pingretries'\n"
                 "                   (can be additionally filtered, partial match)\n"
-                "  info           - Print info in format 'status protocol payee lastseen activeseconds sentinelversion sentinelstate IP'\n"
+                "  info           - Print info in format 'status protocol payee lastseen activeseconds sentinelversion sentinelstate IP pingretries'\n"
                 "                   (can be additionally filtered, partial match)\n"
                 "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
                 "  lastpaidblock  - Print the last block height a node was paid on the network\n"
@@ -489,7 +489,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
                                mn.GetLastPaidTime() << " "  << std::setw(6) <<
                                mn.GetLastPaidBlock() << " " <<
-                               mn.addr.ToString();
+                               mn.addr.ToString() << " " <<
+                               mn.nPingRetries;
                 std::string strFull = streamFull.str();
                 if (strFilter !="" && strFull.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
@@ -504,7 +505,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.lastPing.GetSentinelString() << " "  <<
                                (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
-                               mn.addr.ToString();
+                               mn.addr.ToString() << " " <<
+                               mn.nPingRetries;
                 std::string strInfo = streamInfo.str();
                 if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
@@ -521,7 +523,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                                (int64_t)mn.lastPing.sigTime << " " <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.GetLastPaidTime() << " " <<
-                               mn.GetLastPaidBlock();
+                               mn.GetLastPaidBlock() << " " <<
+                               mn.nPingRetries;
                 std::string strInfo = streamInfo.str();
                 if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
@@ -537,6 +540,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.pushKV("activeseconds", (int64_t)(mn.lastPing.sigTime - mn.sigTime));
                 objMN.pushKV("lastpaidtime", mn.GetLastPaidTime());
                 objMN.pushKV("lastpaidblock", mn.GetLastPaidBlock());
+                objMN.pushKV("pingretries", mn.nPingRetries);
                 obj.pushKV(strOutpoint, objMN);
             } else if (strMode == "lastpaidblock") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
