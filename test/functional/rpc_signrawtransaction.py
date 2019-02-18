@@ -5,7 +5,7 @@
 """Test transaction signing using the signrawtransaction* RPCs."""
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, hex_str_to_bytes
+from test_framework.util import assert_equal, assert_raises_rpc_error, hex_str_to_bytes
 from test_framework.messages import sha256
 from test_framework.script import CScript, OP_0
 
@@ -161,7 +161,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         unspent_output = self.nodes[1].listunspent(0, 999999, [p2sh_p2wsh_address["address"]])[0]
         assert_equal(unspent_output["witnessScript"], p2sh_p2wsh_address["redeemScript"])
         p2sh_redeemScript = CScript([OP_0, sha256(hex_str_to_bytes(p2sh_p2wsh_address["redeemScript"]))])
-        assert_equal(unspent_output["redeemScript"], bytes_to_hex_str(p2sh_redeemScript))
+        assert_equal(unspent_output["redeemScript"], p2sh_redeemScript.hex())
         # Now create and sign a transaction spending that output on node[0], which doesn't know the scripts or keys
         spending_tx = self.nodes[0].createrawtransaction([unspent_output], {self.nodes[1].getnewaddress(): Decimal("49.998")})
         spending_tx_signed = self.nodes[0].signrawtransactionwithkey(spending_tx, [embedded_privkey], [unspent_output])

@@ -9,12 +9,12 @@ from decimal import Decimal
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, satoshi_round
+from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 MAX_REPLACEMENT_LIMIT = 100
 
 def txToHex(tx):
-    return bytes_to_hex_str(tx.serialize())
+    return tx.serialize().hex()
 
 def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
     """Create a txout with a given amount and scriptPubKey

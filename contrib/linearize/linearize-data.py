@@ -16,7 +16,7 @@ import hashlib
 import datetime
 import time
 from collections import namedtuple
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 
 settings = {}
 
@@ -61,7 +61,7 @@ def calc_hash_str(blk_hdr):
     hash = calc_hdr_hash(blk_hdr)
     hash = bufreverse(hash)
     hash = wordreverse(hash)
-    hash_str = hexlify(hash).decode('utf-8')
+    hash_str = hash.hex()
     return hash_str
 
 def get_blk_dt(blk_hdr):
@@ -213,7 +213,7 @@ class BlockDataCopier:
 
             inMagic = inhdr[:4]
             if (inMagic != self.settings['netmagic']):
-                print("Invalid magic: " + hexlify(inMagic).decode('utf-8'))
+                print("Invalid magic: " + inMagic.hex())
                 return
             inLenLE = inhdr[4:]
             su = struct.unpack("<I", inLenLE)

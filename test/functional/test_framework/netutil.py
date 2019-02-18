@@ -12,7 +12,7 @@ import socket
 import struct
 import array
 import os
-from binascii import unhexlify, hexlify
+from binascii import unhexlify
 
 # STATE_ESTABLISHED = '01'
 # STATE_SYN_SENT  = '02'
@@ -139,7 +139,7 @@ def addr_to_hex(addr):
         addr = sub[0] + ([0] * nullbytes) + sub[1]
     else:
         raise ValueError('Could not parse address %s' % addr)
-    return hexlify(bytearray(addr)).decode('ascii')
+    return bytearray(addr).hex()
 
 def test_ipv6_local():
     '''

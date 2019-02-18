@@ -25,7 +25,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    bytes_to_hex_str,
 )
 from test_framework.wallet_util import (
     get_key,
@@ -127,7 +126,7 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Nonstandard scriptPubKey + !internal
         self.log.info("Should not import a nonstandard scriptPubKey without internal flag")
-        nonstandardScriptPubKey = key.p2pkh_script + bytes_to_hex_str(CScript([OP_NOP]))
+        nonstandardScriptPubKey = key.p2pkh_script + CScript([OP_NOP]).hex()
         key = get_key(self.nodes[0])
         self.test_importmulti({"scriptPubKey": nonstandardScriptPubKey,
                                "timestamp": "now"},

@@ -20,7 +20,6 @@ from .messages import (
     CTxOut,
     FromHex,
     ToHex,
-    bytes_to_hex_str,
     hash256,
     hex_str_to_bytes,
     ser_string,
@@ -190,7 +189,7 @@ def witness_script(use_p2wsh, pubkey):
         witness_program = CScript([OP_1, hex_str_to_bytes(pubkey), OP_1, OP_CHECKMULTISIG])
         scripthash = sha256(witness_program)
         pkscript = CScript([OP_0, scripthash])
-    return bytes_to_hex_str(pkscript)
+    return pkscript.hex()
 
 def create_witness_tx(node, use_p2wsh, utxo, pubkey, encode_p2sh, amount):
     """Return a transaction (in hex) that spends the given utxo to a segwit output.

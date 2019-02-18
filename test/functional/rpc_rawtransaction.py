@@ -17,7 +17,7 @@ from decimal import Decimal
 from io import BytesIO
 from test_framework.messages import CTransaction, ToHex
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, connect_nodes_bi, hex_str_to_bytes
+from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes_bi, hex_str_to_bytes
 
 class multidict(dict):
     """Dictionary that allows duplicate keys.
@@ -119,21 +119,21 @@ class RawTransactionsTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs={address: 99}))))
         assert_equal(len(tx.vout), 1)
         assert_equal(
-            bytes_to_hex_str(tx.serialize()),
+            tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}]),
         )
         # Two outputs
         tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=OrderedDict([(address, 99), (address2, 99)])))))
         assert_equal(len(tx.vout), 2)
         assert_equal(
-            bytes_to_hex_str(tx.serialize()),
+            tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {address2: 99}]),
         )
         # Multiple mixed outputs
         tx.deserialize(BytesIO(hex_str_to_bytes(self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=multidict([(address, 99), (address2, 99), ('data', '99')])))))
         assert_equal(len(tx.vout), 3)
         assert_equal(
-            bytes_to_hex_str(tx.serialize()),
+            tx.serialize().hex(),
             self.nodes[2].createrawtransaction(inputs=[{'txid': txid, 'vout': 9}], outputs=[{address: 99}, {address2: 99}, {'data': '99'}]),
         )
 
