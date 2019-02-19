@@ -16,7 +16,11 @@ pkg_add git gmake libevent libtool boost
 pkg_add autoconf # (select highest version, e.g. 2.69)
 pkg_add automake # (select highest version, e.g. 1.16)
 pkg_add python # (select highest version, e.g. 3.6)
+```
 
+Make sure your working directory does not contain spaces.
+
+```
 git clone https://github.com/bitcoin/bitcoin.git
 ```
 
@@ -103,4 +107,3 @@ If your user is in the `staff` group the limit can be raised with:
 The change will only affect the current shell and processes spawned by it. To
 make the change system-wide, change `datasize-cur` and `datasize-max` in
 `/etc/login.conf`, and reboot.
-

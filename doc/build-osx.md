@@ -45,6 +45,9 @@ from the root of the repository.
 ## Build Bitcoin Core
 
 1. Clone the Bitcoin Core source code:
+
+    Make sure your working directory does not contain spaces.
+
     ```shell
     git clone https://github.com/bitcoin/bitcoin
     cd bitcoin

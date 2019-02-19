@@ -17,7 +17,10 @@ the usage of the absolute path.
 To Build
 ---------------------
 
+Make sure your working directory does not contain spaces.
+
 ```bash
+git clone https://github.com/bitcoin/bitcoin.git
 ./autogen.sh
 ./configure
 make

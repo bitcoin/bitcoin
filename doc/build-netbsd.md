@@ -21,7 +21,11 @@ libevent
 libtool
 pkg-config
 python37
+```
 
+Make sure your working directory does not contain spaces.
+
+```
 git clone https://github.com/bitcoin/bitcoin.git
 ```
 
