@@ -16,7 +16,7 @@ def unidirectional_node_sync_via_rpc(node_src, node_dest):
     blockhash = node_src.getbestblockhash()
     while True:
         try:
-            assert(len(node_dest.getblock(blockhash, False)) > 0)
+            assert len(node_dest.getblock(blockhash, False)) > 0
             break
         except:
             blocks_to_copy.append(blockhash)
@@ -24,7 +24,7 @@ def unidirectional_node_sync_via_rpc(node_src, node_dest):
     blocks_to_copy.reverse()
     for blockhash in blocks_to_copy:
         blockdata = node_src.getblock(blockhash, False)
-        assert(node_dest.submitblock(blockdata) in (None, 'inconclusive'))
+        assert node_dest.submitblock(blockdata) in (None, 'inconclusive')
 
 def node_sync_via_rpc(nodes):
     for node_src in nodes:
@@ -57,7 +57,7 @@ class PreciousTest(BitcoinTestFramework):
         self.log.info("Mine competing blocks E-F-G on Node 1")
         hashG = self.nodes[1].generatetoaddress(3, gen_address(1))[-1]
         assert_equal(self.nodes[1].getblockcount(), 5)
-        assert(hashC != hashG)
+        assert hashC != hashG
         self.log.info("Connect nodes and check no reorg occurs")
         # Submit competing blocks via RPC so any reorg should occur before we proceed (no way to wait on inaction for p2p sync)
         node_sync_via_rpc(self.nodes[0:2])
