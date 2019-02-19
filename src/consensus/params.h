@@ -107,14 +107,6 @@ struct LLMQParams {
     // Number of quorums to consider "active" for signing sessions
     int signingActiveQuorumCount;
 
-    // Used for inter-quorum communication. This is the number of deterministic connections built to the clockwise
-    // neighbors on the circle shaped nodes topography
-    int neighborConnections;
-
-    // Used for inter-quorum communication. This is the number of deterministic connections built diagonally to the
-    // member on the circle shaped nodes topography.
-    int diagonalConnections;
-
     // Used for inter-quorum communication. This is the number of quorums for which we should keep old connections. This
     // should be at least as much as the active quorums set.
     int keepOldConnections;

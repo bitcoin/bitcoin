@@ -122,8 +122,6 @@ static Consensus::LLMQParams llmq10_60 = {
 
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
-        .neighborConnections = 2,
-        .diagonalConnections = 2,
         .keepOldConnections = 24,
 };
 
@@ -142,8 +140,6 @@ static Consensus::LLMQParams llmq50_60 = {
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
-        .neighborConnections = 2,
-        .diagonalConnections = 2,
         .keepOldConnections = 24,
 };
 
@@ -162,8 +158,6 @@ static Consensus::LLMQParams llmq400_60 = {
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
-        .neighborConnections = 4,
-        .diagonalConnections = 4,
         .keepOldConnections = 4,
 };
 
@@ -183,8 +177,6 @@ static Consensus::LLMQParams llmq400_85 = {
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
-        .neighborConnections = 4,
-        .diagonalConnections = 4,
         .keepOldConnections = 4,
 };
 

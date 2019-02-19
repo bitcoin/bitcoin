@@ -50,26 +50,20 @@ std::set<CService> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType
     for (size_t i = 0; i < mns.size(); i++) {
         auto& dmn = mns[i];
         if (dmn->proTxHash == forMember) {
-            for (int n = 0; n < params.neighborConnections; n++) {
-                size_t idx = (i + 1 + n) % mns.size();
+            // Connect to nodes at indexes (i+2^k)%n, k: 0..floor(log2(n-1))-1, n: size of the quorum/ring
+            int gap = 1;
+            int gap_max = mns.size() - 1;
+            while (gap_max >>= 1) {
+                size_t idx = (i + gap) % mns.size();
                 auto& otherDmn = mns[idx];
                 if (otherDmn == dmn) {
                     continue;
                 }
                 result.emplace(otherDmn->pdmnState->addr);
+                gap <<= 1;
             }
-            size_t startIdx = i + mns.size() / 2;
-            startIdx -= (params.diagonalConnections / 2) * params.neighborConnections;
-            startIdx %= mns.size();
-            for (int n = 0; n < params.diagonalConnections; n++) {
-                size_t idx = startIdx + n * params.neighborConnections;
-                idx %= mns.size();
-                auto& otherDmn = mns[idx];
-                if (otherDmn == dmn) {
-                    continue;
-                }
-                result.emplace(otherDmn->pdmnState->addr);
-            }
+            // there can be no two members with the same proTxHash, so return early
+            break;
         }
     }
     return result;
