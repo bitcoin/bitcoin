@@ -184,11 +184,8 @@ class PruneTest(BitcoinTestFramework):
 
     def reorg_back(self):
         # Verify that a block on the old main chain fork has been pruned away
-        try:
-            self.nodes[2].getblock(self.forkhash)
-            raise AssertionError("Old block wasn't pruned so can't test redownload")
-        except JSONRPCException as e:
-            print("Will need to redownload block",self.forkheight)
+        assert_raises_jsonrpc(-1, "Block not available (pruned data)", self.nodes[2].getblock, self.forkhash)
+        print("Will need to redownload block",self.forkheight)
 
         # Verify that we have enough history to reorg back to the fork point
         # Although this is more than 288 blocks, because this chain was written more recently
@@ -233,7 +230,7 @@ class PruneTest(BitcoinTestFramework):
         # at this point, node has 995 blocks and has not yet run in prune mode
         node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-debug=0"], timewait=900)
         assert_equal(node.getblockcount(), 995)
-        assert_raises_message(JSONRPCException, "not in prune mode", node.pruneblockchain, 500)
+        assert_raises_jsonrpc(-1, "not in prune mode", node.pruneblockchain, 500)
         self.stop_node(node_number)
 
         # now re-start in manual pruning mode
@@ -265,14 +262,14 @@ class PruneTest(BitcoinTestFramework):
             return os.path.isfile(self.options.tmpdir + "/node{}/regtest/blocks/blk{:05}.dat".format(node_number, index))
 
         # should not prune because chain tip of node 3 (995) < PruneAfterHeight (1000)
-        assert_raises_message(JSONRPCException, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
+        assert_raises_jsonrpc(-1, "Blockchain is too short for pruning", node.pruneblockchain, height(500))
 
         # mine 6 blocks so we are at height 1001 (i.e., above PruneAfterHeight)
         node.generate(6)
         assert_equal(node.getblockchaininfo()["blocks"], 1001)
 
         # negative heights should raise an exception
-        assert_raises_message(JSONRPCException, "Negative", node.pruneblockchain, -10)
+        assert_raises_jsonrpc(-8, "Negative", node.pruneblockchain, -10)
 
         # height=100 too low to prune first block file so this is a no-op
         prune(100)
@@ -318,12 +315,9 @@ class PruneTest(BitcoinTestFramework):
     def wallet_test(self):
         # check that the pruning node's wallet is still in good shape
         print("Stop and start pruning node to trigger wallet rescan")
-        try:
-            self.stop_node(2)
-            start_node(2, self.options.tmpdir, ["-debug=1","-prune=550"])
-            print("Success")
-        except Exception as detail:
-            raise AssertionError("Wallet test: unable to re-start the pruning node")
+        self.stop_node(2)
+        start_node(2, self.options.tmpdir, ["-debug=1","-prune=550"])
+        print("Success")
 
         # check that wallet loads loads successfully when restarting a pruned node after IBD.
         # this was reported to fail in #7494.
@@ -331,12 +325,9 @@ class PruneTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 5)
         nds = [self.nodes[0], self.nodes[5]]
         sync_blocks(nds, wait=5, timeout=300)
-        try:
-            self.stop_node(5) #stop and start to trigger rescan
-            start_node(5, self.options.tmpdir, ["-debug=1","-prune=550"])
-            print ("Success")
-        except Exception as detail:
-            raise AssertionError("Wallet test: unable to re-start node5")
+        self.stop_node(5) #stop and start to trigger rescan
+        start_node(5, self.options.tmpdir, ["-debug=1","-prune=550"])
+        print ("Success")
 
     def run_test(self):
         print("Warning! This test requires 4GB of disk space and takes over 30 mins (up to 2 hours)")

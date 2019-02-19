@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <deque>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -33,7 +34,6 @@
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
 
 extern CWallet* pwalletMain;
 
@@ -84,6 +84,7 @@ class CCoinControl;
 class COutput;
 class CReserveKey;
 class CScript;
+class CScheduler;
 class CTxMemPool;
 class CWalletTx;
 
@@ -325,6 +326,15 @@ public:
     std::vector<std::pair<std::string, std::string> > vOrderForm;
     unsigned int fTimeReceivedIsTxTime;
     unsigned int nTimeReceived; //!< time received by this node
+    /**
+     * Stable timestamp that never changes, and reflects the order a transaction
+     * was added to the wallet. Timestamp is based on the block time for a
+     * transaction added as part of a block, or else the time when the
+     * transaction was received if it wasn't part of a block, with the timestamp
+     * adjusted in both cases so timestamp order matches the order transactions
+     * were added to the wallet. More details can be found in
+     * CWallet::ComputeTimeSmart().
+     */
     unsigned int nTimeSmart;
     /**
      * From me flag is set to 1 for transactions that were created by the wallet
@@ -654,7 +664,7 @@ private:
 class CWallet : public CCryptoKeyStore, public CValidationInterface
 {
 private:
-    static std::atomic<bool> fFlushThreadRunning;
+    static std::atomic<bool> fFlushScheduled;
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -916,6 +926,7 @@ public:
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 
     void GetKeyBirthTimes(std::map<CTxDestination, int64_t> &mapKeyBirth) const;
+    unsigned int ComputeTimeSmart(const CWalletTx& wtx) const;
 
     /** 
      * Increment the next transaction order id
@@ -1124,7 +1135,7 @@ public:
      * Wallet post-init setup
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
-    void postInitProcess(boost::thread_group& threadGroup);
+    void postInitProcess(CScheduler& scheduler);
 
     /* Wallets parameter interaction */
     static bool ParameterInteraction();
@@ -1163,6 +1174,10 @@ public:
         pwallet = pwalletIn;
         fInternal = false;
     }
+
+    CReserveKey() = default;
+    CReserveKey(const CReserveKey&) = delete;
+    CReserveKey& operator=(const CReserveKey&) = delete;
 
     ~CReserveKey()
     {

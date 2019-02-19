@@ -118,7 +118,7 @@ void CDKGDebugManager::StartScheduler()
     if (scheduler) {
         scheduler->scheduleEvery([&]() {
             SendLocalStatus();
-        }, 10);
+        }, 10 * 1000);
     }
 }
 

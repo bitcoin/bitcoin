@@ -10,6 +10,7 @@ import sys
 import binascii
 import difflib
 import logging
+import pprint
 
 def parse_output(a, fmt):
     """Parse the output according to specified format.
@@ -65,6 +66,7 @@ def bctest(testDir, testObj, exeext):
         raise
 
     if outputData:
+        data_mismatch, formatting_mismatch = False, False
         # Parse command output and expected output
         try:
             a_parsed = parse_output(outs[0], outputType)
@@ -79,7 +81,7 @@ def bctest(testDir, testObj, exeext):
         # Compare data
         if a_parsed != b_parsed:
             logging.error("Output data mismatch for " + outputFn + " (format " + outputType + ")")
-            raise Exception
+            data_mismatch = True
         # Compare formatting
         if outs[0] != outputData:
             error_message = "Output formatting mismatch for " + outputFn + ":\n"
@@ -88,7 +90,9 @@ def bctest(testDir, testObj, exeext):
                                                           fromfile=outputFn,
                                                           tofile="returned"))
             logging.error(error_message)
-            raise Exception
+            formatting_mismatch = True
+
+        assert not data_mismatch and not formatting_mismatch
 
     # Compare the return code to the expected return code
     wantRC = 0
@@ -127,7 +131,9 @@ def bctester(testDir, input_basename, buildenv):
             failed_testcases.append(testObj["description"])
 
     if failed_testcases:
-        logging.error("FAILED TESTCASES: [" + ", ".join(failed_testcases) + "]")
+        error_message = "FAILED_TESTCASES:\n"
+        error_message += pprint.pformat(failed_testcases, width=400)
+        logging.error(error_message)
         sys.exit(1)
     else:
         sys.exit(0)
