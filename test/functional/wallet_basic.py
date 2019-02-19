@@ -24,8 +24,6 @@ class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = True
-        # TODO: remove -txindex. Currently required for getrawtransaction call.
-        self.extra_args = [[], [], ["-txindex"], []]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
