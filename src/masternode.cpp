@@ -799,6 +799,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
     const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
     bool foundPayee = false;
+    bool foundPayeeInWinnersList = false;
     {
         LOCK(cs_mapMasternodeBlocks);
         CMasternodePayee payee;  
@@ -811,9 +812,22 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
                 break;
             }
         }
+       for (int i = -10; i < 20; i++) {
+            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
+            {
+                foundPayeeInWinnersList = true;
+                break;
+            }
+        }
     }
     if(!foundPayee){
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Couldn't find Masternode entry in the payee list, masternode=%s\n", masternodeOutpoint.ToStringShort());
+        // if not in winners list at all, should ban if someone pings
+        if(!foundPayeeInWinnersList){
+            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Not found in winners list, misbehaving...\n");
+            nDos = 10;
+        }
         return false;
     }
 
@@ -876,6 +890,10 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if (!pmn->IsEnabled() && !pmn->IsExpired() && !pmn->IsSentinelPingExpired()) return false;
 
     LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping accepted and relayed, masternode=%s\n", masternodeOutpoint.ToStringShort());
+    if(pmn->nPingRetries > 0)
+        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries being reset from %d\n", pmn->nPingRetries);
+    // after a successful ping we reset ping retries
+    pmn->nPingRetries = 0;
     Relay(connman);
 
     return true;
