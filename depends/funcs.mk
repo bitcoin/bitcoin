@@ -170,13 +170,13 @@ $($(1)_extracted): | $($(1)_fetched)
 	$(AT)mkdir -p $$(@D)
 	$(AT)cd $$(@D); $(call $(1)_extract_cmds,$(1))
 	$(AT)touch $$@
-$($(1)_preprocessed): | $($(1)_dependencies) $($(1)_extracted)
+$($(1)_preprocessed): | $($(1)_extracted)
 	$(AT)echo Preprocessing $(1)...
 	$(AT)mkdir -p $$(@D) $($(1)_patch_dir)
 	$(AT)$(foreach patch,$($(1)_patches),cd $(PATCHES_PATH)/$(1); cp $(patch) $($(1)_patch_dir) ;)
 	$(AT)cd $$(@D); $(call $(1)_preprocess_cmds, $(1))
 	$(AT)touch $$@
-$($(1)_configured): | $($(1)_preprocessed)
+$($(1)_configured): | $($(1)_dependencies) $($(1)_preprocessed)
 	$(AT)echo Configuring $(1)...
 	$(AT)rm -rf $(host_prefix); mkdir -p $(host_prefix)/lib; cd $(host_prefix); $(foreach package,$($(1)_all_dependencies), tar xf $($(package)_cached); )
 	$(AT)mkdir -p $$(@D)
