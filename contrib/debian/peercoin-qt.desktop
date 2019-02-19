@@ -1,10 +1,8 @@
 [Desktop Entry]
-Version=1.0
-Name=Peercoin Core
-Comment=Connect to the Peercoin P2P Network
-Comment[de]=Verbinde mit dem Peercoin peer-to-peer Netzwerk
-Comment[fr]=Peercoin, monnaie virtuelle cryptographique pair à pair
-Comment[tr]=Peercoin, eşten eşe kriptografik sanal para birimi
+Encoding=UTF-8
+Name=Peercoin
+Comment=Desktop allet for Peercoin Cryptocurrency
+Comment[de]=Offizieller Client für die Kryptowährung Peercoin
 Exec=peercoin-qt %u
 Terminal=false
 Type=Application
