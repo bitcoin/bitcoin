@@ -213,6 +213,14 @@ $(1): | $($(1)_cached_checksum)
 
 endef
 
+stages = fetched extracted preprocessed configured built staged postprocessed cached cached_checksum
+
+define ext_add_stages
+$(foreach stage,$(stages),
+          $(1)_$(stage): $($(1)_$(stage))
+          .PHONY: $(1)_$(stage))
+endef
+
 # These functions create the build targets for each package. They must be
 # broken down into small steps so that each part is done for all packages
 # before moving on to the next step. Otherwise, a package's info
