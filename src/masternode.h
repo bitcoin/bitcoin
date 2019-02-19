@@ -19,8 +19,7 @@ static const int MASTERNODE_CHECK_SECONDS               =   10;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
 static const int MASTERNODE_MIN_MNP_SECONDS             =  60;
 static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  10 * 60;
-static const int MASTERNODE_SENTINEL_PING_EXPIRED_ATTEMPTS          = 3;
-static const int MASTERNODE_SENTINEL_PING_EXPIRED_NEW_START_REQUIRED_ATTEMPTS  = 5;
+static const int MASTERNODE_MAX_RETRIES  = 5;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 
@@ -138,10 +137,8 @@ struct masternode_info_t
 enum state {
     MASTERNODE_PRE_ENABLED,
     MASTERNODE_ENABLED,
-    MASTERNODE_EXPIRED,
     MASTERNODE_OUTPOINT_SPENT,
     MASTERNODE_UPDATE_REQUIRED,
-    MASTERNODE_SENTINEL_PING_EXPIRED,
     MASTERNODE_NEW_START_REQUIRED,
     MASTERNODE_POSE_BAN
 };
@@ -232,31 +229,19 @@ public:
     bool IsPoSeBanned() const { return nActiveState == MASTERNODE_POSE_BAN; }
     // NOTE: this one relies on nPoSeBanScore, not on nActiveState as everything else here
     bool IsPoSeVerified() const { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
-    bool IsExpired() const { return nActiveState == MASTERNODE_EXPIRED; }
     bool IsOutpointSpent() const { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
     bool IsUpdateRequired() const { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
-    bool IsSentinelPingExpired() const { return nActiveState == MASTERNODE_SENTINEL_PING_EXPIRED; }
     bool IsNewStartRequired() const { return nActiveState == MASTERNODE_NEW_START_REQUIRED; }
 
     static bool IsValidStateForAutoStart(int nActiveStateIn)
     {
         return  nActiveStateIn == MASTERNODE_ENABLED ||
-                nActiveStateIn == MASTERNODE_PRE_ENABLED ||
-                nActiveStateIn == MASTERNODE_EXPIRED ||
-                nActiveStateIn == MASTERNODE_SENTINEL_PING_EXPIRED;
+                nActiveStateIn == MASTERNODE_PRE_ENABLED;
     }
 
     bool IsValidForPayment() const
     {
-        if(nActiveState == MASTERNODE_ENABLED) {
-            return true;
-        }
-        if(!sporkManager.IsSporkActive(SPORK_14_REQUIRE_SENTINEL_FLAG) &&
-           (nActiveState == MASTERNODE_SENTINEL_PING_EXPIRED)) {
-            return true;
-        }
-
-        return false;
+        return nActiveState == MASTERNODE_ENABLED;
     }
 
     bool IsValidNetAddr();
