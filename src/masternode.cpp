@@ -796,39 +796,41 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
         pmn->nActiveState = MASTERNODE_ENABLED;
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode %s is in %s state now\n", pmn->outpoint.ToStringShort(), pmn->GetStateString());
     }
-    // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
-    const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
-    bool foundPayee = false;
-    bool foundPayeeInWinnersList = false;
-    {
-        LOCK(cs_mapMasternodeBlocks);
-        CMasternodePayee payee;  
-        // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
-        for (int i = -10; i < 20; i++) {
-            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
-            {
-                foundPayee = true;
-                break;
+    if(!fFromNewBroadcast){
+        // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
+        const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
+        bool foundPayee = false;
+        bool foundPayeeInWinnersList = false;
+        {
+            LOCK(cs_mapMasternodeBlocks);
+            CMasternodePayee payee;  
+            // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
+            for (int i = -10; i < 20; i++) {
+                if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                      mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
+                {
+                    foundPayee = true;
+                    break;
+                }
+            }
+           for (int i = -10; i < 20; i++) {
+                if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                      mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
+                {
+                    foundPayeeInWinnersList = true;
+                    break;
+                }
             }
         }
-       for (int i = -10; i < 20; i++) {
-            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
-            {
-                foundPayeeInWinnersList = true;
-                break;
+        if(!foundPayee){
+            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Couldn't find Masternode entry in the payee list, masternode=%s\n", masternodeOutpoint.ToStringShort());
+            // if not in winners list at all, should ban if someone pings
+            if(!foundPayeeInWinnersList){
+                LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Not found in winners list, misbehaving...\n");
+                nDos = 10;
             }
+            return false;
         }
-    }
-    if(!foundPayee){
-        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Couldn't find Masternode entry in the payee list, masternode=%s\n", masternodeOutpoint.ToStringShort());
-        // if not in winners list at all, should ban if someone pings
-        if(!foundPayeeInWinnersList){
-            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Not found in winners list, misbehaving...\n");
-            nDos = 10;
-        }
-        return false;
     }
 
 
