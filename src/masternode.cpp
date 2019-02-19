@@ -791,11 +791,6 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Couldn't find Masternode entry, masternode=%s\n", masternodeOutpoint.ToStringShort());
         return false;
     }
-    // when ping comes from broadcast and newstart/update is not flagged then enable the masternode
-    if(fFromNewBroadcast && !pmn->IsUpdateRequired() && !pmn->IsNewStartRequired()) {
-        pmn->nActiveState = MASTERNODE_ENABLED;
-        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode %s is in %s state now\n", pmn->outpoint.ToStringShort(), pmn->GetStateString());
-    }
     if(!fFromNewBroadcast){
         // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
         const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
@@ -888,6 +883,12 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     // force update, ignoring cache
     pmn->Check(true);
+    // when ping comes from broadcast and newstart/update is not flagged then enable the masternode
+    if(fFromNewBroadcast && !pmn->IsUpdateRequired() && !pmn->IsNewStartRequired()) {
+        pmn->nActiveState = MASTERNODE_ENABLED;
+        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode %s is in %s state now\n", pmn->outpoint.ToStringShort(), pmn->GetStateString());
+    }
+    
     // relay ping for nodes in ENABLED/EXPIRED/SENTINEL_PING_EXPIRED state only, skip everyone else
     if (!pmn->IsEnabled() && !pmn->IsExpired() && !pmn->IsSentinelPingExpired()) return false;
 
