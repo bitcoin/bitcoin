@@ -219,21 +219,14 @@ void CMasternode::Check(bool fForce)
     // don't expire if we are still in "waiting for ping" mode unless it's our own masternode
     if(!fWaitForPing || fOurMasternode) {
 
-        if(nPingRetries >= MASTERNODE_SENTINEL_PING_EXPIRED_NEW_START_REQUIRED_ATTEMPTS) {
+        if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
             nActiveState = MASTERNODE_NEW_START_REQUIRED;
             if(nActiveStatePrev != nActiveState) {
                 LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
         }
-
-        if(nPingRetries >= MASTERNODE_SENTINEL_PING_EXPIRED_ATTEMPTS) {
-            nActiveState = MASTERNODE_EXPIRED;
-            if(nActiveStatePrev != nActiveState) {
-                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
-            }
-            return;
-        }
+        
 
         // part 1: expire based on syscoind ping
         bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
@@ -243,7 +236,6 @@ void CMasternode::Check(bool fForce)
 
         if(fSentinelPingExpired) {
             nPingRetries++;
-            nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
                 LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
@@ -251,23 +243,7 @@ void CMasternode::Check(bool fForce)
         }
     }
     
-
-    if(!fWaitForPing || fOurMasternode) {
-        // part 2: expire based on sentinel info
-        bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
-        bool fSentinelPingExpired = lastPing && fSentinelPingActive && !lastPing.fSentinelIsCurrent;
-
-        LogPrint(BCLog::MN, "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
-                outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
-
-        if(fSentinelPingExpired) {
-            nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
-            if(nActiveStatePrev != nActiveState) {
-                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
-            }
-            return;
-        }
-    }
+    
     // by default we are in preenabled state waiting for first ping sent with broadcast
     // once the broadcast happens it sets it to enabled to we don't want it to auto switch back to preenabled from enabled specifically
     if(nActiveState != MASTERNODE_ENABLED)
@@ -303,10 +279,8 @@ std::string CMasternode::StateToString(int nStateIn)
     switch(nStateIn) {
         case MASTERNODE_PRE_ENABLED:            return "PRE_ENABLED";
         case MASTERNODE_ENABLED:                return "ENABLED";
-        case MASTERNODE_EXPIRED:                return "EXPIRED";
         case MASTERNODE_OUTPOINT_SPENT:         return "OUTPOINT_SPENT";
         case MASTERNODE_UPDATE_REQUIRED:        return "UPDATE_REQUIRED";
-        case MASTERNODE_SENTINEL_PING_EXPIRED:  return "SENTINEL_PING_EXPIRED";
         case MASTERNODE_NEW_START_REQUIRED:     return "NEW_START_REQUIRED";
         case MASTERNODE_POSE_BAN:               return "POSE_BAN";
         default:                                return "UNKNOWN";
@@ -460,12 +434,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
         nDos = 1;
         return false;
     }
-
-    // empty ping or incorrect sigTime/unknown blockhash
-    if(lastPing && !lastPing.SimpleCheck(nDos)) {
-        // one of us is probably forked or smth, just mark it as expired and check the rest of the rules
-        nActiveState = MASTERNODE_EXPIRED;
-    }
+    
 
     if(nProtocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::SimpleCheck -- outdated Masternode: masternode=%s  nProtocolVersion=%d\n", outpoint.ToStringShort(), nProtocolVersion);
@@ -895,10 +864,10 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping accepted and relayed, masternode=%s\n", masternodeOutpoint.ToStringShort());
     if(pmn->IsEnabled()){
-        if(pmn->nPingRetries > 0)
-            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries being reset from %d\n", pmn->nPingRetries);
-        // after a successful ping we reset ping retries
-        pmn->nPingRetries = 0;
+        if(pmn->nPingRetries > 0){
+            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries reduced from %d\n", pmn->nPingRetries);
+            pmn->nPingRetries -= 1;
+        }
     }
     Relay(connman);
 
