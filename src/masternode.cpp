@@ -880,14 +880,15 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if (mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
         mnodeman.mapSeenMasternodeBroadcast[hash].second.lastPing = *this;
     }
-
-    // force update, ignoring cache
-    pmn->Check(true);
+    
     // when ping comes from broadcast and newstart/update is not flagged then enable the masternode
     if(fFromNewBroadcast && !pmn->IsUpdateRequired() && !pmn->IsNewStartRequired()) {
         pmn->nActiveState = MASTERNODE_ENABLED;
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode %s is in %s state now\n", pmn->outpoint.ToStringShort(), pmn->GetStateString());
     }
+    
+    // force update, ignoring cache
+    pmn->Check(true);
     
     // relay ping for nodes in ENABLED/EXPIRED/SENTINEL_PING_EXPIRED state only, skip everyone else
     if (!pmn->IsEnabled() && !pmn->IsExpired() && !pmn->IsSentinelPingExpired()) return false;
