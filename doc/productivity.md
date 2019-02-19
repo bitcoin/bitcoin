@@ -76,7 +76,7 @@ Writing code
 
 ### Format C/C++/Protobuf diffs with `clang-format-diff.py`
 
-See [contrib/devtools/README.md](contrib/devtools/README.md#clang-format-diff.py).
+See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.py).
 
 ### Format Python diffs with `yapf-diff.py`
 
