@@ -55,11 +55,11 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             # Make sure we're creating the outputs we expect
             address_details = self.nodes[idx].validateaddress(addr_extpool)
             if i == 0:
-                assert(not address_details["isscript"] and not address_details["iswitness"])
+                assert not address_details["isscript"] and not address_details["iswitness"]
             elif i == 1:
-                assert(address_details["isscript"] and not address_details["iswitness"])
+                assert address_details["isscript"] and not address_details["iswitness"]
             else:
-                assert(not address_details["isscript"] and address_details["iswitness"])
+                assert not address_details["isscript"] and address_details["iswitness"]
 
 
             self.log.info("Send funds to wallet")

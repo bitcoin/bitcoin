@@ -33,7 +33,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         signedtx = node.signrawtransactionwithwallet(rawtx)
         txid = node.sendrawtransaction(signedtx['hex'])
         fulltx = node.getrawtransaction(txid, 1)
-        assert(len(fulltx['vout']) == num_outputs) # make sure we didn't generate a change output
+        assert len(fulltx['vout']) == num_outputs  # make sure we didn't generate a change output
         return (txid, send_value)
 
     def run_test(self):
@@ -125,13 +125,13 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert_equal(len(v_ancestors), len(chain)-1)
         for x in v_ancestors.keys():
             assert_equal(mempool[x], v_ancestors[x])
-        assert(chain[-1] not in v_ancestors.keys())
+        assert chain[-1] not in v_ancestors.keys()
 
         v_descendants = self.nodes[0].getmempooldescendants(chain[0], True)
         assert_equal(len(v_descendants), len(chain)-1)
         for x in v_descendants.keys():
             assert_equal(mempool[x], v_descendants[x])
-        assert(chain[0] not in v_descendants.keys())
+        assert chain[0] not in v_descendants.keys()
 
         # Check that ancestor modified fees includes fee deltas from
         # prioritisetransaction
