@@ -18,7 +18,10 @@ FUZZERS_MISSING_CORPORA = [
 
 
 def main():
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description='''Run the fuzz targets with all inputs from the seed_dir once.''',
+    )
     parser.add_argument(
         "-l",
         "--loglevel",
@@ -49,6 +52,10 @@ def main():
         'target',
         nargs='*',
         help='The target(s) to run. Default is to run all targets.',
+    )
+    parser.add_argument(
+        '--m_dir',
+        help='Merge inputs from this directory into the seed_dir. Needs /target subdirectory.',
     )
 
     args = parser.parse_args()
@@ -112,6 +119,14 @@ def main():
         logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
+    if args.m_dir:
+        merge_inputs(
+            corpus=args.seed_dir,
+            test_list=test_list_selection,
+            build_dir=config["environment"]["BUILDDIR"],
+            merge_dir=args.m_dir,
+        )
+
     run_once(
         corpus=args.seed_dir,
         test_list=test_list_selection,
@@ -119,6 +134,22 @@ def main():
         export_coverage=args.export_coverage,
         use_valgrind=args.valgrind,
     )
+
+
+def merge_inputs(*, corpus, test_list, build_dir, merge_dir):
+    logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    for t in test_list:
+        args = [
+            os.path.join(build_dir, 'src', 'test', 'fuzz', t),
+            '-merge=1',
+            os.path.join(corpus, t),
+            os.path.join(merge_dir, t),
+        ]
+        os.makedirs(os.path.join(corpus, t), exist_ok=True)
+        os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
+        logging.debug('Run {} with args {}'.format(t, args))
+        output = subprocess.run(args, check=True, stderr=subprocess.PIPE, universal_newlines=True).stderr
+        logging.debug('Output: {}'.format(output))
 
 
 def run_once(*, corpus, test_list, build_dir, export_coverage, use_valgrind):
