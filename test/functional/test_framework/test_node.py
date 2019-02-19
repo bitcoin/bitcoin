@@ -60,7 +60,7 @@ class TestNode():
     To make things easier for the test writer, any unrecognised messages will
     be dispatched to the RPC connection."""
 
-    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
+    def __init__(self, i, datadir, extra_args_from_options, *, chain, rpchost, timewait, bitcoind, bitcoin_cli, mocktime, coverage_dir, cwd, extra_conf=None, extra_args=None, use_cli=False, start_perf=False):
         """
         Kwargs:
             start_perf (bool): If True, begin profiling the node with `perf` as soon as
@@ -78,6 +78,7 @@ class TestNode():
         self.rpc_timeout *= Options.timeout_scale
         self.binary = bitcoind
         self.coverage_dir = coverage_dir
+        self.cwd = cwd
         self.mocktime = mocktime
         if extra_conf is not None:
             append_config(datadir, extra_conf)
@@ -185,7 +186,7 @@ class TestNode():
             assert self.rpc_connected and self.rpc is not None, self._node_msg("Error: no RPC connection")
             return getattr(self.rpc, name)
 
-    def start(self, extra_args=None, *, stdout=None, stderr=None, **kwargs):
+    def start(self, extra_args=None, *, cwd=None, stdout=None, stderr=None, **kwargs):
         """Start the node."""
         if extra_args is None:
             extra_args = self.extra_args
@@ -197,6 +198,9 @@ class TestNode():
             stdout = tempfile.NamedTemporaryFile(dir=self.stdout_dir, delete=False)
         self.stderr = stderr
         self.stdout = stdout
+
+        if cwd is None:
+            cwd = self.cwd
 
         all_args = self.args + self.extra_args_from_options + extra_args
         if self.mocktime != 0:
@@ -210,7 +214,7 @@ class TestNode():
         # add environment variable LIBC_FATAL_STDERR_=1 so that libc errors are written to stderr and not the terminal
         subp_env = dict(os.environ, LIBC_FATAL_STDERR_="1")
 
-        self.process = subprocess.Popen(all_args, env=subp_env, stdout=stdout, stderr=stderr, **kwargs)
+        self.process = subprocess.Popen(all_args, env=subp_env, stdout=stdout, stderr=stderr, cwd=cwd, **kwargs)
 
         self.running = True
         self.log.debug("dashd started, waiting for RPC to come up")

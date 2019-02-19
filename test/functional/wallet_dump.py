@@ -78,7 +78,6 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
 
 class WalletDumpTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-keypool=90", "-usehd=1"]]
         self.rpc_timeout = 120
@@ -87,12 +86,6 @@ class WalletDumpTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def setup_network(self):
-        # TODO remove this when usehd=1 becomes the default
-        # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
-        self.options.tmpdir = os.path.join(self.options.tmpdir, 'hd')
-        self.options.cachedir = os.path.join(self.options.cachedir, 'hd')
-        self._initialize_chain(extra_args=self.extra_args[0])
-        self.set_cache_mocktime()
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
 
