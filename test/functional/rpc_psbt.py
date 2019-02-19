@@ -20,8 +20,6 @@ class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 3
-       # TODO: remove -txindex. Currently required for getrawtransaction call.
-        self.extra_args = [["-txindex"], ["-txindex"], ["-txindex"]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -161,11 +159,11 @@ class PSBTTest(BitcoinTestFramework):
         node1_addr = self.nodes[1].getnewaddress()
         node2_addr = self.nodes[2].getnewaddress()
         txid1 = self.nodes[0].sendtoaddress(node1_addr, 13)
-        txid2 =self.nodes[0].sendtoaddress(node2_addr, 13)
-        self.nodes[0].generate(6)
+        txid2 = self.nodes[0].sendtoaddress(node2_addr, 13)
+        blockhash = self.nodes[0].generate(6)[0]
         self.sync_all()
-        vout1 = find_output(self.nodes[1], txid1, 13)
-        vout2 = find_output(self.nodes[2], txid2, 13)
+        vout1 = find_output(self.nodes[1], txid1, 13, blockhash=blockhash)
+        vout2 = find_output(self.nodes[2], txid2, 13, blockhash=blockhash)
 
         # Create a psbt spending outputs from nodes 1 and 2
         psbt_orig = self.nodes[0].createpsbt([{"txid":txid1,  "vout":vout1}, {"txid":txid2, "vout":vout2}], {self.nodes[0].getnewaddress():25.999})
@@ -344,9 +342,9 @@ class PSBTTest(BitcoinTestFramework):
         addr = self.nodes[1].getnewaddress("", "p2sh-segwit")
         txid = self.nodes[0].sendtoaddress(addr, 7)
         addrinfo = self.nodes[1].getaddressinfo(addr)
-        self.nodes[0].generate(6)
+        blockhash = self.nodes[0].generate(6)[0]
         self.sync_all()
-        vout = find_output(self.nodes[0], txid, 7)
+        vout = find_output(self.nodes[0], txid, 7, blockhash=blockhash)
         psbt = self.nodes[1].createpsbt([{"txid":txid, "vout":vout}], {self.nodes[0].getnewaddress("", "p2sh-segwit"):Decimal('6.999')})
         analyzed = self.nodes[0].analyzepsbt(psbt)
         assert not analyzed['inputs'][0]['has_utxo'] and not analyzed['inputs'][0]['is_final'] and analyzed['inputs'][0]['next'] == 'updater' and analyzed['next'] == 'updater'
