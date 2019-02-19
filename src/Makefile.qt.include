@@ -389,7 +389,9 @@ RES_ICONS = \
   qt/res/movies/spinner-032.png \
   qt/res/movies/spinner-033.png \
   qt/res/movies/spinner-034.png \
-  qt/res/movies/spinner-035.png
+  qt/res/movies/spinner-035.png \
+  qt/res/themes/default.qss \
+  qt/res/fonts/NotoSans-Regular.ttf
 
 BITCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
