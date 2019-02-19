@@ -894,10 +894,12 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if (!pmn->IsEnabled() && !pmn->IsExpired() && !pmn->IsSentinelPingExpired()) return false;
 
     LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping accepted and relayed, masternode=%s\n", masternodeOutpoint.ToStringShort());
-    if(pmn->nPingRetries > 0)
-        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries being reset from %d\n", pmn->nPingRetries);
-    // after a successful ping we reset ping retries
-    pmn->nPingRetries = 0;
+    if(pmn->IsEnabled()){
+        if(pmn->nPingRetries > 0)
+            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries being reset from %d\n", pmn->nPingRetries);
+        // after a successful ping we reset ping retries
+        pmn->nPingRetries = 0;
+    }
     Relay(connman);
 
     return true;
