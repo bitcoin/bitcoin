@@ -255,7 +255,7 @@ void CMasternode::Check(bool fForce)
     if(!fWaitForPing || fOurMasternode) {
         // part 2: expire based on sentinel info
         bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
-        bool fSentinelPingExpired = fSentinelPingActive && !lastPing.fSentinelIsCurrent;
+        bool fSentinelPingExpired = lastPing && fSentinelPingActive && !lastPing.fSentinelIsCurrent;
 
         LogPrint(BCLog::MN, "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
@@ -859,8 +859,8 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     // LogPrint(BCLog::MN, "mnping - Found corresponding mn for outpoint: %s\n", masternodeOutpoint.ToStringShort());
     // update only if there is no known ping for this masternode or
-    // last ping was more then MASTERNODE_MIN_MNP_SECONDS-60 ago comparing to this one
-    if (pmn->lastPing && pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 60, sigTime)) {
+    // last ping was more then MASTERNODE_MIN_MNP_SECONDS-30 ago comparing to this one
+    if (pmn->lastPing && pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 30, sigTime)) {
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping arrived too early, masternode=%s\n", masternodeOutpoint.ToStringShort());
         //nDos = 1; //disable, this is happening frequently and causing banned peers
         return false;
