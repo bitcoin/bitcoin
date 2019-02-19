@@ -75,8 +75,6 @@ public:
     {
         Other,
         Generated,
-        MasterNodeReward,
-        SystemNodeReward,
         SendToAddress,
         SendToOther,
         RecvWithAddress,

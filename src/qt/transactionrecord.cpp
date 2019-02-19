@@ -76,19 +76,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::RecvFromOther;
                     sub.address = mapValue["from"];
                 }
-                if (wtx.IsCoinBase())
+                if (wtx.IsCoinBase() || wtx.IsCoinStake())
                 {
-                    if (isPoSActive) {
-                        //After PoS activates, only MN/SN rewards (and budget too) will be in coinbase tx
-                        if (i == MN_PMT_SLOT)
-                            sub.type = TransactionRecord::MasterNodeReward;
-                        else if (i == SN_PMT_SLOT)
-                            sub.type = TransactionRecord::SystemNodeReward;
-                    } else {
-                        //PoS not active, just consider this 'generated'
-                        sub.type = TransactionRecord::Generated;
-                    }
-                } else if (wtx.IsCoinStake()) {
                     sub.type = TransactionRecord::Generated;
                 }
 
