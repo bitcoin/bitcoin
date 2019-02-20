@@ -182,9 +182,6 @@ def check_json_precision():
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
 
-def b_2_x(byte_str):
-    return byte_str.hex()
-
 def hash256(byte_str):
     sha256 = hashlib.sha256()
     sha256.update(byte_str)

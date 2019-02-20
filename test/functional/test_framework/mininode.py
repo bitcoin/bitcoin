@@ -218,10 +218,7 @@ class P2PConnection(asyncio.Protocol):
         def maybe_write():
             if not self._transport:
                 return
-            # Python <3.4.4 does not have is_closing, so we have to check for
-            # its existence explicitly as long as Bitcoin Core supports all
-            # Python 3.4 versions.
-            if hasattr(self._transport, 'is_closing') and self._transport.is_closing():
+            if self._transport.is_closing():
                 return
             self._transport.write(raw_message_bytes)
         NetworkThread.network_event_loop.call_soon_threadsafe(maybe_write)
