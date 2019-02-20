@@ -34,7 +34,7 @@ No other options are needed, the paths are automatically configured.
 
 #### For macOS cross compilation
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
 
 #### For Win32/Win64 cross compilation
 
