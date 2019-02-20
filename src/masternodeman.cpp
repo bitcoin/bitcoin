@@ -132,7 +132,25 @@ void CMasternodeMan::Check()
 {
 	// SYSCOIN remove csmain lock
     LOCK(cs);
-
+    // only check masternodes in winners list
+    // once the masternode leaves the recent payee list set lastPing to null to avoid the case when it reenters and checks this code it gets flagged as expired before the masternode has a chance to send a ping to the network
+    /*{
+        LOCK(cs_mapMasternodeBlocks);
+   
+        for (int i = -10; i < 20; i++) {
+            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i))
+            {
+                const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
+                for(auto& payee: payees.vecPayees){
+                    if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+                        
+                    }
+                }
+                
+            }
+        }
+    }*/
+    
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
@@ -504,7 +522,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
-        if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
+        if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*1.1*60) > GetAdjustedTime()) continue;
 
         //make sure it has at least as many confirmations as there are masternodes
         if(GetUTXOConfirmations(mnpair.first) < nMnCount) continue;
@@ -1559,7 +1577,7 @@ void CMasternodeMan::CheckMasternode(const CPubKey& pubKeyMasternode, bool fForc
 bool CMasternodeMan::IsMasternodePingedWithin(const CMasternode* pmn, const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt) const
 {
     LOCK(cs);
-    return pmn && pmn->lastPing? pmn->IsPingedWithin(nSeconds, nTimeToCheckAt) : false;
+    return pmn && pmn->IsPingedWithin(nSeconds, nTimeToCheckAt) : false;
 }
 
 void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp)
