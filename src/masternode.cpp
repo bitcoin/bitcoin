@@ -226,7 +226,8 @@ void CMasternode::Check(bool fForce)
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
         if(fSentinelPingExpired) {
-            nPingRetries++;
+            if(!fOurMasternode)
+                nPingRetries++;
             return;
         }
         // part 2: expire based on sentinel ping  
