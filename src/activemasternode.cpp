@@ -41,8 +41,7 @@ void CActiveMasternode::ManageState(CConnman& connman)
     if(eType == MASTERNODE_REMOTE) {
         ManageStateRemote();
     }
-    // TODO uncomment
-    //SendMasternodePing(connman);
+    SendMasternodePing(connman);
 }
 
 std::string CActiveMasternode::GetStateString() const
