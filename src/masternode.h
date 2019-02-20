@@ -139,6 +139,7 @@ enum state {
     MASTERNODE_ENABLED,
     MASTERNODE_OUTPOINT_SPENT,
     MASTERNODE_UPDATE_REQUIRED,
+    MASTERNODE_SENTINEL_PING_EXPIRED,
     MASTERNODE_NEW_START_REQUIRED,
     MASTERNODE_POSE_BAN
 };
@@ -231,12 +232,14 @@ public:
     bool IsPoSeVerified() const { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
     bool IsOutpointSpent() const { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
     bool IsUpdateRequired() const { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
+    bool IsSentinelPingExpired() const { return nActiveState == MASTERNODE_SENTINEL_PING_EXPIRED; }
     bool IsNewStartRequired() const { return nActiveState == MASTERNODE_NEW_START_REQUIRED; }
 
     static bool IsValidStateForAutoStart(int nActiveStateIn)
     {
         return  nActiveStateIn == MASTERNODE_ENABLED ||
-                nActiveStateIn == MASTERNODE_PRE_ENABLED;
+                nActiveStateIn == MASTERNODE_PRE_ENABLED ||
+                nActiveStateIn == MASTERNODE_SENTINEL_PING_EXPIRED;
     }
 
     bool IsValidForPayment() const

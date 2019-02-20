@@ -192,7 +192,7 @@ void CMasternode::Check(bool fForce)
 
     if(fWaitForPing && !fOurMasternode) {
         // ...but if it was already expired before the initial check - return right away
-        if(IsNewStartRequired()) {
+        if(IsSentinelPingExpired() || IsNewStartRequired()) {
             LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state, waiting for ping\n", outpoint.ToStringShort(), GetStateString());
             return;
         }
@@ -217,15 +217,29 @@ void CMasternode::Check(bool fForce)
 
         if(fSentinelPingExpired) {
             nPingRetries++;
+            return;
+        }
+        // part 2: expire based on sentinel ping  
+        fSentinelPingExpired = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive() && !lastPing.fSentinelIsCurrent;
+        if(fSentinelPingExpired) {
+            nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
                 LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
             }
             return;
         }
     }
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {  
+        if (!lastPing || lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {  
+            nActiveState = MASTERNODE_PRE_ENABLED;  
+            if (nActiveStatePrev != nActiveState) { 
+                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());    
+            }   
+            return; 
+        }   
+    }   
     
-    if(!lastPing)
-        nActiveState = MASTERNODE_PRE_ENABLED;
+    nActiveState = MASTERNODE_ENABLED;
     if(nActiveStatePrev != nActiveState) {
         LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
     }
@@ -259,6 +273,7 @@ std::string CMasternode::StateToString(int nStateIn)
         case MASTERNODE_ENABLED:                return "ENABLED";
         case MASTERNODE_OUTPOINT_SPENT:         return "OUTPOINT_SPENT";
         case MASTERNODE_UPDATE_REQUIRED:        return "UPDATE_REQUIRED";
+        case MASTERNODE_SENTINEL_PING_EXPIRED:  return "SENTINEL_PING_EXPIRED";
         case MASTERNODE_NEW_START_REQUIRED:     return "NEW_START_REQUIRED";
         case MASTERNODE_POSE_BAN:               return "POSE_BAN";
         default:                                return "UNKNOWN";
@@ -826,12 +841,6 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     uint256 hash = mnb.GetHash();
     if (mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
         mnodeman.mapSeenMasternodeBroadcast[hash].second.lastPing = *this;
-    }
-    
-    // when ping comes from broadcast and newstart/update is not flagged then enable the masternode
-    if(fFromNewBroadcast && !pmn->IsUpdateRequired() && !pmn->IsNewStartRequired()) {
-        pmn->nActiveState = MASTERNODE_ENABLED;
-        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode %s is in %s state now\n", pmn->outpoint.ToStringShort(), pmn->GetStateString());
     }
     
     // force update, ignoring cache

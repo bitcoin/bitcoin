@@ -75,6 +75,7 @@ private:
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
     
+    int64_t nLastSentinelPingTime;
 
     friend class CMasternodeSync;
 
@@ -114,6 +115,7 @@ public:
         READWRITE(mWeAskedForMasternodeListEntry);
         READWRITE(mMnbRecoveryRequests);
         READWRITE(mMnbRecoveryGoodReplies);
+        READWRITE(nLastSentinelPingTime);
 
         READWRITE(mapSeenMasternodeBroadcast);
         READWRITE(mapSeenMasternodePing);
@@ -219,7 +221,8 @@ public:
         return vecTmp;;
     }
 
-
+    bool IsSentinelPingActive();    
+    void UpdateLastSentinelPingTime();
     bool AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash);
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
