@@ -24,11 +24,11 @@
 #include <outputtype.h>
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_PRE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()}
+    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()}
 {}
 
 CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
-    masternode_info_t{ MASTERNODE_PRE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
+    masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
                        outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode}
 {}
 
@@ -186,25 +186,7 @@ void CMasternode::Check(bool fForce)
         }
         return;
     }
-    // once the masternode leaves the recent payee list set lastPing to null to avoid the case when it reenters and checks this code it gets flagged as expired before the masternode has a chance to send a ping to the network
-    const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
-    bool foundPayee = false;
-    {
-        LOCK(cs_mapMasternodeBlocks);
-        CMasternodePayee payee;  
-          
-        for (int i = -10; i < 20; i++) {
-            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
-            {
-                foundPayee = true;
-                break;
-            }
-        }
-    }
-    if(!foundPayee){
-        lastPing = CMasternodePing();
-    }
+
     // keep old masternodes on start, give them a chance to receive updates...
     bool fWaitForPing = !masternodeSync.IsMasternodeListSynced() && !IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS);
 
@@ -242,11 +224,8 @@ void CMasternode::Check(bool fForce)
         }
     }
     
-    
-    // by default we are in preenabled state waiting for first ping sent with broadcast
-    // once the broadcast happens it sets it to enabled to we don't want it to auto switch back to preenabled from enabled specifically
-    if(nActiveState != MASTERNODE_ENABLED)
-        nActiveState = MASTERNODE_PRE_ENABLED; // OK
+    if(!lastPing)
+        nActiveState = MASTERNODE_PRE_ENABLED;
     if(nActiveStatePrev != nActiveState) {
         LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
     }
@@ -823,7 +802,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     // LogPrint(BCLog::MN, "mnping - Found corresponding mn for outpoint: %s\n", masternodeOutpoint.ToStringShort());
     // update only if there is no known ping for this masternode or
     // last ping was more then MASTERNODE_MIN_MNP_SECONDS-30 ago comparing to this one
-    if (pmn->lastPing && pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 30, sigTime)) {
+    if (pmn->IsPingedWithin(MASTERNODE_MIN_MNP_SECONDS - 30, sigTime)) {
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping arrived too early, masternode=%s\n", masternodeOutpoint.ToStringShort());
         //nDos = 1; //disable, this is happening frequently and causing banned peers
         return false;
