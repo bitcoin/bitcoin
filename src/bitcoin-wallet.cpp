@@ -30,6 +30,7 @@ static void SetupWalletToolArgs()
 
     gArgs.AddArg("info", "Get wallet info", false, OptionsCategory::COMMANDS);
     gArgs.AddArg("create", "Create new wallet file", false, OptionsCategory::COMMANDS);
+    gArgs.AddArg("keymetadata", "Manipulate key metadata: (delete: deletes all key metadata)", false, OptionsCategory::COMMANDS);
 }
 
 static bool WalletAppInit(int argc, char* argv[])
@@ -103,7 +104,8 @@ int main(int argc, char* argv[])
 
     const std::set<std::string> methods = {
         "create",
-        "info"};
+        "info",
+        "keymetadata"};
 
     if (methods.find(method) == methods.end()) { // Use contains() as of c++20
         fprintf(stderr, "Invalid method: %s\n", method.c_str());
@@ -131,6 +133,19 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
         }
         if (!WalletTool::ExecuteWalletInfo(name)) return EXIT_FAILURE;
+    } else if (method == "keymetadata") {
+        if (arguments.size() > 1) {
+            fprintf(stderr, "Error: unexpected argument(s)\n");
+            return EXIT_FAILURE;
+        }
+        const std::set<std::string> operations = {
+            "delete"
+        };
+        if (arguments.empty() || operations.find(arguments[0]) == operations.end()) {
+            fprintf(stderr, "Specify operation: delete\n");
+            return EXIT_FAILURE;
+        }
+        if (!WalletTool::ExecuteKeyMetadata(name, arguments[0])) return EXIT_FAILURE;
     } else {
         assert(false);
     }

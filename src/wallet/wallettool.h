@@ -15,6 +15,7 @@ std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& pat
 void WalletShowInfo(CWallet* wallet_instance);
 bool ExecuteCreateWallet(const std::string& name);
 bool ExecuteWalletInfo(const std::string& name);
+bool ExecuteKeyMetadata(const std::string& name, std::string& operation);
 } // namespace WalletTool
 
 #endif // BITCOIN_WALLET_WALLETTOOL_H

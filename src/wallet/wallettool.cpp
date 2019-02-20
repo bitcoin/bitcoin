@@ -127,4 +127,17 @@ bool ExecuteWalletInfo(const std::string& name)
     wallet_instance->Flush(true);
     return true;
 }
+
+bool ExecuteKeyMetadata(const std::string& name, std::string& operation) {
+    fs::path path = fs::absolute(name, GetWalletDir());
+    std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
+    if (wallet_instance == nullptr) return false;
+    LOCK(wallet_instance->cs_wallet);
+    fprintf(stdout, "Modifying key metadata...\n=========================\n");
+    fprintf(stdout, "Operation: %s\n", operation.c_str());
+    fprintf(stdout, "Key: all\n");
+    // wallet_instance->DeleteKeyMetadata();
+    wallet_instance->Flush(true);
+    return true;
+}
 } // namespace WalletTool
