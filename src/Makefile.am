@@ -297,6 +297,7 @@ libsyscoin_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   consensus/tx_verify.cpp \
+  core_write.cpp \
   httprpc.cpp \
   httpserver.cpp \
   index/base.cpp \
@@ -451,7 +452,6 @@ libsyscoin_consensus_a_SOURCES = \
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
-  services/asset.cpp \
   auxpow.cpp \
   base58.cpp \
   bech32.cpp \
@@ -459,7 +459,6 @@ libsyscoin_common_a_SOURCES = \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
-  core_write.cpp \
   key.cpp \
   key_io.cpp \
   keystore.cpp \
