@@ -106,12 +106,16 @@ class ToolWalletTest(BitcoinTestFramework):
         address = self.nodes[0].getnewaddress()
         address_info_before = self.nodes[0].getaddressinfo(address)
         assert ("hdmasterfingerprint" in address_info_before)
-        self.nodes[0].importmulti([{
+        result = self.nodes[0].importmulti([{
             "desc":
-            "wpkh([deadbeef/1/2'/3/4']03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)",
+            "wpkh([deadbeef/1/2'/3/4']03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)#yk54u40t",
             "timestamp": "now",
             "watchonly": True
         }])
+        assert (result[0]["success"])
+        address_watch_only = "bcrt1qngw83fg8dz0k749cg7k3emc7v98wy0c7azaa6h"
+        address_watch_only_info_before = self.nodes[0].getaddressinfo(address_watch_only)
+        assert_equal(address_watch_only_info_before["hdmasterfingerprint"], "deadbeef")
         self.stop_node(0)
         out = textwrap.dedent('''\
             Modifying key metadata...
@@ -123,6 +127,8 @@ class ToolWalletTest(BitcoinTestFramework):
         self.start_node(0, ['-wallet=foo'])
         address_info_after = self.nodes[0].getaddressinfo(address)
         assert ("hdmasterfingerprint" not in address_info_after)
+        address_watch_only_info_after = self.nodes[0].getaddressinfo(address)
+        assert ("hdmasterfingerprint" not in address_watch_only_info_after)
         self.stop_node(0)
 
 

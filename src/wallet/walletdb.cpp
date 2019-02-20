@@ -116,9 +116,14 @@ bool WalletBatch::WriteWatchOnly(const CScript &dest, const CKeyMetadata& keyMet
     return WriteIC(std::make_pair(std::string("watchs"), dest), '1');
 }
 
+bool WalletBatch::EraseWatchOnlyMeta(const CScript& dest)
+{
+    return EraseIC(std::make_pair(std::string("watchmeta"), dest));
+}
+
 bool WalletBatch::EraseWatchOnly(const CScript &dest)
 {
-    if (!EraseIC(std::make_pair(std::string("watchmeta"), dest))) {
+    if (!EraseWatchOnlyMeta(dest)) {
         return false;
     }
     return EraseIC(std::make_pair(std::string("watchs"), dest));

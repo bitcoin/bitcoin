@@ -358,6 +358,13 @@ void CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata 
     m_script_metadata[script_id] = meta;
 }
 
+bool CWallet::EraseWatchOnlyMeta(const CScript& dest)
+{
+    AssertLockHeld(cs_wallet);
+    return WalletBatch(*database).EraseWatchOnlyMeta(dest);
+}
+
+
 // Erases a keymetadata for a public key.
 bool CWallet::EraseKeyMetadata(const CPubKey& pubkey)
 {
@@ -426,6 +433,19 @@ void CWallet::DeleteKeyMetadata()
         CScript script;
         if (GetPubKey(key_id, pubkey)) {
             EraseKeyMetadata(pubkey);
+            script = GetScriptForRawPubKey(pubkey);
+            EraseWatchOnlyMeta(script);
+        }
+        script = GetScriptForDestination(key_id);
+        EraseWatchOnlyMeta(script);
+    }
+
+    const std::set<CScriptID> scripts = GetCScripts();
+
+    for (const CScriptID& scriptid : scripts) {
+        CScript script;
+        if (GetCScript(scriptid, script)) {
+            EraseWatchOnlyMeta(script);
         }
     }
 }
