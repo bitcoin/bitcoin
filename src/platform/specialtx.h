@@ -115,7 +115,7 @@ namespace Platform
         payload.signature.clear();
 
         uint256 hash = ::SerializeHash(payload);
-        if (!CHashSigner::SignHash(hash, key, payload.signature)) {g
+        if (!CHashSigner::SignHash(hash, key, payload.signature)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "failed to sign special tx");
         }
     }

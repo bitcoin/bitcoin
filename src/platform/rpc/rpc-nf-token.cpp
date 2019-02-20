@@ -91,17 +91,23 @@ namespace Platform
     json_spirit::Object BuildNftRecord(const NfTokenIndex & nftIndex)
     {
         json_spirit::Object nftJsonObj;
+
         nftJsonObj.push_back(json_spirit::Pair("block hash", nftIndex.blockIndex->phashBlock->GetHex()));
         nftJsonObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
         nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.blockIndex->nHeight));
         auto blockTime = static_cast<time_t>(nftIndex.blockIndex->nTime);
-        nftJsonObj.push_back(json_spirit::Pair("timestamp", asctime(gmtime(&blockTime))));
+        std::string timeStr(asctime(gmtime(&blockTime)));
+        nftJsonObj.push_back(json_spirit::Pair("timestamp", timeStr));
 
         nftJsonObj.push_back(json_spirit::Pair("NFT protocol ID", ProtocolName{nftIndex.nfToken->tokenProtocolId}.ToString()));
         nftJsonObj.push_back(json_spirit::Pair("NFT ID", nftIndex.nfToken->tokenId.GetHex()));
         nftJsonObj.push_back(json_spirit::Pair("NFT owner address", CBitcoinAddress(nftIndex.nfToken->tokenOwnerKeyId).ToString()));
-        nftJsonObj.push_back(json_spirit::Pair("Metadata amdin address", CBitcoinAddress(nftIndex.nfToken->metadataAdminKeyId).ToString()));
-        //nftJsonObj.push_back(json_spirit::Pair("Metadata", nftIndex.nfToken->metadata));
+        nftJsonObj.push_back(json_spirit::Pair("Metadata admin address", CBitcoinAddress(nftIndex.nfToken->metadataAdminKeyId).ToString()));
+
+        //TODO: mimetype text/plan only for now
+        std::string textMeta(nftIndex.nfToken->metadata.begin(), nftIndex.nfToken->metadata.end());
+        nftJsonObj.push_back(json_spirit::Pair("Metadata", textMeta));
+
         return nftJsonObj;
     }
 

@@ -36,6 +36,10 @@ namespace Platform
         /// Defines if this NF token id can be changed during token lifetime
         bool isTokenImmutable;
 
+        /// Defines if metadata is embedded or contains a URI
+        /// It's recommended to use embedded metadata only if it's shorter than URI
+        bool isMetadataEmbedded;
+
         /// Owner of the NF token protocol
         CKeyID tokenProtocolOwnerId;
 
@@ -50,6 +54,7 @@ namespace Platform
             READWRITE(tokenMetadataMimeType);
             READWRITE(isTokenTransferable);
             READWRITE(isTokenImmutable);
+            READWRITE(isMetadataEmbedded);
             READWRITE(tokenProtocolOwnerId);
         }
     };
@@ -61,13 +66,15 @@ namespace Platform
     tokenMetadataMimeType = null;
     isTokenImmutable = false;
     isTokenTransferable = false;
+    isMetadataEmbedded = false;
 
     tokenProtocolId = cks;
     tokenProtocolName = ercS21.kitts;
     tokenMetadataSchemaUri = https://erc721-json-schema-url;
-    tokenMetadataMimeType = text/uri-list;
+    tokenMetadataMimeType = text/json;
     isTokenImmutable = false;
     isTokenTransferable = false;
+    isMetadataEmbedded = false;
 
     tokenProtocolId = crd;
     tokenProtocolName = crown.id;
@@ -75,13 +82,15 @@ namespace Platform
     tokenMetadataMimeType = application/x-binary;
     isTokenImmutable = false;
     isTokenTransferable = false;
+    isMetadataEmbedded = false;
 
     tokenProtocolSymbol = doc;
     tokenProtocolName = docproof;
     tokenMetadataSchemaUri = https://document-desciption-schema;
     tokenMetadataMimeType = text/plain;
     isTokenImmutable = true;
-    isTokenTransferable = true; */
+    isTokenTransferable = true;
+    isMetadataEmbedded = true; */
 }
 
 #endif // CROWN_PLATFORM_NF_TOKEN_PROTOCOL_H
