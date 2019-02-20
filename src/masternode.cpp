@@ -850,12 +850,12 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if (!pmn->IsEnabled()) return false;
 
     LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping accepted and relayed, masternode=%s\n", masternodeOutpoint.ToStringShort());
-    if(pmn->IsEnabled()){
-        if(pmn->nPingRetries > 0){
-            LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries reduced from %d\n", pmn->nPingRetries);
-            pmn->nPingRetries -= 1;
-        }
+    
+    if(pmn->nPingRetries > 0){
+        LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries reduced from %d\n", pmn->nPingRetries);
+        pmn->nPingRetries -= 1;
     }
+    
     Relay(connman);
 
     return true;
