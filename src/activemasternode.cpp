@@ -106,33 +106,35 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- ERROR: Couldn't sign Masternode Ping\n");
         return false;
     }
-
+    
     // Update lastPing for our masternode in Masternode list
     if(mnodeman.IsMasternodePingedWithin(pmn, outpoint, MASTERNODE_MIN_MNP_SECONDS, mnp.sigTime)) {
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Too early to send Masternode Ping\n");
         return false;
     }
-   
-    // ensure that we should only create ping if in the winners list
-    const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
-    bool foundPayee = false;
-    {
-        LOCK(cs_mapMasternodeBlocks);
-        CMasternodePayee payee;  
-        // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
-        for (int i = -10; i < 20; i++) {
-            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
-            {
-                foundPayee = true;
-                break;
+   // if preenabled allow pings to go through until masternode becomes enabled
+   if(pmn->nActiveState != MASTERNODE_PRE_ENABLED){
+        // ensure that we should only create ping if in the winners list
+        const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
+        bool foundPayee = false;
+        {
+            LOCK(cs_mapMasternodeBlocks);
+            CMasternodePayee payee;  
+            // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
+            for (int i = -10; i < 20; i++) {
+                if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                      mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
+                {
+                    foundPayee = true;
+                    break;
+                }
             }
         }
+        if(!foundPayee){
+            LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Not in winners list, skipping ping...\n");
+            return false; 
+        } 
     }
-    if(!foundPayee){
-        LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Not in winners list, skipping ping...\n");
-        return false; 
-    } 
         
         
     mnodeman.SetMasternodeLastPing(outpoint, mnp);
