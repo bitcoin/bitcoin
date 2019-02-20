@@ -140,7 +140,7 @@ void CMasternode::Check(bool fForce)
     LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state\n", outpoint.ToStringShort(), GetStateString());
 
     //once spent, stop doing the checks
-    if(IsOutpointSpent()) return;
+    if(IsOutpointSpent()) { LogPrint(BCLog::MN, "CMasternode::Check Outpoint Spent!\n"); return;}
 
     int nHeight = 0;
   
@@ -181,6 +181,7 @@ void CMasternode::Check(bool fForce)
 
     if(fRequireUpdate) {
         nActiveState = MASTERNODE_UPDATE_REQUIRED;
+        LogPrint(BCLog::MN, "CMasternode::Check -- requireupdate\n");
         if(nActiveStatePrev != nActiveState) {
             LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
         }
@@ -201,6 +202,7 @@ void CMasternode::Check(bool fForce)
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {  
         if (!lastPing || lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {  
             nActiveState = MASTERNODE_PRE_ENABLED;  
+            LogPrint(BCLog::MN, "CMasternode::Check -- preenabled lastPing? %d lastPing.sigTime %d vs sigTime %d\n", lastPing? 1: 0, lastPing.sigTime, sigTime);
             if (nActiveStatePrev != nActiveState) { 
                 LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());    
             }   
