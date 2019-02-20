@@ -197,7 +197,17 @@ void CMasternode::Check(bool fForce)
             return;
         }
     }
-
+    
+    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {  
+        if (!lastPing || lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {  
+            nActiveState = MASTERNODE_PRE_ENABLED;  
+            if (nActiveStatePrev != nActiveState) { 
+                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());    
+            }   
+            return; 
+        }   
+    }   
+    
     // don't expire if we are still in "waiting for ping" mode unless it's our own masternode
     if(!fWaitForPing || fOurMasternode) {
 
@@ -211,7 +221,7 @@ void CMasternode::Check(bool fForce)
         
 
         // part 1: expire based on syscoind ping
-        bool fSentinelPingExpired = masternodeSync.IsSynced() && lastPing && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
+        bool fSentinelPingExpired = masternodeSync.IsSynced() && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
         LogPrint(BCLog::MN, "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
@@ -229,16 +239,7 @@ void CMasternode::Check(bool fForce)
             return;
         }
     }
-    if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {  
-        if (!lastPing || lastPing.sigTime - sigTime < MASTERNODE_MIN_MNP_SECONDS) {  
-            nActiveState = MASTERNODE_PRE_ENABLED;  
-            if (nActiveStatePrev != nActiveState) { 
-                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());    
-            }   
-            return; 
-        }   
-    }   
-    
+
     nActiveState = MASTERNODE_ENABLED;
     if(nActiveStatePrev != nActiveState) {
         LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
