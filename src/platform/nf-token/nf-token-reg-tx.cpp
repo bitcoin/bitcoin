@@ -13,21 +13,6 @@
 
 namespace Platform
 {
-
-    template <typename NfTokenTx>
-    static bool CheckNfTokenTxSignature(const CTransaction &tx, const NfTokenTx& nfTokenTx, const CKeyID& keyId, CValidationState& state)
-    {
-        //uint256 inputsHash = CalcTxInputsHash(tx);
-        //if (inputsHash != proTx.inputsHash)
-        //    return state.DoS(100, false, REJECT_INVALID, "bad-protx-inputs-hash");
-
-        std::string strError;
-        if (!CHashSigner::VerifyHash(::SerializeHash(nfTokenTx), keyId, nfTokenTx.signature, strError))
-            return state.DoS(100, false, REJECT_INVALID, "bad-token-reg-tx-sig", false, strError);
-
-        return true;
-    }
-
     bool NfTokenRegTx::CheckTx(const CTransaction& tx, const CBlockIndex* pindexLast, CValidationState& state)
     {
         AssertLockHeld(cs_main);
@@ -39,26 +24,29 @@ namespace Platform
         const NfToken & nfToken = nfTokenRegTx.GetNfToken();
 
         if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
-            return state.DoS(100, false, REJECT_INVALID, "bad-token-reg-tx-version");
+            return state.DoS(100, false, REJECT_INVALID, "bad-nf-token-reg-tx-version");
 
         if (nfToken.tokenId.IsNull())
-            return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-token");
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token");
 
         if (nfToken.tokenOwnerKeyId.IsNull())
-            return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-owner-key-null");
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-owner-key-null");
 
         if (nfToken.metadataAdminKeyId.IsNull())
-            return state.DoS(10, false, REJECT_INVALID, "bad-token-reg-tx-metadata-admin-key-null");
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-metadata-admin-key-null");
 
         //TODO: Validate metadata
 
         if (pindexLast != nullptr)
         {
             if (NfTokensManager::Instance().Contains(nfToken.tokenProtocolId, nfToken.tokenId, pindexLast->nHeight))
-                return state.DoS(10, false, REJECT_DUPLICATE, "bad-token-reg-tx-dup-token");
+                return state.DoS(10, false, REJECT_DUPLICATE, "bad-nf-token-reg-tx-dup-token");
         }
 
-        return CheckNfTokenTxSignature(tx, nfTokenRegTx, nfTokenRegTx.GetNfToken().tokenOwnerKeyId, state);
+        if (!CheckInputsHashAndSig(tx, nfTokenRegTx, nfTokenRegTx.GetNfToken().tokenOwnerKeyId, state))
+            return state.DoS(50, false, REJECT_INVALID, "bad-nf-token-reg-tx-invalid-signature");
+
+        return true;
     }
 
     bool NfTokenRegTx::ProcessTx(const CTransaction &tx, const CBlockIndex *pindex, CValidationState &state)
@@ -75,7 +63,7 @@ namespace Platform
         auto nfToken = nfTokenRegTx.GetNfToken();
 
         if (!NfTokensManager::Instance().AddNfToken(nfToken, tx, pindex))
-            return state.DoS(100, false, REJECT_DUPLICATE/*TODO: REJECT_CONFLICT*/, "token-reg-tx-conflit");
+            return state.DoS(100, false, REJECT_DUPLICATE/*TODO: REJECT_CONFLICT*/, "token-reg-tx-conflict");
         return true;
     }
 
