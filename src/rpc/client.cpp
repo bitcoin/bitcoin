@@ -219,12 +219,13 @@ UniValue RPCConvertValues(const std::string &strMethod, const std::vector<std::s
     for (unsigned int idx = 0; idx < strParams.size(); idx++) {
         const std::string& strVal = strParams[idx];
 
-        if (!rpcCvtTable.convert(strMethod, idx)) {
+        UniValue json_value;
+        if (!rpcCvtTable.convert(strMethod, idx) || !json_value.read(strVal)) {
             // insert string value directly
             params.push_back(strVal);
         } else {
             // parse string as JSON, insert bool/number/object/etc. value
-            params.push_back(ParseNonRFCJSONValue(strVal));
+            params.push_back(json_value);
         }
     }
 
@@ -244,12 +245,13 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
         std::string name = s.substr(0, pos);
         std::string value = s.substr(pos+1);
 
-        if (!rpcCvtTable.convert(strMethod, name)) {
+        UniValue json_value;
+        if (!rpcCvtTable.convert(strMethod, name) || !json_value.read(value)) {
             // insert string value directly
             params.pushKV(name, value);
         } else {
             // parse string as JSON, insert bool/number/object/etc. value
-            params.pushKV(name, ParseNonRFCJSONValue(value));
+            params.pushKV(name, json_value);
         }
     }
 
