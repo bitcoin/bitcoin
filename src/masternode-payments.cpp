@@ -504,13 +504,6 @@ void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote, CConnm
     for (auto& payee : vecPayees) {
         if (payee.GetPayee() == vote.payee) {
             payee.AddVoteHash(nVoteHash);
-            // if we have MNPAYMENTS_SIGNATURES_REQUIRED votes on the active masternode start timer by sending a ping
-            if(vote.masternodeOutpoint == activeMasternode.outpoint && payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED){
-                // send a ping if you are the active masternode adding this payee
-                // first time you add to payees you should start the timer to track when to kick them out (ban policy)
-                // TODO add this back after we test expiry
-                //activeMasternode.SendMasternodePing(connman);
-            }
             return;
         }
     }

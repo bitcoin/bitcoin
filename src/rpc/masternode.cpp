@@ -841,6 +841,5 @@ UniValue sentinelping(const JSONRPCRequest& request)
     }
 
     activeMasternode.UpdateSentinelPing(request.params[0].get_int());
-    activeMasternode.SendMasternodePing(*g_connman);
     return true;
 }
