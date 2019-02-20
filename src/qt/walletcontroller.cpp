@@ -65,7 +65,7 @@ OpenWalletActivity* WalletController::openWallet(const std::string& name, QWidge
     return activity;
 }
 
-std::unique_ptr<interfaces::Wallet> WalletController::createWallet(const std::string& name, std::string& error, std::string& warning, SecureString& passphrase, uint64_t wallet_creation_flags)
+std::unique_ptr<interfaces::Wallet> WalletController::createWallet(const std::string& name, std::string& error, std::string& warning, const SecureString& passphrase, uint64_t wallet_creation_flags)
 {
     return m_node.createWallet(name, error, warning, passphrase, wallet_creation_flags);
 }
