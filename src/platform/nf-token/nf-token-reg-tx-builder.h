@@ -7,6 +7,7 @@
 
 #include "utilstrencodings.h"
 #include "rpcserver.h"
+#include "platform/platform-utils.h"
 #include "platform/rpc/specialtx-rpc-utils.h"
 #include "nf-token-reg-tx.h"
 
@@ -17,8 +18,7 @@ namespace Platform
     public:
         NfTokenRegTxBuilder & SetTokenProtocol(const json_spirit::Value & tokenProtocolId)
         {
-            auto tokenProtocolIdStr = DecodeBase32(tokenProtocolId.get_str());
-            m_nfToken.tokenProtocolId = std::stoull(tokenProtocolIdStr);
+            m_nfToken.tokenProtocolId = StringToProtocolName(tokenProtocolId.get_str().c_str());
             return *this;
         }
 

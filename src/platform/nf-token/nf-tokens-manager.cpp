@@ -21,7 +21,7 @@ namespace Platform
         assert(!nfToken.tokenOwnerKeyId.IsNull());
         assert(!nfToken.metadataAdminKeyId.IsNull());
 
-        NfTokenIndex newNfTokenIndex {pindex->nHeight, *pindex->phashBlock, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))};
+        NfTokenIndex newNfTokenIndex {pindex, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))};
 
         return m_nfTokensIndexSet.emplace(std::move(newNfTokenIndex)).second;
     }
@@ -62,7 +62,7 @@ namespace Platform
 
         auto nfTokenIdx = this->GetNfTokenIndex(protocolId, tokenId);
         if (nfTokenIdx != nullptr)
-            return nfTokenIdx->height <= height;
+            return nfTokenIdx->blockIndex->nHeight <= height;
         return false;
     }
 
@@ -181,7 +181,20 @@ namespace Platform
         return protocolIndex.count(protocolId);
     }
 
-    bool NfTokensManager::Delete(const uint64_t &protocolId, const uint256 &tokenId)
+    NfTokensManager::NftIndexRange NfTokensManager::FullNftIndexRange() const
+    {
+        return m_nfTokensIndexSet;
+    }
+
+    NfTokensManager::NftIndexRange NfTokensManager::NftIndexRangeByHeight(int height) const
+    {
+        return m_nfTokensIndexSet.get<Tags::Height>().range(
+                    bmx::unbounded,
+                    [&](int curHeight) { return curHeight <= height; }
+        );
+    }
+
+    bool NfTokensManager::Delete(const uint64_t & protocolId, const uint256 & tokenId)
     {
         return Delete(protocolId, tokenId, m_tipHeight);
     }
@@ -193,7 +206,7 @@ namespace Platform
         assert(height >= 0);
 
         auto it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        if (it != m_nfTokensIndexSet.end() && it->height <= height)
+        if (it != m_nfTokensIndexSet.end() && it->blockIndex->nHeight <= height)
         {
             bool result = m_nfTokensIndexSet.erase(it) != m_nfTokensIndexSet.end();
             assert(result);

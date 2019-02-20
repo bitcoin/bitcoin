@@ -12,6 +12,7 @@
 #include "main.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "platform/rpc/rpcagents.h"
 #include "platform/rpc/rpc-nf-token.h"
 #ifdef ENABLE_WALLET
@@ -141,6 +142,34 @@ vector<unsigned char> ParseHexO(const Object& o, string strKey)
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
+int32_t ParseInt32V(const Value& v, const std::string &strName)
+{
+    std::string strNum = v.get_str();
+    int32_t num;
+    if (!ParseInt32(strNum, &num))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be a 32bit integer (not '"+strNum+"')");
+    return num;
+}
+
+bool ParseBoolV(const Value& v, const std::string &strName)
+{
+    std::string strBool;
+    if (v.type() == bool_type)
+        return v.get_bool();
+    else if (v.type() == int_type)
+        strBool = itostr(v.get_int());
+    else if (v.type() == str_type)
+        strBool = v.get_str();
+
+    std::transform(strBool.begin(), strBool.end(), strBool.begin(), ::tolower);
+
+    if (strBool == "true" || strBool == "yes" || strBool == "1") {
+        return true;
+    } else if (strBool == "false" || strBool == "no" || strBool == "0") {
+        return false;
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, strName+" must be true, false, yes, no, 1 or 0 (not '"+strBool+"')");
+}
 
 /**
  * Note: This interface may still be subject to change.

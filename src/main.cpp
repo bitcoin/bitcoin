@@ -75,6 +75,7 @@ bool fAlerts = DEFAULT_ALERTS;
 CFeeRate minRelayTxFee = CFeeRate(10000);
 
 CTxMemPool mempool(::minRelayTxFee);
+Platform::NfTokenTxMemPoolHandler g_nfTokenTxMemPoolHandler;
 
 struct COrphanTx {
     CTransaction tx;

@@ -4,7 +4,9 @@
 
 #include "primitives/transaction.h"
 #include "platform/specialtx.h"
+#include "platform/platform-utils.h"
 #include "platform/nf-token/nf-token-reg-tx-builder.h"
+#include "platform/nf-token/nf-tokens-manager.h"
 #include "specialtx-rpc-utils.h"
 #include "rpc-nf-token.h"
 
@@ -14,6 +16,8 @@ json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
 
     if (command == "register")
         return Platform::RegisterNfToken(params, fHelp);
+    else if (command == "list")
+        return Platform::ListNfTokenTxs(params, fHelp);
 
     throw std::runtime_error("Invalid command: " + command);
 }
@@ -39,7 +43,7 @@ namespace Platform
                 "                                 The private key does not have to be known by your wallet. Can be set to 0.\n"
 
                 "5. \"nfTokenMetadata\"           (string, optional) metadata describing the token.\n"
-                "                                 It may contain text or binary in hex/base64 //TODO .\n";
+                "                                 It may contain text or binary in hex/base64 //TODO .\n";//TODO: add examples
 
         throw std::runtime_error(helpMessage);
     }
@@ -70,5 +74,65 @@ namespace Platform
 
         std::string result = SignAndSendSpecialTx(tx);
         return result;
+    }
+
+    void ListNfTokenTxsHelp()
+    {
+        static std::string helpMessage =
+                "nftoken list\n"
+                "Lists all nftoken registration (for now) transactions on chain (or in your wallet:TODO)\n"
+                "\nArguments:\n"
+                //"1. \"tx-id-or-nftoken-id\" (boolean, optional)\n"
+                "1. \"verbose\"             (boolean, optional, default=false) true for a detailed list, false for an array of transaction IDs\n"
+                "2. \"height\"              (numeric, optional) If height is not specified, it defaults to the current chain-tip\n";
+        throw std::runtime_error(helpMessage);
+    }
+
+    json_spirit::Object BuildNftRecord(const NfTokenIndex & nftIndex)
+    {
+        json_spirit::Object nftJsonObj;
+        nftJsonObj.push_back(json_spirit::Pair("block hash", nftIndex.blockIndex->phashBlock->GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.blockIndex->nHeight));
+        auto blockTime = static_cast<time_t>(nftIndex.blockIndex->nTime);
+        nftJsonObj.push_back(json_spirit::Pair("timestamp", asctime(gmtime(&blockTime))));
+
+        nftJsonObj.push_back(json_spirit::Pair("NFT protocol ID", ProtocolName{nftIndex.nfToken->tokenProtocolId}.ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("NFT ID", nftIndex.nfToken->tokenId.GetHex()));
+        nftJsonObj.push_back(json_spirit::Pair("NFT owner address", CBitcoinAddress(nftIndex.nfToken->tokenOwnerKeyId).ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("Metadata amdin address", CBitcoinAddress(nftIndex.nfToken->metadataAdminKeyId).ToString()));
+        //nftJsonObj.push_back(json_spirit::Pair("Metadata", nftIndex.nfToken->metadata));
+        return nftJsonObj;
+    }
+
+    json_spirit::Value ListNfTokenTxs(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() < 1 || params.size() > 3)
+            ListNfTokenTxsHelp();
+
+        bool verbose = (params.size() > 1) ? ParseBoolV(params[1], "verbose") : false;
+
+        int height = (params.size() > 2) ? ParseInt32V(params[2], "height") : chainActive.Height();
+        if (height < 0 || height > chainActive.Height())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+
+        json_spirit::Array nftList;
+
+        auto tokensRange = NfTokensManager::Instance().NftIndexRangeByHeight(height);
+        for (const auto & nftIndex : tokensRange)
+        {
+            if (verbose)
+            {
+                nftList.push_back(BuildNftRecord(nftIndex));
+            }
+            else
+            {
+                json_spirit::Object hashObj;
+                hashObj.push_back(json_spirit::Pair("reg tx hash", nftIndex.regTxHash.GetHex()));
+                nftList.push_back(hashObj);
+            }
+        }
+
+        return nftList;
     }
 }

@@ -5,6 +5,9 @@
 #ifndef CROWN_PLATFORM_NF_TOKENS_MANAGER_H
 #define CROWN_PLATFORM_NF_TOKENS_MANAGER_H
 
+#include <boost/range/adaptors.hpp>
+#include <boost/range/any_range.hpp>
+
 #include "nf-token-multiindex-utils.h"
 #include "nf-token.h"
 
@@ -16,9 +19,7 @@ namespace Platform
     class NfTokenIndex
     {
     public:
-        int height;
-        //TODO: use block ptr for opt
-        uint256 blockHash;
+        const CBlockIndex * blockIndex;
         uint256 regTxHash;
         std::shared_ptr<const NfToken> nfToken;
     };
@@ -63,6 +64,26 @@ namespace Platform
         }
     };
 
+    struct BlockHashExtractor
+    {
+        using result_type = uint256;
+
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
+        {
+            return *nfTokenIndex.blockIndex->phashBlock;
+        }
+    };
+
+    struct HeightExtractor
+    {
+        using result_type = int;
+
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
+        {
+            return nfTokenIndex.blockIndex->nHeight;
+        }
+    };
+
     using NfTokensIndexSet = bmx::multi_index_container<
         NfTokenIndex,
         bmx::indexed_by<
@@ -86,7 +107,14 @@ namespace Platform
             /// gives access to all nf-tokens registered in a specified block
             bmx::hashed_non_unique<
                 bmx::tag<Tags::BlockHash>,
-                bmx::member<NfTokenIndex, uint256, &NfTokenIndex::blockHash>
+                BlockHashExtractor
+            >,
+            /// ordered by nf-token registration block height
+            /// gives access to all nf-tokens registered at a specific block height
+            /// or gives access to a range requested by height
+            bmx::ordered_non_unique<
+                bmx::tag<Tags::Height>,
+                HeightExtractor
             >,
             /// hash-indexed by a composite-key <TokenProtocolId, OwnerId>
             /// gives access to all nf-tokens owned by the OwnerId in a specified protocol
@@ -133,9 +161,9 @@ namespace Platform
             /// Checks the existence of a specified nf-token at a specified height
             bool Contains(const uint64_t & protocolId, const uint256 & tokenId, int height) const;
 
-            /// Retreive a specified nf-token index
+            /// Retrieve a specified nf-token index
             const NfTokenIndex * GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
-            /// Retreive the specified nf-token
+            /// Retrieve a specified nf-token
             std::weak_ptr<const NfToken> GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const;
 
             /// Owner of a specified nf-token
@@ -146,20 +174,25 @@ namespace Platform
             /// Amount of all nf-tokens belonging to a specified owner in a global protocol set
             std::size_t BalanceOf(const CKeyID & ownerId) const;
 
-            /// Retreive all nf-tokens belonging to a specified owner within a protocol
+            /// Retrieve all nf-tokens belonging to a specified owner within a protocol
             std::vector<std::weak_ptr<const NfToken> > NfTokensOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
-            /// Retreive all nf-tokens belonging to a specified owner in a global protocol set
+            /// Retrieve all nf-tokens belonging to a specified owner in a global protocol set
             std::vector<std::weak_ptr<const NfToken> > NfTokensOf(const CKeyID & ownerId) const;
 
-            /// Retreive all nf-token IDs belonging to a specified owner within a protocol
+            /// Retrieve all nf-token IDs belonging to a specified owner within a protocol
             std::vector<uint256> NfTokenIdsOf(const uint64_t & protocolId, const CKeyID & ownerId) const;
-            /// Retreive all nf-tokens IDs belonging to a specified owner in a global protocol set
+            /// Retrieve all nf-tokens IDs belonging to a specified owner in a global protocol set
             std::vector<uint256> NfTokenIdsOf(const CKeyID & ownerId) const;
 
             /// Total amount of nf-tokens
             std::size_t TotalSupply() const;
             /// Total amount of nf-tokens for a specified protocol
             std::size_t TotalSupply(const uint64_t & protocolId) const;
+
+            using NftIndexRange = boost::any_range<const NfTokenIndex &, boost::forward_traversal_tag>;
+
+            NftIndexRange FullNftIndexRange() const;
+            NftIndexRange NftIndexRangeByHeight(int height) const;
 
             /// Delete a specified nf-token
             bool Delete(const uint64_t & protocolId, const uint256 & tokenId);

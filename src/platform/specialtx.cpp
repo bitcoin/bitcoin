@@ -39,13 +39,13 @@ namespace Platform
         if (tx.nVersion < 3 || tx.nType == TRANSACTION_NORMAL)
             return true;
 
-        switch (tx.nType) {
-            case TRANSACTION_GOVERNANCE_VOTE: {
-                if (justCheck)
-                    return true;
+        if (justCheck)
+            return true;
 
+        switch (tx.nType)
+        {
+            case TRANSACTION_GOVERNANCE_VOTE:
                 return ProcessVoteTx(tx, pindex, state);
-            }
 
             case TRANSACTION_NF_TOKEN_REGISTER:
                 return Platform::NfTokenRegTx::ProcessTx(tx, pindex, state);

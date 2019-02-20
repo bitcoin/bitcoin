@@ -4,6 +4,7 @@
 
 #include "nf-token-protocol-reg-tx.h"
 #include "primitives/transaction.h"
+#include "platform/platform-utils.h"
 #include "platform/specialtx.h"
 
 #include "sync.h"
@@ -20,5 +21,15 @@ namespace Platform
             return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
 
         return true;
+    }
+
+    std::string NfTokenProtocolRegTx::ToString() const
+    {
+        std::ostringstream out;
+        out << "NfTokenProtocolRegTx(nft protocol ID=" << ProtocolName{m_nfTokenProtocol.tokenProtocolId}.ToString()
+        << ", nft protocol name=" << m_nfTokenProtocol.tokenProtocolName << ", nft metadata schema url=" << m_nfTokenProtocol.tokenMetadataSchemaUri
+        << ", nft metadata mimetype=" << m_nfTokenProtocol.tokenMetadataMimeType << ", transferable=" << m_nfTokenProtocol.isTokenTransferable
+        << ", immutable=" << m_nfTokenProtocol.isTokenImmutable << ", nft owner ID=" << CBitcoinAddress(m_nfTokenProtocol.tokenProtocolOwnerId).ToString() << ")";
+        return out.str();
     }
 }

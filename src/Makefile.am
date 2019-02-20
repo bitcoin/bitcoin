@@ -145,6 +145,7 @@ BITCOIN_CORE_H = \
   nodeconfig.h \
   platform/specialtx-common.h \
   platform/specialtx.h \
+  platform/platform-utils.h \
   platform/rpc/rpcagents.h \
   platform/rpc/rpc-nf-token.h \
   platform/rpc/specialtx-rpc-utils.h \
