@@ -4002,13 +4002,11 @@ bool CChainState::AcceptBlockHeader(const CBlockHeader& block, CValidationState&
 // Exposed wrapper for AcceptBlockHeader
 bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex, CBlockHeader *first_invalid)
 {
-    LogPrintf("ProcessNewBlockHeaders\n");
     if (first_invalid != nullptr) first_invalid->SetNull();
     {
         LOCK(cs_main);
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
-            LogPrintf("g_chainstate.AcceptBlockHeader\n");
             if (!g_chainstate.AcceptBlockHeader(header, state, chainparams, &pindex)) {
                 if (first_invalid) *first_invalid = header;
                 return false;
@@ -4018,9 +4016,7 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
             }
         }
     }
-    LogPrintf("NotifyHeaderTip\n");
     NotifyHeaderTip();
-    LogPrintf("done\n");
     return true;
 }
 
