@@ -57,6 +57,11 @@ bool WalletBatch::EraseTx(uint256 hash)
     return EraseIC(std::make_pair(std::string("tx"), hash));
 }
 
+bool WalletBatch::EraseKeyMetadata(const CPubKey& pubkey)
+{
+    return EraseIC(std::make_pair(std::string("keymeta"), pubkey));
+}
+
 bool WalletBatch::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)
 {
     return WriteIC(std::make_pair(std::string("keymeta"), pubkey), meta, overwrite);

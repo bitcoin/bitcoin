@@ -101,5 +101,30 @@ class ToolWalletTest(BitcoinTestFramework):
         assert_equal(1000, out['keypoolsize_hd_internal'])
         assert_equal(True, 'hdseedid' in out)
 
+        self.log.info("Test method: keymetadata")
+        self.start_node(0, ['-wallet=foo'])
+        address = self.nodes[0].getnewaddress()
+        address_info_before = self.nodes[0].getaddressinfo(address)
+        assert ("hdmasterfingerprint" in address_info_before)
+        self.nodes[0].importmulti([{
+            "desc":
+            "wpkh([deadbeef/1/2'/3/4']03a34b99f22c790c4e36b2b3c2c35a36db06226e41c692fc82b8b56ac1c540c5bd)",
+            "timestamp": "now",
+            "watchonly": True
+        }])
+        self.stop_node(0)
+        out = textwrap.dedent('''\
+            Modifying key metadata...
+            =========================
+            Operation: delete
+            Key: all
+        ''')
+        self.assert_tool_output(out, '-wallet=foo', 'keymetadata', 'delete')
+        self.start_node(0, ['-wallet=foo'])
+        address_info_after = self.nodes[0].getaddressinfo(address)
+        assert ("hdmasterfingerprint" not in address_info_after)
+        self.stop_node(0)
+
+
 if __name__ == '__main__':
     ToolWalletTest().main()

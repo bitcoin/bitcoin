@@ -358,6 +358,13 @@ void CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata 
     m_script_metadata[script_id] = meta;
 }
 
+// Erases a keymetadata for a public key.
+bool CWallet::EraseKeyMetadata(const CPubKey& pubkey)
+{
+    return WalletBatch(*database).EraseKeyMetadata(pubkey);
+}
+
+
 // Writes a keymetadata for a public key. overwrite specifies whether to overwrite an existing metadata for that key if there exists one.
 bool CWallet::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)
 {
@@ -404,6 +411,23 @@ void CWallet::UpgradeKeyMetadata()
     }
     batch.reset(); //write before setting the flag
     SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
+}
+
+void CWallet::DeleteKeyMetadata()
+{
+    // mapKeyMetadata and m_script_metadata may be incomplete if metadata couldn't
+    // be loaded due to data corruption. Instead we iterate over all pubkeys
+    // and scripts and delete any possible entry.
+
+    const std::set<CKeyID>& keys = GetKeys();
+
+    for (const CKeyID& key_id : keys) {
+        CPubKey pubkey;
+        CScript script;
+        if (GetPubKey(key_id, pubkey)) {
+            EraseKeyMetadata(pubkey);
+        }
+    }
 }
 
 bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)

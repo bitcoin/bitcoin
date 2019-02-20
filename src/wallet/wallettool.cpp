@@ -136,7 +136,7 @@ bool ExecuteKeyMetadata(const std::string& name, std::string& operation) {
     fprintf(stdout, "Modifying key metadata...\n=========================\n");
     fprintf(stdout, "Operation: %s\n", operation.c_str());
     fprintf(stdout, "Key: all\n");
-    // wallet_instance->DeleteKeyMetadata();
+    wallet_instance->DeleteKeyMetadata();
     wallet_instance->Flush(true);
     return true;
 }
