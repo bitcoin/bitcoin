@@ -68,7 +68,6 @@ CMasternodeMan::CMasternodeMan():
     fMasternodesAdded(false),
     fMasternodesRemoved(false),
     vecDirtyGovernanceObjectHashes(),
-    nLastSentinelPingTime(0),
     mapSeenMasternodeBroadcast(),
     mapSeenMasternodePing()
 {}
@@ -334,7 +333,6 @@ void CMasternodeMan::Clear()
     mWeAskedForMasternodeListEntry.clear();
     mapSeenMasternodeBroadcast.clear();
     mapSeenMasternodePing.clear();
-    nLastSentinelPingTime = 0;
 }
 
 int CMasternodeMan::CountMasternodes(int nProtocolVersion)
@@ -808,9 +806,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         // see if we have this Masternode
         CMasternode* pmn = Find(mnp.masternodeOutpoint);
-
-        if(pmn && mnp.fSentinelIsCurrent)
-            UpdateLastSentinelPingTime();
+        
 
         // too late, new MNANNOUNCE is required
         if(pmn && pmn->IsNewStartRequired()) return;
@@ -1528,18 +1524,7 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
     nLastRunBlockHeight = nCachedBlockHeight;
 }
 
-void CMasternodeMan::UpdateLastSentinelPingTime()
-{
-    LOCK(cs);
-    nLastSentinelPingTime = GetTime();
-}
 
-bool CMasternodeMan::IsSentinelPingActive()
-{
-    LOCK(cs);
-    // Check if any masternodes have voted recently, otherwise return false
-    return (GetTime() - nLastSentinelPingTime) <= MASTERNODE_SENTINEL_PING_MAX_SECONDS;
-}
 
 bool CMasternodeMan::AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash)
 {
@@ -1585,9 +1570,7 @@ void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMas
         return;
     }
     pmn->lastPing = mnp;
-    if(mnp.fSentinelIsCurrent) {
-        UpdateLastSentinelPingTime();
-    }
+
     mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
 
     CMasternodeBroadcast mnb(*pmn);

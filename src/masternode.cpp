@@ -229,8 +229,7 @@ void CMasternode::Check(bool fForce)
         
 
         // part 1: expire based on syscoind ping
-        bool fSentinelPingActive = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive();
-        bool fSentinelPingExpired = fSentinelPingActive && lastPing && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
+        bool fSentinelPingExpired = masternodeSync.IsSynced() && lastPing && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
         LogPrint(BCLog::MN, "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
