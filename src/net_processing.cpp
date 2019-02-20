@@ -3877,7 +3877,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         }
 
         //
-        // Message: getdata (non-blocks)
+        // Message: getdata (transactions)
         //
         auto& tx_process_time = state.m_tx_download.m_tx_process_time;
         while (!tx_process_time.empty() && tx_process_time.begin()->first <= nNow && state.m_tx_download.m_tx_in_flight.size() < MAX_PEER_TX_IN_FLIGHT) {
