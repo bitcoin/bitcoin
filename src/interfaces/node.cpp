@@ -207,7 +207,6 @@ public:
         }
     }
     bool getNetworkActive() override { return g_connman && g_connman->GetNetworkActive(); }
-    CAmount getMaxTxFee() override { return ::maxTxFee; }
     CFeeRate estimateSmartFee(int num_blocks, bool conservative, int* returned_target = nullptr) override
     {
         FeeCalculation fee_calc;
