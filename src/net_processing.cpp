@@ -975,6 +975,7 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
  */
 static bool TxRelayMayResultInDisconnect(const CValidationState& state)
 {
+    assert(IsTransactionReason(state.GetReason()));
     return state.GetReason() == ValidationInvalidReason::CONSENSUS;
 }
 
@@ -1806,6 +1807,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee
             LogPrint(BCLog::MEMPOOL, "   removed orphan tx %s\n", orphanHash.ToString());
+            assert(IsTransactionReason(orphan_state.GetReason()));
             if (!orphanTx.HasWitness() && orphan_state.GetReason() != ValidationInvalidReason::TX_WITNESS_MUTATED) {
                 // Do not use rejection cache for witness transactions or
                 // witness-stripped transactions, as they can have been malleated.
@@ -2523,6 +2525,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 recentRejects->insert(tx.GetHash());
             }
         } else {
+            assert(IsTransactionReason(state.GetReason()));
             if (!tx.HasWitness() && state.GetReason() != ValidationInvalidReason::TX_WITNESS_MUTATED) {
                 // Do not use rejection cache for witness transactions or
                 // witness-stripped transactions, as they can have been malleated.
