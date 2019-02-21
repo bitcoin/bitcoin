@@ -1612,6 +1612,7 @@ void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMas
     uint256 hash = mnb.GetHash();
     if(mapSeenMasternodeBroadcast.count(hash)) {
         mapSeenMasternodeBroadcast[hash].second.lastPing = mnp;
+        mapSeenMasternodeBroadcast[hash].second.nPingRetries = pmn->nPingRetries;
     }
 }
 
