@@ -781,7 +781,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
-
+        LogPrintf("MNANNOUNCE mnb.nPingRetries %d addr %s\n", mnb.nPingRetries, mnb.addr.ToString());
         pfrom->setAskFor.erase(mnb.GetHash());
 
         if(!masternodeSync.IsBlockchainSynced()) return;
@@ -898,7 +898,7 @@ void CMasternodeMan::SyncSingle(CNode* pnode, const COutPoint& outpoint, CConnma
 
     auto it = mapMasternodes.find(outpoint);
 
-    if(it != mapMasternodes.end()) {
+    if(it !=  mapMasternodes.end()) {
         if (it->second.addr.IsRFC1918() || it->second.addr.IsLocal()) return; // do not send local network masternode
         // NOTE: send masternode regardless of its current state, the other node will need it to verify old votes.
         LogPrint(BCLog::MN, "CMasternodeMan::%s -- Sending Masternode entry: masternode=%s  addr=%s\n", __func__, outpoint.ToStringShort(), it->second.addr.ToString());
@@ -947,11 +947,12 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
 void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 {
     AssertLockHeld(cs);
-
+    LogPrintf("PushDsegInvs mn.nPingRetries %d addr=%s\n", mn.nPingRetries, mn.addr.ToString());
     CMasternodeBroadcast mnb(mn);
     CMasternodePing mnp = mnb.lastPing;
     const uint256 &hashMNB = mnb.GetHash();
     const uint256 &hashMNP = mnp.GetHash();
+    LogPrintf("PushDsegInvs mnb.nPingRetries %d\n", mnb.nPingRetries);
     pnode->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
     pnode->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
     mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
