@@ -24,12 +24,12 @@
 #include <outputtype.h>
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime()}
+    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime(), 0}
 {}
 
-CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn) :
+CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn, int retries) :
     masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
-                       outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode}
+                       outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode, retries}
 {}
 
 CMasternode::CMasternode(const CMasternode& other) :
@@ -39,16 +39,14 @@ CMasternode::CMasternode(const CMasternode& other) :
     nCollateralMinConfBlockHash(other.nCollateralMinConfBlockHash),
     nBlockLastPaid(other.nBlockLastPaid),
     nPoSeBanScore(other.nPoSeBanScore),
-    nPoSeBanHeight(other.nPoSeBanHeight),
-    nPingRetries(other.nPingRetries)
+    nPoSeBanHeight(other.nPoSeBanHeight)
 {}
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     masternode_info_t{ mnb.nActiveState, mnb.nProtocolVersion, mnb.sigTime,
-                       mnb.outpoint, mnb.addr, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode},
+                       mnb.outpoint, mnb.addr, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode, 0},
     lastPing(mnb.lastPing),
-    vchSig(mnb.vchSig),
-    nPingRetries(0)
+    vchSig(mnb.vchSig)
 {}
 
 //
