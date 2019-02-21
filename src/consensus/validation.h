@@ -66,6 +66,32 @@ enum class ValidationInvalidReason {
     TX_MEMPOOL_POLICY,        //!< violated mempool's fee/size/descendant/RBF/etc limits
 };
 
+inline bool IsTransactionReason(ValidationInvalidReason r)
+{
+    return r == ValidationInvalidReason::NONE ||
+           r == ValidationInvalidReason::CONSENSUS ||
+           r == ValidationInvalidReason::RECENT_CONSENSUS_CHANGE ||
+           r == ValidationInvalidReason::TX_NOT_STANDARD ||
+           r == ValidationInvalidReason::TX_MISSING_INPUTS ||
+           r == ValidationInvalidReason::TX_WITNESS_MUTATED ||
+           r == ValidationInvalidReason::TX_CONFLICT ||
+           r == ValidationInvalidReason::TX_MEMPOOL_POLICY;
+}
+
+inline bool IsBlockReason(ValidationInvalidReason r)
+{
+    return r == ValidationInvalidReason::NONE ||
+           r == ValidationInvalidReason::CONSENSUS ||
+           r == ValidationInvalidReason::RECENT_CONSENSUS_CHANGE ||
+           r == ValidationInvalidReason::CACHED_INVALID ||
+           r == ValidationInvalidReason::BLOCK_INVALID_HEADER ||
+           r == ValidationInvalidReason::BLOCK_MUTATED ||
+           r == ValidationInvalidReason::BLOCK_MISSING_PREV ||
+           r == ValidationInvalidReason::BLOCK_INVALID_PREV ||
+           r == ValidationInvalidReason::BLOCK_TIME_FUTURE ||
+           r == ValidationInvalidReason::BLOCK_CHECKPOINT;
+}
+
 /** Capture information about block/transaction validation */
 class CValidationState {
 private:
