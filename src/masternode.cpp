@@ -44,7 +44,7 @@ CMasternode::CMasternode(const CMasternode& other) :
 
 CMasternode::CMasternode(const CMasternodeBroadcast& mnb) :
     masternode_info_t{ mnb.nActiveState, mnb.nProtocolVersion, mnb.sigTime,
-                       mnb.outpoint, mnb.addr, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode, 0},
+                       mnb.outpoint, mnb.addr, mnb.pubKeyCollateralAddress, mnb.pubKeyMasternode, mnb.nPingRetries},
     lastPing(mnb.lastPing),
     vchSig(mnb.vchSig)
 {}
@@ -64,7 +64,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
     nPoSeBanScore = 0;
     nPoSeBanHeight = 0;
     nTimeLastChecked = 0;
-    nPingRetries = 0;
+    nPingRetries = mnb.nPingRetries;
     int nDos = 0;
     if(!mnb.lastPing || (mnb.lastPing && mnb.lastPing.CheckAndUpdate(this, true, nDos, connman))) {
         lastPing = mnb.lastPing;
@@ -847,8 +847,10 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     // and update mnodeman.mapSeenMasternodeBroadcast.lastPing which is probably outdated
     CMasternodeBroadcast mnb(*pmn);
     uint256 hash = mnb.GetHash();
-    if (mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
+    bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
+    if (existsInMnbList) {
         mnodeman.mapSeenMasternodeBroadcast[hash].second.lastPing = *this;
+        
     }
     
     // force update, ignoring cache
@@ -862,6 +864,8 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     if(pmn->nPingRetries > 0){
         LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Ping retries reduced from %d\n", pmn->nPingRetries);
         pmn->nPingRetries -= 1;
+        if(existsInMnbList)
+            mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = pmn->nPingRetries;
     }
     
     Relay(connman);
