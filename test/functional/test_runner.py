@@ -179,6 +179,7 @@ BASE_SCRIPTS = [
     'rpc_bind.py --ipv6',
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
+    'mining_timewarp_fork.py',
     'wallet_bumpfee.py',
     'wallet_bumpfee_totalfee_deprecation.py',
     'wallet_implicitsegwit.py',

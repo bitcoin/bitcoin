@@ -29,6 +29,9 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 {
     int64_t nOldTime = pblock->nTime;
     int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    if (pindexPrev->nHeight % consensusParams.DifficultyAdjustmentInterval() == consensusParams.DifficultyAdjustmentInterval() - 1) {
+        nNewTime = std::max(nNewTime, (int64_t)pindexPrev->nTime - 600);
+    }
 
     if (nOldTime < nNewTime)
         pblock->nTime = nNewTime;

@@ -677,7 +677,11 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     result.pushKV("coinbasevalue", (int64_t)pblock->vtx[0]->vout[0].nValue);
     result.pushKV("longpollid", ::ChainActive().Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast));
     result.pushKV("target", hashTarget.GetHex());
-    result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
+    if (pindexPrev->nHeight % consensusParams.DifficultyAdjustmentInterval() == consensusParams.DifficultyAdjustmentInterval() - 1) {
+        result.pushKV("mintime", std::max((int64_t)pindexPrev->GetMedianTimePast()+1, (int64_t)pindexPrev->nTime - 600));
+    } else {
+        result.pushKV("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1);
+    }
     result.pushKV("mutable", aMutable);
     result.pushKV("noncerange", "00000000ffffffff");
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
