@@ -138,7 +138,7 @@ public:
     bool PoSeBan(const COutPoint &outpoint);
 
     /// Check all Masternodes
-    void Check();
+    void Check(bool fForce = false);
 
     /// Check all Masternodes and remove inactive
     void CheckAndRemove(CConnman& connman);
