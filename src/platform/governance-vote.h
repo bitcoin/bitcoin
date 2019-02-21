@@ -5,6 +5,7 @@
 #ifndef CROWN_GOVERNANCE_VOTE_H
 #define CROWN_GOVERNANCE_VOTE_H
 
+#include <json/json_spirit_value.h>
 #include <pubkey.h>
 #include "primitives/transaction.h"
 #include "platform/governance.h"
@@ -59,6 +60,7 @@ namespace Platform
         }
 
         std::string ToString() const;
+        void ToJson(json_spirit::Object & result) const;
     };
 
 

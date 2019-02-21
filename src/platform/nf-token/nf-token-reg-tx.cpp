@@ -82,14 +82,28 @@ namespace Platform
         return NfTokensManager::Instance().Delete(nfToken.tokenProtocolId, nfToken.tokenId, pindex->nHeight);
     }
 
+    void NfTokenRegTx::ToJson(json_spirit::Object & result) const
+    {
+        result.push_back(json_spirit::Pair("version", m_version));
+        result.push_back(json_spirit::Pair("nftProtocolId", ProtocolName{m_nfToken.tokenProtocolId}.ToString()));
+        result.push_back(json_spirit::Pair("nftId", m_nfToken.tokenId.ToString()));
+        result.push_back(json_spirit::Pair("nftOwnerKeyId", CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()));
+        result.push_back(json_spirit::Pair("metadataAdminKeyId", CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString()));
+        // TODO: if not text -> implement conversion to base64
+        // If metadata is embedded text/plain -> read directly, otherwise download from the URI
+        result.push_back(json_spirit::Pair("metadata", std::string(m_nfToken.metadata.begin(), m_nfToken.metadata.end())));
+    }
+
     std::string NfTokenRegTx::ToString() const
     {
         std::ostringstream out;
-        out << "NfTokenRegTx(nft protocol ID=" << ProtocolName{m_nfToken.tokenProtocolId}.ToString()
-            << ", nft ID=" << m_nfToken.tokenId.ToString()
-            << ", nft owner address=" << CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()
-            << ", metadata admin address=" << CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString() << ")";
-            //TODO: << ", metadata" << m_nfToken.metadata << ")";
+        out << "NfTokenRegTx(version=" << m_version
+            << ", NFT protocol ID=" << ProtocolName{m_nfToken.tokenProtocolId}.ToString()
+            << ", NFT ID=" << m_nfToken.tokenId.ToString()
+            << ", NFT owner address=" << CBitcoinAddress(m_nfToken.tokenOwnerKeyId).ToString()
+            << ", metadata admin address=" << CBitcoinAddress(m_nfToken.metadataAdminKeyId).ToString()
+            // TODO: if not text -> implement conversion to base64
+            << ", metadata" << std::string(m_nfToken.metadata.begin(), m_nfToken.metadata.end()) << ")";
         return out.str();
     }
 }
