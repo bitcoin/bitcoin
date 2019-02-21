@@ -64,6 +64,8 @@ before_script:
     # Make sure stdout is in blocking mode. Otherwise builds will fail due to large writes to stdout
     # See https://github.com/travis-ci/travis-ci/issues/4704. If this gets fixed, this line can also be removed.
     - python3 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
+    # Build docker image only for develop branch of the main repo
+    - if [ "$TRAVIS_REPO_SLUG" != "dashpay/dash" -o "$TRAVIS_BRANCH" != "develop" -o "$TRAVIS_PULL_REQUEST" != "false" ]; then export DOCKER_BUILD="false"; echo DOCKER_BUILD=$DOCKER_BUILD; fi
 script:
     - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
     # Our scripts try to be Travis agnostic
@@ -79,4 +81,4 @@ after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
 after_success:
-    - if [ "$TRAVIS_PULL_REQUEST" = "false" -a "$TRAVIS_BRANCH" = "develop" -a "$DOCKER_BUILD" = "true" ]; then docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD && ./docker/push-docker.sh; fi
+    - if [ "$DOCKER_BUILD" = "true" ]; then docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD && ./docker/push-docker.sh; fi
