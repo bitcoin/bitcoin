@@ -192,6 +192,13 @@ AC_ARG_ENABLE([debug],
     [enable_debug=$enableval],
     [enable_debug=no])
 
+# Enable exception stacktraces
+AC_ARG_ENABLE([stacktraces],
+    [AS_HELP_STRING([--enable-stacktraces],
+                    [gather and print exception stack traces (default is no)])],
+    [enable_stacktraces=$enableval],
+    [enable_stacktraces=no])
+
 # Turn warnings into errors
 AC_ARG_ENABLE([werror],
     [AS_HELP_STRING([--enable-werror],
@@ -211,7 +218,33 @@ if test "x$enable_debug" = xyes; then
     if test "x$GXX" = xyes; then
         CXXFLAGS="$CXXFLAGS -g3 -O0"
     fi
+elif test "x$enable_stacktraces" = xyes; then
+    # Enable debug information but don't turn off optimization
+    # (stacktraces will be suboptimal, but better than nothing)
+    if test "x$GCC" = xyes; then
+        CFLAGS="$CFLAGS -g1 -fno-omit-frame-pointer"
+    fi
+
+    if test "x$GXX" = xyes; then
+        CXXFLAGS="$CXXFLAGS -g1 -fno-omit-frame-pointer"
+    fi
 fi
+
+AM_CONDITIONAL([ENABLE_STACKTRACES], [test x$enable_stacktraces = xyes])
+if test "x$enable_stacktraces" = xyes; then
+    AC_DEFINE(ENABLE_STACKTRACES, 1, [Define this symbol if stacktraces should be enables])
+fi
+AX_CHECK_LINK_FLAG([-Wl,-wrap=__cxa_allocate_exception], [LINK_WRAP_SUPPORTED=yes],,,)
+AX_CHECK_COMPILE_FLAG([-rdynamic], [RDYNAMIC_SUPPORTED=yes],,,)
+AM_CONDITIONAL([STACKTRACE_WRAPPED_CXX_ABI],[test x$LINK_WRAP_SUPPORTED = xyes])
+AM_CONDITIONAL([RDYNAMIC_SUPPORTED],[test x$RDYNAMIC_SUPPORTED = xyes])
+
+if test x$LINK_WRAP_SUPPORTED = "xyes"; then
+  AC_DEFINE(STACKTRACE_WRAPPED_CXX_ABI, 1, [Define this symbol to use wrapped CXX ABIs for exception stacktraces])],
+fi
+
+# Needed for MinGW targets when debug symbols are enabled as compiled objects get very large
+AX_CHECK_COMPILE_FLAG([-Wa,-mbig-obj], [CXXFLAGS="$CXXFLAGS -Wa,-mbig-obj"],,,)
 
 ERROR_CXXFLAGS=
 if test "x$enable_werror" = "xyes"; then
@@ -1209,6 +1242,7 @@ echo "  with test     = $use_tests"
 echo "  with bench    = $use_bench"
 echo "  with upnp     = $use_upnp"
 echo "  debug enabled = $enable_debug"
+echo "  stacktraces enabled = $enable_stacktraces"
 echo "  werror        = $enable_werror"
 echo 
 echo "  target os     = $TARGET_OS"

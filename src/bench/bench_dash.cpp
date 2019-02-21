@@ -5,6 +5,7 @@
 #include "bench.h"
 
 #include "key.h"
+#include "stacktraces.h"
 #include "validation.h"
 #include "util.h"
 
@@ -16,6 +17,9 @@ void CleanupBLSDkgTests();
 int
 main(int argc, char** argv)
 {
+    RegisterPrettySignalHandlers();
+    RegisterPrettyTerminateHander();
+
     ECC_Start();
     ECCVerifyHandle verifyHandle;
 

@@ -3085,13 +3085,10 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman, const std::atomic<bool>& i
             }
             else
             {
-                PrintExceptionContinue(&e, "ProcessMessages()");
+                PrintExceptionContinue(std::current_exception(), "ProcessMessages()");
             }
-        }
-        catch (const std::exception& e) {
-            PrintExceptionContinue(&e, "ProcessMessages()");
         } catch (...) {
-            PrintExceptionContinue(NULL, "ProcessMessages()");
+            PrintExceptionContinue(std::current_exception(), "ProcessMessages()");
         }
 
         if (!fRet) {

@@ -175,7 +175,12 @@ class BitcoinTestFramework(object):
 
         if not self.options.noshutdown:
             print("Stopping nodes")
-            stop_nodes(self.nodes)
+            try:
+                stop_nodes(self.nodes)
+            except BaseException as e:
+                success = False
+                print("Unexpected exception caught during shutdown: " + repr(e))
+                traceback.print_tb(sys.exc_info()[2])
         else:
             print("Note: dashds were not stopped and may still be running")
 

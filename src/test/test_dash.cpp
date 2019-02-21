@@ -21,6 +21,7 @@
 #include "rpc/server.h"
 #include "rpc/register.h"
 #include "script/sigcache.h"
+#include "stacktraces.h"
 
 #include "test/testutil.h"
 
@@ -33,6 +34,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/unit_test_monitor.hpp>
 #include <boost/thread.hpp>
 
 std::unique_ptr<CConnman> g_connman;
@@ -225,3 +227,33 @@ bool ShutdownRequested()
 {
   return false;
 }
+
+template<typename T>
+void translate_exception(const T &e)
+{
+    std::cerr << GetPrettyExceptionStr(std::current_exception()) << std::endl;
+    throw;
+}
+
+template<typename T>
+void register_exception_translator()
+{
+    boost::unit_test::unit_test_monitor.register_exception_translator<T>(&translate_exception<T>);
+}
+
+struct ExceptionInitializer {
+    ExceptionInitializer()
+    {
+        RegisterPrettyTerminateHander();
+        RegisterPrettySignalHandlers();
+
+        register_exception_translator<std::exception>();
+        register_exception_translator<std::string>();
+        register_exception_translator<const char*>();
+    }
+    ~ExceptionInitializer()
+    {
+    }
+};
+
+BOOST_GLOBAL_FIXTURE( ExceptionInitializer );
