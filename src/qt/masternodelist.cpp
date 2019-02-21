@@ -289,7 +289,7 @@ void MasternodeList::updateNodeList()
     ui->tableWidgetMasternodes->setSortingEnabled(false);
     ui->tableWidgetMasternodes->clearContents();
     ui->tableWidgetMasternodes->setRowCount(0);
-    std::map<COutPoint, CMasternode> mapMasternodes = mnodeman.GetFullMasternodeMap();
+    const std::map<COutPoint, CMasternode> &mapMasternodes = mnodeman.GetFullMasternodeMap();
     int offsetFromUtc = GetOffsetFromUtc();
 
     for (const auto& mnpair : mapMasternodes)

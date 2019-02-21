@@ -461,7 +461,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             obj.pushKV(strOutpoint, rankpair.first);
         }
     } else {
-        std::map<COutPoint, CMasternode> mapMasternodes = mnodeman.GetFullMasternodeMap();
+        const std::map<COutPoint, CMasternode> &mapMasternodes = mnodeman.GetFullMasternodeMap();
         for (const auto& mnpair : mapMasternodes) {
             CMasternode mn = mnpair.second;
             std::string strOutpoint = mnpair.first.ToStringShort();
