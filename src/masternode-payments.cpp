@@ -569,6 +569,7 @@ bool CMasternodeBlockPayees::HasPayeeWithVotes(const CScript& payeeIn, int nVote
 
 bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes, bool retry) const
 {
+    LOCK(cs_main);
     LOCK(cs_vecPayees);
 	const CAmount& nHalfFee = fee / 2;
     int nMaxSignatures = 0;
