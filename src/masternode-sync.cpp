@@ -89,7 +89,6 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
             //try to activate our masternode if possible
             activeMasternode.ManageState(connman);
-            LogPrintf("Adding full-sync flag to all connected peers\n");
             connman.ForEachNode([](CNode* pnode) {
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "full-sync");
             });
