@@ -225,8 +225,16 @@ void CMasternode::Check(bool fForce)
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
         if(fSentinelPingExpired) {
-            if(!fOurMasternode)
+            if(!fOurMasternode){
                 nPingRetries++;
+                CMasternodeBroadcast mnb(*this);
+                uint256 hash = mnb.GetHash();
+                bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
+                if (existsInMnbList) {
+                    mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = nPingRetries;
+                    
+                }
+            }
             if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
                 nActiveState = MASTERNODE_NEW_START_REQUIRED;
                 if(nActiveStatePrev != nActiveState) {
