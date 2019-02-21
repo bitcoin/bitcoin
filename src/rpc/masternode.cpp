@@ -111,6 +111,8 @@ UniValue masternode(const JSONRPCRequest& request)
 
         int nCount;
         masternode_info_t mnInfo;
+        // run masternode check incase of inconsistencies
+        mnodeman.Check();
         mnodeman.GetNextMasternodeInQueueForPayment(true, nCount, mnInfo);
 
         int total = mnodeman.size();
@@ -155,7 +157,8 @@ UniValue masternode(const JSONRPCRequest& request)
         }
         nHeight = pindex->nHeight + (strCommand == "current" ? 1 : 10);
         mnodeman.UpdateLastPaid(pindex);
-
+        // run masternode check incase of inconsistencies
+        mnodeman.Check();
         if(!mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount, mnInfo))
             return "unknown";
 
@@ -295,6 +298,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
     if (strCommand == "list-conf")
     {
+        mnodeman.Check();
         UniValue resultObj(UniValue::VOBJ);
 
         for (const auto& mne : masternodeConfig.getEntries()) {
@@ -437,7 +441,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 "                   UPDATE_REQUIRED / POSE_BAN / OUTPOINT_SPENT (can be additionally filtered, partial match)\n"
                 );
     }
-
+    mnodeman.Check();
     if (strMode == "full" || strMode == "json" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
         CBlockIndex* pindex = NULL;
         {

@@ -143,14 +143,15 @@ void CMasternode::Check(bool fForce)
     if(IsOutpointSpent()) return;
 
     int nHeight = 0;
-  
-	TRY_LOCK(cs_main, lockMain);
-	if (!lockMain) return;
-    Coin coin;
-    if(!GetUTXOCoin(outpoint, coin)) {
-        nActiveState = MASTERNODE_OUTPOINT_SPENT;
-        LogPrint(BCLog::MN, "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
-        return;
+    {
+    	TRY_LOCK(cs_main, lockMain);
+    	if (!lockMain) return;
+        Coin coin;
+        if(!GetUTXOCoin(outpoint, coin)) {
+            nActiveState = MASTERNODE_OUTPOINT_SPENT;
+            LogPrint(BCLog::MN, "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
+            return;
+        }
     }
 
     nHeight = chainActive.Height();
@@ -228,6 +229,12 @@ void CMasternode::Check(bool fForce)
         if(fSentinelPingExpired) {
             if(!fOurMasternode)
                 nPingRetries++;
+            if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
+                nActiveState = MASTERNODE_NEW_START_REQUIRED;
+                if(nActiveStatePrev != nActiveState) {
+                    LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+                }
+            }                
             return;
         }
         // part 2: expire based on sentinel ping  
