@@ -228,7 +228,7 @@ void CMasternode::Check(bool fForce)
             if(!fOurMasternode){
                 nPingRetries++;
                 CMasternodeBroadcast mnb(*this);
-                uint256 hash = mnb.GetHash();
+                const uint256 &hash = mnb.GetHash();
                 bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
                 if (existsInMnbList) {
                     mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = nPingRetries;
@@ -854,7 +854,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
 
     // and update mnodeman.mapSeenMasternodeBroadcast.lastPing which is probably outdated
     CMasternodeBroadcast mnb(*pmn);
-    uint256 hash = mnb.GetHash();
+    const uint256 &hash = mnb.GetHash();
     bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
     if (existsInMnbList) {
         mnodeman.mapSeenMasternodeBroadcast[hash].second.lastPing = *this;

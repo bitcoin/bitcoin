@@ -178,7 +178,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
         std::map<COutPoint, CMasternode>::iterator it = mapMasternodes.begin();
         while (it != mapMasternodes.end()) {
             CMasternodeBroadcast mnb = CMasternodeBroadcast(it->second);
-            uint256 hash = mnb.GetHash();
+            const uint256 &hash = mnb.GetHash();
             // If collateral was spent ...
             if (it->second.IsOutpointSpent()) {
                 LogPrint(BCLog::MN, "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", it->second.GetStateString(), it->second.addr.ToString(), size() - 1);
@@ -950,8 +950,8 @@ void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 
     CMasternodeBroadcast mnb(mn);
     CMasternodePing mnp = mnb.lastPing;
-    uint256 hashMNB = mnb.GetHash();
-    uint256 hashMNP = mnp.GetHash();
+    const uint256 &hashMNB = mnb.GetHash();
+    const uint256 &hashMNP = mnp.GetHash();
     pnode->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
     pnode->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
     mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
@@ -1437,7 +1437,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         LOCK(cs);
         nDos = 0;
         LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.outpoint.ToStringShort());
-        uint256 hash = mnb.GetHash();
+        const uint256 &hash = mnb.GetHash();
         if(mapSeenMasternodeBroadcast.count(hash) && !mnb.fRecovery) { //seen
             LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.outpoint.ToStringShort());
             // less then 2 pings left before this MN goes into non-recoverable state, bump sync timeout
@@ -1606,7 +1606,7 @@ void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMas
     mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
 
     CMasternodeBroadcast mnb(*pmn);
-    uint256 hash = mnb.GetHash();
+    const uint256 &hash = mnb.GetHash();
     if(mapSeenMasternodeBroadcast.count(hash)) {
         mapSeenMasternodeBroadcast[hash].second.lastPing = mnp;
         mapSeenMasternodeBroadcast[hash].second.nPingRetries = pmn->nPingRetries;
