@@ -1437,15 +1437,11 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         LOCK(cs);
         nDos = 0;
         LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.outpoint.ToStringShort());
-        CMasternode* pmn = Find(mnb.outpoint);
-        int nPingRetries = 0;
-        if(pmn)
-            nPingRetries = pmn->nPingRetries;
         uint256 hash = mnb.GetHash();
         if(mapSeenMasternodeBroadcast.count(hash) && !mnb.fRecovery) { //seen
             LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.outpoint.ToStringShort());
             // less then 2 pings left before this MN goes into non-recoverable state, bump sync timeout
-            if(((GetTime() - mapSeenMasternodeBroadcast[hash].first) > (MASTERNODE_SENTINEL_PING_MAX_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2)) && nPingRetries >= (MASTERNODE_MAX_RETRIES-1)) {
+            if(((GetTime() - mapSeenMasternodeBroadcast[hash].first) > (MASTERNODE_SENTINEL_PING_MAX_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2)) && mapSeenMasternodeBroadcast[hash].second.nPingRetries >= (MASTERNODE_MAX_RETRIES-2)) {
                 LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen update\n", mnb.outpoint.ToStringShort());
                 mapSeenMasternodeBroadcast[hash].first = GetTime();
                 masternodeSync.BumpAssetLastTime("CMasternodeMan::CheckMnbAndUpdateMasternodeList - seen");
@@ -1483,6 +1479,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         }
 
         // search Masternode list
+        CMasternode* pmn = Find(mnb.outpoint);
         if(pmn) {
             const CMasternodeBroadcast &mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
             if(!mnb.Update(pmn, nDos, connman)) {
