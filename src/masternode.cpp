@@ -205,7 +205,7 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
     }
     
     if (Params().NetworkIDString() != CBaseChainParams::REGTEST) {  
-        if (abs(GetAdjustedTime() - sigTime) < MASTERNODE_MIN_MNP_SECONDS*10) {  
+        if (sigTime <= 0 || !IsBroadcastedWithin(MASTERNODE_MIN_MNP_SECONDS*10)) {  
             nActiveState = MASTERNODE_PRE_ENABLED;  
             if (nActiveStatePrev != nActiveState) { 
                 LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());    
