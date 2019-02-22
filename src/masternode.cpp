@@ -245,7 +245,7 @@ void CMasternode::Check(bool fForce)
             return;
         }
         // part 2: expire based on sentinel ping  
-        fSentinelPingExpired = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive() && !lastPing.fSentinelIsCurrent;
+        fSentinelPingExpired = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive() && lastPing && !lastPing.fSentinelIsCurrent;
         if(fSentinelPingExpired) {
             nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
             if(nActiveStatePrev != nActiveState) {
