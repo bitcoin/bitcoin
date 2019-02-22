@@ -249,16 +249,17 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
                     LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
                 }
             }                
-            return;
         }
-        // part 2: expire based on sentinel ping  
-        fSentinelPingExpired = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive() && lastPing && !lastPing.fSentinelIsCurrent;
-        if(fSentinelPingExpired) {
-            nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
-            if(nActiveStatePrev != nActiveState) {
-                LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+        else{
+            // part 2: expire based on sentinel ping  
+            fSentinelPingExpired = masternodeSync.IsSynced() && mnodeman.IsSentinelPingActive() && lastPing && !lastPing.fSentinelIsCurrent;
+            if(fSentinelPingExpired) {
+                nActiveState = MASTERNODE_SENTINEL_PING_EXPIRED;
+                if(nActiveStatePrev != nActiveState) {
+                    LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+                }
+                return;
             }
-            return;
         }
     }
 
