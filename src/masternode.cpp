@@ -126,8 +126,15 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
     return COLLATERAL_OK;
 }
 
-void CMasternode::Check(bool fForce)
+void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
 {
+    if(IsEnabled()){
+        const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+        if(!payeeScripts.empty()){
+            if(payeeScripts.find(mnScript) == payeeScripts.end())
+                return;
+        }
+    }
     LOCK(cs);
 
     if(ShutdownRequested()) return;
