@@ -5,7 +5,6 @@
 #include <key_io.h>
 #include <keystore.h>
 #include <pubkey.h>
-#include <rpc/protocol.h>
 #include <rpc/util.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
