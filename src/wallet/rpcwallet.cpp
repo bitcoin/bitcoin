@@ -3790,9 +3790,17 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
 
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
+    std::set<std::string> addresses;
     for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
         if (item.second.name == label) {
-            ret.pushKV(EncodeDestination(item.first), AddressBookDataToJSON(item.second, false));
+            std::string address = EncodeDestination(item.first);
+            if (addresses.emplace(address).second) {
+                // UniValue::pushKV checks if the key exists in O(N)
+                // and since duplicate addresses are filtered with the above
+                // std::set in O(log(N)), UniValue::__pushKV is used instead,
+                // which currently is O(1).
+                ret.__pushKV(address, AddressBookDataToJSON(item.second, false));
+            }
         }
     }
 
