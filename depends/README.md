@@ -26,6 +26,7 @@ Common `host-platform-triplets` for cross compilation are:
 - `x86_64-pc-linux-gnu` for x86 Linux
 - `x86_64-w64-mingw32` for Win64
 - `x86_64-apple-darwin16` for macOS
+- `aarch64-apple-darwin19` for iOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `powerpc64-linux-gnu` for Linux POWER 64-bit (big endian)
@@ -79,6 +80,21 @@ For linux S390X cross compilation:
 
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 
+#### For iOS cross compilation
+
+This produces a library which can be used in an iOS application. It is not well tested and does not provide a GUI.
+
+For iOS cross compilation you need to obtain the iOS SDK.
+
+Make sure the IOS_SDK_VERSION version specified in [hosts/darwin.mk](hosts/darwin.mk) is available.
+
+    make HOST=aarch64-apple-darwin19 NO_WALLET=1 NO_QT=1 NO_UPNP=1
+
+There is currently no wallet support, because BDB compilation fails. There is also
+no GUI support (QT).
+
+See also: https://github.com/bitcoin/bitcoin/issues/11720
+
 ### Dependency Options
 The following can be set when running make: make FOO=bar
 
@@ -123,4 +139,3 @@ This is an example command for a default build with no disabled dependencies:
 
 - [description.md](description.md): General description of the depends system
 - [packages.md](packages.md): Steps for adding packages
-
