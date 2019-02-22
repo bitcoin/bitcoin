@@ -445,7 +445,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     // make sure signature isn't in the future (past is OK)
-    if (sigTime > GetAdjustedTime() + 60 * 60) {
+    if (sigTime > GetAdjustedTime() + MASTERNODE_MIN_MNB_SECONDS) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::SimpleCheck -- Signature rejected, too far into the future: masternode=%s\n", outpoint.ToStringShort());
         nDos = 1;
         return false;
