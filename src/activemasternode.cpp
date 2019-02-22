@@ -112,7 +112,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         return false;
     }
    // if preenabled allow pings to go through until masternode becomes enabled
-   if(pmn->nActiveState != MASTERNODE_PRE_ENABLED && masternodeSync.IsMasternodeListSynced()){
+   if(pmn->nActiveState != MASTERNODE_PRE_ENABLED && masternodeSync.IsSynced()){
         // ensure that we should only create ping if in the winners list
         const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
         bool foundPayee = false;

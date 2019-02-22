@@ -770,7 +770,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
         return false;
     }
     // allow pings during pre-enabled state and if its a new broadcast ping
-    if(!fFromNewBroadcast && pmn->nActiveState != MASTERNODE_PRE_ENABLED && masternodeSync.IsMasternodeListSynced()){
+    if(!fFromNewBroadcast && pmn->nActiveState != MASTERNODE_PRE_ENABLED && masternodeSync.IsSynced()){
         // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
         const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
         bool foundPayee = false;
