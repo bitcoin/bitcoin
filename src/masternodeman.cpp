@@ -1605,13 +1605,20 @@ void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMas
     }
     
     mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
-
+    
+    if(pmn->nPingRetries > 0 && pmn->IsEnabled()){
+        LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Ping retries reduced from %d\n", pmn->nPingRetries);
+        pmn->nPingRetries -= 1;
+    }
+    
+    
     CMasternodeBroadcast mnb(*pmn);
     const uint256 &hash = mnb.GetHash();
     if(mapSeenMasternodeBroadcast.count(hash)) {
         mapSeenMasternodeBroadcast[hash].second.lastPing = mnp;
         mapSeenMasternodeBroadcast[hash].second.nPingRetries = pmn->nPingRetries;
     }
+    
 }
 
 void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
