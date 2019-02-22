@@ -327,6 +327,7 @@ public:
         READWRITE(nProtocolVersion);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(lastPing);
+            READWRITE(nPingRetries);
         }
     }
 
