@@ -37,7 +37,8 @@ Configuration files
 
 Import trusted keys
 -------------------
-In order to check the commit signatures you must add the trusted PGP keys to your machine. This can be done in Linux by running
+In order to check the commit signatures, you must add the trusted PGP keys to your machine. [GnuPG](https://gnupg.org/) may be used to import the trusted keys by running the following command:
+
 ```sh
 gpg --recv-keys $(<contrib/verify-commits/trusted-keys)
 ```
