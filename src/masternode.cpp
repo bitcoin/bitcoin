@@ -128,11 +128,11 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 
 void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
 {
-    if(IsEnabled()){
+    if(IsEnabled() && !payeeScripts.empty()){
         const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
-        if(!payeeScripts.empty()){
-            if(payeeScripts.find(mnScript) == payeeScripts.end())
-                return;
+        if(payeeScripts.find(mnScript) == payeeScripts.end()){
+            LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s not found in winners list, skipping...\n", outpoint.ToStringShort());
+            return;
         }
     }
     LOCK(cs);
