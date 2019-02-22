@@ -12,7 +12,7 @@
 
 #include <future>
 
-const char* TransactionErrorString(const TransactionError err)
+std::string TransactionErrorString(const TransactionError err)
 {
     switch (err) {
         case TransactionError::OK:
@@ -33,21 +33,15 @@ const char* TransactionErrorString(const TransactionError err)
             return "PSBTs not compatible (different transactions)";
         case TransactionError::SIGHASH_MISMATCH:
             return "Specified sighash value does not match existing value";
-
-        case TransactionError::UNKNOWN_ERROR:
-        default: break;
+        // no default case, so the compiler can warn about missing cases
     }
-    return "Unknown error";
+    assert(false);
 }
 
-bool BroadcastTransaction(const CTransactionRef tx, uint256& hashTx, TransactionError& error, std::string& err_string, const bool allowhighfees)
+TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx, std::string& err_string, const CAmount& highfee)
 {
     std::promise<void> promise;
     hashTx = tx->GetHash();
-
-    CAmount nMaxRawTxFee = maxTxFee;
-    if (allowhighfees)
-        nMaxRawTxFee = 0;
 
     { // cs_main scope
     LOCK(cs_main);
@@ -63,19 +57,16 @@ bool BroadcastTransaction(const CTransactionRef tx, uint256& hashTx, Transaction
         CValidationState state;
         bool fMissingInputs;
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, nMaxRawTxFee)) {
+                                nullptr /* plTxnReplaced */, false /* bypass_limits */, highfee)) {
             if (state.IsInvalid()) {
                 err_string = FormatStateMessage(state);
-                error = TransactionError::MEMPOOL_REJECTED;
-                return false;
+                return TransactionError::MEMPOOL_REJECTED;
             } else {
                 if (fMissingInputs) {
-                    error = TransactionError::MISSING_INPUTS;
-                    return false;
+                    return TransactionError::MISSING_INPUTS;
                 }
                 err_string = FormatStateMessage(state);
-                error = TransactionError::MEMPOOL_ERROR;
-                return false;
+                return TransactionError::MEMPOOL_ERROR;
             }
         } else {
             // If wallet is enabled, ensure that the wallet has been made aware
@@ -88,8 +79,7 @@ bool BroadcastTransaction(const CTransactionRef tx, uint256& hashTx, Transaction
             });
         }
     } else if (fHaveChain) {
-        error = TransactionError::ALREADY_IN_CHAIN;
-        return false;
+        return TransactionError::ALREADY_IN_CHAIN;
     } else {
         // Make sure we don't block forever if re-sending
         // a transaction already in mempool.
@@ -100,16 +90,14 @@ bool BroadcastTransaction(const CTransactionRef tx, uint256& hashTx, Transaction
 
     promise.get_future().wait();
 
-    if(!g_connman) {
-        error = TransactionError::P2P_DISABLED;
-        return false;
+    if (!g_connman) {
+        return TransactionError::P2P_DISABLED;
     }
 
     CInv inv(MSG_TX, hashTx);
-    g_connman->ForEachNode([&inv](CNode* pnode)
-    {
+    g_connman->ForEachNode([&inv](CNode* pnode) {
         pnode->PushInventory(inv);
     });
 
-    return true;
-    }
+    return TransactionError::OK;
+}

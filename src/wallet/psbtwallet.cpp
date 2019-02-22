@@ -4,7 +4,7 @@
 
 #include <wallet/psbtwallet.h>
 
-bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, TransactionError& error, bool& complete, int sighash_type, bool sign, bool bip32derivs)
+TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs)
 {
     LOCK(pwallet->cs_wallet);
     // Get all of the previous transactions
@@ -19,8 +19,7 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, Transac
 
         // Verify input looks sane. This will check that we have at most one uxto, witness or non-witness.
         if (!input.IsSane()) {
-            error = TransactionError::INVALID_PSBT;
-            return false;
+            return TransactionError::INVALID_PSBT;
         }
 
         // If we have no utxo, grab it from the wallet.
@@ -37,8 +36,7 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, Transac
 
         // Get the Sighash type
         if (sign && input.sighash_type > 0 && input.sighash_type != sighash_type) {
-            error = TransactionError::SIGHASH_MISMATCH;
-            return false;
+            return TransactionError::SIGHASH_MISMATCH;
         }
 
         complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psbtx, i, sighash_type);
@@ -58,5 +56,5 @@ bool FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& psbtx, Transac
         psbt_out.FromSignatureData(sigdata);
     }
 
-    return true;
+    return TransactionError::OK;
 }
