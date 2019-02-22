@@ -132,9 +132,9 @@ void CMasternodeMan::Check(bool fForce)
 {
 	// SYSCOIN remove csmain lock
     LOCK(cs);
+    std::set<CScript> payeeScripts;
     // only check masternodes in winners list
-    // once the masternode leaves the recent payee list set lastPing to null to avoid the case when it reenters and checks this code it gets flagged as expired before the masternode has a chance to send a ping to the network
-    /*{
+    {
         LOCK(cs_mapMasternodeBlocks);
    
         for (int i = -10; i < 20; i++) {
@@ -143,18 +143,18 @@ void CMasternodeMan::Check(bool fForce)
                 const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
                 for(auto& payee: payees.vecPayees){
                     if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
-                        
+                        payeeScripts.insert(payee.GetPayee());
                     }
                 }
                 
             }
         }
-    }*/
+    }
     
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
-        mnpair.second.Check(fForce);
+        mnpair.second.Check(fForce, payeeScripts);
     }
 }
 
