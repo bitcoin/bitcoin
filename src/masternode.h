@@ -39,7 +39,7 @@ public:
     uint256 blockHash{};
     int64_t sigTime{}; //mnb message times
     std::vector<unsigned char> vchSig{};
-    bool fSentinelIsCurrent = false; // true if last sentinel ping was current
+    bool fSentinelIsCurrent = true; // true if last sentinel ping was current
     // MSB is major version to control backwards compatibility, other 3 bits corresponds to miner x.x.x version scheme
     uint32_t nSentinelVersion{DEFAULT_SENTINEL_VERSION};
     uint32_t nDaemonVersion{DEFAULT_DAEMON_VERSION};
