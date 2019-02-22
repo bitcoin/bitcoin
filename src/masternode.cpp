@@ -225,8 +225,8 @@ void CMasternode::Check(bool fForce)
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
         if(fSentinelPingExpired) {
-            // only update other masternodes and if its not forced (the timer that calls maintenance which calls every masternode passes false for force)
-            if(!fOurMasternode && !fForce){
+            // only update if its not forced (the timer that calls maintenance which calls every masternode passes false for force)
+            if(!fForce){
                 nPingRetries++;
                 CMasternodeBroadcast mnb(*this);
                 const uint256 &hash = mnb.GetHash();
