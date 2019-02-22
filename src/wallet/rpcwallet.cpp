@@ -4007,8 +4007,8 @@ UniValue walletprocesspsbt(const JSONRPCRequest& request)
     bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
     bool bip32derivs = request.params[3].isNull() ? false : request.params[3].get_bool();
     bool complete = true;
-    TransactionError err;
-    if (!FillPSBT(pwallet, psbtx, err, complete, nHashType, sign, bip32derivs)) {
+    const TransactionError err = FillPSBT(pwallet, psbtx, complete, nHashType, sign, bip32derivs);
+    if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
 
@@ -4125,8 +4125,8 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     // Fill transaction with out data but don't sign
     bool bip32derivs = request.params[4].isNull() ? false : request.params[4].get_bool();
     bool complete = true;
-    TransactionError err;
-    if (!FillPSBT(pwallet, psbtx, err, complete, 1, false, bip32derivs)) {
+    const TransactionError err = FillPSBT(pwallet, psbtx, complete, 1, false, bip32derivs);
+    if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
 
