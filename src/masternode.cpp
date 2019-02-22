@@ -742,7 +742,7 @@ bool CMasternodePing::SimpleCheck(int& nDos)
     // don't ban by default
     nDos = 0;
 
-    if (sigTime > GetAdjustedTime() + (MASTERNODE_SENTINEL_PING_MAX_SECONDS/2)) {
+    if (sigTime > GetAdjustedTime() + MASTERNODE_MIN_MNB_SECONDS) {
         LogPrint(BCLog::MN, "CMasternodePing::SimpleCheck -- Signature rejected, too far into the future, masternode=%s\n", masternodeOutpoint.ToStringShort());
         nDos = 1;
         return false;
