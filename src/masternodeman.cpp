@@ -781,7 +781,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
-        LogPrintf("MNANNOUNCE mnb.nPingRetries %d addr %s\n", mnb.nPingRetries, mnb.addr.ToString());
         pfrom->setAskFor.erase(mnb.GetHash());
 
         if(!masternodeSync.IsBlockchainSynced()) return;
@@ -947,12 +946,10 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
 void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 {
     AssertLockHeld(cs);
-    LogPrintf("PushDsegInvs mn.nPingRetries %d addr=%s\n", mn.nPingRetries, mn.addr.ToString());
     CMasternodeBroadcast mnb(mn);
     CMasternodePing mnp = mnb.lastPing;
     const uint256 &hashMNB = mnb.GetHash();
     const uint256 &hashMNP = mnp.GetHash();
-    LogPrintf("PushDsegInvs mnb.nPingRetries %d\n", mnb.nPingRetries);
     pnode->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
     pnode->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
     mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
