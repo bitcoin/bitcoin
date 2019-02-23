@@ -300,7 +300,7 @@ static bool rest_mempool_info(HTTPRequest* req, const std::string& strURIPart)
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolInfoObject = mempoolInfoToJSON();
+        UniValue mempoolInfoObject = MempoolInfoToJSON(::mempool);
 
         std::string strJSON = mempoolInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
@@ -322,7 +322,7 @@ static bool rest_mempool_contents(HTTPRequest* req, const std::string& strURIPar
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolObject = mempoolToJSON(true);
+        UniValue mempoolObject = MempoolToJSON(::mempool, true);
 
         std::string strJSON = mempoolObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
