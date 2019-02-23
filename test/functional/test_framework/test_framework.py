@@ -277,7 +277,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.setup_clean_chain:
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
-            self.log.debug('Generate a block with current time to finalize the cache and assert we are out of IBD')
+            # To ensure that all nodes are out of IBD, the most recent block
+            # must have a timestamp not too old (see IsInitialBlockDownload()).
+            self.log.debug('Generate a block with current time')
             block_hash = self.nodes[0].generate(1)[0]
             block = self.nodes[0].getblock(blockhash=block_hash, verbosity=0)
             for n in self.nodes:
@@ -493,14 +495,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # block in the cache does not age too much (have an old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
-            for i in range(2):
-                for peer in range(4):
-                    for j in range(25):
-                        if i == 1 and peer == 3 and j == 24:
-                            break
-                        self.nodes[peer].generatetoaddress(1, self.nodes[peer].get_deterministic_priv_key().address)
-                    # Must sync before next peer starts generating blocks
-                    sync_blocks(self.nodes)
+            for i in range(8):
+                self.nodes[0].generatetoaddress(25 if i != 7 else 24, self.nodes[i % 4].get_deterministic_priv_key().address)
+            sync_blocks(self.nodes)
 
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
