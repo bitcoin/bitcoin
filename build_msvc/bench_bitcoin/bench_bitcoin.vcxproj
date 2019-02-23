@@ -32,6 +32,7 @@
     <ClCompile Include="..\..\src\bench\examples.cpp" />
     <ClCompile Include="..\..\src\bench\lockedpool.cpp" />
     <ClCompile Include="..\..\src\bench\mempool_eviction.cpp" />
+    <ClCompile Include="..\..\src\bench\rpc_mempool.cpp" />
     <ClCompile Include="..\..\src\bench\merkle_root.cpp" />
     <ClCompile Include="..\..\src\bench\rollingbloom.cpp" />
     <ClCompile Include="..\..\src\bench\verify_script.cpp" />
