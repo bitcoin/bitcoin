@@ -34,6 +34,7 @@ bench_bench_dash_SOURCES = \
   bench/mempool_eviction.cpp \
   bench/nanobench.h \
   bench/nanobench.cpp \
+  bench/rpc_mempool.cpp \
   bench/util_time.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
@@ -58,7 +59,9 @@ bench_bench_dash_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBUNIVALUE)
+  $(LIBUNIVALUE) \
+  $(EVENT_PTHREADS_LIBS) \
+  $(EVENT_LIBS)
 
 if ENABLE_ZMQ
 bench_bench_dash_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
