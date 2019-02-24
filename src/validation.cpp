@@ -206,8 +206,10 @@ private:
     CBlockIndex* FindMostWorkChain() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const CDiskBlockPos& pos, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    //! Mark a block as not having block data
+    void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 } g_chainstate;
 
 /**
@@ -4168,6 +4170,42 @@ bool ReplayBlocks(const CChainParams& params, CCoinsView* view) {
     return g_chainstate.ReplayBlocks(params, view);
 }
 
+//! Helper for CChainState::RewindBlockIndex
+void CChainState::EraseBlockData(CBlockIndex* index)
+{
+    AssertLockHeld(cs_main);
+    assert(!chainActive.Contains(index)); // Make sure this block isn't active
+
+    // Reduce validity
+    index->nStatus = std::min<unsigned int>(index->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE) | (index->nStatus & ~BLOCK_VALID_MASK);
+    // Remove have-data flags.
+    index->nStatus &= ~(BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO);
+    // Remove storage location.
+    index->nFile = 0;
+    index->nDataPos = 0;
+    index->nUndoPos = 0;
+    // Remove various other things
+    index->nTx = 0;
+    index->nChainTx = 0;
+    index->nSequenceId = 0;
+    // Make sure it gets written.
+    setDirtyBlockIndex.insert(index);
+    // Update indexes
+    setBlockIndexCandidates.erase(index);
+    std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> ret = mapBlocksUnlinked.equal_range(index->pprev);
+    while (ret.first != ret.second) {
+        if (ret.first->second == index) {
+            mapBlocksUnlinked.erase(ret.first++);
+        } else {
+            ++ret.first;
+        }
+    }
+    // Mark parent as eligible for main chain again
+    if (index->pprev && index->pprev->IsValid(BLOCK_VALID_TRANSACTIONS) && index->pprev->HaveTxsDownloaded()) {
+        setBlockIndexCandidates.insert(index->pprev);
+    }
+}
+
 bool CChainState::RewindBlockIndex(const CChainParams& params)
 {
     LOCK(cs_main);
@@ -4219,32 +4257,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
         // rewind all the way.  Blocks remaining on chainActive at this point
         // must not have their validity reduced.
         if (IsWitnessEnabled(pindexIter->pprev, params.GetConsensus()) && !(pindexIter->nStatus & BLOCK_OPT_WITNESS) && !chainActive.Contains(pindexIter)) {
-            // Reduce validity
-            pindexIter->nStatus = std::min<unsigned int>(pindexIter->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE) | (pindexIter->nStatus & ~BLOCK_VALID_MASK);
-            // Remove have-data flags.
-            pindexIter->nStatus &= ~(BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO);
-            // Remove storage location.
-            pindexIter->nFile = 0;
-            pindexIter->nDataPos = 0;
-            pindexIter->nUndoPos = 0;
-            // Remove various other things
-            pindexIter->nTx = 0;
-            pindexIter->nChainTx = 0;
-            pindexIter->nSequenceId = 0;
-            // Make sure it gets written.
-            setDirtyBlockIndex.insert(pindexIter);
-            // Update indexes
-            setBlockIndexCandidates.erase(pindexIter);
-            std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> ret = mapBlocksUnlinked.equal_range(pindexIter->pprev);
-            while (ret.first != ret.second) {
-                if (ret.first->second == pindexIter) {
-                    mapBlocksUnlinked.erase(ret.first++);
-                } else {
-                    ++ret.first;
-                }
-            }
-        } else if (pindexIter->IsValid(BLOCK_VALID_TRANSACTIONS) && pindexIter->HaveTxsDownloaded()) {
-            setBlockIndexCandidates.insert(pindexIter);
+            EraseBlockData(pindexIter);
         }
     }
 
