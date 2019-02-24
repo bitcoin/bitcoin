@@ -4234,10 +4234,13 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
 
     // nHeight is now the height of the first insufficiently-validated block, or tipheight + 1
     CValidationState state;
-    CBlockIndex* pindex = chainActive.Tip();
-    CBlockIndex* tip = pindex;
-    while (chainActive.Height() >= nHeight) {
-        if (fPruneMode && !(chainActive.Tip()->nStatus & BLOCK_HAVE_DATA)) {
+    CBlockIndex* tip = chainActive.Tip();
+    // Loop until the tip is below nHeight, or we reach a pruned block.
+    while (true) {
+        // Make sure nothing changed from under us (this won't happen because RewindBlockIndex runs before importing/network are active)
+        assert(tip == chainActive.Tip());
+        if (tip == nullptr || tip->nHeight < nHeight) break;
+        if (fPruneMode && !(tip->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, don't try rewinding past the HAVE_DATA point;
             // since older blocks can't be served anyway, there's
             // no need to walk further, and trying to DisconnectTip()
@@ -4245,29 +4248,29 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
             // of the blockchain).
             break;
         }
-        if (!DisconnectTip(state, params, nullptr)) {
-            return error("RewindBlockIndex: unable to disconnect block at height %i (%s)", pindex->nHeight, FormatStateMessage(state));
-        }
-        // Occasionally flush state to disk.
-        if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", FormatStateMessage(state));
-            return false;
-        }
-    }
 
-    // Reduce validity flag and have-data flags.
-    // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
-    // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
-    while (tip->nHeight > chainActive.Height()) {
+        // Disconnect block
+        if (!DisconnectTip(state, params, nullptr)) {
+            return error("RewindBlockIndex: unable to disconnect block at height %i (%s)", tip->nHeight, FormatStateMessage(state));
+        }
+
+        // Reduce validity flag and have-data flags.
+        // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
+        // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
         // Note: If we encounter an insufficiently validated block that
         // is on chainActive, it must be because we are a pruning node, and
         // this block or some successor doesn't HAVE_DATA, so we were unable to
         // rewind all the way.  Blocks remaining on chainActive at this point
         // must not have their validity reduced.
-        if (IsWitnessEnabled(tip->pprev, params.GetConsensus()) && !(tip->nStatus & BLOCK_OPT_WITNESS)) {
-            EraseBlockData(tip);
-        }
+        EraseBlockData(tip);
+
         tip = tip->pprev;
+
+        // Occasionally flush state to disk.
+        if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
+            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", FormatStateMessage(state));
+            return false;
+        }
     }
 
     if (chainActive.Tip() != nullptr) {
