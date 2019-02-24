@@ -4209,9 +4209,18 @@ void CChainState::EraseBlockData(CBlockIndex* index)
 bool CChainState::RewindBlockIndex(const CChainParams& params)
 {
     LOCK(cs_main);
-
     // Note that during -reindex-chainstate we are called with an empty chainActive!
 
+    // First erase all post-segwit blocks without witness not in the main chain,
+    // as this can we done without costly DisconnectTip calls. Active
+    // blocks will be dealt with below.
+    for (const auto& entry : mapBlockIndex) {
+        if (IsWitnessEnabled(entry.second->pprev, params.GetConsensus()) && !(entry.second->nStatus & BLOCK_OPT_WITNESS) && !chainActive.Contains(entry.second)) {
+            EraseBlockData(entry.second);
+        }
+    }
+
+    // Find what height we need to reorganize to.
     int nHeight = 1;
     while (nHeight <= chainActive.Height()) {
         // Although SCRIPT_VERIFY_WITNESS is now generally enforced on all
@@ -4226,6 +4235,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     // nHeight is now the height of the first insufficiently-validated block, or tipheight + 1
     CValidationState state;
     CBlockIndex* pindex = chainActive.Tip();
+    CBlockIndex* tip = pindex;
     while (chainActive.Height() >= nHeight) {
         if (fPruneMode && !(chainActive.Tip()->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, don't try rewinding past the HAVE_DATA point;
@@ -4248,17 +4258,16 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
     // Reduce validity flag and have-data flags.
     // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
     // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
-    for (const auto& entry : mapBlockIndex) {
-        CBlockIndex* pindexIter = entry.second;
-
+    while (tip->nHeight > chainActive.Height()) {
         // Note: If we encounter an insufficiently validated block that
         // is on chainActive, it must be because we are a pruning node, and
         // this block or some successor doesn't HAVE_DATA, so we were unable to
         // rewind all the way.  Blocks remaining on chainActive at this point
         // must not have their validity reduced.
-        if (IsWitnessEnabled(pindexIter->pprev, params.GetConsensus()) && !(pindexIter->nStatus & BLOCK_OPT_WITNESS) && !chainActive.Contains(pindexIter)) {
-            EraseBlockData(pindexIter);
+        if (IsWitnessEnabled(tip->pprev, params.GetConsensus()) && !(tip->nStatus & BLOCK_OPT_WITNESS)) {
+            EraseBlockData(tip);
         }
+        tip = tip->pprev;
     }
 
     if (chainActive.Tip() != nullptr) {
