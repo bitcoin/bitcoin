@@ -43,7 +43,7 @@ from test_framework.messages import (
     msg_headers
 )
 from test_framework.mininode import P2PInterface
-from test_framework.script import (CScript, OP_TRUE)
+from test_framework.script import (CScript, OP_TRUE, OP_DROP)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -131,7 +131,7 @@ class AssumeValidTest(BitcoinTestFramework):
         # Create a transaction spending the coinbase output with an invalid (null) signature
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].sha256, 0), scriptSig=b""))
-        tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
+        tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])))
         tx.calc_sha256()
 
         block102 = create_block(self.tip, create_coinbase(height), self.block_time)

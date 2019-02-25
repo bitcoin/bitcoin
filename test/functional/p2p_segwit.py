@@ -328,7 +328,7 @@ class SegWitTest(BitcoinTestFramework):
 
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
-        tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, CScript([OP_TRUE])))
+        tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])))
         tx.wit.vtxinwit.append(CTxInWitness())
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([CScriptNum(1)])]
 
@@ -496,7 +496,7 @@ class SegWitTest(BitcoinTestFramework):
         # Now try to spend the outputs. This should fail since SCRIPT_VERIFY_WITNESS is always enabled.
         p2wsh_tx = CTransaction()
         p2wsh_tx.vin = [CTxIn(COutPoint(txid, 0), b'')]
-        p2wsh_tx.vout = [CTxOut(value, CScript([OP_TRUE]))]
+        p2wsh_tx.vout = [CTxOut(value, CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP]))]
         p2wsh_tx.wit.vtxinwit.append(CTxInWitness())
         p2wsh_tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         p2wsh_tx.rehash()
@@ -813,7 +813,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.vin.append(CTxIn(COutPoint(self.utxo[0].sha256, self.utxo[0].n), b""))
 
         # Let's construct a witness program
-        witness_program = CScript([OP_TRUE])
+        witness_program = CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         tx.vout.append(CTxOut(self.utxo[0].nValue - 1000, script_pubkey))
@@ -1114,7 +1114,7 @@ class SegWitTest(BitcoinTestFramework):
 
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
-        tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
+        tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])))
         tx2.wit.vtxinwit.append(CTxInWitness())
         # First try a 521-byte stack element
         tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a' * (MAX_SCRIPT_ELEMENT_SIZE + 1), witness_program]
@@ -1155,7 +1155,7 @@ class SegWitTest(BitcoinTestFramework):
 
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
-        tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE])))
+        tx2.vout.append(CTxOut(tx.vout[0].nValue - 1000, CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])))
         tx2.wit.vtxinwit.append(CTxInWitness())
         tx2.wit.vtxinwit[0].scriptWitness.stack = [b'a'] * 44 + [long_witness_program]
         tx2.rehash()
@@ -1444,7 +1444,7 @@ class SegWitTest(BitcoinTestFramework):
 
         block = self.build_next_block()
         # Change the output of the block to be a witness output.
-        witness_program = CScript([OP_TRUE])
+        witness_program = CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])
         witness_hash = sha256(witness_program)
         script_pubkey = CScript([OP_0, witness_hash])
         block.vtx[0].vout[0].scriptPubKey = script_pubkey
@@ -1716,7 +1716,7 @@ class SegWitTest(BitcoinTestFramework):
         sign_p2pk_witness_input(witness_program, tx, 0, SIGHASH_ALL, temp_utxos[0].nValue, key)
         tx2 = CTransaction()
         tx2.vin.append(CTxIn(COutPoint(tx.sha256, 0), b""))
-        tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE])))
+        tx2.vout.append(CTxOut(tx.vout[0].nValue, CScript([OP_TRUE, OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])))
 
         script = get_p2pkh_script(pubkeyhash)
         sig_hash = SegwitVersion1SignatureHash(script, tx2, 0, SIGHASH_ALL, tx.vout[0].nValue)

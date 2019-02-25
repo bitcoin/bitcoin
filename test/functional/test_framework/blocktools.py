@@ -36,6 +36,7 @@ from .script import (
     OP_CHECKSIG,
     OP_RETURN,
     OP_TRUE,
+    OP_DROP,
     hash160,
 )
 from .util import assert_equal
@@ -120,12 +121,13 @@ def create_coinbase(height, pubkey=None):
     if (pubkey is not None):
         coinbaseoutput.scriptPubKey = CScript([pubkey, OP_CHECKSIG])
     else:
-        coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
+        # Use three OP_TRUEs to ensure we're always > 64 bytes in non-witness size
+        coinbaseoutput.scriptPubKey = CScript([OP_TRUE, OP_TRUE, OP_DROP])
     coinbase.vout = [coinbaseoutput]
     coinbase.calc_sha256()
     return coinbase
 
-def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=CScript()):
+def create_tx_with_script(prevtx, n, script_sig=b"", *, amount, script_pub_key=CScript([OP_TRUE, OP_DROP, OP_TRUE, OP_DROP])):
     """Return one-input, one-output transaction object
        spending the prevtx's n-th output with the given amount.
 
