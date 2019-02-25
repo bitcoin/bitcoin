@@ -523,13 +523,7 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
 
 static UniValue setban(const JSONRPCRequest& request)
 {
-    std::string strCommand;
-    if (!request.params[1].isNull())
-        strCommand = request.params[1].get_str();
-    if (request.fHelp || request.params.size() < 2 ||
-        (strCommand != "add" && strCommand != "remove"))
-        throw std::runtime_error(
-            RPCHelpMan{"setban",
+    const RPCHelpMan help{"setban",
                 "\nAttempts to add or remove an IP/Subnet from the banned list.\n",
                 {
                     {"subnet", RPCArg::Type::STR, RPCArg::Optional::NO, "The IP/Subnet (see getpeerinfo for nodes IP) with an optional netmask (default is /32 = single IP)"},
@@ -543,7 +537,13 @@ static UniValue setban(const JSONRPCRequest& request)
                             + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
                             + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
                 },
-            }.ToString());
+    };
+    std::string strCommand;
+    if (!request.params[1].isNull())
+        strCommand = request.params[1].get_str();
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size()) || (strCommand != "add" && strCommand != "remove")) {
+        throw std::runtime_error(help.ToString());
+    }
     if (!g_banman) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Error: Ban database not loaded");
     }
