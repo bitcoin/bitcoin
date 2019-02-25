@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1778,9 +1778,7 @@ static constexpr size_t PER_UTXO_OVERHEAD = sizeof(COutPoint) + sizeof(uint32_t)
 
 static UniValue getblockstats(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4) {
-        throw std::runtime_error(
-            RPCHelpMan{"getblockstats",
+    const RPCHelpMan help{"getblockstats",
                 "\nCompute per block statistics for a given window. All amounts are in satoshis.\n"
                 "It won't work for some heights with pruning.\n"
                 "It won't work without -txindex for utxo_size_inc, *fee or *feerate stats.\n",
@@ -1836,7 +1834,9 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                     HelpExampleCli("getblockstats", "1000 '[\"minfeerate\",\"avgfeerate\"]'")
             + HelpExampleRpc("getblockstats", "1000 '[\"minfeerate\",\"avgfeerate\"]'")
                 },
-            }.ToString());
+    };
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
     }
 
     LOCK(cs_main);
