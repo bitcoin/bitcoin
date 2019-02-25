@@ -28,7 +28,6 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
     hex_str_to_bytes,
-    wait_until,
 )
 
 
@@ -37,7 +36,6 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             '-txindex',
-            '-reindex',  # Need reindex for txindex
         ]] * self.num_nodes
         self.supports_cli = False
 
@@ -55,7 +53,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
 
         self.log.info('Start with empty mempool, and 200 blocks')
         self.mempool_size = 0
-        wait_until(lambda: node.getblockcount() == 200)
+        assert_equal(node.getblockcount(), 200)
         assert_equal(node.getmempoolinfo()['size'], self.mempool_size)
         coins = node.listunspent()
 

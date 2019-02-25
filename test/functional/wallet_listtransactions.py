@@ -11,7 +11,6 @@ from test_framework.util import assert_array_result, assert_equal
 class ListTransactionsTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.set_cache_mocktime()
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
