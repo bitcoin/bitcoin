@@ -38,6 +38,7 @@ from .script import (
     OP_0,
     OP_RETURN,
     OP_TRUE,
+    OP_DROP,
 )
 from .script_util import (
     key_to_p2pk_script,
@@ -194,7 +195,8 @@ def create_coinbase(height, pubkey=None, *, script_pubkey=None, extra_output_scr
     elif script_pubkey is not None:
         coinbaseoutput.scriptPubKey = script_pubkey
     else:
-        coinbaseoutput.scriptPubKey = CScript([OP_TRUE])
+        # Use two OP_TRUEs and an OP_DROP to ensure we're always > 64 bytes in non-witness size (BIP 54)
+        coinbaseoutput.scriptPubKey = CScript([OP_TRUE, OP_TRUE, OP_DROP])
     coinbase.vout = [coinbaseoutput]
     if extra_output_script is not None:
         coinbaseoutput2 = CTxOut()
