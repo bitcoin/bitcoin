@@ -15,7 +15,6 @@ from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, O
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    bytes_to_hex_str,
     hex_str_to_bytes,
 )
 
@@ -58,7 +57,9 @@ def cltv_validate(node, tx, height):
 class BIP65Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1', '-par=1']]  # Use only one script thread to get the exact reject reason for testing
+        # Use only one script thread to get the exact reject reason for testing
+        # Also, we run some non-push opcodes in scriptSigs so disable the cleanups rules
+        self.extra_args = [['-whitelist=127.0.0.1', '-par=1', '-vbparams=cleanups:0:0']]
         self.setup_clean_chain = True
 
     def skip_test_if_missing_module(self):
@@ -109,12 +110,9 @@ class BIP65Test(BitcoinTestFramework):
         cltv_invalidate(spendtx)
         spendtx.rehash()
 
-        # First we show that this tx is valid except for CLTV by getting it
-        # rejected from the mempool for exactly that reason.
-        assert_equal(
-            [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': '64: non-mandatory-script-verify-flag (Negative locktime)'}],
-            self.nodes[0].testmempoolaccept(rawtxs=[bytes_to_hex_str(spendtx.serialize())], allowhighfees=True)
-        )
+        # Sadly, we can't check that the mempool rejects spendtx due to negative locktime
+        # as non-push-scriptSig is checked first, but as its built in the same way as the
+        # accepted transaction above, this should be OK.
 
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)

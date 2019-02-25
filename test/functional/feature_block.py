@@ -78,7 +78,7 @@ class FullBlockTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
-        self.extra_args = [[]]
+        self.extra_args = [['-vbparams=cleanups:0:0']] # Don't enforce new cleanup softfork rules
 
     def run_test(self):
         node = self.nodes[0]  # convenience reference to the node

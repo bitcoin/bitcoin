@@ -1772,6 +1772,11 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
     }
 
+    // Start enforcing BIPXXX using versionbits logic.
+    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_CLEANUPS, versionbitscache) == ThresholdState::ACTIVE) {
+        flags |= SCRIPT_VERIFY_SIGPUSHONLY | SCRIPT_VERIFY_CONST_SCRIPTCODE | SCRIPT_VERIFY_DEFINED_SIGHASH;
+    }
+
     if (IsNullDummyEnabled(pindex->pprev, consensusparams)) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
@@ -1780,6 +1785,8 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 }
 
 
+
+static bool ContextualBlockPreCheck(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 static int64_t nTimeCheck = 0;
 static int64_t nTimeForks = 0;
@@ -1814,6 +1821,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
     // re-enforce that rule here (at least until we make it impossible for
     // GetAdjustedTime() to go backward).
+    if (!ContextualBlockPreCheck(block, state, chainparams.GetConsensus(), pindex->pprev)) {
+        return error("%s: Consensus::ContextualBlockPreCheck: %s", __func__, FormatStateMessage(state));
+    }
     if (!CheckBlock(block, state, chainparams.GetConsensus(), !fJustCheck, !fJustCheck)) {
         if (state.CorruptionPossible()) {
             // We don't write down blocks to disk if they may have been
@@ -3238,6 +3248,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
+    // Check timestamp against prev for difficulty-adjustment blocks to prevent
+    // timewarp attacks (BIPXXX).
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CLEANUPS, versionbitscache) == ThresholdState::ACTIVE) {
+        if (pindexPrev->nHeight % consensusParams.DifficultyAdjustmentInterval() == consensusParams.DifficultyAdjustmentInterval() - 1) {
+            if (block.GetBlockTime() < pindexPrev->GetBlockTime() - 600) {
+                return state.Invalid(false, REJECT_INVALID, "time-timewarp-attack", "block's timestamp is too early on diff adjustment block");
+            }
+        }
+    }
+
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + MAX_FUTURE_BLOCK_TIME)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
@@ -3249,6 +3269,28 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
        (block.nVersion < 4 && nHeight >= consensusParams.BIP65Height))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
+
+    return true;
+}
+
+/**
+ * We want to enforce certain rules (specifically the 64-byte transaction check)
+ * before we call CheckBlock to check the merkle root. This allows us to enforce
+ * malleability checks which may interact with other CheckBlock checks.
+ * This is currently called both in AcceptBlock prior to writing the block to
+ * disk and in ConnectBlock.
+ * Note that as this is called before merkle-tree checks so must never return a
+ * non-malleable error condition.
+ */
+static bool ContextualBlockPreCheck(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+{
+    if (VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_CLEANUPS, versionbitscache) == ThresholdState::ACTIVE) {
+      for (const auto& tx : block.vtx) {
+            if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) <= 64) {
+                return state.DoS(0, false, REJECT_INVALID, "64-byte-transaction", true, strprintf("%s : transaction <= 64 bytes without witness", __func__));
+            }
+        }
+    }
 
     return true;
 }
@@ -3508,7 +3550,8 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
         if (pindex->nChainWork < nMinimumChainWork) return true;
     }
 
-    if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
+    if (!ContextualBlockPreCheck(block, state, chainparams.GetConsensus(), pindex->pprev) ||
+        !CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
@@ -3591,6 +3634,8 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
         return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
+    if (!ContextualBlockPreCheck(block, state, chainparams.GetConsensus(), pindexPrev))
+        return error("%s: Consensus::ContextualBlockPreCheck: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev))
@@ -4019,6 +4064,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
             return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
+        if (nCheckLevel >= 1 && !ContextualBlockPreCheck(block, state, chainparams.GetConsensus(), pindex->pprev))
+            return error("%s: *** found bad block at %d due to soft-fork, hash=%s (%s)\n", __func__,
+                         pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         if (nCheckLevel >= 1 && !CheckBlock(block, state, chainparams.GetConsensus()))
             return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__,
                          pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));

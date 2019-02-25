@@ -90,6 +90,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1479168000; // November 15th, 2016.
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1510704000; // November 15th, 2017.
 
+        // Deployment of BIPXXX
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].nStartTime = 1564617600; // August 1st, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].nTimeout = 1596240000; // August 1st, 2020
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000051dc8b82f450202ecb3d471");
 
@@ -207,6 +212,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
 
+        // Deployment of BIPXXX
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].nStartTime = 1559347200; // June 1st, 2019
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].nTimeout = 1590969600; // June 1st, 2020
+
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000007dbe94253893cbd463");
 
@@ -297,6 +307,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].bit = 3;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_CLEANUPS].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
