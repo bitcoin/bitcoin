@@ -324,7 +324,7 @@ void CSigSharesManager::ProcessMessageBatchedSigShares(CNode* pfrom, const CBatc
         auto& nodeState = nodeStates[pfrom->id];
 
         for (size_t i = 0; i < batchedSigShares.sigShares.size(); i++) {
-            CSigShare sigShare = batchedSigShares.RebuildSigShare(i);
+            CSigShare sigShare = RebuildSigShare(sessionInfo, batchedSigShares, i);
             nodeState.requestedSigShares.Erase(sigShare.GetKey());
 
             // TODO track invalid sig shares received for PoSe?
@@ -978,6 +978,21 @@ bool CSigSharesManager::SendMessages()
     }
 
     return didSend;
+}
+
+CSigShare CSigSharesManager::RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx)
+{
+    assert(idx < batchedSigShares.sigShares.size());
+    auto& s = batchedSigShares.sigShares[idx];
+    CSigShare sigShare;
+    sigShare.llmqType = session.llmqType;
+    sigShare.quorumHash = session.quorumHash;
+    sigShare.quorumMember = s.first;
+    sigShare.id = session.id;
+    sigShare.msgHash = session.msgHash;
+    sigShare.sigShare = s.second;
+    sigShare.UpdateKey();
+    return sigShare;
 }
 
 void CSigSharesManager::Cleanup()

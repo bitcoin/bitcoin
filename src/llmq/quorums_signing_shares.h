@@ -127,21 +127,6 @@ public:
         READWRITE(sigShares);
     }
 
-    CSigShare RebuildSigShare(size_t idx) const
-    {
-        assert(idx < sigShares.size());
-        auto& s = sigShares[idx];
-        CSigShare sigShare;
-        sigShare.llmqType = llmqType;
-        sigShare.quorumHash = quorumHash;
-        sigShare.quorumMember = s.first;
-        sigShare.id = id;
-        sigShare.msgHash = msgHash;
-        sigShare.sigShare = s.second;
-        sigShare.UpdateKey();
-        return sigShare;
-    }
-
     CSigSharesInv ToInv(Consensus::LLMQType llmqType) const;
 };
 
@@ -392,6 +377,8 @@ private:
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash, CConnman& connman);
 
 private:
+    CSigShare RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx);
+
     void Cleanup();
     void RemoveSigSharesForSession(const uint256& signHash);
     void RemoveBannedNodeStates();
