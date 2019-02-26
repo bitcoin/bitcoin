@@ -961,18 +961,64 @@ bool CSigSharesManager::SendMessages()
     std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToRequest;
     std::unordered_map<NodeId, std::unordered_map<uint256, CBatchedSigShares, StaticSaltedHasher>> sigSharesToSend;
     std::unordered_map<NodeId, std::unordered_map<uint256, CSigSharesInv, StaticSaltedHasher>> sigSharesToAnnounce;
+    std::unordered_map<NodeId, std::vector<CSigSesAnn>> sigSessionAnnouncements;
+
+    auto addSigSesAnnIfNeeded = [&](NodeId nodeId, const uint256& signHash) {
+        auto& nodeState = nodeStates[nodeId];
+        auto session = nodeState.GetSessionBySignHash(signHash);
+        assert(session);
+        if (session->sendSessionId == (uint32_t)-1) {
+            session->sendSessionId = nodeState.nextSendSessionId++;
+
+            CSigSesAnn sigSesAnn;
+            sigSesAnn.sessionId = session->sendSessionId;
+            sigSesAnn.llmqType = (uint8_t)session->llmqType;
+            sigSesAnn.quorumHash = session->quorumHash;
+            sigSesAnn.id = session->id;
+            sigSesAnn.msgHash = session->msgHash;
+
+            sigSessionAnnouncements[nodeId].emplace_back(sigSesAnn);
+        }
+        return session->sendSessionId;
+    };
 
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
         CollectSigSharesToSend(sigSharesToSend);
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
+
+        for (auto& p : sigSharesToRequest) {
+            for (auto& p2 : p.second) {
+                p2.second.sessionId = addSigSesAnnIfNeeded(p.first, p2.first);
+            }
+        }
+        for (auto& p : sigSharesToSend) {
+            for (auto& p2 : p.second) {
+                p2.second.sessionId = addSigSesAnnIfNeeded(p.first, p2.first);
+            }
+        }
+        for (auto& p : sigSharesToAnnounce) {
+            for (auto& p2 : p.second) {
+                p2.second.sessionId = addSigSesAnnIfNeeded(p.first, p2.first);
+            }
+        }
     }
 
     bool didSend = false;
 
     g_connman->ForEachNode([&](CNode* pnode) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
+
+        auto it1 = sigSessionAnnouncements.find(pnode->id);
+        if (it1 != sigSessionAnnouncements.end()) {
+            for (auto& sigSesAnn : it1->second) {
+                LogPrint("llmq", "CSigSharesManager::SendMessages -- QSIGSESANN signHash=%s, sessionId=%d, node=%d\n",
+                         CLLMQUtils::BuildSignHash(sigSesAnn).ToString(), sigSesAnn.sessionId, pnode->id);
+                g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, sigSesAnn), false);
+                didSend = true;
+            }
+        }
 
         auto it = sigSharesToRequest.find(pnode->id);
         if (it != sigSharesToRequest.end()) {
