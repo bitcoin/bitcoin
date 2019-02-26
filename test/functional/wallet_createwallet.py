@@ -98,5 +98,8 @@ class CreateWalletTest(BitcoinTestFramework):
 
         self.log.info("Test descriptor based wallet creation.")
         self.nodes[0].createwallet(wallet_name='w6', blank=True, descriptor=True)
+
+        self.log.info("Test descriptor based wallet must be created blank.")
+        assert_raises_rpc_error(-4, "A descriptor wallet must be created blank.", self.nodes[0].createwallet, wallet_name='w7', blank=False, descriptor=True)
 if __name__ == '__main__':
     CreateWalletTest().main()

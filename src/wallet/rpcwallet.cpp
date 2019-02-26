@@ -2604,6 +2604,10 @@ static UniValue createwallet(const JSONRPCRequest& request)
         flags |= WALLET_FLAG_DESCRIPTOR_WALLET;
     }
 
+    if ((flags & WALLET_FLAG_DESCRIPTOR_WALLET) && !(flags & WALLET_FLAG_BLANK_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "A descriptor wallet must be created blank.");
+    }
+
     WalletLocation location(request.params[0].get_str());
     if (location.Exists()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + location.GetName() + " already exists.");

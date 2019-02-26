@@ -4192,6 +4192,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
         if ((wallet_creation_flags & WALLET_FLAG_DESCRIPTOR_WALLET)) {
             walletInstance->SetWalletFlag(WALLET_FLAG_DESCRIPTOR_WALLET);
+
+            // Descriptor based wallets must be created blank:
+            if (!(wallet_creation_flags & WALLET_FLAG_BLANK_WALLET)) {
+                InitError(_("A descriptor wallet must be created blank."));
+                return nullptr;
+            }
         }
         if ((wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             //selective allow to set flags
