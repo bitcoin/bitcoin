@@ -199,6 +199,11 @@ bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindex, const C
         evoDb.Write(std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)params.type), quorumHash);
     }
 
+    {
+        LOCK(minableCommitmentsCs);
+        hasMinedCommitmentCache.erase(std::make_pair(params.type, quorumHash));
+    }
+
     LogPrintf("CQuorumBlockProcessor::%s -- processed commitment from block. type=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s\n", __func__,
               qc.llmqType, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
 
@@ -222,6 +227,10 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         }
 
         evoDb.Erase(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)));
+        {
+            LOCK(minableCommitmentsCs);
+            hasMinedCommitmentCache.erase(std::make_pair((Consensus::LLMQType)qc.llmqType, qc.quorumHash));
+        }
 
         // if a reorg happened, we should allow to mine this commitment later
         AddMinableCommitment(qc);
@@ -309,8 +318,21 @@ uint256 CQuorumBlockProcessor::GetQuorumBlockHash(Consensus::LLMQType llmqType, 
 
 bool CQuorumBlockProcessor::HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
+    auto cacheKey = std::make_pair(llmqType, quorumHash);
+    {
+        LOCK(minableCommitmentsCs);
+        auto cacheIt = hasMinedCommitmentCache.find(cacheKey);
+        if (cacheIt != hasMinedCommitmentCache.end()) {
+            return cacheIt->second;
+        }
+    }
+
     auto key = std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)llmqType, quorumHash));
-    return evoDb.Exists(key);
+    bool ret = evoDb.Exists(key);
+
+    LOCK(minableCommitmentsCs);
+    hasMinedCommitmentCache.emplace(cacheKey, ret);
+    return ret;
 }
 
 bool CQuorumBlockProcessor::GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, CFinalCommitment& ret)
