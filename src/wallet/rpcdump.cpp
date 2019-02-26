@@ -826,53 +826,62 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     file << strprintf("#   mined on %s\n", tip_height ? FormatISO8601DateTime(locked_chain->getBlockTime(*tip_height)) : "(missing block time)");
     file << "\n";
 
-    // add the base58check encoded extended master if the wallet uses HD
-    CKeyID seed_id = pwallet->GetHDChain().seed_id;
-    if (!seed_id.IsNull())
-    {
-        CKey seed;
-        if (pwallet->GetKey(seed_id, seed)) {
-            CExtKey masterKey;
-            masterKey.SetSeed(seed.begin(), seed.size());
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        for (auto& p : pwallet->m_descriptors) {
+            file << strprintf("%lu ", p.second->m_id);
+            file << strprintf("%d ", p.second->m_purpose);
+            file << strprintf("%s", p.second->m_descriptor->ToString().c_str());
+            file << "\n";
+        }
+    } else {
+        // add the base58check encoded extended master if the wallet uses HD
+        CKeyID seed_id = pwallet->GetHDChain().seed_id;
+        if (!seed_id.IsNull())
+        {
+            CKey seed;
+            if (pwallet->GetKey(seed_id, seed)) {
+                CExtKey masterKey;
+                masterKey.SetSeed(seed.begin(), seed.size());
 
-            file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
-        }
-    }
-    for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
-        const CKeyID &keyid = it->second;
-        std::string strTime = FormatISO8601DateTime(it->first);
-        std::string strAddr;
-        std::string strLabel;
-        CKey key;
-        if (pwallet->GetKey(keyid, key)) {
-            file << strprintf("%s %s ", EncodeSecret(key), strTime);
-            if (GetWalletAddressesForKey(pwallet, keyid, strAddr, strLabel)) {
-               file << strprintf("label=%s", strLabel);
-            } else if (keyid == seed_id) {
-                file << "hdseed=1";
-            } else if (mapKeyPool.count(keyid)) {
-                file << "reserve=1";
-            } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "s") {
-                file << "inactivehdseed=1";
-            } else {
-                file << "change=1";
+                file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
             }
-            file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].has_key_origin ? " hdkeypath="+WriteHDKeypath(pwallet->mapKeyMetadata[keyid].key_origin.path) : ""));
         }
-    }
-    file << "\n";
-    for (const CScriptID &scriptid : scripts) {
-        CScript script;
-        std::string create_time = "0";
-        std::string address = EncodeDestination(scriptid);
-        // get birth times for scripts with metadata
-        auto it = pwallet->m_script_metadata.find(scriptid);
-        if (it != pwallet->m_script_metadata.end()) {
-            create_time = FormatISO8601DateTime(it->second.nCreateTime);
+        for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
+            const CKeyID &keyid = it->second;
+            std::string strTime = FormatISO8601DateTime(it->first);
+            std::string strAddr;
+            std::string strLabel;
+            CKey key;
+            if (pwallet->GetKey(keyid, key)) {
+                file << strprintf("%s %s ", EncodeSecret(key), strTime);
+                if (GetWalletAddressesForKey(pwallet, keyid, strAddr, strLabel)) {
+                   file << strprintf("label=%s", strLabel);
+                } else if (keyid == seed_id) {
+                    file << "hdseed=1";
+                } else if (mapKeyPool.count(keyid)) {
+                    file << "reserve=1";
+                } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "s") {
+                    file << "inactivehdseed=1";
+                } else {
+                    file << "change=1";
+                }
+                file << strprintf(" # addr=%s%s\n", strAddr, (pwallet->mapKeyMetadata[keyid].has_key_origin ? " hdkeypath="+WriteHDKeypath(pwallet->mapKeyMetadata[keyid].key_origin.path) : ""));
+            }
         }
-        if(pwallet->GetCScript(scriptid, script)) {
-            file << strprintf("%s %s script=1", HexStr(script.begin(), script.end()), create_time);
-            file << strprintf(" # addr=%s\n", address);
+        file << "\n";
+        for (const CScriptID &scriptid : scripts) {
+            CScript script;
+            std::string create_time = "0";
+            std::string address = EncodeDestination(scriptid);
+            // get birth times for scripts with metadata
+            auto it = pwallet->m_script_metadata.find(scriptid);
+            if (it != pwallet->m_script_metadata.end()) {
+                create_time = FormatISO8601DateTime(it->second.nCreateTime);
+            }
+            if(pwallet->GetCScript(scriptid, script)) {
+                file << strprintf("%s %s script=1", HexStr(script.begin(), script.end()), create_time);
+                file << strprintf(" # addr=%s\n", address);
+            }
         }
     }
     file << "\n";
