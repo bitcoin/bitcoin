@@ -208,6 +208,33 @@ class BitcoinTestFramework(object):
             logging.shutdown()
             sys.exit(1)
 
+    def _start_logging(self):
+        # Add logger and logging handlers
+        self.log = logging.getLogger('TestFramework')
+        self.log.setLevel(logging.DEBUG)
+        # Create file handler to log all messages
+        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log')
+        fh.setLevel(logging.DEBUG)
+        # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
+        ch = logging.StreamHandler(sys.stdout)
+        # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
+        ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
+        ch.setLevel(ll)
+        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
+        formatter = logging.Formatter(fmt = '%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        self.log.addHandler(fh)
+        self.log.addHandler(ch)
+
+        if self.options.trace_rpc:
+            rpc_logger = logging.getLogger("BitcoinRPC")
+            rpc_logger.setLevel(logging.DEBUG)
+            rpc_handler = logging.StreamHandler(sys.stdout)
+            rpc_handler.setLevel(logging.DEBUG)
+            rpc_logger.addHandler(rpc_handler)
+
 
 MASTERNODE_COLLATERAL = 1000
 
@@ -546,33 +573,6 @@ class DashTestFramework(BitcoinTestFramework):
             self.nodes[0].generate(1)
 
         sync_blocks(self.nodes)
-
-    def _start_logging(self):
-        # Add logger and logging handlers
-        self.log = logging.getLogger('TestFramework')
-        self.log.setLevel(logging.DEBUG)
-        # Create file handler to log all messages
-        fh = logging.FileHandler(self.options.tmpdir + '/test_framework.log')
-        fh.setLevel(logging.DEBUG)
-        # Create console handler to log messages to stderr. By default this logs only error messages, but can be configured with --loglevel.
-        ch = logging.StreamHandler(sys.stdout)
-        # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
-        ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
-        ch.setLevel(ll)
-        # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
-        formatter = logging.Formatter(fmt = '%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        # add the handlers to the logger
-        self.log.addHandler(fh)
-        self.log.addHandler(ch)
-
-        if self.options.trace_rpc:
-            rpc_logger = logging.getLogger("BitcoinRPC")
-            rpc_logger.setLevel(logging.DEBUG)
-            rpc_handler = logging.StreamHandler(sys.stdout)
-            rpc_handler.setLevel(logging.DEBUG)
-            rpc_logger.addHandler(rpc_handler)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:

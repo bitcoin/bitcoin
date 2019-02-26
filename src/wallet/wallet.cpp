@@ -2538,6 +2538,12 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             if (nDepth == 0 && !pcoin->InMempool())
                 continue;
 
+            bool safeTx = pcoin->IsTrusted();
+
+            if (fOnlySafe && !safeTx) {
+                continue;
+            }
+
             for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
                 bool found = false;
                 if(nCoinType == ONLY_DENOMINATED) {
@@ -2553,12 +2559,6 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
                     found = true;
                 }
                 if(!found) continue;
-
-            bool safeTx = pcoin->IsTrusted();
-
-            if (fOnlySafe && !safeTx) {
-                continue;
-            }
 
                 isminetype mine = IsMine(pcoin->tx->vout[i]);
                 if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
@@ -3227,7 +3227,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
                 int nDepth = pcoin->GetDepthInMainChain();
 
                 for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
-                    COutput out = COutput(pcoin, i, nDepth, true, true);
+                    COutput out = COutput(pcoin, i, nDepth, true, true, false);
                     COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
 
                     if(out.tx->tx->vout[out.i].nValue != nInputAmount) continue;

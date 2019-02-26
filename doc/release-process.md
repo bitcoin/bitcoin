@@ -175,22 +175,22 @@ Codesigner only: Create Windows/OS X detached signatures:
 
 Codesigner only: Sign the osx binary:
 
-    transfer bitcoin-osx-unsigned.tar.gz to osx for signing
-    tar xf bitcoin-osx-unsigned.tar.gz
+    transfer dashcore-osx-unsigned.tar.gz to osx for signing
+    tar xf dashcore-osx-unsigned.tar.gz
     ./detached-sig-create.sh -s "Key ID"
     Enter the keychain password and authorize the signature
     Move signature-osx.tar.gz back to the gitian host
 
 Codesigner only: Sign the windows binaries:
 
-    tar xf bitcoin-win-unsigned.tar.gz
+    tar xf dashcore-win-unsigned.tar.gz
     ./detached-sig-create.sh -key /path/to/codesign.key
     Enter the passphrase for the key when prompted
     signature-win.tar.gz will be created
 
 Codesigner only: Commit the detached codesign payloads:
 
-    cd ~/bitcoin-detached-sigs
+    cd ~/dashcore-detached-sigs
     checkout the appropriate branch for this release series
     rm -rf *
     tar xf signature-osx.tar.gz
