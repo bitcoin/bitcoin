@@ -1,5 +1,8 @@
-#ifndef KERNELRECORD_H
-#define KERNELRECORD_H
+// Copyright (c) 2012-2019 The Peercoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef PEERCOIN_KERNELRECORD_H
+#define PEERCOIN_KERNELRECORD_H
 
 #include <uint256.h>
 
@@ -49,4 +52,4 @@ protected:
     double prevProbability;
 };
 
-#endif // KERNELRECORD_H
+#endif // PEERCOIN_KERNELRECORD_H

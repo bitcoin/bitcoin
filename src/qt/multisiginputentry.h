@@ -1,5 +1,8 @@
-#ifndef MULTISIGINPUTENTRY_H
-#define MULTISIGINPUTENTRY_H
+// Copyright (c) 2012-2019 The Peercoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef PEERCOIN_QT_MULTISIGINPUTENTRY_H
+#define PEERCOIN_QT_MULTISIGINPUTENTRY_H
 
 #include <uint256.h>
 
@@ -49,4 +52,4 @@ class MultisigInputEntry : public QFrame
     void on_pasteRedeemScriptButton_clicked();
 };
 
-#endif // MULTISIGINPUTENTRY_H
+#endif // PEERCOIN_QT_MULTISIGINPUTENTRY_H

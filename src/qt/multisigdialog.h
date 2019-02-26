@@ -1,5 +1,8 @@
-#ifndef MULTISIGDIALOG_H
-#define MULTISIGDIALOG_H
+// Copyright (c) 2012-2019 The Peercoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef PEERCOIN_QT_MULTISIGDIALOG_H
+#define PEERCOIN_QT_MULTISIGDIALOG_H
 
 //#include "multisigaddressentry.h"
 //#include "multisiginputentry.h"
@@ -60,4 +63,4 @@ class MultisigDialog : public QDialog
     void updateAmounts();
 };
 
-#endif // MULTISIGDIALOG_H
+#endif // PEERCOIN_QT_MULTISIGDIALOG_H

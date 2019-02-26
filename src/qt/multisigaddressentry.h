@@ -1,5 +1,8 @@
-#ifndef MULTISIGADDRESSENTRY_H
-#define MULTISIGADDRESSENTRY_H
+// Copyright (c) 2012-2019 The Peercoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef PEERCOIN_QT_MULTISIGADDRESSENTRY_H
+#define PEERCOIN_QT_MULTISIGADDRESSENTRY_H
 
 #include <QFrame>
 
@@ -42,4 +45,4 @@ class MultisigAddressEntry : public QFrame
     void on_addressBookButton_clicked();
 };
 
-#endif // MULTISIGADDRESSENTRY_H
+#endif // PEERCOIN_QT_MULTISIGADDRESSENTRY_H

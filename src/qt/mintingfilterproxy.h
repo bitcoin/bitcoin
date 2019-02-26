@@ -1,5 +1,8 @@
-#ifndef MINTINGFILTERPROXY_H
-#define MINTINGFILTERPROXY_H
+// Copyright (c) 2012-2019 The Peercoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef PEERCOIN_QT_MINTINGFILTERPROXY_H
+#define PEERCOIN_QT_MINTINGFILTERPROXY_H
 
 #include <QSortFilterProxyModel>
 
@@ -10,4 +13,4 @@ public:
     explicit MintingFilterProxy(QObject *parent = 0);
 };
 
-#endif // MINTINGFILTERPROXY_H
+#endif // PEERCOIN_QT_MINTINGFILTERPROXY_H
