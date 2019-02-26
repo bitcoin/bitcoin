@@ -1826,7 +1826,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     // peercoin: fees are not collected by miners as in bitcoin
     // peercoin: fees are destroyed to compensate the entire network
     if (gArgs.GetBoolArg("-printcreation", false))
-        LogPrintf("%s: destroy=%s nFees=%lld\n", FormatMoney(nFees), nFees);
+        LogPrintf("%s: destroy=%s nFees=%lld\n", __func__, FormatMoney(nFees), nFees);
 
     if (!WriteUndoDataForBlock(blockundo, state, pindex, chainparams))
         return false;
