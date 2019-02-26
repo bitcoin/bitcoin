@@ -96,5 +96,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
 
+        self.log.info("Test descriptor based wallet creation.")
+        self.nodes[0].createwallet(wallet_name='w6', blank=True, descriptor=True)
 if __name__ == '__main__':
     CreateWalletTest().main()

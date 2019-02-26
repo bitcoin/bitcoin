@@ -2566,7 +2566,7 @@ static UniValue loadwallet(const JSONRPCRequest& request)
 
 static UniValue createwallet(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4) {
         throw std::runtime_error(
             RPCHelpMan{"createwallet",
                 "\nCreates and loads a new wallet.\n",
@@ -2574,6 +2574,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
                     {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
                     {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
                     {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
+                    {"descriptor", RPCArg::Type::BOOL, /* default */ "false", "Create a descriptor based wallet. Must also be blank."},
                 },
                 RPCResult{
             "{\n"
@@ -2597,6 +2598,10 @@ static UniValue createwallet(const JSONRPCRequest& request)
 
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
         flags |= WALLET_FLAG_BLANK_WALLET;
+    }
+
+    if (!request.params[3].isNull() && request.params[3].get_bool()) {
+        flags |= WALLET_FLAG_DESCRIPTOR_WALLET;
     }
 
     WalletLocation location(request.params[0].get_str());
@@ -4105,7 +4110,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label","address_type"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "bumpfee",                          &bumpfee,                       {"txid", "options"} },
-    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank"} },
+    { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name", "disable_private_keys", "blank", "descriptor"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
