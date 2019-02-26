@@ -469,7 +469,7 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         return false;
     }
     case GOVERNANCE_OBJECT_PROPOSAL: {
-        CProposalValidator validator(GetDataAsHexString());
+        CProposalValidator validator(GetDataAsHexString(), true);
         // Note: It's ok to have expired proposals
         // they are going to be cleared by CGovernanceManager::UpdateCachesAndClean()
         // TODO: should they be tagged as "expired" to skip vote downloading?

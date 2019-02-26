@@ -452,7 +452,7 @@ void CGovernanceManager::UpdateCachesAndClean()
         } else {
             // NOTE: triggers are handled via triggerman
             if (pObj->GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
-                CProposalValidator validator(pObj->GetDataAsHexString());
+                CProposalValidator validator(pObj->GetDataAsHexString(), true);
                 if (!validator.Validate()) {
                     LogPrintf("CGovernanceManager::UpdateCachesAndClean -- set for deletion expired obj %s\n", (*it).first.ToString());
                     pObj->fCachedDelete = true;

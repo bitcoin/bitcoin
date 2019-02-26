@@ -45,13 +45,18 @@ BOOST_AUTO_TEST_CASE(valid_proposals_test)
 
         // legacy format
         std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1);
+        CProposalValidator validator1(strHexData1, true);
         BOOST_CHECK_MESSAGE(validator1.Validate(false), validator1.GetErrorMessages());
         BOOST_CHECK_MESSAGE(!validator1.Validate(), validator1.GetErrorMessages());
 
+        // legacy format w/validation flag off
+        CProposalValidator validator0(strHexData1, false);
+        BOOST_CHECK(!validator0.Validate());
+        BOOST_CHECK_EQUAL(validator0.GetErrorMessages(), "Legacy proposal serialization format not allowed;JSON parsing error;");
+
         // new format
         std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2);
+        CProposalValidator validator2(strHexData2, false);
         BOOST_CHECK_MESSAGE(validator2.Validate(false), validator2.GetErrorMessages());
         BOOST_CHECK_MESSAGE(!validator2.Validate(), validator2.GetErrorMessages());
     }
@@ -69,12 +74,12 @@ BOOST_AUTO_TEST_CASE(invalid_proposals_test)
 
         // legacy format
         std::string strHexData1 = CreateEncodedProposalObject(objProposal);
-        CProposalValidator validator1(strHexData1);
+        CProposalValidator validator1(strHexData1, true);
         BOOST_CHECK_MESSAGE(!validator1.Validate(false), validator1.GetErrorMessages());
 
         // new format
         std::string strHexData2 = HexStr(objProposal.write());
-        CProposalValidator validator2(strHexData2);
+        CProposalValidator validator2(strHexData2, false);
         BOOST_CHECK_MESSAGE(!validator2.Validate(false), validator2.GetErrorMessages());
     }
 }
