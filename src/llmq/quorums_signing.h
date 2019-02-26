@@ -126,6 +126,7 @@ private:
 
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<CRecoveredSig>> pendingRecoveredSigs;
+    std::list<std::pair<CRecoveredSig, CQuorumCPtr>> pendingReconstructedRecoveredSigs;
 
     // must be protected by cs
     FastRandomContext rnd;
@@ -142,6 +143,10 @@ public:
 
     void ProcessMessage(CNode* pnode, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
+    // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
+    // This is the case for example when a signature appears as part of InstantSend or ChainLocks
+    void PushReconstructedRecoveredSig(const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum);
+
 private:
     void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman);
     bool PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, bool& retBan);
@@ -149,6 +154,7 @@ private:
     void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::list<CRecoveredSig>>& retSigShares,
             std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
+    bool ProcessPendingReconstructedRecoveredSigs();
     bool ProcessPendingRecoveredSigs(CConnman& connman); // called from the worker thread of CSigSharesManager
     void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum, CConnman& connman);
     void Cleanup(); // called from the worker thread of CSigSharesManager
