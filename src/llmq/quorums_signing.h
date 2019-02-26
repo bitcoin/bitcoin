@@ -76,7 +76,6 @@ public:
     }
 };
 
-// TODO implement caching to speed things up
 class CRecoveredSigsDb
 {
     static const size_t MAX_CACHE_SIZE = 30000;
