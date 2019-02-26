@@ -328,14 +328,6 @@ public:
     Session* GetSessionByRecvId(uint32_t sessionId);
     bool GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo);
 
-    void MarkAnnounced(const uint256& signHash, const CSigSharesInv& inv);
-    void MarkRequested(const uint256& signHash, const CSigSharesInv& inv);
-    void MarkKnows(const uint256& signHash, const CSigSharesInv& inv);
-
-    void MarkAnnounced(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember);
-    void MarkRequested(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember);
-    void MarkKnows(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember);
-
     void RemoveSession(const uint256& signHash);
 };
 

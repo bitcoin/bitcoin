@@ -160,36 +160,6 @@ bool CSigSharesNodeState::GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo
     return true;
 }
 
-void CSigSharesNodeState::MarkAnnounced(const uint256& signHash, const CSigSharesInv& inv)
-{
-    GetOrCreateSession((Consensus::LLMQType)inv.llmqType, signHash).announced.Merge(inv);
-}
-
-void CSigSharesNodeState::MarkRequested(const uint256& signHash, const CSigSharesInv& inv)
-{
-    GetOrCreateSession((Consensus::LLMQType)inv.llmqType, signHash).requested.Merge(inv);
-}
-
-void CSigSharesNodeState::MarkKnows(const uint256& signHash, const CSigSharesInv& inv)
-{
-    GetOrCreateSession((Consensus::LLMQType)inv.llmqType, signHash).knows.Merge(inv);
-}
-
-void CSigSharesNodeState::MarkAnnounced(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember)
-{
-    GetOrCreateSession(llmqType, signHash).announced.Set(quorumMember, true);
-}
-
-void CSigSharesNodeState::MarkRequested(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember)
-{
-    GetOrCreateSession(llmqType, signHash).requested.Set(quorumMember, true);
-}
-
-void CSigSharesNodeState::MarkKnows(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember)
-{
-    GetOrCreateSession(llmqType, signHash).knows.Set(quorumMember, true);
-}
-
 void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 {
     auto it = sessions.find(signHash);
