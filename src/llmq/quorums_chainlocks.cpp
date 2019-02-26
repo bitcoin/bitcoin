@@ -149,6 +149,11 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 
     LogPrintf("CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
+
+    if (lastNotifyChainLockBlockIndex != bestChainLockBlockIndex) {
+        lastNotifyChainLockBlockIndex = bestChainLockBlockIndex;
+        GetMainSignals().NotifyChainLock(bestChainLockBlockIndex);
+    }
 }
 
 void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
@@ -204,6 +209,11 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
         if (bestChainLockBlockIndex == pindexNew) {
             // we first got the CLSIG, then the header, and then the block was connected.
             // In this case there is no need to continue here.
+            // However, NotifyChainLock might not have been called yet, so call it now if needed
+            if (lastNotifyChainLockBlockIndex != bestChainLockBlockIndex) {
+                lastNotifyChainLockBlockIndex = bestChainLockBlockIndex;
+                GetMainSignals().NotifyChainLock(bestChainLockBlockIndex);
+            }
             return;
         }
 

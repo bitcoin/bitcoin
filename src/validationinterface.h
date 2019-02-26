@@ -39,6 +39,7 @@ protected:
     virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     virtual void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) {}
     virtual void NotifyTransactionLock(const CTransaction &tx) {}
+    virtual void NotifyChainLock(const CBlockIndex* pindex) {}
     virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
     virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
     virtual void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
@@ -76,6 +77,8 @@ struct CMainSignals {
     boost::signals2::signal<void (const CTransaction &, const CBlockIndex *pindex, int posInBlock)> SyncTransaction;
     /** Notifies listeners of an updated transaction lock without new data. */
     boost::signals2::signal<void (const CTransaction &)> NotifyTransactionLock;
+    /** Notifies listeners of a ChainLock. */
+    boost::signals2::signal<void (const CBlockIndex* pindex)> NotifyChainLock;
     /** Notifies listeners of a new governance vote. */
     boost::signals2::signal<void (const CGovernanceVote &)> NotifyGovernanceVote;
     /** Notifies listeners of a new governance object. */

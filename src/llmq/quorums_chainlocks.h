@@ -55,6 +55,7 @@ private:
 
     CChainLockSig bestChainLockWithKnownBlock;
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
+    const CBlockIndex* lastNotifyChainLockBlockIndex{nullptr};
 
     int32_t lastSignedHeight{-1};
     uint256 lastSignedRequestId;
