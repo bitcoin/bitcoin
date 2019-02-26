@@ -25,12 +25,12 @@ if RDYNAMIC_SUPPORTED
 # This gives better stacktraces
 AM_CXXFLAGS += -rdynamic
 endif
-endif
 
 if TARGET_WINDOWS
 BACKTRACE_LIB = -ldbghelp -lbacktrace
 else
 BACKTRACE_LIB = -lbacktrace
+endif
 endif
 
 if EMBEDDED_UNIVALUE

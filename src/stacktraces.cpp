@@ -26,9 +26,6 @@
 #include <execinfo.h>
 #include <unistd.h>
 #include <signal.h>
-#if !__APPLE__
-#include <linux/limits.h> // for PATH_MAX
-#endif
 #endif
 
 #if !WIN32
@@ -39,7 +36,9 @@
 #include <mach-o/dyld.h>
 #endif
 
+#ifdef ENABLE_STACKTRACES
 #include <backtrace.h>
+#endif
 #include <libgen.h> // for basename()
 #include <string.h>
 
@@ -50,10 +49,29 @@ static void PrintCrashInfo(const std::string& s)
     fflush(stderr);
 }
 
+std::string DemangleSymbol(const std::string& name)
+{
+#if __GNUC__ || __clang__
+    int status = -4; // some arbitrary value to eliminate the compiler warning
+    char* str = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
+    if (status != 0) {
+        free(str);
+        return name;
+    }
+    std::string ret = str;
+    free(str);
+    return ret;
+#else
+    // TODO other platforms/compilers
+    return name;
+#endif
+}
+
 // set to true when the abort signal should not handled
 // this is the case when the terminate handler or an assert already handled the exception
 static std::atomic<bool> skipAbortSignal(false);
 
+#ifdef ENABLE_STACKTRACES
 ssize_t GetExeFileNameImpl(char* buf, size_t bufSize)
 {
 #if WIN32
@@ -96,24 +114,6 @@ std::string GetExeFileName()
         }
         buf.resize(buf.size() * 2);
     }
-}
-
-std::string DemangleSymbol(const std::string& name)
-{
-#if __GNUC__ || __clang__
-    int status = -4; // some arbitrary value to eliminate the compiler warning
-    char* str = abi::__cxa_demangle(name.c_str(), nullptr, nullptr, &status);
-    if (status != 0) {
-        free(str);
-        return name;
-    }
-    std::string ret = str;
-    free(str);
-    return ret;
-#else
-    // TODO other platforms/compilers
-    return name;
-#endif
 }
 
 static void my_backtrace_error_callback (void *data, const char *msg,
@@ -356,7 +356,6 @@ static std::string GetStackFrameInfosStr(const std::vector<stackframe_info>& sis
     return s;
 }
 
-#if ENABLE_STACKTRACES
 static std::mutex g_stacktraces_mutex;
 static std::map<void*, std::shared_ptr<std::vector<uintptr_t>>> g_stacktraces;
 
@@ -477,7 +476,7 @@ static std::shared_ptr<std::vector<uintptr_t>> GetExceptionStacktrace(const std:
     }
     return it->second;
 }
-#endif
+#endif //ENABLE_STACKTRACES
 
 std::string GetExceptionStacktraceStr(const std::exception_ptr& e)
 {
@@ -576,7 +575,8 @@ void RegisterPrettyTerminateHander()
     std::set_terminate(terminate_handler);
 }
 
-#if ENABLE_STACKTRACES && !WIN32
+#ifdef ENABLE_STACKTRACES
+#if !WIN32
 static void HandlePosixSignal(int s)
 {
     if (s == SIGABRT && skipAbortSignal) {
@@ -593,9 +593,8 @@ static void HandlePosixSignal(int s)
     skipAbortSignal = true;
     std::abort();
 }
-#endif
 
-#if WIN32
+#else
 static void DoHandleWindowsException(EXCEPTION_POINTERS * ExceptionInfo)
 {
     std::string excType;
@@ -646,6 +645,7 @@ LONG WINAPI HandleWindowsException(EXCEPTION_POINTERS * ExceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 #endif
+#endif // ENABLE_STACKTRACES
 
 void RegisterPrettySignalHandlers()
 {
