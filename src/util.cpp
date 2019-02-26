@@ -1113,6 +1113,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
     StopGethNode(pid);
         
     fs::path fpath = fs::system_complete(gethFilename);
+    fs::path dataDir = GetDataDir() / "geth";
     #ifndef WIN32
             // Prevent killed child-processes remaining as "defunct"
             struct sigaction sa;
@@ -1137,13 +1138,14 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
                     (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                     (char*)"--wsorigins", (char*)"*",
                     (char*)"--syncmode", (char*)"light", 
+                    (char*)"--datadir", (char*)dataDir.c_str(),
                     (char*)"--bootnodes", (char*)"enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303", NULL };
                 execvp(argv[0], &argv[0]);
             }
             else{
                 char * argv[] = {(char*)fpath.c_str(), (char*)"--rpc", (char*)"--rpccorsdomain", (char*)"*", 
                     (char*)"--rpcapi", (char*)"eth,net,web3,admin", (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                    (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", 
+                    (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", (char*)"--datadir", (char*)dataDir.c_str(),
                     (char*)"--bootnodes", (char*)"enode://78de8a0916848093c73790ead81d1928bec737d565119932b98c6b100d944b7a95e94f847f689fc723399d2e31129d182f7ef3863f2b4c820abbf3ab2722344d@191.235.84.50:30303,enode://570b9996c04eca0d9b94b5fa911a0becc0d9764bca2a284d776df74077a7e4b5a355a5cbbf553fcbd790204a28002aa9d858f211a8109b13e2dcef070956f8dd@54.39.28.76:30303,enode://1dc3dcbba882d910efb21ab65920d1d8d7b78c7ea99916f7318a6dc3b599cf1e9470e75f26fe036ef127f86eafc84842c0a9aa56c04a0d9fede2fc912bf51b20@3.8.146.75:30303,enode://39df253834cbca314bc3234b9bd0916e19fd887bce4971ebe6fc1fd11f30a63c616dd4341fbd614728d68c32cba81bc0d56873a69ab18da98bcc42fdf65cd28f@47.186.78.207:30301,enode://95176fe178be55d40aae49a5c11f21aa58968e13c681a6b1f571b2bb3e45927a7fb3888361bef85c0e28a52ea0e4afa17dcaa9d6c61baf504b3559f056f78581@163.172.145.241:30303,enode://4c2b5c5d9503b7f4e76a551c827f19200f7f9ebb62f2cb5078c352de1e8d4d1006efa8fc143f9ccf2c8fd85836198dc1c69729dfa1c54d63f5d1d57fd8781bf8@62.151.178.212:30303,enode://9ba1bdeed84efec70f4caa6d94be303e6d659eebbe9ba293d38a3c2242aa3f59ba6e436f83971a241c23149c0f2eab963b21b65c29ff1f9407082233204004f9@104.192.88.96:30303,enode://29ba9bf4aad4bf7206ec9ec36e7d85b652f04d82813bed6925fccd2805cf29b7cb8054fa700cfb891de561199f9c18a80d2731dbf62ba08450794f0c04da0490@68.183.180.253:30303,enode://1d70e87a2ee28a2762f1b2cd56f1b9134824a84264030539bba297f67a5bc9ec7ae3016b5f900dc59b1c27b4e258a63fc282a37b2dd6e25a8377473530513394@208.88.169.151:30303,enode://a18cc2a6ad4b00cae57b77ef26276eaceffb2593a196df105ce06caa25300636369767430fa21f82b12ed431bca1f61742b8ec7e4db1a58f1b6421d280752b96@148.251.67.86:30303,enode://16d92fc94f4ec4386aca44d255853c27cbe97a4274c0df98d2b642b0cc4b2f2330e99b00b46db8a031da1a631c85e2b4742d52f5eaeca46612cd28db41fb1d7f@91.223.175.173:30303,enode://31b5db1136a0ebceeb0ab6879e95dc66e8c52bcce9c8de50e2f722b5868f782aa0306b6b137b9e0c6271a419c5562a194d7f2abd78e22dcd1f55700dfc30c46a@35.165.17.127:30303", 
                         NULL };
                 execvp(argv[0], &argv[0]);
@@ -1155,7 +1157,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         }
     #else
         std::string portStr = std::to_string(websocketport);
-        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light");
+        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") + dataDir;
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
             args += std::string(" --bootnodes enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303");
