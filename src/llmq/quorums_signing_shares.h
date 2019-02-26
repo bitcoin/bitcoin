@@ -56,6 +56,32 @@ public:
     }
 };
 
+// Nodes will first announce a signing session with a sessionId to be used in all future P2P messages related to that
+// session. We locally keep track of the mapping for each node. We also assign new sessionIds for outgoing sessions
+// and send QSIGSESANN messages appropriately. All values except the max value for uint32_t are valid as sessionId
+class CSigSesAnn
+{
+public:
+    uint32_t sessionId{(uint32_t)-1};
+    uint8_t llmqType;
+    uint256 quorumHash;
+    uint256 id;
+    uint256 msgHash;
+
+    ADD_SERIALIZE_METHODS
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(VARINT(sessionId));
+        READWRITE(llmqType);
+        READWRITE(quorumHash);
+        READWRITE(id);
+        READWRITE(msgHash);
+    }
+
+    std::string ToString() const;
+};
+
 class CSigSharesInv
 {
 public:
@@ -344,6 +370,7 @@ public:
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
 private:
+    void ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman);
     void ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);

@@ -271,6 +271,7 @@ extern const char *QJUSTIFICATION;
 extern const char *QPCOMMITMENT;
 extern const char *QWATCH;
 extern const char *QDEBUGSTATUS;
+extern const char *QSIGSESANN;
 extern const char *QSIGSHARESINV;
 extern const char *QGETSIGSHARES;
 extern const char *QBSIGSHARES;

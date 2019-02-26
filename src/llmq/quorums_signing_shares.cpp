@@ -26,6 +26,12 @@ void CSigShare::UpdateKey()
     key.second = quorumMember;
 }
 
+std::string CSigSesAnn::ToString() const
+{
+    return strprintf("sessionId=%d, llmqType=%d, quorumHash=%s, id=%s, msgHash=%s",
+                     sessionId, llmqType, quorumHash.ToString(), id.ToString(), msgHash.ToString());
+}
+
 void CSigSharesInv::Merge(const CSigSharesInv& inv2)
 {
     for (size_t i = 0; i < inv.size(); i++) {
@@ -196,7 +202,11 @@ void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strComma
         return;
     }
 
-    if (strCommand == NetMsgType::QSIGSHARESINV) {
+    if (strCommand == NetMsgType::QSIGSESANN) {
+        CSigSesAnn ann;
+        vRecv >> ann;
+        ProcessMessageSigSesAnn(pfrom, ann, connman);
+    } else if (strCommand == NetMsgType::QSIGSHARESINV) {
         CSigSharesInv inv;
         vRecv >> inv;
         ProcessMessageSigSharesInv(pfrom, inv, connman);
@@ -209,6 +219,31 @@ void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strComma
         vRecv >> batchedSigShares;
         ProcessMessageBatchedSigShares(pfrom, batchedSigShares, connman);
     }
+}
+
+void CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman)
+{
+    auto llmqType = (Consensus::LLMQType)ann.llmqType;
+    if (!Params().GetConsensus().llmqs.count(llmqType)) {
+        BanNode(pfrom->id);
+        return;
+    }
+    if (ann.sessionId == (uint32_t)-1 || ann.quorumHash.IsNull() || ann.id.IsNull() || ann.msgHash.IsNull()) {
+        BanNode(pfrom->id);
+        return;
+    }
+
+    LogPrint("llmq", "CSigSharesManager::%s -- ann={%s}, node=%d\n", __func__, ann.ToString(), pfrom->id);
+
+    auto quorum = quorumManager->GetQuorum(llmqType, ann.quorumHash);
+    if (!quorum) {
+        // TODO should we ban here?
+        LogPrintf("CSigSharesManager::%s -- quorum %s not found, node=%d\n", __func__,
+                  ann.quorumHash.ToString(), pfrom->id);
+        return;
+    }
+
+    auto signHash = CLLMQUtils::BuildSignHash(llmqType, ann.quorumHash, ann.id, ann.msgHash);
 }
 
 bool CSigSharesManager::VerifySigSharesInv(NodeId from, const CSigSharesInv& inv)
