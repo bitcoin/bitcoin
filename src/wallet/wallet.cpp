@@ -4198,6 +4198,12 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
                 InitError(_("A descriptor wallet must be created blank."));
                 return nullptr;
             }
+
+            // Descriptor based wallets must have private keys disabled:
+            if (!(wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+                InitError(_("A descriptor wallet must have private keys disabled."));
+                return nullptr;
+            }
         }
         if ((wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             //selective allow to set flags

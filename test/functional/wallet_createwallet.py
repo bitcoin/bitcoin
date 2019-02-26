@@ -97,9 +97,13 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
 
         self.log.info("Test descriptor based wallet creation.")
-        self.nodes[0].createwallet(wallet_name='w6', blank=True, descriptor=True)
+        self.nodes[0].createwallet(wallet_name='w6', disable_private_keys=True, blank=True, descriptor=True)
 
         self.log.info("Test descriptor based wallet must be created blank.")
-        assert_raises_rpc_error(-4, "A descriptor wallet must be created blank.", self.nodes[0].createwallet, wallet_name='w7', blank=False, descriptor=True)
+        assert_raises_rpc_error(-4, "A descriptor wallet must be created blank.", self.nodes[0].createwallet, wallet_name='w7', disable_private_keys=True, blank=False, descriptor=True)
+
+        self.log.info("Test descriptor based wallet must have private keys disabled.")
+        assert_raises_rpc_error(-4, "A descriptor wallet must have private keys disabled.", self.nodes[0].createwallet, wallet_name='w8', disable_private_keys=False, blank=True, descriptor=True)
+
 if __name__ == '__main__':
     CreateWalletTest().main()

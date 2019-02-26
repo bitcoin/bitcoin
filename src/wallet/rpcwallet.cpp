@@ -2574,7 +2574,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
                     {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
                     {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
                     {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
-                    {"descriptor", RPCArg::Type::BOOL, /* default */ "false", "Create a descriptor based wallet. Must also be blank."},
+                    {"descriptor", RPCArg::Type::BOOL, /* default */ "false", "Create a descriptor based wallet. Must also be blank and have private keys disabled."},
                 },
                 RPCResult{
             "{\n"
@@ -2606,6 +2606,10 @@ static UniValue createwallet(const JSONRPCRequest& request)
 
     if ((flags & WALLET_FLAG_DESCRIPTOR_WALLET) && !(flags & WALLET_FLAG_BLANK_WALLET)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "A descriptor wallet must be created blank.");
+    }
+
+    if ((flags & WALLET_FLAG_DESCRIPTOR_WALLET) && !(flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "A descriptor wallet must have private keys disabled.");
     }
 
     WalletLocation location(request.params[0].get_str());
