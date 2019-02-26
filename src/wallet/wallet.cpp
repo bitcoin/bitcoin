@@ -23,7 +23,6 @@
 #include <policy/rbf.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
-#include <script/descriptor.h>
 #include <script/script.h>
 #include <shutdown.h>
 #include <timedata.h>
@@ -490,6 +489,42 @@ bool CWallet::RemoveWatchOnly(const CScript &dest)
 bool CWallet::LoadWatchOnly(const CScript &dest)
 {
     return CCryptoKeyStore::AddWatchOnly(dest);
+}
+
+bool CWallet::LoadDescriptor(std::unique_ptr<WalletDescriptor>wdesc)
+{
+    m_descriptors[wdesc->m_id] = std::move(wdesc);
+    return true;
+}
+
+bool CWallet::HaveDescriptor(Descriptor *descriptor)
+{
+    for (auto& pair : m_descriptors) {
+        if (pair.second->m_descriptor->ToString() == descriptor->ToString()) return true;
+    }
+    return false;
+}
+
+bool CWallet::AddDescriptor(std::unique_ptr<Descriptor>descriptor, int purpose, int64_t nCreateTime)
+{
+    uint64_t wdesc_id = m_descriptors.size();
+    auto wdesc = MakeUnique<WalletDescriptor>(std::move(descriptor), nCreateTime, wdesc_id, purpose);
+    if (!WalletBatch(*database).WriteDescriptor(wdesc.get())) {
+        return false;
+    }
+    bool res = LoadDescriptor(std::move(wdesc));
+    return res;
+}
+
+bool CWallet::HaveAddressSourceDescriptor(bool internal, AddressType address_type)
+{
+    for (auto& pair : m_descriptors) {
+        if (
+            pair.second->m_purpose == (internal ? DESCRIPTOR_PURPOSE_CHANGE_CURRENT : DESCRIPTOR_PURPOSE_RECEIVE_CURRENT)
+            && pair.second->m_descriptor->GetAddressType() == address_type
+        ) return true;
+    }
+    return false;
 }
 
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)

@@ -7,10 +7,11 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <amount.h>
+#include <key.h>
 #include <primitives/transaction.h>
+#include <script/descriptor.h>
 #include <script/sign.h>
 #include <wallet/db.h>
-#include <key.h>
 
 #include <list>
 #include <stdint.h>
@@ -142,6 +143,56 @@ public:
     }
 };
 
+static const int DESCRIPTOR_PURPOSE_RECEIVE_CURRENT = 1;
+static const int DESCRIPTOR_PURPOSE_CHANGE_CURRENT  = 2;
+static const int DESCRIPTOR_PURPOSE_RECEIVE_ARCHIVE = 3;
+static const int DESCRIPTOR_PURPOSE_CHANGE_ARCHIVE  = 4;
+
+/* Descriptor data model for the wallet */
+class WalletDescriptor
+{
+public:
+    static const int VERSION_BASIC=1;
+    static const int CURRENT_VERSION=VERSION_BASIC;
+    int nVersion;
+    std::unique_ptr<Descriptor> m_descriptor;
+    std::string m_descriptor_string;
+    int64_t nCreateTime;
+    uint64_t m_id;
+    int m_purpose;
+    FlatSigningProvider m_provider;
+
+    WalletDescriptor() {}
+
+    explicit WalletDescriptor(std::unique_ptr<Descriptor>descriptor_, int64_t nCreateTime_, uint64_t id_, int purpose_) :
+        m_descriptor(std::move(descriptor_)), nCreateTime(nCreateTime_), m_id(id_), m_purpose(purpose_)
+    {
+        nVersion = WalletDescriptor::CURRENT_VERSION;
+        m_descriptor_string = m_descriptor->ToString();
+    }
+
+    explicit WalletDescriptor(std::string descriptor_string_, int64_t nCreateTime_, uint64_t id_, int purpose_) :
+        m_descriptor_string(descriptor_string_), nCreateTime(nCreateTime_), m_id(id_), m_purpose(purpose_)
+    {
+        nVersion = WalletDescriptor::CURRENT_VERSION;
+        // ReadKeyValue first initializes an empty WalletDescriptor
+        if(m_descriptor_string.length()) {
+            m_descriptor = Parse(m_descriptor_string, m_provider, /* require_checksum = */ true);
+        }
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(this->nVersion);
+        READWRITE(m_id);
+        READWRITE(m_descriptor_string);
+        READWRITE(nCreateTime);
+        READWRITE(m_purpose);
+    }
+};
+
 /** Access to the wallet database.
  * This represents a single transaction at the
  * database. It will be committed when the object goes out of scope.
@@ -197,6 +248,8 @@ public:
 
     bool WriteWatchOnly(const CScript &script, const CKeyMetadata &keymeta);
     bool EraseWatchOnly(const CScript &script);
+
+    bool WriteDescriptor(WalletDescriptor *wdesc);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);

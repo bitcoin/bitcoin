@@ -119,6 +119,12 @@ bool WalletBatch::EraseWatchOnly(const CScript &dest)
     return EraseIC(std::make_pair(std::string("watchs"), dest));
 }
 
+bool WalletBatch::WriteDescriptor(WalletDescriptor* wdesc)
+{
+    assert(wdesc != nullptr);
+    return WriteIC(std::make_pair(std::string("descriptor"), wdesc->m_id), *wdesc, true);
+}
+
 bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
 {
     WriteIC(std::string("bestblock"), CBlockLocator()); // Write empty block locator so versions that require a merkle branch automatically rescan
@@ -416,6 +422,23 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> flags;
             if (!pwallet->SetWalletFlags(flags, true)) {
                 strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
+                return false;
+            }
+        } else if (strType == "descriptor") {
+            uint64_t wdesc_id;
+            ssKey >> wdesc_id;
+            // Unfortunately this doesn't work:
+            // std::unique_ptr<WalletDescriptor> wdesc_u;
+            // ssValue >> wdesc_u;
+            WalletDescriptor wdesc;
+            ssValue >> wdesc;
+            FlatSigningProvider dummy;
+            wdesc.m_id = wdesc_id;
+            wdesc.m_descriptor = Parse(wdesc.m_descriptor_string, dummy, /* require_checksum = */ true);
+            std::unique_ptr<WalletDescriptor> wdesc_u = MakeUnique<WalletDescriptor>(std::move(wdesc));
+
+            if (!pwallet->LoadDescriptor(std::move(wdesc_u))) {
+                strErr = "Error reading wallet database: unable to process descriptor";
                 return false;
             }
         } else if (strType != "bestblock" && strType != "bestblock_nomerkle" &&

@@ -6,6 +6,7 @@
 #ifndef BITCOIN_WALLET_WALLET_H
 #define BITCOIN_WALLET_WALLET_H
 
+#include <addresstype.h>
 #include <amount.h>
 #include <interfaces/chain.h>
 #include <outputtype.h>
@@ -15,6 +16,7 @@
 #include <ui_interface.h>
 #include <util/strencodings.h>
 #include <validationinterface.h>
+#include <script/descriptor.h>
 #include <script/ismine.h>
 #include <script/sign.h>
 #include <util/system.h>
@@ -801,6 +803,8 @@ public:
 
     std::map<uint256, CWalletTx> mapWallet GUARDED_BY(cs_wallet);
 
+    std::map<int, std::unique_ptr<WalletDescriptor>> m_descriptors GUARDED_BY(cs_wallet);
+
     typedef std::multimap<int64_t, CWalletTx*> TxItems;
     TxItems wtxOrdered;
 
@@ -901,6 +905,11 @@ public:
     bool RemoveWatchOnly(const CScript &dest) override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
+
+    bool HaveDescriptor(Descriptor* descriptor) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool LoadDescriptor(std::unique_ptr<WalletDescriptor>wdesc) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddDescriptor(std::unique_ptr<Descriptor>descriptor, int purpose, int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool HaveAddressSourceDescriptor(bool internal, AddressType address_type) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime = 0;
