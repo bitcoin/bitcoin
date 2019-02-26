@@ -4190,6 +4190,9 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
         walletInstance->SetMinVersion(FEATURE_LATEST);
 
+        if ((wallet_creation_flags & WALLET_FLAG_DESCRIPTOR_WALLET)) {
+            walletInstance->SetWalletFlag(WALLET_FLAG_DESCRIPTOR_WALLET);
+        }
         if ((wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             //selective allow to set flags
             walletInstance->SetWalletFlag(WALLET_FLAG_DISABLE_PRIVATE_KEYS);
