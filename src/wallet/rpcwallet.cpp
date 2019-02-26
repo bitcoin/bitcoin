@@ -4171,8 +4171,8 @@ UniValue convertaddress(const JSONRPCRequest& request)
             "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("getaddressinfo", "\"sc1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-            + HelpExampleRpc("getaddressinfo", "\"sc1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+            + HelpExampleCli("getaddressinfo", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+            + HelpExampleRpc("getaddressinfo", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
         );
     }
 

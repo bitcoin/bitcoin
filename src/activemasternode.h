@@ -37,9 +37,7 @@ private:
     masternode_type_enum_t eType;
 
     bool fPingerEnabled;
-
-    /// Ping Masternode
-    bool SendMasternodePing(CConnman& connman);
+    
 
     //  sentinel ping data
     int64_t nSentinelPingTime;
@@ -56,7 +54,8 @@ public:
 
     int nState; // should be one of ACTIVE_MASTERNODE_XXXX
     std::string strNotCapableReason;
-
+    /// Ping Masternode
+    bool SendMasternodePing(CConnman& connman);
 
     CActiveMasternode()
         : eType(MASTERNODE_UNKNOWN),
