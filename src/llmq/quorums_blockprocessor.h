@@ -10,6 +10,7 @@
 
 #include "consensus/params.h"
 #include "primitives/transaction.h"
+#include "saltedhasher.h"
 #include "sync.h"
 
 #include <map>
@@ -31,7 +32,7 @@ private:
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum;
     std::map<uint256, CFinalCommitment> minableCommitments;
 
-    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, bool> hasMinedCommitmentCache;
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher> hasMinedCommitmentCache;
 
 public:
     CQuorumBlockProcessor(CEvoDB& _evoDb) : evoDb(_evoDb) {}

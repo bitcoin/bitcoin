@@ -173,10 +173,10 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
     }
 }
 
-template<typename K>
-static void TruncateCacheMap(std::unordered_map<K, std::pair<bool, int64_t>>& m, size_t maxSize, size_t truncateThreshold)
+template<typename K, typename H>
+static void TruncateCacheMap(std::unordered_map<K, std::pair<bool, int64_t>, H>& m, size_t maxSize, size_t truncateThreshold)
 {
-    typedef typename std::unordered_map<K, std::pair<bool, int64_t>> Map;
+    typedef typename std::unordered_map<K, std::pair<bool, int64_t>, H> Map;
     typedef typename Map::iterator Iterator;
 
     if (m.size() <= truncateThreshold) {
@@ -377,7 +377,7 @@ bool CSigningManager::PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& 
 void CSigningManager::CollectPendingRecoveredSigsToVerify(
         size_t maxUniqueSessions,
         std::unordered_map<NodeId, std::list<CRecoveredSig>>& retSigShares,
-        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr>& retQuorums)
+        std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums)
 {
     {
         LOCK(cs);
@@ -385,7 +385,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
             return;
         }
 
-        std::unordered_set<std::pair<NodeId, uint256>> uniqueSignHashes;
+        std::unordered_set<std::pair<NodeId, uint256>, StaticSaltedHasher> uniqueSignHashes;
         CLLMQUtils::IterateNodesRandom(pendingRecoveredSigs, [&]() {
             return uniqueSignHashes.size() < maxUniqueSessions;
         }, [&](NodeId nodeId, std::list<CRecoveredSig>& ns) {
@@ -443,7 +443,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
 bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 {
     std::unordered_map<NodeId, std::list<CRecoveredSig>> recSigsByNode;
-    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr> quorums;
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
 
     CollectPendingRecoveredSigsToVerify(32, recSigsByNode, quorums);
     if (recSigsByNode.empty()) {
@@ -472,7 +472,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 
     LogPrint("llmq", "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());
 
-    std::unordered_set<uint256> processed;
+    std::unordered_set<uint256, StaticSaltedHasher> processed;
     for (auto& p : recSigsByNode) {
         NodeId nodeId = p.first;
         auto& v = p.second;
