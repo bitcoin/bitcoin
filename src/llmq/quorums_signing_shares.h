@@ -278,13 +278,40 @@ public:
 class CSigSharesNodeState
 {
 public:
+    // Used to avoid holding locks too long
+    struct SessionInfo
+    {
+        uint32_t recvSessionId;
+        Consensus::LLMQType llmqType;
+        uint256 quorumHash;
+        uint256 id;
+        uint256 msgHash;
+        uint256 signHash;
+
+        CQuorumCPtr quorum;
+    };
+
     struct Session {
+        uint32_t recvSessionId{(uint32_t)-1};
+        uint32_t sendSessionId{(uint32_t)-1};
+
+        Consensus::LLMQType llmqType;
+        uint256 quorumHash;
+        uint256 id;
+        uint256 msgHash;
+        uint256 signHash;
+
+        CQuorumCPtr quorum;
+
         CSigSharesInv announced;
         CSigSharesInv requested;
         CSigSharesInv knows;
     };
     // TODO limit number of sessions per node
     std::unordered_map<uint256, Session, StaticSaltedHasher> sessions;
+
+    std::unordered_map<uint32_t, Session*> sessionByRecvId;
+    uint32_t nextSendSessionId{1};
 
     SigShareMap<CSigShare> pendingIncomingSigShares;
     SigShareMap<int64_t> requestedSigShares;
@@ -295,7 +322,11 @@ public:
 
     bool banned{false};
 
-    Session& GetOrCreateSession(Consensus::LLMQType llmqType, const uint256& signHash);
+    Session& GetOrCreateSessionFromShare(const CSigShare& sigShare);
+    Session& GetOrCreateSessionFromAnn(const CSigSesAnn& ann);
+    Session* GetSessionBySignHash(const uint256& signHash);
+    Session* GetSessionByRecvId(uint32_t sessionId);
+    bool GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo);
 
     void MarkAnnounced(const uint256& signHash, const CSigSharesInv& inv);
     void MarkRequested(const uint256& signHash, const CSigSharesInv& inv);
@@ -377,6 +408,7 @@ private:
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash, CConnman& connman);
 
 private:
+    bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo);
     CSigShare RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx);
 
     void Cleanup();

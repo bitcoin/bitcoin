@@ -93,19 +93,71 @@ CSigSharesInv CBatchedSigShares::ToInv(Consensus::LLMQType llmqType) const
     return inv;
 }
 
-CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSession(Consensus::LLMQType llmqType, const uint256& signHash)
+template<typename T>
+static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, T& from)
 {
-    auto& s = sessions[signHash];
+    s.llmqType = (Consensus::LLMQType)from.llmqType;
+    s.quorumHash = from.quorumHash;
+    s.id = from.id;
+    s.msgHash = from.msgHash;
+    s.signHash = signHash;
+    s.announced.Init((Consensus::LLMQType)from.llmqType);
+    s.requested.Init((Consensus::LLMQType)from.llmqType);
+    s.knows.Init((Consensus::LLMQType)from.llmqType);
+}
+
+CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromShare(const llmq::CSigShare& sigShare)
+{
+    auto& s = sessions[sigShare.GetSignHash()];
     if (s.announced.inv.empty()) {
-        s.announced.Init(llmqType, signHash);
-        s.requested.Init(llmqType, signHash);
-        s.knows.Init(llmqType, signHash);
-    } else {
-        assert(s.announced.llmqType == llmqType);
-        assert(s.requested.llmqType == llmqType);
-        assert(s.knows.llmqType == llmqType);
+        InitSession(s, sigShare.GetSignHash(), sigShare);
     }
     return s;
+}
+
+CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSessionFromAnn(const llmq::CSigSesAnn& ann)
+{
+    auto signHash = CLLMQUtils::BuildSignHash((Consensus::LLMQType)ann.llmqType, ann.quorumHash, ann.id, ann.msgHash);
+    auto& s = sessions[signHash];
+    if (s.announced.inv.empty()) {
+        InitSession(s, signHash, ann);
+    }
+    return s;
+}
+
+CSigSharesNodeState::Session* CSigSharesNodeState::GetSessionBySignHash(const uint256& signHash)
+{
+    auto it = sessions.find(signHash);
+    if (it == sessions.end()) {
+        return nullptr;
+    }
+    return &it->second;
+}
+
+CSigSharesNodeState::Session* CSigSharesNodeState::GetSessionByRecvId(uint32_t sessionId)
+{
+    auto it = sessionByRecvId.find(sessionId);
+    if (it == sessionByRecvId.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
+bool CSigSharesNodeState::GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo)
+{
+    auto s = GetSessionByRecvId(sessionId);
+    if (!s) {
+        return false;
+    }
+    retInfo.recvSessionId = sessionId;
+    retInfo.llmqType = s->llmqType;
+    retInfo.quorumHash = s->quorumHash;
+    retInfo.id = s->id;
+    retInfo.msgHash = s->msgHash;
+    retInfo.signHash = s->signHash;
+    retInfo.quorum = s->quorum;
+
+    return true;
 }
 
 void CSigSharesNodeState::MarkAnnounced(const uint256& signHash, const CSigSharesInv& inv)
@@ -140,7 +192,11 @@ void CSigSharesNodeState::MarkKnows(Consensus::LLMQType llmqType, const uint256&
 
 void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 {
-    sessions.erase(signHash);
+    auto it = sessions.find(signHash);
+    if (it != sessions.end()) {
+        sessionByRecvId.erase(it->second.recvSessionId);
+        sessions.erase(it);
+    }
     requestedSigShares.EraseAllForSignHash(signHash);
     pendingIncomingSigShares.EraseAllForSignHash(signHash);
 }
@@ -244,6 +300,15 @@ void CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& 
     }
 
     auto signHash = CLLMQUtils::BuildSignHash(llmqType, ann.quorumHash, ann.id, ann.msgHash);
+
+    LOCK(cs);
+    auto& nodeState = nodeStates[pfrom->id];
+    auto& session = nodeState.GetOrCreateSessionFromAnn(ann);
+    nodeState.sessionByRecvId.erase(session.recvSessionId);
+    nodeState.sessionByRecvId.erase(ann.sessionId);
+    session.recvSessionId = ann.sessionId;
+    session.quorum = quorum;
+    nodeState.sessionByRecvId.emplace(ann.sessionId, &session);
 }
 
 bool CSigSharesManager::VerifySigSharesInv(NodeId from, const CSigSharesInv& inv)
@@ -978,6 +1043,12 @@ bool CSigSharesManager::SendMessages()
     }
 
     return didSend;
+}
+
+bool CSigSharesManager::GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo)
+{
+    LOCK(cs);
+    return nodeStates[nodeId].GetSessionInfoByRecvId(sessionId, retInfo);
 }
 
 CSigShare CSigSharesManager::RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx)
