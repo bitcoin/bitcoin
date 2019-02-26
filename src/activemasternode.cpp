@@ -7,8 +7,10 @@
 #include "masternode.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
+#include "masternode-payments.h"
 #include "netbase.h"
 #include "protocol.h"
+#include "script/standard.h"
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;
@@ -39,7 +41,6 @@ void CActiveMasternode::ManageState(CConnman& connman)
     if(eType == MASTERNODE_REMOTE) {
         ManageStateRemote();
     }
-
     SendMasternodePing(connman);
 }
 
@@ -96,6 +97,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
     }
 
     CMasternodePing mnp(outpoint);
+    const CMasternode* pmn = mnodeman.Find(outpoint);
     mnp.nSentinelVersion = nSentinelVersion;
     mnp.fSentinelIsCurrent =
             (abs(GetAdjustedTime() - nSentinelPingTime) < MASTERNODE_SENTINEL_PING_MAX_SECONDS);
@@ -103,17 +105,43 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- ERROR: Couldn't sign Masternode Ping\n");
         return false;
     }
-
+    
     // Update lastPing for our masternode in Masternode list
-    if(mnodeman.IsMasternodePingedWithin(outpoint, MASTERNODE_MIN_MNP_SECONDS, mnp.sigTime)) {
+    if(mnodeman.IsMasternodePingedWithin(pmn, outpoint, MASTERNODE_MIN_MNP_SECONDS, mnp.sigTime)) {
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Too early to send Masternode Ping\n");
         return false;
     }
+    if(pmn->nActiveState == MASTERNODE_PRE_ENABLED || !masternodeSync.IsSynced()) {
+        LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Active masternode is not ready to start sending pings\n");
+        return false;
+    }
 
+    // ensure that we should only create ping if in the winners list
+    const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
+    bool foundPayee = false;
+    {
+        LOCK(cs_mapMasternodeBlocks);
+        CMasternodePayee payee;  
+        // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
+        for (int i = -10; i < 20; i++) {
+            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
+            {
+                foundPayee = true;
+                break;
+            }
+        }
+    }
+    if(!foundPayee){
+        LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Not in winners list, skipping ping...\n");
+        return false; 
+    } 
+    
     mnodeman.SetMasternodeLastPing(outpoint, mnp);
 
     LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Relaying ping, collateral=%s\n", outpoint.ToStringShort());
     mnp.Relay(connman);
+    
 
     return true;
 }

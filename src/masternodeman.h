@@ -74,12 +74,10 @@ private:
     bool fMasternodesRemoved;
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
-
+    
     int64_t nLastSentinelPingTime;
 
     friend class CMasternodeSync;
-    /// Find an entry
-    CMasternode* Find(const COutPoint& outpoint);
 
     bool GetMasternodeScores(const uint256& nBlockHash, score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol = 0);
 
@@ -127,7 +125,9 @@ public:
     }
 
     CMasternodeMan();
-
+    /// Find an entry
+    CMasternode* Find(const COutPoint& outpoint);
+    
     /// Add an entry
     bool Add(CMasternode &mn);
 
@@ -138,7 +138,7 @@ public:
     bool PoSeBan(const COutPoint &outpoint);
 
     /// Check all Masternodes
-    void Check();
+    void Check(bool fForce = false);
 
     /// Check all Masternodes and remove inactive
     void CheckAndRemove(CConnman& connman);
@@ -221,14 +221,14 @@ public:
         return vecTmp;;
     }
 
-    bool IsSentinelPingActive();
+    bool IsSentinelPingActive();    
     void UpdateLastSentinelPingTime();
     bool AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash);
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
     void CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce);
 
-    bool IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1);
+    bool IsMasternodePingedWithin(const CMasternode* pmn, const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1) const;
     void SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);

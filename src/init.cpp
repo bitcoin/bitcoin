@@ -227,12 +227,6 @@ void PrepareShutdown()
     StopMapPort();
     if (!fLiteMode) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-        flatdb1.Dump(mnodeman);
-        CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
-        flatdb2.Dump(mnpayments);
-        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-        flatdb3.Dump(governance);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
     }
@@ -1863,31 +1857,6 @@ bool AppInitMain()
         fs::path pathDB = GetDataDir();
         std::string strDBName;
 
-        strDBName = "mncache.dat";
-        uiInterface.InitMessage(_("Loading masternode cache..."));
-        CFlatDB<CMasternodeMan> flatdb1(strDBName, "magicMasternodeCache");
-        if(!flatdb1.Load(mnodeman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
-        }
-
-        if(mnodeman.size()) {
-            strDBName = "mnpayments.dat";
-            uiInterface.InitMessage(_("Loading masternode payment cache..."));
-            CFlatDB<CMasternodePayments> flatdb2(strDBName, "magicMasternodePaymentsCache");
-            if(!flatdb2.Load(mnpayments)) {
-                return InitError(_("Failed to load masternode payments cache from") + "\n" + (pathDB / strDBName).string());
-            }
-
-            strDBName = "governance.dat";
-            uiInterface.InitMessage(_("Loading governance cache..."));
-            CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-            if(!flatdb3.Load(governance)) {
-                return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
-            }
-            governance.InitOnLoad();
-        } else {
-            uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
-        }
 
         strDBName = "netfulfilled.dat";
         uiInterface.InitMessage(_("Loading fulfilled requests cache..."));

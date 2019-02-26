@@ -15,15 +15,14 @@ class CMasternode;
 class CMasternodeBroadcast;
 class CConnman;
 
-static const int MASTERNODE_CHECK_SECONDS               =   5;
+static const int MASTERNODE_CHECK_SECONDS               =   10;
 static const int MASTERNODE_MIN_MNB_SECONDS             =   5 * 60;
-static const int MASTERNODE_MIN_MNP_SECONDS             =  10 * 60;
-static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  60 * 60;
-static const int MASTERNODE_EXPIRATION_SECONDS          = 120 * 60;
-static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
+static const int MASTERNODE_MIN_MNP_SECONDS             =  60;
+static const int MASTERNODE_SENTINEL_PING_MAX_SECONDS   =  10 * 60;
+static const int MASTERNODE_MAX_RETRIES  = 60;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
-
+static std::set<CScript> payeeScriptsTmp;
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
@@ -40,7 +39,7 @@ public:
     uint256 blockHash{};
     int64_t sigTime{}; //mnb message times
     std::vector<unsigned char> vchSig{};
-    bool fSentinelIsCurrent = false; // true if last sentinel ping was current
+    bool fSentinelIsCurrent = true; // true if last sentinel ping was current
     // MSB is major version to control backwards compatibility, other 3 bits corresponds to miner x.x.x version scheme
     uint32_t nSentinelVersion{DEFAULT_SENTINEL_VERSION};
     uint32_t nDaemonVersion{DEFAULT_DAEMON_VERSION};
@@ -77,8 +76,7 @@ public:
 
     uint256 GetHash() const;
     uint256 GetSignatureHash() const;
-
-    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_NEW_START_REQUIRED_SECONDS; }
+    bool IsExpired() const { return GetAdjustedTime() - sigTime > MASTERNODE_SENTINEL_PING_MAX_SECONDS;}
 
     bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
     bool CheckSignature(const CPubKey& pubKeyMasternode, int &nDos) const;
@@ -112,15 +110,15 @@ struct masternode_info_t
     masternode_info_t() = default;
     masternode_info_t(masternode_info_t const&) = default;
 
-    masternode_info_t(int activeState, int protoVer, int64_t sTime) :
-        nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime} {}
+    masternode_info_t(int activeState, int protoVer, int64_t sTime, int retries) :
+        nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime}, nPingRetries{retries} {}
 
     masternode_info_t(int activeState, int protoVer, int64_t sTime,
                       COutPoint const& outpnt, CService const& addr,
-                      CPubKey const& pkCollAddr, CPubKey const& pkMN) :
+                      CPubKey const& pkCollAddr, CPubKey const& pkMN, int retries) :
         nActiveState{activeState}, nProtocolVersion{protoVer}, sigTime{sTime},
         outpoint{outpnt}, addr{addr},
-        pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN} {}
+        pubKeyCollateralAddress{pkCollAddr}, pubKeyMasternode{pkMN}, nPingRetries{retries}{}
 
     int nActiveState = 0;
     int nProtocolVersion = 0;
@@ -130,13 +128,21 @@ struct masternode_info_t
     CService addr{};
     CPubKey pubKeyCollateralAddress{};
     CPubKey pubKeyMasternode{};
-
+    int nPingRetries = 0;
     int64_t nTimeLastChecked = 0;
     int64_t nTimeLastPaid = 0;
     int64_t nTimeLastPing = 0; //* not in CMN
     bool fInfoValid = false; //* not in CMN
 };
-
+enum state {
+    MASTERNODE_PRE_ENABLED,
+    MASTERNODE_ENABLED,
+    MASTERNODE_OUTPOINT_SPENT,
+    MASTERNODE_UPDATE_REQUIRED,
+    MASTERNODE_SENTINEL_PING_EXPIRED,
+    MASTERNODE_NEW_START_REQUIRED,
+    MASTERNODE_POSE_BAN
+};
 //
 // The Masternode Class. It contains the input of the 100000SYS, signature to prove
 // it's the one who own that ip address and code for calculating the payment election.
@@ -148,16 +154,6 @@ private:
     mutable CCriticalSection cs;
 
 public:
-    enum state {
-        MASTERNODE_PRE_ENABLED,
-        MASTERNODE_ENABLED,
-        MASTERNODE_EXPIRED,
-        MASTERNODE_OUTPOINT_SPENT,
-        MASTERNODE_UPDATE_REQUIRED,
-        MASTERNODE_SENTINEL_PING_EXPIRED,
-        MASTERNODE_NEW_START_REQUIRED,
-        MASTERNODE_POSE_BAN
-    };
 
     enum CollateralStatus {
         COLLATERAL_OK,
@@ -181,7 +177,7 @@ public:
     CMasternode();
     CMasternode(const CMasternode& other);
     CMasternode(const CMasternodeBroadcast& mnb);
-    CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn);
+    CMasternode(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn, int retries);
 
     ADD_SERIALIZE_METHODS;
 
@@ -190,7 +186,7 @@ public:
         LOCK(cs);
         // using new format directly
         READWRITE(outpoint);
-        
+        READWRITE(nPingRetries);
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
         READWRITE(pubKeyMasternode);
@@ -215,11 +211,11 @@ public:
 
     static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey);
     static CollateralStatus CheckCollateral(const COutPoint& outpoint, const CPubKey& pubkey, int& nHeightRet);
-    void Check(bool fForce = false);
+    void Check(bool fForce = false, const std::set<CScript> &payeeScripts=payeeScriptsTmp);
 
     bool IsBroadcastedWithin(int nSeconds) { return GetAdjustedTime() - sigTime < nSeconds; }
 
-    bool IsPingedWithin(int nSeconds, int64_t nTimeToCheckAt = -1)
+    bool IsPingedWithin(int nSeconds, int64_t nTimeToCheckAt = -1) const
     {
         if(!lastPing) return false;
 
@@ -234,7 +230,6 @@ public:
     bool IsPoSeBanned() const { return nActiveState == MASTERNODE_POSE_BAN; }
     // NOTE: this one relies on nPoSeBanScore, not on nActiveState as everything else here
     bool IsPoSeVerified() const { return nPoSeBanScore <= -MASTERNODE_POSE_BAN_MAX_SCORE; }
-    bool IsExpired() const { return nActiveState == MASTERNODE_EXPIRED; }
     bool IsOutpointSpent() const { return nActiveState == MASTERNODE_OUTPOINT_SPENT; }
     bool IsUpdateRequired() const { return nActiveState == MASTERNODE_UPDATE_REQUIRED; }
     bool IsSentinelPingExpired() const { return nActiveState == MASTERNODE_SENTINEL_PING_EXPIRED; }
@@ -244,21 +239,12 @@ public:
     {
         return  nActiveStateIn == MASTERNODE_ENABLED ||
                 nActiveStateIn == MASTERNODE_PRE_ENABLED ||
-                nActiveStateIn == MASTERNODE_EXPIRED ||
                 nActiveStateIn == MASTERNODE_SENTINEL_PING_EXPIRED;
     }
 
     bool IsValidForPayment() const
     {
-        if(nActiveState == MASTERNODE_ENABLED) {
-            return true;
-        }
-        if(!sporkManager.IsSporkActive(SPORK_14_REQUIRE_SENTINEL_FLAG) &&
-           (nActiveState == MASTERNODE_SENTINEL_PING_EXPIRED)) {
-            return true;
-        }
-
-        return false;
+        return nActiveState == MASTERNODE_ENABLED;
     }
 
     bool IsValidNetAddr();
@@ -322,7 +308,7 @@ public:
     CMasternodeBroadcast() : CMasternode(), fRecovery(false) {}
     CMasternodeBroadcast(const CMasternode& mn) : CMasternode(mn), fRecovery(false) {}
     CMasternodeBroadcast(CService addrNew, COutPoint outpointNew, CPubKey pubKeyCollateralAddressNew, CPubKey pubKeyMasternodeNew, int nProtocolVersionIn) :
-        CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn), fRecovery(false) {}
+        CMasternode(addrNew, outpointNew, pubKeyCollateralAddressNew, pubKeyMasternodeNew, nProtocolVersionIn, 0), fRecovery(false) {}
 
     ADD_SERIALIZE_METHODS;
 
@@ -341,6 +327,7 @@ public:
         READWRITE(nProtocolVersion);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(lastPing);
+            READWRITE(nPingRetries);
         }
     }
 

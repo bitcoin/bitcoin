@@ -238,6 +238,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     CScript payee;
 	int nStartHeightBlock = 0;
     if(!GetBlockPayee(nBlockHeight, payee, nStartHeightBlock)) {
+        // make sure to run masternode checks before trying to get next masternode in queue
+        mnodeman.Check(true);
         // no masternode detected...
         int nCount = 0;
         masternode_info_t mnInfo;
@@ -388,7 +390,7 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
 		LogPrint(BCLog::MNPAYMENT, "MASTERNODEPAYMENTVOTE -- hash=%s, nBlockHeight=%d/%d vote=%s, new\n",
 			nHash.ToString(), vote.nBlockHeight, nCachedBlockHeight, vote.ToString());
 
-        if(AddOrUpdatePaymentVote(vote)){
+        if(AddOrUpdatePaymentVote(vote, connman)){
             vote.Relay(connman);
             masternodeSync.BumpAssetLastTime("MASTERNODEPAYMENTVOTE");
         }
@@ -467,7 +469,7 @@ bool CMasternodePayments::IsScheduled(const masternode_info_t& mnInfo, int nNotB
     return false;
 }
 
-bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote)
+bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& vote, CConnman& connman)
 {
     uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, vote.nBlockHeight - 101)) return false;
@@ -481,7 +483,7 @@ bool CMasternodePayments::AddOrUpdatePaymentVote(const CMasternodePaymentVote& v
     mapMasternodePaymentVotes[nVoteHash] = vote;
 
     auto it = mapMasternodeBlocks.emplace(vote.nBlockHeight, CMasternodeBlockPayees(vote.nBlockHeight)).first;
-    it->second.AddPayee(vote);
+    it->second.AddPayee(vote, connman);
 
     LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::AddOrUpdatePaymentVote -- added, hash=%s\n", nVoteHash.ToString());
 
@@ -495,7 +497,7 @@ bool CMasternodePayments::HasVerifiedPaymentVote(const uint256& hashIn) const
     return it != mapMasternodePaymentVotes.end() && it->second.IsVerified();
 }
 
-void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote)
+void CMasternodeBlockPayees::AddPayee(const CMasternodePaymentVote& vote, CConnman& connman)
 {
     LOCK(cs_vecPayees);
 
@@ -565,8 +567,9 @@ bool CMasternodeBlockPayees::HasPayeeWithVotes(const CScript& payeeIn, int nVote
     return false;
 }
 
-bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes) const
+bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes, bool retry) const
 {
+    LOCK(cs_main);
     LOCK(cs_vecPayees);
 	const CAmount& nHalfFee = fee / 2;
     int nMaxSignatures = 0;
@@ -618,6 +621,12 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 		nTotalRewardWithMasternodes  -= fee;
 		return true;
 	}
+    if(!retry){
+        // do check and try again incase of inconsistencies
+        mnodeman.Check(true);
+        if(IsTransactionValid(txNew, nHeight, fee, nTotalRewardWithMasternodes, true))
+            return true;
+    }
     LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s', amount: %f SYS\n", strPayeesPossible, (float)nMasternodePayment/COIN);
     return false;
 }
@@ -781,14 +790,18 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
     masternode_info_t mnInfo;
 
     if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
-        LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- ERROR: Failed to find masternode to pay\n");
-        return false;
+        // run masternode check and check again incase of inconsistencies
+        mnodeman.Check(true);
+        if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
+            LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- ERROR: Failed to find masternode to pay\n");
+            return false;
+        }
     }
 
     LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- Masternode found by GetNextMasternodeInQueueForPayment(): %s\n", mnInfo.outpoint.ToStringShort());
 
 
-    CScript payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
+    const CScript &payee = GetScriptForDestination(mnInfo.pubKeyCollateralAddress.GetID());
 
     CMasternodePaymentVote voteNew(activeMasternode.outpoint, nBlockHeight, payee, mnodeman.GetStartHeight(mnInfo));
 
@@ -803,7 +816,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
     if (voteNew.Sign()) {
         LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- AddOrUpdatePaymentVote()\n");
 
-        if (AddOrUpdatePaymentVote(voteNew)) {
+        if (AddOrUpdatePaymentVote(voteNew, connman)) {
             voteNew.Relay(connman);
             return true;
         }
@@ -1007,7 +1020,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
             continue;
         }
         // DEBUG
-        DBG (
+        /*DBG (
             // Let's see why this failed
             for (const auto& payee : mnBlockPayees.second.vecPayees) {
                 CTxDestination address1;
@@ -1015,7 +1028,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
                 printf("payee %s votes %d\n", EncodeDestination(address1).c_str(), payee.GetVoteCount());
             }
             printf("block %d votes total %d\n", nBlockHeight, nTotalVotes);
-        )
+        )*/
         // END DEBUG
         // Low data block found, let's try to sync it
         uint256 hash;

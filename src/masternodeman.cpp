@@ -68,7 +68,6 @@ CMasternodeMan::CMasternodeMan():
     fMasternodesAdded(false),
     fMasternodesRemoved(false),
     vecDirtyGovernanceObjectHashes(),
-    nLastSentinelPingTime(0),
     mapSeenMasternodeBroadcast(),
     mapSeenMasternodePing()
 {}
@@ -129,15 +128,33 @@ bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
     return true;
 }
 
-void CMasternodeMan::Check()
+void CMasternodeMan::Check(bool fForce)
 {
 	// SYSCOIN remove csmain lock
     LOCK(cs);
-
+    std::set<CScript> payeeScripts;
+    // only check masternodes in winners list
+    {
+        LOCK(cs_mapMasternodeBlocks);
+   
+        for (int i = -10; i < 20; i++) {
+            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i))
+            {
+                const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
+                for(auto& payee: payees.vecPayees){
+                    if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+                        payeeScripts.insert(payee.GetPayee());
+                    }
+                }
+                
+            }
+        }
+    }
+    
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
-        mnpair.second.Check();
+        mnpair.second.Check(fForce, payeeScripts);
     }
 }
 
@@ -161,7 +178,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
         std::map<COutPoint, CMasternode>::iterator it = mapMasternodes.begin();
         while (it != mapMasternodes.end()) {
             CMasternodeBroadcast mnb = CMasternodeBroadcast(it->second);
-            uint256 hash = mnb.GetHash();
+            const uint256 &hash = mnb.GetHash();
             // If collateral was spent ...
             if (it->second.IsOutpointSpent()) {
                 LogPrint(BCLog::MN, "CMasternodeMan::CheckAndRemove -- Removing Masternode: %s  addr=%s  %i now\n", it->second.GetStateString(), it->second.addr.ToString(), size() - 1);
@@ -334,7 +351,6 @@ void CMasternodeMan::Clear()
     mWeAskedForMasternodeListEntry.clear();
     mapSeenMasternodeBroadcast.clear();
     mapSeenMasternodePing.clear();
-    nLastSentinelPingTime = 0;
 }
 
 int CMasternodeMan::CountMasternodes(int nProtocolVersion)
@@ -452,7 +468,7 @@ bool CMasternodeMan::GetMasternodeInfo(const CScript& payee, masternode_info_t& 
 {
     LOCK(cs);
     for (const auto& mnpair : mapMasternodes) {
-        CScript scriptCollateralAddress = GetScriptForDestination(mnpair.second.pubKeyCollateralAddress.GetID());
+        const CScript &scriptCollateralAddress = GetScriptForDestination(mnpair.second.pubKeyCollateralAddress.GetID());
         if (scriptCollateralAddress == payee) {
             mnInfoRet = mnpair.second.GetInfo();
             return true;
@@ -506,7 +522,7 @@ bool CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool f
         if(mnpayments.IsScheduled(mnpair.second, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
-        if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
+        if(fFilterSigTime && mnpair.second.sigTime + (nMnCount*1.1*60) > GetAdjustedTime()) continue;
 
         //make sure it has at least as many confirmations as there are masternodes
         if(GetUTXOConfirmations(mnpair.first) < nMnCount) continue;
@@ -765,7 +781,6 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
-
         pfrom->setAskFor.erase(mnb.GetHash());
 
         if(!masternodeSync.IsBlockchainSynced()) return;
@@ -809,8 +824,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         // see if we have this Masternode
         CMasternode* pmn = Find(mnp.masternodeOutpoint);
 
-        if(pmn && mnp.fSentinelIsCurrent)
-            UpdateLastSentinelPingTime();
+        if(pmn && mnp.fSentinelIsCurrent)   
+            UpdateLastSentinelPingTime();        
 
         // too late, new MNANNOUNCE is required
         if(pmn && pmn->IsNewStartRequired()) return;
@@ -882,7 +897,7 @@ void CMasternodeMan::SyncSingle(CNode* pnode, const COutPoint& outpoint, CConnma
 
     auto it = mapMasternodes.find(outpoint);
 
-    if(it != mapMasternodes.end()) {
+    if(it !=  mapMasternodes.end()) {
         if (it->second.addr.IsRFC1918() || it->second.addr.IsLocal()) return; // do not send local network masternode
         // NOTE: send masternode regardless of its current state, the other node will need it to verify old votes.
         LogPrint(BCLog::MN, "CMasternodeMan::%s -- Sending Masternode entry: masternode=%s  addr=%s\n", __func__, outpoint.ToStringShort(), it->second.addr.ToString());
@@ -931,11 +946,10 @@ void CMasternodeMan::SyncAll(CNode* pnode, CConnman& connman)
 void CMasternodeMan::PushDsegInvs(CNode* pnode, const CMasternode& mn)
 {
     AssertLockHeld(cs);
-
     CMasternodeBroadcast mnb(mn);
     CMasternodePing mnp = mnb.lastPing;
-    uint256 hashMNB = mnb.GetHash();
-    uint256 hashMNP = mnp.GetHash();
+    const uint256 &hashMNB = mnb.GetHash();
+    const uint256 &hashMNP = mnp.GetHash();
     pnode->PushInventory(CInv(MSG_MASTERNODE_ANNOUNCE, hashMNB));
     pnode->PushInventory(CInv(MSG_MASTERNODE_PING, hashMNP));
     mapSeenMasternodeBroadcast.insert(std::make_pair(hashMNB, std::make_pair(GetTime(), mnb)));
@@ -1421,12 +1435,11 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         LOCK(cs);
         nDos = 0;
         LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s\n", mnb.outpoint.ToStringShort());
-
-        uint256 hash = mnb.GetHash();
+        const uint256 &hash = mnb.GetHash();
         if(mapSeenMasternodeBroadcast.count(hash) && !mnb.fRecovery) { //seen
             LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen\n", mnb.outpoint.ToStringShort());
             // less then 2 pings left before this MN goes into non-recoverable state, bump sync timeout
-            if(GetTime() - mapSeenMasternodeBroadcast[hash].first > MASTERNODE_NEW_START_REQUIRED_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2) {
+            if(((GetTime() - mapSeenMasternodeBroadcast[hash].first) > (MASTERNODE_SENTINEL_PING_MAX_SECONDS - MASTERNODE_MIN_MNP_SECONDS * 2)) && mapSeenMasternodeBroadcast[hash].second.nPingRetries >= (MASTERNODE_MAX_RETRIES-20)) {
                 LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- masternode=%s seen update\n", mnb.outpoint.ToStringShort());
                 mapSeenMasternodeBroadcast[hash].first = GetTime();
                 masternodeSync.BumpAssetLastTime("CMasternodeMan::CheckMnbAndUpdateMasternodeList - seen");
@@ -1466,7 +1479,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
         // search Masternode list
         CMasternode* pmn = Find(mnb.outpoint);
         if(pmn) {
-            CMasternodeBroadcast mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
+            const CMasternodeBroadcast &mnbOld = mapSeenMasternodeBroadcast[CMasternodeBroadcast(*pmn).GetHash()].second;
             if(!mnb.Update(pmn, nDos, connman)) {
                 LogPrint(BCLog::MN, "CMasternodeMan::CheckMnbAndUpdateMasternodeList -- Update() failed, masternode=%s\n", mnb.outpoint.ToStringShort());
                 return false;
@@ -1526,17 +1539,18 @@ void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
     nLastRunBlockHeight = nCachedBlockHeight;
 }
 
-void CMasternodeMan::UpdateLastSentinelPingTime()
-{
-    LOCK(cs);
-    nLastSentinelPingTime = GetTime();
-}
+void CMasternodeMan::UpdateLastSentinelPingTime()   
+{   
+    LOCK(cs);   
+    nLastSentinelPingTime = GetTime();  
+}   
 
-bool CMasternodeMan::IsSentinelPingActive()
-{
-    LOCK(cs);
-    // Check if any masternodes have voted recently, otherwise return false
-    return (GetTime() - nLastSentinelPingTime) <= MASTERNODE_SENTINEL_PING_MAX_SECONDS;
+
+ bool CMasternodeMan::IsSentinelPingActive()    
+{   
+    LOCK(cs);   
+    // Check if any masternodes have voted recently, otherwise return false 
+    return (GetTime() - nLastSentinelPingTime) <= MASTERNODE_SENTINEL_PING_MAX_SECONDS; 
 }
 
 bool CMasternodeMan::AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash)
@@ -1569,10 +1583,9 @@ void CMasternodeMan::CheckMasternode(const CPubKey& pubKeyMasternode, bool fForc
     }
 }
 
-bool CMasternodeMan::IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt)
+bool CMasternodeMan::IsMasternodePingedWithin(const CMasternode* pmn, const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt) const
 {
     LOCK(cs);
-    CMasternode* pmn = Find(outpoint);
     return pmn ? pmn->IsPingedWithin(nSeconds, nTimeToCheckAt) : false;
 }
 
@@ -1584,16 +1597,25 @@ void CMasternodeMan::SetMasternodeLastPing(const COutPoint& outpoint, const CMas
         return;
     }
     pmn->lastPing = mnp;
-    if(mnp.fSentinelIsCurrent) {
-        UpdateLastSentinelPingTime();
+    if(mnp.fSentinelIsCurrent) { 
+         UpdateLastSentinelPingTime();  
     }
+    
     mapSeenMasternodePing.insert(std::make_pair(mnp.GetHash(), mnp));
-
+    
+    if(pmn->nPingRetries > 0 && pmn->IsEnabled()){
+        LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Ping retries reduced from %d\n", pmn->nPingRetries);
+        pmn->nPingRetries -= 1;
+    }
+    
+    
     CMasternodeBroadcast mnb(*pmn);
-    uint256 hash = mnb.GetHash();
+    const uint256 &hash = mnb.GetHash();
     if(mapSeenMasternodeBroadcast.count(hash)) {
         mapSeenMasternodeBroadcast[hash].second.lastPing = mnp;
+        mapSeenMasternodeBroadcast[hash].second.nPingRetries = pmn->nPingRetries;
     }
+    
 }
 
 void CMasternodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
