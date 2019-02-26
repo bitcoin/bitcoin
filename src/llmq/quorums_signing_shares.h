@@ -59,8 +59,7 @@ public:
 class CSigSharesInv
 {
 public:
-    uint8_t llmqType;
-    uint256 signHash;
+    uint32_t sessionId{(uint32_t)-1};
     std::vector<bool> inv;
 
 public:
@@ -69,20 +68,14 @@ public:
     template<typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(llmqType);
+        uint64_t invSize = inv.size();
 
-        auto& consensus = Params().GetConsensus();
-        auto it = consensus.llmqs.find((Consensus::LLMQType)llmqType);
-        if (it == consensus.llmqs.end()) {
-            throw std::ios_base::failure("invalid llmqType");
-        }
-        const auto& params = it->second;
-
-        READWRITE(signHash);
-        READWRITE(AUTOBITSET(inv, (size_t)params.size));
+        READWRITE(VARINT(sessionId));
+        READWRITE(COMPACTSIZE(invSize));
+        READWRITE(AUTOBITSET(inv, (size_t)invSize));
     }
 
-    void Init(Consensus::LLMQType _llmqType, const uint256& _signHash);
+    void Init(Consensus::LLMQType _llmqType);
     bool IsSet(uint16_t quorumMember) const;
     void Set(uint16_t quorumMember, bool v);
     void Merge(const CSigSharesInv& inv2);
@@ -95,10 +88,7 @@ public:
 class CBatchedSigShares
 {
 public:
-    uint8_t llmqType;
-    uint256 quorumHash;
-    uint256 id;
-    uint256 msgHash;
+    uint32_t sessionId{(uint32_t)-1};
     std::vector<std::pair<uint16_t, CBLSLazySignature>> sigShares;
 
 public:
@@ -107,10 +97,7 @@ public:
     template<typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(id);
-        READWRITE(msgHash);
+        READWRITE(VARINT(sessionId));
         READWRITE(sigShares);
     }
 
@@ -129,7 +116,7 @@ public:
         return sigShare;
     }
 
-    CSigSharesInv ToInv() const;
+    CSigSharesInv ToInv(Consensus::LLMQType llmqType) const;
 };
 
 template<typename T>

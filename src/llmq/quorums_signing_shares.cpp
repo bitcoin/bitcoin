@@ -28,8 +28,6 @@ void CSigShare::UpdateKey()
 
 void CSigSharesInv::Merge(const CSigSharesInv& inv2)
 {
-    assert(llmqType == inv2.llmqType);
-    assert(signHash == inv2.signHash);
     for (size_t i = 0; i < inv.size(); i++) {
         if (inv2.inv[i]) {
             inv[i] = inv2.inv[i];
@@ -44,7 +42,7 @@ size_t CSigSharesInv::CountSet() const
 
 std::string CSigSharesInv::ToString() const
 {
-    std::string str = strprintf("signHash=%s, inv=(", signHash.ToString());
+    std::string str = "(";
     bool first = true;
     for (size_t i = 0; i < inv.size(); i++) {
         if (!inv[i]) {
@@ -61,11 +59,8 @@ std::string CSigSharesInv::ToString() const
     return str;
 }
 
-void CSigSharesInv::Init(Consensus::LLMQType _llmqType, const uint256& _signHash)
+void CSigSharesInv::Init(Consensus::LLMQType _llmqType)
 {
-    llmqType = _llmqType;
-    signHash = _signHash;
-
     size_t llmqSize = (size_t)(Params().GetConsensus().llmqs.at(_llmqType).size);
     inv.resize(llmqSize, false);
 }
@@ -80,6 +75,16 @@ void CSigSharesInv::Set(uint16_t quorumMember, bool v)
 {
     assert(quorumMember < inv.size());
     inv[quorumMember] = v;
+}
+
+CSigSharesInv CBatchedSigShares::ToInv(Consensus::LLMQType llmqType) const
+{
+    CSigSharesInv inv;
+    inv.Init(llmqType);
+    for (size_t i = 0; i < sigShares.size(); i++) {
+        inv.inv[sigShares[i].first] = true;
+    }
+    return inv;
 }
 
 CSigSharesNodeState::Session& CSigSharesNodeState::GetOrCreateSession(Consensus::LLMQType llmqType, const uint256& signHash)
@@ -132,16 +137,6 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
     sessions.erase(signHash);
     requestedSigShares.EraseAllForSignHash(signHash);
     pendingIncomingSigShares.EraseAllForSignHash(signHash);
-}
-
-CSigSharesInv CBatchedSigShares::ToInv() const
-{
-    CSigSharesInv inv;
-    inv.Init((Consensus::LLMQType)llmqType, CLLMQUtils::BuildSignHash(*this));
-    for (size_t i = 0; i < sigShares.size(); i++) {
-        inv.inv[sigShares[i].first] = true;
-    }
-    return inv;
 }
 
 //////////////////////
