@@ -4311,8 +4311,10 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
 
     walletInstance->WalletLogPrintf("Wallet completed loading in %15dms\n", GetTimeMillis() - nStart);
 
-    // Try to top up keypool. No-op if the wallet is locked.
-    walletInstance->TopUpKeyPool();
+    // Try to top up keypool, except for descriptor based wallet. No-op if the wallet is locked.
+    if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        walletInstance->TopUpKeyPool();
+    }
 
     auto locked_chain = chain.lock();
     LOCK(walletInstance->cs_wallet);
@@ -4409,7 +4411,10 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     walletInstance->SetBroadcastTransactions(gArgs.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     {
-        walletInstance->WalletLogPrintf("setKeyPool.size() = %u\n",      walletInstance->GetKeyPoolSize());
+        // Descriptor based wallet does not have a keypool
+        if (!(wallet_creation_flags & WALLET_FLAG_DESCRIPTOR_WALLET)) {
+            walletInstance->WalletLogPrintf("setKeyPool.size() = %u\n",      walletInstance->GetKeyPoolSize());
+        }
         walletInstance->WalletLogPrintf("mapWallet.size() = %u\n",       walletInstance->mapWallet.size());
         walletInstance->WalletLogPrintf("mapAddressBook.size() = %u\n",  walletInstance->mapAddressBook.size());
     }
