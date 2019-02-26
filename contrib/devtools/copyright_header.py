@@ -85,7 +85,7 @@ ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE = ("%s %s" % (ANY_COPYRIGHT_STYLE,
 ANY_COPYRIGHT_COMPILED = re.compile(ANY_COPYRIGHT_STYLE_OR_YEAR_STYLE)
 
 def compile_copyright_regex(copyright_style, year_style, name):
-    return re.compile('%s %s,? %s\n' % (copyright_style, year_style, name))
+    return re.compile(r'%s %s,? %s( +\*)?\n' % (copyright_style, year_style, name))
 
 EXPECTED_HOLDER_NAMES = [
     r"Satoshi Nakamoto",
