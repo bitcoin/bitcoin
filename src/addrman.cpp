@@ -569,6 +569,13 @@ void CAddrMan::ResolveCollisions_()
                         Good_(info_new, false, GetAdjustedTime());
                         erase_collision = true;
                     }
+                } else if (GetAdjustedTime() - info_new.nLastSuccess > ADDRMAN_TEST_WINDOW) {
+                    // If the collision hasn't resolved in some reasonable amount of time,
+                    // just evict the old entry -- we must not be able to
+                    // connect to it for some reason.
+                    LogPrint(BCLog::ADDRMAN, "Unable to test; swapping %s for %s in tried table anyway\n", info_new.ToString(), info_old.ToString());
+                    Good_(info_new, false, GetAdjustedTime());
+                    erase_collision = true;
                 }
             } else { // Collision is not actually a collision anymore
                 Good_(info_new, false, GetAdjustedTime());
