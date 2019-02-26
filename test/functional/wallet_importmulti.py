@@ -813,5 +813,6 @@ class ImportMultiTest(BitcoinTestFramework):
             addr = wrpc.getnewaddress('', 'bech32')
             assert_equal(addr, addresses[i])
 
+
 if __name__ == '__main__':
     ImportMultiTest().main()

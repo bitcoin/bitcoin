@@ -90,6 +90,7 @@ BASE_SCRIPTS = [
     'p2p_sendheaders.py',
     'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
+    'wallet_importdescriptor.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',

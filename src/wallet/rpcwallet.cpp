@@ -4100,6 +4100,7 @@ UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
 UniValue importaddress(const JSONRPCRequest& request);
+UniValue importdescriptor(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importpubkey(const JSONRPCRequest& request);
 UniValue dumpwallet(const JSONRPCRequest& request);
 UniValue importwallet(const JSONRPCRequest& request);
@@ -4133,6 +4134,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
     { "wallet",             "getwalletinfo",                    &getwalletinfo,                 {} },
     { "wallet",             "importaddress",                    &importaddress,                 {"address","label","rescan","p2sh"} },
+    { "wallet",             "importdescriptor",                 &importdescriptor,              {"desc","options"} },
     { "wallet",             "importmulti",                      &importmulti,                   {"requests","options"} },
     { "wallet",             "importprivkey",                    &importprivkey,                 {"privkey","label","rescan"} },
     { "wallet",             "importprunedfunds",                &importprunedfunds,             {"rawtransaction","txoutproof"} },

@@ -2,11 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <addresstype.h>
 #include <chain.h>
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>
+#include <optional.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
@@ -1315,7 +1317,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
     return result;
 }
 
-static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
+static int64_t GetImportTimestamp(const UniValue& data, int64_t now, bool required=true)
 {
     if (data.exists("timestamp")) {
         const UniValue& timestamp = data["timestamp"];
@@ -1326,7 +1328,10 @@ static int64_t GetImportTimestamp(const UniValue& data, int64_t now)
         }
         throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Expected number or \"now\" timestamp value for key. got type %s", uvTypeName(timestamp.type())));
     }
-    throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
+    if (required) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Missing required timestamp field for key");
+    }
+    return now;
 }
 
 UniValue importmulti(const JSONRPCRequest& mainRequest)
@@ -1335,6 +1340,10 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, mainRequest.fHelp)) {
         return NullUniValue;
+    }
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Use importdescriptor for this wallet.");
     }
 
     if (mainRequest.fHelp || mainRequest.params.size() < 1 || mainRequest.params.size() > 2)
@@ -1448,7 +1457,8 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
 
         for (const UniValue& data : requests.getValues()) {
             const int64_t timestamp = std::max(GetImportTimestamp(data, now), minimumTimestamp);
-            const UniValue result = ProcessImport(pwallet, data, timestamp);
+            UniValue result;
+            result = ProcessImport(pwallet, data, timestamp);
             response.push_back(result);
 
             if (!fRescan) {
@@ -1508,4 +1518,146 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     }
 
     return response;
+}
+
+UniValue importdescriptor(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            RPCHelpMan{"importdescriptor",
+                "\nImports scripts / addresses via an output descriptor, optionally rescanning the blockchain from the earliest creation time of the imported scripts. Requires a new wallet backup.\n"
+                "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
+                "may report that the imported keys, addresses or scripts exists but related transactions are still missing.\n",
+                {
+                    {"desc", RPCArg::Type::STR, RPCArg::Optional::NO, "Descriptor to import. Private keys will be ignored."},
+                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                        {
+                            {"change", RPCArg::Type::BOOL, /* default */ "false", "Stating whether matching outputs should be treated as not incoming payments"},
+                            {"address_source", RPCArg::Type::BOOL, /* default */ "false", "Use for getnewaddress and to generate change addresses (similar to keypool). There be no more than one receive or change address source per address type (legacy and bech32)."},
+                            {"rescan", RPCArg::Type::BOOL, /* default */ "true", "Stating if should rescan the blockchain after all imports"},
+                            {"timestamp", RPCArg::Type::NUM, /* default */ "now", "Creation time of the key in seconds since epoch (Jan 1 1970 GMT),\n"
+"                                                              or the string \"now\" to substitute the current synced blockchain time. This\n"
+"                                                              will determine how far back blockchain rescans need to begin for missing wallet transactions.\n"
+"                                                              \"now\" can be specified to bypass scanning, for keys which are known to never have been used.\n"
+"                                                              The past two hours are always scanned. 0 can be specified to scan the entire blockchain.",
+                                /* oneline_description */ "", {"timestamp | \"now\"", "integer / string"}
+                            },
+
+                        },
+                    }
+                },
+                RPCResult{
+            "  {\"success\": true}\n"
+                },
+                RPCExamples{""},
+            }.ToString()
+        );
+
+    if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "This is not a descriptor based wallet. Use importmulti instead.");
+    }
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
+
+    const std::string& descriptor = request.params[0].get_str();
+
+    //Default options
+    bool fRescan = true;
+
+    const UniValue& options = request.params[1];
+
+    if (options.exists("rescan")) {
+        fRescan = options["rescan"].get_bool();
+    }
+
+    const bool change = options.exists("change") ? options["change"].get_bool() : false;
+    const bool address_source = options.exists("address_source") ? options["address_source"].get_bool() : false;
+
+    WalletRescanReserver reserver(pwallet);
+    if (fRescan && !reserver.reserve()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+    }
+
+    int64_t now = 0;
+    bool fRunRescan = false;
+    int64_t nRescanTimestamp = 0;
+
+    FlatSigningProvider keys;
+    auto parsed_desc = Parse(descriptor, keys, /* require_checksum = */ true);
+    if (!parsed_desc) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Descriptor is invalid");
+    }
+
+    if (!parsed_desc->IsSolvable()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor must be solvable");
+    }
+
+    {
+        auto locked_chain = pwallet->chain().lock();
+        LOCK(pwallet->cs_wallet);
+        EnsureWalletIsUnlocked(pwallet);
+
+        if (pwallet->HaveDescriptor(parsed_desc.get())) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Descriptor already in wallet");
+        }
+
+        int purpose = 0;
+        if (address_source) {
+            purpose = change ? DESCRIPTOR_PURPOSE_CHANGE_CURRENT : DESCRIPTOR_PURPOSE_RECEIVE_CURRENT;
+        } else {
+            purpose = change ? DESCRIPTOR_PURPOSE_CHANGE_ARCHIVE : DESCRIPTOR_PURPOSE_RECEIVE_ARCHIVE;
+        }
+
+        Optional<AddressType>address_type = parsed_desc->GetAddressType();
+        if (address_type == nullopt) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Descriptor can't generate addresses");
+        }
+
+        if (address_source && pwallet->HaveAddressSourceDescriptor(change, *address_type)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Wallet already contains a %s %s descriptor.", FormatAddressType(*address_type), change ? "change" : "receive"));
+        }
+
+        // Verify all timestamps are present before importing any keys.
+        const Optional<int> tip_height = locked_chain->getHeight();
+        now = tip_height ? locked_chain->getBlockMedianTimePast(*tip_height) : 0;
+        const int64_t minimumTimestamp = 1;
+        nRescanTimestamp = std::max(GetImportTimestamp(options, now, false), minimumTimestamp);
+
+        pwallet->MarkDirty();
+
+        if (!pwallet->AddDescriptor(std::move(parsed_desc), purpose, nRescanTimestamp)) {
+             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding descriptor to wallet");
+        }
+        pwallet->UpdateTimeFirstKey(nRescanTimestamp);
+    }
+    if (fRunRescan) {
+        int64_t scannedTime = pwallet->RescanFromTime(nRescanTimestamp, reserver, true /* update */);
+        pwallet->ReacceptWalletTransactions();
+
+        if (pwallet->IsAbortingRescan()) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
+        }
+        if (scannedTime > nRescanTimestamp) {
+            throw JSONRPCError(RPC_MISC_ERROR,
+                strprintf("Rescan failed for key with creation timestamp %d. There was an error reading a "
+                          "block from time %d, which is after or within %d seconds of key creation, and "
+                          "could contain transactions pertaining to the key. As a result, transactions "
+                          "and coins using this key may not appear in the wallet. This error could be "
+                          "caused by pruning or data corruption (see bitcoind log for details) and could "
+                          "be dealt with by downloading and rescanning the relevant blocks (see -reindex "
+                          "and -rescan options).",
+                    nRescanTimestamp, scannedTime - TIMESTAMP_WINDOW - 1, TIMESTAMP_WINDOW)
+            );
+        }
+    }
+
+    UniValue result = UniValue(UniValue::VOBJ);
+    result.pushKV("success", UniValue(true));
+    return result;
 }
