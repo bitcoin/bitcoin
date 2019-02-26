@@ -1113,7 +1113,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
     StopGethNode(pid);
         
     fs::path fpath = fs::system_complete(gethFilename);
-    fs::path dataDir = GetDataDir() / "geth";
+    fs::path dataDir = GetDataDir(true) / "geth";
     #ifndef WIN32
             // Prevent killed child-processes remaining as "defunct"
             struct sigaction sa;
