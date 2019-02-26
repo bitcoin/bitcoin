@@ -81,8 +81,23 @@ bool CRecoveredSigsDb::HasRecoveredSigForSession(const uint256& signHash)
 
 bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
 {
+    int64_t t = GetTimeMillis();
+
+    {
+        LOCK(cs);
+        auto it = hasSigForHashCache.find(hash);
+        if (it != hasSigForHashCache.end()) {
+            it->second.second = t;
+            return it->second.first;
+        }
+    }
+
     auto k = std::make_tuple('h', hash);
-    return db.Exists(k);
+    bool ret = db.Exists(k);
+
+    LOCK(cs);
+    hasSigForHashCache.emplace(hash, std::make_pair(ret, t));
+    return ret;
 }
 
 bool CRecoveredSigsDb::ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret)
@@ -154,6 +169,7 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
         LOCK(cs);
         hasSigForIdCache[std::make_pair((Consensus::LLMQType)recSig.llmqType, recSig.id)] = std::make_pair(true, t);
         hasSigForSessionCache[signHash] = std::make_pair(true, t);
+        hasSigForHashCache[recSig.GetHash()] = std::make_pair(true, t);
     }
 }
 
@@ -239,10 +255,12 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 
             hasSigForIdCache.erase(std::make_pair((Consensus::LLMQType)recSig.llmqType, recSig.id));
             hasSigForSessionCache.erase(signHash);
+            hasSigForHashCache.erase(recSig.GetHash());
         }
 
         TruncateCacheMap(hasSigForIdCache, MAX_CACHE_SIZE, MAX_CACHE_TRUNCATE_THRESHOLD);
         TruncateCacheMap(hasSigForSessionCache, MAX_CACHE_SIZE, MAX_CACHE_TRUNCATE_THRESHOLD);
+        TruncateCacheMap(hasSigForHashCache, MAX_CACHE_SIZE, MAX_CACHE_TRUNCATE_THRESHOLD);
     }
 
     for (auto& e : toDelete2) {

@@ -88,6 +88,7 @@ private:
     CCriticalSection cs;
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::pair<bool, int64_t>> hasSigForIdCache;
     std::unordered_map<uint256, std::pair<bool, int64_t>> hasSigForSessionCache;
+    std::unordered_map<uint256, std::pair<bool, int64_t>> hasSigForHashCache;
 
 public:
     CRecoveredSigsDb(bool fMemory);
