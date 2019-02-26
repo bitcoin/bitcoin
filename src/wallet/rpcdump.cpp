@@ -567,6 +567,10 @@ UniValue importwallet(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import a descriptor based wallet");
+    }
+
     if (pwallet->chain().getPruneMode()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
     }
