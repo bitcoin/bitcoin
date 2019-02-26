@@ -4228,6 +4228,10 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         // Make it impossible to disable private keys after creation
         chain.initError(strprintf(_("Error loading %s: Private keys can only be disabled during creation"), walletFile));
         return NULL;
+    } else if (wallet_creation_flags & WALLET_FLAG_DESCRIPTOR_WALLET) {
+        // Pre-descriptor wallets can not be upgraded.
+        InitError(strprintf(_("Error loading %s: Cannot upgrade to descriptor wallet"), walletFile));
+        return NULL;
     } else if (walletInstance->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         LOCK(walletInstance->cs_KeyStore);
         if (!walletInstance->mapKeys.empty() || !walletInstance->mapCryptedKeys.empty()) {
