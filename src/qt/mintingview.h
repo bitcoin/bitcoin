@@ -6,7 +6,7 @@
 
 #include <QWidget>
 #include <QComboBox>
-#include "mintingfilterproxy.h"
+#include <mintingfilterproxy.h>
 
 class WalletModel;
 
