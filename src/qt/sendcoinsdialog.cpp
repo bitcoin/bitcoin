@@ -518,8 +518,8 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& stake, c
 void SendCoinsDialog::updateDisplayUnit()
 {
     setBalance(model->getBalance(), model->getStake(), 0, 0, 0, 0, 0);
-    updateMinFeeLabel();
-    updateSmartFeeLabel();
+    //updateMinFeeLabel();
+    //updateSmartFeeLabel();
 }
 
 void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn &sendCoinsReturn, const QString &msgArg)
