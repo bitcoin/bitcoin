@@ -1100,10 +1100,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 fSpendsCoinbase = true;
                 bMultiThreaded = false;
             }
-            // SYSCOIN
-            else if(txin.scriptWitness.IsNull()){
-                 return state.DoS(10, false, REJECT_NONSTANDARD, "non-witness");
-            }
         }
              
 
