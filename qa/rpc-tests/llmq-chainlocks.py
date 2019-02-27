@@ -102,7 +102,7 @@ class LLMQChainLocksTest(DashTestFramework):
         while time() - t < 15:
             try:
                 block = node.getblock(block_hash)
-                if block["chainlock"]:
+                if block["confirmations"] > 0 and block["chainlock"]:
                     return
             except:
                 # block might not be on the node yet
