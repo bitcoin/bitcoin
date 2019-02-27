@@ -1132,13 +1132,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         if (!data.exists("range")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor is ranged, please specify the range");
         }
-        const UniValue& range = data["range"];
-        range_start = range.exists("start") ? range["start"].get_int64() : 0;
-        if (!range.exists("end")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "End of range for descriptor must be specified");
-        }
-        range_end = range["end"].get_int64();
-        if (range_end < range_start || range_start < 0) {
+        auto range = ParseRange(data["range"]);
+        range_start = range.first;
+        range_end = range.second;
+        if (range_start < 0 || (range_end >> 31) != 0 || range_end - range_start >= 1000000) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid descriptor range specified");
         }
     }
@@ -1373,12 +1370,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                             {"key", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
                                         }
                                     },
-                                    {"range", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the start and end of the range to import",
-                                        {
-                                            {"start", RPCArg::Type::NUM, /* default */ "0", "Start of the range to import"},
-                                            {"end", RPCArg::Type::NUM, RPCArg::Optional::NO, "End of the range to import (inclusive)"},
-                                        }
-                                    },
+                                    {"range", RPCArg::Type::RANGE, RPCArg::Optional::OMITTED, "If a ranged descriptor is used, this specifies the end or the range (in the form [begin,end]) to import"},
                                     {"internal", RPCArg::Type::BOOL, /* default */ "false", "Stating whether matching outputs should be treated as not incoming payments (also known as change)"},
                                     {"watchonly", RPCArg::Type::BOOL, /* default */ "false", "Stating whether matching outputs should be considered watchonly."},
                                     {"label", RPCArg::Type::STR, /* default */ "''", "Label to assign to the address, only allowed with internal=false"},
