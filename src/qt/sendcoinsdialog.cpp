@@ -649,7 +649,6 @@ void SendCoinsDialog::updateMinFeeLabel()
             BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetMinFee(1000, GetAdjustedTime())) + "/kB")
         );
 }
-*/
 
 void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
 {
@@ -658,7 +657,6 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
 }
 
-/*
 void SendCoinsDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
