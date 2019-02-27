@@ -200,6 +200,7 @@ struct Sections {
         case RPCArg::Type::STR:
         case RPCArg::Type::NUM:
         case RPCArg::Type::AMOUNT:
+        case RPCArg::Type::RANGE:
         case RPCArg::Type::BOOL: {
             if (outer_type == OuterType::NAMED_ARG) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
@@ -405,6 +406,10 @@ std::string RPCArg::ToDescriptionString() const
             ret += "numeric or string";
             break;
         }
+        case Type::RANGE: {
+            ret += "numeric or array";
+            break;
+        }
         case Type::BOOL: {
             ret += "boolean";
             break;
@@ -464,6 +469,8 @@ std::string RPCArg::ToStringObj(const bool oneline) const
         return res + "\"hex\"";
     case Type::NUM:
         return res + "n";
+    case Type::RANGE:
+        return res + "n or [n,n]";
     case Type::AMOUNT:
         return res + "amount";
     case Type::BOOL:
@@ -494,6 +501,7 @@ std::string RPCArg::ToString(const bool oneline) const
         return "\"" + m_name + "\"";
     }
     case Type::NUM:
+    case Type::RANGE:
     case Type::AMOUNT:
     case Type::BOOL: {
         return m_name;
