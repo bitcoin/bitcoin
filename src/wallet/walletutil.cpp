@@ -35,7 +35,7 @@ static bool IsBerkeleyBtree(const fs::path& path)
     boost::system::error_code ec;
     if (fs::file_size(path, ec) < 4096) return false;
 
-    fs::ifstream file(path.string(), std::ios::binary);
+    fsbridge::ifstream file(path, std::ios::binary);
     if (!file.is_open()) return false;
 
     file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
