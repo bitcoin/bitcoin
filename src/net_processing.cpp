@@ -192,7 +192,11 @@ namespace {
     static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
 } // namespace
 
+bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+static uint32_t GetFetchFlags(CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 namespace {
+
 struct CBlockReject {
     unsigned char chRejectCode;
     std::string strRejectReason;
@@ -744,6 +748,42 @@ void RequestTx(CNodeState* state, const uint256& txid, int64_t nNow) EXCLUSIVE_L
     int64_t process_time = CalculateTxGetDataTime(txid, nNow, !state->fPreferredDownload);
 
     peer_download_state.m_tx_process_time.emplace(process_time, txid);
+}
+
+//! Given a txid and a peer that we'd like to consider downloading a transaction
+//! from: add an appropriate INV message to get_data if it is time to request
+//! the transaction from the peer, and update the appropriate tx download state
+//! (both the global state and the peer's state). Send a getdata message if the
+//! get_data vector grows too large.
+void TryRequestTx(CNodeState &state, CNode *pto, const uint256 &txid, std::vector<CInv> &get_data, const int64_t nNow, CConnman *connman, const CNetMsgMaker& msg_maker) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+{
+    CInv inv(MSG_TX | GetFetchFlags(pto), txid);
+    if (!AlreadyHave(inv)) {
+        // If this transaction was last requested more than 1 minute ago,
+        // then request.
+        int64_t last_request_time = GetTxRequestTime(inv.hash);
+        if (last_request_time <= nNow - GETDATA_TX_INTERVAL) {
+            LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
+            get_data.push_back(inv);
+            if (get_data.size() >= MAX_GETDATA_SZ) {
+                connman->PushMessage(pto, msg_maker.Make(NetMsgType::GETDATA, get_data));
+                get_data.clear();
+            }
+            UpdateTxRequestTime(inv.hash, nNow);
+            state.m_tx_download.m_tx_in_flight.emplace(inv.hash, nNow);
+        } else {
+            // This transaction is in flight from someone else; queue
+            // up processing to happen after the download times out
+            // (with a slight delay for inbound peers, to prefer
+            // requests to outbound peers).
+            int64_t next_process_time = CalculateTxGetDataTime(txid, nNow, !state.fPreferredDownload);
+            state.m_tx_download.m_tx_process_time.emplace(next_process_time, txid);
+        }
+    } else {
+        // We have already seen this transaction, no need to download.
+        state.m_tx_download.m_tx_announced.erase(inv.hash);
+        state.m_tx_download.m_tx_in_flight.erase(inv.hash);
+    }
 }
 
 } // namespace
@@ -4020,35 +4060,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto, uint64_t sequence_number)
             // Erase this entry from tx_process_time (it may be added back for
             // processing at a later time, see below)
             tx_process_time.erase(tx_process_time.begin());
-            CInv inv(MSG_TX | GetFetchFlags(pto), txid);
-            if (!AlreadyHave(inv)) {
-                // If this transaction was last requested more than 1 minute ago,
-                // then request.
-                int64_t last_request_time = GetTxRequestTime(inv.hash);
-                if (last_request_time <= nNow - GETDATA_TX_INTERVAL) {
-                    LogPrint(BCLog::NET, "Requesting %s peer=%d\n", inv.ToString(), pto->GetId());
-                    vGetData.push_back(inv);
-                    if (vGetData.size() >= MAX_GETDATA_SZ) {
-                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-                        vGetData.clear();
-                    }
-                    UpdateTxRequestTime(inv.hash, nNow);
-                    state.m_tx_download.m_tx_in_flight.emplace(inv.hash, nNow);
-                } else {
-                    // This transaction is in flight from someone else; queue
-                    // up processing to happen after the download times out
-                    // (with a slight delay for inbound peers, to prefer
-                    // requests to outbound peers).
-                    int64_t next_process_time = CalculateTxGetDataTime(txid, nNow, !state.fPreferredDownload);
-                    tx_process_time.emplace(next_process_time, txid);
-                }
-            } else {
-                // We have already seen this transaction, no need to download.
-                state.m_tx_download.m_tx_announced.erase(inv.hash);
-                state.m_tx_download.m_tx_in_flight.erase(inv.hash);
-            }
+            TryRequestTx(state, pto, txid, vGetData, nNow, connman, msgMaker);
         }
-
 
         if (!vGetData.empty())
             connman->PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
