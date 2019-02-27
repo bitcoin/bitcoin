@@ -56,11 +56,36 @@ public:
     }
 };
 
+// Nodes will first announce a signing session with a sessionId to be used in all future P2P messages related to that
+// session. We locally keep track of the mapping for each node. We also assign new sessionIds for outgoing sessions
+// and send QSIGSESANN messages appropriately. All values except the max value for uint32_t are valid as sessionId
+class CSigSesAnn
+{
+public:
+    uint32_t sessionId{(uint32_t)-1};
+    uint8_t llmqType;
+    uint256 quorumHash;
+    uint256 id;
+    uint256 msgHash;
+
+    ADD_SERIALIZE_METHODS
+
+    template<typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(VARINT(sessionId));
+        READWRITE(llmqType);
+        READWRITE(quorumHash);
+        READWRITE(id);
+        READWRITE(msgHash);
+    }
+
+    std::string ToString() const;
+};
+
 class CSigSharesInv
 {
 public:
-    uint8_t llmqType;
-    uint256 signHash;
+    uint32_t sessionId{(uint32_t)-1};
     std::vector<bool> inv;
 
 public:
@@ -69,20 +94,14 @@ public:
     template<typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(llmqType);
+        uint64_t invSize = inv.size();
 
-        auto& consensus = Params().GetConsensus();
-        auto it = consensus.llmqs.find((Consensus::LLMQType)llmqType);
-        if (it == consensus.llmqs.end()) {
-            throw std::ios_base::failure("invalid llmqType");
-        }
-        const auto& params = it->second;
-
-        READWRITE(signHash);
-        READWRITE(AUTOBITSET(inv, (size_t)params.size));
+        READWRITE(VARINT(sessionId));
+        READWRITE(COMPACTSIZE(invSize));
+        READWRITE(AUTOBITSET(inv, (size_t)invSize));
     }
 
-    void Init(Consensus::LLMQType _llmqType, const uint256& _signHash);
+    void Init(Consensus::LLMQType _llmqType);
     bool IsSet(uint16_t quorumMember) const;
     void Set(uint16_t quorumMember, bool v);
     void Merge(const CSigSharesInv& inv2);
@@ -95,10 +114,7 @@ public:
 class CBatchedSigShares
 {
 public:
-    uint8_t llmqType;
-    uint256 quorumHash;
-    uint256 id;
-    uint256 msgHash;
+    uint32_t sessionId{(uint32_t)-1};
     std::vector<std::pair<uint16_t, CBLSLazySignature>> sigShares;
 
 public:
@@ -107,29 +123,11 @@ public:
     template<typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(id);
-        READWRITE(msgHash);
+        READWRITE(VARINT(sessionId));
         READWRITE(sigShares);
     }
 
-    CSigShare RebuildSigShare(size_t idx) const
-    {
-        assert(idx < sigShares.size());
-        auto& s = sigShares[idx];
-        CSigShare sigShare;
-        sigShare.llmqType = llmqType;
-        sigShare.quorumHash = quorumHash;
-        sigShare.quorumMember = s.first;
-        sigShare.id = id;
-        sigShare.msgHash = msgHash;
-        sigShare.sigShare = s.second;
-        sigShare.UpdateKey();
-        return sigShare;
-    }
-
-    CSigSharesInv ToInv() const;
+    CSigSharesInv ToInv(Consensus::LLMQType llmqType) const;
 };
 
 template<typename T>
@@ -280,13 +278,40 @@ public:
 class CSigSharesNodeState
 {
 public:
+    // Used to avoid holding locks too long
+    struct SessionInfo
+    {
+        uint32_t recvSessionId;
+        Consensus::LLMQType llmqType;
+        uint256 quorumHash;
+        uint256 id;
+        uint256 msgHash;
+        uint256 signHash;
+
+        CQuorumCPtr quorum;
+    };
+
     struct Session {
+        uint32_t recvSessionId{(uint32_t)-1};
+        uint32_t sendSessionId{(uint32_t)-1};
+
+        Consensus::LLMQType llmqType;
+        uint256 quorumHash;
+        uint256 id;
+        uint256 msgHash;
+        uint256 signHash;
+
+        CQuorumCPtr quorum;
+
         CSigSharesInv announced;
         CSigSharesInv requested;
         CSigSharesInv knows;
     };
     // TODO limit number of sessions per node
     std::unordered_map<uint256, Session, StaticSaltedHasher> sessions;
+
+    std::unordered_map<uint32_t, Session*> sessionByRecvId;
+    uint32_t nextSendSessionId{1};
 
     SigShareMap<CSigShare> pendingIncomingSigShares;
     SigShareMap<int64_t> requestedSigShares;
@@ -297,15 +322,11 @@ public:
 
     bool banned{false};
 
-    Session& GetOrCreateSession(Consensus::LLMQType llmqType, const uint256& signHash);
-
-    void MarkAnnounced(const uint256& signHash, const CSigSharesInv& inv);
-    void MarkRequested(const uint256& signHash, const CSigSharesInv& inv);
-    void MarkKnows(const uint256& signHash, const CSigSharesInv& inv);
-
-    void MarkAnnounced(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember);
-    void MarkRequested(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember);
-    void MarkKnows(Consensus::LLMQType llmqType, const uint256& signHash, uint16_t quorumMember);
+    Session& GetOrCreateSessionFromShare(const CSigShare& sigShare);
+    Session& GetOrCreateSessionFromAnn(const CSigSesAnn& ann);
+    Session* GetSessionBySignHash(const uint256& signHash);
+    Session* GetSessionByRecvId(uint32_t sessionId);
+    bool GetSessionInfoByRecvId(uint32_t sessionId, SessionInfo& retInfo);
 
     void RemoveSession(const uint256& signHash);
 };
@@ -357,12 +378,13 @@ public:
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
 private:
+    void ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman);
     void ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
     void ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);
 
-    bool VerifySigSharesInv(NodeId from, const CSigSharesInv& inv);
-    bool PreVerifyBatchedSigShares(NodeId nodeId, const CBatchedSigShares& batchedSigShares, bool& retBan);
+    bool VerifySigSharesInv(NodeId from, Consensus::LLMQType llmqType, const CSigSharesInv& inv);
+    bool PreVerifyBatchedSigShares(NodeId nodeId, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
@@ -378,6 +400,9 @@ private:
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash, CConnman& connman);
 
 private:
+    bool GetSessionInfoByRecvId(NodeId nodeId, uint32_t sessionId, CSigSharesNodeState::SessionInfo& retInfo);
+    CSigShare RebuildSigShare(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, size_t idx);
+
     void Cleanup();
     void RemoveSigSharesForSession(const uint256& signHash);
     void RemoveBannedNodeStates();
