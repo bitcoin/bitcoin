@@ -51,6 +51,7 @@ struct RPCArg {
         OBJ_USER_KEYS, //!< Special type where the user must set the keys e.g. to define multiple addresses; as opposed to e.g. an options object where the keys are predefined
         AMOUNT,        //!< Special type representing a floating point amount (can be either NUM or STR)
         STR_HEX,       //!< Special type that is a STR with only hex chars
+        RANGE,         //!< Special type that is a NUM or [NUM,NUM]
     };
 
     enum class Optional {
