@@ -59,7 +59,6 @@ OpenWalletActivity* WalletController::openWallet(const std::string& name, QWidge
 {
     OpenWalletActivity* activity = new OpenWalletActivity(this, name);
     activity->moveToThread(&m_activity_thread);
-    QMetaObject::invokeMethod(activity, "open", Qt::QueuedConnection);
     return activity;
 }
 
