@@ -150,7 +150,10 @@ void CMasternodeMan::Check(bool fForce)
             }
         }
     }
-    
+    if(payeeScripts.empty()){
+        LogPrint(BCLog::MN, "CMasternodeMan::Check -- Masternode winners list is empty, skipping...\n");
+        return;
+    }
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
