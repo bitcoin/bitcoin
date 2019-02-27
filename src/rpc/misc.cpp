@@ -199,7 +199,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             "For more information on output descriptors, see the documentation in the doc/descriptors.md file.\n"},
             {
                 {"descriptor", RPCArg::Type::STR, RPCArg::Optional::NO, "The descriptor."},
-                {"begin", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the beginning of the range to import."},
+                {"start", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the beginning of the range to import."},
                 {"end", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "If a ranged descriptor is used, this specifies the end of the range to import."}
             },
             RPCResult{
@@ -225,10 +225,10 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
         range_begin = request.params[1].get_int();
         range_end = request.params[2].get_int();
         if (range_begin < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should be greater or equal than 0");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range should be greater than or equal to 0");
         }
         if (range_begin > range_end) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range end should be equal to or greater than begin");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Range end should be equal to or greater than start");
         }
     }
 
@@ -603,7 +603,7 @@ static const CRPCCommand commands[] =
     { "control",            "logging",                &logging,                {"include", "exclude"}},
     { "util",               "validateaddress",        &validateaddress,        {"address"} },
     { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys","address_type"} },
-    { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "begin", "end"} },
+    { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "start", "end"} },
     { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
     { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
