@@ -500,11 +500,25 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
                 signHash.ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), nodeId);
 
         if (db.HasRecoveredSigForId(llmqType, recoveredSig.id)) {
-            // this should really not happen, as each masternode is participating in only one vote,
-            // even if it's a member of multiple quorums. so a majority is only possible on one quorum and one msgHash per id
-            LogPrintf("CSigningManager::%s -- conflicting recoveredSig for id=%s, msgHash=%s\n", __func__,
-                      recoveredSig.id.ToString(), recoveredSig.msgHash.ToString());
-            return;
+            CRecoveredSig otherRecoveredSig;
+            if (db.GetRecoveredSigById(llmqType, recoveredSig.id, otherRecoveredSig)) {
+                auto otherSignHash = CLLMQUtils::BuildSignHash(recoveredSig);
+                if (signHash != otherSignHash) {
+                    // this should really not happen, as each masternode is participating in only one vote,
+                    // even if it's a member of multiple quorums. so a majority is only possible on one quorum and one msgHash per id
+                    LogPrintf("CSigningManager::%s -- conflicting recoveredSig for signHash=%s, id=%s, msgHash=%s, otherSignHash=%s\n", __func__,
+                              signHash.ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), otherSignHash.ToString());
+                } else {
+                    // Looks like we're trying to process a recSig that is already known. This might happen if the same
+                    // recSig comes in through regular QRECSIG messages and at the same time through some other message
+                    // which allowed to reconstruct a recSig (e.g. IXLOCK). In this case, just bail out.
+                }
+                return;
+            } else {
+                // This case is very unlikely. It can only happen when cleanup caused this specific recSig to vanish
+                // between the HasRecoveredSigForId and GetRecoveredSigById call. If that happens, treat it as if we
+                // never had that recSig
+            }
         }
 
         db.WriteRecoveredSig(recoveredSig);
@@ -559,14 +573,19 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         if (db.HasVotedOnId(llmqType, id)) {
             uint256 prevMsgHash;
             db.GetVoteForId(llmqType, id, prevMsgHash);
-            LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
-                      id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
+            if (msgHash != prevMsgHash) {
+                LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
+                        id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
+            } else {
+                LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting again.\n", __func__,
+                          id.ToString(), prevMsgHash.ToString());
+            }
             return false;
         }
 
         if (db.HasRecoveredSigForId(llmqType, id)) {
             // no need to sign it if we already have a recovered sig
-            return false;
+            return true;
         }
         db.WriteVoteForId(llmqType, id, msgHash);
     }

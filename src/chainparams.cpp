@@ -145,7 +145,7 @@ static Consensus::LLMQParams llmq50_60 = {
 
 static Consensus::LLMQParams llmq400_60 = {
         .type = Consensus::LLMQ_400_60,
-        .name = "llmq_400_51",
+        .name = "llmq_400_60",
         .size = 400,
         .minSize = 300,
         .threshold = 240,

@@ -31,6 +31,12 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         CFinalCommitment qc;
         vRecv >> qc;
 
+        auto hash = ::SerializeHash(qc);
+        {
+            LOCK(cs_main);
+            connman.RemoveAskFor(hash);
+        }
+
         if (qc.IsNull()) {
             LOCK(cs_main);
             LogPrintf("CQuorumBlockProcessor::%s -- null commitment from peer=%d\n", __func__, pfrom->id);
