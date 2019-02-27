@@ -6,8 +6,8 @@
 #include <chain.h>
 #include <coins.h>
 #include <compat/byteswap.h>
-#include <consensus/validation.h>
 #include <consensus/tx_verify.h>
+#include <consensus/validation.h>
 #include <core_io.h>
 #include <index/txindex.h>
 #include <init.h>
@@ -67,9 +67,7 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
 
 static UniValue getrawtransaction(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
-            RPCHelpMan{
+    const RPCHelpMan help{
                 "getrawtransaction",
                 "\nReturn the raw transaction data.\n"
 
@@ -79,8 +77,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
                 "will return the transaction if it is in the mempool, or if -txindex is enabled and the transaction\n"
                 "is in a block in the blockchain.\n"
 
-                "\nHint: use getmempoolentry to fetch a specific transaction from the mempool.\n"
-                "Or use gettransaction for wallet transactions.\n"
+                "\nHint: Use gettransaction for wallet transactions.\n"
 
                 "\nIf verbose is 'true', returns an Object with information about 'txid'.\n"
                 "If verbose is 'false' or omitted, returns a string that is serialized, hex-encoded data for 'txid'.\n",
@@ -148,7 +145,11 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             + HelpExampleCli("getrawtransaction", "\"mytxid\" false \"myblockhash\"")
             + HelpExampleCli("getrawtransaction", "\"mytxid\" true \"myblockhash\"")
                 },
-            }.ToString());
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
+    }
 
     bool in_active_chain = true;
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
