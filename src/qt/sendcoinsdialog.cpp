@@ -161,6 +161,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
         ui->frameCoinControl->setVisible(_model->getOptionsModel()->getCoinControlFeatures());
         coinControlUpdateLabels();
 
+        /*
         // fee section
         for (const int n : confTargets) {
             ui->confTargetSelector->addItem(tr("%1 (%2 blocks)").arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing)).arg(n));
@@ -188,16 +189,17 @@ void SendCoinsDialog::setModel(WalletModel *_model)
             ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(model->getDefaultConfirmTarget()));
         else
             ui->confTargetSelector->setCurrentIndex(getIndexForConfTarget(settings.value("nConfTarget").toInt()));
+        */
     }
 }
 
 SendCoinsDialog::~SendCoinsDialog()
 {
     QSettings settings;
-    settings.setValue("fFeeSectionMinimized", fFeeMinimized);
-    settings.setValue("nFeeRadio", ui->groupFee->checkedId());
-    settings.setValue("nConfTarget", getConfTargetForIndex(ui->confTargetSelector->currentIndex()));
-    settings.setValue("fPayOnlyMinFee", ui->checkBoxMinimumFee->isChecked());
+    //settings.setValue("fFeeSectionMinimized", fFeeMinimized);
+    //settings.setValue("nFeeRadio", ui->groupFee->checkedId());
+    //settings.setValue("nConfTarget", getConfTargetForIndex(ui->confTargetSelector->currentIndex()));
+    //settings.setValue("fPayOnlyMinFee", ui->checkBoxMinimumFee->isChecked());
 
     delete ui;
 }
@@ -567,6 +569,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
     Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
 }
 
+/*
 void SendCoinsDialog::minimizeFeeSection(bool fMinimize)
 {
     ui->labelFeeMinimized->setVisible(fMinimize);
@@ -587,6 +590,7 @@ void SendCoinsDialog::on_buttonMinimizeFee_clicked()
     updateFeeMinimizedLabel();
     minimizeFeeSection(true);
 }
+*/
 
 void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
 {
@@ -613,6 +617,7 @@ void SendCoinsDialog::useAvailableBalance(SendCoinsEntry* entry)
     }
 }
 
+/*
 void SendCoinsDialog::updateFeeSectionControls()
 {
     ui->confTargetSelector      ->setEnabled(ui->radioSmartFee->isChecked());
@@ -644,6 +649,7 @@ void SendCoinsDialog::updateMinFeeLabel()
             BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), GetMinFee(1000, GetAdjustedTime())) + "/kB")
         );
 }
+*/
 
 void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
 {
@@ -652,6 +658,7 @@ void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
     ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
 }
 
+/*
 void SendCoinsDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
@@ -671,6 +678,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
 
     updateFeeMinimizedLabel();
 }
+*/
 
 // Coin Control: copy label "Quantity" to clipboard
 void SendCoinsDialog::coinControlClipboardQuantity()
