@@ -1597,7 +1597,12 @@ static UniValue invalidateblock(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DATABASE_ERROR, FormatStateMessage(state));
     }
 
-    return NullUniValue;
+    UniValue res(UniValue::VOBJ);
+    {
+        LOCK(cs_main);
+        res.pushKV("invalidated", !chainActive.Contains(pblockindex));
+    }
+    return res;
 }
 
 static UniValue reconsiderblock(const JSONRPCRequest& request)
