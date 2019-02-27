@@ -40,7 +40,8 @@ class InvalidateTest(BitcoinTestFramework):
         badhash = self.nodes[1].getblockhash(2)
 
         self.log.info("Invalidate block 2 on node 0 and verify we reorg to node 0's original chain")
-        self.nodes[0].invalidateblock(badhash)
+        res = self.nodes[0].invalidateblock(badhash)
+        assert_equal(res['invalidated'], True)
         assert_equal(self.nodes[0].getblockcount(), 4)
         assert_equal(self.nodes[0].getbestblockhash(), besthash_n0)
 
