@@ -112,6 +112,12 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
 
+        if (gArgs.IsArgSet("-printconfig")) {
+            fprintf(stdout, " datadir:   %s\n", GetDataDir(false).c_str());
+            fprintf(stdout, " blocksdir: %s\n", GetBlocksDir().c_str());
+            return true;
+        }
+
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
