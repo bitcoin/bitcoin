@@ -28,6 +28,7 @@
 #include "evo/cbtx.h"
 
 #include "llmq/quorums_chainlocks.h"
+#include "llmq/quorums_instantsend.h"
 
 #include <stdint.h>
 
@@ -409,7 +410,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
 
     info.push_back(Pair("depends", depends));
     info.push_back(Pair("instantsend", instantsend.HasTxLockRequest(tx.GetHash())));
-    info.push_back(Pair("instantlock", instantsend.IsLockedInstantSendTransaction(tx.GetHash())));
+    info.push_back(Pair("instantlock", instantsend.IsLockedInstantSendTransaction(tx.GetHash()) || llmq::quorumInstantSendManager->IsLocked(tx.GetHash())));
 }
 
 UniValue mempoolToJSON(bool fVerbose = false)

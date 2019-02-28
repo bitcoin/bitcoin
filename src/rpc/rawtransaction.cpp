@@ -36,6 +36,7 @@
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_commitment.h"
+#include "llmq/quorums_instantsend.h"
 
 #include <stdint.h>
 
@@ -199,7 +200,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         }
     }
     bool fLocked = instantsend.IsLockedInstantSendTransaction(txid);
-    entry.push_back(Pair("instantlock", fLocked));
+    bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(txid);
+    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked));
     entry.push_back(Pair("chainlock", chainLock));
 }
 
