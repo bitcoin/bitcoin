@@ -46,6 +46,7 @@
 #include "evo/deterministicmns.h"
 #include "evo/cbtx.h"
 
+#include "llmq/quorums_instantsend.h"
 #include "llmq/quorums_chainlocks.h"
 
 #include <atomic>
@@ -690,6 +691,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with completed Transaction Lock %s",
                                     hash.ToString(), hashLocked.ToString()),
                             REJECT_INVALID, "tx-txlock-conflict");
+    }
+
+    uint256 txConflictHash;
+    if (llmq::quorumInstantSendManager->GetConflictingTx(tx, txConflictHash)) {
+        CTransactionRef txConflict;
+        uint256 hashBlock;
+        if (GetTransaction(txConflictHash, txConflict, Params().GetConsensus(), hashBlock)) {
+            GetMainSignals().NotifyInstantSendDoubleSpendAttempt(tx, *txConflict);
+        }
+        return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with locked TX %s",
+                                   hash.ToString(), txConflictHash.ToString()),
+                         REJECT_INVALID, "tx-txlock-conflict");
     }
 
     // Check for conflicts with in-memory transactions
@@ -3277,6 +3290,15 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
                     return state.DoS(100, false, REJECT_INVALID, "conflict-tx-lock", false, 
                                      strprintf("transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), hashLocked.ToString()));
                 }
+            }
+            uint256 txConflict;
+            if (llmq::quorumInstantSendManager->GetConflictingTx(*tx, txConflict)) {
+                // The node which relayed this will have to switch later,
+                // relaying instantsend data won't help it.
+                LOCK(cs_main);
+                mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+                return state.DoS(100, false, REJECT_INVALID, "conflict-tx-lock", false,
+                                 strprintf("transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), txConflict.ToString()));
             }
         }
     } else {
