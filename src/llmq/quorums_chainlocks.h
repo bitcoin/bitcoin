@@ -49,6 +49,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 private:
     CScheduler* scheduler;
     CCriticalSection cs;
+    bool tryLockChainTipScheduled{false};
     std::atomic<bool> inEnforceBestChainLock{false};
 
     uint256 bestChainLockHash;
@@ -74,8 +75,8 @@ public:
     CChainLocksHandler(CScheduler* _scheduler);
     ~CChainLocksHandler();
 
-    void RegisterAsRecoveredSigsListener();
-    void UnregisterAsRecoveredSigsListener();
+    void Start();
+    void Stop();
 
     bool AlreadyHave(const CInv& inv);
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
@@ -86,6 +87,7 @@ public:
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork);
     void NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block);
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void TrySignChainTip();
     void EnforceBestChainLock();
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 

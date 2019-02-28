@@ -66,7 +66,7 @@ void StartLLMQSystem()
         quorumSigSharesManager->StartWorkerThread();
     }
     if (chainLocksHandler) {
-        chainLocksHandler->RegisterAsRecoveredSigsListener();
+        chainLocksHandler->Start();
     }
     if (quorumInstantSendManager) {
         quorumInstantSendManager->RegisterAsRecoveredSigsListener();
@@ -79,7 +79,7 @@ void StopLLMQSystem()
         quorumInstantSendManager->UnregisterAsRecoveredSigsListener();
     }
     if (chainLocksHandler) {
-        chainLocksHandler->UnregisterAsRecoveredSigsListener();
+        chainLocksHandler->Stop();
     }
     if (quorumSigSharesManager) {
         quorumSigSharesManager->StopWorkerThread();
