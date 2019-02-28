@@ -170,7 +170,10 @@ UniValue masternode(const JSONRPCRequest& request)
         obj.pushKV("outpoint",      mnInfo.outpoint.ToStringShort());
         obj.pushKV("payee",         EncodeDestination(mnInfo.pubKeyCollateralAddress.GetID()));
         obj.pushKV("lastseen",      mnInfo.nTimeLastPing);
-        obj.pushKV("activeseconds", mnInfo.nTimeLastPing - mnInfo.sigTime);
+        int64_t activeTime = (int64_t)(mnInfo.nTimeLastPing - mnInfo.sigTime);
+        if(activeTime <= 0)
+            activeTime = (int64_t)(GetAdjustedTime() - mnInfo.sigTime);
+        obj.pushKV("activeseconds", activeTime);
         return obj;
     }
 
@@ -541,7 +544,10 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.pushKV("sentinelversion", mn.lastPing.GetSentinelString());
                 objMN.pushKV("sentinelstate", (mn.lastPing.fSentinelIsCurrent ? "current" : "expired"));
                 objMN.pushKV("lastseen", (int64_t)mn.lastPing.sigTime);
-                objMN.pushKV("activeseconds", (int64_t)(mn.lastPing.sigTime - mn.sigTime));
+                int64_t activeTime = (int64_t)(mn.lastPing.sigTime - mn.sigTime);
+                if(activeTime <= 0)
+                    activeTime = (int64_t)(GetAdjustedTime() - mn.sigTime);
+                objMN.pushKV("activeseconds", activeTime);
                 objMN.pushKV("lastpaidtime", mn.GetLastPaidTime());
                 objMN.pushKV("lastpaidblock", mn.GetLastPaidBlock());
                 objMN.pushKV("pingretries", mn.nPingRetries);
