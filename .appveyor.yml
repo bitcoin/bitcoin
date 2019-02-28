@@ -11,15 +11,15 @@ environment:
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
 cache:
-- C:\tools\vcpkg\installed -> appveyor.yml
-- C:\Users\appveyor\clcache -> appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
+- C:\tools\vcpkg\installed -> .appveyor.yml
+- C:\Users\appveyor\clcache -> .appveyor.yml, build_msvc\**, **\Makefile.am, **\*.vcxproj.in
 install:
 - cmd: pip install --quiet git+https://github.com/frerich/clcache.git@v4.2.0
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
+- cmd: echo set(VCPKG_BUILD_TYPE release) >> C:\tools\vcpkg\triplets\%PLATFORM%-windows-static.cmake
 - cmd: vcpkg remove --outdated --recurse
 - cmd: vcpkg install --triplet %PLATFORM%-windows-static %PACKAGES% > NUL
-- cmd: del /s /q C:\Tools\vcpkg\installed\%PLATFORM%-windows-static\debug # Remove unused debug library
 before_build:
 - ps:  clcache -M 536870912
 - cmd: python build_msvc\msvc-autogen.py
