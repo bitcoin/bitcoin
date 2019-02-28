@@ -120,6 +120,42 @@ NODISCARD static bool CreatePidFile()
     }
 }
 
+/**
+ * The ready file facilities.
+ */
+static const char* BITCOIN_READY_FILENAME = ".ready";
+
+static fs::path GetReadyFileName()
+{
+    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-ready", BITCOIN_READY_FILENAME)));
+}
+
+NODISCARD static bool CreateReadyFile()
+{
+    FILE* file = fsbridge::fopen(GetReadyFileName(), "w");
+    if (file) {
+        fclose(file);
+        return true;
+    } else {
+        return InitError(strprintf(_("Unable to create the ready status file '%s': %s"),
+                   GetReadyFileName().string(), std::strerror(errno)));
+    }
+}
+
+static bool RemoveFile(const fs::path& file)
+{
+    try {
+        if (!fs::remove(file)) {
+            LogPrintf("%s: Unable to remove '%s': File does not exist\n", __func__, file);
+            return false;
+        }
+    } catch (const fs::filesystem_error& e) {
+        LogPrintf("%s: Unable to remove '%s': %s\n", __func__, file, fsbridge::get_filesystem_error_message(e));
+        return false;
+    }
+    return true;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Shutdown
@@ -194,6 +230,7 @@ void Interrupt()
 void Shutdown(InitInterfaces& interfaces)
 {
     LogPrintf("%s: In progress...\n", __func__);
+    RemoveFile(GetReadyFileName());
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
@@ -288,13 +325,7 @@ void Shutdown(InitInterfaces& interfaces)
     }
 #endif
 
-    try {
-        if (!fs::remove(GetPidFile())) {
-            LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
-        }
-    } catch (const fs::filesystem_error& e) {
-        LogPrintf("%s: Unable to remove PID file: %s\n", __func__, fsbridge::get_filesystem_error_message(e));
-    }
+    RemoveFile(GetPidFile());
     interfaces.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
@@ -396,6 +427,7 @@ void SetupServerArgs()
     gArgs.AddArg("-prune=<n>", strprintf("Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex and -rescan. "
             "Warning: Reverting this setting requires re-downloading the entire blockchain. "
             "(default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, >=%u = automatically prune block files to stay under the specified target size in MiB)", MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-ready=<file>", strprintf("Specify ready status file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)", BITCOIN_READY_FILENAME), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-reindex", "Rebuild chain state and block index from the blk*.dat files on disk", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-reindex-chainstate", "Rebuild chain state from the currently indexed blocks. When in pruning mode or if blocks on disk might be corrupted, use full -reindex instead.", false, OptionsCategory::OPTIONS);
 #ifndef WIN32
@@ -1224,6 +1256,9 @@ bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
+    if (fs::exists(GetReadyFileName())) {
+        RemoveFile(GetReadyFileName());
+    }
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
         return false;
@@ -1805,5 +1840,9 @@ bool AppInitMain(InitInterfaces& interfaces)
         g_banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
 
+    if (!CreateReadyFile()) {
+        // Detailed error printed inside CreateReadyFile().
+        return false;
+    }
     return true;
 }
