@@ -386,7 +386,12 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     CValidationState state;
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX)) {
+    // the new IX system does not require explicit IX messages
+    std::string strCommand = NetMsgType::TX;
+    if (fUseInstantSend && llmq::IsOldInstantSendEnabled()) {
+        strCommand = NetMsgType::TXLOCKREQUEST;
+    }
+    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state, strCommand)) {
         strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
@@ -1136,7 +1141,12 @@ UniValue sendmany(const JSONRPCRequest& request)
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX)) {
+    // the new IX system does not require explicit IX messages
+    std::string strCommand = NetMsgType::TX;
+    if (fUseInstantSend && llmq::IsOldInstantSendEnabled()) {
+        strCommand = NetMsgType::TXLOCKREQUEST;
+    }
+    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state, strCommand)) {
         strFailReason = strprintf("Transaction commit failed:: %s", state.GetRejectReason());
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }

@@ -26,6 +26,7 @@
 #include "instantx.h"
 #include "spork.h"
 #include "privatesend-client.h"
+#include "llmq/quorums_instantsend.h"
 
 #include <stdint.h>
 
@@ -389,7 +390,12 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
         CValidationState state;
-        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state, recipients[0].fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX))
+        // the new IX system does not require explicit IX messages
+        std::string strCommand = NetMsgType::TX;
+        if (recipients[0].fUseInstantSend && llmq::IsOldInstantSendEnabled()) {
+            strCommand = NetMsgType::TXLOCKREQUEST;
+        }
+        if(!wallet->CommitTransaction(*newTx, *keyChange, g_connman.get(), state, strCommand))
             return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(state.GetRejectReason()));
 
         CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
