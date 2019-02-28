@@ -1685,6 +1685,46 @@ int CConnman::GetExtraOutboundCount()
     return std::max(nOutbound - m_max_outbound_full_relay - m_max_outbound_block_relay, 0);
 }
 
+void CConnman::ThreadOpenPeerConnectionsFast(size_t i)
+{
+    while (!interruptNet)
+    {
+        CSemaphoreGrant grant(*semOutbound);
+
+        if (!interruptNet.sleep_for(std::chrono::milliseconds(100)))
+            return;
+
+        //
+        // Choose an address to connect to from main thread
+        //
+        CAddress addrConnect;
+
+        {
+            LOCK(cs_vNodes);
+            // Finished already?
+
+            if (fFastFinished) return;
+
+            if (vFastConnect.size() <= i) continue;
+
+            auto& vc = vFastConnect.at(i);
+            if (!vc.first) continue;
+            addrConnect = vc.second;
+        }
+
+        if (interruptNet) return;
+
+        LogPrintf("Trying connection in thread fastcon%d\n", i);
+        OpenNetworkConnection(addrConnect, false, &grant, nullptr, false, false);
+
+        {
+           LOCK(cs_vNodes);
+           if (vFastConnect.size() <= i) continue;
+           vFastConnect.at(i).first = false;
+        }
+    }
+}
+
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 {
     // Connect to specific addresses
@@ -1710,6 +1750,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
     // Initiate network connections
     int64_t nStart = GetTime();
+    bool fFastStartup = true;
 
     // Minimum time before next feeler connection (in microseconds).
     int64_t nNextFeeler = PoissonNextSend(nStart*1000*1000, FEELER_INTERVAL);
@@ -1759,6 +1800,13 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                         nOutboundBlockRelay++;
                     } else if (!pnode->fFeeler) {
                         nOutboundFullRelay++;
+                    }
+                }
+            }
+            if (fFastStartup) {
+                for (auto& i : vFastConnect) {
+                    if (i.first) {
+                        setConnected.insert(i.second.GetGroup());
                     }
                 }
             }
@@ -1843,13 +1891,57 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         }
 
         if (addrConnect.IsValid()) {
-
             if (fFeeler) {
                 // Add small amount of random noise before connection to avoid synchronization.
                 int randsleep = GetRandInt(FEELER_SLEEP_WINDOW * 1000);
                 if (!interruptNet.sleep_for(std::chrono::milliseconds(randsleep)))
                     return;
                 LogPrint(BCLog::NET, "Making feeler connection to %s\n", addrConnect.ToString());
+            } else {
+                if (fFastStartup) {
+                    if (nOutboundFullRelay >= 2 && nOutboundFullRelay + FAST_CONNECT_THREADS >= m_max_outbound_full_relay) {
+                        // Done with fast connections
+                        {
+                            LOCK(cs_vNodes);
+                            fFastFinished = true; // signal fast connect threads to stop
+                            vFastConnect.clear();
+                        }
+                        LogPrint(BCLog::NET, "Waiting for fast connection threads to finish (outbound=%d)\n", nOutboundFullRelay);
+                        for (auto& t : threadFastConnections) {
+                            if (t.joinable())
+                                t.join();
+                        }
+                        threadFastConnections.clear();
+                        fFastStartup = false;
+                        if (interruptNet) continue;
+                    } else {
+                        // Add to vFastConnect
+                        {
+                            LOCK(cs_vNodes);
+                            if (vFastConnect.size() < threadFastConnections.size()) {
+                                vFastConnect.push_back({true, addrConnect});
+                                continue;
+                            }
+                        }
+                        bool placed = false;
+                        while (!placed && !interruptNet) {
+                            {
+                                LOCK(cs_vNodes);
+                                for (auto& i : vFastConnect) {
+                                    if (!i.first) {
+                                        i.second = addrConnect;
+                                        i.first = true;
+                                        placed = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!placed && !interruptNet.sleep_for(std::chrono::milliseconds(100)))
+                                return;
+                        }
+                        continue;
+                    }
+                }
             }
 
             // Open this connection as block-relay-only if we're already at our
@@ -2311,6 +2403,13 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         }
         return false;
     }
+
+    if (connOptions.m_use_addrman_outgoing && connOptions.m_specified_outgoing.empty()) {
+        for (size_t i = 0; i < FAST_CONNECT_THREADS; i++) {
+            threadFastConnections.push_back(std::thread(&TraceThreads<std::function<void()> >, "fastcon", i, std::function<void()>(std::bind(&CConnman::ThreadOpenPeerConnectionsFast, this, i))));
+        }
+    }
+
     if (connOptions.m_use_addrman_outgoing || !connOptions.m_specified_outgoing.empty())
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this, connOptions.m_specified_outgoing)));
 
@@ -2368,6 +2467,11 @@ void CConnman::Stop()
         threadMessageHandler.join();
     if (threadOpenConnections.joinable())
         threadOpenConnections.join();
+    for (auto& t : threadFastConnections) {
+        // might be joined and cleared from threadOpenConnections, so finish that thread first
+        if (t.joinable())
+            t.join();
+    }
     if (threadOpenAddedConnections.joinable())
         threadOpenAddedConnections.join();
     if (threadDNSAddressSeed.joinable())

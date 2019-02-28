@@ -360,6 +360,14 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         throw;
     }
 }
+/**
+ * .. and a wrapper the allows for multiple threads for the same function
+ */
+template <typename Callable> void TraceThreads(const char* name, int index, Callable func)
+{
+    std::string nameidx = strprintf("%s%d", name, index);
+    TraceThread(nameidx.c_str(), func);
+}
 
 std::string CopyrightHolders(const std::string& strPrefix);
 

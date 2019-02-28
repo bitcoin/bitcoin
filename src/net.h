@@ -63,6 +63,8 @@ static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes over which we'll relay everything (blocks, tx, addrs, etc) */
 static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
+/** Number of fast connect threads */
+static const int FAST_CONNECT_THREADS = 4;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
 /** Maximum number of block-relay-only outgoing connections */
@@ -347,6 +349,7 @@ private:
     void AddOneShot(const std::string& strDest);
     void ProcessOneShot();
     void ThreadOpenConnections(std::vector<std::string> connect);
+    void ThreadOpenPeerConnectionsFast(size_t threadnum);
     void ThreadMessageHandler();
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
@@ -416,6 +419,8 @@ private:
     std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
     uint64_t conn_attempts GUARDED_BY(cs_vNodes) = 0;
     uint64_t conn_success GUARDED_BY(cs_vNodes) = 0;
+    std::vector<std::pair<bool,CAddress> > vFastConnect GUARDED_BY(cs_vNodes);
+    bool fFastFinished GUARDED_BY(cs_vNodes) = false;
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
@@ -471,6 +476,7 @@ private:
     std::thread threadSocketHandler;
     std::thread threadOpenAddedConnections;
     std::thread threadOpenConnections;
+    std::vector<std::thread> threadFastConnections; // manipulated in threadOpenConnections
     std::thread threadMessageHandler;
 
     /** flag for deciding to connect to an extra outbound peer,
