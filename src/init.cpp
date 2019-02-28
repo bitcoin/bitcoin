@@ -1841,7 +1841,7 @@ bool AppInitMain()
         while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
             result += buffer.data();
         }
-        if(result != "1")   
+        if(std::stoi(result) != 1)   
             return InitError(_("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...")); 
                          
         std::string strMasterNodePrivKey = gArgs.GetArg("-masternodeprivkey", "");
