@@ -16,7 +16,7 @@ bool CheckBlockSignature(const CBlock& block, const CPubKey& pubkeyMasternode)
 }
 
 // Check kernel hash target and coinstake signature
-bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpointStakePointer)
+bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const COutPoint& outpointStakePointer, uint256& hashProofOfStake)
 {
     const CTransaction tx = block.vtx[1];
     if (!tx.IsCoinStake())
@@ -52,6 +52,8 @@ bool CheckProofOfStake(const CBlock& block, const CBlockIndex* prevBlock, const 
         return error("CheckProofOfStake() : nBits below minimum stake");
 
     LogPrintf("%s : %s\n", __func__, kernel.ToString());
+
+    hashProofOfStake = kernel.GetStakeHash();
 
     return kernel.IsValidProof(ArithToUint256(bnTarget));
 }

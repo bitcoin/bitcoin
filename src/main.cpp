@@ -30,7 +30,6 @@
 #include "util.h"
 #include "spork.h"
 #include "utilmoneystr.h"
-#include "mn-pos/stakevalidation.h"
 
 #include <sstream>
 
@@ -39,6 +38,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <mn-pos/blockwitness.h>
+#include <mn-pos/prooftracker.h>
 #include <mn-pos/stakevalidation.h>
 #include <mn-pos/stakepointer.h>
 
@@ -58,6 +59,7 @@ CCriticalSection cs_main;
 BlockMap mapBlockIndex;
 CChain chainActive;
 std::map<PointerHash, uint256> mapUsedStakePointers;
+ProofTracker* g_proofTracker = new ProofTracker();
 CBlockIndex *pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
@@ -2226,7 +2228,7 @@ bool IsMasternodeOrSystemnodeReward(const CTransaction& tx, const COutPoint& out
     return outpoint.n == MN_PMT_SLOT || outpoint.n == SN_PMT_SLOT;
 }
 
-bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
+bool CheckStake(const CBlockIndex* pindex, const CBlock& block, uint256& hashProofOfStake)
 {
     AssertLockHeld(cs_main);
     //Coinbase has to be 0 value
@@ -2249,7 +2251,7 @@ bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
 
     //cs_main is locked and mapblockindex checks for hashblock in CheckBlockProofPointer. Fine to access directly.
     CBlockIndex* pindexFrom = mapBlockIndex.at(block.stakePointer.hashBlock);
-    return CheckProofOfStake(block, pindexFrom, outpointStakePointer);
+    return CheckProofOfStake(block, pindexFrom, outpointStakePointer, hashProofOfStake);
 }
 
 static int64_t nTimeVerify = 0;
@@ -2271,7 +2273,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             return state.DoS(100, error("%s: Proof of Work block submitted after PoW end", __func__), REJECT_INVALID,
                     "pow-end");
 
-        if (!CheckStake(pindex, block))
+        uint256 hashProofOfStake;
+        if (!CheckStake(pindex, block, hashProofOfStake))
             return state.DoS(100, error("%s: Block has invalid proof of stake", __func__), REJECT_INVALID, "pos-invalid");
 
     } else if (block.IsProofOfStake()) {
@@ -3504,6 +3507,20 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
             setDirtyBlockIndex.insert(pindex);
         }
         return false;
+    }
+
+    if (pindex->nHeight > Params().PoSStartHeight()) {
+        uint256 hashProofOfStake;
+        if (!CheckStake(pindex, block, hashProofOfStake))
+            return error("%s: Proof of stake check failed", __func__);
+
+        // Check if this proof hash has been used to package other blocks
+        if (g_proofTracker->IsSuspicious(hashProofOfStake, pindex->GetBlockHash())) {
+            //Stake has been packaged into many different blocks. At this point we wait until enough masternodes have approved
+            //this block as on the main chain
+            return error("%s: hashProofOfStake has appeared in too many blocks, waiting for masternode approval for "
+                         "block %s", __func__, pindex->GetBlockHash().GetHex());
+        }
     }
 
     int nHeight = pindex->nHeight;

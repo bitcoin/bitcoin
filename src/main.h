@@ -44,6 +44,7 @@ class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
+class ProofTracker;
 class CScriptCheck;
 class CValidationInterface;
 class CValidationState;
@@ -151,6 +152,7 @@ extern std::map<uint256, int64_t> mapRejectedBlocks;
 
 typedef uint256 PointerHash;
 extern std::map<PointerHash, uint256> mapUsedStakePointers; //pointer hash matched to blockhash that it is in
+extern ProofTracker* g_proofTracker;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
