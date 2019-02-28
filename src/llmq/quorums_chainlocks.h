@@ -12,6 +12,7 @@
 #include "chainparams.h"
 
 #include <atomic>
+#include <unordered_set>
 
 class CBlockIndex;
 class CScheduler;
@@ -61,6 +62,10 @@ private:
     uint256 lastSignedRequestId;
     uint256 lastSignedMsgHash;
 
+    // We keep track of txids from recently received blocks so that we can check if all TXs got ixlocked
+    std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> blockTxs;
+    std::unordered_map<uint256, int64_t> txFirstSeenTime;
+
     std::map<uint256, int64_t> seenChainLocks;
 
     int64_t lastCleanupTime{0};
@@ -79,6 +84,8 @@ public:
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork);
+    void NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block);
+    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void EnforceBestChainLock();
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 

@@ -11,6 +11,7 @@
 #include "net_processing.h"
 #include "scheduler.h"
 #include "spork.h"
+#include "txmempool.h"
 #include "validation.h"
 
 namespace llmq
@@ -244,6 +245,51 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     quorumSigningManager->AsyncSignIfMember(Params().GetConsensus().llmqChainLocks, requestId, msgHash);
 }
 
+void CChainLocksHandler::NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block)
+{
+    LOCK(cs);
+    if (blockTxs.count(pindex->GetBlockHash())) {
+        // should actually not happen (blocks are only written once to disk and this is when NewPoWValidBlock is called)
+        // but be extra safe here in case this behaviour changes.
+        return;
+    }
+
+    // We listen for NewPoWValidBlock so that we can collect all TX ids of all included TXs of newly received blocks
+    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
+    // safe.
+
+    auto txs = std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>();
+    for (const auto& tx : block->vtx) {
+        if (tx->nVersion == 3) {
+            if (tx->nType == TRANSACTION_COINBASE ||
+                tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
+                continue;
+            }
+        }
+        txs->emplace(tx->GetHash());
+    }
+    blockTxs[pindex->GetBlockHash()] = txs;
+
+    int64_t curTime = GetAdjustedTime();
+    for (auto& tx : block->vtx) {
+        txFirstSeenTime.emplace(tx->GetHash(), curTime);
+    }
+}
+
+void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
+{
+    if (tx.nVersion == 3) {
+        if (tx.nType == TRANSACTION_COINBASE ||
+            tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+            return;
+        }
+    }
+
+    LOCK(cs);
+    int64_t curTime = GetAdjustedTime();
+    txFirstSeenTime.emplace(tx.GetHash(), curTime);
+}
+
 // WARNING: cs_main and cs should not be held!
 void CChainLocksHandler::EnforceBestChainLock()
 {
@@ -420,11 +466,45 @@ void CChainLocksHandler::Cleanup()
         }
     }
 
-    LOCK2(cs_main, cs);
+    // need mempool.cs due to GetTransaction calls
+    LOCK2(cs_main, mempool.cs);
+    LOCK(cs);
 
     for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
         if (GetTimeMillis() - it->second >= CLEANUP_SEEN_TIMEOUT) {
             it = seenChainLocks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
+        auto pindex = mapBlockIndex.at(it->first);
+        if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            for (auto& txid : *it->second) {
+                txFirstSeenTime.erase(txid);
+            }
+            it = blockTxs.erase(it);
+        } else if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            it = blockTxs.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
+        CTransactionRef tx;
+        uint256 hashBlock;
+        if (!GetTransaction(it->first, tx, Params().GetConsensus(), hashBlock)) {
+            // tx has vanished, probably due to conflicts
+            it = txFirstSeenTime.erase(it);
+        } else if (!hashBlock.IsNull()) {
+            auto pindex = mapBlockIndex.at(hashBlock);
+            if (chainActive.Tip()->GetAncestor(pindex->nHeight) == pindex && chainActive.Height() - pindex->nHeight >= 6) {
+                // tx got confirmed >= 6 times, so we can stop keeping track of it
+                it = txFirstSeenTime.erase(it);
+            } else {
+                ++it;
+            }
         } else {
             ++it;
         }
