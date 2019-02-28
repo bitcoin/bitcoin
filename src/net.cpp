@@ -1965,6 +1965,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return;
 
+    { LOCK(cs_vNodes); ++conn_attempts; }
+
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, manual_connection, block_relay_only);
 
     if (!pnode)
@@ -1981,6 +1983,8 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     m_msgproc->InitializeNode(pnode);
     {
         LOCK(cs_vNodes);
+        ++conn_success;
+        LogPrintf("Successful connection; %ld of %ld (%.1f%%)\n", conn_success, conn_attempts, conn_success*100.0/conn_attempts);
         vNodes.push_back(pnode);
     }
 }

@@ -414,6 +414,8 @@ private:
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
     CCriticalSection cs_vAddedNodes;
     std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);
+    uint64_t conn_attempts GUARDED_BY(cs_vNodes) = 0;
+    uint64_t conn_success GUARDED_BY(cs_vNodes) = 0;
     std::list<CNode*> vNodesDisconnected;
     mutable CCriticalSection cs_vNodes;
     std::atomic<NodeId> nLastNodeId{0};
