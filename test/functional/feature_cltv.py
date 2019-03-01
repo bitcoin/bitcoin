@@ -60,6 +60,7 @@ class BIP65Test(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [['-whitelist=127.0.0.1', '-par=1']]  # Use only one script thread to get the exact reject reason for testing
         self.setup_clean_chain = True
+        self.rpc_timeout = 120
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
