@@ -1574,7 +1574,17 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
     /* If there is no auxpow, error.  */
     if (!block.auxpow)
     {
-        return error("%s : block does not auxpow information", __func__);
+        if(Params().NetworkIDString() != CBaseChainParams::MAIN)
+        {
+            if (block.IsAuxpow())
+                return error("%s : no auxpow on block with auxpow version", 
+                             __func__);
+            if (!CheckProofOfWork(block.GetHash(), block.nBits, params))
+                return error("%s : non-AUX proof of work failed", __func__);
+                
+            return true;
+        }
+        return error("%s : block does not have auxpow information", __func__);
     }
 
     /* We have auxpow.  Check it.  */
