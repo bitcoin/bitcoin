@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,8 @@
 #include <clientversion.h>
 #include <core_io.h>
 #include <crypto/ripemd160.h>
-#include <key_io.h>
-#include <validation.h>
 #include <httpserver.h>
+#include <key_io.h>
 #include <net.h>
 #include <netbase.h>
 #include <outputtype.h>
@@ -18,8 +17,9 @@
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <timedata.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 #include <warnings.h>
 
 #include <stdint.h>
@@ -185,9 +185,7 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
 
 UniValue deriveaddresses(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty() || request.params.size() > 2) {
-        throw std::runtime_error(
-            RPCHelpMan{"deriveaddresses",
+    const RPCHelpMan help{"deriveaddresses",
             {"\nDerives one or more addresses corresponding to an output descriptor.\n"
             "Examples of output descriptors are:\n"
             "    pkh(<pubkey>)                        P2PKH outputs for the given pubkey\n"
@@ -207,8 +205,10 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             RPCExamples{
                 "First three native segwit receive addresses\n" +
                 HelpExampleCli("deriveaddresses", "\"wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#trd0mf0l\" \"[0,2]\"")
-            }}.ToString()
-        );
+            }};
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
     }
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
