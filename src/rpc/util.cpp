@@ -224,3 +224,20 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
     }
 }
 
+UniValue GetServicesNames(ServiceFlags services)
+{
+    UniValue servicesNames(UniValue::VARR);
+
+    if (services & NODE_NETWORK)
+        servicesNames.push_back("NETWORK");
+    if (services & NODE_GETUTXO)
+        servicesNames.push_back("GETUTXO");
+    if (services & NODE_BLOOM)
+        servicesNames.push_back("BLOOM");
+    if (services & NODE_XTHIN)
+        servicesNames.push_back("XTHIN");
+    if (services & NODE_NETWORK_LIMITED)
+        servicesNames.push_back("NETWORK_LIMITED");
+
+    return servicesNames;
+}
