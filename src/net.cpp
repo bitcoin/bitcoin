@@ -1765,12 +1765,12 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 addr = addrman.Select(fFeeler);
             }
 
-            // Require outbound connections to be to distinct network groups
+            // Require outbound connections, other than feelers, to be to distinct network groups
             if (!fFeeler && setConnected.count(addr.GetGroup())) {
                 break;
             }
 
-            // if we selected an invalid address, restart
+            // if we selected an invalid or local address, restart
             if (!addr.IsValid() || IsLocal(addr)) {
                 break;
             }
