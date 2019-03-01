@@ -454,7 +454,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             continue;
         }
 
-        if (!llmq::chainLocksHandler->IsTxSafeForMining(mi->GetTx().GetHash())) {
+        if (mi != mempool.mapTx.get<ancestor_score>().end() &&
+                !llmq::chainLocksHandler->IsTxSafeForMining(mi->GetTx().GetHash())) {
             ++mi;
             continue;
         }
