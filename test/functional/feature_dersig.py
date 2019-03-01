@@ -44,6 +44,7 @@ class BIP66Test(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [['-whitelist=127.0.0.1', '-dip3params=9000:9000']]
         self.setup_clean_chain = True
+        self.rpc_timeout = 120
 
     def test_dersig_info(self, *, is_active):
         assert_equal(
