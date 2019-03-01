@@ -15,7 +15,10 @@
 #include "scheduler.h"
 #include "spork.h"
 #include "validation.h"
+
+#ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
+#endif
 
 // needed for nCompleteTXLocks
 #include "instantx.h"
