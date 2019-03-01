@@ -1156,7 +1156,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         }
     #else
         std::string portStr = std::to_string(websocketport);
-        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") + dataDir.c_str();
+        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") + std::string(dataDir.c_str());
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
 
