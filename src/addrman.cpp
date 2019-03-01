@@ -563,7 +563,7 @@ void CAddrMan::ResolveCollisions_()
 
                     // Give address at least 60 seconds to successfully connect
                     if (GetAdjustedTime() - info_old.nLastTry > 60) {
-                        LogPrint(BCLog::ADDRMAN, "Swapping %s for %s in tried table\n", info_new.ToString(), info_old.ToString());
+                        LogPrint(BCLog::ADDRMAN, "Replacing %s with %s in tried table\n", info_old.ToString(), info_new.ToString());
 
                         // Replaces an existing address already in the tried table with the new address
                         Good_(info_new, false, GetAdjustedTime());
@@ -573,7 +573,7 @@ void CAddrMan::ResolveCollisions_()
                     // If the collision hasn't resolved in some reasonable amount of time,
                     // just evict the old entry -- we must not be able to
                     // connect to it for some reason.
-                    LogPrint(BCLog::ADDRMAN, "Unable to test; swapping %s for %s in tried table anyway\n", info_new.ToString(), info_old.ToString());
+                    LogPrint(BCLog::ADDRMAN, "Unable to test; replacing %s with %s in tried table anyway\n", info_old.ToString(), info_new.ToString());
                     Good_(info_new, false, GetAdjustedTime());
                     erase_collision = true;
                 }
