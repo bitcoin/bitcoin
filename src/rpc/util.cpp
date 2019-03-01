@@ -293,6 +293,7 @@ struct Sections {
         case RPCArg::Type::STR:
         case RPCArg::Type::NUM:
         case RPCArg::Type::AMOUNT:
+        case RPCArg::Type::RANGE:
         case RPCArg::Type::BOOL: {
             if (outer_type == OuterType::NAMED_ARG) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
@@ -483,6 +484,10 @@ std::string RPCArg::ToDescriptionString() const
             ret += "numeric or string";
             break;
         }
+        case Type::RANGE: {
+            ret += "numeric or array";
+            break;
+        }
         case Type::BOOL: {
             ret += "boolean";
             break;
@@ -542,6 +547,8 @@ std::string RPCArg::ToStringObj(const bool oneline) const
         return res + "\"hex\"";
     case Type::NUM:
         return res + "n";
+    case Type::RANGE:
+        return res + "n or [n,n]";
     case Type::AMOUNT:
         return res + "amount";
     case Type::BOOL:
@@ -572,6 +579,7 @@ std::string RPCArg::ToString(const bool oneline) const
         return "\"" + m_name + "\"";
     }
     case Type::NUM:
+    case Type::RANGE:
     case Type::AMOUNT:
     case Type::BOOL: {
         return m_name;
@@ -600,6 +608,20 @@ std::string RPCArg::ToString(const bool oneline) const
         // no default case, so the compiler can warn about missing cases
     }
     assert(false);
+}
+
+std::pair<int64_t, int64_t> ParseRange(const UniValue& value)
+{
+    if (value.isNum()) {
+        return {0, value.get_int64()};
+    }
+    if (value.isArray() && value.size() == 2 && value[0].isNum() && value[1].isNum()) {
+        int64_t low = value[0].get_int64();
+        int64_t high = value[1].get_int64();
+        if (low > high) throw JSONRPCError(RPC_INVALID_PARAMETER, "Range specified as [begin,end] must not have begin after end");
+        return {low, high};
+    }
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified as end or as [begin,end]");
 }
 
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)

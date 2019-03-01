@@ -498,7 +498,7 @@ class ImportMultiTest(BitcoinTestFramework):
         self.log.info("Should import the ranged descriptor with specified range as solvable")
         self.test_importmulti({"desc": descsum_create(desc),
                                "timestamp": "now",
-                               "range": {"end": 1}},
+                               "range": 1},
                               success=True,
                               warnings=["Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag."])
 
