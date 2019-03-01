@@ -1176,7 +1176,42 @@ void CSigSharesManager::Cleanup()
         return;
     }
 
-    std::unordered_set<std::pair<Consensus::LLMQType, uint256>, StaticSaltedHasher> quorumsToCheck;
+    // This map is first filled with all quorums found in all sig shares. Then we remove all inactive quorums and
+    // loop through all sig shares again to find the ones belonging to the inactive quorums. We then delete the
+    // sessions belonging to the sig shares. At the same time, we use this map as a cache when we later need to resolve
+    // quorumHash -> quorumPtr (as GetQuorum() requires cs_main, leading to deadlocks with cs held)
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
+
+    {
+        LOCK(cs);
+        sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
+            quorums.emplace(std::make_pair((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash), nullptr);
+        });
+    }
+
+    // Find quorums which became inactive
+    for (auto it = quorums.begin(); it != quorums.end(); ) {
+        if (CLLMQUtils::IsQuorumActive(it->first.first, it->first.second)) {
+            it->second = quorumManager->GetQuorum(it->first.first, it->first.second);
+            ++it;
+        } else {
+            it = quorums.erase(it);
+        }
+    }
+
+    {
+        // Now delete sessions which are for inactive quorums
+        LOCK(cs);
+        std::unordered_set<uint256, StaticSaltedHasher> inactiveQuorumSessions;
+        sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
+            if (!quorums.count(std::make_pair((Consensus::LLMQType)sigShare.llmqType, sigShare.quorumHash))) {
+                inactiveQuorumSessions.emplace(sigShare.GetSignHash());
+            }
+        });
+        for (auto& signHash : inactiveQuorumSessions) {
+            RemoveSigSharesForSession(signHash);
+        }
+    }
 
     {
         LOCK(cs);
@@ -1214,39 +1249,27 @@ void CSigSharesManager::Cleanup()
                 assert(m);
 
                 auto& oneSigShare = m->begin()->second;
-                LogPrintf("CSigSharesManager::%s -- signing session timed out. signHash=%s, id=%s, msgHash=%s, sigShareCount=%d\n", __func__,
-                          signHash.ToString(), oneSigShare.id.ToString(), oneSigShare.msgHash.ToString(), count);
+
+                std::string strMissingMembers;
+                if (LogAcceptCategory("llmq")) {
+                    auto quorumIt = quorums.find(std::make_pair((Consensus::LLMQType)oneSigShare.llmqType, oneSigShare.quorumHash));
+                    if (quorumIt != quorums.end()) {
+                        auto& quorum = quorumIt->second;
+                        for (size_t i = 0; i < quorum->members.size(); i++) {
+                            if (!m->count((uint16_t)i)) {
+                                auto& dmn = quorum->members[i];
+                                strMissingMembers += strprintf("\n  %s", dmn->proTxHash.ToString());
+                            }
+                        }
+                    }
+                }
+
+                LogPrintf("CSigSharesManager::%s -- signing session timed out. signHash=%s, id=%s, msgHash=%s, sigShareCount=%d, missingMembers=%s\n", __func__,
+                          signHash.ToString(), oneSigShare.id.ToString(), oneSigShare.msgHash.ToString(), count, strMissingMembers);
             } else {
                 LogPrintf("CSigSharesManager::%s -- signing session timed out. signHash=%s, sigShareCount=%d\n", __func__,
                           signHash.ToString(), count);
             }
-            RemoveSigSharesForSession(signHash);
-        }
-
-        sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
-            quorumsToCheck.emplace((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
-        });
-    }
-
-    // Find quorums which became inactive
-    for (auto it = quorumsToCheck.begin(); it != quorumsToCheck.end(); ) {
-        if (CLLMQUtils::IsQuorumActive(it->first, it->second)) {
-            it = quorumsToCheck.erase(it);
-        } else {
-            ++it;
-        }
-    }
-
-    {
-        // Now delete sessions which are for inactive quorums
-        LOCK(cs);
-        std::unordered_set<uint256, StaticSaltedHasher> inactiveQuorumSessions;
-        sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
-            if (quorumsToCheck.count(std::make_pair((Consensus::LLMQType)sigShare.llmqType, sigShare.quorumHash))) {
-                inactiveQuorumSessions.emplace(sigShare.GetSignHash());
-            }
-        });
-        for (auto& signHash : inactiveQuorumSessions) {
             RemoveSigSharesForSession(signHash);
         }
     }
