@@ -256,6 +256,10 @@ void PrepareShutdown()
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
     peerLogic.reset();
+    if (g_connman) {
+        // make sure to stop all threads before g_connman is reset to nullptr as these threads might still be accessing it
+        g_connman->Stop();
+    }
     g_connman.reset();
 
     if (!fLiteMode && !fRPCInWarmup) {
