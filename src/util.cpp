@@ -1160,7 +1160,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
-
+        }
         pid = fork(fpath.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Could not start Geth\n");
