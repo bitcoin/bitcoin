@@ -1114,7 +1114,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         
     fs::path fpath = fs::system_complete(gethFilename);
     fs::path dataDir = GetDataDir(true) / "geth";
-    const std::string dataDirStr = dataDir.c_str();
+    
     #ifndef WIN32
             // Prevent killed child-processes remaining as "defunct"
             struct sigaction sa;
@@ -1157,7 +1157,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         }
     #else
         std::string portStr = std::to_string(websocketport);
-        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") + dataDirStr;
+        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
 
