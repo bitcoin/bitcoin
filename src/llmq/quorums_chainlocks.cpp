@@ -227,9 +227,6 @@ void CChainLocksHandler::TrySignChainTip()
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
-    uint256 msgHash = pindex->GetBlockHash();
-
     {
         LOCK(cs);
 
@@ -244,6 +241,16 @@ void CChainLocksHandler::TrySignChainTip()
             return;
         }
 
+        if (pindex->nHeight == lastSignedHeight) {
+            // already signed this one
+            return;
+        }
+
+        if (bestChainLock.nHeight >= pindex->nHeight) {
+            // already got the same CLSIG or a better one
+            return;
+        }
+
         if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             if (!inEnforceBestChainLock) {
                 // we accepted this block when there was no lock yet, but now a conflicting lock appeared. Invalidate it.
@@ -253,14 +260,15 @@ void CChainLocksHandler::TrySignChainTip()
             }
             return;
         }
+    }
 
+    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
+    uint256 msgHash = pindex->GetBlockHash();
+
+    {
+        LOCK(cs);
         if (bestChainLock.nHeight >= pindex->nHeight) {
-            // already got the same CLSIG or a better one
-            return;
-        }
-
-        if (pindex->nHeight == lastSignedHeight) {
-            // already signed this one
+            // might have happened while we didn't hold cs
             return;
         }
         lastSignedHeight = pindex->nHeight;
