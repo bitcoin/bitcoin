@@ -61,9 +61,11 @@ public:
     * Send queued protocol messages to be sent to a give node.
     *
     * @param[in]   pto             The node which we are sending messages to.
+    * @param[in]   sequence_number A counter that increments after SendMessages
+    *                              has been called on all peers
     * @return                      True if there is more work to be done
     */
-    bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
+    bool SendMessages(CNode* pto, uint64_t sequence_number) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
     void ConsiderEviction(CNode *pto, int64_t time_in_seconds) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

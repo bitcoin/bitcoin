@@ -3514,7 +3514,7 @@ public:
 };
 }
 
-bool PeerLogicValidation::SendMessages(CNode* pto)
+bool PeerLogicValidation::SendMessages(CNode* pto, uint64_t sequence_number)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     {

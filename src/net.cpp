@@ -1944,8 +1944,10 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
 
 void CConnman::ThreadMessageHandler()
 {
+    uint64_t sequence_number = 0;
     while (!flagInterruptMsgProc)
     {
+        ++sequence_number;
         std::vector<CNode*> vNodesCopy;
         {
             LOCK(cs_vNodes);
@@ -1970,7 +1972,7 @@ void CConnman::ThreadMessageHandler()
             // Send messages
             {
                 LOCK(pnode->cs_sendProcessing);
-                m_msgproc->SendMessages(pnode);
+                m_msgproc->SendMessages(pnode, sequence_number);
             }
 
             if (flagInterruptMsgProc)

@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // Test starts here
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in getheaders
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0)); // should result in getheaders
     }
     {
         LOCK2(cs_main, dummyNode1.cs_vSend);
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     SetMockTime(nStartTime+21*60);
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in getheaders
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0)); // should result in getheaders
     }
     {
         LOCK2(cs_main, dummyNode1.cs_vSend);
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     SetMockTime(nStartTime+24*60);
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in disconnect
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0)); // should result in disconnect
     }
     BOOST_CHECK(dummyNode1.fDisconnect == true);
     SetMockTime(0);
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     }
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0));
     }
     BOOST_CHECK(banman->IsBanned(addr1));
     BOOST_CHECK(!banman->IsBanned(ip(0xa0b0c001|0x0000ff00))); // Different IP, not banned
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     }
     {
         LOCK2(cs_main, dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2, 0));
     }
     BOOST_CHECK(!banman->IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(banman->IsBanned(addr1));  // ... but 1 still should be
@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     }
     {
         LOCK2(cs_main, dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2, 0));
     }
     BOOST_CHECK(banman->IsBanned(addr2));
 
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0));
     }
     BOOST_CHECK(!banman->IsBanned(addr1));
     {
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0));
     }
     BOOST_CHECK(!banman->IsBanned(addr1));
     {
@@ -307,7 +307,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     {
         LOCK2(cs_main, dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1, 0));
     }
     BOOST_CHECK(banman->IsBanned(addr1));
     gArgs.ForceSetArg("-banscore", std::to_string(DEFAULT_BANSCORE_THRESHOLD));
@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     }
     {
         LOCK2(cs_main, dummyNode.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
+        BOOST_CHECK(peerLogic->SendMessages(&dummyNode, 0));
     }
     BOOST_CHECK(banman->IsBanned(addr));
 
