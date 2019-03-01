@@ -337,6 +337,13 @@ class CSigSharesManager : public CRecoveredSigsListener
     static const int64_t SESSION_TOTAL_TIMEOUT = 5 * 60 * 1000;
     static const int64_t SIG_SHARE_REQUEST_TIMEOUT = 5 * 1000;
 
+    // we try to keep total message size below 10k
+    const size_t MAX_MSGS_CNT_QSIGSESANN = 100;
+    const size_t MAX_MSGS_CNT_QGETSIGSHARES = 200;
+    const size_t MAX_MSGS_CNT_QSIGSHARESINV = 200;
+    // 400 is the maximum quorum size, so this is also the maximum number of sigs we need to support
+    const size_t MAX_MSGS_TOTAL_BATCHED_SIGS = 400;
+
 private:
     CCriticalSection cs;
 
@@ -378,10 +385,11 @@ public:
     void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
 private:
-    void ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman);
-    void ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
-    void ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
-    void ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);
+    // all of these return false when the currently processed message should be aborted (as each message actually contains multiple messages)
+    bool ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& ann, CConnman& connman);
+    bool ProcessMessageSigSharesInv(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
+    bool ProcessMessageGetSigShares(CNode* pfrom, const CSigSharesInv& inv, CConnman& connman);
+    bool ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares, CConnman& connman);
 
     bool VerifySigSharesInv(NodeId from, Consensus::LLMQType llmqType, const CSigSharesInv& inv);
     bool PreVerifyBatchedSigShares(NodeId nodeId, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
