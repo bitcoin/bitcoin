@@ -1232,177 +1232,179 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 			return error(errorMessage.c_str());
 		}
 	}
-	if (!fJustCheck || bSanityCheck) {
-		CAsset dbAsset;
-        const uint32_t &nAsset = op == OP_ASSET_SEND ? theAssetAllocation.assetAllocationTuple.nAsset : theAsset.nAsset;
-        auto result = mapAssets.try_emplace(nAsset, std::move(emptyAsset));
-        auto mapAsset = result.first;
-        const bool & mapAssetNotFound = result.second; 
-		if (mapAssetNotFound)
-		{
-            if(!GetAsset(nAsset, dbAsset)){
-    			if (op != OP_ASSET_ACTIVATE) {
-    				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Failed to read from asset DB");
-    				return error(errorMessage.c_str());
-    			}
-		    }
+
+	CAsset dbAsset;
+    const uint32_t &nAsset = op == OP_ASSET_SEND ? theAssetAllocation.assetAllocationTuple.nAsset : theAsset.nAsset;
+    auto result = mapAssets.try_emplace(nAsset, std::move(emptyAsset));
+    auto mapAsset = result.first;
+    const bool & mapAssetNotFound = result.second; 
+	if (mapAssetNotFound)
+	{
+        if(!GetAsset(nAsset, dbAsset)){
+			if (op != OP_ASSET_ACTIVATE) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Failed to read from asset DB");
+				return error(errorMessage.c_str());
+			}
             else
-                mapAsset->second = std::move(dbAsset); 
+                 mapAsset->second = std::move(theAsset); 
+	    }
+        else{
+            if(op == OP_ASSET_ACTIVATE){
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2041 - " + _("Asset already exists");
+                return error(errorMessage.c_str());
+            }
+            mapAsset->second = std::move(dbAsset); 
         }
-        CAsset &storedSenderAssetRef = mapAsset->second;
-		if (op == OP_ASSET_TRANSFER) {
-		
-            if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
-            {
-                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Asset owner must sign off on this change");
-                return error(errorMessage.c_str());
-            }           
-		}
-
-		if (op == OP_ASSET_UPDATE) {
-			if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
-				return error(errorMessage.c_str());
-			}
-
-			if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update supply");
-				return error(errorMessage.c_str());
-			}          
-            // increase total supply
-            storedSenderAssetRef.nTotalSupply += theAsset.nBalance;
-			storedSenderAssetRef.nBalance += theAsset.nBalance;
-
-			if (!AssetRange(storedSenderAssetRef.nTotalSupply, storedSenderAssetRef.nPrecision))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Total supply out of money range");
-				return error(errorMessage.c_str());
-			}
-			if (storedSenderAssetRef.nTotalSupply > storedSenderAssetRef.nMaxSupply)
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Total supply cannot exceed maximum supply");
-				return error(errorMessage.c_str());
-			}
-
-		}      
-		if (op == OP_ASSET_SEND) {
-			if (storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
-				return error(errorMessage.c_str());
-			}
+    }
+    CAsset &storedSenderAssetRef = mapAsset->second;
+	if (op == OP_ASSET_TRANSFER) {
 	
-			// check balance is sufficient on sender
-			CAmount nTotal = 0;
-			for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-				nTotal += amountTuple.second;
-				if (amountTuple.second <= 0)
-				{
-					errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2032 - " + _("Receiving amount must be positive");
-					return error(errorMessage.c_str());
-				}
-			}
-			if (storedSenderAssetRef.nBalance < nTotal) {
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2033 - " + _("Sender balance is insufficient");
-				return error(errorMessage.c_str());
-			}
-			for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
-				if (!bSanityCheck) {
-                    
-					CAssetAllocation receiverAllocation;
-					const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
-                    const string& receiverTupleStr = receiverAllocationTuple.ToString();
-                    auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr), std::move(emptyAllocation));
-                    auto mapAssetAllocation = result.first;
-                    const bool& mapAssetAllocationNotFound = result.second;
-                   
-                    if(mapAssetAllocationNotFound){
-                        GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
-                        if (receiverAllocation.assetAllocationTuple.IsNull()) {
-                            receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                            receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
-                        } 
-                        mapAssetAllocation->second = std::move(receiverAllocation);                
-                    }
-                    
-                    CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
-                    
-                    storedReceiverAllocationRef.nBalance += amountTuple.second;
-                                            
-					// adjust sender balance
-					storedSenderAssetRef.nBalance -= amountTuple.second;                              
-				}
-			}
-            passetallocationdb->WriteAssetAllocationIndex(op, tx, storedSenderAssetRef, true, nHeight);  
-		}
-		else if (op != OP_ASSET_ACTIVATE)
-		{         
-			if (!theAsset.witnessAddress.IsNull())
-				storedSenderAssetRef.witnessAddress = theAsset.witnessAddress;
-			if (!theAsset.vchPubData.empty())
-				storedSenderAssetRef.vchPubData = theAsset.vchPubData;
-			else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
-				return error(errorMessage.c_str());
-			}
-                     
-			if (!theAsset.vchBurnMethodSignature.empty() && op != OP_ASSET_TRANSFER)
-				storedSenderAssetRef.vchBurnMethodSignature = theAsset.vchBurnMethodSignature;				
-			else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract burn method signature");
-				return error(errorMessage.c_str());
-			}
-            
-            if (!theAsset.vchContract.empty() && op != OP_ASSET_TRANSFER)
-                storedSenderAssetRef.vchContract = theAsset.vchContract;             
-            else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
-            {
-                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract");
-                return error(errorMessage.c_str());
-            }    
-                  
-			if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags && (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN)))) {
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Insufficient privileges to update flags");
-				return error(errorMessage.c_str());
-			}
-            storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
-
-
-		}
-		if (op == OP_ASSET_ACTIVATE)
-		{
-			if (GetAsset(nAsset, theAsset))
-			{
-				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2041 - " + _("Asset already exists");
-				return error(errorMessage.c_str());
-			}
-            storedSenderAssetRef = std::move(theAsset);
-            if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
-            {
-                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
-                return error(errorMessage.c_str());
-            }          
-			// starting supply is the supplied balance upon init
-			storedSenderAssetRef.nTotalSupply = storedSenderAssetRef.nBalance;
-		}
-		// set the asset's txn-dependent values
-        storedSenderAssetRef.nHeight = nHeight;
-		storedSenderAssetRef.txHash = txHash;
-		// write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
-		if (!bSanityCheck) {
-            passetdb->WriteAssetIndex(tx, storedSenderAssetRef, op, nHeight);
-			LogPrint(BCLog::SYS,"CONNECTED ASSET: op=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
-					assetFromOp(op).c_str(),
-					nAsset,
-					txHash.ToString().c_str(),
-					nHeight,
-					fJustCheck ? 1 : 0);
-		}
+        if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Asset owner must sign off on this change");
+            return error(errorMessage.c_str());
+        }           
 	}
+
+	if (op == OP_ASSET_UPDATE) {
+		if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
+			return error(errorMessage.c_str());
+		}
+
+		if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update supply");
+			return error(errorMessage.c_str());
+		}          
+        // increase total supply
+        storedSenderAssetRef.nTotalSupply += theAsset.nBalance;
+		storedSenderAssetRef.nBalance += theAsset.nBalance;
+
+		if (!AssetRange(storedSenderAssetRef.nTotalSupply, storedSenderAssetRef.nPrecision))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Total supply out of money range");
+			return error(errorMessage.c_str());
+		}
+		if (storedSenderAssetRef.nTotalSupply > storedSenderAssetRef.nMaxSupply)
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Total supply cannot exceed maximum supply");
+			return error(errorMessage.c_str());
+		}
+
+	}      
+	if (op == OP_ASSET_SEND) {
+		if (storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
+			return error(errorMessage.c_str());
+		}
+
+		// check balance is sufficient on sender
+		CAmount nTotal = 0;
+		for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+			nTotal += amountTuple.second;
+			if (amountTuple.second <= 0)
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2032 - " + _("Receiving amount must be positive");
+				return error(errorMessage.c_str());
+			}
+		}
+		if (storedSenderAssetRef.nBalance < nTotal) {
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2033 - " + _("Sender balance is insufficient");
+			return error(errorMessage.c_str());
+		}
+		for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
+			if (!bSanityCheck) {
+                
+				CAssetAllocation receiverAllocation;
+				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
+                const string& receiverTupleStr = receiverAllocationTuple.ToString();
+                auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr), std::move(emptyAllocation));
+                auto mapAssetAllocation = result.first;
+                const bool& mapAssetAllocationNotFound = result.second;
+               
+                if(mapAssetAllocationNotFound){
+                    GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
+                    if (receiverAllocation.assetAllocationTuple.IsNull()) {
+                        receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
+                        receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
+                    } 
+                    mapAssetAllocation->second = std::move(receiverAllocation);                
+                }
+                
+                CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
+                
+                storedReceiverAllocationRef.nBalance += amountTuple.second;
+                                        
+				// adjust sender balance
+				storedSenderAssetRef.nBalance -= amountTuple.second;                              
+			}
+		}
+        if (!bSanityCheck && !fJustCheck)
+            passetallocationdb->WriteAssetAllocationIndex(op, tx, storedSenderAssetRef, true, nHeight);  
+	}
+	else if (op != OP_ASSET_ACTIVATE)
+	{         
+		if (!theAsset.witnessAddress.IsNull())
+			storedSenderAssetRef.witnessAddress = theAsset.witnessAddress;
+		if (!theAsset.vchPubData.empty())
+			storedSenderAssetRef.vchPubData = theAsset.vchPubData;
+		else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
+			return error(errorMessage.c_str());
+		}
+                 
+		if (!theAsset.vchBurnMethodSignature.empty() && op != OP_ASSET_TRANSFER)
+			storedSenderAssetRef.vchBurnMethodSignature = theAsset.vchBurnMethodSignature;				
+		else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract burn method signature");
+			return error(errorMessage.c_str());
+		}
+        
+        if (!theAsset.vchContract.empty() && op != OP_ASSET_TRANSFER)
+            storedSenderAssetRef.vchContract = theAsset.vchContract;             
+        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract");
+            return error(errorMessage.c_str());
+        }    
+              
+		if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags && (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN)))) {
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Insufficient privileges to update flags");
+			return error(errorMessage.c_str());
+		}
+        storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
+
+
+	}
+	if (op == OP_ASSET_ACTIVATE)
+	{
+        if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot create this asset. Asset owner must sign off on this change");
+            return error(errorMessage.c_str());
+        }          
+		// starting supply is the supplied balance upon init
+		storedSenderAssetRef.nTotalSupply = storedSenderAssetRef.nBalance;
+	}
+	// set the asset's txn-dependent values
+    storedSenderAssetRef.nHeight = nHeight;
+	storedSenderAssetRef.txHash = txHash;
+	// write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
+	if (!bSanityCheck && !fJustCheck) {
+        passetdb->WriteAssetIndex(tx, storedSenderAssetRef, op, nHeight);
+		LogPrint(BCLog::SYS,"CONNECTED ASSET: op=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
+				assetFromOp(op).c_str(),
+				nAsset,
+				txHash.ToString().c_str(),
+				nHeight,
+				fJustCheck ? 1 : 0);
+	}
+	
     return true;
 }
 
