@@ -10,6 +10,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
 )
 
 from test_framework.authproxy import JSONRPCException
@@ -27,7 +28,8 @@ class RpcMiscTest(BitcoinTestFramework):
         assert_greater_than(memory['used'], 0)
         assert_greater_than(memory['free'], 0)
         assert_greater_than(memory['total'], 0)
-        assert_greater_than(memory['locked'], 0)
+        # assert_greater_than_or_equal() for locked in case locking pages failed at some point
+        assert_greater_than_or_equal(memory['locked'], 0)
         assert_greater_than(memory['chunks_used'], 0)
         assert_greater_than(memory['chunks_free'], 0)
         assert_equal(memory['used'] + memory['free'], memory['total'])
