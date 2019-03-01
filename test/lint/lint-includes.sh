@@ -59,11 +59,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/filesystem.hpp
     boost/filesystem/detail/utf8_codecvt_facet.hpp
     boost/filesystem/fstream.hpp
-    boost/graph/adjacency_list.hpp
-    boost/graph/directed_graph.hpp
-    boost/graph/graph_traits.hpp
-    boost/graph/hawick_circuits.hpp
-    boost/graph/topological_sort.hpp
     boost/interprocess/sync/file_lock.hpp
     boost/lexical_cast.hpp
     boost/multi_index/hashed_index.hpp
