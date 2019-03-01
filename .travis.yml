@@ -123,15 +123,6 @@ jobs:
         RUN_TESTS=false
         GOAL="install"
         SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER"
-# x86_64 Linux, No wallet
-    - stage: test
-      env: >-
-        HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3"
-        DEP_OPTS="NO_WALLET=1"
-        RUN_TESTS=false
-        GOAL="install"
-        SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
 # Cross-Mac
     - stage: test
       env: >-
