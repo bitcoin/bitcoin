@@ -354,6 +354,13 @@ bool CSigSharesManager::ProcessMessageSigSharesInv(CNode* pfrom, const CSigShare
     LogPrint("llmq", "CSigSharesManager::%s -- signHash=%s, inv={%s}, node=%d\n", __func__,
             sessionInfo.signHash.ToString(), inv.ToString(), pfrom->id);
 
+    if (sessionInfo.quorum->quorumVvec == nullptr) {
+        // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
+        LogPrintf("CSigSharesManager::%s -- we don't have the quorum vvec for %s, not requesting sig shares. node=%d\n", __func__,
+                  sessionInfo.quorumHash.ToString(), pfrom->id);
+        return true;
+    }
+
     LOCK(cs);
     auto& nodeState = nodeStates[pfrom->id];
     auto session = nodeState.GetSessionByRecvId(inv.sessionId);
