@@ -382,9 +382,9 @@ void CInstantSendManager::ProcessMessageInstantXLock(CNode* pfrom, const llmq::C
 
     if (!hasScheduledProcessPending) {
         hasScheduledProcessPending = true;
-        scheduler->schedule([&] {
+        scheduler->scheduleFromNow([&] {
             ProcessPendingInstantXLocks();
-        }, boost::chrono::system_clock::now() + boost::chrono::milliseconds(100));
+        }, 100);
     }
 }
 
