@@ -34,6 +34,7 @@
 #include "evo/deterministicmns.h"
 
 #include "llmq/quorums_blockprocessor.h"
+#include "llmq/quorums_chainlocks.h"
 
 #include <algorithm>
 #include <boost/thread.hpp>
@@ -453,6 +454,11 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             continue;
         }
 
+        if (!llmq::chainLocksHandler->IsTxSafeForMining(mi->GetTx().GetHash())) {
+            ++mi;
+            continue;
+        }
+
         // Now that mi is not stale, determine which transaction to evaluate:
         // the next entry from mapTx, or the best from mapModifiedTx?
         bool fUsingModified = false;
@@ -598,6 +604,10 @@ void BlockAssembler::addPriorityTxs()
         // then put it in the waitSet
         if (isStillDependent(iter)) {
             waitPriMap.insert(std::make_pair(iter, actualPriority));
+            continue;
+        }
+
+        if (!llmq::chainLocksHandler->IsTxSafeForMining(iter->GetTx().GetHash())) {
             continue;
         }
 

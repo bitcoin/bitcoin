@@ -46,6 +46,9 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
 
+    // how long to wait for ixlocks until we consider a block with non-ixlocked TXs to be safe to sign
+    static const int64_t WAIT_FOR_IXLOCK_TIMEOUT = 10 * 60;
+
 private:
     CScheduler* scheduler;
     CCriticalSection cs;
@@ -93,6 +96,8 @@ public:
 
     bool HasChainLock(int nHeight, const uint256& blockHash);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
+
+    bool IsTxSafeForMining(const uint256& txid);
 
 private:
     // these require locks to be held already

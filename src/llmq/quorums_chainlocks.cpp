@@ -4,6 +4,7 @@
 
 #include "quorums.h"
 #include "quorums_chainlocks.h"
+#include "quorums_instantsend.h"
 #include "quorums_signing.h"
 #include "quorums_utils.h"
 
@@ -262,6 +263,61 @@ void CChainLocksHandler::TrySignChainTip()
         }
     }
 
+    LogPrintf("CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
+
+    // When the new IX system is activated, we only try to ChainLock blocks which include safe transactions. A TX is
+    // considered safe when it is ixlocked or at least known since 10 minutes (from mempool or block). These checks are
+    // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
+    // way down, we consider all TXs to be safe.
+    if (IsNewInstantSendEnabled() && sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+        auto pindexWalk = pindex;
+        while (pindexWalk) {
+            if (pindex->nHeight - pindexWalk->nHeight > 5) {
+                // no need to check further down, 6 confs is safe to assume that TXs below this height won't be
+                // ixlocked anymore if they aren't already
+                LogPrintf("CChainLocksHandler::%s -- tip and previous 5 blocks all safe\n", __func__);
+                break;
+            }
+            if (HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
+                // we don't care about ixlocks for TXs that are ChainLocked already
+                LogPrintf("CChainLocksHandler::%s -- chainlock at height %d \n", __func__, pindexWalk->nHeight);
+                break;
+            }
+
+            decltype(blockTxs.begin()->second) txids;
+            {
+                LOCK(cs);
+                auto it = blockTxs.find(pindexWalk->GetBlockHash());
+                if (it == blockTxs.end()) {
+                    // this should actually not happen as NewPoWValidBlock should have been called before
+                    LogPrintf("CChainLocksHandler::%s -- blockTxs for %s not found\n", __func__,
+                              pindexWalk->GetBlockHash().ToString());
+                    return;
+                }
+                txids = it->second;
+            }
+
+            for (auto& txid : *txids) {
+                int64_t txAge = 0;
+                {
+                    LOCK(cs);
+                    auto it = txFirstSeenTime.find(txid);
+                    if (it != txFirstSeenTime.end()) {
+                        txAge = GetAdjustedTime() - it->second;
+                    }
+                }
+
+                if (txAge < WAIT_FOR_IXLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+                    LogPrintf("CChainLocksHandler::%s -- not signing block %s due to TX %s not being ixlocked and not old enough. age=%d\n", __func__,
+                              pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
+                    return;
+                }
+            }
+
+            pindexWalk = pindexWalk->pprev;
+        }
+    }
+
     uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
     uint256 msgHash = pindex->GetBlockHash();
 
@@ -322,6 +378,30 @@ void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockInd
     LOCK(cs);
     int64_t curTime = GetAdjustedTime();
     txFirstSeenTime.emplace(tx.GetHash(), curTime);
+}
+
+bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
+{
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED) || !sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+        return true;
+    }
+    if (!IsNewInstantSendEnabled()) {
+        return true;
+    }
+
+    int64_t txAge = 0;
+    {
+        LOCK(cs);
+        auto it = txFirstSeenTime.find(txid);
+        if (it != txFirstSeenTime.end()) {
+            txAge = GetAdjustedTime() - it->second;
+        }
+    }
+
+    if (txAge < WAIT_FOR_IXLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+        return false;
+    }
+    return true;
 }
 
 // WARNING: cs_main and cs should not be held!
