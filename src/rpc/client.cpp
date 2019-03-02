@@ -29,8 +29,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "setmocktime", 0, "timestamp" },
     { "mockscheduler", 0, "delta_time" },
 #if ENABLE_MINER
-    { "generate", 0, "nblocks" },
-    { "generate", 1, "maxtries" },
     { "generatetoaddress", 0, "nblocks" },
     { "generatetoaddress", 2, "maxtries" },
     { "generatetodescriptor", 0, "num_blocks" },

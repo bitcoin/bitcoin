@@ -1177,8 +1177,6 @@ public:
 
     bool DelAddressBook(const CTxDestination& address);
 
-    void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
-
     unsigned int GetKeyPoolSize() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet)
     {
         AssertLockHeld(cs_wallet);
