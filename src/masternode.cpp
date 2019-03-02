@@ -148,7 +148,7 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
     if(IsOutpointSpent()) return;
 
     int nHeight = 0;
-    {
+    if!fForce){
     	TRY_LOCK(cs_main, lockMain);
     	if (!lockMain) return;
         Coin coin;
