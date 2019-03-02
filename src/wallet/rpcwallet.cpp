@@ -19,7 +19,6 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
-#include <rpc/mining.h>
 #include <rpc/rawtransaction.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
@@ -3358,62 +3357,6 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
-UniValue generate(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw std::runtime_error(
-            RPCHelpMan{"generate",
-                "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n",
-                {
-                    {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"maxtries", RPCArg::Type::NUM, /* default */ "1000000", "How many iterations to try."},
-                },
-                RPCResult{
-            "[ blockhashes ]     (array) hashes of blocks generated\n"
-                },
-                RPCExamples{
-            "\nGenerate 11 blocks\n"
-            + HelpExampleCli("generate", "11")
-                },
-            }.ToString());
-    }
-
-    if (!IsDeprecatedRPCEnabled("generate")) {
-        throw JSONRPCError(RPC_METHOD_DEPRECATED, "The wallet generate rpc method is deprecated and will be fully removed in v0.19. "
-            "To use generate in v0.18, restart bitcoind with -deprecatedrpc=generate.\n"
-            "Clients should transition to using the node rpc method generatetoaddress\n");
-    }
-
-    int num_generate = request.params[0].get_int();
-    uint64_t max_tries = 1000000;
-    if (!request.params[1].isNull()) {
-        max_tries = request.params[1].get_int();
-    }
-
-    std::shared_ptr<CReserveScript> coinbase_script;
-    pwallet->GetScriptForMining(coinbase_script);
-
-    // If the keypool is exhausted, no script is returned at all.  Catch this.
-    if (!coinbase_script) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    }
-
-    //throw an error if no script was provided
-    if (coinbase_script->reserveScript.empty()) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
-    }
-
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
-}
-
 UniValue rescanblockchain(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -4156,7 +4099,6 @@ UniValue importmulti(const JSONRPCRequest& request);
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
-    { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
     { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
