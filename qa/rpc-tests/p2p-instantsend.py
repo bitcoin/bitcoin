@@ -21,6 +21,20 @@ class InstantSendTest(DashTestFramework):
         self.sender_idx = self.num_nodes - 3
 
     def run_test(self):
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.mine_quorum()
+
+        print("Test old InstantSend")
+        self.test_doublespend()
+
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 1)
+        self.wait_for_sporks_same()
+
+        print("Test new InstantSend")
+        self.test_doublespend()
+
+    def test_doublespend(self):
         # feed the sender with some balance
         sender_addr = self.nodes[self.sender_idx].getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
@@ -73,7 +87,12 @@ class InstantSendTest(DashTestFramework):
             assert (res['hash'] != wrong_block)
             # wait for long time only for first node
             timeout = 1
-
+        # mine more blocks
+        # TODO: mine these blocks on an isolated node
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].generate(2)
+        self.sync_all()
 
 if __name__ == '__main__':
     InstantSendTest().main()
