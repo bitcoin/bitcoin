@@ -89,13 +89,14 @@ class AutoInstantSendTest(DashTestFramework):
         self.nodes[0].spork('SPORK_16_INSTANTSEND_AUTOLOCKS', value)
 
     # sends regular IX with high fee and may inputs (not-simple transaction)
-    def send_regular_IX(self):
+    def send_regular_IX(self, check_fee = True):
         receiver_addr = self.nodes[self.receiver_idx].getnewaddress()
         txid = self.nodes[0].instantsendtoaddress(receiver_addr, 1.0)
-        MIN_FEE = satoshi_round(-0.0001)
-        fee = self.nodes[0].gettransaction(txid)['fee']
-        expected_fee = MIN_FEE * len(self.nodes[0].getrawtransaction(txid, True)['vin'])
-        assert_equal(fee, expected_fee)
+        if (check_fee):
+            MIN_FEE = satoshi_round(-0.0001)
+            fee = self.nodes[0].gettransaction(txid)['fee']
+            expected_fee = MIN_FEE * len(self.nodes[0].getrawtransaction(txid, True)['vin'])
+            assert_equal(fee, expected_fee)
         return self.wait_for_instantlock(txid, self.nodes[0])
 
     # sends simple trx, it should become IX if autolocks are allowed
@@ -115,6 +116,21 @@ class AutoInstantSendTest(DashTestFramework):
     def run_test(self):
         # make sure masternodes are synced
         sync_masternodes(self.nodes)
+
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.mine_quorum()
+
+        print("Test old InstantSend")
+        self.test_auto();
+
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 1)
+        self.wait_for_sporks_same()
+
+        print("Test new InstantSend")
+        self.test_auto(True);
+
+    def test_auto(self, new_is = False):
         # feed the sender with some balance
         sender_addr = self.nodes[self.sender_idx].getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
@@ -126,9 +142,9 @@ class AutoInstantSendTest(DashTestFramework):
             
         assert(not self.get_autoix_spork_state())
 
-        assert(self.send_regular_IX())
-        assert(not self.send_simple_tx())
-        assert(not self.send_complex_tx())
+        assert(self.send_regular_IX(not new_is))
+        assert(self.send_simple_tx() if new_is else not self.send_simple_tx())
+        assert(self.send_complex_tx() if new_is else not self.send_complex_tx())
 
         self.activate_autoix_bip9()
         self.set_autoix_spork_state(True)
@@ -136,16 +152,16 @@ class AutoInstantSendTest(DashTestFramework):
         assert(self.get_autoix_bip9_status() == 'active')
         assert(self.get_autoix_spork_state())
 
-        assert(self.send_regular_IX())
+        assert(self.send_regular_IX(not new_is))
         assert(self.send_simple_tx())
-        assert(not self.send_complex_tx())
+        assert(self.send_complex_tx() if new_is else not self.send_complex_tx())
 
         self.set_autoix_spork_state(False)
         assert(not self.get_autoix_spork_state())
 
-        assert(self.send_regular_IX())
-        assert(not self.send_simple_tx())
-        assert(not self.send_complex_tx())
+        assert(self.send_regular_IX(not new_is))
+        assert(self.send_simple_tx() if new_is else not self.send_simple_tx())
+        assert(self.send_complex_tx() if new_is else not self.send_complex_tx())
 
 
 if __name__ == '__main__':
