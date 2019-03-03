@@ -137,6 +137,10 @@ bool CInstantSendManager::ProcessTx(CNode* pfrom, const CTransaction& tx, CConnm
 
 bool CInstantSendManager::CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params)
 {
+    if (sporkManager.IsSporkActive(SPORK_16_INSTANTSEND_AUTOLOCKS) && (mempool.UsedMemoryShare() > CInstantSend::AUTO_IX_MEMPOOL_THRESHOLD)) {
+        return false;
+    }
+
     int nInstantSendConfirmationsRequired = params.nInstantSendConfirmationsRequired;
 
     uint256 txHash = tx.GetHash();

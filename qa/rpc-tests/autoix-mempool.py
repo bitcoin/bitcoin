@@ -122,6 +122,21 @@ class AutoIXMempoolTest(DashTestFramework):
     def run_test(self):
         # make sure masternodes are synced
         sync_masternodes(self.nodes)
+
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.mine_quorum()
+
+        print("Test old InstantSend")
+        self.test_auto();
+
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 1)
+        self.wait_for_sporks_same()
+
+        print("Test new InstantSend")
+        self.test_auto(True);
+
+    def test_auto(self, new_is = False):
         self.activate_autoix_bip9()
         self.set_autoix_spork_state(True)
 
@@ -151,8 +166,8 @@ class AutoIXMempoolTest(DashTestFramework):
 
         # autoIX is not working now
         assert(not self.send_simple_tx(sender, receiver))
-        # regular IX is still working
-        assert(self.send_regular_IX(sender, receiver))
+        # regular IX is still working for old IS but not for new one
+        assert(not self.send_regular_IX(sender, receiver) if new_is else self.send_regular_IX(sender, receiver))
 
         # generate one block to clean up mempool and retry auto and regular IX
         # generate 2 more blocks to have enough confirmations for IX
