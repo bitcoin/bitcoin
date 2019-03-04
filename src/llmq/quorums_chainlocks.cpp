@@ -344,6 +344,8 @@ void CChainLocksHandler::NewPoWValidBlock(const CBlockIndex* pindex, const std::
         return;
     }
 
+    int64_t curTime = GetAdjustedTime();
+
     // We listen for NewPoWValidBlock so that we can collect all TX ids of all included TXs of newly received blocks
     // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
     // safe.
@@ -357,13 +359,9 @@ void CChainLocksHandler::NewPoWValidBlock(const CBlockIndex* pindex, const std::
             }
         }
         txs->emplace(tx->GetHash());
-    }
-    blockTxs[pindex->GetBlockHash()] = txs;
-
-    int64_t curTime = GetAdjustedTime();
-    for (auto& tx : block->vtx) {
         txFirstSeenTime.emplace(tx->GetHash(), curTime);
     }
+    blockTxs[pindex->GetBlockHash()] = txs;
 }
 
 void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
