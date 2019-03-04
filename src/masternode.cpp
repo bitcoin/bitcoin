@@ -128,6 +128,13 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 
 void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
 {
+    if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
+        nActiveState = MASTERNODE_NEW_START_REQUIRED;
+        if(nActiveStatePrev != nActiveState) {
+            LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
+        }
+        return;
+    }
     if(IsEnabled() && !payeeScripts.empty()){
         const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
         if(payeeScripts.find(mnScript) == payeeScripts.end()){
