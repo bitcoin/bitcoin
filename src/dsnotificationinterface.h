@@ -24,7 +24,7 @@ protected:
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) override;
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) override;
     void NotifyMasternodeListChanged(const CDeterministicMNList& newList) override;
-    void NotifyChainLock(const CBlockIndex* pindex);
+    void NotifyChainLock(const CBlockIndex* pindex) override;
 
 private:
     CConnman& connman;
