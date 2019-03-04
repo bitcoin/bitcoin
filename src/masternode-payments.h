@@ -105,7 +105,7 @@ public:
 	bool GetBestPayee(CScript& payeeRet, int &nStartHeightBlock) const;
     bool HasPayeeWithVotes(const CScript& payeeIn, int nVotesReq, CMasternodePayee& payee) const;
 
-    bool IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes, bool retry = false) const;
+    bool IsTransactionValid(const CTransaction& txNew, const int64_t &nHeight, const CAmount& fee, CAmount& nTotalRewardWithMasternodes) const;
 
     std::string GetRequiredPaymentsString() const;
 };
