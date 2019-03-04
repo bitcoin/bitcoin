@@ -543,7 +543,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
                 } else {
                     // Looks like we're trying to process a recSig that is already known. This might happen if the same
                     // recSig comes in through regular QRECSIG messages and at the same time through some other message
-                    // which allowed to reconstruct a recSig (e.g. IXLOCK). In this case, just bail out.
+                    // which allowed to reconstruct a recSig (e.g. ISLOCK). In this case, just bail out.
                 }
                 return;
             } else {

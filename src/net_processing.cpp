@@ -977,7 +977,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return llmq::quorumSigningManager->AlreadyHave(inv);
     case MSG_CLSIG:
         return llmq::chainLocksHandler->AlreadyHave(inv);
-    case MSG_IXLOCK:
+    case MSG_ISLOCK:
         return llmq::quorumInstantSendManager->AlreadyHave(inv);
     }
 
@@ -1299,10 +1299,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!push && (inv.type == MSG_IXLOCK)) {
-                    llmq::CInstantXLock o;
-                    if (llmq::quorumInstantSendManager->GetInstantXLockByHash(inv.hash, o)) {
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::IXLOCK, o));
+                if (!push && (inv.type == MSG_ISLOCK)) {
+                    llmq::CInstantSendLock o;
+                    if (llmq::quorumInstantSendManager->GetInstantSendLockByHash(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::ISLOCK, o));
                         push = true;
                     }
                 }
@@ -1788,7 +1788,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             case MSG_CLSIG:
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
-                            case MSG_IXLOCK:
+                            case MSG_ISLOCK:
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
                         }

@@ -307,7 +307,7 @@ void CChainLocksHandler::TrySignChainTip()
                     }
                 }
 
-                if (txAge < WAIT_FOR_IXLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+                if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
                     LogPrintf("CChainLocksHandler::%s -- not signing block %s due to TX %s not being ixlocked and not old enough. age=%d\n", __func__,
                               pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
                     return;
@@ -396,7 +396,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
         }
     }
 
-    if (txAge < WAIT_FOR_IXLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+    if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
         return false;
     }
     return true;

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DASH_QUORUMS_INSTANTX_H
-#define DASH_QUORUMS_INSTANTX_H
+#ifndef DASH_QUORUMS_INSTANTSEND_H
+#define DASH_QUORUMS_INSTANTSEND_H
 
 #include "quorums_signing.h"
 
@@ -18,7 +18,7 @@ class CScheduler;
 namespace llmq
 {
 
-class CInstantXLock
+class CInstantSendLock
 {
 public:
     std::vector<COutPoint> inputs;
@@ -39,14 +39,14 @@ public:
     uint256 GetRequestId() const;
 };
 
-class CInstantXLockInfo
+class CInstantSendLockInfo
 {
 public:
-    // might be nullptr when ixlock is received before the TX itself
+    // might be nullptr when islock is received before the TX itself
     CTransactionRef tx;
-    CInstantXLock ixlock;
+    CInstantSendLock islock;
     // only valid when recovered sig was received
-    uint256 ixlockHash;
+    uint256 islockHash;
     // time when it was created/received
     int64_t time;
 
@@ -68,27 +68,27 @@ private:
     std::unordered_map<uint256, uint256, StaticSaltedHasher> inputVotes;
 
     /**
-     * These are the ixlocks that are currently in the middle of being created. Entries are created when we observed
-     * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the ixlock.
-     * When the recovered sig for the ixlock later arrives, we can finish the ixlock and propagate it.
+     * These are the islocks that are currently in the middle of being created. Entries are created when we observed
+     * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the islock.
+     * When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
-    std::unordered_map<uint256, CInstantXLockInfo, StaticSaltedHasher> creatingInstantXLocks;
-    // maps from txid to the in-progress ixlock
-    std::unordered_map<uint256, CInstantXLockInfo*, StaticSaltedHasher> txToCreatingInstantXLocks;
+    std::unordered_map<uint256, CInstantSendLockInfo, StaticSaltedHasher> creatingInstantSendLocks;
+    // maps from txid to the in-progress islock
+    std::unordered_map<uint256, CInstantSendLockInfo*, StaticSaltedHasher> txToCreatingInstantSendLocks;
 
     /**
-     * These are the final ixlocks, indexed by their own hash. The other maps are used to get from TXs, inputs and blocks
-     * to ixlocks.
+     * These are the final islocks, indexed by their own hash. The other maps are used to get from TXs, inputs and blocks
+     * to islocks.
      */
-    std::unordered_map<uint256, CInstantXLockInfo, StaticSaltedHasher> finalInstantXLocks;
-    std::unordered_map<uint256, CInstantXLockInfo*, StaticSaltedHasher> txToInstantXLock;
-    std::unordered_map<COutPoint, CInstantXLockInfo*, SaltedOutpointHasher> inputToInstantXLock;
-    std::unordered_multimap<uint256, CInstantXLockInfo*, StaticSaltedHasher> blockToInstantXLocks;
+    std::unordered_map<uint256, CInstantSendLockInfo, StaticSaltedHasher> finalInstantSendLocks;
+    std::unordered_map<uint256, CInstantSendLockInfo*, StaticSaltedHasher> txToInstantSendLock;
+    std::unordered_map<COutPoint, CInstantSendLockInfo*, SaltedOutpointHasher> inputToInstantSendLock;
+    std::unordered_multimap<uint256, CInstantSendLockInfo*, StaticSaltedHasher> blockToInstantSendLocks;
 
     const CBlockIndex* pindexLastChainLock{nullptr};
 
     // Incoming and not verified yet
-    std::unordered_map<uint256, std::pair<NodeId, CInstantXLock>> pendingInstantXLocks;
+    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>> pendingInstantSendLocks;
     bool hasScheduledProcessPending{false};
 
 public:
@@ -108,27 +108,27 @@ public:
 
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
-    void HandleNewInstantXLockRecoveredSig(const CRecoveredSig& recoveredSig);
+    void HandleNewInstantSendLockRecoveredSig(const CRecoveredSig& recoveredSig);
 
-    void TrySignInstantXLock(const CTransaction& tx);
+    void TrySignInstantSendLock(const CTransaction& tx);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    void ProcessMessageInstantXLock(CNode* pfrom, const CInstantXLock& ixlock, CConnman& connman);
-    bool PreVerifyInstantXLock(NodeId nodeId, const CInstantXLock& ixlock, bool& retBan);
-    void ProcessPendingInstantXLocks();
-    void ProcessInstantXLock(NodeId from, const uint256& hash, const CInstantXLock& ixlock);
+    void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLock& islock, CConnman& connman);
+    bool PreVerifyInstantSendLock(NodeId nodeId, const CInstantSendLock& islock, bool& retBan);
+    void ProcessPendingInstantSendLocks();
+    void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
     void UpdateWalletTransaction(const uint256& txid);
 
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void NotifyChainLock(const CBlockIndex* pindex);
-    void UpdateIxLockMinedBlock(CInstantXLockInfo* ixlockInfo, const CBlockIndex* pindex);
-    void RemoveFinalIxLock(const uint256& hash);
+    void UpdateISLockMinedBlock(CInstantSendLockInfo* islockInfo, const CBlockIndex* pindex);
+    void RemoveFinalISLock(const uint256& hash);
 
-    void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantXLock& ixlock);
+    void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void RetryLockMempoolTxs(const uint256& lockedParentTx);
 
     bool AlreadyHave(const CInv& inv);
-    bool GetInstantXLockByHash(const uint256& hash, CInstantXLock& ret);
+    bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
 };
 
 extern CInstantSendManager* quorumInstantSendManager;
@@ -144,4 +144,4 @@ bool IsInstantSendEnabled();
 
 }
 
-#endif//DASH_QUORUMS_INSTANTX_H
+#endif//DASH_QUORUMS_INSTANTSEND_H

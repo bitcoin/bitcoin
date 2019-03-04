@@ -3346,7 +3346,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                                 int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType nCoinType, bool fUseInstantSend, int nExtraPayloadSize)
 {
     if (!llmq::IsOldInstantSendEnabled()) {
-        // The new system does not require special handling for InstantSend as this is all done in CInstantXManager.
+        // The new system does not require special handling for InstantSend as this is all done in CInstantSendManager.
         // There is also no need for an extra fee anymore.
         fUseInstantSend = false;
     }
