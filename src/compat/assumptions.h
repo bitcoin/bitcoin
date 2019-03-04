@@ -17,6 +17,17 @@
 # error "Bitcoin cannot be compiled without assertions."
 #endif
 
+// Assumption: We assume a C++11 (ISO/IEC 14882:2011) compiler (minimum requirement).
+// Example(s): We assume the presence of C++11 features everywhere :-)
+// Note:       MSVC does not report the expected __cplusplus value due to legacy
+//             reasons.
+#if !defined(_MSC_VER)
+// ISO Standard C++11 [cpp.predefined]p1:
+// "The name __cplusplus is defined to the value 201103L when compiling a C++
+//  translation unit."
+static_assert(__cplusplus >= 201103L, "C++11 standard assumed");
+#endif
+
 // Assumption: We assume the floating-point types to fulfill the requirements of
 //             IEC 559 (IEEE 754) standard.
 // Example(s): Floating-point division by zero in ConnectBlock, CreateTransaction
