@@ -6,8 +6,19 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <interfaces/wallet.h>
+#include <net.h>
+#include <policy/fees.h>
+#include <policy/policy.h>
+#include <policy/rbf.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
+#include <protocol.h>
 #include <sync.h>
+#include <threadsafety.h>
+#include <timedata.h>
+#include <txmempool.h>
+#include <ui_interface.h>
 #include <uint256.h>
 #include <util/system.h>
 #include <validation.h>
@@ -132,6 +143,17 @@ class LockImpl : public Chain::Lock
         }
         return nullopt;
     }
+    bool checkFinalTx(const CTransaction& tx) override
+    {
+        LockAnnotation lock(::cs_main);
+        return CheckFinalTx(tx);
+    }
+    bool submitToMemoryPool(CTransactionRef tx, CAmount absurd_fee, CValidationState& state) override
+    {
+        LockAnnotation lock(::cs_main);
+        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
+            false /* bypass limits */, absurd_fee);
+    }
 };
 
 class LockingStateImpl : public LockImpl, public UniqueLock<CCriticalSection>
@@ -177,6 +199,61 @@ public:
         LOCK(cs_main);
         return GuessVerificationProgress(Params().TxData(), LookupBlockIndex(block_hash));
     }
+    RBFTransactionState isRBFOptIn(const CTransaction& tx) override
+    {
+        LOCK(::mempool.cs);
+        return IsRBFOptIn(tx, ::mempool);
+    }
+    bool hasDescendantsInMempool(const uint256& txid) override
+    {
+        LOCK(::mempool.cs);
+        auto it_mp = ::mempool.mapTx.find(txid);
+        return it_mp != ::mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1;
+    }
+    void relayTransaction(const uint256& txid) override
+    {
+        CInv inv(MSG_TX, txid);
+        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+    }
+    void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
+    {
+        ::mempool.GetTransactionAncestry(txid, ancestors, descendants);
+    }
+    bool checkChainLimits(CTransactionRef tx) override
+    {
+        LockPoints lp;
+        CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
+        CTxMemPool::setEntries ancestors;
+        auto limit_ancestor_count = gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
+        auto limit_ancestor_size = gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT) * 1000;
+        auto limit_descendant_count = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+        auto limit_descendant_size = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000;
+        std::string unused_error_string;
+        LOCK(::mempool.cs);
+        return ::mempool.CalculateMemPoolAncestors(entry, ancestors, limit_ancestor_count, limit_ancestor_size,
+            limit_descendant_count, limit_descendant_size, unused_error_string);
+    }
+    CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc) override
+    {
+        return ::feeEstimator.estimateSmartFee(num_blocks, calc, conservative);
+    }
+    unsigned int estimateMaxBlocks() override
+    {
+        return ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+    }
+    CFeeRate mempoolMinFee() override
+    {
+        return ::mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    }
+    CAmount maxTxFee() override { return ::maxTxFee; }
+    bool getPruneMode() override { return ::fPruneMode; }
+    bool p2pEnabled() override { return g_connman != nullptr; }
+    bool isInitialBlockDownload() override { return IsInitialBlockDownload(); }
+    int64_t getAdjustedTime() override { return GetAdjustedTime(); }
+    void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
+    void initWarning(const std::string& message) override { InitWarning(message); }
+    void initError(const std::string& message) override { InitError(message); }
+    void loadWallet(std::unique_ptr<Wallet> wallet) override { ::uiInterface.LoadWallet(wallet); }
 };
 
 } // namespace

@@ -5,19 +5,26 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
-#include <optional.h>
+#include <optional.h>               // For Optional and nullopt
+#include <policy/rbf.h>             // For RBFTransactionState
+#include <primitives/transaction.h> // For CTransactionRef
 
 #include <memory>
+#include <stddef.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
 class CBlock;
 class CScheduler;
+class CValidationState;
 class uint256;
 struct CBlockLocator;
+struct FeeCalculation;
 
 namespace interfaces {
+
+class Wallet;
 
 //! Interface for giving wallet processes access to blockchain state.
 class Chain
@@ -102,6 +109,13 @@ public:
         //! is guaranteed to be an ancestor of the block used to create the
         //! locator.
         virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
+
+        //! Check if transaction will be final given chain height current time.
+        virtual bool checkFinalTx(const CTransaction& tx) = 0;
+
+        //! Add transaction to memory pool if the transaction fee is below the
+        //! amount specified by absurd_fee (as a safeguard). */
+        virtual bool submitToMemoryPool(CTransactionRef tx, CAmount absurd_fee, CValidationState& state) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
@@ -127,6 +141,60 @@ public:
     //! Estimate fraction of total transactions verified if blocks up to
     //! the specified block hash are verified.
     virtual double guessVerificationProgress(const uint256& block_hash) = 0;
+
+    //! Check if transaction is RBF opt in.
+    virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
+
+    //! Check if transaction has descendants in mempool.
+    virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
+
+    //! Relay transaction.
+    virtual void relayTransaction(const uint256& txid) = 0;
+
+    //! Calculate mempool ancestor and descendant counts for the given transaction.
+    virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
+
+    //! Check chain limits.
+    virtual bool checkChainLimits(CTransactionRef tx) = 0;
+
+    //! Estimate smart fee.
+    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc = nullptr) = 0;
+
+    //! Fee estimator max target.
+    virtual unsigned int estimateMaxBlocks() = 0;
+
+    //! Pool min fee.
+    virtual CFeeRate mempoolMinFee() = 0;
+
+    //! Get node max tx fee setting (-maxtxfee).
+    //! This could be replaced by a per-wallet max fee, as proposed at
+    //! https://github.com/bitcoin/bitcoin/issues/15355
+    //! But for the time being, wallets call this to access the node setting.
+    virtual CAmount maxTxFee() = 0;
+
+    //! Check if pruning is enabled.
+    virtual bool getPruneMode() = 0;
+
+    //! Check if p2p enabled.
+    virtual bool p2pEnabled() = 0;
+
+    // Check if in IBD.
+    virtual bool isInitialBlockDownload() = 0;
+
+    //! Get adjusted time.
+    virtual int64_t getAdjustedTime() = 0;
+
+    //! Send init message.
+    virtual void initMessage(const std::string& message) = 0;
+
+    //! Send init warning.
+    virtual void initWarning(const std::string& message) = 0;
+
+    //! Send init error.
+    virtual void initError(const std::string& message) = 0;
+
+    //! Send wallet load notification to the GUI.
+    virtual void loadWallet(std::unique_ptr<Wallet> wallet) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

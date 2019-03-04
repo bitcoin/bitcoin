@@ -33,7 +33,7 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
 UniValue DescribeAddress(const CTxDestination& dest);
 
 //! Parse a confirm target option and raise an RPC error if it is invalid.
-unsigned int ParseConfirmTarget(const UniValue& value);
+unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
