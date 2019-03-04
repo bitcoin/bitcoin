@@ -128,6 +128,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
 
 void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
 {
+    const int nActiveStatePrev = nActiveState;
     if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
         nActiveState = MASTERNODE_NEW_START_REQUIRED;
         if(nActiveStatePrev != nActiveState) {
@@ -184,7 +185,7 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
         return;
     }
 
-    int nActiveStatePrev = nActiveState;
+   
     bool fOurMasternode = fMasternodeMode && activeMasternode.pubKeyMasternode == pubKeyMasternode;
 
                    // masternode doesn't meet payment protocol requirements ...
