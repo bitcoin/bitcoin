@@ -40,8 +40,13 @@ static_assert(sizeof(double) == 8, "64-bit double assumed");
 static_assert(sizeof(short) == 2, "16-bit short assumed");
 static_assert(sizeof(int) == 4, "32-bit int assumed");
 
+// Assumption: We assume size_t to be 32-bit or 64-bit.
+// Example(s): size_t assumed to be at least 32-bit in ecdsa_signature_parse_der_lax(...).
+//             size_t assumed to be 32-bit or 64-bit in MallocUsage(...).
+static_assert(sizeof(size_t) == 4 || sizeof(size_t) == 8, "size_t assumed to be 32-bit or 64-bit");
+static_assert(sizeof(size_t) == sizeof(void*), "Sizes of size_t and void* assumed to be equal");
+
 // Some important things we are NOT assuming (non-exhaustive list):
-// * We are NOT assuming a specific value for sizeof(std::size_t).
 // * We are NOT assuming a specific value for std::endian::native.
 // * We are NOT assuming a specific value for std::locale("").name().
 // * We are NOT assuming a specific value for std::numeric_limits<char>::is_signed.
