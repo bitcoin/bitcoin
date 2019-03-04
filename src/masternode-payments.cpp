@@ -238,8 +238,6 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int nBlockH
     CScript payee;
 	int nStartHeightBlock = 0;
     if(!GetBlockPayee(nBlockHeight, payee, nStartHeightBlock)) {
-        // make sure to run masternode checks before trying to get next masternode in queue
-        mnodeman.Check(true);
         // no masternode detected...
         int nCount = 0;
         masternode_info_t mnInfo;
@@ -620,12 +618,6 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 		nTotalRewardWithMasternodes  -= fee;
 		return true;
 	}
-    if(!retry){
-        // do check and try again incase of inconsistencies
-        mnodeman.Check(true);
-        if(IsTransactionValid(txNew, nHeight, fee, nTotalRewardWithMasternodes, true))
-            return true;
-    }
     LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s', amount: %f SYS\n", strPayeesPossible, (float)nMasternodePayment/COIN);
     return false;
 }
@@ -789,12 +781,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight, CConnman& connman)
     masternode_info_t mnInfo;
 
     if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
-        // run masternode check and check again incase of inconsistencies
-        mnodeman.Check(true);
-        if (!mnodeman.GetNextMasternodeInQueueForPayment(nBlockHeight, true, nCount, mnInfo)) {
-            LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- ERROR: Failed to find masternode to pay\n");
-            return false;
-        }
+        LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- ERROR: Failed to find masternode to pay\n");
+        return false;
     }
 
     LogPrint(BCLog::MNPAYMENT, "CMasternodePayments::ProcessBlock -- Masternode found by GetNextMasternodeInQueueForPayment(): %s\n", mnInfo.outpoint.ToStringShort());
