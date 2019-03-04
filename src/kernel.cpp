@@ -35,7 +35,8 @@ const unsigned int nProtocolV07SwitchTime     = 1552392000; // Tue 12 Mar 12:00:
 const unsigned int nProtocolV07TestSwitchTime = 1541505600; // Tue 06 Nov 12:00:00 UTC 2018
 
 // Switch time for new BIPs from bitcoin 0.16.x
-const uint32_t nBTC16BIPsSwitchTime = 1559260800; // Fri 31 May 00:00:00 UTC 2019
+const uint32_t nBTC16BIPsSwitchTime = 32548219200; // Fri 31 May 12:00:00 UTC 3001
+const uint32_t nBTC16BIPsTestSwitchTime = 1559260800; // Fri 31 May 00:00:00 UTC 2019
 
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
@@ -107,7 +108,8 @@ bool IsProtocolV07(unsigned int nTimeTx)
 
 bool IsBTC16BIPsEnabled(uint32_t nTimeTx)
 {
-    return nTimeTx >= nBTC16BIPsSwitchTime;
+    bool fTestNet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
+    return (nTimeTx >= (fTestNet? nBTC16BIPsTestSwitchTime : nBTC16BIPsSwitchTime));
 }
 
 // Get the last stake modifier and its generation time from a given block
