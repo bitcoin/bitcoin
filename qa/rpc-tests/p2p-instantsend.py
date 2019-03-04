@@ -28,7 +28,7 @@ class InstantSendTest(DashTestFramework):
         print("Test old InstantSend")
         self.test_doublespend()
 
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 1)
+        self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 0)
         self.wait_for_sporks_same()
 
         print("Test new InstantSend")
