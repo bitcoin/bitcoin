@@ -28,9 +28,10 @@ static const int SPORK_16_INSTANTSEND_AUTOLOCKS                         = 10015;
 static const int SPORK_17_QUORUM_DKG_ENABLED                            = 10016;
 static const int SPORK_18_QUORUM_DEBUG_ENABLED                          = 10017;
 static const int SPORK_19_CHAINLOCKS_ENABLED                            = 10018;
+static const int SPORK_20_INSTANTSEND_LLMQ_BASED                        = 10019;
 
 static const int SPORK_START                                            = SPORK_2_INSTANTSEND_ENABLED;
-static const int SPORK_END                                              = SPORK_19_CHAINLOCKS_ENABLED;
+static const int SPORK_END                                              = SPORK_20_INSTANTSEND_LLMQ_BASED;
 
 extern std::map<int, int64_t> mapSporkDefaults;
 extern CSporkManager sporkManager;

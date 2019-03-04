@@ -861,26 +861,17 @@ bool CInstantSendManager::GetConflictingTx(const CTransaction& tx, uint256& retC
 
 bool IsOldInstantSendEnabled()
 {
-    int spork2Value = sporkManager.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED);
-    if (spork2Value == 0) {
-        return true;
-    }
-    return false;
+    return sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED) && !sporkManager.IsSporkActive(SPORK_20_INSTANTSEND_LLMQ_BASED);
 }
 
 bool IsNewInstantSendEnabled()
 {
-    int spork2Value = sporkManager.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED);
-    if (spork2Value == 1) {
-        return true;
-    }
-    return false;
+    return sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED) && sporkManager.IsSporkActive(SPORK_20_INSTANTSEND_LLMQ_BASED);
 }
 
 bool IsInstantSendEnabled()
 {
-    int spork2Value = sporkManager.GetSporkValue(SPORK_2_INSTANTSEND_ENABLED);
-    return spork2Value == 0 || spork2Value == 1;
+    return sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED);
 }
 
 }
