@@ -4,11 +4,9 @@
 
 #include <key_io.h>
 #include <keystore.h>
-#include <policy/fees.h>
 #include <rpc/util.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
-#include <validation.h>
 
 InitInterfaces* g_rpc_interfaces = nullptr;
 
@@ -130,10 +128,9 @@ UniValue DescribeAddress(const CTxDestination& dest)
     return boost::apply_visitor(DescribeAddressVisitor(), dest);
 }
 
-unsigned int ParseConfirmTarget(const UniValue& value)
+unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
 {
     int target = value.get_int();
-    unsigned int max_target = ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
     if (target < 1 || (unsigned int)target > max_target) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid conf_target, must be between %u - %u", 1, max_target));
     }
