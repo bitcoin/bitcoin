@@ -130,6 +130,7 @@ bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
 
 void CMasternodeMan::Check(bool fForce)
 {
+    static bool bFirstTime = true;
 	// SYSCOIN remove csmain lock
     LOCK(cs);
     std::set<CScript> payeeScripts;
@@ -151,9 +152,13 @@ void CMasternodeMan::Check(bool fForce)
         }
     }
     if(payeeScripts.empty()){
-        LogPrint(BCLog::MN, "CMasternodeMan::Check -- Masternode winners list is empty, skipping...\n");
-        return;
+        if(!bFirstTime){
+            LogPrint(BCLog::MN, "CMasternodeMan::Check -- Masternode winners list is empty, skipping...\n");
+            return;
+        }
     }
+    if(masternodeSync.IsSynced())
+        bFirstTime = true;
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
