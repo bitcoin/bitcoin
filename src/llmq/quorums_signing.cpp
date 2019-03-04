@@ -440,7 +440,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
     }
 }
 
-bool CSigningManager::ProcessPendingReconstructedRecoveredSigs()
+void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
 {
     decltype(pendingReconstructedRecoveredSigs) l;
     {
