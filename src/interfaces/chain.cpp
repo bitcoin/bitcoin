@@ -148,7 +148,7 @@ class LockImpl : public Chain::Lock
         LockAnnotation lock(::cs_main);
         return CheckFinalTx(tx);
     }
-    bool submitToMemoryPool(CTransactionRef tx, CAmount absurd_fee, CValidationState& state) override
+    bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) override
     {
         LockAnnotation lock(::cs_main);
         return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
@@ -207,8 +207,8 @@ public:
     bool hasDescendantsInMempool(const uint256& txid) override
     {
         LOCK(::mempool.cs);
-        auto it_mp = ::mempool.mapTx.find(txid);
-        return it_mp != ::mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1;
+        auto it = ::mempool.GetIter(txid);
+        return it && (*it)->GetCountWithDescendants() > 1;
     }
     void relayTransaction(const uint256& txid) override
     {
@@ -219,7 +219,7 @@ public:
     {
         ::mempool.GetTransactionAncestry(txid, ancestors, descendants);
     }
-    bool checkChainLimits(CTransactionRef tx) override
+    bool checkChainLimits(const CTransactionRef& tx) override
     {
         LockPoints lp;
         CTxMemPoolEntry entry(tx, 0, 0, 0, false, 0, lp);
