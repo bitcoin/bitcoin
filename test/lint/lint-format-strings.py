@@ -262,27 +262,27 @@ def main():
     parser.add_argument("--skip-arguments", type=int, help="number of arguments before the format string "
                         "argument (e.g. 1 in the case of fprintf)", default=0)
     parser.add_argument("function_name", help="function name (e.g. fprintf)", default=None)
-    parser.add_argument("file", type=argparse.FileType("r", encoding="utf-8"), nargs="*", help="C++ source code file (e.g. foo.cpp)")
+    parser.add_argument("file", nargs="*", help="C++ source code file (e.g. foo.cpp)")
     args = parser.parse_args()
-
     exit_code = 0
-    for f in args.file:
-        for function_call_str in parse_function_calls(args.function_name, f.read()):
-            parts = parse_function_call_and_arguments(args.function_name, function_call_str)
-            relevant_function_call_str = unescape("".join(parts))[:512]
-            if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
-                continue
-            if len(parts) < 3 + args.skip_arguments:
-                exit_code = 1
-                print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
-                continue
-            argument_count = len(parts) - 3 - args.skip_arguments
-            format_str = parse_string_content(parts[1 + args.skip_arguments])
-            format_specifier_count = count_format_specifiers(format_str)
-            if format_specifier_count != argument_count:
-                exit_code = 1
-                print("{}: Expected {} argument(s) after format string but found {} argument(s): {}".format(f.name, format_specifier_count, argument_count, relevant_function_call_str))
-                continue
+    for filename in args.file:
+        with open(filename, "r", encoding="utf-8") as f:
+            for function_call_str in parse_function_calls(args.function_name, f.read()):
+                parts = parse_function_call_and_arguments(args.function_name, function_call_str)
+                relevant_function_call_str = unescape("".join(parts))[:512]
+                if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
+                    continue
+                if len(parts) < 3 + args.skip_arguments:
+                    exit_code = 1
+                    print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
+                    continue
+                argument_count = len(parts) - 3 - args.skip_arguments
+                format_str = parse_string_content(parts[1 + args.skip_arguments])
+                format_specifier_count = count_format_specifiers(format_str)
+                if format_specifier_count != argument_count:
+                    exit_code = 1
+                    print("{}: Expected {} argument(s) after format string but found {} argument(s): {}".format(f.name, format_specifier_count, argument_count, relevant_function_call_str))
+                    continue
     sys.exit(exit_code)
 
 
