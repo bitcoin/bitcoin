@@ -158,7 +158,7 @@ void CMasternodeMan::Check(bool fForce)
         }
     }
     if(masternodeSync.IsSynced())
-        bFirstTime = true;
+        bFirstTime = false;
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
