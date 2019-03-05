@@ -225,7 +225,6 @@ class CAssetIndexDB : public CDBWrapper {
 public:
     CAssetIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetindex", nCacheSize, fMemory, fWipe) {
     }
-
     bool ReadIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint64_t &page, std::vector<uint256> &TXIDS) {
         return Read(std::make_pair(allocationTuple.ToString(), page), TXIDS);
     }
@@ -263,8 +262,17 @@ public:
         std::string strPayload;
         bool res = Read(txid, strPayload);
         return res && payload.read(strPayload);
-    }    
-    bool ScanAssetIndex(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
+    } 
+    bool ReadBlockHash(const uint256& txid, uint256& block_hash){
+        return Read(std::make_pair(std::string("bh"), txid), block_hash);
+    }
+    bool WriteBlockHash(const uint256& txid, const uint256& block_hash){
+        return Write(std::make_pair(std::string("bh"), txid), block_hash);
+    } 
+    bool EraseBlockHash(const uint256& txid){
+        return Erase(std::make_pair(std::string("bh"), txid));
+    }       
+    bool ScanAssetIndex(const uint64_t page, const UniValue& oOptions, UniValue& oRes);
 };
 static CAsset emptyAsset;
 bool GetAsset(const int &nAsset,CAsset& txPos);

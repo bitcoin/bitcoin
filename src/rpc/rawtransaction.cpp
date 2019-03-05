@@ -35,7 +35,8 @@
 #include <stdint.h>
 
 #include <univalue.h>
-
+// SYSCOIN
+#include <services/asset.h>
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -167,6 +168,16 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
         in_active_chain = chainActive.Contains(blockindex);
+    }else if(fAssetIndex){      
+        LOCK(cs_main);
+        uint256 blockhash;
+        if(!passetindexdb->ReadBlockHash(hash, blockhash))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
+        blockindex = LookupBlockIndex(blockhash);
+        if (!blockindex) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+        }
+        in_active_chain = chainActive.Contains(blockindex);       
     }
 
     bool f_txindex_ready = false;

@@ -2114,7 +2114,95 @@ UniValue listassets(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
 	return oRes;
 }
+bool CAssetIndexDB::ScanAssetIndex(const uint64_t page, const UniValue& oOptions, UniValue& oRes) {
+    CAssetAllocationTuple assetTuple;
+    uint32_t nAsset = 0;
+    if (!oOptions.isNull()) {
+        const UniValue &assetObj = find_value(oOptions, "asset");
+        if (assetObj.isNum()) {
+            nAsset = boost::lexical_cast<uint32_t>(assetObj.get_int());
+        }
+        else
+            return false;
 
+        const UniValue &addressObj = find_value(oOptions, "address");
+        if (addressObj.isStr()) {
+            const CTxDestination &dest = DecodeDestination(addressObj.get_str());
+            UniValue detail = DescribeAddress(dest);
+            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+            unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
+            assetTuple = CAssetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+        }
+    }
+    else
+        return false;
+    vector<uint256> vecTX;
+    uint64_t pageFound;
+    bool scanAllocation = !assetTuple.IsNull();
+    if(scanAllocation){
+        if(!ReadAssetAllocationPage(pageFound))
+            return true;
+    }
+    else{
+        if(!ReadAssetPage(pageFound))
+            return true;
+    }
+    if(pageFound < page)
+        return false;
+    if(scanAllocation){
+        if(!ReadIndexTXIDs(assetTuple, page, vecTX))
+            return false;
+    }
+    else{
+        if(!ReadIndexTXIDs(nAsset, page, vecTX))
+            return false;
+    }
+    uint256 block_hash;
+    for(const uint256& txid: vecTX){
+        UniValue oObj(UniValue::VOBJ);
+        if(!ReadPayload(txid, oObj))
+            return false;
+        if(ReadBlockHash(txid, block_hash)){
+            oObj.pushKV("block_hash", block_hash.GetHex());        
+        }
+        else
+            oObj.pushKV("block_hash", "");
+           
+        oRes.push_back(oObj);
+    }
+    return true;
+}
+UniValue listassetindex(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 2 != params.size())
+        throw runtime_error("listassetindex [page] [options]\n"
+            "Scan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n"
+            "[page]           (numeric, default=0) Return specific page number of transactions. Lower page number means more recent transactions.\n"
+            "[options]        (array, required) A json object with options to filter results\n"
+            "    {\n"
+            "      \"asset\":guid                   (number) Asset GUID to filter.\n"
+            "      \"address\":string               (string, optional) Address to filter. Leave empty to scan globally through asset.\n"
+            "    }\n"
+            + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
+            + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}'")
+        );
+    UniValue options;
+    uint64_t page = 10;
+   
+    page = params[0].get_int64();
+    if (page < 0) {
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'page' must be 0 or greater"));
+    }
+
+    options = params[1];
+    
+    UniValue oRes(UniValue::VARR);
+    if (!passetindexdb->ScanAssetIndex(page, options, oRes))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
+    return oRes;
+}
 UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 0 != params.size())

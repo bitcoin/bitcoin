@@ -2264,6 +2264,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         // SYSCOIN
         if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations))
             fClean = false;
+        if(fAssetIndex && !passetindexdb->EraseBlockHash(hash))
+            fClean = false;
     } 
     // SYSCOIN 
     if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets)){
