@@ -782,6 +782,11 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             const CTransaction &tx = *(block.vtx[i]);
             if(tx.IsCoinBase())
                 continue;
+            if(fAssetIndex){
+                if(!passetindexdb->WriteBlockHash(tx.GetHash(), block.GetHash())){
+                    return state.DoS(0, false, REJECT_INVALID, "Could not write block hash to asset index db");
+                }
+            }                
             if((tx.nVersion == SYSCOIN_TX_VERSION_MINT_SYSCOIN || tx.nVersion == SYSCOIN_TX_VERSION_MINT_ASSET) && !CheckSyscoinMint(ibd, tx, state, false, nHeight, mapAssets, mapAssetAllocations))
                 return state.DoS(100, error("%s: check syscoin mint", __func__), REJECT_INVALID, FormatStateMessage(state));
             else if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET)
