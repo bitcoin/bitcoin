@@ -165,8 +165,11 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
     }
     // index the allocation
     uint64_t page;
-    if(!passetindexdb->ReadAssetAllocationPage(page))
+    if(!passetindexdb->ReadAssetAllocationPage(page)){
         page = 0;
+        if(!passetindexdb->WriteAssetAllocationPage(page))
+            LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");           
+    }
    
     std::vector<uint256> TXIDS;
     passetindexdb->ReadIndexTXIDs(allocationTuple, page, TXIDS);
@@ -174,6 +177,8 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
     if(((int)TXIDS.size()) >= fAssetIndexPageSize){
         TXIDS.clear();
         page++;
+        if(!passetindexdb->WriteAssetAllocationPage(page))
+            LogPrint(BCLog::SYS, "Failed to write asset allocation page\n");        
     }
     TXIDS.push_back(txid);
     if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS))
@@ -182,8 +187,11 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
     
     
     // index into the asset as well        
-    if(!passetindexdb->ReadAssetPage(page))
+    if(!passetindexdb->ReadAssetPage(page)){
         page = 0;
+        if(!passetindexdb->WriteAssetPage(page))
+           LogPrint(BCLog::SYS, "Failed to write asset page\n");          
+    }
         
     TXIDS.clear();    
     passetindexdb->ReadIndexTXIDs(allocationTuple.nAsset, page, TXIDS);
@@ -191,6 +199,8 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
     if(((int)TXIDS.size()) >= fAssetIndexPageSize){
         TXIDS.clear();
         page++;
+        if(!passetindexdb->WriteAssetPage(page))
+            LogPrint(BCLog::SYS, "Failed to write asset page\n");
     }
     TXIDS.push_back(txid);
     if(!passetindexdb->WriteIndexTXIDs(allocationTuple.nAsset, page, TXIDS))
