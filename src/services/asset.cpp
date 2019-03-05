@@ -989,7 +989,7 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                 if(!passetindexdb->ReadAssetPage(page))
                     page = 0;
                 std::vector<uint256> TXIDS;
-                passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS)
+                passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS);
                 // new page needed
                 if(((int)TXIDS.size()) >= fAssetIndexPageSize){
                     TXIDS.clear();
