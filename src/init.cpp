@@ -1591,6 +1591,7 @@ bool AppInitMain()
                     passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
                 }                
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
+                fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
                 if(fAssetIndex)
                     passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
                     
@@ -1814,7 +1815,7 @@ bool AppInitMain()
     fLogThreadpool = LogAcceptCategory(BCLog::THREADPOOL);
     fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
     fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
-    fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
+    
     fAssetIndexPageSize = gArgs.GetArg("-assetindexpagesize", 25);
     if(fAssetIndexPageSize < 10 || fAssetIndexPageSize > 1000){
         return InitError(_("Asset index page size is invalid, must be between 10 and 1000."));
