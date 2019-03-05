@@ -539,9 +539,8 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
             LOCK(mempool.cs);
             int countInputs = 0;
             // fund with small inputs first
-            for (unsigned int i = 0; i < utxoArray.size(); i++)
+            for (int i = 0; i < (int)utxoArray.size(); i++)
             {
-                bool bOutputIndex = i == output_index || output_index < 0;
                 const UniValue& utxoObj = utxoArray[i].get_obj();
                 const string &strTxid = find_value(utxoObj, "txid").get_str();
                 const uint256& txid = uint256S(strTxid);
@@ -987,7 +986,7 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                     std::vector<uint256> TXIDS;
                     if(passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS)){
                         // new page needed
-                        if(TXIDS.size() >= fAssetIndexPageSize){
+                        if(((int)TXIDS.size()) >= fAssetIndexPageSize){
                             TXIDS.clear();
                             page++;
                         }
@@ -2084,7 +2083,7 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"    }\n"
 			+ HelpExampleCli("listassets", "0")
 			+ HelpExampleCli("listassets", "10 10")
-			+ HelpExampleCli("listassets", "0 0 '{\"addresses\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 			+ HelpExampleCli("listassets", "0 0 '{\"asset\":3473733}'")
 		);
 	UniValue options;
@@ -2186,7 +2185,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             "      \"address\":string               (string, optional) Address to filter. Leave empty to scan globally through asset.\n"
             "    }\n"
             + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
-            + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}'")
+            + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
         );
     UniValue options;
     uint64_t page = 10;
@@ -2201,6 +2200,33 @@ UniValue listassetindex(const JSONRPCRequest& request) {
     UniValue oRes(UniValue::VARR);
     if (!passetindexdb->ScanAssetIndex(page, options, oRes))
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
+    return oRes;
+}
+UniValue listassetindexassets(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 1 != params.size())
+        throw runtime_error("listassetindexassets [address]\n"
+            "Return a list of assets an address is associated with.\n"
+            "[asset]          (numeric, required) Address to find assets associated with.\n"
+            + HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+        );
+    const CTxDestination &dest = DecodeDestination(params[0].get_str());
+    UniValue detail = DescribeAddress(dest);
+    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
+ 
+    UniValue oRes(UniValue::VARR);
+    std::vector<uint32_t> assetGuids;
+    if (!passetindexdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Lookup failed"));
+        
+    for(const uint32_t& guid: assetGuids){
+        UniValue oObj(UniValue::VOBJ);
+        oObj.pushKV("asset", (int)guid);
+        oRes.push_back(oObj);
+    }
     return oRes;
 }
 UniValue syscoinstopgeth(const JSONRPCRequest& request) {
