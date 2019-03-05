@@ -58,6 +58,8 @@ extern bool fGethSynced;
 extern bool fLoaded;
 extern pid_t gethPID;
 extern pid_t relayerPID;
+extern bool fAssetIndex;
+extern int fAssetIndexPageSize;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.
     long MemTotalKiB;

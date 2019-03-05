@@ -89,6 +89,8 @@ bool fConcurrentProcessing = true;
 bool fLiteMode = false;
 bool fZMQAssetAllocation = false;
 bool fZMQAsset = false;
+bool fAssetIndex = false;
+int fAssetIndexPageSize = 25;
 uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;
 pid_t gethPID = 0;
@@ -1045,13 +1047,45 @@ fs::path GetGethPidFile()
 void KillProcess(const pid_t& pid){
     if(pid <= 0)
         return;
+    LogPrintf("%s: Trying to kill pid %d\n", __func__, pid);
     #ifdef WIN32
         HANDLE handy;
         handy =OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, TRUE,pid);
         TerminateProcess(handy,0);
     #endif  
     #ifndef WIN32
-        kill( pid, SIGTERM ) ;
+        int result = 0;
+        for(int i =0;i<10;i++){
+            MilliSleep(10);
+            result = kill( pid, SIGINT ) ;
+            if(result == 0){
+                LogPrintf("%s: Killing with SIGINT %d\n", __func__, pid);
+                continue;
+            }  
+            LogPrintf("%s: Killed with SIGINT\n", __func__);
+            return;
+        }
+        for(int i =0;i<10;i++){
+            MilliSleep(10);
+            result = kill( pid, SIGTERM ) ;
+            if(result == 0){
+                LogPrintf("%s: Killing with SIGTERM %d\n", __func__, pid);
+                continue;
+            }  
+            LogPrintf("%s: Killed with SIGTERM\n", __func__);
+            return;
+        }
+        for(int i =0;i<10;i++){
+            MilliSleep(10);
+            result = kill( pid, SIGKILL ) ;
+            if(result == 0){
+                LogPrintf("%s: Killing with SIGKILL %d\n", __func__, pid);
+                continue;
+            }  
+            LogPrintf("%s: Killed with SIGKILL\n", __func__);
+            return;
+        }  
+        LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
     #endif 
 }
 std::string GetGethFilename(){
