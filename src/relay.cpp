@@ -7,8 +7,7 @@
 
 void RelayTransaction(const uint256& txid, CConnman* connman)
 {
-    CInv inv(MSG_TX, txid);
-    connman.ForEachNode([&inv](CNode* node) {
-        node->PushInventory(inv);
+    connman.ForEachNode([&txid](CNode* node) {
+        node->PushTransactionInventory(txid);
     });
 }

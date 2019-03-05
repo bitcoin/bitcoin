@@ -839,16 +839,20 @@ public:
         }
     }
 
-    void PushInventory(const CInv& inv)
+    //! Pushes a tx inv to this peer, unless already known
+    void PushTransactionInventory(const uint256& txid)
     {
         LOCK(cs_inventory);
-        if (inv.type == MSG_TX) {
-            if (!filterInventoryKnown.contains(inv.hash)) {
-                setInventoryTxToSend.insert(inv.hash);
-            }
-        } else if (inv.type == MSG_BLOCK) {
-            vInventoryBlockToSend.push_back(inv.hash);
+        if (!filterInventoryKnown.contains(txid)) {
+            setInventoryTxToSend.insert(txid);
         }
+    }
+
+    //! Pushes a block inv to this peer
+    void PushBlockInventory(const uint256& blockhash)
+    {
+        LOCK(cs_inventory);
+        vInventoryBlockToSend.push_back(blockhash);
     }
 
     void PushBlockHash(const uint256 &hash)
