@@ -184,8 +184,7 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
     // index into the asset as well        
     if(!passetindexdb->ReadAssetPage(page))
         page = 0;
-
-    std::vector<uint256> TXIDS;
+        
     if(passetindexdb->ReadIndexTXIDs(allocationTuple.nAsset, page, TXIDS)){
         // new page needed
         if(((int)TXIDS.size()) >= fAssetIndexPageSize){
