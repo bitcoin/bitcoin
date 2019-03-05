@@ -221,6 +221,51 @@ public:
 	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
 };
+class CAssetIndexDB : public CDBWrapper {
+public:
+    CAssetIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetindex", nCacheSize, fMemory, fWipe) {
+    }
+
+    bool ReadIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint64_t &page, std::vector<uint256> &TXIDS) {
+        return Read(std::make_pair(allocationTuple.ToString(), page), TXIDS);
+    }
+    bool WriteIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint64_t &page, const std::vector<uint256> &TXIDS) {
+        return Write(std::make_pair(allocationTuple.ToString(), page), TXIDS);
+    }
+    bool ReadIndexTXIDs(const uint32_t &assetGuid, const uint64_t &page, std::vector<uint256> &TXIDS){
+        return Read(std::make_pair(assetGuid, page), TXIDS);
+    }
+    bool WriteIndexTXIDs(const uint32_t &assetGuid, const uint64_t &page, const std::vector<uint256> &TXIDS) {
+        return Write(std::make_pair(assetGuid, page), TXIDS);
+    } 
+    bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){
+        return Read(address, assetGuids);
+    }
+    bool WriteAssetsByAddress(const CWitnessAddress &address, const std::vector<uint32_t> &assetGuids) {
+        return Write(address, assetGuids);
+    }      
+    bool ReadAssetPage(uint64_t& page) {
+        return Read(std::string("assetindexpage"), page);
+    }
+    bool WriteAssetPage(const uint64_t &page) {
+        return Write(std::string("assetindexpage"), page);
+    }
+    bool ReadAssetAllocationPage(uint64_t& page) {
+        return Read(std::string("assetallocationindexpage"), page);
+    }
+    bool WriteAssetAllocationPage(const uint64_t &page) {
+        return Write(std::string("assetallocationindexpage"), page);
+    }
+    bool WritePayload(const uint256& txid, const UniValue& payload) {
+        return Write(txid, payload.write());
+    }
+    bool ReadPayload(const uint256& txid, UniValue& payload) {
+        std::string strPayload;
+        bool res = Read(txid, strPayload);
+        return res && payload.read(strPayload);
+    }    
+    bool ScanAssetIndex(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
+};
 static CAsset emptyAsset;
 bool GetAsset(const int &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
@@ -240,4 +285,5 @@ extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
+extern std::unique_ptr<CAssetIndexDB> passetindexdb;
 #endif // ASSET_H

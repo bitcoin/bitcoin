@@ -289,6 +289,7 @@ void PrepareShutdown()
     passetallocationdb.reset();
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
+    passetindexdb.reset();
     if (threadpool)
         delete threadpool;
     threadpool = NULL;
@@ -1574,6 +1575,7 @@ bool AppInitMain()
                 passetallocationdb.reset();
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
+                passetindexdb.reset();
                 
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset));
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset));
@@ -1587,7 +1589,9 @@ bool AppInitMain()
                     passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
                 }                
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
-
+                if(fAssetIndex)
+                    passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
+                    
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
