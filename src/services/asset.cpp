@@ -986,14 +986,19 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                     return;
                 }
                 uint64_t page;
-                if(!passetindexdb->ReadAssetPage(page))
+                if(!passetindexdb->ReadAssetPage(page)){
                     page = 0;
+                    if(!passetindexdb->WriteAssetPage(page))
+                       LogPrint(BCLog::SYS, "Failed to write asset page\n");                  
+                }
                 std::vector<uint256> TXIDS;
                 passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS);
                 // new page needed
                 if(((int)TXIDS.size()) >= fAssetIndexPageSize){
                     TXIDS.clear();
                     page++;
+                    if(!passetindexdb->WriteAssetPage(page))
+                        LogPrint(BCLog::SYS, "Failed to write asset page\n");
                 }
                 TXIDS.push_back(tx.GetHash());
                 if(!passetindexdb->WriteIndexTXIDs(dbAsset.nAsset, page, TXIDS))
