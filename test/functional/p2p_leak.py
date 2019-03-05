@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test message sending before handshake completion.
@@ -117,9 +117,9 @@ class P2PLeakTest(BitcoinTestFramework):
         wait_until(lambda: len(self.nodes[0].getpeerinfo()) == 0)
 
         # Make sure no unexpected messages came in
-        assert(no_version_bannode.unexpected_msg == False)
-        assert(no_version_idlenode.unexpected_msg == False)
-        assert(no_verack_idlenode.unexpected_msg == False)
+        assert no_version_bannode.unexpected_msg == False
+        assert no_version_idlenode.unexpected_msg == False
+        assert no_verack_idlenode.unexpected_msg == False
 
 
 if __name__ == '__main__':

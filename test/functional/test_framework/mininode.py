@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2018 The Bitcoin Core developers
+# Copyright (c) 2010-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin P2P network half-a-node.
@@ -218,10 +218,7 @@ class P2PConnection(asyncio.Protocol):
         def maybe_write():
             if not self._transport:
                 return
-            # Python <3.4.4 does not have is_closing, so we have to check for
-            # its existence explicitly as long as Bitcoin Core supports all
-            # Python 3.4 versions.
-            if hasattr(self._transport, 'is_closing') and self._transport.is_closing():
+            if self._transport.is_closing():
                 return
             self._transport.write(raw_message_bytes)
         NetworkThread.network_event_loop.call_soon_threadsafe(maybe_write)

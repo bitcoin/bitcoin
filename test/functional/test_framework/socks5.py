@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
@@ -144,7 +144,7 @@ class Socks5Server():
                 thread.start()
 
     def start(self):
-        assert(not self.running)
+        assert not self.running
         self.running = True
         self.thread = threading.Thread(None, self.run)
         self.thread.daemon = True
