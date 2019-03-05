@@ -20,10 +20,9 @@ bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, std::vector<std::v
 bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
 bool DecodeAssetAllocationScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 
-bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, std::string& strSender);
-bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry);
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry);
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry);
+
 std::string assetAllocationFromOp(int op);
 
 class CWitnessAddress{
@@ -230,4 +229,9 @@ bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAsset
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
 bool ResetAssetAllocation(const std::string &senderStr, const uint256 &txHash, const bool &bMiner=false, const bool &bExpiryOnly=false);
 void ResyncAssetAllocationStates();
+bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, CAssetAllocation& assetallocation);
+bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry);
+void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
+void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
+void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocationTuple, const uint256& txid, const UniValue& oName);
 #endif // ASSETALLOCATION_H

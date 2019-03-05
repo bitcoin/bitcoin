@@ -30,6 +30,8 @@ std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
+std::unique_ptr<CAssetIndexDB> passetindexdb;
+
 // SYSCOIN service rpc functions
 UniValue syscoinburn(const JSONRPCRequest& request);
 UniValue syscoinmint(const JSONRPCRequest& request);
@@ -973,10 +975,35 @@ void CMintSyscoin::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& op, const int& nHeight) {
-	if (fZMQAsset) {
+	if (fZMQAsset || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
-        if(AssetTxToJSON(op, tx, dbAsset, nHeight, oName))
-            GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+        if(AssetTxToJSON(op, tx, dbAsset, nHeight, oName)){
+            if(fZMQAsset)
+                GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
+            if(fAssetIndex)
+            {
+                uint64_t page = 0;
+                if(passetindexdb->ReadAssetPage(page)){
+                    std::vector<uint256> TXIDS;
+                    if(passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS)){
+                        // new page needed
+                        if(TXIDS.size() >= fAssetIndexPageSize){
+                            TXIDS.clear();
+                            page++;
+                        }
+                        TXIDS.push_back(tx.GetHash());
+                        if(!passetindexdb->WriteIndexTXIDs(dbAsset.nAsset, page, TXIDS))
+                            LogPrint(BCLog::SYS, "Failed to write asset index txids");
+                        if(!passetindexdb->WritePayload(tx.GetHash(), oName))
+                            LogPrint(BCLog::SYS, "Failed to write asset index payload");
+                    }
+                    else
+                        LogPrint(BCLog::SYS, "Failed to read asset index txids");
+                }
+                else
+                    LogPrint(BCLog::SYS, "Failed to read asset page");
+            }
+        }
 	}
 }
 bool GetAsset(const int &nAsset,
@@ -1317,7 +1344,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
 		}
 		for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
 			if (!bSanityCheck) {
-                
 				CAssetAllocation receiverAllocation;
 				const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string& receiverTupleStr = receiverAllocationTuple.ToString();
@@ -1330,6 +1356,14 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int
                     if (receiverAllocation.assetAllocationTuple.IsNull()) {
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
+                        if(fAssetIndex){
+                            std::vector<uint32_t> assetGuids;
+                            passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
+                            if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
+                                assetGuids.push_back(receiverAllocation.assetAllocationTuple.nAsset);
+                            
+                            passetindexdb->WriteAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
+                        }                        
                     } 
                     mapAssetAllocation->second = std::move(receiverAllocation);                
                 }
@@ -1826,7 +1860,7 @@ bool AssetTxToJSON(const int &op, const CTransaction& tx, UniValue &entry)
     if(op == OP_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
         
-    if(op == OP_ASSET_ACTIVATE || (!asset.vchBurnMethodSignature.empty() && dbAsset.vchContract != asset.vchBurnMethodSignature))
+    if(op == OP_ASSET_ACTIVATE || (!asset.vchBurnMethodSignature.empty() && dbAsset.vchBurnMethodSignature != asset.vchBurnMethodSignature))
         entry.pushKV("burnsig", HexStr(asset.vchBurnMethodSignature));                  
         
 	if (op == OP_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
@@ -1860,7 +1894,7 @@ bool AssetTxToJSON(const int &op, const CTransaction& tx, const CAsset& dbAsset,
     if(op == OP_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
         
-    if(op == OP_ASSET_ACTIVATE || (!asset.vchBurnMethodSignature.empty() && dbAsset.vchContract != asset.vchBurnMethodSignature))
+    if(op == OP_ASSET_ACTIVATE || (!asset.vchBurnMethodSignature.empty() && dbAsset.vchBurnMethodSignature != asset.vchBurnMethodSignature))
         entry.pushKV("burnsig", HexStr(asset.vchBurnMethodSignature));                  
         
     if (op == OP_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))

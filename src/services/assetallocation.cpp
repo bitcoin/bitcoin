@@ -112,22 +112,92 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 
 }
 void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight){
-    if (fZMQAssetAllocation) {
+    if (fZMQAssetAllocation || fAssetIndex) {
         UniValue output(UniValue::VOBJ);
-        if(AssetMintTxToJson(tx, mintSyscoin, nHeight, output))
-            GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
+        if(AssetMintTxToJson(tx, mintSyscoin, nHeight, output)){
+            if(fZMQAssetAllocation)
+                GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
+            if(fAssetIndex)
+                WriteAssetIndexForAllocation(mintSyscoin, tx.GetHash(), output);  
+        }
     }
 }
 void CAssetAllocationDB::WriteAssetAllocationIndex(const int& op, const CTransaction &tx, const CAsset& dbAsset, const bool& confirmed, int nHeight) {
-	if (fZMQAssetAllocation) {
+	if (fZMQAssetAllocation || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
-        string strSender;
-        if(AssetAllocationTxToJSON(op, tx, dbAsset, nHeight, confirmed, oName, strSender)){
-            const string& strObj = oName.write();
-            GetMainSignals().NotifySyscoinUpdate(strObj.c_str(), "assetallocation");
+        CAssetAllocation allocation;
+        if(AssetAllocationTxToJSON(op, tx, dbAsset, nHeight, confirmed, oName, allocation)){
+            if(fZMQAssetAllocation)
+                GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
+            if(fAssetIndex)
+                WriteAssetIndexForAllocation(allocation, tx.GetHash(), oName);          
         }
 	}
 
+}
+void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName){
+
+    // sender
+    WriteAssetIndexForAllocationAddress(assetallocation.assetAllocationTuple, txid, oName);
+    
+    // receivers
+    for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+         WriteAssetIndexForAllocationAddress(CAssetAllocationTuple(assetallocation.assetAllocationTuple.nAsset, amountTuple.first), txid, oName);
+    }
+    // write payload only once for txid
+    if(!passetindexdb->WritePayload(txid, oName))
+        LogPrint(BCLog::SYS, "Failed to write asset index payload");        
+    
+}
+void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){
+   
+    // receiver
+    WriteAssetIndexForAllocationAddress(mintSyscoin.assetAllocationTuple, txid, oName);
+    
+    if(!passetindexdb->WritePayload(txid, oName))
+        LogPrint(BCLog::SYS, "Failed to write asset index payload");        
+
+}
+void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocationTuple, const uint256& txid, const UniValue& oName){
+    // index the allocation
+    uint64_t page = 0;
+    if(passetindexdb->ReadAssetAllocationPage(page)){
+        std::vector<uint256> TXIDS;
+        if(passetindexdb->ReadIndexTXIDs(allocationTuple, page, TXIDS)){
+            // new page needed
+            if(TXIDS.size() >= fAssetIndexPageSize){
+                TXIDS.clear();
+                page++;
+            }
+            TXIDS.push_back(txid);
+            if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS))
+                LogPrint(BCLog::SYS, "Failed to write asset index txids");
+
+        }
+        else
+            LogPrint(BCLog::SYS, "Failed to read asset index txids");
+    }
+    else
+        LogPrint(BCLog::SYS, "Failed to read asset page");
+    // index into the asset as well        
+    page = 0;
+    if(passetindexdb->ReadAssetPage(page)){
+        std::vector<uint256> TXIDS;
+        if(passetindexdb->ReadIndexTXIDs(allocationTuple.nAsset, page, TXIDS)){
+            // new page needed
+            if(TXIDS.size() >= fAssetIndexPageSize){
+                TXIDS.clear();
+                page++;
+            }
+            TXIDS.push_back(txid);
+            if(!passetindexdb->WriteIndexTXIDs(allocationTuple.nAsset, page, TXIDS))
+                LogPrint(BCLog::SYS, "Failed to write asset index txids");
+        }
+        else
+            LogPrint(BCLog::SYS, "Failed to read asset index txids");
+    }
+    else
+        LogPrint(BCLog::SYS, "Failed to read asset page");
 }
 bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocation& txPos) {
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
@@ -552,9 +622,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             const bool& mapAssetAllocationReceiverNotFound = result.second;
             if(mapAssetAllocationReceiverNotFound){
                 CAssetAllocation dbAssetAllocationReceiver;
-                if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {
+                if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                    dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);               
+                    dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress); 
+                    if(fAssetIndex){
+                        std::vector<uint32_t> assetGuids;
+                        passetindexdb->ReadAssetsByAddress(dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress, assetGuids);
+                        if(std::find(assetGuids.begin(), assetGuids.end(), dbAssetAllocationReceiver.assetAllocationTuple.nAsset) == assetGuids.end())
+                            assetGuids.push_back(dbAssetAllocationReceiver.assetAllocationTuple.nAsset);
+                        
+                        passetindexdb->WriteAssetsByAddress(dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress, assetGuids);
+                    }              
                 }
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                   
             } 
@@ -640,9 +718,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 const bool& mapAssetAllocationReceiverBlockNotFound = result.second;
                 if(mapAssetAllocationReceiverBlockNotFound){
                     CAssetAllocation receiverAllocation;
-                    if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {
+                    if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {                   
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress); 
+                        if(fAssetIndex){
+                            std::vector<uint32_t> assetGuids;
+                            passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
+                            if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
+                                assetGuids.push_back(receiverAllocation.assetAllocationTuple.nAsset);
+                            
+                            passetindexdb->WriteAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
+                        }                       
                     }
                     mapBalanceReceiverBlock->second = std::move(receiverAllocation);   
                 }
@@ -1325,13 +1411,12 @@ bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &en
     CTransactionRef txRef;
     if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
         nHeight = blockindex->nHeight; 
-    const string& strSender = assetallocation.assetAllocationTuple.witnessAddress.ToString();
     entry.pushKV("txtype", assetAllocationFromOp(op));
     entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("height", nHeight);
     entry.pushKV("asset", (int)assetallocation.assetAllocationTuple.nAsset);
-    entry.pushKV("sender", strSender);
+    entry.pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;  
     if (!assetallocation.listSendingAllocationAmounts.empty()) {
@@ -1349,18 +1434,17 @@ bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &en
     entry.pushKV("confirmed", nHeight > 0);  
     return true;
 }
-bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, string& strSender)
+bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, CAssetAllocation& assetallocation)
 {
-    CAssetAllocation assetallocation(tx);
+    assetallocation = CAssetAllocation(tx);
     if(assetallocation.assetAllocationTuple.IsNull() || dbAsset.IsNull())
         return false;
-    strSender = assetallocation.assetAllocationTuple.witnessAddress.ToString();
     entry.pushKV("txtype", assetAllocationFromOp(op));
     entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("height", nHeight);
     entry.pushKV("asset", (int)assetallocation.assetAllocationTuple.nAsset);
-    entry.pushKV("sender", strSender);
+    entry.pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
 

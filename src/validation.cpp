@@ -710,9 +710,17 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
         if(mapAssetAllocationNotFound){
             CAssetAllocation receiverAllocation;
             GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
-            if (receiverAllocation.assetAllocationTuple.IsNull()) {
+            if (receiverAllocation.assetAllocationTuple.IsNull()) {           
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
+                if(fAssetIndex){
+                    std::vector<uint32_t> assetGuids;
+                    passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
+                    if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
+                        assetGuids.push_back(receiverAllocation.assetAllocationTuple.nAsset);
+                    
+                    passetindexdb->WriteAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
+                } 
             }
             mapAssetAllocation->second = std::move(receiverAllocation);              
         }
