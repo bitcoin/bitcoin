@@ -981,6 +981,10 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
             {
+                if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),dbAsset.nAsset) == fAssetIndexGuids.end()){
+                    LogPrint(BCLog::SYS, "Asset cannot be indexed because it is not set in -assetindexguids list");
+                    return;
+                }
                 uint64_t page = 0;
                 if(passetindexdb->ReadAssetPage(page)){
                     std::vector<uint256> TXIDS;

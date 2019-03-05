@@ -91,6 +91,7 @@ bool fZMQAssetAllocation = false;
 bool fZMQAsset = false;
 bool fAssetIndex = false;
 int fAssetIndexPageSize = 25;
+std::vector<uint32_t> fAssetIndexGuids; 
 uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;
 pid_t gethPID = 0;

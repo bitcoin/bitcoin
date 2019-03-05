@@ -159,6 +159,10 @@ void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256
 
 }
 void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocationTuple, const uint256& txid, const UniValue& oName){
+    if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),allocationTuple.nAsset) == fAssetIndexGuids.end()){
+        LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because asset is not set in -assetindexguids list");
+        return;
+    }
     // index the allocation
     uint64_t page = 0;
     if(passetindexdb->ReadAssetAllocationPage(page)){

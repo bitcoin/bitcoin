@@ -462,7 +462,9 @@ void SetupServerArgs()
     gArgs.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", false, OptionsCategory::OPTIONS);
-    
+    gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-assetindexpagesize=<n>", strprintf("Page size of results for Asset index, should match the paging mechanism of the consuming client. (10-1000, default: 25). Used in conjunction with -assetindex=1."), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma seperated. Used in conjunction with -assetindex=1. Leave empty for all."), false, OptionsCategory::OPTIONS);
       
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), false, OptionsCategory::CONNECTION);
@@ -1812,7 +1814,17 @@ bool AppInitMain()
     fLogThreadpool = LogAcceptCategory(BCLog::THREADPOOL);
     fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
     fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
-
+    fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
+    fAssetIndexPageSize = gArgs.GetArg("-assetindexpagesize", 25);
+    if(fAssetIndexPageSize < 10 || fAssetIndexPageSize > 1000){
+        return InitError(_("Asset index page size is invalid, must be between 10 and 1000."));
+    }
+    if (gArgs.IsArgSet("-assetindexguids")) {
+        const std::vector<std::string> &assetguidsStr = gArgs.GetArgs("-assetindexguids");
+        for(const std::string& guidStr: assetguidsStr)
+            fAssetIndexGuids.push_back(std::stoi(guidStr));
+    }
+    
     //lite mode disables all Syscoin-specific functionality
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
 
