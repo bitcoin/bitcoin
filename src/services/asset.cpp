@@ -2216,6 +2216,9 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
             "[asset]          (numeric, required) Address to find assets associated with.\n"
             + HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
         );
+    if(!fAssetIndex){
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
+    }       
     const CTxDestination &dest = DecodeDestination(params[0].get_str());
     UniValue detail = DescribeAddress(dest);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
