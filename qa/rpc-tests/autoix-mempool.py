@@ -161,8 +161,12 @@ class AutoIXMempoolTest(DashTestFramework):
 
         # fill mempool with transactions
         self.set_autoix_spork_state(False)
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
         self.fill_mempool()
         self.set_autoix_spork_state(True)
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.wait_for_sporks_same()
 
         # autoIX is not working now
         assert(not self.send_simple_tx(sender, receiver))
