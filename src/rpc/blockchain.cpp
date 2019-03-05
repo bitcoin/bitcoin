@@ -1220,7 +1220,6 @@ static void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::
 
 UniValue getblockchaininfo(const JSONRPCRequest& request)
 {
-    LogPrintf("getblockchaininfo1\n");
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             "getblockchaininfo\n"
@@ -1276,9 +1275,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             + HelpExampleCli("getblockchaininfo", "")
             + HelpExampleRpc("getblockchaininfo", "")
         );
-         LogPrintf("getblockchaininfo2\n");
     LOCK(cs_main);
-     LogPrintf("getblockchaininfo3\n");
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("chain",                 Params().NetworkIDString());
     obj.pushKV("blocks",                (int)chainActive.Height());
@@ -1326,7 +1323,6 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     obj.pushKV("bip9_softforks", bip9_softforks);
 
     obj.pushKV("warnings", GetWarnings("statusbar"));
-     LogPrintf("getblockchaininfo4\n");
     return obj;
 }
 

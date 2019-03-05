@@ -2191,10 +2191,12 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
             + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
         );
+    if(!fAssetIndex){
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
+    }
     UniValue options;
-    uint64_t page = 10;
+    uint64_t page = params[0].get_int64();
    
-    page = params[0].get_int64();
     if (page < 0) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'page' must be 0 or greater"));
     }
