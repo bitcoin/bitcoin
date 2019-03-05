@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the Partially Signed Transaction RPCs.
@@ -47,11 +47,11 @@ class PSBTTest(BitcoinTestFramework):
         utxos = online_node.listunspent(addresses=[offline_addr])
         raw = online_node.createrawtransaction([{"txid":utxos[0]["txid"], "vout":utxos[0]["vout"]}],[{online_addr:0.9999}])
         psbt = online_node.walletprocesspsbt(online_node.converttopsbt(raw))["psbt"]
-        assert("non_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0])
+        assert "non_witness_utxo" in mining_node.decodepsbt(psbt)["inputs"][0]
 
         # Have the offline node sign the PSBT (which will update the UTXO to segwit)
         signed_psbt = offline_node.walletprocesspsbt(psbt)["psbt"]
-        assert("witness_utxo" in mining_node.decodepsbt(signed_psbt)["inputs"][0])
+        assert "witness_utxo" in mining_node.decodepsbt(signed_psbt)["inputs"][0]
 
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(mining_node.finalizepsbt(signed_psbt)["hex"])
