@@ -40,7 +40,8 @@ static const int CLIENT_VERSION =
                          +   10000 * CLIENT_VERSION_MINOR
                          +     100 * CLIENT_VERSION_REVISION
                          +       1 * CLIENT_VERSION_BUILD;
-static const int CLIENT_VERSION_MASTERNODE_MAJOR = 1;                         
+//  TODO: WK rollback masternode version when doing mainnet release
+static const int CLIENT_VERSION_MASTERNODE_MAJOR = 2;
 static const int CLIENT_MASTERNODE_VERSION =
                            1000000 * CLIENT_VERSION_MASTERNODE_MAJOR
                          +   10000 * CLIENT_VERSION_MINOR
