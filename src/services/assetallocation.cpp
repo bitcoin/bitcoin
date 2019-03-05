@@ -169,34 +169,32 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
         page = 0;
    
     std::vector<uint256> TXIDS;
-    if(passetindexdb->ReadIndexTXIDs(allocationTuple, page, TXIDS)){
-        // new page needed
-        if(((int)TXIDS.size()) >= fAssetIndexPageSize){
-            TXIDS.clear();
-            page++;
-        }
-        TXIDS.push_back(txid);
-        if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS))
-            LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
-
+    passetindexdb->ReadIndexTXIDs(allocationTuple, page, TXIDS);
+    // new page needed
+    if(((int)TXIDS.size()) >= fAssetIndexPageSize){
+        TXIDS.clear();
+        page++;
     }
+    TXIDS.push_back(txid);
+    if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS))
+        LogPrint(BCLog::SYS, "Failed to write asset allocation index txids\n");
+
+    
     
     // index into the asset as well        
     if(!passetindexdb->ReadAssetPage(page))
         page = 0;
         
-    if(passetindexdb->ReadIndexTXIDs(allocationTuple.nAsset, page, TXIDS)){
-        // new page needed
-        if(((int)TXIDS.size()) >= fAssetIndexPageSize){
-            TXIDS.clear();
-            page++;
-        }
-        TXIDS.push_back(txid);
-        if(!passetindexdb->WriteIndexTXIDs(allocationTuple.nAsset, page, TXIDS))
-            LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
+    TXIDS.clear();    
+    passetindexdb->ReadIndexTXIDs(allocationTuple.nAsset, page, TXIDS);
+    // new page needed
+    if(((int)TXIDS.size()) >= fAssetIndexPageSize){
+        TXIDS.clear();
+        page++;
     }
-    else
-        LogPrint(BCLog::SYS, "Failed to read asset index txids\n");
+    TXIDS.push_back(txid);
+    if(!passetindexdb->WriteIndexTXIDs(allocationTuple.nAsset, page, TXIDS))
+        LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
 }
 bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocation& txPos) {
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))

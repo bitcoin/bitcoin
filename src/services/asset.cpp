@@ -989,20 +989,17 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                 if(!passetindexdb->ReadAssetPage(page))
                     page = 0;
                 std::vector<uint256> TXIDS;
-                if(passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS)){
-                    // new page needed
-                    if(((int)TXIDS.size()) >= fAssetIndexPageSize){
-                        TXIDS.clear();
-                        page++;
-                    }
-                    TXIDS.push_back(tx.GetHash());
-                    if(!passetindexdb->WriteIndexTXIDs(dbAsset.nAsset, page, TXIDS))
-                        LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
-                    if(!passetindexdb->WritePayload(tx.GetHash(), oName))
-                        LogPrint(BCLog::SYS, "Failed to write asset index payload\n");
+                passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS)
+                // new page needed
+                if(((int)TXIDS.size()) >= fAssetIndexPageSize){
+                    TXIDS.clear();
+                    page++;
                 }
-                else
-                    LogPrint(BCLog::SYS, "Failed to read asset index txids\n");
+                TXIDS.push_back(tx.GetHash());
+                if(!passetindexdb->WriteIndexTXIDs(dbAsset.nAsset, page, TXIDS))
+                    LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
+                if(!passetindexdb->WritePayload(tx.GetHash(), oName))
+                    LogPrint(BCLog::SYS, "Failed to write asset index payload\n");
             }
         }
 	}
