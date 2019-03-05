@@ -842,17 +842,12 @@ public:
         }
     }
 
-    void PushInventory(const CInv& inv)
-    {
-        LOCK(cs_inventory);
-        if (inv.type == MSG_TX) {
-            if (!filterInventoryKnown.contains(inv.hash)) {
-                setInventoryTxToSend.insert(inv.hash);
-            }
-        } else if (inv.type == MSG_BLOCK) {
-            vInventoryBlockToSend.push_back(inv.hash);
-        }
-    }
+    //! Pushes a tx inv to this peer, unless already known
+    //! @returns true if the inv will be sent, false if not
+    bool PushTransactionInventory(const uint256& txid);
+
+    //! Pushes a block inv to this peer
+    void PushBlockInventory(const uint256& blockhash);
 
     void PushBlockHash(const uint256 &hash)
     {

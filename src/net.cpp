@@ -444,6 +444,22 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     return pnode;
 }
 
+bool CNode::PushTransactionInventory(const uint256& txid)
+{
+    LOCK(cs_inventory);
+    if (!filterInventoryKnown.contains(txid)) {
+        return setInventoryTxToSend.insert(txid).second;
+    }
+    return false;
+}
+
+void CNode::PushBlockInventory(const uint256& blockhash)
+{
+    LOCK(cs_inventory);
+    LogPrint(BCLog::NET, "sending block inv peer=%d hash=%s\n", GetId(), blockhash.ToString());
+    vInventoryBlockToSend.push_back(blockhash);
+}
+
 void CNode::CloseSocketDisconnect()
 {
     fDisconnect = true;
@@ -2612,8 +2628,13 @@ int CConnman::GetBestHeight() const
 
 void CConnman::RelayTransaction(const uint256& txid) const
 {
-    CInv inv(MSG_TX, txid);
-    ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+    size_t sent = 0;
+    ForEachNode([&txid, &sent](CNode* pnode) {
+        if (pnode->PushTransactionInventory(txid)) ++sent;
+    });
+    if (sent > 0) {
+        LogPrint(BCLog::NET, "Relaying tx %s to %u peers\n", txid.ToString(), sent);
+    }
 }
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
