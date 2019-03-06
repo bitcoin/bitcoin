@@ -405,9 +405,9 @@ static std::string EntryDescriptionString()
            "    \"bip125-replaceable\" : true|false,  (boolean) Whether this transaction could be replaced due to BIP125 (replace-by-fee)\n";
 }
 
-static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCKS_REQUIRED(::mempool.cs)
+static void entryToJSON(const CTxMemPool& pool, UniValue& info, const CTxMemPoolEntry& e) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
-    AssertLockHeld(mempool.cs);
+    AssertLockHeld(pool.cs);
 
     UniValue fees(UniValue::VOBJ);
     fees.pushKV("base", ValueFromAmount(e.GetFee()));
@@ -427,12 +427,12 @@ static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCK
     info.pushKV("ancestorcount", e.GetCountWithAncestors());
     info.pushKV("ancestorsize", e.GetSizeWithAncestors());
     info.pushKV("ancestorfees", e.GetModFeesWithAncestors());
-    info.pushKV("wtxid", mempool.vTxHashes[e.vTxHashesIdx].first.ToString());
+    info.pushKV("wtxid", pool.vTxHashes[e.vTxHashesIdx].first.ToString());
     const CTransaction& tx = e.GetTx();
     std::set<std::string> setDepends;
     for (const CTxIn& txin : tx.vin)
     {
-        if (mempool.exists(txin.prevout.hash))
+        if (pool.exists(txin.prevout.hash))
             setDepends.insert(txin.prevout.hash.ToString());
     }
 
@@ -445,8 +445,8 @@ static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCK
     info.pushKV("depends", depends);
 
     UniValue spent(UniValue::VARR);
-    const CTxMemPool::txiter &it = mempool.mapTx.find(tx.GetHash());
-    const CTxMemPool::setEntries &setChildren = mempool.GetMemPoolChildren(it);
+    const CTxMemPool::txiter& it = pool.mapTx.find(tx.GetHash());
+    const CTxMemPool::setEntries& setChildren = pool.GetMemPoolChildren(it);
     for (CTxMemPool::txiter childiter : setChildren) {
         spent.push_back(childiter->GetTx().GetHash().ToString());
     }
@@ -455,7 +455,7 @@ static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCK
 
     // Add opt-in RBF status
     bool rbfStatus = false;
-    RBFTransactionState rbfState = IsRBFOptIn(tx, mempool);
+    RBFTransactionState rbfState = IsRBFOptIn(tx, pool);
     if (rbfState == RBFTransactionState::UNKNOWN) {
         throw JSONRPCError(RPC_MISC_ERROR, "Transaction is not in mempool");
     } else if (rbfState == RBFTransactionState::REPLACEABLE_BIP125) {
@@ -465,25 +465,21 @@ static void entryToJSON(UniValue &info, const CTxMemPoolEntry &e) EXCLUSIVE_LOCK
     info.pushKV("bip125-replaceable", rbfStatus);
 }
 
-UniValue mempoolToJSON(bool fVerbose)
+UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose)
 {
-    if (fVerbose)
-    {
-        LOCK(mempool.cs);
+    if (verbose) {
+        LOCK(pool.cs);
         UniValue o(UniValue::VOBJ);
-        for (const CTxMemPoolEntry& e : mempool.mapTx)
-        {
+        for (const CTxMemPoolEntry& e : pool.mapTx) {
             const uint256& hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(info, e);
+            entryToJSON(pool, info, e);
             o.pushKV(hash.ToString(), info);
         }
         return o;
-    }
-    else
-    {
+    } else {
         std::vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
+        pool.queryHashes(vtxid);
 
         UniValue a(UniValue::VARR);
         for (const uint256& hash : vtxid)
@@ -525,7 +521,7 @@ static UniValue getrawmempool(const JSONRPCRequest& request)
     if (!request.params[0].isNull())
         fVerbose = request.params[0].get_bool();
 
-    return mempoolToJSON(fVerbose);
+    return MempoolToJSON(::mempool, fVerbose);
 }
 
 static UniValue getmempoolancestors(const JSONRPCRequest& request)
@@ -591,7 +587,7 @@ static UniValue getmempoolancestors(const JSONRPCRequest& request)
             const CTxMemPoolEntry &e = *ancestorIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(info, e);
+            entryToJSON(::mempool, info, e);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -661,7 +657,7 @@ static UniValue getmempooldescendants(const JSONRPCRequest& request)
             const CTxMemPoolEntry &e = *descendantIt;
             const uint256& _hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
-            entryToJSON(info, e);
+            entryToJSON(::mempool, info, e);
             o.pushKV(_hash.ToString(), info);
         }
         return o;
@@ -700,7 +696,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
 
     const CTxMemPoolEntry &e = *it;
     UniValue info(UniValue::VOBJ);
-    entryToJSON(info, e);
+    entryToJSON(::mempool, info, e);
     return info;
 }
 
@@ -1485,15 +1481,15 @@ static UniValue getchaintips(const JSONRPCRequest& request)
     return res;
 }
 
-UniValue mempoolInfoToJSON()
+UniValue MempoolInfoToJSON(const CTxMemPool& pool)
 {
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("size", (int64_t) mempool.size());
-    ret.pushKV("bytes", (int64_t) mempool.GetTotalTxSize());
-    ret.pushKV("usage", (int64_t) mempool.DynamicMemoryUsage());
+    ret.pushKV("size", (int64_t)pool.size());
+    ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
+    ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
     size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     ret.pushKV("maxmempool", (int64_t) maxmempool);
-    ret.pushKV("mempoolminfee", ValueFromAmount(std::max(mempool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK()));
+    ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK()));
     ret.pushKV("minrelaytxfee", ValueFromAmount(::minRelayTxFee.GetFeePerK()));
 
     return ret;
@@ -1522,7 +1518,7 @@ static UniValue getmempoolinfo(const JSONRPCRequest& request)
                 },
             }.ToString());
 
-    return mempoolInfoToJSON();
+    return MempoolInfoToJSON(::mempool);
 }
 
 static UniValue preciousblock(const JSONRPCRequest& request)
