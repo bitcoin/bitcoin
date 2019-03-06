@@ -8,7 +8,6 @@
 #include "init.h"
 #include "masternode-sync.h"
 #include "netbase.h"
-#include "qrdialog.h"
 #include "sync.h"
 #include "wallet/wallet.h"
 #include "walletmodel.h"

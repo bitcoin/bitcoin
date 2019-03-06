@@ -91,6 +91,7 @@ private Q_SLOTS:
     void contextualMenu(const QPoint &);
     void dateRangeChanged();
     void showDetails();
+    void showAddressQRCode();
     void copyAddress();
     void editLabel();
     void copyLabel();

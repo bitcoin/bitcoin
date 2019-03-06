@@ -78,6 +78,19 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="showAddressQRCode">
+       <property name="toolTip">
+        <string>Show QR code for the currently selected address</string>
+       </property>
+       <property name="text">
+        <string>&amp;Show QR code</string>
+       </property>
+       <property name="autoDefault">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="deleteAddress">
        <property name="toolTip">
         <string>Delete the currently selected address from the list</string>
