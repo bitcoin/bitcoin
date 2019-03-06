@@ -420,8 +420,8 @@ class WalletTest(BitcoinTestFramework):
         for m in maintenance:
             self.log.info("check " + m)
             self.stop_nodes()
-            # set lower ancestor limit for later
-            self.start_node(0, [m, "-limitancestorcount=" + str(chainlimit)])
+            # set lower ancestor limit and allow node0 wallet to make too-long chains for later
+            self.start_node(0, [m, "-limitancestorcount=" + str(chainlimit), "-walletrejectlongchains=0"])
             self.start_node(1, [m, "-limitancestorcount=" + str(chainlimit)])
             self.start_node(2, [m, "-limitancestorcount=" + str(chainlimit)])
             if m == '-reindex':
@@ -460,7 +460,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getmempoolinfo()['size'], chainlimit * 2)
         assert_equal(len(txid_list), chainlimit * 2)
 
-        # Without walletrejectlongchains, we will still generate a txid
+        # With walletrejectlongchains=0, we will still generate a txid
         # The tx will be stored in the wallet but not accepted to the mempool
         extra_txid = self.nodes[0].sendtoaddress(sending_addr, Decimal('0.0001'))
         assert extra_txid not in self.nodes[0].getrawmempool()
@@ -468,10 +468,10 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].abandontransaction(extra_txid)
         total_txs = len(self.nodes[0].listtransactions("*", 99999))
 
-        # Try with walletrejectlongchains
+        # Try with walletrejectlongchains default value of true
         # Double chain limit but require combining inputs, so we pass SelectCoinsMinConf
         self.stop_node(0)
-        self.start_node(0, extra_args=["-walletrejectlongchains", "-limitancestorcount=" + str(2 * chainlimit)])
+        self.start_node(0, extra_args=["-limitancestorcount=" + str(2 * chainlimit)])
 
         # wait for loadmempool
         timeout = 10
