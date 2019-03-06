@@ -233,5 +233,5 @@ bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset
 bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry);
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
-void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocationTuple, const uint256& txid, const UniValue& oName);
+void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);
 #endif // ASSETALLOCATION_H
