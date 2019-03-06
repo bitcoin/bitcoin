@@ -1053,7 +1053,6 @@ bool DecodeAssetTx(const CTransaction& tx, int& op,
 
 
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations){
-    const uint256 &txid = tx.GetHash();
     CAsset dbAsset;
     CAssetAllocation theAssetAllocation(tx);
     if(theAssetAllocation.assetAllocationTuple.IsNull()){
@@ -1098,28 +1097,11 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         } 
         if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();       
-        }
-        if(fAssetIndex){
-            if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
-                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase receiver allocation from asset allocation index\n");
-            }
-            if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
-                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase receiver allocation from asset index\n");
-            }       
         }                                           
-    } 
-    if(fAssetIndex){
-        if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
-             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase sender allocation from asset allocation index\n");
-        }
-        if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
-             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase sender allocation from asset index\n");
-        }       
-    }           
+    }          
     return true;  
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
-    const uint256 &txid = tx.GetHash();
     CAsset dbAsset;
     CAsset theAsset(tx);
     if(theAsset.IsNull()){
@@ -1146,17 +1128,10 @@ bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Asset cannot be negative: Balance %lld, Supply: %lld\n",storedSenderRef.nBalance, storedSenderRef.nTotalSupply);
             return false;
         }                                          
-    } 
-        
-    if(fAssetIndex){
-        if(!passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase asset update from asset index\n");
-        }       
     }      
     return true;  
 }
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
-    const uint256 &txid = tx.GetHash();
     CAsset theAsset(tx);
     
     if(theAsset.IsNull()){
@@ -1174,12 +1149,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
         } 
         mapAsset->second = std::move(dbAsset);                   
     }
-    mapAsset->second.SetNull();  
-    if(fAssetIndex){
-        if(!passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
-             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase asset activate from asset index\n");
-        }       
-    }    
+    mapAsset->second.SetNull();     
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const vector<vector<unsigned char> > &vvchArgs,
@@ -2201,7 +2171,7 @@ bool CAssetIndexDB::ScanAssetIndex(uint64_t page, const UniValue& oOptions, UniV
     for(const uint256& txid: vecTX){
         UniValue oObj(UniValue::VOBJ);
         if(!ReadPayload(txid, oObj))
-            return false;
+            continue;
         if(ReadBlockHash(txid, block_hash)){
             oObj.pushKV("block_hash", block_hash.GetHex());        
         }
@@ -2410,6 +2380,20 @@ bool CEthereumTxRootsDB::Init(){
     }
     return highestHeight && ReadCurrentHeight(fGethCurrentHeight);
     
+}
+bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
+    if(vecTXIDs.empty() || !fAssetIndex)
+        return true;
+
+    CDBBatch batch(*this);
+    for (const uint256 &txid : vecTXIDs) {
+        // erase payload
+        batch.Erase(txid);
+        // erase blockhash
+        batch.Erase(std::make_pair(bh, txid));
+    }
+    LogPrint(BCLog::SYS, "Flushing %d asset index removals\n", vecTXIDs.size());
+    return WriteBatch(batch);
 }
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     if(vecHeightKeys.empty())
