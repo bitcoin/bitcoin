@@ -580,4 +580,9 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
  */
 NODISCARD TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& psbtxs);
 
+//! Decode a base64ed PSBT into a PartiallySignedTransaction
+NODISCARD bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const std::string& base64_psbt, std::string& error);
+//! Decode a raw (binary blob) PSBT into a PartiallySignedTransaction
+NODISCARD bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, const std::string& raw_psbt, std::string& error);
+
 #endif // BITCOIN_PSBT_H
