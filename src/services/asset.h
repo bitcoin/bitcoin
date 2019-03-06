@@ -278,11 +278,7 @@ public:
         if(!ReadAssetPage(page))
             return false;
         uint64_t walkBackPage = page;
-        int count = 0;
         while(walkBackPage >= 0){
-            count++;
-            if(count > 5)
-                return false;
             if(!ReadIndexTXIDs(assetGuid, walkBackPage, TXIDS)){
                 walkBackPage--;
                 continue;
