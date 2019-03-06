@@ -152,9 +152,9 @@ UniValue masternode(const JSONRPCRequest& request)
         {
             LOCK(cs_main);
             pindex = chainActive.Tip();
+            mnodeman.UpdateLastPaid(pindex);
         }
         nHeight = pindex->nHeight + (strCommand == "current" ? 1 : 10);
-        mnodeman.UpdateLastPaid(pindex);
         if(!mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount, mnInfo))
             return "unknown";
 
@@ -444,8 +444,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
         {
             LOCK(cs_main);
             pindex = chainActive.Tip();
+            mnodeman.UpdateLastPaid(pindex);
         }
-        mnodeman.UpdateLastPaid(pindex);
     }
 
     UniValue obj(UniValue::VOBJ);
