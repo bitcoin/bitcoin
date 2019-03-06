@@ -1967,7 +1967,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 return InitError(_("Invalid masternodeblsprivkey. Please see documenation."));
             }
         } else {
-            InitWarning(_("You should specify a masternodeblsprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a masternodeblsprivkey in the configuration. Please see documentation for help."));
         }
 
         // init and register activeMasternodeManager
