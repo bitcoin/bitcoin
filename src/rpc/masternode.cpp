@@ -520,10 +520,18 @@ UniValue masternodelist(const JSONRPCRequest& request)
 
     mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
         std::string strOutpoint = dmn->collateralOutpoint.ToStringShort();
+        Coin coin;
+        std::string collateralAddressStr = "UNKNOWN";
+        if (GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+            CTxDestination collateralDest;
+            if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+                collateralAddressStr = CBitcoinAddress(collateralDest).ToString();
+            }
+        }
 
         CScript payeeScript = dmn->pdmnState->scriptPayout;
         CTxDestination payeeDest;
-        std::string payeeStr = "UNKOWN";
+        std::string payeeStr = "UNKNOWN";
         if (ExtractDestination(payeeScript, payeeDest)) {
             payeeStr = CBitcoinAddress(payeeDest).ToString();
         }
@@ -564,6 +572,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                            dmn->pdmnState->nLastPaidHeight << " " <<
                            CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString() << " " <<
                            CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString() << " " <<
+                           collateralAddressStr << " " <<
                            dmn->pdmnState->pubKeyOperator.ToString();
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
@@ -576,6 +585,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             objMN.push_back(Pair("lastpaidblock", dmn->pdmnState->nLastPaidHeight));
             objMN.push_back(Pair("owneraddress", CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString()));
             objMN.push_back(Pair("votingaddress", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
+            objMN.push_back(Pair("collateraladdress", collateralAddressStr));
             objMN.push_back(Pair("pubkeyoperator", dmn->pdmnState->pubKeyOperator.ToString()));
             obj.push_back(Pair(strOutpoint, objMN));
         } else if (strMode == "lastpaidblock") {
