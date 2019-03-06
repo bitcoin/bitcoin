@@ -136,14 +136,20 @@ void CAssetAllocationDB::WriteAssetAllocationIndex(const int& op, const CTransac
 
 }
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName){
-
+    if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), assetallocation.assetAllocationTuple.nAsset) == fAssetIndexGuids.end()){
+        LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
+        return;
+    }
     // sender
-    WriteAssetIndexForAllocationAddress(assetallocation.assetAllocationTuple, txid, oName);
+    WriteAssetAllocationIndexTXID(assetallocation.assetAllocationTuple, txid);
     
     // receivers
     for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-         WriteAssetIndexForAllocationAddress(CAssetAllocationTuple(assetallocation.assetAllocationTuple.nAsset, amountTuple.first), txid, oName);
+         WriteAssetAllocationIndexTXID(CAssetAllocationTuple(assetallocation.assetAllocationTuple.nAsset, amountTuple.first), txid);
     }
+    // index into the asset as well     
+    WriteAssetIndexTXID(assetallocation.assetAllocationTuple.nAsset, txid);
+         
     // write payload only once for txid
     if(!passetindexdb->WritePayload(txid, oName))
         LogPrint(BCLog::SYS, "Failed to write asset index payload\n");        
@@ -152,17 +158,16 @@ void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){
    
     // receiver
-    WriteAssetIndexForAllocationAddress(mintSyscoin.assetAllocationTuple, txid, oName);
+    WriteAssetAllocationIndexTXID(mintSyscoin.assetAllocationTuple, txid);
+    
+    // index into the asset as well     
+    WriteAssetIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid);
     
     if(!passetindexdb->WritePayload(txid, oName))
         LogPrint(BCLog::SYS, "Failed to write asset index payload\n");        
 
 }
-void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocationTuple, const uint256& txid, const UniValue& oName){
-    if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),allocationTuple.nAsset) == fAssetIndexGuids.end()){
-        LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
-        return;
-    }
+void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid){
     // index the allocation
     uint64_t page;
     if(!passetindexdb->ReadAssetAllocationPage(page)){
@@ -183,28 +188,7 @@ void WriteAssetIndexForAllocationAddress(const CAssetAllocationTuple& allocation
     TXIDS.push_back(txid);
     if(!passetindexdb->WriteIndexTXIDs(allocationTuple, page, TXIDS))
         LogPrint(BCLog::SYS, "Failed to write asset allocation index txids\n");
-
-    
-    
-    // index into the asset as well        
-    if(!passetindexdb->ReadAssetPage(page)){
-        page = 0;
-        if(!passetindexdb->WriteAssetPage(page))
-           LogPrint(BCLog::SYS, "Failed to write asset page\n");          
-    }
         
-    TXIDS.clear();    
-    passetindexdb->ReadIndexTXIDs(allocationTuple.nAsset, page, TXIDS);
-    // new page needed
-    if(((int)TXIDS.size()) >= fAssetIndexPageSize){
-        TXIDS.clear();
-        page++;
-        if(!passetindexdb->WriteAssetPage(page))
-            LogPrint(BCLog::SYS, "Failed to write asset page\n");
-    }
-    TXIDS.push_back(txid);
-    if(!passetindexdb->WriteIndexTXIDs(allocationTuple.nAsset, page, TXIDS))
-        LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
 }
 bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAssetAllocation& txPos) {
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))

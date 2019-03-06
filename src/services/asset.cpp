@@ -973,6 +973,26 @@ void CMintSyscoin::Serialize( vector<unsigned char> &vchData) {
     vchData = vector<unsigned char>(dsMint.begin(), dsMint.end());
 
 }
+void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
+    uint64_t page;
+    if(!passetindexdb->ReadAssetPage(page)){
+        page = 0;
+        if(!passetindexdb->WriteAssetPage(page))
+           LogPrint(BCLog::SYS, "Failed to write asset page\n");                  
+    }
+    std::vector<uint256> TXIDS;
+    passetindexdb->ReadIndexTXIDs(nAsset, page, TXIDS);
+    // new page needed
+    if(((int)TXIDS.size()) >= fAssetIndexPageSize){
+        TXIDS.clear();
+        page++;
+        if(!passetindexdb->WriteAssetPage(page))
+            LogPrint(BCLog::SYS, "Failed to write asset page\n");
+    }
+    TXIDS.push_back(txid);
+    if(!passetindexdb->WriteIndexTXIDs(nAsset, page, TXIDS))
+        LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
+}
 void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& op, const int& nHeight) {
 	if (fZMQAsset || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
@@ -985,25 +1005,9 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                     LogPrint(BCLog::SYS, "Asset cannot be indexed because it is not set in -assetindexguids list\n");
                     return;
                 }
-                uint64_t page;
-                if(!passetindexdb->ReadAssetPage(page)){
-                    page = 0;
-                    if(!passetindexdb->WriteAssetPage(page))
-                       LogPrint(BCLog::SYS, "Failed to write asset page\n");                  
-                }
-                std::vector<uint256> TXIDS;
-                passetindexdb->ReadIndexTXIDs(dbAsset.nAsset, page, TXIDS);
-                // new page needed
-                if(((int)TXIDS.size()) >= fAssetIndexPageSize){
-                    TXIDS.clear();
-                    page++;
-                    if(!passetindexdb->WriteAssetPage(page))
-                        LogPrint(BCLog::SYS, "Failed to write asset page\n");
-                }
-                TXIDS.push_back(tx.GetHash());
-                if(!passetindexdb->WriteIndexTXIDs(dbAsset.nAsset, page, TXIDS))
-                    LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
-                if(!passetindexdb->WritePayload(tx.GetHash(), oName))
+                const uint256& txid = tx.GetHash();
+                WriteAssetIndexTXID(dbAsset.nAsset, txid);
+                if(!passetindexdb->WritePayload(txid, oName))
                     LogPrint(BCLog::SYS, "Failed to write asset index payload\n");
             }
         }
