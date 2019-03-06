@@ -508,14 +508,15 @@ static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) 
     for (const COutPoint& removed : vNoSpendsRemaining)
         pcoinsTip->Uncache(removed);
 }
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<uint256> & vecTXIDs)
 {
     if(tx.IsCoinBase())
         return true;
 
     if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET && tx.nVersion != SYSCOIN_TX_VERSION_MINT_ASSET)
         return true;
-        
+    if(fAssetIndex)
+        vecTXIDs.push_back(tx.GetHash());    
     if(tx.nVersion == SYSCOIN_TX_VERSION_MINT_ASSET){
         if(!DisconnectMintAsset(tx, mapAssets, mapAssetAllocations))
             return false;       
@@ -2220,7 +2221,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     }
     AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
-    
+    std::vector<uint256> vecTXIDs;
+    std::vector<uint256> vecBlocks;
     bool fClean = true;
     CBlockUndo blockUndo;
     if (!UndoReadFromDisk(blockUndo, pindex)) {
@@ -2267,13 +2269,11 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations))
-            fClean = false;
-        if(fAssetIndex && !passetindexdb->EraseBlockHash(hash))
+        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations, vecTXIDs))
             fClean = false;
     } 
     // SYSCOIN 
-    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets)){
+    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs)){
        error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
        return DISCONNECT_FAILED;
     }  
