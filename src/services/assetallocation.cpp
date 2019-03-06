@@ -1629,7 +1629,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
-			if (pcursor->GetKey(key) && (nAsset == 0 || nAsset != key.nAsset)) {
+			if (pcursor->GetKey(key) && (nAsset == 0 || nAsset == key.nAsset)) {
 				pcursor->GetValue(txPos);              
 				if (!vecWitnessAddresses.empty() && std::find(vecWitnessAddresses.begin(), vecWitnessAddresses.end(), txPos.assetAllocationTuple.witnessAddress) == vecWitnessAddresses.end())
 				{
