@@ -3167,9 +3167,9 @@ static UniValue bumpfee(const JSONRPCRequest& request)
             RPCHelpMan{"bumpfee",
                 "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
                 "An opt-in RBF transaction with the given txid must be in the wallet.\n"
-                "The command will pay the additional fee by decreasing (or perhaps removing) its change output.\n"
-                "If the change output is not big enough to cover the increased fee, the command will currently fail\n"
-                "instead of adding new inputs to compensate. (A future implementation could improve this.)\n"
+                "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
+                "If `totalFee` is given, adding inputs is not supported, so there must be a single change output that is big enough or it will fail.\n"
+                "All inputs in the original transaction will be included in the replacement transaction.\n"
                 "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
                 "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
                 "The user can specify a confirmation target for estimatesmartfee.\n"
@@ -3266,7 +3266,14 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    feebumper::Result res = feebumper::CreateTransaction(pwallet, hash, coin_control, totalFee, errors, old_fee, new_fee, mtx);
+    feebumper::Result res;
+    if (totalFee > 0) {
+        // Targeting total fee bump. Requires a change output of sufficient size.
+        res = feebumper::CreateTotalBumpTransaction(pwallet, hash, coin_control, totalFee, errors, old_fee, new_fee, mtx);
+    } else {
+        // Targeting feerate bump.
+        res = feebumper::CreateRateBumpTransaction(pwallet, hash, coin_control, errors, old_fee, new_fee, mtx);
+    }
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:
