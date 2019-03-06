@@ -148,13 +148,13 @@ UniValue masternode(const JSONRPCRequest& request)
         int nCount;
         int nHeight;
         masternode_info_t mnInfo;
-        CBlockIndex* pindex = NULL;
         {
             LOCK(cs_main);
-            pindex = chainActive.Tip();
+            CBlockIndex* pindex = chainActive.Tip();
             mnodeman.UpdateLastPaid(pindex);
+            nHeight = pindex->nHeight + (strCommand == "current" ? 1 : 10);
         }
-        nHeight = pindex->nHeight + (strCommand == "current" ? 1 : 10);
+        
         if(!mnodeman.GetNextMasternodeInQueueForPayment(nHeight, true, nCount, mnInfo))
             return "unknown";
 
@@ -440,10 +440,9 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 );
     }
     if (strMode == "full" || strMode == "json" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
-        CBlockIndex* pindex = NULL;
         {
             LOCK(cs_main);
-            pindex = chainActive.Tip();
+            CBlockIndex* pindex = chainActive.Tip();
             mnodeman.UpdateLastPaid(pindex);
         }
     }
