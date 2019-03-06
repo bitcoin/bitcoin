@@ -131,8 +131,7 @@ bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
 void CMasternodeMan::Check(bool fForce)
 {
     static bool bFirstTime = true;
-	// SYSCOIN remove csmain lock
-    LOCK(cs);
+    LOCK2(cs_main, cs);
     std::set<CScript> payeeScripts;
     // only check masternodes in winners list
     {
@@ -1528,7 +1527,7 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CNode* pfrom, CMasternodeBr
 
 void CMasternodeMan::UpdateLastPaid(const CBlockIndex* pindex)
 {
-    LOCK(cs);
+    LOCK2(cs_main, cs);
 
     if(fLiteMode || !masternodeSync.IsWinnersListSynced() || mapMasternodes.empty()) return;
 
