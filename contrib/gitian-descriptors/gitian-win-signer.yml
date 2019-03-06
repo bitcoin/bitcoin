@@ -16,6 +16,8 @@ files:
 - "osslsigncode-Backports-to-1.7.1.patch"
 - "bitcoin-win-unsigned.tar.gz"
 script: |
+  set -e -o pipefail
+
   BUILD_DIR=`pwd`
   SIGDIR=${BUILD_DIR}/signature/win
   UNSIGNED_DIR=${BUILD_DIR}/unsigned
