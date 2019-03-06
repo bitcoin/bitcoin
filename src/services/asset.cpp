@@ -1053,7 +1053,7 @@ bool DecodeAssetTx(const CTransaction& tx, int& op,
 
 
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations){
-
+    const uint256 &txid = tx.GetHash();
     CAsset dbAsset;
     CAssetAllocation theAssetAllocation(tx);
     if(theAssetAllocation.assetAllocationTuple.IsNull()){
@@ -1098,11 +1098,28 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         } 
         if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();       
-        }                                    
-    }       
+        }
+        if(fAssetIndex){
+            if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
+                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase receiver allocation from asset allocation index\n");
+            }
+            if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
+                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase receiver allocation from asset index\n");
+            }       
+        }                                           
+    } 
+    if(fAssetIndex){
+        if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase sender allocation from asset allocation index\n");
+        }
+        if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase sender allocation from asset index\n");
+        }       
+    }           
     return true;  
 }
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
+    const uint256 &txid = tx.GetHash();
     CAsset dbAsset;
     CAsset theAsset(tx);
     if(theAsset.IsNull()){
@@ -1131,10 +1148,15 @@ bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
         }                                          
     } 
         
-      
+    if(fAssetIndex){
+        if(!passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase asset update from asset index\n");
+        }       
+    }      
     return true;  
 }
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
+    const uint256 &txid = tx.GetHash();
     CAsset theAsset(tx);
     
     if(theAsset.IsNull()){
@@ -1153,6 +1175,11 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
         mapAsset->second = std::move(dbAsset);                   
     }
     mapAsset->second.SetNull();  
+    if(fAssetIndex){
+        if(!passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase asset activate from asset index\n");
+        }       
+    }    
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const vector<vector<unsigned char> > &vvchArgs,

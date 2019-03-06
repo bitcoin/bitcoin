@@ -372,10 +372,18 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
     else if(storedReceiverAllocationRef.nBalance == 0){
         storedReceiverAllocationRef.SetNull();
     }
-    
+    if(fAssetIndex){
+        if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple, tx.GetHash())){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase mint asset allocation from asset allocation index\n");
+        }
+        if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, tx.GetHash())){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase mint asset allocation from asset index\n");
+        }       
+    }
     return true; 
 }
 bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations){
+    const uint256& txid = tx.GetHash();
     CAssetAllocation theAssetAllocation(tx);
     const std::string &senderTupleStr = theAssetAllocation.assetAllocationTuple.ToString();
     if(theAssetAllocation.assetAllocationTuple.IsNull()){
@@ -424,8 +432,24 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
         }
         else if(storedReceiverAllocationRef.nBalance == 0){
             storedReceiverAllocationRef.SetNull();  
-        }                              
+        } 
+        if(fAssetIndex){
+            if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple, txid)){
+                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase receiver allocation from asset allocation index\n");
+            }
+            if(!passetindexdb->EraseIndexTXID(receiverAllocationTuple.nAsset, txid)){
+                 LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase receiver allocation from asset index\n");
+            }       
+        }                               
     }
+    if(fAssetIndex){
+        if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase sender allocation from asset allocation index\n");
+        }
+        if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple.nAsset, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase sender allocation from asset index\n");
+        }       
+    }    
     return true; 
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const vector<vector<unsigned char> > &vvchArgs,
@@ -1524,18 +1548,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
     }   
     return false;                
 }
-std::vector<std::string> vecIntersection(std::vector<std::string> &v1,
-                                      std::vector<std::string> &v2){
-    std::vector<std::string> v3;
-
-    std::sort(v1.begin(), v1.end());
-    std::sort(v2.begin(), v2.end());
-
-    std::set_intersection(v1.begin(),v1.end(),
-                          v2.begin(),v2.end(),
-                          back_inserter(v3));
-    return v3;
-}
 
 bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
     string strTxid = "";
@@ -1719,7 +1731,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 3 < params.size())
         throw runtime_error("listassetallocationmempoolbalances [count] [from] [{options}]\n"
-            "scan through all asset allocations.\n"
+            "scan through all asset allocation mempool balances. Useful for ZDAG analysis on senders of allocations.\n"
             "[count]          (numeric, optional, default=10) The number of results to return.\n"
             "[from]           (numeric, optional, default=0) The number of results to skip.\n"
             "[options]        (array, optional) A json object with options to filter results\n"
@@ -1732,9 +1744,9 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
             "           ,...\n"
             "       ]\n"
             "    }\n"
-            + HelpExampleCli("listassetallocations", "0")
-            + HelpExampleCli("listassetallocations", "10 10")
-            + HelpExampleCli("listassetallocations", "0 0 '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
+            + HelpExampleCli("listassetallocationmempoolbalances", "0")
+            + HelpExampleCli("listassetallocationmempoolbalances", "10 10")
+            + HelpExampleCli("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
         );
     UniValue options;
     int count = 10;
