@@ -268,6 +268,8 @@ public:
             return false;
         if(TXIDS.empty() && walkBackPage == page){
             bool res = Erase(std::make_pair(allocationTuple.ToString(), page));
+            if(page <= 0)
+                return res;
             page--;
             return res && WriteAssetAllocationPage(page);
         }
@@ -301,6 +303,8 @@ public:
             return false;
         if(TXIDS.empty() && walkBackPage == page){
             bool res = Erase(std::make_pair(assetGuid, page));
+            if(page <= 0)
+                return res;
             page--;
             return res && WriteAssetPage(page);
         }
