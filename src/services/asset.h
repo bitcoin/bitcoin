@@ -253,6 +253,7 @@ public:
             }
             if(TXIDS.empty()){
                 Erase(std::make_pair(allocationTuple.ToString(), walkBackPage));
+                walkBackPage--;
                 continue;
             }
             std::vector<uint256>::iterator it = std::find(TXIDS.begin(), TXIDS.end(), txid);
@@ -285,6 +286,7 @@ public:
             }
             if(TXIDS.empty()){
                 Erase(std::make_pair(assetGuid, walkBackPage));
+                walkBackPage--;
                 continue;
             }            
             std::vector<uint256>::iterator it = std::find(TXIDS.begin(), TXIDS.end(), txid);
