@@ -2148,7 +2148,7 @@ UniValue listassets(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
 	return oRes;
 }
-bool CAssetIndexDB::ScanAssetIndex(const uint64_t page, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetIndexDB::ScanAssetIndex(uint64_t page, const UniValue& oOptions, UniValue& oRes) {
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;
     if (!oOptions.isNull()) {
@@ -2185,6 +2185,8 @@ bool CAssetIndexDB::ScanAssetIndex(const uint64_t page, const UniValue& oOptions
     }
     if(pageFound < page)
         return false;
+    // order by highest page first
+    page = pageFound - page;
     if(scanAllocation){
         if(!ReadIndexTXIDs(assetTuple, page, vecTX))
             return false;
@@ -2193,6 +2195,8 @@ bool CAssetIndexDB::ScanAssetIndex(const uint64_t page, const UniValue& oOptions
         if(!ReadIndexTXIDs(nAsset, page, vecTX))
             return false;
     }
+    // reverse order LIFO
+    std::reverse(vecTX.begin(), vecTX.end());
     uint256 block_hash;
     for(const uint256& txid: vecTX){
         UniValue oObj(UniValue::VOBJ);
@@ -2206,6 +2210,7 @@ bool CAssetIndexDB::ScanAssetIndex(const uint64_t page, const UniValue& oOptions
            
         oRes.push_back(oObj);
     }
+    
     return true;
 }
 UniValue listassetindex(const JSONRPCRequest& request) {

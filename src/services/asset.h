@@ -328,7 +328,7 @@ public:
     bool EraseBlockHash(const uint256& txid){
         return Erase(std::make_pair(std::string("bh"), txid));
     }       
-    bool ScanAssetIndex(const uint64_t page, const UniValue& oOptions, UniValue& oRes);
+    bool ScanAssetIndex(uint64_t page, const UniValue& oOptions, UniValue& oRes);
 };
 static CAsset emptyAsset;
 bool GetAsset(const int &nAsset,CAsset& txPos);
