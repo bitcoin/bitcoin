@@ -18,6 +18,18 @@ void ProofTracker::AddWitness(const BlockWitness& witness)
     m_mapBlockWitness.at(witness.m_hashBlock).emplace(witness);
 }
 
+std::set<BlockWitness> ProofTracker::GetWitnesses(const uint256& hashBlock) const
+{
+    if (m_mapBlockWitness.count(hashBlock))
+        return m_mapBlockWitness.at(hashBlock);
+    return std::set<BlockWitness>();
+}
+
+bool ProofTracker::HasSufficientProof(const BLOCKHASH& hashBlock) const
+{
+    return m_mapBlockWitness.count(hashBlock) && m_mapBlockWitness.at(hashBlock).size() >= REQUIRED_WITNESS_SIGS;
+}
+
 bool ProofTracker::IsSuspicious(const STAKEHASH& hashStake, const BLOCKHASH& hashBlock)
 {
     if (!m_mapStakes.count(hashStake)) {

@@ -15,6 +15,8 @@ private:
     void AddNewStake(const STAKEHASH& hashStake, const BLOCKHASH& hashBlock);
 
 public:
+    std::set<BlockWitness> GetWitnesses(const uint256& hashBlock) const;
+    bool HasSufficientProof(const BLOCKHASH& hashBlock) const;
     bool IsSuspicious(const STAKEHASH& hash, const BLOCKHASH& hashBlock);
     void AddWitness(const BlockWitness& witness);
 };
