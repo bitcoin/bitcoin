@@ -27,8 +27,8 @@ std::string TransactionErrorString(const TransactionError error);
  * Broadcast a transaction
  *
  * @param[in]  tx the transaction to broadcast
- * @param[out] &txid the txid of the transaction, if successfully broadcast
- * @param[out] &err_string reference to std::string to fill with error string if available
+ * @param[out] txid the txid of the transaction, if successfully broadcast
+ * @param[out] err_string std::string to fill with error string if available
  * @param[in]  highfee Reject txs with fees higher than this (if 0, accept any fee)
  * return error
  */
