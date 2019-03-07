@@ -157,7 +157,7 @@ std::string LocksHeld()
     return result;
 }
 
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs)
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, Lock* cs)
 {
     for (const std::pair<void*, CLockLocation>& i : g_lockstack)
         if (i.first == cs)

@@ -46,11 +46,23 @@ LEAVE_CRITICAL_SECTION(mutex); // no RAII
 //                           //
 ///////////////////////////////
 
+/**
+ * Abstract lock interface
+ */
+class LOCKABLE Lock
+{
+public:
+    virtual ~Lock() {}
+    virtual void lock() EXCLUSIVE_LOCK_FUNCTION() = 0;
+    virtual void unlock() UNLOCK_FUNCTION() = 0;
+    virtual bool try_lock() EXCLUSIVE_TRYLOCK_FUNCTION(true) = 0;
+};
+
 #ifdef DEBUG_LOCKORDER
 void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
 void LeaveCritical();
 std::string LocksHeld();
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) ASSERT_EXCLUSIVE_LOCK(cs);
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, Lock* cs) ASSERT_EXCLUSIVE_LOCK(cs);
 void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
 void DeleteLock(void* cs);
 
@@ -63,7 +75,7 @@ extern bool g_debug_lockorder_abort;
 #else
 void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
-void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) ASSERT_EXCLUSIVE_LOCK(cs) {}
+void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, Lock* cs) ASSERT_EXCLUSIVE_LOCK(cs) {}
 void static inline AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
 void static inline DeleteLock(void* cs) {}
 #endif
@@ -75,7 +87,7 @@ void static inline DeleteLock(void* cs) {}
  * checking to a subset of the mutex API.
  */
 template <typename PARENT>
-class LOCKABLE AnnotatedMixin : public PARENT
+class LOCKABLE AnnotatedMixin : public Lock, public PARENT
 {
 public:
     ~AnnotatedMixin() {

@@ -328,6 +328,7 @@ if test "x$enable_werror" = "xyes"; then
   ## isystem is in use to keep the build clean
   if test "x$use_isystem" = "xyes"; then
     AX_CHECK_COMPILE_FLAG([-Werror=documentation],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=documentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Werror=thread-safety-attributes],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety-attributes"],,[[$CXXFLAG_WERROR]])
   fi
   werror_enabled = yes
 fi
@@ -355,6 +356,7 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   ## isystem is in use to keep the build clean
   if test "x$use_isystem" = "xyes" && test "x$werror_enabled" == "x"; then
     AX_CHECK_COMPILE_FLAG([-Wdocumentation],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdocumentation"],,[[$CXXFLAG_WERROR]])
+    AX_CHECK_COMPILE_FLAG([-Wthread-safety-attributes],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety-attributes"],,[[$CXXFLAG_WERROR]])
   fi
 fi
 
