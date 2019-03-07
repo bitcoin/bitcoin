@@ -126,23 +126,9 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
     return COLLATERAL_OK;
 }
 
-void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
+void CMasternode::Check(bool fForce)
 {
-    const int nActiveStatePrev = nActiveState;
-    if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
-        nActiveState = MASTERNODE_NEW_START_REQUIRED;
-        if(nActiveStatePrev != nActiveState) {
-            LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s is in %s state now\n", outpoint.ToStringShort(), GetStateString());
-        }
-        return;
-    }
-    if(!IsPreEnabled() && !payeeScripts.empty()){
-        const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
-        if(payeeScripts.find(mnScript) == payeeScripts.end()){
-            LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s not found in winners list, skipping...\n", outpoint.ToStringShort());
-            return;
-        }
-    }
+
     LOCK(cs);
 
     if(ShutdownRequested()) return;
@@ -154,8 +140,7 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
 
     //once spent, stop doing the checks
     if(IsOutpointSpent()) return;
-
-    int nHeight = 0;
+    
     if(!fForce){
     	TRY_LOCK(cs_main, lockMain);
     	if (!lockMain) return;
@@ -166,8 +151,8 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
             return;
         }
     }
-
-    nHeight = chainActive.Height();
+    const int nActiveStatePrev = nActiveState;
+    int nHeight = chainActive.Height();
     
 
     if(IsPoSeBanned()) {
@@ -235,21 +220,50 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
         
 
         // part 1: expire based on syscoind ping
-        bool fSentinelPingExpired = !IsPreEnabled() && masternodeSync.IsSynced() && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
+        bool fSentinelPingExpired = masternodeSync.IsSynced() && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
         LogPrint(BCLog::MN, "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
         if(fSentinelPingExpired) {
             // only update if its not forced (the timer that calls maintenance which calls every masternode passes false for force)
             if(!fForce){
-                nPingRetries++;
-                CMasternodeBroadcast mnb(*this);
-                const uint256 &hash = mnb.GetHash();
-                bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
-                if (existsInMnbList) {
-                    mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = nPingRetries;
-                    
+                const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+                // only check masternodes in winners list
+                bool foundPayee = false;
+                {
+                    LOCK(cs_mapMasternodeBlocks);
+
+                    for (int i = -10; i < 20; i++) {
+                        if(foundPayee)
+                            break;
+                        if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i))
+                        {
+                            const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
+                            for(auto& payee: payees.vecPayees){
+                                if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+                                    if(mnScript == payee.GetPayee())
+                                    {
+                                        foundPayee = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                        }
+                    }
                 }
+                if(foundPayee){
+                    nPingRetries++;
+                    CMasternodeBroadcast mnb(*this);
+                    const uint256 &hash = mnb.GetHash();
+                    bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
+                    if (existsInMnbList) {
+                        mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = nPingRetries;
+                        
+                    }                        
+                    
+                }           
+
             }
             if(nPingRetries >= MASTERNODE_MAX_RETRIES) {
                 nActiveState = MASTERNODE_NEW_START_REQUIRED;

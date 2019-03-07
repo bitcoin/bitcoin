@@ -130,38 +130,11 @@ bool CMasternodeMan::PoSeBan(const COutPoint &outpoint)
 
 void CMasternodeMan::Check(bool fForce)
 {
-    static bool bFirstTime = true;
     LOCK2(cs_main, cs);
-    std::set<CScript> payeeScripts;
-    // only check masternodes in winners list
-    {
-        LOCK(cs_mapMasternodeBlocks);
-   
-        for (int i = -10; i < 20; i++) {
-            if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i))
-            {
-                const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
-                for(auto& payee: payees.vecPayees){
-                    if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
-                        payeeScripts.insert(payee.GetPayee());
-                    }
-                }
-                
-            }
-        }
-    }
-    if(payeeScripts.empty()){
-        if(!bFirstTime){
-            LogPrint(BCLog::MN, "CMasternodeMan::Check -- Masternode winners list is empty, skipping...\n");
-            return;
-        }
-    }
-    if(masternodeSync.IsSynced())
-        bFirstTime = false;
     for (auto& mnpair : mapMasternodes) {
         // NOTE: internally it checks only every MASTERNODE_CHECK_SECONDS seconds
         // since the last time, so expect some MNs to skip this
-        mnpair.second.Check(fForce, payeeScripts);
+        mnpair.second.Check(fForce);
     }
 }
 
