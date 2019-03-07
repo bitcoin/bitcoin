@@ -2172,7 +2172,7 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
         return error("%s: Stake pointer from height %d is too recent", __func__, pindexFrom->nHeight);
 
     //No stakepointers from budgetblocks
-    if (budget.IsBudgetPaymentBlock(pindexFrom->nHeight))
+    if (GetAdjustedTime() - block.GetBlockTime() < 24*60*60 && budget.IsBudgetPaymentBlock(pindexFrom->nHeight))
         return error("%s: Stake pointers cannot be from budget blocks", __func__);
 
     //Ensure that this stake pointer is not already used by another block in the chain
@@ -4609,30 +4609,36 @@ void static ProcessGetData(CNode* pfrom)
 
                 if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
                     if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
-                        int nVersionSend = PROTOCOL_VERSION;
+                        auto mnb = mnodeman.mapSeenMasternodeBroadcast[inv.hash];
+                        std::string strCommand = "mnb_new";
                         if (pfrom->nVersion < MIN_MNW_PING_VERSION) {
                             //Make sure this serializes to a format that is readable by the peer we are sending to
-                            nVersionSend = MIN_MNW_PING_VERSION - 1;
+                            mnb.lastPing.nVersion = 1;
                         }
-                        CDataStream ss(SER_NETWORK, nVersionSend);
+                        if (mnb.lastPing.nVersion == 1)
+                            strCommand = "mnb";
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash];
-                        pfrom->PushMessage("mnb", ss);
+                        ss << mnb;
+                        pfrom->PushMessage(strCommand.c_str(), ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_PING) {
                     if(mnodeman.mapSeenMasternodePing.count(inv.hash)){
-                        int nVersionSend = PROTOCOL_VERSION;
+                        auto mnp = mnodeman.mapSeenMasternodePing[inv.hash];
+                        std::string strCommand = "mnp_new";
                         if (pfrom->nVersion < MIN_MNW_PING_VERSION) {
                             //Make sure this serializes to a format that is readable by the peer we are sending to
-                            nVersionSend = MIN_MNW_PING_VERSION - 1;
+                            mnp.nVersion = 1;
                         }
-                        CDataStream ss(SER_NETWORK, nVersionSend);
+                        if (mnp.nVersion == 1)
+                            strCommand = "mnp";
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenMasternodePing[inv.hash];
-                        pfrom->PushMessage("mnp", ss);
+                        ss << mnp;
+                        pfrom->PushMessage(strCommand.c_str(), ss);
                         pushed = true;
                     }
                 }
@@ -4718,8 +4724,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-        vRecv.nVersion = pfrom->nVersion;
-        if (pfrom->nVersion != PROTOCOL_VERSION)
+        if (pfrom->nVersion < MinPeerProtoVersion())
         {
             // disconnect from peers older than this proto version
             LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);

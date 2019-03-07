@@ -64,8 +64,8 @@ public:
         READWRITE(sigTime);
         READWRITE(vchSig);
 
-        //New versioning signalled comes through protocol version passed to datastream
-        if (nVersion >= MIN_MNW_PING_VERSION) {
+        //New versioning is set externally before serialization
+        if (this->nVersion >= 2) {
             READWRITE(this->nVersion);
             READWRITE(vPrevBlockHash);
             READWRITE(vchSigPrevBlocks);

@@ -1237,6 +1237,7 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         return true;
     }
+    return false;
 }
 
 bool CBudgetManager::CanSubmitVotes(int blockStart, int blockEnd)

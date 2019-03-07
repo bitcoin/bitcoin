@@ -537,8 +537,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     LOCK(cs_process_message);
 
-    if (strCommand == "mnb") { //Masternode Broadcast
+    if (strCommand == "mnb" || strCommand == "mnb_new") { //Masternode Broadcast
         CMasternodeBroadcast mnb;
+        if (strCommand == "mnb") {
+            //Set to old version for old serialization
+            mnb.lastPing.nVersion = 1;
+        } else {
+            mnb.lastPing.nVersion = 2;
+        }
         vRecv >> mnb;
 
         int nDoS = 0;
@@ -550,8 +556,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
     }
 
-    else if (strCommand == "mnp") { //Masternode Ping
+    else if (strCommand == "mnp" || strCommand == "mnp_new") { //Masternode Ping
         CMasternodePing mnp;
+        if (strCommand == "mnp") {
+            //Set to old version for old serialization
+            mnp.nVersion = 1;
+        }
         vRecv >> mnp;
 
         LogPrint("masternode", "mnp - Masternode ping, vin: %s\n", mnp.vin.ToString());
