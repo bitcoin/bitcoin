@@ -136,7 +136,7 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
         }
         return;
     }
-    if(IsEnabled() && !payeeScripts.empty()){
+    if(!IsPreEnabled() && !payeeScripts.empty()){
         const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
         if(payeeScripts.find(mnScript) == payeeScripts.end()){
             LogPrint(BCLog::MN, "CMasternode::Check -- Masternode %s not found in winners list, skipping...\n", outpoint.ToStringShort());
@@ -235,7 +235,7 @@ void CMasternode::Check(bool fForce, const std::set<CScript> &payeeScripts)
         
 
         // part 1: expire based on syscoind ping
-        bool fSentinelPingExpired = masternodeSync.IsSynced() && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
+        bool fSentinelPingExpired = !IsPreEnabled() && masternodeSync.IsSynced() && !IsPingedWithin(MASTERNODE_SENTINEL_PING_MAX_SECONDS);
         LogPrint(BCLog::MN, "CMasternode::Check -- outpoint=%s, GetAdjustedTime()=%d, fSentinelPingExpired=%d\n",
                 outpoint.ToStringShort(), GetAdjustedTime(), fSentinelPingExpired);
 
