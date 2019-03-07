@@ -923,12 +923,12 @@ void CMasternodePing::Relay(CConnman& connman)
 
 std::string CMasternodePing::GetSentinelString() const
 {
-    return nSentinelVersion >= DEFAULT_SENTINEL_VERSION ? FormatVersion(nSentinelVersion) : "Unknown";
+    return FormatVersion(nSentinelVersion);
 }
 
 std::string CMasternodePing::GetDaemonString() const
 {
-    return nDaemonVersion >= DEFAULT_DAEMON_VERSION ? FormatVersion(nDaemonVersion) : "Unknown";
+    return FormatVersion(nDaemonVersion);
 }
 
 void CMasternode::AddGovernanceVote(uint256 nGovernanceObjectHash)

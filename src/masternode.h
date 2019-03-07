@@ -26,11 +26,6 @@ static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
 
-// sentinel version before implementation of nSentinelVersion in CMasternodePing
-#define DEFAULT_SENTINEL_VERSION CLIENT_SENTINEL_VERSION
-// daemon version before implementation of nDaemonVersion in CMasternodePing
-#define DEFAULT_DAEMON_VERSION CLIENT_MASTERNODE_VERSION
-
 class CMasternodePing
 {
 public:
@@ -40,8 +35,8 @@ public:
     std::vector<unsigned char> vchSig{};
     bool fSentinelIsCurrent = true; // true if last sentinel ping was current
     // MSB is major version to control backwards compatibility, other 3 bits corresponds to miner x.x.x version scheme
-    uint32_t nSentinelVersion{DEFAULT_SENTINEL_VERSION};
-    uint32_t nDaemonVersion{DEFAULT_DAEMON_VERSION};
+    uint32_t nSentinelVersion{CLIENT_SENTINEL_VERSION};
+    uint32_t nDaemonVersion{CLIENT_MASTERNODE_VERSION};
 
     CMasternodePing() = default;
 
