@@ -238,7 +238,7 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 CPubKey CWallet::GenerateNewKey(WalletBatch &batch, uint32_t nAccountIndex, bool fInternal)
 {
     assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    AssertLockHeld(cs_wallet); // mapKeyMetadata
+    AssertLockHeld(cs_wallet);
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
 
     CKey secret;
@@ -418,9 +418,9 @@ bool CWallet::AddHDPubKey(WalletBatch &batch, const CExtPubKey &extPubKey, bool 
     return batch.WriteHDPubKey(hdPubKey, mapKeyMetadata[extPubKey.pubkey.GetID()]);
 }
 
-bool CWallet::AddKeyPubKeyWithDB(WalletBatch &batch, const CKey& secret, const CPubKey &pubkey)
+bool CWallet::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& secret, const CPubKey& pubkey)
 {
-    AssertLockHeld(cs_wallet); // mapKeyMetadata
+    AssertLockHeld(cs_wallet);
 
     // Make sure we aren't adding private keys to private key disabled wallets
     assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
@@ -482,16 +482,16 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
     }
 }
 
-void CWallet::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &meta)
+void CWallet::LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata& meta)
 {
-    AssertLockHeld(cs_wallet); // mapKeyMetadata
+    AssertLockHeld(cs_wallet);
     UpdateTimeFirstKey(meta.nCreateTime);
     mapKeyMetadata[keyID] = meta;
 }
 
-void CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &meta)
+void CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata& meta)
 {
-    AssertLockHeld(cs_wallet); // m_script_metadata
+    AssertLockHeld(cs_wallet);
     UpdateTimeFirstKey(meta.nCreateTime);
     m_script_metadata[script_id] = meta;
 }
@@ -704,7 +704,7 @@ void CWallet::ChainStateFlushed(const CBlockLocator& loc)
 
 void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, bool fExplicit)
 {
-    LOCK(cs_wallet); // nWalletVersion
+    LOCK(cs_wallet);
     if (nWalletVersion >= nVersion)
         return;
 
@@ -728,7 +728,7 @@ void CWallet::SetMinVersion(enum WalletFeature nVersion, WalletBatch* batch_in, 
 
 bool CWallet::SetMaxVersion(int nVersion)
 {
-    LOCK(cs_wallet); // nWalletVersion, nWalletMaxVersion
+    LOCK(cs_wallet);
     // cannot downgrade below current version
     if (nWalletVersion > nVersion)
         return false;
@@ -1040,9 +1040,9 @@ DBErrors CWallet::ReorderTransactions()
     return DBErrors::LOAD_OK;
 }
 
-int64_t CWallet::IncOrderPosNext(WalletBatch *batch)
+int64_t CWallet::IncOrderPosNext(WalletBatch* batch)
 {
-    AssertLockHeld(cs_wallet); // nOrderPosNext
+    AssertLockHeld(cs_wallet);
     int64_t nRet = nOrderPosNext++;
     if (batch) {
         batch->WriteOrderPosNext(nOrderPosNext);
@@ -4025,8 +4025,8 @@ void CWallet::AutoLockMasternodeCollaterals()
 
 DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256>& vHashOut)
 {
-    AssertLockHeld(cs_wallet); // mapWallet
-    DBErrors nZapSelectTxRet = WalletBatch(*database,"cr+").ZapSelectTx(vHashIn, vHashOut);
+    AssertLockHeld(cs_wallet);
+    DBErrors nZapSelectTxRet = WalletBatch(*database, "cr+").ZapSelectTx(vHashIn, vHashOut);
     for (uint256 hash : vHashOut) {
         const auto& it = mapWallet.find(hash);
         wtxOrdered.erase(it->second.m_it_wtxOrdered);
@@ -4053,7 +4053,6 @@ DBErrors CWallet::ZapSelectTx(std::vector<uint256>& vHashIn, std::vector<uint256
     MarkDirty();
 
     return DBErrors::LOAD_OK;
-
 }
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
@@ -4169,7 +4168,7 @@ bool CWallet::NewKeyPool()
 
 size_t CWallet::KeypoolCountExternalKeys()
 {
-    AssertLockHeld(cs_wallet); // setExternalKeyPool
+    AssertLockHeld(cs_wallet);
     return setExternalKeyPool.size();
 }
 
@@ -4438,7 +4437,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances(interfaces::Chain:
 
 std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
 {
-    AssertLockHeld(cs_wallet); // mapWallet
+    AssertLockHeld(cs_wallet);
     std::set< std::set<CTxDestination> > groupings;
     std::set<CTxDestination> grouping;
 
@@ -4613,7 +4612,7 @@ void CWallet::GetScriptForMining(std::shared_ptr<CReserveScript> &script)
 
 void CWallet::LockCoin(const COutPoint& output)
 {
-    AssertLockHeld(cs_wallet); // setLockedCoins
+    AssertLockHeld(cs_wallet);
     setLockedCoins.insert(output);
     std::map<uint256, CWalletTx>::iterator it = mapWallet.find(output.hash);
     if (it != mapWallet.end()) it->second.MarkDirty(); // recalculate all credits for this tx
@@ -4624,7 +4623,7 @@ void CWallet::LockCoin(const COutPoint& output)
 
 void CWallet::UnlockCoin(const COutPoint& output)
 {
-    AssertLockHeld(cs_wallet); // setLockedCoins
+    AssertLockHeld(cs_wallet);
     setLockedCoins.erase(output);
     std::map<uint256, CWalletTx>::iterator it = mapWallet.find(output.hash);
     if (it != mapWallet.end()) it->second.MarkDirty(); // recalculate all credits for this tx
@@ -4635,13 +4634,13 @@ void CWallet::UnlockCoin(const COutPoint& output)
 
 void CWallet::UnlockAllCoins()
 {
-    AssertLockHeld(cs_wallet); // setLockedCoins
+    AssertLockHeld(cs_wallet);
     setLockedCoins.clear();
 }
 
 bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const
 {
-    AssertLockHeld(cs_wallet); // setLockedCoins
+    AssertLockHeld(cs_wallet);
     COutPoint outpt(hash, n);
 
     return (setLockedCoins.count(outpt) > 0);
@@ -4649,7 +4648,7 @@ bool CWallet::IsLockedCoin(uint256 hash, unsigned int n) const
 
 void CWallet::ListLockedCoins(std::vector<COutPoint>& vOutpts) const
 {
-    AssertLockHeld(cs_wallet); // setLockedCoins
+    AssertLockHeld(cs_wallet);
     for (std::set<COutPoint>::iterator it = setLockedCoins.begin();
          it != setLockedCoins.end(); it++) {
         COutPoint outpt = (*it);
@@ -4675,9 +4674,9 @@ void CWallet::ListProTxCoins(std::vector<COutPoint>& vOutpts) const
 
 /** @} */ // end of Actions
 
-void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<CTxDestination, int64_t> &mapKeyBirth) const {
+void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<CTxDestination, int64_t>& mapKeyBirth) const {
     AssertLockHeld(::cs_main); // LookupBlockIndex
-    AssertLockHeld(cs_wallet); // mapKeyMetadata
+    AssertLockHeld(cs_wallet);
     mapKeyBirth.clear();
 
     // get birth times for keys with metadata
