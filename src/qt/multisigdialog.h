@@ -39,7 +39,7 @@ class MultisigDialog : public QDialog
     MultisigInputEntry * addInput();
     SendCoinsEntry * addOutput();
 
-  private:
+private:
     Ui::MultisigDialog *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;

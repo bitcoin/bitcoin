@@ -234,7 +234,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     progressBar = new GUIUtil::ProgressBar();
     progressBar->setAlignment(Qt::AlignCenter);
     progressBar->setVisible(false);
-    progressBar->setStyleSheet("QProgressBar { background-color: #333333; text-align: center; color: white; border: 1px solid #4b4b4b; } QProgressBar::chunk { background: #3cb054; margin: 0px; }");
+    progressBar->setStyleSheet("QProgressBar { background-color: #8C8C8C; text-align: center; color: white; border: 1px solid #4b4b4b; } QProgressBar::chunk { background: #3cb054; margin: 0px; }");
 
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
@@ -327,6 +327,9 @@ void BitcoinGUI::createActions()
 
     multisigAction = new QAction(QIcon(":/icons/multisig"), tr("&Multisig"), this);
     multisigAction->setStatusTip(tr("UI to create multisig addresses"));
+    multisigAction->setToolTip(multisigAction->statusTip());
+    multisigAction->setCheckable(true);
+    multisigAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
     tabGroup->addAction(multisigAction);
 
 #ifdef ENABLE_WALLET
@@ -401,7 +404,7 @@ void BitcoinGUI::createActions()
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Peercoin command-line options").arg(tr(PACKAGE_NAME)));
 
     openChatroomAction = new QAction(QIcon(":/icons/peercoin"), tr("&Chatroom"), this);
-    openChatroomAction->setStatusTip(tr("Open https://peercoin.chat in a web browser."));
+    openChatroomAction->setStatusTip(tr("Open the Peercoin Discord in a web browser."));
 
     openForumAction = new QAction(QIcon(":/icons/peercoin"), tr("&Forum"), this);
     openForumAction->setStatusTip(tr("Open https://talk.peercoin.net in a web browser."));
@@ -769,7 +772,7 @@ void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 }
 
 void BitcoinGUI::openChatroom() {
-    QDesktopServices::openUrl(QUrl("https://peercoin.chat"));
+    QDesktopServices::openUrl(QUrl("https://discord.gg/XPxfwtG"));
 }
 
 void BitcoinGUI::openForum() {

@@ -13,6 +13,11 @@
 #if !defined(CLIENT_VERSION_MAJOR) || !defined(CLIENT_VERSION_MINOR) || !defined(CLIENT_VERSION_REVISION) || !defined(CLIENT_VERSION_BUILD) || !defined(CLIENT_VERSION_IS_RELEASE) || !defined(COPYRIGHT_YEAR)
 #error Client version information missing: version is not defined by bitcoin-config.h or in any other way
 #endif
+// ppcoin version - intended for display purpose ONLY
+#define PEERCOIN_VERSION_MAJOR       0
+#define PEERCOIN_VERSION_MINOR       8
+#define PEERCOIN_VERSION_REVISION    0
+#define PEERCOIN_VERSION_BUILD       0
 
 #if !defined(PEERCOIN_VERSION_MAJOR) || !defined(PEERCOIN_VERSION_MINOR) || !defined(PEERCOIN_VERSION_REVISION) || !defined(PEERCOIN_VERSION_BUILD)
 #error Client version information missing: version is not defined by bitcoin-config.h or in any other way

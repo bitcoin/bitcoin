@@ -20,15 +20,15 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 #define STYLE_INVALID "background:#FF8080"
 
 /* Transaction list -- unconfirmed transaction */
-#define COLOR_UNCONFIRMED QColor(128, 128, 128)
+#define COLOR_UNCONFIRMED QColor(140, 140, 140)
 /* Transaction list -- negative amount */
-#define COLOR_NEGATIVE QColor(136, 0, 21)
+#define COLOR_NEGATIVE QColor(255, 58, 66)
 /* Table List -- negative amount */
-#define COLOR_NEGATIVE_TABLE QColor(224, 0, 0)
+#define COLOR_NEGATIVE_TABLE QColor(255, 58, 66)
 /* Transaction list -- positive amount */
-#define COLOR_POSITIVE QColor(0x3c, 0xb0, 0x54)
+#define COLOR_POSITIVE QColor(60, 176, 84)
 /* Transaction list -- bare address (without label) */
-#define COLOR_BAREADDRESS QColor(140, 140, 140)
+#define COLOR_BAREADDRESS QColor(121, 121, 121)
 /* Transaction list -- TX status decoration - open until date */
 #define COLOR_TX_STATUS_OPENUNTILDATE QColor(64, 64, 255)
 /* Transaction list -- TX status decoration - danger, tx needs attention */
@@ -56,8 +56,8 @@ static const int MAX_URI_LENGTH = 255;
 #define QAPP_APP_NAME_TESTNET "Peercoin-Qt-testnet"
 
 /* Colors for minting tab for each coin age group */
-#define COLOR_MINT_YOUNG QColor(128, 64, 64)
-#define COLOR_MINT_MATURE QColor(64, 128, 64)
-#define COLOR_MINT_OLD QColor(26, 77, 26)
+#define COLOR_MINT_YOUNG QColor(255, 224, 226)
+#define COLOR_MINT_MATURE QColor(204, 255, 207)
+#define COLOR_MINT_OLD QColor(111, 252, 141)
 
 #endif // BITCOIN_QT_GUICONSTANTS_H

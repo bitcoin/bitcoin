@@ -1,5 +1,4 @@
-Peercoin Core
-=============
+Peercoin 0.8.0 BETA
 
 Setup
 ---------------------

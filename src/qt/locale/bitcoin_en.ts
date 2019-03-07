@@ -1195,8 +1195,7 @@
     </message>
     <message>
         <location line="+7"/>
-        <location line="+20"/>
-        <source>calculating...</source>
+        <source>transaction has reached maximum probability</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
