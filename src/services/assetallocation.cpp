@@ -169,7 +169,7 @@ void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256
 }
 void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid){
     // index the allocation
-    uint64_t page;
+    int64_t page;
     if(!passetindexdb->ReadAssetAllocationPage(page)){
         page = 0;
         if(!passetindexdb->WriteAssetAllocationPage(page))

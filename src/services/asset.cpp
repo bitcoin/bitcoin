@@ -974,7 +974,7 @@ void CMintSyscoin::Serialize( vector<unsigned char> &vchData) {
 
 }
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
-    uint64_t page;
+    int64_t page;
     if(!passetindexdb->ReadAssetPage(page)){
         page = 0;
         if(!passetindexdb->WriteAssetPage(page))
@@ -2149,7 +2149,7 @@ UniValue listassets(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
 	return oRes;
 }
-bool CAssetIndexDB::ScanAssetIndex(uint64_t page, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes) {
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;
     if (!oOptions.isNull()) {
@@ -2174,7 +2174,7 @@ bool CAssetIndexDB::ScanAssetIndex(uint64_t page, const UniValue& oOptions, UniV
     else
         return false;
     vector<uint256> vecTX;
-    uint64_t pageFound;
+    int64_t pageFound;
     bool scanAllocation = !assetTuple.IsNull();
     if(scanAllocation){
         if(!ReadAssetAllocationPage(pageFound))
@@ -2232,7 +2232,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
     }
     UniValue options;
-    uint64_t page = params[0].get_int64();
+    int64_t page = params[0].get_int64();
    
     if (page < 0) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'page' must be 0 or greater"));
