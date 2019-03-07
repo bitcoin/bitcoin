@@ -228,24 +228,24 @@ class CAssetIndexDB : public CDBWrapper {
 public:
     CAssetIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetindex", nCacheSize, fMemory, fWipe) {
     }
-    bool ReadIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint64_t &page, std::vector<uint256> &TXIDS) {
+    bool ReadIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const int64_t &page, std::vector<uint256> &TXIDS) {
         return Read(std::make_pair(allocationTuple.ToString(), page), TXIDS);
     }
-    bool WriteIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const uint64_t &page, const std::vector<uint256> &TXIDS) {
+    bool WriteIndexTXIDs(const CAssetAllocationTuple& allocationTuple, const int64_t &page, const std::vector<uint256> &TXIDS) {
         return Write(std::make_pair(allocationTuple.ToString(), page), TXIDS);
     }
-    bool ReadIndexTXIDs(const uint32_t &assetGuid, const uint64_t &page, std::vector<uint256> &TXIDS){
+    bool ReadIndexTXIDs(const uint32_t &assetGuid, const int64_t &page, std::vector<uint256> &TXIDS){
         return Read(std::make_pair(assetGuid, page), TXIDS);
     }
-    bool WriteIndexTXIDs(const uint32_t &assetGuid, const uint64_t &page, const std::vector<uint256> &TXIDS) {
+    bool WriteIndexTXIDs(const uint32_t &assetGuid, const int64_t &page, const std::vector<uint256> &TXIDS) {
         return Write(std::make_pair(assetGuid, page), TXIDS);
     }
    bool EraseIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256 &txid) {
-        uint64_t page=0;
+        int64_t page=0;
         std::vector<uint256> TXIDS;
         if(!ReadAssetAllocationPage(page))
             return false;
-        uint64_t walkBackPage = page;
+        int64_t walkBackPage = page;
         while(walkBackPage >= 0){
             if(!ReadIndexTXIDs(allocationTuple, walkBackPage, TXIDS)){
                 walkBackPage--;
@@ -276,11 +276,11 @@ public:
         return Write(std::make_pair(allocationTuple.ToString(), page), TXIDS);
     }    
     bool EraseIndexTXID(const uint32_t &assetGuid, const uint256 &txid) {
-        uint64_t page=0;
+        int64_t page=0;
         std::vector<uint256> TXIDS;
         if(!ReadAssetPage(page))
             return false;
-        uint64_t walkBackPage = page;
+        int64_t walkBackPage = page;
         while(walkBackPage >= 0){
             if(!ReadIndexTXIDs(assetGuid, walkBackPage, TXIDS)){
                 walkBackPage--;
@@ -316,16 +316,16 @@ public:
     bool WriteAssetsByAddress(const CWitnessAddress &address, const std::vector<uint32_t> &assetGuids) {
         return Write(address, assetGuids);
     }      
-    bool ReadAssetPage(uint64_t& page) {
+    bool ReadAssetPage(int64_t& page) {
         return Read(assetindexpage, page);
     }
-    bool WriteAssetPage(const uint64_t &page) {
+    bool WriteAssetPage(const int64_t &page) {
         return Write(assetindexpage, page);
     }
-    bool ReadAssetAllocationPage(uint64_t& page) {
+    bool ReadAssetAllocationPage(int64_t& page) {
         return Read(assetallocationindexpage, page);
     }
-    bool WriteAssetAllocationPage(const uint64_t &page) {
+    bool WriteAssetAllocationPage(const int64_t &page) {
         return Write(assetallocationindexpage, page);
     }
     bool WritePayload(const uint256& txid, const UniValue& payload) {
@@ -342,7 +342,7 @@ public:
     bool WriteBlockHash(const uint256& txid, const uint256& block_hash){
         return Write(std::make_pair(bh, txid), block_hash);
     }       
-    bool ScanAssetIndex(uint64_t page, const UniValue& oOptions, UniValue& oRes);
+    bool ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
 static CAsset emptyAsset;
