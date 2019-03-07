@@ -1972,11 +1972,11 @@ bool AppInitMain(InitInterfaces& interfaces)
 
         uiInterface.InitMessage(_("Loading block index..."));
 
-        LOCK(cs_main);
-
         do {
             const int64_t load_block_index_start_time = GetTimeMillis();
+            bool is_coinsview_empty;
             try {
+                LOCK(cs_main);
                 // This statement makes ::ChainstateActive() usable.
                 g_chainstate = MakeUnique<CChainState>();
                 UnloadBlockIndex();
@@ -2099,7 +2099,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                     break;
                 }
 
-                bool is_coinsview_empty = fReset || fReindexChainState ||
+                is_coinsview_empty = fReset || fReindexChainState ||
                     ::ChainstateActive().CoinsTip().GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
                     // LoadChainTip initializes the chain based on CoinsTip()'s best block

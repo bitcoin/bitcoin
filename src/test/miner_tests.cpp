@@ -518,20 +518,22 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Mine an empty block
     createAndProcessEmptyBlock();
 
+    {
     LOCK(cs_main);
 
     SetMockTime(::ChainActive().Tip()->GetMedianTimePast() + 1);
 
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5U);
+    } // unlock cs_main while calling InvalidateBlock
 
     CValidationState state;
-    InvalidateBlock(state, chainparams, ::ChainActive().Tip());
+    InvalidateBlock(state, chainparams, WITH_LOCK(cs_main, return ::ChainActive().Tip()));
 
     SetMockTime(0);
     mempool.clear();
 
-    LOCK(::mempool.cs);
+    LOCK2(cs_main, ::mempool.cs);
     TestPackageSelection(chainparams, scriptPubKey, txFirst);
 
     fCheckpointsEnabled = true;

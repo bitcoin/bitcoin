@@ -1430,10 +1430,9 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
 
         LogPrintf("CInstantSendManager::%s -- invalidating block %s\n", __func__, pindex->GetBlockHash().ToString());
 
-        LOCK(cs_main);
         CValidationState state;
         // need non-const pointer
-        auto pindex2 = LookupBlockIndex(pindex->GetBlockHash());
+        auto pindex2 = WITH_LOCK(::cs_main, return LookupBlockIndex(pindex->GetBlockHash()));
         if (!InvalidateBlock(state, Params(), pindex2)) {
             LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
