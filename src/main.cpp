@@ -4608,8 +4608,13 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
+                        int nVersionSend = PROTOCOL_VERSION;
+                        if (pfrom->nVersion < MIN_MNW_PING_VERSION) {
+                            //Make sure this serializes to a format that is readable by the peer we are sending to
+                            nVersionSend = MIN_MNW_PING_VERSION - 1;
+                        }
+                        CDataStream ss(SER_NETWORK, nVersionSend);
                         ss.reserve(1000);
                         ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash];
                         pfrom->PushMessage("mnb", ss);
@@ -4619,7 +4624,12 @@ void static ProcessGetData(CNode* pfrom)
 
                 if (!pushed && inv.type == MSG_MASTERNODE_PING) {
                     if(mnodeman.mapSeenMasternodePing.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        int nVersionSend = PROTOCOL_VERSION;
+                        if (pfrom->nVersion < MIN_MNW_PING_VERSION) {
+                            //Make sure this serializes to a format that is readable by the peer we are sending to
+                            nVersionSend = MIN_MNW_PING_VERSION - 1;
+                        }
+                        CDataStream ss(SER_NETWORK, nVersionSend);
                         ss.reserve(1000);
                         ss << mnodeman.mapSeenMasternodePing[inv.hash];
                         pfrom->PushMessage("mnp", ss);
@@ -4708,6 +4718,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
+        vRecv.nVersion = pfrom->nVersion;
         if (pfrom->nVersion != PROTOCOL_VERSION)
         {
             // disconnect from peers older than this proto version
@@ -5505,6 +5516,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         std::vector<CMasternodePing> vPings;
         vRecv >> vPings;
 
+        LOCK(cs_main);
         for (auto& ping : vPings) {
             int nDoS;
             ping.CheckAndUpdate(nDoS);
@@ -5535,6 +5547,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 //if this is a suspicious block rejection, and we have proof, send it
                 if (strReason == "block-suspicious") {
+                    LOCK(cs_main);
                     if (g_proofTracker->HasSufficientProof(hash)) {
                         auto setWitness = g_proofTracker->GetWitnesses(hash);
                         //collect pings from witnesses

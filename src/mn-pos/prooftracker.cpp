@@ -25,6 +25,13 @@ std::set<BlockWitness> ProofTracker::GetWitnesses(const uint256& hashBlock) cons
     return std::set<BlockWitness>();
 }
 
+int ProofTracker::GetWitnessCount(const BLOCKHASH& hashBlock) const
+{
+    if (!m_mapBlockWitness.count(hashBlock))
+        return 0;
+    return m_mapBlockWitness.at(hashBlock).size();
+}
+
 bool ProofTracker::HasSufficientProof(const BLOCKHASH& hashBlock) const
 {
     return m_mapBlockWitness.count(hashBlock) && m_mapBlockWitness.at(hashBlock).size() >= REQUIRED_WITNESS_SIGS;

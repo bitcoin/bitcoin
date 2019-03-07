@@ -911,6 +911,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
 
             if (this->nVersion > 1) {
                 for (const uint256& hashBlock : vPrevBlockHash) {
+                    LogPrintf("%s:*************8********** adding witness for block %s\n", __func__, hashBlock.GetHex());
                     g_proofTracker->AddWitness(BlockWitness(pmn->vin, hashBlock));
                 }
             }

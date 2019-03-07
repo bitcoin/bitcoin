@@ -19,4 +19,5 @@ public:
     bool HasSufficientProof(const BLOCKHASH& hashBlock) const;
     bool IsSuspicious(const STAKEHASH& hash, const BLOCKHASH& hashBlock);
     void AddWitness(const BlockWitness& witness);
+    int GetWitnessCount(const BLOCKHASH& hashBlock) const;
 };

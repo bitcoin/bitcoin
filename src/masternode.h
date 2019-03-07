@@ -64,8 +64,8 @@ public:
         READWRITE(sigTime);
         READWRITE(vchSig);
 
-        //New versioning signalled by flipping sign bit on sigTime
-        if (this->nVersion > 1) {
+        //New versioning signalled comes through protocol version passed to datastream
+        if (nVersion >= MIN_MNW_PING_VERSION) {
             READWRITE(this->nVersion);
             READWRITE(vPrevBlockHash);
             READWRITE(vchSigPrevBlocks);
