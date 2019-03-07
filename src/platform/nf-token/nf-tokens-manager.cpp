@@ -21,6 +21,9 @@ namespace Platform
         assert(!nfToken.tokenOwnerKeyId.IsNull());
         assert(!nfToken.metadataAdminKeyId.IsNull());
 
+        assert(pindex != nullptr);
+        assert(!tx.GetHash().IsNull());
+
         NfTokenIndex newNfTokenIndex {pindex, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))};
 
         return m_nfTokensIndexSet.emplace(std::move(newNfTokenIndex)).second;
@@ -208,9 +211,8 @@ namespace Platform
         auto it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
         if (it != m_nfTokensIndexSet.end() && it->blockIndex->nHeight <= height)
         {
-            bool result = m_nfTokensIndexSet.erase(it) != m_nfTokensIndexSet.end();
-            assert(result);
-            return result;
+            m_nfTokensIndexSet.erase(it);
+            return true;
         }
         return false;
     }

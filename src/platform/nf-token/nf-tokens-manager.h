@@ -8,6 +8,7 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/any_range.hpp>
 
+#include "chain.h"
 #include "nf-token-multiindex-utils.h"
 #include "nf-token.h"
 
