@@ -721,6 +721,7 @@ void CInstantSendManager::RemoveFinalISLock(const uint256& hash)
         inputToInstantSendLock.erase(in);
     }
     UpdateISLockMinedBlock(&islockInfo, nullptr);
+    finalInstantSendLocks.erase(it);
 }
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock)
