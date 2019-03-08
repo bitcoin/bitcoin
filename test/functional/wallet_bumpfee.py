@@ -73,6 +73,9 @@ class BumpFeeTest(BitcoinTestFramework):
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
+        # These tests wipe out a number of utxos that are expected in other tests
+        test_small_output_with_feerate_succeeds(rbf_node, dest_address)
+        test_no_more_inputs_fails(rbf_node, dest_address)
         self.log.info("Success")
 
 
@@ -173,6 +176,40 @@ def test_small_output_fails(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
 
+def test_small_output_with_feerate_succeeds(rbf_node, dest_address):
+
+    # Make sure additional inputs exist
+    rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
+    rbfid = spend_one_input(rbf_node, dest_address)
+    original_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+    assert_equal(len(original_input_list), 1)
+    original_txin = original_input_list[0]
+    # Keep bumping until we out-spend change output
+    tx_fee = 0
+    while tx_fee < Decimal("0.0005"):
+        new_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+        new_item = list(new_input_list)[0]
+        assert_equal(len(original_input_list), 1)
+        assert_equal(original_txin["txid"], new_item["txid"])
+        assert_equal(original_txin["vout"], new_item["vout"])
+        rbfid_new_details = rbf_node.bumpfee(rbfid)
+        rbfid_new = rbfid_new_details["txid"]
+        raw_pool = rbf_node.getrawmempool()
+        assert rbfid not in raw_pool
+        assert rbfid_new in raw_pool
+        rbfid = rbfid_new
+        tx_fee = rbfid_new_details["origfee"]
+
+    # input(s) have been added
+    final_input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
+    assert_greater_than(len(final_input_list), 1)
+    # Original input is in final set
+    assert [txin for txin in final_input_list
+            if txin["txid"] == original_txin["txid"]
+            and txin["vout"] == original_txin["vout"]]
+
+    rbf_node.generatetoaddress(1, rbf_node.getnewaddress())
+    assert_equal(rbf_node.gettransaction(rbfid)["confirmations"], 1)
 
 def test_dust_to_fee(rbf_node, dest_address):
     # check that if output is reduced to dust, it will be converted to fee
@@ -272,18 +309,19 @@ def test_locked_wallet_fails(rbf_node, dest_address):
     rbf_node.walletlock()
     assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
                             rbf_node.bumpfee, rbfid)
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
 
-def spend_one_input(node, dest_address):
+def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(
         sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
-    rawtx = node.createrawtransaction(
-        [tx_input], {dest_address: Decimal("0.00050000"),
-                     node.getrawchangeaddress(): Decimal("0.00049000")})
+    destinations = {dest_address: Decimal("0.00050000")}
+    if change_size > 0:
+        destinations[node.getrawchangeaddress()] = change_size
+    rawtx = node.createrawtransaction([tx_input], destinations)
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
-
 
 def submit_block_with_tx(node, tx):
     ctx = CTransaction()
@@ -301,6 +339,12 @@ def submit_block_with_tx(node, tx):
     node.submitblock(block.serialize(True).hex())
     return block
 
+def test_no_more_inputs_fails(rbf_node, dest_address):
+    # feerate rbf requires confirmed outputs when change output doesn't exist or is insufficient
+    rbf_node.generatetoaddress(1, dest_address)
+    # spend all funds, no change output
+    rbfid = rbf_node.sendtoaddress(rbf_node.getnewaddress(), rbf_node.getbalance(), "", "", True)
+    assert_raises_rpc_error(-4, "Unable to create transaction: Insufficient funds", rbf_node.bumpfee, rbfid)
 
 if __name__ == "__main__":
     BumpFeeTest().main()
