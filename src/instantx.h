@@ -45,11 +45,12 @@ extern int nCompleteTXLocks;
  */
 class CInstantSend
 {
-private:
-    static const std::string SERIALIZATION_VERSION_STRING;
+public:
     /// Automatic locks of "simple" transactions are only allowed
     /// when mempool usage is lower than this threshold
     static const double AUTO_IX_MEMPOOL_THRESHOLD;
+private:
+    static const std::string SERIALIZATION_VERSION_STRING;
 
     // Keep track of current block height
     int nCachedBlockHeight;

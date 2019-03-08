@@ -25,6 +25,8 @@
 #include "wallet/wallet.h"
 #endif // ENABLE_WALLET
 
+#include "llmq/quorums_instantsend.h"
+
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
 
@@ -56,7 +58,7 @@ const std::string CInstantSend::SERIALIZATION_VERSION_STRING = "CInstantSend-Ver
 void CInstantSend::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     if (fLiteMode) return; // disable all Dash specific functionality
-    if (!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
+    if (!llmq::IsOldInstantSendEnabled()) return;
 
     // NOTE: NetMsgType::TXLOCKREQUEST is handled via ProcessMessage() in net_processing.cpp
 
@@ -224,7 +226,7 @@ void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
 void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 {
     if (!fMasternodeMode) return;
-    if (!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
+    if (!llmq::IsOldInstantSendEnabled()) return;
 
     AssertLockHeld(cs_main);
     AssertLockHeld(cs_instantsend);
@@ -496,7 +498,7 @@ void CInstantSend::ProcessOrphanTxLockVotes()
 
 void CInstantSend::TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCandidate)
 {
-    if (!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
+    if (!llmq::IsOldInstantSendEnabled()) return;
 
     AssertLockHeld(cs_main);
     AssertLockHeld(cs_instantsend);
@@ -547,7 +549,7 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
 
 void CInstantSend::LockTransactionInputs(const CTxLockCandidate& txLockCandidate)
 {
-    if (!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return;
+    if (!llmq::IsOldInstantSendEnabled()) return;
 
     LOCK(cs_instantsend);
 
@@ -740,6 +742,10 @@ void CInstantSend::CheckAndRemove()
 
 bool CInstantSend::AlreadyHave(const uint256& hash)
 {
+    if (!llmq::IsOldInstantSendEnabled()) {
+        return true;
+    }
+
     LOCK(cs_instantsend);
     return mapLockRequestAccepted.count(hash) ||
             mapLockRequestRejected.count(hash) ||
@@ -766,6 +772,10 @@ bool CInstantSend::HasTxLockRequest(const uint256& txHash)
 
 bool CInstantSend::GetTxLockRequest(const uint256& txHash, CTxLockRequest& txLockRequestRet)
 {
+    if (!llmq::IsOldInstantSendEnabled()) {
+        return false;
+    }
+
     LOCK(cs_instantsend);
 
     std::map<uint256, CTxLockCandidate>::iterator it = mapTxLockCandidates.find(txHash);
@@ -777,6 +787,10 @@ bool CInstantSend::GetTxLockRequest(const uint256& txHash, CTxLockRequest& txLoc
 
 bool CInstantSend::GetTxLockVote(const uint256& hash, CTxLockVote& txLockVoteRet)
 {
+    if (!llmq::IsOldInstantSendEnabled()) {
+        return false;
+    }
+
     LOCK(cs_instantsend);
 
     std::map<uint256, CTxLockVote>::iterator it = mapTxLockVotes.find(hash);
@@ -828,7 +842,7 @@ int CInstantSend::GetTransactionLockSignatures(const uint256& txHash)
 {
     if (!fEnableInstantSend) return -1;
     if (GetfLargeWorkForkFound() || GetfLargeWorkInvalidChainFound()) return -2;
-    if (!sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED)) return -3;
+    if (!llmq::IsOldInstantSendEnabled()) return -3;
 
     LOCK(cs_instantsend);
 
@@ -932,7 +946,7 @@ void CInstantSend::DoMaintenance()
 
 bool CInstantSend::CanAutoLock()
 {
-    if (!isAutoLockBip9Active) {
+    if (!isAutoLockBip9Active || !llmq::IsOldInstantSendEnabled()) {
         return false;
     }
     if (!sporkManager.IsSporkActive(SPORK_16_INSTANTSEND_AUTOLOCKS)) {

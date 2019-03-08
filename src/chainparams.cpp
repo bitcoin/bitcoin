@@ -308,6 +308,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         consensus.llmqChainLocks = Consensus::LLMQ_400_60;
+        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
 
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
@@ -476,6 +477,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         consensus.llmqChainLocks = Consensus::LLMQ_50_60;
+        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
 
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
@@ -623,6 +625,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         consensus.llmqChainLocks = Consensus::LLMQ_50_60;
+        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
 
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
@@ -787,6 +790,7 @@ public:
         consensus.llmqs[Consensus::LLMQ_10_60] = llmq10_60;
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqChainLocks = Consensus::LLMQ_10_60;
+        consensus.llmqForInstantSend = Consensus::LLMQ_10_60;
     }
 
     void UpdateBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout, int64_t nWindowSize, int64_t nThreshold)

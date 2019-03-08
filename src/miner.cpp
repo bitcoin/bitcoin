@@ -34,6 +34,7 @@
 #include "evo/deterministicmns.h"
 
 #include "llmq/quorums_blockprocessor.h"
+#include "llmq/quorums_chainlocks.h"
 
 #include <algorithm>
 #include <boost/thread.hpp>
@@ -286,11 +287,15 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
+// - safe TXs in regard to ChainLocks
 bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
 {
     BOOST_FOREACH (const CTxMemPool::txiter it, package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
             return false;
+        if (!llmq::chainLocksHandler->IsTxSafeForMining(it->GetTx().GetHash())) {
+            return false;
+        }
     }
     return true;
 }
@@ -331,6 +336,10 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
     // as long as reorgs keep the mempool consistent.
     if (!IsFinalTx(iter->GetTx(), nHeight, nLockTimeCutoff))
         return false;
+
+    if (!llmq::chainLocksHandler->IsTxSafeForMining(iter->GetTx().GetHash())) {
+        return false;
+    }
 
     return true;
 }
@@ -523,7 +532,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         onlyUnconfirmed(ancestors);
         ancestors.insert(iter);
 
-        // Test if all tx's are Final
+        // Test if all tx's are Final and safe
         if (!TestPackageTransactions(ancestors)) {
             if (fUsingModified) {
                 mapModifiedTx.get<ancestor_score>().erase(modit);

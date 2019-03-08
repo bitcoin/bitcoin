@@ -21,6 +21,8 @@
 
 #include "instantx.h"
 
+#include "llmq/quorums_instantsend.h"
+
 #include <stdint.h>
 #include <string>
 
@@ -50,6 +52,11 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
             strTxStatus = tr("%1/unconfirmed").arg(nDepth);
         } else {
             strTxStatus = tr("%1 confirmations").arg(nDepth);
+        }
+
+        if (llmq::quorumInstantSendManager->IsLocked(wtx.GetHash())) {
+            strTxStatus += tr(" (verified via LLMQ based InstantSend)");
+            return strTxStatus;
         }
 
         if(!instantsend.HasTxLockRequest(wtx.GetHash())) return strTxStatus; // regular tx

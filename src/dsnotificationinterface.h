@@ -21,8 +21,10 @@ protected:
     void AcceptedBlockHeader(const CBlockIndex *pindexNew) override;
     void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) override;
     void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) override;
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock) override;
     void NotifyMasternodeListChanged(const CDeterministicMNList& newList) override;
+    void NotifyChainLock(const CBlockIndex* pindex) override;
 
 private:
     CConnman& connman;

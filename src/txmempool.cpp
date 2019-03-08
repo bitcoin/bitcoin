@@ -24,6 +24,8 @@
 #include "evo/specialtx.h"
 #include "evo/providertx.h"
 
+#include "llmq/quorums_instantsend.h"
+
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  CAmount _inChainInputValue,
@@ -1497,7 +1499,7 @@ int CTxMemPool::Expire(int64_t time) {
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         // locked txes do not expire until mined and have sufficient confirmations
-        if (instantsend.IsLockedInstantSendTransaction(it->GetTx().GetHash())) {
+        if (instantsend.IsLockedInstantSendTransaction(it->GetTx().GetHash()) || llmq::quorumInstantSendManager->IsLocked(it->GetTx().GetHash())) {
             it++;
             continue;
         }

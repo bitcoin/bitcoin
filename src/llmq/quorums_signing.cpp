@@ -440,10 +440,24 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
     }
 }
 
+void CSigningManager::ProcessPendingReconstructedRecoveredSigs()
+{
+    decltype(pendingReconstructedRecoveredSigs) l;
+    {
+        LOCK(cs);
+        l = std::move(pendingReconstructedRecoveredSigs);
+    }
+    for (auto& p : l) {
+        ProcessRecoveredSig(-1, p.first, p.second, *g_connman);
+    }
+}
+
 bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 {
     std::unordered_map<NodeId, std::list<CRecoveredSig>> recSigsByNode;
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
+
+    ProcessPendingReconstructedRecoveredSigs();
 
     CollectPendingRecoveredSigsToVerify(32, recSigsByNode, quorums);
     if (recSigsByNode.empty()) {
@@ -529,7 +543,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
                 } else {
                     // Looks like we're trying to process a recSig that is already known. This might happen if the same
                     // recSig comes in through regular QRECSIG messages and at the same time through some other message
-                    // which allowed to reconstruct a recSig (e.g. IXLOCK). In this case, just bail out.
+                    // which allowed to reconstruct a recSig (e.g. ISLOCK). In this case, just bail out.
                 }
                 return;
             } else {
@@ -548,6 +562,12 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
     for (auto& l : listeners) {
         l->HandleNewRecoveredSig(recoveredSig);
     }
+}
+
+void CSigningManager::PushReconstructedRecoveredSig(const llmq::CRecoveredSig& recoveredSig, const llmq::CQuorumCPtr& quorum)
+{
+    LOCK(cs);
+    pendingReconstructedRecoveredSigs.emplace_back(recoveredSig, quorum);
 }
 
 void CSigningManager::Cleanup()

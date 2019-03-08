@@ -50,6 +50,7 @@
 #include "llmq/quorums_debug.h"
 #include "llmq/quorums_dkgsessionmgr.h"
 #include "llmq/quorums_init.h"
+#include "llmq/quorums_instantsend.h"
 #include "llmq/quorums_signing.h"
 #include "llmq/quorums_signing_shares.h"
 
@@ -976,6 +977,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return llmq::quorumSigningManager->AlreadyHave(inv);
     case MSG_CLSIG:
         return llmq::chainLocksHandler->AlreadyHave(inv);
+    case MSG_ISLOCK:
+        return llmq::quorumInstantSendManager->AlreadyHave(inv);
     }
 
     // Don't know what it is, just say we already got one
@@ -1292,6 +1295,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     llmq::CChainLockSig o;
                     if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
+                        push = true;
+                    }
+                }
+
+                if (!push && (inv.type == MSG_ISLOCK)) {
+                    llmq::CInstantSendLock o;
+                    if (llmq::quorumInstantSendManager->GetInstantSendLockByHash(inv.hash, o)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::ISLOCK, o));
                         push = true;
                     }
                 }
@@ -1777,6 +1788,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             case MSG_CLSIG:
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
+                            case MSG_ISLOCK:
+                                doubleRequestDelay = 5 * 1000000;
+                                break;
                         }
                         pfrom->AskFor(inv, doubleRequestDelay);
                     }
@@ -2001,11 +2015,16 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if(strCommand == NetMsgType::TX) {
             vRecv >> ptx;
             txLockRequest = CTxLockRequest(ptx);
-            fCanAutoLock = CInstantSend::CanAutoLock() && txLockRequest.IsSimple();
+            fCanAutoLock = llmq::IsOldInstantSendEnabled() && CInstantSend::CanAutoLock() && txLockRequest.IsSimple();
         } else if(strCommand == NetMsgType::TXLOCKREQUEST) {
             vRecv >> txLockRequest;
             ptx = txLockRequest.tx;
             nInvType = MSG_TXLOCK_REQUEST;
+            if (llmq::IsNewInstantSendEnabled()) {
+                // the new system does not require explicit lock requests
+                // changing the inv type to MSG_TX also results in re-broadcasting the TX as normal TX
+                nInvType = MSG_TX;
+            }
         } else if (strCommand == NetMsgType::DSTX) {
             vRecv >> dstx;
             ptx = dstx.tx;
@@ -2021,7 +2040,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
-        if (strCommand == NetMsgType::TXLOCKREQUEST || fCanAutoLock) {
+        if (nInvType == MSG_TXLOCK_REQUEST || fCanAutoLock) {
             if(!instantsend.ProcessTxLockRequest(txLockRequest, connman)) {
                 LogPrint("instantsend", "TXLOCKREQUEST -- failed %s\n", txLockRequest.GetHash().ToString());
                 // Should not really happen for "fCanAutoLock == true" but just in case:
@@ -2032,7 +2051,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // Fallback for normal txes to process as usual
                 fCanAutoLock = false;
             }
-        } else if (strCommand == NetMsgType::DSTX) {
+        } else if (nInvType == MSG_DSTX) {
             uint256 hashTx = tx.GetHash();
             if(CPrivateSend::GetDSTX(hashTx)) {
                 LogPrint("privatesend", "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
@@ -2069,15 +2088,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs)) {
             // Process custom txes, this changes AlreadyHave to "true"
-            if (strCommand == NetMsgType::DSTX) {
+            if (nInvType == MSG_DSTX) {
                 LogPrintf("DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->id);
                 CPrivateSend::AddDSTX(dstx);
-            } else if (strCommand == NetMsgType::TXLOCKREQUEST || fCanAutoLock) {
+            } else if (nInvType == MSG_TXLOCK_REQUEST || fCanAutoLock) {
                 LogPrintf("TXLOCKREQUEST -- Transaction Lock Request accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->id);
                 instantsend.AcceptLockRequest(txLockRequest);
                 instantsend.Vote(tx.GetHash(), connman);
+            }
+
+            if (nInvType != MSG_TXLOCK_REQUEST) {
+                llmq::quorumInstantSendManager->ProcessTx(pfrom, tx, connman, chainparams.GetConsensus());
             }
 
             mempool.check(pcoinsTip);
@@ -2124,6 +2147,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             vWorkQueue.emplace_back(orphanHash, i);
                         }
                         vEraseQueue.push_back(orphanHash);
+
+                        llmq::quorumInstantSendManager->ProcessTx(pfrom, orphanTx, connman, chainparams.GetConsensus());
                     }
                     else if (!fMissingInputs2)
                     {
@@ -2188,7 +2213,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 }
             }
 
-            if (strCommand == NetMsgType::TXLOCKREQUEST && !AlreadyHave(inv)) {
+            if (nInvType == MSG_TXLOCK_REQUEST && !AlreadyHave(inv)) {
                 // i.e. AcceptToMemoryPool failed, probably because it's conflicting
                 // with existing normal tx or tx lock for another tx. For the same tx lock
                 // AlreadyHave would have return "true" already.
@@ -2943,6 +2968,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
             llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv, connman);
+            llmq::quorumInstantSendManager->ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else
         {

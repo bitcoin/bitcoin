@@ -36,6 +36,8 @@
 
 #include "evo/providertx.h"
 
+#include "llmq/quorums_instantsend.h"
+
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1919,6 +1921,9 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman, const std::string& str
                     instantsend.RejectLockRequest((CTxLockRequest)*this);
                 }
             }
+
+            llmq::quorumInstantSendManager->ProcessTx(nullptr, *this->tx, *connman, Params().GetConsensus());
+
             if (connman) {
                 connman->RelayTransaction((CTransaction)*this);
                 return true;
@@ -3340,6 +3345,12 @@ bool CWallet::ConvertList(std::vector<CTxIn> vecTxIn, std::vector<CAmount>& vecA
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
                                 int& nChangePosInOut, std::string& strFailReason, const CCoinControl* coinControl, bool sign, AvailableCoinsType nCoinType, bool fUseInstantSend, int nExtraPayloadSize)
 {
+    if (!llmq::IsOldInstantSendEnabled()) {
+        // The new system does not require special handling for InstantSend as this is all done in CInstantSendManager.
+        // There is also no need for an extra fee anymore.
+        fUseInstantSend = false;
+    }
+
     CAmount nFeePay = fUseInstantSend ? CTxLockRequest().GetMinFee(true) : 0;
 
     CAmount nValue = 0;
@@ -5426,7 +5437,7 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 
 bool CMerkleTx::IsLockedByInstantSend() const
 {
-    return instantsend.IsLockedInstantSendTransaction(GetHash());
+    return instantsend.IsLockedInstantSendTransaction(GetHash()) || llmq::quorumInstantSendManager->IsLocked(GetHash());
 }
 
 int CMerkleTx::GetBlocksToMaturity() const

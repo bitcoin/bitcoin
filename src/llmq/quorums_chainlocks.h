@@ -12,6 +12,7 @@
 #include "chainparams.h"
 
 #include <atomic>
+#include <unordered_set>
 
 class CBlockIndex;
 class CScheduler;
@@ -45,9 +46,13 @@ class CChainLocksHandler : public CRecoveredSigsListener
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
     static const int64_t CLEANUP_SEEN_TIMEOUT = 24 * 60 * 60 * 1000;
 
+    // how long to wait for ixlocks until we consider a block with non-ixlocked TXs to be safe to sign
+    static const int64_t WAIT_FOR_ISLOCK_TIMEOUT = 10 * 60;
+
 private:
     CScheduler* scheduler;
     CCriticalSection cs;
+    bool tryLockChainTipScheduled{false};
     std::atomic<bool> inEnforceBestChainLock{false};
 
     uint256 bestChainLockHash;
@@ -55,10 +60,15 @@ private:
 
     CChainLockSig bestChainLockWithKnownBlock;
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
+    const CBlockIndex* lastNotifyChainLockBlockIndex{nullptr};
 
     int32_t lastSignedHeight{-1};
     uint256 lastSignedRequestId;
     uint256 lastSignedMsgHash;
+
+    // We keep track of txids from recently received blocks so that we can check if all TXs got ixlocked
+    std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> blockTxs;
+    std::unordered_map<uint256, int64_t> txFirstSeenTime;
 
     std::map<uint256, int64_t> seenChainLocks;
 
@@ -68,8 +78,8 @@ public:
     CChainLocksHandler(CScheduler* _scheduler);
     ~CChainLocksHandler();
 
-    void RegisterAsRecoveredSigsListener();
-    void UnregisterAsRecoveredSigsListener();
+    void Start();
+    void Stop();
 
     bool AlreadyHave(const CInv& inv);
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
@@ -78,11 +88,16 @@ public:
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork);
+    void NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block);
+    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void TrySignChainTip();
     void EnforceBestChainLock();
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
 
     bool HasChainLock(int nHeight, const uint256& blockHash);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
+
+    bool IsTxSafeForMining(const uint256& txid);
 
 private:
     // these require locks to be held already

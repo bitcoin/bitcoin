@@ -36,6 +36,7 @@
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_commitment.h"
+#include "llmq/quorums_instantsend.h"
 
 #include <stdint.h>
 
@@ -199,7 +200,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         }
     }
     bool fLocked = instantsend.IsLockedInstantSendTransaction(txid);
-    entry.push_back(Pair("instantlock", fLocked));
+    bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(txid);
+    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked));
     entry.push_back(Pair("chainlock", chainLock));
 }
 
@@ -1018,6 +1020,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
             }
         }
+        llmq::quorumInstantSendManager->ProcessTx(nullptr, *tx, *g_connman, Params().GetConsensus());
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
     }

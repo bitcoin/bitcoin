@@ -4,6 +4,7 @@
 
 #include "quorums.h"
 #include "quorums_chainlocks.h"
+#include "quorums_instantsend.h"
 #include "quorums_signing.h"
 #include "quorums_utils.h"
 
@@ -11,6 +12,7 @@
 #include "net_processing.h"
 #include "scheduler.h"
 #include "spork.h"
+#include "txmempool.h"
 #include "validation.h"
 
 namespace llmq
@@ -34,12 +36,16 @@ CChainLocksHandler::~CChainLocksHandler()
 {
 }
 
-void CChainLocksHandler::RegisterAsRecoveredSigsListener()
+void CChainLocksHandler::Start()
 {
     quorumSigningManager->RegisterRecoveredSigsListener(this);
+    scheduler->scheduleEvery([&]() {
+        // regularely retry signing the current chaintip as it might have failed before due to missing ixlocks
+        TrySignChainTip();
+    }, 5000);
 }
 
-void CChainLocksHandler::UnregisterAsRecoveredSigsListener()
+void CChainLocksHandler::Stop()
 {
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
@@ -149,6 +155,11 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
 
     LogPrintf("CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
+
+    if (lastNotifyChainLockBlockIndex != bestChainLockBlockIndex) {
+        lastNotifyChainLockBlockIndex = bestChainLockBlockIndex;
+        GetMainSignals().NotifyChainLock(bestChainLockBlockIndex);
+    }
 }
 
 void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
@@ -178,60 +189,217 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
 
 void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork)
 {
+    // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
+    // never locked and TrySignChainTip is not called twice in parallel
+    LOCK(cs);
+    if (tryLockChainTipScheduled) {
+        return;
+    }
+    tryLockChainTipScheduled = true;
+    scheduler->scheduleFromNow([&]() {
+        TrySignChainTip();
+        LOCK(cs);
+        tryLockChainTipScheduled = false;
+    }, 0);
+}
+
+void CChainLocksHandler::TrySignChainTip()
+{
+    Cleanup();
+
+    const CBlockIndex* pindex;
+    {
+        LOCK(cs_main);
+        pindex = chainActive.Tip();
+    }
+
     if (!fMasternodeMode) {
         return;
     }
-    if (!pindexNew->pprev) {
+    if (!pindex->pprev) {
         return;
     }
     if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
         return;
     }
 
-    Cleanup();
-
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
     // This will fail when multiple blocks compete, but we accept this for the initial implementation.
     // Later, we'll add the multiple attempts process.
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindexNew->nHeight));
-    uint256 msgHash = pindexNew->GetBlockHash();
-
     {
         LOCK(cs);
 
-        if (bestChainLockBlockIndex == pindexNew) {
+        if (bestChainLockBlockIndex == pindex) {
             // we first got the CLSIG, then the header, and then the block was connected.
             // In this case there is no need to continue here.
-            return;
-        }
-
-        if (InternalHasConflictingChainLock(pindexNew->nHeight, pindexNew->GetBlockHash())) {
-            if (!inEnforceBestChainLock) {
-                // we accepted this block when there was no lock yet, but now a conflicting lock appeared. Invalidate it.
-                LogPrintf("CChainLocksHandler::%s -- conflicting lock after block was accepted, invalidating now\n",
-                          __func__);
-                ScheduleInvalidateBlock(pindexNew);
+            // However, NotifyChainLock might not have been called yet, so call it now if needed
+            if (lastNotifyChainLockBlockIndex != bestChainLockBlockIndex) {
+                lastNotifyChainLockBlockIndex = bestChainLockBlockIndex;
+                GetMainSignals().NotifyChainLock(bestChainLockBlockIndex);
             }
             return;
         }
 
-        if (bestChainLock.nHeight >= pindexNew->nHeight) {
+        if (pindex->nHeight == lastSignedHeight) {
+            // already signed this one
+            return;
+        }
+
+        if (bestChainLock.nHeight >= pindex->nHeight) {
             // already got the same CLSIG or a better one
             return;
         }
 
-        if (pindexNew->nHeight == lastSignedHeight) {
-            // already signed this one
+        if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            if (!inEnforceBestChainLock) {
+                // we accepted this block when there was no lock yet, but now a conflicting lock appeared. Invalidate it.
+                LogPrintf("CChainLocksHandler::%s -- conflicting lock after block was accepted, invalidating now\n",
+                          __func__);
+                ScheduleInvalidateBlock(pindex);
+            }
             return;
         }
-        lastSignedHeight = pindexNew->nHeight;
+    }
+
+    LogPrintf("CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
+
+    // When the new IX system is activated, we only try to ChainLock blocks which include safe transactions. A TX is
+    // considered safe when it is ixlocked or at least known since 10 minutes (from mempool or block). These checks are
+    // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
+    // way down, we consider all TXs to be safe.
+    if (IsNewInstantSendEnabled() && sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+        auto pindexWalk = pindex;
+        while (pindexWalk) {
+            if (pindex->nHeight - pindexWalk->nHeight > 5) {
+                // no need to check further down, 6 confs is safe to assume that TXs below this height won't be
+                // ixlocked anymore if they aren't already
+                LogPrintf("CChainLocksHandler::%s -- tip and previous 5 blocks all safe\n", __func__);
+                break;
+            }
+            if (HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
+                // we don't care about ixlocks for TXs that are ChainLocked already
+                LogPrintf("CChainLocksHandler::%s -- chainlock at height %d \n", __func__, pindexWalk->nHeight);
+                break;
+            }
+
+            decltype(blockTxs.begin()->second) txids;
+            {
+                LOCK(cs);
+                auto it = blockTxs.find(pindexWalk->GetBlockHash());
+                if (it == blockTxs.end()) {
+                    // this should actually not happen as NewPoWValidBlock should have been called before
+                    LogPrintf("CChainLocksHandler::%s -- blockTxs for %s not found\n", __func__,
+                              pindexWalk->GetBlockHash().ToString());
+                    return;
+                }
+                txids = it->second;
+            }
+
+            for (auto& txid : *txids) {
+                int64_t txAge = 0;
+                {
+                    LOCK(cs);
+                    auto it = txFirstSeenTime.find(txid);
+                    if (it != txFirstSeenTime.end()) {
+                        txAge = GetAdjustedTime() - it->second;
+                    }
+                }
+
+                if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+                    LogPrintf("CChainLocksHandler::%s -- not signing block %s due to TX %s not being ixlocked and not old enough. age=%d\n", __func__,
+                              pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
+                    return;
+                }
+            }
+
+            pindexWalk = pindexWalk->pprev;
+        }
+    }
+
+    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, pindex->nHeight));
+    uint256 msgHash = pindex->GetBlockHash();
+
+    {
+        LOCK(cs);
+        if (bestChainLock.nHeight >= pindex->nHeight) {
+            // might have happened while we didn't hold cs
+            return;
+        }
+        lastSignedHeight = pindex->nHeight;
         lastSignedRequestId = requestId;
         lastSignedMsgHash = msgHash;
     }
 
     quorumSigningManager->AsyncSignIfMember(Params().GetConsensus().llmqChainLocks, requestId, msgHash);
+}
+
+void CChainLocksHandler::NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block)
+{
+    LOCK(cs);
+    if (blockTxs.count(pindex->GetBlockHash())) {
+        // should actually not happen (blocks are only written once to disk and this is when NewPoWValidBlock is called)
+        // but be extra safe here in case this behaviour changes.
+        return;
+    }
+
+    int64_t curTime = GetAdjustedTime();
+
+    // We listen for NewPoWValidBlock so that we can collect all TX ids of all included TXs of newly received blocks
+    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
+    // safe.
+
+    auto txs = std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>();
+    for (const auto& tx : block->vtx) {
+        if (tx->nVersion == 3) {
+            if (tx->nType == TRANSACTION_COINBASE ||
+                tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
+                continue;
+            }
+        }
+        txs->emplace(tx->GetHash());
+        txFirstSeenTime.emplace(tx->GetHash(), curTime);
+    }
+    blockTxs[pindex->GetBlockHash()] = txs;
+}
+
+void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
+{
+    if (tx.nVersion == 3) {
+        if (tx.nType == TRANSACTION_COINBASE ||
+            tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
+            return;
+        }
+    }
+
+    LOCK(cs);
+    int64_t curTime = GetAdjustedTime();
+    txFirstSeenTime.emplace(tx.GetHash(), curTime);
+}
+
+bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
+{
+    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED) || !sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+        return true;
+    }
+    if (!IsNewInstantSendEnabled()) {
+        return true;
+    }
+
+    int64_t txAge = 0;
+    {
+        LOCK(cs);
+        auto it = txFirstSeenTime.find(txid);
+        if (it != txFirstSeenTime.end()) {
+            txAge = GetAdjustedTime() - it->second;
+        }
+    }
+
+    if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
+        return false;
+    }
+    return true;
 }
 
 // WARNING: cs_main and cs should not be held!
@@ -410,11 +578,45 @@ void CChainLocksHandler::Cleanup()
         }
     }
 
-    LOCK2(cs_main, cs);
+    // need mempool.cs due to GetTransaction calls
+    LOCK2(cs_main, mempool.cs);
+    LOCK(cs);
 
     for (auto it = seenChainLocks.begin(); it != seenChainLocks.end(); ) {
         if (GetTimeMillis() - it->second >= CLEANUP_SEEN_TIMEOUT) {
             it = seenChainLocks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    for (auto it = blockTxs.begin(); it != blockTxs.end(); ) {
+        auto pindex = mapBlockIndex.at(it->first);
+        if (InternalHasChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            for (auto& txid : *it->second) {
+                txFirstSeenTime.erase(txid);
+            }
+            it = blockTxs.erase(it);
+        } else if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
+            it = blockTxs.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    for (auto it = txFirstSeenTime.begin(); it != txFirstSeenTime.end(); ) {
+        CTransactionRef tx;
+        uint256 hashBlock;
+        if (!GetTransaction(it->first, tx, Params().GetConsensus(), hashBlock)) {
+            // tx has vanished, probably due to conflicts
+            it = txFirstSeenTime.erase(it);
+        } else if (!hashBlock.IsNull()) {
+            auto pindex = mapBlockIndex.at(hashBlock);
+            if (chainActive.Tip()->GetAncestor(pindex->nHeight) == pindex && chainActive.Height() - pindex->nHeight >= 6) {
+                // tx got confirmed >= 6 times, so we can stop keeping track of it
+                it = txFirstSeenTime.erase(it);
+            } else {
+                ++it;
+            }
         } else {
             ++it;
         }

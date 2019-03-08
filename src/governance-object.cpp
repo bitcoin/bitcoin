@@ -16,6 +16,8 @@
 #include "util.h"
 #include "validation.h"
 
+#include "llmq/quorums_instantsend.h"
+
 #include <string>
 #include <univalue.h>
 
@@ -618,7 +620,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     }
 
     if ((nConfirmationsIn < GOVERNANCE_FEE_CONFIRMATIONS) &&
-        (!instantsend.IsLockedInstantSendTransaction(nCollateralHash))) {
+        (!instantsend.IsLockedInstantSendTransaction(nCollateralHash) || llmq::quorumInstantSendManager->IsLocked(nCollateralHash))) {
         strError = strprintf("Collateral requires at least %d confirmations to be relayed throughout the network (it has only %d)", GOVERNANCE_FEE_CONFIRMATIONS, nConfirmationsIn);
         if (nConfirmationsIn >= GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS) {
             fMissingConfirmations = true;
