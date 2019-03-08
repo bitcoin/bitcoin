@@ -73,6 +73,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
+        test_change_script_match(rbf_node, dest_address)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(rbf_node, dest_address)
         test_no_more_inputs_fails(rbf_node, dest_address)
@@ -326,6 +327,29 @@ def test_locked_wallet_fails(rbf_node, dest_address):
                             rbf_node.bumpfee, rbfid)
     rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
+def test_change_script_match(rbf_node, dest_address):
+    rbfid = spend_one_input(rbf_node, dest_address)
+    unbumped_details = rbf_node.getrawtransaction(rbfid, 1)
+    bumped_total_tx = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
+    total_bumped_details = rbf_node.getrawtransaction(bumped_total_tx["txid"], 1)
+    bumped_rate_tx = rbf_node.bumpfee(bumped_total_tx["txid"])
+    rate_bumped_details = rbf_node.getrawtransaction(bumped_rate_tx["txid"], 1)
+
+    # find single change from original
+    change_address = None
+    for out in unbumped_details["vout"]:
+        address = out["scriptPubKey"]["addresses"][0]
+        if rbf_node.getaddressinfo(address)["ischange"]:
+            assert_equal(change_address, None)
+            change_address = address
+    assert(address is not None)
+
+    # Now find that address in each subsequent tx, and no other change
+    for bumped_tx in [rate_bumped_details, total_bumped_details]:
+        for out in bumped_tx["vout"]:
+            new_address = out["scriptPubKey"]["addresses"][0]
+            if rbf_node.getaddressinfo(new_address)["ischange"]:
+                assert_equal(new_address, change_address)
 
 def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(
