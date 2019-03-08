@@ -36,7 +36,7 @@ void CDKGSessionManager::StartMessageHandlerPool()
     for (const auto& qt : Params().GetConsensus().llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
                 std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, evoDb, messageHandlerPool, blsWorker, *this));
+                std::forward_as_tuple(qt.second, messageHandlerPool, blsWorker, *this));
     }
 
     messageHandlerPool.resize(2);
