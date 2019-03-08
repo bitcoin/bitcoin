@@ -500,8 +500,8 @@ void CNode::copyStats(CNodeStats &stats)
     X(addr);
     X(addrBind);
     {
-        LOCK(m_tx_relay.cs_filter);
-        stats.fRelayTxes = m_tx_relay.fRelayTxes;
+        LOCK(m_tx_relay->cs_filter);
+        stats.fRelayTxes = m_tx_relay->fRelayTxes;
     }
     X(nLastSend);
     X(nLastRecv);
@@ -529,8 +529,8 @@ void CNode::copyStats(CNodeStats &stats)
     X(m_legacyWhitelisted);
     X(m_permissionFlags);
     {
-        LOCK(m_tx_relay.cs_feeFilter);
-        stats.minFeeFilter = m_tx_relay.minFeeFilter;
+        LOCK(m_tx_relay->cs_feeFilter);
+        stats.minFeeFilter = m_tx_relay->minFeeFilter;
     }
 
     // It is common for nodes with good ping times to suddenly become lagged,
@@ -818,11 +818,11 @@ bool CConnman::AttemptToEvictConnection()
                 continue;
             if (node->fDisconnect)
                 continue;
-            LOCK(node->m_tx_relay.cs_filter);
+            LOCK(node->m_tx_relay->cs_filter);
             NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->nMinPingUsecTime,
                                                node->nLastBlockTime, node->nLastTXTime,
                                                HasAllDesirableServiceFlags(node->nServices),
-                                               node->m_tx_relay.fRelayTxes, node->m_tx_relay.pfilter != nullptr, node->addr, node->nKeyedNetGroup,
+                                               node->m_tx_relay->fRelayTxes, node->m_tx_relay->pfilter != nullptr, node->addr, node->nKeyedNetGroup,
                                                node->m_prefer_evict};
             vEvictionCandidates.push_back(candidate);
         }
@@ -2633,6 +2633,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     hashContinue = uint256();
+    m_tx_relay = MakeUnique<TxRelay>();
 
     for (const std::string &msg : getAllNetMessageTypes())
         mapRecvBytesPerMsgCmd[msg] = 0;
