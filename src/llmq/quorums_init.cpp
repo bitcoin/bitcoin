@@ -30,7 +30,7 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
 
     quorumDKGDebugManager = new CDKGDebugManager(scheduler);
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(evoDb, blsWorker);
+    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, blsWorker);
     quorumManager = new CQuorumManager(evoDb, blsWorker, *quorumDKGSessionManager);
     quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(unitTests);
