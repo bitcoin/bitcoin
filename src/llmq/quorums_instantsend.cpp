@@ -90,41 +90,32 @@ bool CInstantSendManager::ProcessTx(CNode* pfrom, const CTransaction& tx, CConnm
     std::vector<uint256> ids;
     ids.reserve(tx.vin.size());
 
+    size_t alreadyVotedCount = 0;
     for (const auto& in : tx.vin) {
         auto id = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in.prevout));
         ids.emplace_back(id);
-    }
 
-    {
-        LOCK(cs);
-        size_t alreadyVotedCount = 0;
-        for (size_t i = 0; i < ids.size(); i++) {
-            auto it = inputVotes.find(ids[i]);
-            if (it != inputVotes.end()) {
-                if (it->second != tx.GetHash()) {
-                    LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: input %s is conflicting with islock %s\n", __func__,
-                            tx.GetHash().ToString(), tx.vin[i].prevout.ToStringShort(), it->second.ToString());
-                    return false;
-                }
-                alreadyVotedCount++;
+        uint256 otherTxHash;
+        if (quorumSigningManager->GetVoteForId(llmqType, id, otherTxHash)) {
+            if (otherTxHash != tx.GetHash()) {
+                LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: input %s is conflicting with islock %s\n", __func__,
+                         tx.GetHash().ToString(), in.prevout.ToStringShort(), otherTxHash.ToString());
+                return false;
             }
-        }
-        if (alreadyVotedCount == ids.size()) {
-            return true;
+            alreadyVotedCount++;
         }
 
-        for (auto& id : ids) {
-            inputVotes.emplace(id, tx.GetHash());
-        }
-    }
-
-    // don't even try the actual signing if any input is conflicting
-    for (auto& id : ids) {
+        // don't even try the actual signing if any input is conflicting
         if (quorumSigningManager->IsConflicting(llmqType, id, tx.GetHash())) {
             return false;
         }
     }
+    if (alreadyVotedCount == ids.size()) {
+        return true;
+    }
+
     for (auto& id : ids) {
+        inputRequestIds.emplace(id);
         quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash());
     }
 
@@ -244,9 +235,8 @@ void CInstantSendManager::HandleNewRecoveredSig(const CRecoveredSig& recoveredSi
     bool isInstantSendLock = false;
     {
         LOCK(cs);
-        auto it = inputVotes.find(recoveredSig.id);
-        if (it != inputVotes.end()) {
-            txid = it->second;
+        if (inputRequestIds.count(recoveredSig.id)) {
+            txid = recoveredSig.msgHash;
         }
         if (creatingInstantSendLocks.count(recoveredSig.id)) {
             isInstantSendLock = true;
@@ -717,7 +707,7 @@ void CInstantSendManager::RemoveFinalISLock(const uint256& hash)
     txToInstantSendLock.erase(islockInfo.islock.txid);
     for (auto& in : islockInfo.islock.inputs) {
         auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
-        inputVotes.erase(inputRequestId);
+        inputRequestIds.erase(inputRequestId);
         inputToInstantSendLock.erase(in);
     }
     UpdateISLockMinedBlock(&islockInfo, nullptr);

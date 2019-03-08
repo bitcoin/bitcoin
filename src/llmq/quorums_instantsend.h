@@ -61,11 +61,10 @@ private:
     CScheduler* scheduler;
 
     /**
-     * These are the votes/signatures we performed locally. It's indexed by the LLMQ requestId, which is
-     * hash(TXLOCK_REQUESTID_PREFIX, prevout). The map values are the txids we voted for. This map is used to
-     * avoid voting for the same input twice.
+     * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
+     * in-progress input lock.
      */
-    std::unordered_map<uint256, uint256, StaticSaltedHasher> inputVotes;
+    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds;
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
