@@ -1586,7 +1586,7 @@ class NodeConn(asyncore.dispatcher):
                     t.deserialize(f)
                     self.got_message(t)
                 else:
-                    logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, command, repr(msg)))
+                    logger.warning("Received unknown command from %s:%d: '%s' %s" % (self.dstaddr, self.dstport, str(command), repr(msg)))
         except Exception as e:
             logger.exception('got_data:', repr(e))
 
