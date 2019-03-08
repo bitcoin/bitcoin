@@ -17,7 +17,7 @@ from decimal import Decimal
 import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
-from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
+from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction, FromHex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than, assert_raises_rpc_error, connect_nodes_bi, hex_str_to_bytes, sync_mempools
 
@@ -73,6 +73,9 @@ class BumpFeeTest(BitcoinTestFramework):
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
+        # These tests wipe out a number of utxos that are expected in other tests
+        test_small_output_with_feerate_succeeds(rbf_node, dest_address)
+        test_no_more_inputs_fails(rbf_node, dest_address)
         self.log.info("Success")
 
 
@@ -173,6 +176,55 @@ def test_small_output_fails(rbf_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
 
+def test_no_more_inputs_fails(rbf_node, dest_address):
+    # feerate rbf requires confirmed outputs when change output doesn't exist or is insufficient
+    rbf_node.generatetoaddress(1, dest_address)
+    # spend all funds, no change output
+    rbfid = rbf_node.sendtoaddress(rbf_node.getnewaddress(), rbf_node.getbalance(), "", "", True)
+    assert_raises_rpc_error(-4, "Unable to create transaction: Insufficient funds", rbf_node.bumpfee, rbfid)
+
+def test_small_output_with_feerate_succeeds(rbf_node, dest_address):
+    def input_set(tx):
+        tx_struct = FromHex(CTransaction(), tx)
+        input_set = set()
+        for tx_in in tx_struct.vin:
+            input_set.add(tx_in.prevout)
+        return input_set
+
+    # Make sure additional inputs exist
+    rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
+    rbfid = spend_one_input(rbf_node, dest_address)
+    original_input_set = input_set(rbf_node.getrawtransaction(rbfid))
+    assert_equal(len(original_input_set), 1)
+    original_item = list(original_input_set)[0]
+    # Keep bumping until we out-spend change output
+    orig_fee = 0
+    while orig_fee < Decimal("0.0005"):
+        new_input_set = input_set(rbf_node.getrawtransaction(rbfid))
+        new_item = list(new_input_set)[0]
+        assert_equal(len(original_input_set), 1)
+        assert_equal(original_item.hash, new_item.hash)
+        assert_equal(original_item.n, new_item.n)
+        rbfid_new_det = rbf_node.bumpfee(rbfid)
+        rbfid_new = rbfid_new_det["txid"]
+        raw_pool = rbf_node.getrawmempool()
+        assert(rbfid not in raw_pool)
+        assert(rbfid_new in raw_pool)
+        rbfid = rbfid_new
+        orig_fee = rbfid_new_det["origfee"]
+
+    # input(s) have been added
+    final_input_set = input_set(rbf_node.getrawtransaction(rbfid))
+    assert_greater_than(len(final_input_set), 1)
+    # Original input is in final set
+    found_original = False
+    for item in final_input_set:
+        if item.hash == original_item.hash and item.n == original_item.n:
+            found_original = True
+    assert(found_original)
+
+    rbf_node.generatetoaddress(1, rbf_node.getnewaddress())
+    assert_equal(rbf_node.gettransaction(rbfid)["confirmations"], 1)
 
 def test_dust_to_fee(rbf_node, dest_address):
     # check that if output is reduced to dust, it will be converted to fee
@@ -272,18 +324,19 @@ def test_locked_wallet_fails(rbf_node, dest_address):
     rbf_node.walletlock()
     assert_raises_rpc_error(-13, "Please enter the wallet passphrase with walletpassphrase first.",
                             rbf_node.bumpfee, rbfid)
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
 
-def spend_one_input(node, dest_address):
+def spend_one_input(node, dest_address, change_size=Decimal("0.00049000")):
     tx_input = dict(
         sequence=BIP125_SEQUENCE_NUMBER, **next(u for u in node.listunspent() if u["amount"] == Decimal("0.00100000")))
-    rawtx = node.createrawtransaction(
-        [tx_input], {dest_address: Decimal("0.00050000"),
-                     node.getrawchangeaddress(): Decimal("0.00049000")})
+    destinations = {dest_address: Decimal("0.00050000")}
+    if change_size > 0:
+        destinations[node.getrawchangeaddress()] = change_size
+    rawtx = node.createrawtransaction([tx_input], destinations)
     signedtx = node.signrawtransactionwithwallet(rawtx)
     txid = node.sendrawtransaction(signedtx["hex"])
     return txid
-
 
 def submit_block_with_tx(node, tx):
     ctx = CTransaction()
