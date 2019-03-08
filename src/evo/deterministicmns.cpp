@@ -83,6 +83,15 @@ void CDeterministicMN::ToJson(UniValue& obj) const
     obj.push_back(Pair("proTxHash", proTxHash.ToString()));
     obj.push_back(Pair("collateralHash", collateralOutpoint.hash.ToString()));
     obj.push_back(Pair("collateralIndex", (int)collateralOutpoint.n));
+
+    Coin coin;
+    if (GetUTXOCoin(collateralOutpoint, coin)) {
+        CTxDestination dest;
+        if (ExtractDestination(coin.out.scriptPubKey, dest)) {
+            obj.push_back(Pair("collateralAddress", CBitcoinAddress(dest).ToString()));
+        }
+    }
+
     obj.push_back(Pair("operatorReward", (double)nOperatorReward / 100));
     obj.push_back(Pair("state", stateObj));
 }
@@ -438,6 +447,13 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& _state)
 {
+    AssertLockHeld(cs_main);
+
+    bool fDIP0003Active = VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+    if (!fDIP0003Active) {
+        return true;
+    }
+
     LOCK(cs);
 
     int nHeight = pindex->nHeight;
@@ -457,7 +473,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     CDeterministicMNListDiff diff = oldList.BuildDiff(newList);
 
     evoDb.Write(std::make_pair(DB_LIST_DIFF, diff.blockHash), diff);
-    if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0) {
+    if ((nHeight % SNAPSHOT_LIST_PERIOD) == 0 || oldList.GetHeight() == -1) {
         evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, diff.blockHash), newList);
         LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
             __func__, nHeight, newList.GetAllMNsCount());

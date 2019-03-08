@@ -256,6 +256,10 @@ void PrepareShutdown()
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
     peerLogic.reset();
+    if (g_connman) {
+        // make sure to stop all threads before g_connman is reset to nullptr as these threads might still be accessing it
+        g_connman->Stop();
+    }
     g_connman.reset();
 
     if (!fLiteMode && !fRPCInWarmup) {
@@ -1963,7 +1967,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 return InitError(_("Invalid masternodeblsprivkey. Please see documenation."));
             }
         } else {
-            InitWarning(_("You should specify a masternodeblsprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a masternodeblsprivkey in the configuration. Please see documentation for help."));
         }
 
         // init and register activeMasternodeManager

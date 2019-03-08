@@ -8,8 +8,19 @@ CEvoDB* evoDb;
 
 CEvoDB::CEvoDB(size_t nCacheSize, bool fMemory, bool fWipe) :
     db(fMemory ? "" : (GetDataDir() / "evodb"), nCacheSize, fMemory, fWipe),
-    dbTransaction(db)
+    rootBatch(db),
+    rootDBTransaction(db, rootBatch),
+    curDBTransaction(rootDBTransaction, rootDBTransaction)
 {
+}
+
+bool CEvoDB::CommitRootTransaction()
+{
+    assert(curDBTransaction.IsClean());
+    rootDBTransaction.Commit();
+    bool ret = db.WriteBatch(rootBatch);
+    rootBatch.Clear();
+    return ret;
 }
 
 bool CEvoDB::VerifyBestBlock(const uint256& hash)

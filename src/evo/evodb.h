@@ -16,15 +16,22 @@ class CEvoDB
 private:
     CCriticalSection cs;
     CDBWrapper db;
-    CDBTransaction dbTransaction;
+
+    typedef CDBTransaction<CDBWrapper, CDBBatch> RootTransaction;
+    typedef CDBTransaction<RootTransaction, RootTransaction> CurTransaction;
+    typedef CScopedDBTransaction<RootTransaction, RootTransaction> ScopedTransaction;
+
+    CDBBatch rootBatch;
+    RootTransaction rootDBTransaction;
+    CurTransaction curDBTransaction;
 
 public:
     CEvoDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    std::unique_ptr<CScopedDBTransaction> BeginTransaction()
+    std::unique_ptr<ScopedTransaction> BeginTransaction()
     {
         LOCK(cs);
-        auto t = CScopedDBTransaction::Begin(dbTransaction);
+        auto t = ScopedTransaction::Begin(curDBTransaction);
         return t;
     }
 
@@ -32,34 +39,36 @@ public:
     bool Read(const K& key, V& value)
     {
         LOCK(cs);
-        return dbTransaction.Read(key, value);
+        return curDBTransaction.Read(key, value);
     }
 
     template <typename K, typename V>
     void Write(const K& key, const V& value)
     {
         LOCK(cs);
-        dbTransaction.Write(key, value);
+        curDBTransaction.Write(key, value);
     }
 
     template <typename K>
     bool Exists(const K& key)
     {
         LOCK(cs);
-        return dbTransaction.Exists(key);
+        return curDBTransaction.Exists(key);
     }
 
     template <typename K>
     void Erase(const K& key)
     {
         LOCK(cs);
-        dbTransaction.Erase(key);
+        curDBTransaction.Erase(key);
     }
 
     CDBWrapper& GetRawDB()
     {
         return db;
     }
+
+    bool CommitRootTransaction();
 
     bool VerifyBestBlock(const uint256& hash);
     void WriteBestBlock(const uint256& hash);

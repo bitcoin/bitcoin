@@ -890,17 +890,26 @@ UniValue masternodelist(const JSONRPCRequest& request)
             std::string strOutpoint = mnpair.first.ToStringShort();
 
             CScript payeeScript;
+            std::string collateralAddressStr = "UNKNOWN";
             if (deterministicMNManager->IsDeterministicMNsSporkActive()) {
                 auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(mn.outpoint);
                 if (dmn) {
                     payeeScript = dmn->pdmnState->scriptPayout;
+                    Coin coin;
+                    if (GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+                        CTxDestination collateralDest;
+                        if (ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+                            collateralAddressStr = CBitcoinAddress(collateralDest).ToString();
+                        }
+                    }
                 }
             } else {
                 payeeScript = GetScriptForDestination(mn.keyIDCollateralAddress);
+                collateralAddressStr = CBitcoinAddress(mn.keyIDCollateralAddress).ToString();
             }
 
             CTxDestination payeeDest;
-            std::string payeeStr = "UNKOWN";
+            std::string payeeStr = "UNKNOWN";
             if (ExtractDestination(payeeScript, payeeDest)) {
                 payeeStr = CBitcoinAddress(payeeDest).ToString();
             }
@@ -965,7 +974,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                                (int64_t)mn.lastPing.sigTime << " " <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.GetLastPaidTime() << " " <<
-                               mn.GetLastPaidBlock();
+                               mn.GetLastPaidBlock() << " " <<
+                               collateralAddressStr;
                 std::string strInfo = streamInfo.str();
                 if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
@@ -983,6 +993,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 objMN.push_back(Pair("lastpaidblock", mn.GetLastPaidBlock()));
                 objMN.push_back(Pair("owneraddress", CBitcoinAddress(mn.keyIDOwner).ToString()));
                 objMN.push_back(Pair("votingaddress", CBitcoinAddress(mn.keyIDVoting).ToString()));
+                objMN.push_back(Pair("collateraladdress", collateralAddressStr));
                 obj.push_back(Pair(strOutpoint, objMN));
             } else if (strMode == "keyid") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
