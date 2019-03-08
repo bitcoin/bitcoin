@@ -60,12 +60,11 @@ public:
             READWRITE(nSentinelVersion / 1000000);
         else
              READWRITE(nSentinelVersion);
-        if (!(s.GetType() & SER_NETWORK)) {
-            if(s.GetType() & SER_GETHASH)
-                READWRITE(nDaemonVersion / 1000000);
-            else
-                READWRITE(nDaemonVersion);
-        }
+        if(s.GetType() & SER_GETHASH)
+            READWRITE(nDaemonVersion / 1000000);
+        else
+            READWRITE(nDaemonVersion);
+        
     }
 
     uint256 GetHash() const;
