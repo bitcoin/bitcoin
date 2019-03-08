@@ -31,7 +31,7 @@ CRecoveredSigsDb::CRecoveredSigsDb(CDBWrapper& _db) :
 
 bool CRecoveredSigsDb::HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
-    auto k = std::make_tuple('r', (uint8_t)llmqType, id, msgHash);
+    auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id, msgHash);
     return db.Exists(k);
 }
 
@@ -50,7 +50,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForId(Consensus::LLMQType llmqType, const 
     }
 
 
-    auto k = std::make_tuple('r', (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id);
     bool ret = db.Exists(k);
 
     LOCK(cs);
@@ -71,7 +71,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForSession(const uint256& signHash)
         }
     }
 
-    auto k = std::make_tuple('s', signHash);
+    auto k = std::make_tuple(std::string("rs_s"), signHash);
     bool ret = db.Exists(k);
 
     LOCK(cs);
@@ -92,7 +92,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
         }
     }
 
-    auto k = std::make_tuple('h', hash);
+    auto k = std::make_tuple(std::string("rs_h"), hash);
     bool ret = db.Exists(k);
 
     LOCK(cs);
@@ -102,7 +102,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
 
 bool CRecoveredSigsDb::ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret)
 {
-    auto k = std::make_tuple('r', (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id);
 
     CDataStream ds(SER_DISK, CLIENT_VERSION);
     if (!db.ReadDataStream(k, ds)) {
@@ -119,7 +119,7 @@ bool CRecoveredSigsDb::ReadRecoveredSig(Consensus::LLMQType llmqType, const uint
 
 bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret)
 {
-    auto k1 = std::make_tuple('h', hash);
+    auto k1 = std::make_tuple(std::string("rs_h"), hash);
     std::pair<uint8_t, uint256> k2;
     if (!db.Read(k1, k2)) {
         return false;
@@ -139,26 +139,26 @@ void CRecoveredSigsDb::WriteRecoveredSig(const llmq::CRecoveredSig& recSig)
 
     // we put these close to each other to leverage leveldb's key compaction
     // this way, the second key can be used for fast HasRecoveredSig checks while the first key stores the recSig
-    auto k1 = std::make_tuple('r', recSig.llmqType, recSig.id);
-    auto k2 = std::make_tuple('r', recSig.llmqType, recSig.id, recSig.msgHash);
+    auto k1 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id);
+    auto k2 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id, recSig.msgHash);
     batch.Write(k1, recSig);
     batch.Write(k2, (uint8_t)1);
 
     // store by object hash
-    auto k3 = std::make_tuple('h', recSig.GetHash());
+    auto k3 = std::make_tuple(std::string("rs_h"), recSig.GetHash());
     batch.Write(k3, std::make_pair(recSig.llmqType, recSig.id));
 
     // store by signHash
     auto signHash = CLLMQUtils::BuildSignHash(recSig);
-    auto k4 = std::make_tuple('s', signHash);
+    auto k4 = std::make_tuple(std::string("rs_s"), signHash);
     batch.Write(k4, (uint8_t)1);
 
     // remove the votedForId entry as we won't need it anymore
-    auto k5 = std::make_tuple('v', recSig.llmqType, recSig.id);
+    auto k5 = std::make_tuple(std::string("rs_v"), recSig.llmqType, recSig.id);
     batch.Erase(k5);
 
     // store by current time. Allows fast cleanup of old recSigs
-    auto k6 = std::make_tuple('t', (uint32_t)GetAdjustedTime(), recSig.llmqType, recSig.id);
+    auto k6 = std::make_tuple(std::string("rs_t"), (uint32_t)GetAdjustedTime(), recSig.llmqType, recSig.id);
     batch.Write(k6, (uint8_t)1);
 
     db.WriteBatch(batch);
@@ -203,8 +203,8 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
 
     static const uint256 maxUint256 = uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    auto start = std::make_tuple('t', (uint32_t)0, (uint8_t)0, uint256());
-    auto end = std::make_tuple('t', (uint32_t)(GetAdjustedTime() - maxAge), (uint8_t)255, maxUint256);
+    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
+    auto end = std::make_tuple(std::string("rs_t"), (uint32_t)(GetAdjustedTime() - maxAge), (uint8_t)255, maxUint256);
     pcursor->Seek(start);
 
     std::vector<std::pair<Consensus::LLMQType, uint256>> toDelete;
@@ -242,11 +242,11 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 
             auto signHash = CLLMQUtils::BuildSignHash(recSig);
 
-            auto k1 = std::make_tuple('r', recSig.llmqType, recSig.id);
-            auto k2 = std::make_tuple('r', recSig.llmqType, recSig.id, recSig.msgHash);
-            auto k3 = std::make_tuple('h', recSig.GetHash());
-            auto k4 = std::make_tuple('s', signHash);
-            auto k5 = std::make_tuple('v', recSig.llmqType, recSig.id);
+            auto k1 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id);
+            auto k2 = std::make_tuple(std::string("rs_r"), recSig.llmqType, recSig.id, recSig.msgHash);
+            auto k3 = std::make_tuple(std::string("rs_h"), recSig.GetHash());
+            auto k4 = std::make_tuple(std::string("rs_s"), signHash);
+            auto k5 = std::make_tuple(std::string("rs_v"), recSig.llmqType, recSig.id);
             batch.Erase(k1);
             batch.Erase(k2);
             batch.Erase(k3);
@@ -272,19 +272,19 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 
 bool CRecoveredSigsDb::HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id)
 {
-    auto k = std::make_tuple('v', (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), (uint8_t)llmqType, id);
     return db.Exists(k);
 }
 
 bool CRecoveredSigsDb::GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet)
 {
-    auto k = std::make_tuple('v', (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), (uint8_t)llmqType, id);
     return db.Read(k, msgHashRet);
 }
 
 void CRecoveredSigsDb::WriteVoteForId(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
-    auto k = std::make_tuple('v', (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), (uint8_t)llmqType, id);
     db.Write(k, msgHash);
 }
 
