@@ -23,26 +23,6 @@ SCRIPT_SIG = [CScript([OP_TRUE, redeem_script_1]), CScript([OP_TRUE, redeem_scri
 
 global log
 
-class DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, Decimal):
-            return float(o)
-        return super(DecimalEncoder, self).default(o)
-
-def swap_outputs_in_rawtx(rawtx, outputs, inputnum):
-    '''
-    Since dictionaries in python are unsorted make sure that our outputs are correctly ordered.
-    Note: comparing strings to get "correct order" is based on the fact that
-    P2SH_1 string is < P2SH_2 string in this particular case.
-    '''
-    outputs_unordered = json.dumps(outputs, cls=DecimalEncoder)
-    outputs_ordered = json.dumps(outputs, sort_keys=True, cls=DecimalEncoder)
-    if outputs_ordered != outputs_unordered: # nope, we need to do some work here
-        first_rawoutput = rawtx[12+82*inputnum:12+82*inputnum+64]
-        second_rawoutput = rawtx[12+82*inputnum+64:12+82*inputnum+64+64]
-        rawtx = rawtx[0:12+82*inputnum] + second_rawoutput + first_rawoutput + rawtx[12+82*inputnum+64+64:]
-    return rawtx
-
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     """
     Create and send a transaction with a random fee.
