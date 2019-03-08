@@ -686,6 +686,16 @@ bool CSigningManager::IsConflicting(Consensus::LLMQType llmqType, const uint256&
     return false;
 }
 
+bool CSigningManager::HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id)
+{
+    return db.HasVotedOnId(llmqType, id);
+}
+
+bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet)
+{
+    return db.GetVoteForId(llmqType, id, msgHashRet);
+}
+
 CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, int signHeight, const uint256& selectionHash)
 {
     auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
