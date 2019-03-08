@@ -72,7 +72,7 @@ class CRecoveredSigsDb
     static const size_t MAX_CACHE_TRUNCATE_THRESHOLD = 50000;
 
 private:
-    CDBWrapper db;
+    CDBWrapper& db;
 
     CCriticalSection cs;
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::pair<bool, int64_t>, StaticSaltedHasher> hasSigForIdCache;
@@ -80,7 +80,7 @@ private:
     std::unordered_map<uint256, std::pair<bool, int64_t>, StaticSaltedHasher> hasSigForHashCache;
 
 public:
-    CRecoveredSigsDb(bool fMemory);
+    CRecoveredSigsDb(CDBWrapper& _db);
 
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
@@ -136,7 +136,7 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
 
 public:
-    CSigningManager(bool fMemory);
+    CSigningManager(CDBWrapper& llmqDb, bool fMemory);
 
     bool AlreadyHave(const CInv& inv);
     bool GetRecoveredSigForGetData(const uint256& hash, CRecoveredSig& ret);

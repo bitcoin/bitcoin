@@ -24,8 +24,8 @@ namespace llmq
 
 CSigningManager* quorumSigningManager;
 
-CRecoveredSigsDb::CRecoveredSigsDb(bool fMemory) :
-    db(fMemory ? "" : (GetDataDir() / "llmq"), 1 << 20, fMemory)
+CRecoveredSigsDb::CRecoveredSigsDb(CDBWrapper& _db) :
+    db(_db)
 {
 }
 
@@ -290,8 +290,8 @@ void CRecoveredSigsDb::WriteVoteForId(Consensus::LLMQType llmqType, const uint25
 
 //////////////////
 
-CSigningManager::CSigningManager(bool fMemory) :
-    db(fMemory)
+CSigningManager::CSigningManager(CDBWrapper& llmqDb, bool fMemory) :
+    db(llmqDb)
 {
 }
 
