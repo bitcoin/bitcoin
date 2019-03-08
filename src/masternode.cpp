@@ -228,27 +228,17 @@ void CMasternode::Check(bool fForce)
             // only update if its not forced (the timer that calls maintenance which calls every masternode passes false for force)
             if(!fForce){
                 const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+                CMasternodePayee payee;
                 // only check masternodes in winners list
                 bool foundPayee = false;
                 {
                     LOCK(cs_mapMasternodeBlocks);
-
                     for (int i = -10; i < 20; i++) {
-                        if(foundPayee)
-                            break;
-                        if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i))
+                        if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                              mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnScript, 0, payee))
                         {
-                            const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
-                            for(auto& payee: payees.vecPayees){
-                                if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
-                                    if(mnScript == payee.GetPayee())
-                                    {
-                                        foundPayee = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            
+                            foundPayee = true;
+                            break;
                         }
                     }
                 }
@@ -806,20 +796,12 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
         {
             LOCK(cs_mapMasternodeBlocks);
             CMasternodePayee payee;  
-            // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
+            // only allow ping if 1 votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
             for (int i = -10; i < 20; i++) {
-                if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                      mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
-                {
-                    foundPayee = true;
-                    break;
-                }
-            }
-           for (int i = -10; i < 20; i++) {
                 if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
                       mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
                 {
-                    foundPayeeInWinnersList = true;
+                    foundPayee = true;
                     break;
                 }
             }
