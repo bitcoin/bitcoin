@@ -7,6 +7,9 @@
 #endif
 
 #if defined(HAVE_SYS_SELECT_H)
+#ifdef HAVE_CSTRING_DEPENDENT_FD_ZERO
+#include <cstring>
+#endif
 #include <sys/select.h>
 
 // trigger: Call FD_SET to trigger __fdelt_chk. FORTIFY_SOURCE must be defined
