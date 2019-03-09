@@ -43,6 +43,12 @@ public:
     //! @param[out]  UniValue   see doc/external-signer.md
     static UniValue Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, bool mainnet = true);
 
+    //! Get receive and change Descriptor(s) from device for a given account.
+    //! Calls `<command> getdescriptors --account <account>`
+    //! @param[in] account  which BIP32 account to use (e.g. `m/44'/0'/account'`)
+    //! @param[out] UniValue see doc/external-signer.md
+    UniValue getDescriptors(int account);
+
 #endif
 };
 
