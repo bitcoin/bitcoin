@@ -232,23 +232,12 @@ void CMasternode::Check(bool fForce)
                 bool foundPayee = false;
                 {
                     LOCK(cs_mapMasternodeBlocks);
-
                     for (int i = -10; i < 20; i++) {
-                        if(foundPayee)
-                            break;
-                        if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i))
+                        if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
+                          mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnScript, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
                         {
-                            const CMasternodeBlockPayees &payees = mnpayments.mapMasternodeBlocks[chainActive.Height()+i];
-                            for(auto& payee: payees.vecPayees){
-                                if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
-                                    if(mnScript == payee.GetPayee())
-                                    {
-                                        foundPayee = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            
+                            foundPayee = true;
+                            break;
                         }
                     }
                 }
