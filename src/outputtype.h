@@ -14,6 +14,12 @@
 #include <vector>
 
 enum class OutputType {
+    /**
+     * Only refers to an output that can't be represented as any of the types below.
+     * For automatic type selection, use CHANGE_AUTO instead.
+     */
+    NONE,
+
     LEGACY,
     P2SH_SEGWIT,
     BECH32,
