@@ -2021,7 +2021,7 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
             result.pushKV("estimated_vsize", (int)size);
             // Estimate fee rate
             CFeeRate feerate(fee, size);
-            result.pushKV("estimated_feerate", feerate.ToString());
+            result.pushKV("estimated_feerate", ValueFromAmount(feerate.GetFeePerK()));
         }
         result.pushKV("fee", ValueFromAmount(fee));
 
