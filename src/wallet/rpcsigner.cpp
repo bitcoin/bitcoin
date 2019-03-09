@@ -76,6 +76,23 @@ ExternalSigner *GetSignerForJSONRPCRequest(const JSONRPCRequest& request, int in
     }
     throw JSONRPCError(RPC_WALLET_ERROR, "Signer fingerprint not found");
 }
+
+std::unique_ptr<Descriptor> ParseDescriptor(const UniValue &descriptor_val, bool must_be_solveable = true, bool must_be_ranged = false) {
+    if (!descriptor_val.isStr()) JSONRPCError(RPC_WALLET_ERROR, "Unexpect result");
+    FlatSigningProvider provider;
+    const std::string desc_str = descriptor_val.getValStr();
+    std::unique_ptr<Descriptor> desc = Parse(desc_str, provider, true);
+    if (!desc) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor: %s", desc_str));
+    }
+    if (!desc->IsRange()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor must be ranged");
+    }
+    if (!desc->IsSolvable()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor must be solvable");
+    }
+    return desc;
+}
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
