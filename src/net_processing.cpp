@@ -262,7 +262,7 @@ struct CNodeState {
     bool fSupportsDesiredCmpctVersion;
 
     /** State used to enforce CHAIN_SYNC_TIMEOUT
-      * Only in effect for outbound, non-manual connections, with
+      * Only in effect for outbound, non-manual, full-relay connections, with
       * m_protect == false
       * Algorithm: if a peer's best known block has less work than our tip,
       * set a timeout CHAIN_SYNC_TIMEOUT seconds in the future:
@@ -425,7 +425,7 @@ static void PushNodeVersion(CNode *pnode, CConnman* connman, int64_t nTime)
     CAddress addrMe = CAddress(CService(), nLocalNodeServices);
 
     connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes));
+            nonce, strSubVersion, nNodeStartingHeight, ::g_relay_txes && pnode->m_tx_relay != nullptr));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -757,7 +757,7 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 }
 
 // Returns true for outbound peers, excluding manual connections, feelers, and
-// one-shots
+// one-shots.
 static bool IsOutboundDisconnectionCandidate(const CNode *node)
 {
     return !(node->fInbound || node->m_manual_connection || node->fFeeler || node->fOneShot);
@@ -1772,9 +1772,11 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             }
         }
 
-        if (!pfrom->fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr) {
-            // If this is an outbound peer, check to see if we should protect
+        if (!pfrom->fDisconnect && IsOutboundDisconnectionCandidate(pfrom) && nodestate->pindexBestKnownBlock != nullptr && pfrom->m_tx_relay != nullptr) {
+            // If this is an outbound full-relay peer, check to see if we should protect
             // it from the bad/lagging chain logic.
+            // Note that block-relay-only peers are already implicitly protected, so we
+            // only consider setting m_protect for the full-relay peers.
             if (g_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
                 LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom->GetId());
                 nodestate->m_chain_sync.m_protect = true;
@@ -2088,9 +2090,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // Mark this node as currently connected, so we update its timestamp later.
             LOCK(cs_main);
             State(pfrom->GetId())->fCurrentlyConnected = true;
-            LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s\n",
-                      pfrom->nVersion.load(), pfrom->nStartingHeight, pfrom->GetId(),
-                      (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""));
+            LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
+                      pfrom->nVersion.load(), pfrom->nStartingHeight,
+                      pfrom->GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom->addr.ToString()) : ""),
+                      pfrom->m_tx_relay == nullptr ? "block-relay" : "full-relay");
         }
 
         if (pfrom->nVersion >= SENDHEADERS_VERSION) {
@@ -2214,7 +2217,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return false;
         }
 
-        bool fBlocksOnly = !g_relay_txes;
+        // We won't accept tx inv's if we're in blocks-only mode, or this is a
+        // block-relay-only peer
+        bool fBlocksOnly = !g_relay_txes || (pfrom->m_tx_relay == nullptr);
 
         // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
         if (pfrom->HasPermission(PF_RELAY))
@@ -3453,6 +3458,8 @@ void PeerLogicValidation::EvictExtraOutboundPeers(int64_t time_in_seconds)
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
+            // Don't evict our block-relay-only peers.
+            if (pnode->m_tx_relay == nullptr) return;
             if (state->m_last_block_announcement < oldest_block_announcement || (state->m_last_block_announcement == oldest_block_announcement && pnode->GetId() > worst_peer)) {
                 worst_peer = pnode->GetId();
                 oldest_block_announcement = state->m_last_block_announcement;
