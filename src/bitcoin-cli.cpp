@@ -253,10 +253,6 @@ public:
         }
         result.pushKV("version", batch[ID_NETWORKINFO]["result"]["version"]);
         result.pushKV("protocolversion", batch[ID_NETWORKINFO]["result"]["protocolversion"]);
-        if (!batch[ID_WALLETINFO].isNull()) {
-            result.pushKV("walletversion", batch[ID_WALLETINFO]["result"]["walletversion"]);
-            result.pushKV("balance", batch[ID_WALLETINFO]["result"]["balance"]);
-        }
         result.pushKV("blocks", batch[ID_BLOCKCHAININFO]["result"]["blocks"]);
         result.pushKV("timeoffset", batch[ID_NETWORKINFO]["result"]["timeoffset"]);
         result.pushKV("connections", batch[ID_NETWORKINFO]["result"]["connections"]);
