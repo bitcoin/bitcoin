@@ -2761,8 +2761,8 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
 
     // if m_default_address_type is legacy, use legacy address as change (even
     // if some of the outputs are P2WPKH or P2WSH).
-    if (m_default_address_type == OutputType::LEGACY) {
-        return OutputType::LEGACY;
+    if (m_default_address_type == OutputType::PKH) {
+        return OutputType::PKH;
     }
 
     // if any destination is P2WPKH or P2WSH, use P2WPKH for the change
@@ -2772,7 +2772,7 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
         int witnessversion = 0;
         std::vector<unsigned char> witnessprogram;
         if (recipient.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
-            return OutputType::BECH32;
+            return OutputType::WPKH;
         }
     }
 
@@ -4479,7 +4479,7 @@ bool CWalletTx::AcceptToMemoryPool(interfaces::Chain::Lock& locked_chain, CValid
 
 void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 {
-    if (key.IsCompressed() && (type == OutputType::P2SH_SEGWIT || type == OutputType::BECH32)) {
+    if (key.IsCompressed() && (type == OutputType::P2SH_WPKH || type == OutputType::WPKH)) {
         CTxDestination witdest = WitnessV0KeyHash(key.GetID());
         CScript witprog = GetScriptForDestination(witdest);
         // Make sure the resulting program is solvable.
@@ -4490,8 +4490,8 @@ void CWallet::LearnRelatedScripts(const CPubKey& key, OutputType type)
 
 void CWallet::LearnAllRelatedScripts(const CPubKey& key)
 {
-    // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
-    LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+    // OutputType::P2SH_WPKH always adds all necessary scripts for all types.
+    LearnRelatedScripts(key, OutputType::P2SH_WPKH);
 }
 
 std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin) const {

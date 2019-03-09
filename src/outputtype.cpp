@@ -20,13 +20,13 @@ static const std::string OUTPUT_TYPE_STRING_BECH32 = "bech32";
 bool ParseOutputType(const std::string& type, OutputType& output_type)
 {
     if (type == OUTPUT_TYPE_STRING_LEGACY) {
-        output_type = OutputType::LEGACY;
+        output_type = OutputType::PKH;
         return true;
     } else if (type == OUTPUT_TYPE_STRING_P2SH_SEGWIT) {
-        output_type = OutputType::P2SH_SEGWIT;
+        output_type = OutputType::P2SH_WPKH;
         return true;
     } else if (type == OUTPUT_TYPE_STRING_BECH32) {
-        output_type = OutputType::BECH32;
+        output_type = OutputType::WPKH;
         return true;
     }
     return false;
@@ -35,9 +35,9 @@ bool ParseOutputType(const std::string& type, OutputType& output_type)
 const std::string& FormatOutputType(OutputType type)
 {
     switch (type) {
-    case OutputType::LEGACY: return OUTPUT_TYPE_STRING_LEGACY;
-    case OutputType::P2SH_SEGWIT: return OUTPUT_TYPE_STRING_P2SH_SEGWIT;
-    case OutputType::BECH32: return OUTPUT_TYPE_STRING_BECH32;
+    case OutputType::PKH: return OUTPUT_TYPE_STRING_LEGACY;
+    case OutputType::P2SH_WPKH: return OUTPUT_TYPE_STRING_P2SH_SEGWIT;
+    case OutputType::WPKH: return OUTPUT_TYPE_STRING_BECH32;
     default: assert(false);
     }
 }
@@ -45,13 +45,13 @@ const std::string& FormatOutputType(OutputType type)
 CTxDestination GetDestinationForKey(const CPubKey& key, OutputType type)
 {
     switch (type) {
-    case OutputType::LEGACY: return key.GetID();
-    case OutputType::P2SH_SEGWIT:
-    case OutputType::BECH32: {
+    case OutputType::PKH: return key.GetID();
+    case OutputType::P2SH_WPKH:
+    case OutputType::WPKH: {
         if (!key.IsCompressed()) return key.GetID();
         CTxDestination witdest = WitnessV0KeyHash(key.GetID());
         CScript witprog = GetScriptForDestination(witdest);
-        if (type == OutputType::P2SH_SEGWIT) {
+        if (type == OutputType::P2SH_WPKH) {
             return CScriptID(witprog);
         } else {
             return witdest;
@@ -79,17 +79,17 @@ CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript&
     keystore.AddCScript(script);
     // Note that scripts over 520 bytes are not yet supported.
     switch (type) {
-    case OutputType::LEGACY:
+    case OutputType::PKH:
         return CScriptID(script);
-    case OutputType::P2SH_SEGWIT:
-    case OutputType::BECH32: {
+    case OutputType::P2SH_WPKH:
+    case OutputType::WPKH: {
         CTxDestination witdest = WitnessV0ScriptHash(script);
         CScript witprog = GetScriptForDestination(witdest);
         // Check if the resulting program is solvable (i.e. doesn't use an uncompressed key)
         if (!IsSolvable(keystore, witprog)) return CScriptID(script);
         // Add the redeemscript, so that P2WSH and P2SH-P2WSH outputs are recognized as ours.
         keystore.AddCScript(witprog);
-        if (type == OutputType::BECH32) {
+        if (type == OutputType::WPKH) {
             return witdest;
         } else {
             return CScriptID(witprog);
@@ -98,4 +98,3 @@ CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript&
     default: assert(false);
     }
 }
-

@@ -124,7 +124,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     }
 
     // Get the output type
-    OutputType output_type = OutputType::LEGACY;
+    OutputType output_type = OutputType::PKH;
     if (!request.params[2].isNull()) {
         if (!ParseOutputType(request.params[2].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[2].get_str()));

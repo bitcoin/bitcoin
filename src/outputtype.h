@@ -20,9 +20,9 @@ enum class OutputType {
      */
     NONE,
 
-    LEGACY,
-    P2SH_SEGWIT,
-    BECH32,
+    PKH,         /* Pay-to-Public-Key-Hash */
+    P2SH_WPKH,   /* P2SH wrapped Pay-to-Witness-Public-Key-Hash */
+    WPKH,        /* Pay-to-Witness-Public-Key-Hash */
 
     /**
      * Special output type for change outputs only. Automatically choose type
@@ -53,4 +53,3 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
 CTxDestination AddAndGetDestinationForScript(CKeyStore& keystore, const CScript& script, OutputType);
 
 #endif // BITCOIN_OUTPUTTYPE_H
-
