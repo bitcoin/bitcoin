@@ -2464,6 +2464,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             auto dmn = mnList.GetMNByService(addr);
             bool isMasternode = dmn != nullptr;
 
+            // Require outbound connections, other than feelers, to be to distinct network groups
+            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
+                break;
+            }
+
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup(addrman.m_asmap)))
                 break;
@@ -2474,8 +2479,9 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
 
             // if we selected a local address, restart (local addresses are allowed in regtest and devnet)
             bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
-            if (!fAllowLocal && IsLocal(addrConnect))
+            if (!fAllowLocal && IsLocal(addrConnect)) {
                 break;
+            }
 
             // If we didn't find an appropriate destination after trying 100 addresses fetched from addrman,
             // stop this loop, and let the outer loop run again (which sleeps, adds seed nodes, recalculates
