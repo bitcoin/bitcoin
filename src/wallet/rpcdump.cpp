@@ -17,6 +17,7 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <wallet/rpcdump.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
@@ -1177,7 +1178,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     return warnings;
 }
 
-static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     UniValue warnings(UniValue::VARR);
     UniValue result(UniValue::VOBJ);
