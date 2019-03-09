@@ -122,10 +122,10 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
     {
         LOCK(cs_mapMasternodeBlocks);
         CMasternodePayee payee;  
-        // only allow ping votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
+        // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
         for (int i = -10; i < 20; i++) {
             if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
+                  mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
             {
                 foundPayee = true;
                 break;
