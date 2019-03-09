@@ -57,6 +57,25 @@ static UniValue enumeratesigners(const JSONRPCRequest& request)
     return result;
 }
 
+ExternalSigner *GetSignerForJSONRPCRequest(const JSONRPCRequest& request, int index, CWallet* pwallet) {
+    if (pwallet->m_external_signers.empty()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "First call enumeratesigners");
+    }
+
+    // If no fingerprint is specified, return the only available signer
+    if (request.params.size() < size_t(index + 1) || request.params[index].isNull()) {
+        if (pwallet->m_external_signers.size() > 1) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Multiple signers found, please specify which to use");
+        }
+        return &pwallet->m_external_signers.front();
+    }
+
+    const std::string fingerprint = request.params[index].get_str();
+    for (ExternalSigner &candidate : pwallet->m_external_signers) {
+        if (candidate.m_fingerprint == fingerprint) return &candidate;
+    }
+    throw JSONRPCError(RPC_WALLET_ERROR, "Signer fingerprint not found");
+}
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
