@@ -230,6 +230,7 @@ BITCOIN_CORE_H = \
   wallet/ismine.h \
   wallet/load.h \
   wallet/psbtwallet.h \
+  wallet/rpcdump.h \
   wallet/rpcsigner.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
