@@ -30,4 +30,9 @@ UniValue ExternalSigner::Enumerate(const std::string& command, std::vector<Exter
     return result;
 }
 
+UniValue ExternalSigner::getDescriptors(int account)
+{
+    return runCommandParseJSON(m_command + " --fingerprint \"" + m_fingerprint + "\"" + (m_mainnet ? "" : " --testnet ") + " getdescriptors --account " + std::to_string(account));
+}
+
 #endif
