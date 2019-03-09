@@ -21,8 +21,11 @@ enum class OutputType {
     NONE,
 
     PKH,         /* Pay-to-Public-Key-Hash */
+    P2SH,        /* P2SH without SegWit */
     P2SH_WPKH,   /* P2SH wrapped Pay-to-Witness-Public-Key-Hash */
+    P2SH_WSH,    /* P2SH wrapped Pay-to-Witness-Script-Hash */
     WPKH,        /* Pay-to-Witness-Public-Key-Hash */
+    WSH,         /* Pay-to-Witness-Script-Hash */
 
     /**
      * Special output type for change outputs only. Automatically choose type
