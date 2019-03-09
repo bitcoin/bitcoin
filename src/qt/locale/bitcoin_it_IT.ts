@@ -184,10 +184,6 @@
         <translation>Portafoglio criptato</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 ora si chiuderà per concludere il processo di criptaggio. Ricorda che criptare il tuo portafoglio non può definitivamente proteggere i tuoi bitcoin da furti tramite malware che infetta il tuo computer.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Qualsiasi backup precedentemente effettuato del tuo portafoglio dovrebbe essere sostituito con il nuovo file criptato generato. Per questioni di sicurezza, backup precedenti del portafoglio non criptati diverranno inutili non appena inizi ad usare il nuovo portafoglio criptato.</translation>
     </message>
@@ -250,10 +246,6 @@
         <translation>&amp;Panoramica</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Mostra panoramica generale del portafoglio</translation>
     </message>
@@ -310,24 +302,12 @@
         <translation>Cambia Password...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Indirizzi di invio...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Indirizzi di ricezione...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Apri &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Portafoglio</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>Portafoglio predefinito</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -376,10 +356,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portafoglio</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -522,6 +498,14 @@
     <message>
         <source>Incoming transaction</source>
         <translation>Transazione in arrivo</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;enabled&lt;/b&gt;</source>
+        <translation>Generazione  di chiavi HD &lt;b&gt;abilitata&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Generazione di chiavi HD &lt;b&gt;disabilitata&lt;/b&gt;</translation>
     </message>
     <message>
         <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
@@ -815,19 +799,59 @@
         <translation>Saldo disponibile</translation>
     </message>
     <message>
+        <source>Total:</source>
+        <translation>Totale:</translation>
+    </message>
+    <message>
+        <source>Your current total balance</source>
+        <translation>Bilancio totale attuale</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation>Spendibile:</translation>
+    </message>
+    <message>
         <source>Recent transactions</source>
         <translation>Transazioni recenti</translation>
     </message>
-    </context>
+    <message>
+        <source>Current total balance in watch-only addresses</source>
+        <translation>Bilancio totale attuale su indirizzi watch-only</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>URI handling</source>
+        <translation>Gestione URI</translation>
+    </message>
+    <message>
+        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
+        <translation>'bitcoin://' non è un URI valido. Usa invece 'bitcoin:'.</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>Indirizzo di pagamento non valido %1</translation>
+    </message>
     <message>
         <source>Payment request rejected</source>
         <translation>Richiesta di pagamento rifiutata</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>Richiesta di pagamento scaduta.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Richiesta di pagamento non valida.</translation>
+    </message>
+    <message>
         <source>Refund from %1</source>
         <translation>Rimborso da %1</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Errore nella comunicazione con %1: %2</translation>
     </message>
     </context>
 <context>
@@ -855,10 +879,6 @@
     <message>
         <source>Sent</source>
         <translation>Inviato</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>Portafoglio predefinito</translation>
     </message>
     </context>
 <context>
@@ -955,6 +975,10 @@
     <message>
         <source>Copy change</source>
         <translation>Copia cambio</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Richiesta di pagamento scaduta.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1059,7 +1083,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>Portafoglio predefinito</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     </context>

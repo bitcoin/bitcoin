@@ -187,10 +187,6 @@
         <translation>बीटकोइन</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>वॉलेट</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;फाइल</translation>
     </message>

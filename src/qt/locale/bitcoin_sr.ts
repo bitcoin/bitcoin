@@ -188,10 +188,6 @@
         <translation>Новчаник шифриран</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 ће се сада затворити како би се завршио процес шифрирања.  Запамтите да шифрирањем свог новчаника не можете у потпуности заштити своје биткоине од крађе од стране злоћудних програма и компјутерских инфекција.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>ВАЖНО: Свакa претходнa резерва новчаника коју сте имали треба да се замени новим, шифрираним фајлом новчаника. Из сигурносних разлога, свака претходна резерва нешифрираног фајла новчаника постаће сувишна, чим почнете да користите нови, шифрирани новчаник.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Општи преглед</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Ноде</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Погледајте општи преглед новчаника</translation>
     </message>
@@ -314,24 +306,12 @@
         <translation>Промени &amp;лозинку...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Адресе за слање...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Адресе за пријем</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Отвори &amp;УРИ...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Новчаник</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>подразумевани новчаник</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Биткоин</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Новчаник</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -964,10 +940,6 @@
         <translation>Време последњег блока</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>подразумевани новчаник</translation>
-    </message>
-    <message>
         <source>Yes</source>
         <translation>Da</translation>
     </message>
@@ -1236,7 +1208,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>подразумевани новчаник</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

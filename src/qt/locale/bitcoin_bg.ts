@@ -250,10 +250,6 @@
         <translation>&amp;Баланс</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Сървър</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Обобщена информация за портфейла</translation>
     </message>
@@ -310,24 +306,12 @@
         <translation>&amp;Смяна на паролата...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Изпращане на адресите...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Получаване на адресите...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Отвори &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Портфейл</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>Портфейл по подразбиране</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -376,10 +360,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Биткоин</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Портфейл</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -484,6 +464,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Прозорец</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Минимизирай</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -866,10 +854,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Размер на кеша в &amp;базата данни</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>Мегабайта</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
@@ -1383,10 +1367,6 @@
     <message>
         <source>Clear console</source>
         <translation>Изчисти конзолата</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>Портфейл по подразбиране</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -2299,7 +2279,11 @@
         <source>Send Coins</source>
         <translation>Изпращане</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>Портфейл по подразбиране</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

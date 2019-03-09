@@ -180,10 +180,6 @@
         <translation>Veski dulkóðað</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 lokast núna til að dulkóðun klárist. Mundu að dulkóðun veskis kemur ekki að fullu í veg fyrir að mynt verði stolið úr tölvunni þinni með aðstoð smitforrita. </translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>MIKILVÆGT: Nýja dulkóðaða veskisskráin þarf að koma í staðinn fyrir öll fyrri afrit sem þú hefur gert af upprunalegu veskisskránni. Af öryggisástæðum munu öll fyrri afrit af ódulkóðaða veskinu verða óvirk um leið og þú byrjar að nota nýja, dulkóðaða veskið.</translation>
     </message>
@@ -246,10 +242,6 @@
         <translation>&amp;Yfirlit</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Hnútur</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Sýna almennt yfirlit af veski</translation>
     </message>
@@ -306,14 +298,6 @@
         <translation>&amp;Breyta lykilsetningu</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Sendi færslugildi...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Tek við færslugildum...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Opna &amp;URL...</translation>
     </message>
@@ -364,10 +348,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Veski</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -847,10 +827,6 @@
     <message>
         <source>Change:</source>
         <translation>Skiptimynt:</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Það er í lagi að greiða einungis lágmarksupphæðina svo framarlega sem færslurúmtakið er minna en plássið í blokkunum. En gætið þess að þegar það er meiri eftirspurn eftir bitcoin færslum en netið getur unnið úr þá gæti svo farið að færslurnar verða aldrei samþykktar.</translation>
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>

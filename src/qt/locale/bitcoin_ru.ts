@@ -226,10 +226,6 @@
         <translation>&amp;Обзор</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Узел</translation>
-    </message>
-    <message>
         <source>&amp;Transactions</source>
         <translation>&amp;Транзакции</translation>
     </message>
@@ -270,12 +266,24 @@
         <translation>&amp;Зашифровать кошелёк...</translation>
     </message>
     <message>
-        <source>Wallet</source>
+        <source>Wallet:</source>
         <translation>Кошелёк</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;Окно отладки</translation>
     </message>
     <message>
         <source>Error</source>
         <translation>Ошибка</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Окно</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Сворачивать</translation>
     </message>
     </context>
 <context>
@@ -461,7 +469,7 @@
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>Кошелёк постарается не платить меньше, чем минимальная комиссия передачи.</translation>
+        <translation>Кошелёк будет избегать оплат меньших, нежели минимальная комиссия передачи.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>

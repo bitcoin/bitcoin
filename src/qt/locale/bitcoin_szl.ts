@@ -188,10 +188,6 @@
         <translation>Portmanyj zaszyfrowany</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 zawrzi sie coby dokōńczyć proces szyfrowaniŏ. Pamiyntej, iże szyfrowanie portmanyja ganc niy zabezpieczŏ Twojich bitcoinów przed chabiyniym bez wirusy abo trojany mogōnce zakażać Twōj kōmputer.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>WŎŻNE: Wszyjske wykōnane wczaśnij kopije zbioru portmanyja winny być umiyniōne na nowe, szyfrowane zbiory. Z powodōw bezpiyczyństwa, piyrwyjsze kopije niyszyfrowanych zbiorōw portmanyja stōnõ sie bezużyteczne jak ino zaczniesz używać nowego, szyfrowanego portmanyja.</translation>
     </message>
@@ -310,24 +306,12 @@
         <translation>Pōmiyń &amp;hasło</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Adresy posyłaniŏ</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Ad&amp;resy ôdbiyraniŏ</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Ôdewrzij &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Portmanyj:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>wychodny portmanyj</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -380,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portmanyj</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -496,6 +476,10 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Pokŏż pōmoc %1 coby zobŏczyć wykŏz wszyjskich ôpcyji piski nakŏzań.</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>Ô&amp;kno</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -982,10 +966,6 @@
         <translation>Srogość bufōra bazy datōw</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Wielość wōntkōw &amp;weryfikacyje skryptu</translation>
     </message>
@@ -996,10 +976,6 @@
     <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimalizuje zamiast zakōńczyć fungowanie aplikacyje przi zawiyraniu ôkna. Kej ta ôpcyjŏ je zapuszczonŏ, aplikacyjŏ zakōńczy fungowanie po ôbraniu Zawrzij w myni.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktywne ôpcyje piski kōmynd, kere nadpisujōm powyższe ôpcyje:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1409,10 +1385,6 @@
     <message>
         <source>&amp;Disconnect</source>
         <translation>Ô&amp;dkupluj</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>wychodny portmanyj</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -1941,7 +1913,11 @@
         <source>New fee:</source>
         <translation>Nowŏ ôpłŏcka:</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>wychodny portmanyj</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2008,28 +1984,12 @@
         <translation>Wgrŏwanie wykŏzu zaszperowanych...</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Niypodpiyrany argumynt -benchmark zignorowany, użyj -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Niypodpiyrany argumynt -debugnet zignorowany, użyj -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Znŏdniynto było niypodpiyrany argumynt -tor, użyj -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Niypodpiyranŏ kategoryjŏ registrowaniŏ %s=%s.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>Weryfikacyjŏ blokōw...</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Feler w czasie wgrŏwaniŏ %s: Niy idzie zastawić HD w już bydōncym portmanyju HD</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2060,20 +2020,8 @@
         <translation>Pozōr: aktywowano było niyznōme nowe prawidła (versionbit %i)</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Feler w czasie wgrŏwaniŏ %s: Niy idzie zapuścić HD w już bydōncym portmanyju niy-HD</translation>
-    </message>
-    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Imyntnŏ dugość kety wersyje (%i) przekrŏczŏ maksymalnõ dopuszczalnõ dugość (%i). Zmyńsz wielość abo miara parametra uacomment.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Znŏdniynto było niypodpiyrany argumynt -socks. Ôbiyranie wersyje SOCKS je już niymożebne, podpiyrane sōm ino proxy SOCKS5.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Niypodpiyrany argumynt -whitelistalwaysrelay zignorowany, użyj -whitelistrelay i/abo -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

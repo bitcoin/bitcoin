@@ -258,10 +258,6 @@
         <translation>&amp;Aukerak...</translation>
     </message>
     <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Helbideak jasotzen...</translation>
-    </message>
-    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Diruzorroa enkriptatzeko erabilitako pasahitza aldatu</translation>
     </message>

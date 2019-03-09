@@ -188,10 +188,6 @@
         <translation>Peněženka je zašifrována</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 se teď ukončí, aby dokončil zašifrování. Pamatuj však, že pouhé zašifrování peněženky nemůže zabránit krádeži tvých bitcoinů malwarem, kterým se může počítač nakazit.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>DŮLEŽITÉ: Všechny předchozí zálohy peněženky by měly být nahrazeny nově vygenerovanou, zašifrovanou peněženkou. Z bezpečnostních důvodů budou předchozí zálohy nešifrované peněženky nepoužitelné, jakmile začneš používat novou zašifrovanou peněženku.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Přehled</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Uzel</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Zobraz celkový přehled peněženky</translation>
     </message>
@@ -314,24 +306,12 @@
         <translation>Změň &amp;heslo...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Od&amp;esílací adresy...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Př&amp;ijímací adresy...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Načíst &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Peněženka:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>výchozí peněženka</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Peněženka</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -500,6 +476,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Seznam argumentů Bitcoinu pro příkazovou řádku získáš v nápovědě %1</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>O&amp;kno</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Skryj</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -994,10 +978,6 @@
         <translation>Velikost &amp;databázové cache</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Počet vláken pro &amp;verifikaci skriptů</translation>
     </message>
@@ -1028,10 +1008,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL třetích stran (např. block exploreru), která se zobrazí v kontextovém menu v záložce Transakce. %s v URL se nahradí hashem transakce. Více URL odděl svislítkem |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktivní argumenty z příkazové řádky, které přetloukly tato nastavení:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1815,10 +1791,6 @@
         <translation>&amp;Odblokuj</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>výchozí peněženka</translation>
-    </message>
-    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Vítej v RPC konzoli %1.</translation>
     </message>
@@ -2151,14 +2123,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Skryj</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Platit jen minimální poplatek je v pořádku, pokud je zrovna méně transakcí než místa v blocích. Ale počítej s tím, že to také může skončit transakcí, která nikdy nebude potvrzena, pokud je větší poptávka po bitcoinových transakcích, než síť zvládne zpracovat.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(viz bublina)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Doporučený:</translation>
     </message>
@@ -2321,10 +2285,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Payment request expired.</source>
         <translation>Platební požadavek vypršel.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Zaplatit pouze vyžadovaný poplatek %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3109,6 +3069,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <source>Could not commit transaction</source>
         <translation>Nemohl jsem uložit transakci do peněženky</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>výchozí peněženka</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3200,10 +3164,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Nastala chyba při čtení souboru %s! Všechny klíče se přečetly správně, ale data o transakcích nebo záznamy v adresáři mohou chybět či být nesprávné.</translation>
     </message>
     <message>
-        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>Seskupení výstupů podle adresy, při výběru všech nebo žádných, namísto výběru báze za výstup. Zvýšena ochrana soukromí, protože je adresa použita pouze jednou (pokud nikdo na tuto adresu již nic po minutě nepošle). Může být spojeno s vyššími poplatky, jelikož neoptimalizovaný výběr mincí může vyústit v přidané omezení (předvolené: %u)</translation>
-    </message>
-    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Zkontroluj, že máš v počítači správně nastavený datum a čas! Pokud jsou nastaveny špatně, %s nebude fungovat správně.</translation>
     </message>
@@ -3270,10 +3230,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Chceš přestavět databázi bloků hned teď?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Chyba při vytváření %s: v této verzi nemůžeš vytvářeš ne-HD peněženky.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3396,18 +3352,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Nepodařilo se vygenerovat klíče</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Nepodporovaný argument -benchmark se ignoruje, použij -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Nepodporovaný argument -debugnet se ignoruje, použij -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Argument -tor již není podporovaný, použij -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Nepodporovaná logovací kategorie %s=%s.</translation>
     </message>
@@ -3442,10 +3386,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>K návratu k neprořezávacímu režimu je potřeba přestavět databázi použitím -reindex.  Také se znovu stáhne celá bločenka</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Chyba při načítání %s: nemůžeš vypnout HD u existující HD peněženky</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3552,10 +3492,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>-maxtxfee je nastaveno velmi vysoko! Takto vysoký poplatek může být zaplacen v jednotlivé transakci.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Chyba při načítání %s: nemůžeš zapnout HD u existující ne-HD peněženky</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Toto je transakční poplatek, který se platí, pokud náhodou není k dispozici odhad poplatků.</translation>
     </message>
@@ -3566,14 +3502,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Celková délka síťového identifikačního řetězce (%i) překročila svůj horní limit (%i). Omez počet nebo velikost voleb uacomment.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Byl použit nepodporovaný argument -socks. Nastavení verze SOCKS už není možné, podporovány jsou pouze SOCKS5 proxy.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Nepodporovaný argument -whitelistalwaysrelay se ignoruje, použij -whitelistrelay a/nebo -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

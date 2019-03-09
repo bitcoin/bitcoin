@@ -180,10 +180,6 @@
         <translation>La monujo estas ĉifrita</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 nun fermiĝos por fini la ĉifradon. Memoru, ke eĉ ĉifrado ne protektas kontraŭ ĉiu atako, ekz. se viruso infektus vian komputilon.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>GRAVE: antaŭaj sekur-kopioj de via monujo-dosiero estas forigindaj kiam vi havas nove kreitan ĉifritan monujo-dosieron. Pro sekureco, antaŭaj kopioj de la neĉifrita dosiero ne plu funkcios tuj kiam vi ekuzos la novan ĉifritan dosieron.</translation>
     </message>
@@ -208,10 +204,6 @@
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;Superrigardo</translation>
-    </message>
-    <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -258,14 +250,6 @@
         <translation>Ŝanĝi &amp;Pasfrazon...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Sendaj adresoj...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Ricevaj adresoj...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Malfermi &amp;URI-on...</translation>
     </message>
@@ -300,10 +284,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitmono</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Monujo</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -396,6 +376,10 @@
     <message>
         <source>Up to date</source>
         <translation>Ĝisdata</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fenestro</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -646,10 +630,6 @@
     <message>
         <source>Size of &amp;database cache</source>
         <translation>Dosiergrando de &amp;datumbasa kaŝmemoro</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>

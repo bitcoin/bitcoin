@@ -146,10 +146,6 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Cassidile</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Mitte</translation>
     </message>
@@ -224,6 +220,10 @@
     <message>
         <source>Up to date</source>
         <translation>Recentissimo</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fenestra</translation>
     </message>
     <message>
         <source>Catching up...</source>

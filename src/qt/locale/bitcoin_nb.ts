@@ -188,10 +188,6 @@
         <translation>Lommebok kryptert</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 vil nå lukkes for å fullføre krypteringsprosessen. Husk at kryptering av lommeboken ikke fullt ut kan beskytte dine bitcoins fra å bli stjålet om skadevare infiserer datamaskinen din.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>VIKTIG: Tidligere sikkerhetskopier av din lommebokfil bør erstattes med den nylig genererte og krypterte filen, da de blir ugyldiggjort av sikkerhetshensyn så snart du begynner å bruke den nye krypterte lommeboken.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Oversikt</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Node</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Vis generell oversikt over lommeboken</translation>
     </message>
@@ -314,14 +306,6 @@
         <translation>&amp;Endre Adgangsfrase...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Utsendingsadresser...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Mottaksadresser...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Åpne &amp;URI...</translation>
     </message>
@@ -372,10 +356,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Lommebok</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -488,6 +468,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Vis %1 hjelpemeldingen for å få en liste med mulige Bitcoin kommandolinjevalg.</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Vindu</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimer</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -968,10 +956,6 @@
         <translation>Størrelse på &amp;database hurtigbuffer</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Antall script &amp;verifikasjonstråder</translation>
     </message>
@@ -1002,10 +986,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Tredjepart URLer (f. eks. en blokkutforsker) som dukker opp i transaksjonsfanen som kontekst meny elementer. %s i URLen er erstattet med transaksjonen sin hash. Flere URLer er separert av en vertikal linje |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktive kommandolinjevalg som overstyrer valgene ovenfor:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -2061,14 +2041,6 @@
         <translation>Skjul</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Betaling av bare minimumsavgiften går helt fint så lenge det er mindre transaksjonsvolum enn plass i blokkene. Men vær klar over at dette kan ende opp i en transaksjon som aldri blir bekreftet når det er mer etterspørsel etter Bitcoin-transaksjoner enn nettverket kan behandle.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(les verktøytipset)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Anbefalt:</translation>
     </message>
@@ -2219,10 +2191,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Tidsavbrudd for betalingsforespørsel</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Kun betal påkrevd gebyr på %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3003,7 +2971,7 @@
         <source>Could not commit transaction</source>
         <translation>Kunne ikke sende inn transaksjon</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -3158,10 +3126,6 @@
         <translation>Ønsker du å gjenopprette blokkdatabasen nå?</translation>
     </message>
     <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Feil under oppretting av %s: Du kan ikke lage en lommebok uten HD med denne versjonen.</translation>
-    </message>
-    <message>
         <source>Error initializing block database</source>
         <translation>Feil under initialisering av blokkdatabase</translation>
     </message>
@@ -3266,18 +3230,6 @@
         <translation>Kan ikke binde til %s på denne datamaskinen. Sannsynligvis kjører %s allerede.</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Ustøttet argument -benchmark ble ignorert, bruk -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Advarsel: Argumentet -debugnet er ikke støttet og ble ignorert, bruk -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Feil: Argumentet -tor er ikke støttet, bruk -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Ustøttet loggingskategori %s=%s.</translation>
     </message>
@@ -3312,10 +3264,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Du må gjenoppbygge databasen ved hjelp av -reindex for å gå tilbake til ubeskåret modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Feil ved innlasting av %s: Du kan ikke skru av HD på ei HD-lommebok som allerede finnes</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3422,10 +3370,6 @@
         <translation>-maxtxfee er satt veldig høyt! Så stort gebyr kan bli betalt ved en enkelt transaksjon.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Feil ved innlasting av %s: Du kan ikke skru på HD på ei ikke-HD-lommebok som allerede finnes</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Dette er transaksjonsgebyret du kan betale når gebyranslag ikke er tilgjengelige.</translation>
     </message>
@@ -3436,14 +3380,6 @@
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Total lengde av nettverks-versionstreng (%i) er over maks lengde (%i). Reduser tallet eller størrelsen av uacomments.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Argumentet -socks er ikke støttet. Det er ikke lenger mulig å sette SOCKS-versjon; bare SOCKS5-proxyer er støttet.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Argumentet -whitelistalwaysrelay støttes ikke, og blir ignorert, bruk -whitelistrelay og/eller -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

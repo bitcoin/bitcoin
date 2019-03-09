@@ -246,10 +246,6 @@
         <translation>&amp;Apžvalga</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Taškas</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Rodyti piniginės bendrą apžvalgą</translation>
     </message>
@@ -306,24 +302,12 @@
         <translation>&amp;Keisti slaptafrazę...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Siunčiami adresai...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Gaunami adresai...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Atidaryti &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Piniginė</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>numatyta piniginė</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -372,10 +356,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Piniginė</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -452,6 +432,10 @@
     <message>
         <source>Up to date</source>
         <translation>Atnaujinta</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Langas</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -692,10 +676,6 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Pagrindinės</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
@@ -977,10 +957,6 @@
     <message>
         <source>Clear console</source>
         <translation>Išvalyti konsolę</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>numatyta piniginė</translation>
     </message>
     <message>
         <source>never</source>
@@ -1313,7 +1289,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>numatyta piniginė</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     </context>

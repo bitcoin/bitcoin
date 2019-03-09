@@ -168,10 +168,6 @@
         <translation>지갑 암호화</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 이(가) 암호화 작업을 위해 종료됩니다. 이 암호화 작업이 바이러스로부터 비트코인을 완전히 지키지 못한다는 점을 기억하십시요.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>중요: 예전에 만들었던 모든 백업 파일은 새로 만들어진 암호화된 지갑 파일으로 교체됩니다. 보안을 위해서 예전에 만들었던 암호화 되지 않은 백업 파일은 당신이 새로 암호화된 지갑을 사용하고 사용할 수 없게 됩니다. </translation>
     </message>
@@ -234,10 +230,6 @@
         <translation>&amp;개요</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>노드</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>지갑의 일반적인 개요 표시</translation>
     </message>
@@ -294,24 +286,12 @@
         <translation>&amp;암호문 변경...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;보낼 주소...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;받을 주소...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>&amp;URL 열기</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>지갑:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>기본 지갑</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -390,10 +370,6 @@
     </context>
 <context>
     <name>RPCConsole</name>
-    <message>
-        <source>default wallet</source>
-        <translation>기본 지갑</translation>
-    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -449,7 +425,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>기본 지갑</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

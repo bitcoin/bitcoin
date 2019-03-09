@@ -188,10 +188,6 @@
         <translation>Cüzdan şifrelendi</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Şifreleme işleminin bitirilmesi için %1 kapatılacak. Her ne kadar cüzdanınızı şifreleseniz de şifrelemenin bitcoinlerinizi bilgisayarınıza bulaşan zararlılardan tam olarak koruyamayacağını unutmayın.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>ÖNEMLİ: Önceden yapmış olduğunuz cüzdan dosyası yedeklemelerinin yeni oluşturulan şifrelenmiş cüzdan dosyası ile değiştirilmeleri gerekir. Güvenlik nedenleriyle yeni, şifrelenmiş cüzdanı kullanmaya başladığınızda eski şifrelenmemiş cüzdan dosyaları işe yaramaz hale gelecektir.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Genel bakış</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Düğüm</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Cüzdana genel bakışı göster</translation>
     </message>
@@ -314,24 +306,12 @@
         <translation>&amp;Parolayı Değiştir...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Gönderme adresleri...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Alma adresleri...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>&amp;URI Aç...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Cüzdan:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>varsayılan cüzdan</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cüzdan</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -500,6 +476,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Olası Bitcoin komut satırı seçeneklerinin listesini görmek için %1 yardım mesajını göster</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Pencere</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Küçült</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -974,10 +958,6 @@
         <translation>&amp;Veritabanı önbelleğinin boyutu</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>İş parçacıklarını &amp;denetleme betiği sayısı</translation>
     </message>
@@ -1010,10 +990,6 @@
         <translation>İşlemler sekmesinde bağlam menüsü unsurları olarak görünen üçüncü taraf bağlantıları (mesela bir blok tarayıcısı). URL'deki %s, işlem hash değeri ile değiştirilecektir. Birden çok bağlantılar düşey çubuklar | ile ayrılacaktır.</translation>
     </message>
     <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Yukarıdaki seçeneklerin yerine geçen etkin komut satırı seçenekleri:</translation>
-    </message>
-    <message>
         <source>Open the %1 configuration file from the working directory.</source>
         <translation>Çalışma dizininden %1  yapılandırma dosyasını aç.</translation>
     </message>
@@ -1032,6 +1008,22 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Ağ</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Gelişmiş bazı ayarlar devredışı bırakılmış fakat tüm bloklar hala tam olarak doğrulanabilir. Bu ayarları geri almak tüm block zinciri'nin tekrar indirilmesini gerektirir. Mevcut disk kullanımınızda bir miktar artış görülebilir.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Temizle &amp;block depolamasını</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Bu ayarları geri değiştirmek tüm blok zinciri'nin indirilmesini gerektirir.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1300,6 +1292,10 @@
         <translation>URI yönetimi</translation>
     </message>
     <message>
+        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
+        <translation>'bitcoin://' geçerli bir protokol değil. Onun yerine 'bitcoin:' kullanınız.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>Ödeme talebini alma URL'i geçersiz: %1</translation>
     </message>
@@ -1496,6 +1492,10 @@
 </context>
 <context>
     <name>QObject::QObject</name>
+    <message>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation>Komut satırı argümanlarında hatalı ayrıştırma: %1</translation>
+    </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Hata: Belirtilen "%1" veri klasörü yoktur.</translation>
@@ -1769,10 +1769,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Yasaklamayı Kaldır</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>varsayılan cüzdan</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2091,14 +2087,6 @@
         <translation>Gizle</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Gerekli olan en az ücreti ödemek, bloklarda boşluktan daha az işlem hacmi olduğu sürece bir sorun çıkarmaz. Fakat ağın işleyecebileceğinden daha çok bitcoin işlemi talebi olduğunda bunun asla doğrulanmayan bir işlem olabileceğinin farkında olmalısınız.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(bilgi balonunu oku)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Tavsiye edilen:</translation>
     </message>
@@ -2245,10 +2233,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Ödeme talebinin geçerlilik süresi bitti.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Sadece asgari ücret olan %1 tutarını öde</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -3017,6 +3001,10 @@
         <source>Could not commit transaction</source>
         <translation>Alışveriş taahüt edilemedi.</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>varsayılan cüzdan</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3276,18 +3264,6 @@
         <translation>Anahtar üretilemiyor</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Desteklenmeyen -benchmark argümanı görmezden gelindi, -debug=bench kullanınız.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Desteklenmeyen -debugnet argümanı görmezden gelindi, debug=net kullanınız.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Deskteklenmeyen -tor argümanı bulundu, -onion kullanınız.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Desteklenmeyen günlük kategorisi %s=%s.</translation>
     </message>
@@ -3322,10 +3298,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>%s yüklemesinde hata: Zaten HD olan bir cüzdanda HD devre dışı bırakılamaz </translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3432,10 +3404,6 @@
         <translation>-maxtxfee çok yüksek bir değere ayarlanmış! Bu denli yüksek ücretler tek bir işlemde ödenebilir.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>%s yüklenmesinde hata: zaten var olan ve HD olmayan bir cüzdanda HD etkinleştirilemez.</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>İşlem ücret tahminleri mevcut olmadığında ödeyebileceğiniz işlem ücreti budur.</translation>
     </message>
@@ -3446,14 +3414,6 @@
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Ağ sürümü zincirinin toplam boyutu (%i) en yüksek boyutu geçmektedir (%i). Kullanıcı aracı açıklamasının sayısı veya boyutunu azaltınız.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Desteklenmeyen -socks argümanı bulundu. SOCKS sürümünün ayarlanması artık mümkün değildir, sadece SOCKS5 vekilleri desteklenmektedir.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Desteklenmeyen argüman -whitelistalwaysrelay görmezden gelindi, -whitelistrelay ve/veya -whitelistforcerelay kullanın.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

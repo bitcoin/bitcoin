@@ -184,10 +184,6 @@
         <translation>Denarnica šifrirana</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 se bo zaprl, da bi dokončal postopek šifriranja. Zapomnite si, da šifriranje vaše denarnice vaših ne more popolnoma zaščititi vaših bitcoinov pred krajami zlonamernih programov, ki bi lahko bili nameščeni na vašem računalniku.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>POMEMBNO: Vse starejše varnostne kopije denarnice je potrebno zamenjati z novoizdelano, šifrirano, varnostno kopijo. Zaradi varnosti bodo stare varnostne kopije postale neuporabne takoj, ko začnete uporabljati novo, šifrirano denarnico.</translation>
     </message>
@@ -250,10 +246,6 @@
         <translation>Pre&amp;gled</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Vozlišče</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Oglejte si splošne informacije o vaši denarnici</translation>
     </message>
@@ -310,24 +302,12 @@
         <translation>&amp;Spremeni geslo ...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Naslovi za po&amp;šiljanje ...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Naslovi za &amp;prejemanje...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Odpri &amp;URI ...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Denarnica:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>privzeta denarnica</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -380,10 +360,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Denarnica</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -492,6 +468,10 @@
     <message>
         <source>Up to date</source>
         <translation>Posodobljeno</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>O&amp;kno</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -776,10 +756,6 @@
         <translation>Velikost &amp;predpomnilnika podatkovne baze</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MiB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Število programskih &amp;niti za preverjanje</translation>
     </message>
@@ -794,10 +770,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Naslovi URL tretjih oseb (npr. raziskovalec blokov), ki bodo navedeni v kontekstnem meniju seznama transakcij. Niz %s iz naslova URL je nadomeščen s hash vrednostjo transakcije. Več zaporednih naslovov URL je med seboj ločenih z znakom |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktivne opcije iz ukazne vrstice, ki preglasijo zgornje opcije:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1249,10 +1221,6 @@
         <translation>Počisti konzolo</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>privzeta denarnica</translation>
-    </message>
-    <message>
         <source>via %1</source>
         <translation>preko %1</translation>
     </message>
@@ -1459,14 +1427,6 @@
     <message>
         <source>Hide</source>
         <translation>Skrij</translation>
-    </message>
-    <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Dokler bo v blokih še dovolj prostora za vse nastajajoče transakcije, zadostuje, če plačate samo minimalno provizijo. Ko pa se bo količina vseh transakcij povečala do meja zmogljivosti omrežja, se lahko zgodi, da vaša transakcija brez večje provizije nikoli ne bo potrjena.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(oglejte si namig)</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -1763,7 +1723,11 @@
     </context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>privzeta denarnica</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

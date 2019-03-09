@@ -38,10 +38,6 @@
         <translation>Κλείσιμο εφαρμογής</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Πορτοφόλι</translation>
-    </message>
-    <message>
         <source>Error</source>
         <translation>Σφάλμα</translation>
     </message>

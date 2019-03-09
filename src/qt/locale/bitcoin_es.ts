@@ -188,10 +188,6 @@
         <translation>Monedero cifrado</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 se cerrará ahora para terminar el proceso de cifrado. Recuerde que cifrar su monedero no puede proteger completamente su monedero de ser robado por malware que infecte su ordenador.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Cualquier copia de seguridad anterior que haya hecho en su archivo de monedero debería ser reemplazada con el archivo de monedero cifrado generado recientemente. Por razones de seguridad, las copias de seguridad anteriores del archivo de monedero descifrado serán inútiles en cuanto empiece a utilizar el nuevo monedero cifrado.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Vista general</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Mostrar vista general del monedero</translation>
     </message>
@@ -314,24 +306,12 @@
         <translation>&amp;Cambiar la contraseña…</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Direcciones de &amp;envío...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Direcciones de &amp;recepción...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Monedero</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>monedero predeterminado</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Monedero</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -498,8 +474,36 @@
         <translation>Actualizado</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>Direcciones de &amp;envío</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>Direcciones de &amp;recepción</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostrar el mensaje de ayuda %1 para obtener una lista de los posibles comandos de linea de comandos de Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Ventana</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimizar</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Acercar</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Restaurar</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Ventana principal</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -563,6 +567,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>La generación de clave HD está &lt;b&gt;deshabilitada&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Clave privada &lt;b&gt;deshabilitado&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -993,10 +1001,6 @@
         <translation>Tamaño del cache de la &amp;base de datos</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Número de hilos de &amp;verificación de scripts</translation>
     </message>
@@ -1027,10 +1031,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Identificadores URL de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como elementos del menú contextual. El %s en la URL es reemplazado por el valor hash de la transacción. Se pueden separar URL múltiples por una barra vertical |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Opciones activas de consola de comandos que tienen preferencia sobre las opciones anteriores:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1339,8 +1339,16 @@
         <translation>'bitcoin: //' no es un URI válido. Use 'bitcoin:' en su lugar.</translation>
     </message>
     <message>
+        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
+        <translation>Está utilizando una URL BIP70 la cual dejará de tener soporte en el futuro.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>La búsqueda de solicitud de pago URL es válida: %1</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>No se puede procesar la petición de pago debido a que no se ha incluido el soporte de BIP70.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1814,10 +1822,6 @@
         <translation>&amp;Unban</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>Monedero predeterminado</translation>
-    </message>
-    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Bienvenido a la consola RPC %1.</translation>
     </message>
@@ -2150,14 +2154,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Ocultar</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Pagar solamente la comisión mínima es correcto, siempre y cuando haya menos volumen de transacciones que el espacio en los bloques. Pero tenga en cuenta que esto puede terminar en una transacción nunca confirmada, una vez que haya más demanda para transacciones Bitcoin que la red pueda procesar.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(leer la sugerencia)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Recomendada:</translation>
     </message>
@@ -2320,10 +2316,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Payment request expired.</source>
         <translation>Solicitud de pago caducada.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Pagar únicamente la comisión solicitada de %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3108,6 +3100,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <source>Could not commit transaction</source>
         <translation>No se pudo confirmar la transacción</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Monedero predeterminado</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3199,10 +3195,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Error leyendo %s!. Todas las claves se han leido correctamente, pero los datos de transacciones o la libreta de direcciones pueden faltar o ser incorrectos.</translation>
     </message>
     <message>
-        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>Grupo de salida por dirección, seleccionando todo o nada, en lugar de seleccionar en una base para salida. La privacidad se mejora como una dirección utilizada una sola vez (a menos que alguien lo envíe después de gastarlo), a menos que alguien envíe una solicitud, pero puede resultar en tarifas ligeramente más altas ya que la selección de la moneda puede ser inferior a la óptima debido a la limitación adicional después de gastarla. (por defecto, predeterminado %u)</translation>
-    </message>
-    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Por favor, compruebe si la fecha y hora en su computadora son correctas! Si su reloj esta mal, %s no trabajara correctamente. </translation>
     </message>
@@ -3269,10 +3261,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>¿Quieres reconstruir la base de datos de bloques ahora?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Error generando %s: Con esta versin no puede crear monederos no-HD.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3395,18 +3383,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Incapaz de generar claves</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>El argumento -benchmark no es soportado y ha sido ignorado, utiliza -debug=bench</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Parámetros no compatibles -debugnet ignorados , use -debug = red.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Parámetros no compatibles -tor encontrados, use -onion .</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Categoría de registro no soportada %s=%s.</translation>
     </message>
@@ -3443,10 +3419,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>Necesitas reconstruir la base de datos utilizando -reindex para volver al modo sin recorte. Esto volverá a descargar toda la cadena de bloques</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Error cargando %s: No puedes deshabilitar HD en un monedero HD ya existente</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Error al leer la base de datos, cerrando.</translation>
     </message>
@@ -3481,6 +3453,10 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Reduciendo -maxconnections de %d a %d, debido a limitaciones del sistema.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>La sección [%s] no se ha reconocido.</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -3551,10 +3527,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
         <translation>-maxtxfee tiene un ajuste muy elevado! Comisiones muy grandes podrían ser pagadas en una única transaccion.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Error cargando %s: No puedes habilitar HD en un monedero no HD ya existente</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Esta es la comisión de transacción que debe pagar cuando las estimaciones de comisión no estén disponibles.</translation>
     </message>
@@ -3565,14 +3537,6 @@ Nota: Dado que la comisión se calcula por byte, una comisión de "100 satoshis 
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>La longitud total de la cadena de versión de red ( %i ) supera la longitud máxima ( %i ) . Reducir el número o tamaño de uacomments .</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Error:  argumento -socks encontrado. El ajuste de la versión SOCKS ya no es posible, sólo proxies SOCKS5 son compatibles.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>El argumento no soportado -whitelistalwaysrelay ha sido ignorado, utiliza -whitelistrelay  y/o -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

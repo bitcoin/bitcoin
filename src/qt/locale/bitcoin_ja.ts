@@ -188,8 +188,8 @@
         <translation>ウォレットは暗号化されました</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>暗号化処理を完了させるため %1 をいますぐ終了します。ウォレットを暗号化しても、コンピュータに感染したマルウェアなどによる Bitcoin の盗難を完全に防ぐことはできないことにご注意ください。</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>ウォレットの暗号化処理が完了しました。ウォレットを暗号化しても、コンピュータに感染したマルウェアなどによる Bitcoin の盗難を完全に防ぐことはできないことにご注意ください。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -254,10 +254,6 @@
         <translation>概要(&amp;O)</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>ノード</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>ウォレットの概要を見る</translation>
     </message>
@@ -314,24 +310,12 @@
         <translation>パスフレーズの変更... (&amp;C)</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>送金先アドレス一覧 (&amp;S)...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>受け取り用アドレス一覧 (&amp;R)...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>URI を開く (&amp;U)...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>ウォレット:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>デフォルトウォレット</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +368,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>ウォレット</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -498,8 +478,36 @@
         <translation>バージョンは最新です</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>送金先アドレス(&amp;S)</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>受取用アドレス(&amp;R)</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>有効な Bitcoin のコマンドライン オプションを見るために %1 のヘルプメッセージを表示します。</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>ウインドウ (&amp;W)</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>最小化</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>拡大／縮小</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>元に戻す</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>メインウィンドウ</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -564,6 +572,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>HD鍵生成は&lt;b&gt;無効化&lt;/b&gt;されています</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>秘密鍵は &lt;b&gt;無効化&lt;/b&gt; されています</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -994,10 +1006,6 @@
         <translation>データベースキャッシュのサイズ (&amp;D)</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>スクリプト検証用スレッド数 (&amp;V)</translation>
     </message>
@@ -1028,10 +1036,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>トランザクションタブのコンテキストメニュー項目に表示する、サードパーティURL (例えばブロックエクスプローラ)。URL中の%sはトランザクションのハッシュ値に置き換えられます。垂直バー | で区切ることで、複数のURLを指定できます。</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>上のオプションを置き換えることのできる、有効なコマンドラインオプションの一覧:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1068,6 +1072,10 @@
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation>この設定を元に戻すには、ブロック チェーン全体を再ダウンロードする必要があります。</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1192,6 +1200,10 @@
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>サードパーティのトランザクションURL (&amp;T)</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>このダイアログで指定したオプションは、コマンドラインや設定ファイルの内容でオーバーライドされます:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1340,8 +1352,16 @@
         <translation>'bitcoin://' は正しいURIではありません｡ 'bitcoin:'を利用してください｡</translation>
     </message>
     <message>
+        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
+        <translation>将来サポートされなくなる予定のBIP70形式のURLをお使いです。</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>支払い要求の取得先URLが無効です: %1</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>BIP70のサポートが組み込まれていないため、支払いリクエストを処理することができません。</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1603,6 +1623,18 @@
         <translation>データディレクトリ</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>データディレクトリを初期値以外にするには '%1' オプションを使用します。</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>ブロックディレクトリ</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>ブロックディレクトリを初期値以外にするには '%1' オプションを使用します。</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>起動した日時</translation>
     </message>
@@ -1813,10 +1845,6 @@
     <message>
         <source>&amp;Unban</source>
         <translation>Banを解除する (&amp;U)</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>デフォルトウォレット</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2151,14 +2179,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>隠す</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>ブロックの容量に比べてトランザクション流量が少ないうちは最小手数料のみの支払で十分です。しかしながらネットワークが処理しきれないほどbitcoinトランザクションの需要がひとたび生まれてしまった場合には、永遠に検証がされないトランザクションになってしまう可能性があることに注意してください。</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>（ツールチップをお読みください）</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>推奨：</translation>
     </message>
@@ -2185,6 +2205,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Dust:</source>
         <translation>ダスト：</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>ブロック内の空きよりトランザクションのサイズが小さい場合、マイナーや中継ノードは最低限の手数料でも処理することがあります。この最低限の手数料だけを支払っても問題ありませんが、ネットワークが処理できる以上のビットコイントランザクションの要求があると、いつまでも検証されないトランザクションになる可能性があることに注意してください。</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>手数料が低すぎるとトランザクションがいつまでも検証されないかもしれません (ツールチップを読む)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2321,10 +2349,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Payment request expired.</source>
         <translation>支払いリクエストの期限が切れました。</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>要求手数料 %1 のみを支払う</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3109,6 +3133,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Could not commit transaction</source>
         <translation>トランザクションのコミットに失敗しました</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>デフォルトウォレット</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3200,10 +3228,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%s の読み込みエラー! すべてのキーは正しく読み取れますが、取引データやアドレス帳のエントリが失われたか、正しくない可能性があります。</translation>
     </message>
     <message>
-        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>出力ごとではなく、アドレス単位に出力をまとめて選択します。(後からまたそのアドレスに支払われない限り)アドレスが一度しか使用されないためプライバシーが向上します。ただし追加の制限により最適ではないコイン選択が発生した場合に、わずかに高い手数料となる可能性があります。(初期値: %u)</translation>
-    </message>
-    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>あなたのPCの日付と時刻が正しいことを確認して下さい！ もしあなたの時計が正しくなければ %s が正確に動作しません。</translation>
     </message>
@@ -3260,6 +3284,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>おつりのインデックスが範囲外です</translation>
     </message>
     <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>%s の設定は、%sネットワークへは [%s] セクションに書かれた場合のみ適用されます。</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation>Copyright (C) %i-%i</translation>
     </message>
@@ -3271,10 +3299,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>ブロック データベースを今すぐ再構築しますか?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>%sの作成に失敗しました。このバージョンではHDウォレット以外を作成することはできません。</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3397,18 +3421,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>鍵を生成できません</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>サポートされていない引数 -benchmark は無視されました。-debug=bench を使用してください。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>サポートされていない引数 -debugnet は無視されました。-debug=net を使用してください。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>サポートされていないログカテゴリ %s=%s.</translation>
     </message>
@@ -3445,16 +3457,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>非剪定モードに戻るためには-reindexオプションを使用してデータベースを再構築する必要があります。これによりブロックチェイン全体の再ダウンロードが行われます。</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>%s の読み込みエラー: HDウォレットが既に存在するため、HDウォレットを無効化できません</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
         <translation>チェインステートデータベースの更新エラー</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>エラー: %s 用のディスク容量が不足しています</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3485,8 +3497,18 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>システム上の制約から、-maxconnections を %d から %d に削減しました。</translation>
     </message>
     <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>セクション名 [%s] は認識されません。</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>取引の署名に失敗しました</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>指定の設定ファイル %s が存在しません｡
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3541,28 +3563,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>-maxtxfee が非常に高く設定されています！ひとつのトランザクションでこの量の手数料が支払われてしまうことがあります。</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>%s の読み込みエラー: 非HDウォレットが既に存在するため、HDウォレットを有効化できません</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>これは手数料の推定機能が利用できない場合に支払うトランザクション手数料です。</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>この製品はOpenSSLプロジェクトにより開発されたソフトウェアをOpenSSLツールキット %s として利用しています &lt;https://www.openssl.org/&gt;。また、Eric Young氏により開発された暗号ソフトウェア、Thomas Bernard氏により書かれたUPnPソフトウェアを用いています。</translation>
+        <translation>この製品はOpenSSLプロジェクトにより開発されたソフトウェアをOpenSSLツールキット %s として利用しています。また、Eric Young氏により開発された暗号ソフトウェア、Thomas Bernard氏により書かれたUPnPソフトウェアを用いています。</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>ネットワークバージョン文字 (%i) の長さが最大の長さ (%i) を超えています。UAコメントの数や長さを削減してください。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>サポートされていない引数 -socks が見つかりました。SOCKSバージョンの設定はできないようになりました。SOCKS5プロキシのみがサポートされています。</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>サポートされていない引数 -whitelistalwaysrelay は無視されました。-whitelistrelay または -whitelistforcerelay を利用してください</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

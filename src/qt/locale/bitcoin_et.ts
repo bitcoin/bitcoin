@@ -322,10 +322,6 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
-        <source>Wallet</source>
-        <translation>Rahakott</translation>
-    </message>
-    <message>
         <source>&amp;Send</source>
         <translation>&amp;Saada</translation>
     </message>
@@ -424,6 +420,10 @@
     <message>
         <source>Up to date</source>
         <translation>Ajakohane</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Aken</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -714,10 +714,6 @@
     <message>
         <source>&amp;Main</source>
         <translation>&amp;Peamine</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>

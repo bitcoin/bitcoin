@@ -188,10 +188,6 @@
         <translation>Novčanik šifriran</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 će se sada zatvoriti kako bi dovršio postupak šifriranja. Zapamtite da šifriranje vašeg novčanika ne može u potpunosti zaštititi vaše bitcoine od krađe preko zloćudnog softvera koji bi bio na vašem računalu.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>VAŽNO: Sve prethodne pričuve vašeg novčanika trebale bi biti zamijenjene novo stvorenom, šifriranom datotekom novčanika. Zbog sigurnosnih razloga, prethodne pričuve nešifriranog novčanika će postati beskorisne čim počnete koristiti novi, šifrirani novčanik.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Pregled</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Čvor</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Prikaži opći pregled novčanika</translation>
     </message>
@@ -314,24 +306,12 @@
         <translation>Promijenite &amp;lozinku...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Adrese za &amp;slanje</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Adrese za &amp;primanje</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Otvorite &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Novčanik:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>uobičajeni novčanik</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +364,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Novčanik</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -500,6 +476,10 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Prikažite pomoć programa %1 kako biste ispisali moguće opcije preko terminala</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Prozor</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -989,10 +969,6 @@
         <translation>Veličina predmemorije baze podataka</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Broj CPU niti za verifikaciju transakcija</translation>
     </message>
@@ -1023,10 +999,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL-ovi treće stranke (npr. preglednik blokova) koji se javljaju u kartici transakcija kao elementi kontekstnog izbornika. %s u URL-u zamijenjen je hashom transakcije. Višestruki URL-ovi su odvojeni vertikalnom crtom |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Aktivne terminalne opcije koje poništavaju navedene opcije:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1806,10 +1778,6 @@
         <translation>&amp;Ukinite zabranu</translation>
     </message>
     <message>
-        <source>default wallet</source>
-        <translation>uobičajeni novčanik</translation>
-    </message>
-    <message>
         <source>Welcome to the %1 RPC console.</source>
         <translation>Dobrodošli u %1 RPC konzolu.</translation>
     </message>
@@ -2142,14 +2110,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Sakrijte</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Plaćanje minimalnu naknadu je dovoljno ukoliko je volumen transakcija manja od prostora u blokovima. Budite svjesni da ovo može završiti tako da se transakcija nikad ne potvrdi ako je potražnja za Bitcoin transakcijama veća nego što mreža može procesirati.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(pročitajte opis alata)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Preporučeno:</translation>
     </message>
@@ -2312,10 +2272,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Payment request expired.</source>
         <translation>Zahtjev za plaćanje istekao.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Platite samo potrebnu naknadu u iznosu od %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3100,6 +3056,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <source>Could not commit transaction</source>
         <translation>Transakcija ne može biti izvršena.</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>uobičajeni novčanik</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3191,10 +3151,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Greška kod iščitanja %s! Svi ključevi su ispravno učitani, ali transakcijski podaci ili zapisi u adresaru mogu biti nepotpuni ili netočni.</translation>
     </message>
     <message>
-        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>Grupirajte outpute po adresi, birajući sve ili ništa umjesto biranja po outputu. Privatnost je povećana jer je adresa korištena samo jedanput (osim ako netko šalje na tu adresu nakon trošenja iz nje), ali može rezultirati neznatno većim naknadama jer suboptimalno biranje novčića može nastati zbog dodanog ograničenja (uobičajeno: %u)</translation>
-    </message>
-    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Molimo provjerite jesu li datum i vrijeme na vašem računalu točni. Ako je vaš sat krivo namješten, %s neće raditi ispravno.</translation>
     </message>
@@ -3261,10 +3217,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Želite li sada obnoviti bazu blokova?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Greška kod stvaranja %s. S ovom verzijom ne možete stvoriti novčanike koji nisu HD.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3387,18 +3339,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Ne mogu se generirati ključevi</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Nepodržan argument -benchmark ignoriran. Koristite -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Nepodržan argument -debugnet ignoriran. Koristite -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Nepodržan argument -tor pronađen. Koristite -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Nepodržana kategorija zapisa %s=%s.</translation>
     </message>
@@ -3433,10 +3373,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Morat ćete ponovno složiti bazu koristeći -reindex kako biste se vratili na neobrezivan način (unpruned mode). Ovo će ponovno preuzeti cijeli lanac blokova.</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Greška kod učitavanja %s: Ne možete isključiti HD na već postojećem HD novčaniku</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3543,10 +3479,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>-maxtxfee je postavljen preveliko. Naknade ove veličine će biti plaćene na individualnoj transakciji.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Greška kod učitavanja %s: Ne možete uključiti HD na već postojećem novčaniku koji nije HD</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Ovo je transakcijska naknada koju ćete možda platiti kada su nedostupne procjene naknada.</translation>
     </message>
@@ -3557,14 +3489,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Ukupna duljina stringa verzije mreže (%i) prelazi maksimalnu duljinu (%i). Smanjite broj ili veličinu komentara o korisničkom agentu (uacomments).</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Nepodržan argument -socks pronađen. Postavljanje verziju SOCKS-a nije više moguće. Samo su SOCKS5 proxyji podržani.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Nepodržan argument -whitelistalwaysrelay ignoriran. Koristite -whitelistelay i/ili -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

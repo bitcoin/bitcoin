@@ -176,10 +176,6 @@
         <translation>Portofel criptat</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 se va inchide pentru a termina procesul de criptare. Aduți aminte că prin criptarea portofelului tău virtual, nu îți poți proteja complet monedele virtuale de a fi furate când te-ai infectat cu un virus de tip malware pe calculatorul tau.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>IMPORTANT: Fiecare backup anterior pe care l-ai facut portofelului tău virtual trebuie înlocuit cu cel nou. Din motive de securitate, backup-urile anteroiare făcute portofelului tău, care nu sunt criptate vor deveni inutilizabile și inutile când vei începe să utilizezi portofelul criptat.</translation>
     </message>
@@ -242,10 +238,6 @@
         <translation>Vizualizare de ansamblu</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Nod</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Arată o prezentare generală a portofelului.</translation>
     </message>
@@ -298,14 +290,6 @@
         <translation>&amp;Schimbă parola...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Trimite adresele...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Primește adresele...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Deschide &amp;URI...</translation>
     </message>
@@ -340,10 +324,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portofel</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -428,6 +408,10 @@
     <message>
         <source>Up to date</source>
         <translation>Actual</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Fereastra</translation>
     </message>
     <message>
         <source>Date: %1
@@ -692,10 +676,6 @@
     <message>
         <source>Options</source>
         <translation>Opțiuni</translation>
-    </message>
-    <message>
-        <source>MB</source>
-        <translation>MB</translation>
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>

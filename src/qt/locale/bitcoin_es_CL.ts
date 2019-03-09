@@ -188,10 +188,6 @@
         <translation>Billetera codificada</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 se cerrará para finalizar el proceso de encriptación. Recuerda que encriptar tu billetera no protege completamente a tus bitcoins de ser robados por virus y malwares en tu computadora.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>IMPORTANTE: Cualquier respaldo anterior que hayas hecho del archivo de tu billetera debe ser reemplazado por el nuevo archivo encriptado que has generado. Por razones de seguridad, todos los respaldos realizados anteriormente serán inutilizables al momento de que utilices tu nueva billetera encriptada.</translation>
     </message>
@@ -254,10 +250,6 @@
         <translation>&amp;Vista general</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Muestra una vista general de la billetera</translation>
     </message>
@@ -314,14 +306,6 @@
         <translation>&amp;Cambiar la contraseña...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>Mandando direcciones</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Recibiendo direcciones</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir y url...</translation>
     </message>
@@ -372,10 +356,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cartera</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -488,6 +468,11 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostrar el mensaje de ayuda %1 para obtener una lista de los posibles comandos de Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>y windows
+</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -965,10 +950,6 @@
         <translation>Tamaño del caché de la base de &amp;datos</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Número de hilos de &amp;verificación de scripts</translation>
     </message>
@@ -987,10 +968,6 @@
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URLs de terceros (por ejemplo, un explorador de bloques) que aparecen en la pestaña de transacciones como elementos del menú contextual. El %s en la URL es reemplazado por el valor hash de la transacción. Se pueden separar múltiples URLs por una barra vertical |.</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Opciones activas de la terminal que tienen preferencia sobre las opciones anteriores:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1929,10 +1906,6 @@
         <translation>Ocultar</translation>
     </message>
     <message>
-        <source>(read the tooltip)</source>
-        <translation>(leer la sugerencia)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Recomendado:</translation>
     </message>
@@ -2059,10 +2032,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Solicitud de pago expirada</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation>Pagar únicamente la comisión requerida de %1</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2787,7 +2756,7 @@
         <source>Could not commit transaction</source>
         <translation>No se pudo confirmar la transacción</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2978,28 +2947,12 @@
         <translation>El cálculo de la comisión de transacción y del cambio han fallado</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>El argumento -benchmark no es soportado y ha sido ignorado, usa -debug=bench</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>El argumento -debugnet no es soportado, usa -debug=ned.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>El argumento -tor no es soportado, usa -onion.</translation>
-    </message>
-    <message>
         <source>Upgrading UTXO database</source>
         <translation>Actualizando la base de datos UTXO</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>Verificando bloques...</translation>
-    </message>
-    <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Error cargando %s: No puedes deshabilitar HD en un monedero HD ya existente</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3078,24 +3031,12 @@
         <translation>-maxtxfee tiene un valor muy elevado! Comisiones muy grandes podrían ser pagadas en una única transacción.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Error cargando %s: No puedes habilitar HD en un monedero no HD ya existente</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Impuesto por transacción que pagarás cuando la estimación de impuesto no esté disponible.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>La longitud total de la cadena de versión de red ( %i ) supera la longitud máxima ( %i ) . Reducir el número o tamaño de uacomments .</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Argumento -socks no soportado. La configuración de la versión SOCKS ya no es posible, sólo los proxies SOCKS5 son compatibles.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Argumento -whitelistalwaysrelay no soportado ha sido ignorado, utiliza -whitelistrelay y/o -whitelistforcerelay</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>

@@ -188,8 +188,8 @@
         <translation>Portafoglio cifrato</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 verrà chiuso per completare il processo di cifratura. Ricorda che cifrare il tuo portafoglio non può proteggerlo contro potenziali furti di malware che potrebbero aver infettato il tuo computer.</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Adesso il tuo portafoglio è criptato. Ricorda che un portafoglio criptato non protegge pienamente contro il furto di bitcoin se il tuo computer viene infetto da malware.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -254,10 +254,6 @@
         <translation>&amp;Sintesi</translation>
     </message>
     <message>
-        <source>Node</source>
-        <translation>Nodo</translation>
-    </message>
-    <message>
         <source>Show general overview of wallet</source>
         <translation>Mostra lo stato generale del portamonete</translation>
     </message>
@@ -314,24 +310,12 @@
         <translation>&amp;Cambia passphrase...</translation>
     </message>
     <message>
-        <source>&amp;Sending addresses...</source>
-        <translation>&amp;Indirizzi di invio...</translation>
-    </message>
-    <message>
-        <source>&amp;Receiving addresses...</source>
-        <translation>Indirizzi di &amp;ricezione...</translation>
-    </message>
-    <message>
         <source>Open &amp;URI...</source>
         <translation>Apri &amp;URI...</translation>
     </message>
     <message>
         <source>Wallet:</source>
         <translation>Portafoglio:</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>Portafoglio predefinito:</translation>
     </message>
     <message>
         <source>Click to disable network activity.</source>
@@ -384,10 +368,6 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portafoglio</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -498,8 +478,36 @@
         <translation>Aggiornato</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>Indirizzi di &amp;spedizione</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>Indirizzi di &amp;ricezione</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostra il messaggio di aiuto di %1 per ottenere una lista di opzioni di comando per Bitcoin </translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Finestra</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Minimizza</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zoom</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>Ripristina</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Finestra principale</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -564,6 +572,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>La creazione della chiave HD è &lt;b&gt;disabilitata&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Chiava privata (1 disabilitata 1)</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -986,10 +998,6 @@
         <translation>Dimensione della cache del &amp;database.</translation>
     </message>
     <message>
-        <source>MB</source>
-        <translation>MB</translation>
-    </message>
-    <message>
         <source>Number of script &amp;verification threads</source>
         <translation>Numero di thread di &amp;verifica degli script </translation>
     </message>
@@ -1021,10 +1029,6 @@
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL di terze parti (ad es. un block explorer) che appaiono nella tabella delle transazioni come voci nel menu contestuale. "%s" nell'URL è sostituito dall'hash della transazione.
 Per specificare più URL separarli con una barra verticale "|".</translation>
-    </message>
-    <message>
-        <source>Active command-line options that override above options:</source>
-        <translation>Opzioni della riga di comando attive che sostituiscono i settaggi sopra elencati:</translation>
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
@@ -1061,6 +1065,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
         <translation>Per ripristinare questa impostazione è necessario rieseguire il download dell'intera blockchain.</translation>
+    </message>
+    <message>
+        <source>MiB</source>
+        <translation>MiB</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1185,6 +1193,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>&amp;URLs per transazioni terzi </translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Le impostazioni sulla riga di comando o nell'archivio di configurazione hanno priecedenza su quelle impostate in questo pannello:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1333,8 +1345,16 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>'bitcoin: //' non è un URI valido. Usa invece "bitcoin:".</translation>
     </message>
     <message>
+        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
+        <translation>Sta usando un'URL BIP70 che, in futuro, sarà obsoleto</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>URL di recupero della Richiesta di pagamento non valido: %1</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
+        <translation>Non posso completare il pagamento perché non è stato incluso in fase di compilazione del supporto per BIP70.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1588,6 +1608,18 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Datadir</translation>
     </message>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Per specificare una posizione non di default della directory dei dati, usa l'opzione '%1'</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Per specificare una posizione non di default della directory dei blocchi, usa l'opzione '%1'</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Ora di avvio</translation>
     </message>
@@ -1798,10 +1830,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Elimina Ban</translation>
-    </message>
-    <message>
-        <source>default wallet</source>
-        <translation>Portafoglio predefinito:</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -2132,14 +2160,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Nascondi</translation>
     </message>
     <message>
-        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Non vi è alcuna controindicazione a pagare la commissione minima, a patto che il volume delle transazioni sia inferiore allo spazio disponibile nei blocchi. Occorre comunque essere consapevoli che ciò potrebbe impedire la conferma delle transazioni nel caso in cui la rete risultasse satura.</translation>
-    </message>
-    <message>
-        <source>(read the tooltip)</source>
-        <translation>(leggi il suggerimento)</translation>
-    </message>
-    <message>
         <source>Recommended:</source>
         <translation>Raccomandata:</translation>
     </message>
@@ -2166,6 +2186,14 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Dust:</source>
         <translation>Trascurabile:</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Quando il volume delle transazioni è minore dello spazio nei blocchi, i minatori e in nidi di relay potrebbero imporre una commissione minima. Va benissimo pagare solo questa commissione minima, ma tieni presente che questo potrebbe risultare in una transazione che non si confermano mai se la richiesta di transazioni bitcoin dovesse superare la velocità con cui la rete riesce ad elaborarle.</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>Una commissione troppo bassa potrebbe risultare in una transazione che non si conferma mai (vedi il tooltip)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2298,10 +2326,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Payment request expired.</source>
         <translation>Richiesta di pagamento scaduta.</translation>
-    </message>
-    <message>
-        <source>Pay only the required fee of %1</source>
-        <translation> Paga solamente la commissione richiesta di %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -3078,6 +3102,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <source>Could not commit transaction</source>
         <translation>Non è stato possibile completare la transazione</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>Portafoglio predefinito:</translation>
+    </message>
 </context>
 <context>
     <name>WalletView</name>
@@ -3169,10 +3197,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Errore lettura %s! Tutte le chiavi sono state lette correttamente, ma i dati delle transazioni o della rubrica potrebbero essere mancanti o non corretti.</translation>
     </message>
     <message>
-        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
-        <translation>Raggruppa gli output per indirizzo, selezionando tutti o nessuno, invece di selezionarli in base all'output. La privacy è migliorata in quanto un indirizzo viene usato una sola volta (a meno che qualcuno vi invii denaro dopo che avevate già speso da quell'indirizzo), ma può comportare commissioni leggermente più alte visto che le limitazioni aggiunte possono condurre a una selezione subottimale degli input da spendere (default: %u)</translation>
-    </message>
-    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Per favore controllate che la data del computer e l'ora siano corrette! Se il vostro orologio è sbagliato %s non funzionerà correttamente.</translation>
     </message>
@@ -3229,6 +3253,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Cambio indice fuori paramentro</translation>
     </message>
     <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>La configurazione di %s si applica alla rete %s soltanto nella sezione [%s]</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation>Copyright (C) %i-%i</translation>
     </message>
@@ -3239,10 +3267,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Vuoi ricostruire ora il database dei blocchi?</translation>
-    </message>
-    <message>
-        <source>Error creating %s: You can't create non-HD wallets with this version.</source>
-        <translation>Errore durante la creazione %s: non e' possibile creare portafogli non-HD con questa versione.</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3361,18 +3385,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Impossibile generare le chiavi</translation>
     </message>
     <message>
-        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Ignorata opzione -benchmark non supportata, utilizzare -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Argomento -debugnet ignorato in quanto non supportato, usare -debug=net.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -tor found, use -onion.</source>
-        <translation>Rilevato argomento -tor non supportato, utilizzare -onion.</translation>
-    </message>
-    <message>
         <source>Unsupported logging category %s=%s.</source>
         <translation>Categoria di registrazione non supportata %s=%s.</translation>
     </message>
@@ -3409,16 +3421,16 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Per ritornare alla modalità unpruned sarà necessario ricostruire il database utilizzando l'opzione -reindex. L'intera blockchain sarà riscaricata.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't disable HD on an already existing HD wallet</source>
-        <translation>Errore caricamento %s: Non puoi disabilitare HD in un portafoglio HD già esistente</translation>
-    </message>
-    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Errore durante lalettura del database. Arresto in corso.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
         <translation>Errore durante l'aggiornamento del database chainstate</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Errore; Lo spazio sul disco è troppo basso per %s</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3449,6 +3461,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Riduzione -maxconnections da %d a %d a causa di limitazioni di sistema.</translation>
     </message>
     <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>La sezione [%s] non è riconosciuta</translation>
+    </message>
+    <message>
         <source>Signing transaction failed</source>
         <translation>Firma transazione fallita</translation>
     </message>
@@ -3463,6 +3479,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>-walletdir "%s" specificata non e' una directory</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>Lo specificato archivio di configurazione %s non esiste</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3517,10 +3538,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>-maxtxfee è impostato molto alto! Commissioni così alte possono venir pagate anche su una singola transazione.</translation>
     </message>
     <message>
-        <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
-        <translation>Errore caricamento %s: Non puoi abilitare HD in un portafoglio non-HD già esistente</translation>
-    </message>
-    <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Questo è il costo di transazione che potresti pagare quando le stime della tariffa non sono disponibili.</translation>
     </message>
@@ -3531,14 +3548,6 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>La lunghezza totale della stringa di network version (%i) eccede la lunghezza massima (%i). Ridurre il numero o la dimensione di uacomments.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Argomento -socks non supportato. Non è più possibile impostare la versione SOCKS, solamente i proxy SOCKS5 sono supportati.</translation>
-    </message>
-    <message>
-        <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
-        <translation>Argomento non supportato -whitelistalwaysrelay è stato ignorato, utilizzare -whitelistrelay e/o -whitelistforcerelay.</translation>
     </message>
     <message>
         <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
