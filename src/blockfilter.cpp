@@ -251,6 +251,8 @@ bool BlockFilter::BuildParams(GCSFilter::Params& params) const
         params.m_P = BASIC_FILTER_P;
         params.m_M = BASIC_FILTER_M;
         return true;
+    case BlockFilterType::INVALID:
+        return false;
     }
 
     return false;

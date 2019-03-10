@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test createwallet arguments.
@@ -40,8 +40,8 @@ class CreateWalletTest(BitcoinTestFramework):
         privkey = w0.dumpprivkey(addr)
         assert_raises_rpc_error(-4, 'Cannot import private keys to a wallet with private keys disabled', w1.importprivkey, privkey)
         result = w1.importmulti([{'scriptPubKey': {'address': addr}, 'timestamp': 'now', 'keys': [privkey]}])
-        assert(not result[0]['success'])
-        assert('warning' not in result[0])
+        assert not result[0]['success']
+        assert 'warning' not in result[0]
         assert_equal(result[0]['error']['code'], -4)
         assert_equal(result[0]['error']['message'], 'Cannot import private keys to a wallet with private keys disabled')
 

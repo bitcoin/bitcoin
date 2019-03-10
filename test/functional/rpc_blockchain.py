@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPCs related to blockchainstate.
@@ -172,9 +172,9 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(chaintxstats['txcount'], 2)
         assert_equal(chaintxstats['window_final_block_hash'], b1_hash)
         assert_equal(chaintxstats['window_block_count'], 0)
-        assert('window_tx_count' not in chaintxstats)
-        assert('window_interval' not in chaintxstats)
-        assert('txrate' not in chaintxstats)
+        assert 'window_tx_count' not in chaintxstats
+        assert 'window_interval' not in chaintxstats
+        assert 'txrate' not in chaintxstats
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Class for bitcoind node under test"""
@@ -30,9 +30,6 @@ from .util import (
     wait_until,
     p2p_port,
 )
-
-# For Python 3.4 compatibility
-JSONDecodeError = getattr(json, "JSONDecodeError", ValueError)
 
 BITCOIND_PROC_WAIT_TIMEOUT = 60
 
@@ -565,5 +562,5 @@ class TestNodeCLI():
             raise subprocess.CalledProcessError(returncode, self.binary, output=cli_stderr)
         try:
             return json.loads(cli_stdout, parse_float=decimal.Decimal)
-        except JSONDecodeError:
+        except json.JSONDecodeError:
             return cli_stdout.rstrip("\n")

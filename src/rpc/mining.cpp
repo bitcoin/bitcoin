@@ -843,7 +843,8 @@ static UniValue estimatesmartfee(const JSONRPCRequest& request)
 
     RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VSTR});
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-    unsigned int conf_target = ParseConfirmTarget(request.params[0]);
+    unsigned int max_target = ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+    unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
     bool conservative = true;
     if (!request.params[1].isNull()) {
         FeeEstimateMode fee_mode;
@@ -915,7 +916,8 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
 
     RPCTypeCheck(request.params, {UniValue::VNUM, UniValue::VNUM}, true);
     RPCTypeCheckArgument(request.params[0], UniValue::VNUM);
-    unsigned int conf_target = ParseConfirmTarget(request.params[0]);
+    unsigned int max_target = ::feeEstimator.HighestTargetTracked(FeeEstimateHorizon::LONG_HALFLIFE);
+    unsigned int conf_target = ParseConfirmTarget(request.params[0], max_target);
     double threshold = 0.95;
     if (!request.params[1].isNull()) {
         threshold = request.params[1].get_real();
