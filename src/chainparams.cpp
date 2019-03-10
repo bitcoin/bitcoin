@@ -78,7 +78,8 @@ static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash){
     }
     printf("genesis.nTime = %u \n", genesisBlock.nTime);
     printf("genesis.nNonce = %u \n", genesisBlock.auxpow->parentBlock.nNonce );
-    printf("Generate hash = %s\n", phash.ToString().c_str());
+    printf("Generate parent hash = %s\n", phash.ToString().c_str());
+    printf("Generate hash = %s\n", genesisBlock.GetHash().GetHex().c_str());
     printf("genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
 }
 void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
@@ -161,13 +162,13 @@ public:
         nDefaultPort = 8369;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1549299537, 115427, 0x1e0ffff0, 1, 50 * COIN, consensus.nAuxpowChainId);
+        genesis = CreateGenesisBlock(1552236240, 452710, 0x1e0ffff0, 1, 50 * COIN, consensus.nAuxpowChainId);
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x00000bfccfa0986faa4678ec38d62a0949d75257161b910f6e921d1e0dd12776"));
-        assert(consensus.hashGenesisBlock == uint256S("0x69ca7b995787b73c32bab57a7c1003ef469c3167810bae4728ab82662ba23c8c"));
+        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x00000093d7bae1bbae6fd3f1890dc6cb0fc6d86193b7c2e71af849be7d3a2610"));
+        assert(consensus.hashGenesisBlock == uint256S("0x1b4ab9f52fb1cfe8a20008b444ff3b11bcf277c985f530941e7bcca92ca14473"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
