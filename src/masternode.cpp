@@ -230,6 +230,7 @@ void CMasternode::Check(bool fForce)
                 const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
                 // only check masternodes in winners list
                 bool foundPayee = false;
+                CMasternodePayee payee;
                 {
                     LOCK(cs_mapMasternodeBlocks);
                     for (int i = -10; i < 20; i++) {
