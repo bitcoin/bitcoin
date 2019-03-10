@@ -40,7 +40,7 @@ Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
 * `./include/bitcoinconsensus.h` (lib header)
 * `./lib/libbitcoinconsensus.so.0.0.0` (shared lib)
 * `./share/man/man1/` (man pages)
-* `./share/doc/` (documentation)
+* `./share/doc/` (documentation, examples and scripts)
 
 ### Need Help?
 

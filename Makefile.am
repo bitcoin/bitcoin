@@ -3,7 +3,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
-SUBDIRS = src doc contrib/init share/examples share/rpcauth
+SUBDIRS = src doc contrib/init share/examples share/rpcauth contrib/qos
 if ENABLE_MAN
 SUBDIRS += doc/man
 endif
