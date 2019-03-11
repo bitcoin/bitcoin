@@ -229,8 +229,10 @@ void CMasternode::Check(bool fForce)
             if(!fForce){
                 const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
                 // only check masternodes in winners list
-                bool foundPayee = false;
+                // give some buffer for ping retries to count up, once get in 10 retries to the end it is the red line and not check for winners list before incrementing ping retries
+                bool foundPayee = (nPingRetries >= (MASTERNODE_MAX_RETRIES-10));
                 CMasternodePayee payee;
+                if(!foundPayee)
                 {
                     LOCK(cs_mapMasternodeBlocks);
                     for (int i = -10; i < 20; i++) {
@@ -244,14 +246,17 @@ void CMasternode::Check(bool fForce)
                 }
                 if(foundPayee){
                     nPingRetries++;
-                    CMasternodeBroadcast mnb(*this);
-                    const uint256 &hash = mnb.GetHash();
-                    bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
-                    if (existsInMnbList) {
-                        mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = nPingRetries;
-                        
-                    }                        
-                    
+                    if(nPingRetries <= MASTERNODE_MAX_RETRIES){
+                        CMasternodeBroadcast mnb(*this);
+                        const uint256 &hash = mnb.GetHash();
+                        bool existsInMnbList = mnodeman.mapSeenMasternodeBroadcast.count(hash);
+                        if (existsInMnbList) {
+                            mnodeman.mapSeenMasternodeBroadcast[hash].second.nPingRetries = nPingRetries;
+                            
+                        }    
+                    }
+                    else
+                        nPingRetries = MASTERNODE_MAX_RETRIES;  
                 }           
 
             }
