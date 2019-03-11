@@ -8,6 +8,7 @@
 #include <tinyformat.h>
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
@@ -34,7 +35,7 @@ std::string SanitizeString(const std::string& str, int rule)
     return strResult;
 }
 
-const signed char p_util_hexdigit[256] =
+constexpr signed char p_util_hexdigit[256] =
 { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
   -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
@@ -127,7 +128,7 @@ void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
 
 std::string EncodeBase64(const unsigned char* pch, size_t len)
 {
-    static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    constexpr char pbase64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::string str;
     str.reserve(((len + 2) / 3) * 4);
@@ -143,7 +144,7 @@ std::string EncodeBase64(const std::string& str)
 
 std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 {
-    static const int decode64_table[256] =
+    constexpr std::array<int,256> decode64_table =
     {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -196,7 +197,7 @@ std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 
 std::string EncodeBase32(const unsigned char* pch, size_t len)
 {
-    static const char *pbase32 = "abcdefghijklmnopqrstuvwxyz234567";
+    constexpr char pbase32[] = "abcdefghijklmnopqrstuvwxyz234567";
 
     std::string str;
     str.reserve(((len + 4) / 5) * 8);
@@ -212,7 +213,7 @@ std::string EncodeBase32(const std::string& str)
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 {
-    static const int decode32_table[256] =
+    constexpr std::array<int, 256> decode32_table =
     {
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -435,7 +436,7 @@ int atoi(const std::string& str)
  *  9223372036854775807  (1<<63)-1  (max int64_t)
  *  9999999999999999999  1^19-1     (would overflow)
  */
-static const int64_t UPPER_BOUND = 1000000000000000000LL - 1LL;
+constexpr int64_t UPPER_BOUND = 1000000000000000000LL - 1LL;
 
 /** Helper function for ParseFixedPoint */
 static inline bool ProcessMantissaDigit(char ch, int64_t &mantissa, int &mantissa_tzeros)
