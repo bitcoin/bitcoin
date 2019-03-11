@@ -582,20 +582,24 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
             nMaxSignatures = payee.GetVoteCount();
         }
     }
-	CAmount nMasternodePayment = 0;
-	for (const auto& payee : vecPayees) {
-		const CScript& payeeScript = payee.GetPayee();
-		nMasternodePayment = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, payee.nStartHeight);
-		nMasternodePayment += nHalfFee;
-		bool bFoundPayment = false;
-		for(const auto &txout: txNew.vout) {
-			if (payeeScript == txout.scriptPubKey && nMasternodePayment == txout.nValue) {
-				LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
-				bFoundPayment = true;
-			}
-			if (bFoundPayment)
-				break;
-		}
+    CAmount nMasternodePayment = 0;
+    CScript mnScript;
+    for (const auto& payee : vecPayees) {
+        const CScript& payeeScript = payee.GetPayee();
+        nMasternodePayment = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), nTotalRewardWithMasternodes, false, true, payee.nStartHeight);
+        nMasternodePayment += nHalfFee;
+        bool bFoundPayment = false;
+        for(const auto &txout: txNew.vout) {
+            if (nMasternodePayment == txout.nValue) {
+                // the masternode that got paid and not the masternode that this local node is expecting
+                mnScript = txout.scriptPubKey;
+                if(payeeScript == txout.scriptPubKey){
+                    LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::IsTransactionValid -- Found required payment\n");
+                    bFoundPayment = true;
+                    break;
+                }
+            }
+        }
 
         if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
 			if (bFoundPayment)
@@ -618,6 +622,16 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 		nTotalRewardWithMasternodes  -= fee;
 		return true;
 	}
+    // if masternode chosen was NSR to local client, let this go through in the case where miner sees a valid masternode thats on the edge between enabled and NSR for the rest of the network and it has >= MNPAYMENTS_SIGNATURES_REQUIRED votes
+    if(!mnScript.empty()){
+        masternode_info_t mnInfo;
+        if(mnodeman.GetMasternodeInfo(mnScript, mnInfo)){
+            if(mnInfo.nActiveState == MASTERNODE_NEW_START_REQUIRED){
+                LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::IsTransactionValid -- Found required payment but receiver was NSR\n");
+                return true;
+            }
+        }
+    }    
     LogPrint(BCLog::MNPAYMENT, "CMasternodeBlockPayees::IsTransactionValid -- ERROR: Missing required payment, possible payees: '%s', amount: %f SYS\n", strPayeesPossible, (float)nMasternodePayment/COIN);
     return false;
 }
@@ -703,7 +717,11 @@ bool CMasternodePaymentVote::IsValid(CNode* pnode, int nValidationHeight, std::s
 
         return false;
     }
-
+    if(mnInfo.nActiveState != MASTERNODE_ENABLED){
+        LogPrint(BCLog::MNPAYMENT, "CMasternodePaymentVote::IsValid -- Can't process vote for non-enabled masternode %s\n",
+                    masternodeOutpoint.ToStringShort());
+        return false;
+    }
     int nMinRequiredProtocol;
     if(nBlockHeight >= nValidationHeight) {
         // new votes must comply SPORK_10_MASTERNODE_PAY_UPDATED_NODES rules
