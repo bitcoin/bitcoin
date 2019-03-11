@@ -29,6 +29,7 @@ bench_bench_dash_SOURCES = \
   bench/lockedpool.cpp \
   bench/perf.cpp \
   bench/perf.h \
+  bench/prevector_destructor.cpp \ 
   bench/string_cast.cpp
 
 nodist_bench_bench_dash_SOURCES = $(GENERATED_TEST_FILES)

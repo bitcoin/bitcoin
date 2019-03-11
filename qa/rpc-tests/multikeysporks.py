@@ -51,7 +51,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
         # address(base58): yc5TGfcHYoLCrcbVy4umsiDjsYUn39vLui
 
         self.nodes.append(start_node(0, self.options.tmpdir,
-                                     ["-debug", "-sporkkey=931wyuRNVYvhg18Uu9bky5Qg1z4QbxaJ7fefNBzjBPiLRqcd33F",
+                                     ["-sporkkey=931wyuRNVYvhg18Uu9bky5Qg1z4QbxaJ7fefNBzjBPiLRqcd33F",
                                       "-sporkaddr=ygcG5S2pQz2U1UAaHvU6EznKZW7yapKMA7",
                                       "-sporkaddr=yfLSXFfipnkgYioD6L8aUNyfRgEBuJv48h",
                                       "-sporkaddr=yNsMZhEhYqv14TgdYb1NS2UmNZjE8FSJxa",
@@ -59,7 +59,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
                                       "-sporkaddr=yc5TGfcHYoLCrcbVy4umsiDjsYUn39vLui",
                                       "-minsporkkeys=3"]))
         self.nodes.append(start_node(1, self.options.tmpdir,
-                                     ["-debug", "-sporkkey=91vbXGMSWKGHom62986XtL1q2mQDA12ngcuUNNe5NfMSj44j7g3",
+                                     ["-sporkkey=91vbXGMSWKGHom62986XtL1q2mQDA12ngcuUNNe5NfMSj44j7g3",
                                       "-sporkaddr=ygcG5S2pQz2U1UAaHvU6EznKZW7yapKMA7",
                                       "-sporkaddr=yfLSXFfipnkgYioD6L8aUNyfRgEBuJv48h",
                                       "-sporkaddr=yNsMZhEhYqv14TgdYb1NS2UmNZjE8FSJxa",
@@ -67,7 +67,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
                                       "-sporkaddr=yc5TGfcHYoLCrcbVy4umsiDjsYUn39vLui",
                                       "-minsporkkeys=3"]))
         self.nodes.append(start_node(2, self.options.tmpdir,
-                                     ["-debug", "-sporkkey=92bxUjPT5AhgXuXJwfGGXqhomY2SdQ55MYjXyx9DZNxCABCSsRH",
+                                     ["-sporkkey=92bxUjPT5AhgXuXJwfGGXqhomY2SdQ55MYjXyx9DZNxCABCSsRH",
                                       "-sporkaddr=ygcG5S2pQz2U1UAaHvU6EznKZW7yapKMA7",
                                       "-sporkaddr=yfLSXFfipnkgYioD6L8aUNyfRgEBuJv48h",
                                       "-sporkaddr=yNsMZhEhYqv14TgdYb1NS2UmNZjE8FSJxa",
@@ -75,7 +75,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
                                       "-sporkaddr=yc5TGfcHYoLCrcbVy4umsiDjsYUn39vLui",
                                       "-minsporkkeys=3"]))
         self.nodes.append(start_node(3, self.options.tmpdir,
-                                     ["-debug", "-sporkkey=934yPXiVGf4RCY2qTs2Bt5k3TEtAiAg12sMxCt8yVWbSU7p3fuD",
+                                     ["-sporkkey=934yPXiVGf4RCY2qTs2Bt5k3TEtAiAg12sMxCt8yVWbSU7p3fuD",
                                       "-sporkaddr=ygcG5S2pQz2U1UAaHvU6EznKZW7yapKMA7",
                                       "-sporkaddr=yfLSXFfipnkgYioD6L8aUNyfRgEBuJv48h",
                                       "-sporkaddr=yNsMZhEhYqv14TgdYb1NS2UmNZjE8FSJxa",
@@ -83,7 +83,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
                                       "-sporkaddr=yc5TGfcHYoLCrcbVy4umsiDjsYUn39vLui",
                                       "-minsporkkeys=3"]))
         self.nodes.append(start_node(4, self.options.tmpdir,
-                                     ["-debug", "-sporkkey=92Cxwia363Wg2qGF1fE5z4GKi8u7r1nrWQXdtsj2ACZqaDPSihD",
+                                     ["-sporkkey=92Cxwia363Wg2qGF1fE5z4GKi8u7r1nrWQXdtsj2ACZqaDPSihD",
                                       "-sporkaddr=ygcG5S2pQz2U1UAaHvU6EznKZW7yapKMA7",
                                       "-sporkaddr=yfLSXFfipnkgYioD6L8aUNyfRgEBuJv48h",
                                       "-sporkaddr=yNsMZhEhYqv14TgdYb1NS2UmNZjE8FSJxa",

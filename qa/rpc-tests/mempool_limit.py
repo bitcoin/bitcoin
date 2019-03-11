@@ -11,7 +11,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxmempool=5", "-spendzeroconfchange=0", "-debug"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxmempool=5", "-spendzeroconfchange=0"]))
         self.is_network_split = False
         self.sync_all()
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']

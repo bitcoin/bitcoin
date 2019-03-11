@@ -61,7 +61,7 @@ class RPCBindTest(BitcoinTestFramework):
                 break
         if non_loopback_ip is None:
             assert(not 'This test requires at least one non-loopback IPv4 interface')
-        print("Using interface %s for testing" % non_loopback_ip)
+        self.log.info("Using interface %s for testing" % non_loopback_ip)
 
         defaultport = rpc_port(0)
 

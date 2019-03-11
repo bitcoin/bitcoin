@@ -32,7 +32,7 @@ class DIP3Test(BitcoinTestFramework):
         self.is_network_split = False
 
     def start_controller_node(self, extra_args=None):
-        print("starting controller node")
+        self.log.info("starting controller node")
         if self.nodes is None:
             self.nodes = [None]
         args = self.extra_args
@@ -44,7 +44,7 @@ class DIP3Test(BitcoinTestFramework):
                 connect_nodes_bi(self.nodes, 0, i)
 
     def stop_controller_node(self):
-        print("stopping controller node")
+        self.log.info("stopping controller node")
         stop_node(self.nodes[0], 0)
 
     def restart_controller_node(self):
@@ -52,19 +52,19 @@ class DIP3Test(BitcoinTestFramework):
         self.start_controller_node()
 
     def run_test(self):
-        print("funding controller node")
+        self.log.info("funding controller node")
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
             self.nodes[0].generate(1) # generate enough for collaterals
-        print("controller node has {} dash".format(self.nodes[0].getbalance()))
+        self.log.info("controller node has {} dash".format(self.nodes[0].getbalance()))
 
         # Make sure we're below block 135 (which activates dip3)
-        print("testing rejection of ProTx before dip3 activation")
+        self.log.info("testing rejection of ProTx before dip3 activation")
         assert(self.nodes[0].getblockchaininfo()['blocks'] < 135)
 
         mns = []
 
         # prepare mn which should still be accepted later when dip3 activates
-        print("creating collateral for mn-before-dip3")
+        self.log.info("creating collateral for mn-before-dip3")
         before_dip3_mn = self.prepare_mn(self.nodes[0], 1, 'mn-before-dip3')
         self.create_mn_collateral(self.nodes[0], before_dip3_mn)
         mns.append(before_dip3_mn)
@@ -73,11 +73,11 @@ class DIP3Test(BitcoinTestFramework):
         while self.nodes[0].getblockcount() < 150:
             self.nodes[0].generate(1)
 
-        print("mining final block for DIP3 activation")
+        self.log.info("mining final block for DIP3 activation")
         self.nodes[0].generate(1)
 
         # We have hundreds of blocks to sync here, give it more time
-        print("syncing blocks for all nodes")
+        self.log.info("syncing blocks for all nodes")
         sync_blocks(self.nodes, timeout=120)
 
         # DIP3 has activated here
@@ -85,7 +85,7 @@ class DIP3Test(BitcoinTestFramework):
         self.register_mn(self.nodes[0], before_dip3_mn)
         self.start_mn(before_dip3_mn)
 
-        print("registering MNs")
+        self.log.info("registering MNs")
         for i in range(0, self.num_initial_mn):
             mn = self.prepare_mn(self.nodes[0], i + 2, "mn-%d" % i)
             mns.append(mn)
@@ -98,12 +98,12 @@ class DIP3Test(BitcoinTestFramework):
             # let a few of the protx MNs refer to the existing collaterals
             fund = (i % 2) == 0
             if fund:
-                print("register_fund %s" % mn.alias)
+                self.log.info("register_fund %s" % mn.alias)
                 self.register_fund_mn(self.nodes[0], mn)
             else:
-                print("create_collateral %s" % mn.alias)
+                self.log.info("create_collateral %s" % mn.alias)
                 self.create_mn_collateral(self.nodes[0], mn)
-                print("register %s" % mn.alias)
+                self.log.info("register %s" % mn.alias)
                 self.register_mn(self.nodes[0], mn)
 
             self.nodes[0].generate(1)
@@ -114,10 +114,10 @@ class DIP3Test(BitcoinTestFramework):
             self.sync_all()
             self.assert_mnlists(mns)
 
-        print("testing instant send")
+        self.log.info("testing instant send")
         self.test_instantsend(10, 3)
 
-        print("test that MNs disappear from the list when the ProTx collateral is spent")
+        self.log.info("test that MNs disappear from the list when the ProTx collateral is spent")
         spend_mns_count = 3
         mns_tmp = [] + mns
         dummy_txins = []
@@ -129,30 +129,30 @@ class DIP3Test(BitcoinTestFramework):
             mns_tmp.remove(mns[i])
             self.assert_mnlists(mns_tmp)
 
-        print("test that reverting the blockchain on a single node results in the mnlist to be reverted as well")
+        self.log.info("test that reverting the blockchain on a single node results in the mnlist to be reverted as well")
         for i in range(spend_mns_count):
             self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
             mns_tmp.append(mns[spend_mns_count - 1 - i])
             self.assert_mnlist(self.nodes[0], mns_tmp)
 
-        print("cause a reorg with a double spend and check that mnlists are still correct on all nodes")
+        self.log.info("cause a reorg with a double spend and check that mnlists are still correct on all nodes")
         self.mine_double_spend(self.nodes[0], dummy_txins, self.nodes[0].getnewaddress(), use_mnmerkleroot_from_tip=True)
         self.nodes[0].generate(spend_mns_count)
         self.sync_all()
         self.assert_mnlists(mns_tmp)
 
-        print("test mn payment enforcement with deterministic MNs")
+        self.log.info("test mn payment enforcement with deterministic MNs")
         for i in range(20):
             node = self.nodes[i % len(self.nodes)]
             self.test_invalid_mn_payment(node)
             node.generate(1)
             self.sync_all()
 
-        print("testing ProUpServTx")
+        self.log.info("testing ProUpServTx")
         for mn in mns:
             self.test_protx_update_service(mn)
 
-        print("testing P2SH/multisig for payee addresses")
+        self.log.info("testing P2SH/multisig for payee addresses")
         multisig = self.nodes[0].createmultisig(1, [self.nodes[0].getnewaddress(), self.nodes[0].getnewaddress()])['address']
         self.update_mn_payee(mns[0], multisig)
         found_multisig_payee = False
@@ -171,7 +171,7 @@ class DIP3Test(BitcoinTestFramework):
                             found_multisig_payee = True
         assert(found_multisig_payee)
 
-        print("testing reusing of collaterals for replaced MNs")
+        self.log.info("testing reusing of collaterals for replaced MNs")
         for i in range(0, 5):
             mn = mns[i]
             # a few of these will actually refer to old ProRegTx internal collaterals,
@@ -186,15 +186,15 @@ class DIP3Test(BitcoinTestFramework):
             self.nodes[0].generate(1)
             self.sync_all()
             self.assert_mnlists(mns)
-            print("restarting MN %s" % new_mn.alias)
+            self.log.info("restarting MN %s" % new_mn.alias)
             self.stop_node(new_mn.idx)
             self.start_mn(new_mn)
             self.sync_all()
 
-        print("testing instant send with replaced MNs")
+        self.log.info("testing instant send with replaced MNs")
         self.test_instantsend(10, 3, timeout=20)
 
-        print("testing simple PoSe")
+        self.log.info("testing simple PoSe")
         self.assert_mnlists(mns)
         self.nodes[0].spork('SPORK_17_QUORUM_DKG_ENABLED', 0)
         self.wait_for_sporks()
@@ -408,8 +408,8 @@ class DIP3Test(BitcoinTestFramework):
             expected = []
             for mn in mns:
                 expected.append('%s-%d' % (mn.collateral_txid, mn.collateral_vout))
-            print('mnlist: ' + str(node.masternode('list', 'status')))
-            print('expected: ' + str(expected))
+            self.log.error('mnlist: ' + str(node.masternode('list', 'status')))
+            self.log.error('expected: ' + str(expected))
             raise AssertionError("mnlists does not match provided mns")
 
     def wait_for_sporks(self, timeout=30):

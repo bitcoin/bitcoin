@@ -23,11 +23,11 @@ class SpentIndexTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-spentindex"]))
+        self.nodes.append(start_node(0, self.options.tmpdir))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-spentindex"]))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-spentindex"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-spentindex", "-txindex"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-spentindex"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-spentindex", "-txindex"]))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -36,7 +36,7 @@ class SpentIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print("Mining blocks...")
+        self.log.info("Mining blocks...")
         self.nodes[0].generate(105)
         self.sync_all()
 
@@ -44,7 +44,7 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(chain_height, 105)
 
         # Check that
-        print("Testing spent index...")
+        self.log.info("Testing spent index...")
 
         privkey = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
         address = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
@@ -62,7 +62,7 @@ class SpentIndexTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
-        print("Testing getspentinfo method...")
+        self.log.info("Testing getspentinfo method...")
 
         # Check that the spentinfo works standalone
         info = self.nodes[1].getspentinfo({"txid": unspent[0]["txid"], "index": unspent[0]["vout"]})
@@ -70,7 +70,7 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(info["index"], 0)
         assert_equal(info["height"], 106)
 
-        print("Testing getrawtransaction method...")
+        self.log.info("Testing getrawtransaction method...")
 
         # Check that verbose raw transaction includes spent info
         txVerbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
@@ -112,7 +112,7 @@ class SpentIndexTest(BitcoinTestFramework):
         assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
         assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
 
-        print("Passed\n")
+        self.log.info("Passed")
 
 
 if __name__ == '__main__':

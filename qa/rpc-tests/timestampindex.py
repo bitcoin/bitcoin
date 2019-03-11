@@ -21,11 +21,11 @@ class TimestampIndexTest(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # Nodes 0/1 are "wallet" nodes
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-timestampindex"]))
+        self.nodes.append(start_node(0, self.options.tmpdir))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-timestampindex"]))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-timestampindex"]))
+        self.nodes.append(start_node(2, self.options.tmpdir))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-timestampindex"]))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -34,16 +34,16 @@ class TimestampIndexTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print("Mining 5 blocks...")
+        self.log.info("Mining 5 blocks...")
         blockhashes = self.nodes[0].generate(5)
         low = self.nodes[0].getblock(blockhashes[0])["time"]
         high = self.nodes[0].getblock(blockhashes[4])["time"]
         self.sync_all()
-        print("Checking timestamp index...")
+        self.log.info("Checking timestamp index...")
         hashes = self.nodes[1].getblockhashes(high, low)
         assert_equal(len(hashes), 5)
         assert_equal(sorted(blockhashes), sorted(hashes))
-        print("Passed\n")
+        self.log.info("Passed")
 
 
 if __name__ == '__main__':

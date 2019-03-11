@@ -53,8 +53,7 @@ class TimeoutsTest(BitcoinTestFramework):
         self.nodes = []
 
         # Start up node0 to be a version 1, pre-segwit node.
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, 
-                [["-debug", "-logtimemicros=1"]])
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
 
     def run_test(self):
         # Setup the p2p connections and start up the network thread.

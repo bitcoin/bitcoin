@@ -69,7 +69,7 @@ class InstantSendTest(DashTestFramework):
         # start last node
         self.nodes[self.isolated_idx] = start_node(self.isolated_idx,
                                                    self.options.tmpdir,
-                                                   ["-debug"] + self.extra_args)
+                                                   self.extra_args)
         # send doublespend transaction to isolated node
         self.nodes[self.isolated_idx].sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction

@@ -56,7 +56,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(len(res['bestblock']), 64)
         assert_equal(len(res['hash_serialized_2']), 64)
 
-        print("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
+        self.log.info("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)
         node.invalidateblock(b1hash)
 
@@ -68,7 +68,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res2['bestblock'], node.getblockhash(0))
         assert_equal(len(res2['hash_serialized_2']), 64)
 
-        print("Test that gettxoutsetinfo() returns the same result after invalidate/reconsider block")
+        self.log.info("Test that gettxoutsetinfo() returns the same result after invalidate/reconsider block")
         node.reconsiderblock(b1hash)
 
         res3 = node.gettxoutsetinfo()
