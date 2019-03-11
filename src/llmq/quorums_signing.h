@@ -10,6 +10,7 @@
 #include "net.h"
 #include "chainparams.h"
 #include "saltedhasher.h"
+#include "unordered_lru_cache.h"
 
 #include <unordered_map>
 
@@ -68,16 +69,13 @@ public:
 
 class CRecoveredSigsDb
 {
-    static const size_t MAX_CACHE_SIZE = 30000;
-    static const size_t MAX_CACHE_TRUNCATE_THRESHOLD = 50000;
-
 private:
     CDBWrapper& db;
 
     CCriticalSection cs;
-    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::pair<bool, int64_t>, StaticSaltedHasher> hasSigForIdCache;
-    std::unordered_map<uint256, std::pair<bool, int64_t>, StaticSaltedHasher> hasSigForSessionCache;
-    std::unordered_map<uint256, std::pair<bool, int64_t>, StaticSaltedHasher> hasSigForHashCache;
+    unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache;
+    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache;
+    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache;
 
 public:
     CRecoveredSigsDb(CDBWrapper& _db);
