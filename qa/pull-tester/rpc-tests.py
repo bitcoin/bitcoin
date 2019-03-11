@@ -46,6 +46,7 @@ BASE_SCRIPTS= [
     'multikeysporks.py',
     'llmq-signing.py', # NOTE: needs dash_hash to pass
     'llmq-chainlocks.py', # NOTE: needs dash_hash to pass
+    'llmq-simplepose.py', # NOTE: needs dash_hash to pass
     # vv Tests less than 60s vv
     'sendheaders.py', # NOTE: needs dash_hash to pass
     'zapwallettxes.py',
