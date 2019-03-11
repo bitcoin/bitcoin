@@ -428,7 +428,7 @@ void CChainLocksHandler::EnforceBestChainLock()
                     continue;
                 }
                 LogPrintf("CChainLocksHandler::%s -- CLSIG (%s) invalidates block %s\n",
-                          __func__, bestChainLockWithKnownBlock.ToString(), jt->second->GetBlockHash().ToString());
+                          __func__, clsig.ToString(), jt->second->GetBlockHash().ToString());
                 DoInvalidateBlock(jt->second, false);
             }
 
@@ -439,7 +439,7 @@ void CChainLocksHandler::EnforceBestChainLock()
 
     CValidationState state;
     if (!ActivateBestChain(state, Params())) {
-        LogPrintf("CChainLocksHandler::UpdatedBlockTip -- ActivateBestChain failed: %s\n", FormatStateMessage(state));
+        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
         // This should not have happened and we are in a state were it's not safe to continue anymore
         assert(false);
     }
