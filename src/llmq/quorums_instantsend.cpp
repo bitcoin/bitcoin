@@ -732,6 +732,7 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindex)
     while (pindex && pindex->GetBlockHash() != lastChainLockBlock) {
         CBlock block;
         {
+            LOCK(cs_main);
             if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
                 pindex = pindex->pprev;
                 continue;
