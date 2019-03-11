@@ -358,15 +358,16 @@ public:
     }
     WalletBalances getBalances() override
     {
+        const auto bal = m_wallet->GetBalance();
         WalletBalances result;
-        result.balance = m_wallet->GetBalance();
-        result.unconfirmed_balance = m_wallet->GetUnconfirmedBalance();
-        result.immature_balance = m_wallet->GetImmatureBalance();
+        result.balance = bal.m_mine_trusted;
+        result.unconfirmed_balance = bal.m_mine_untrusted_pending;
+        result.immature_balance = bal.m_mine_immature;
         result.have_watch_only = m_wallet->HaveWatchOnly();
         if (result.have_watch_only) {
-            result.watch_only_balance = m_wallet->GetBalance(ISMINE_WATCH_ONLY);
-            result.unconfirmed_watch_only_balance = m_wallet->GetUnconfirmedWatchOnlyBalance();
-            result.immature_watch_only_balance = m_wallet->GetImmatureWatchOnlyBalance();
+            result.watch_only_balance = bal.m_watchonly_trusted;
+            result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
+            result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
         return result;
     }
@@ -382,7 +383,7 @@ public:
         num_blocks = locked_chain->getHeight().get_value_or(-1);
         return true;
     }
-    CAmount getBalance() override { return m_wallet->GetBalance(); }
+    CAmount getBalance() override { return m_wallet->GetBalance().m_mine_trusted; }
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         return m_wallet->GetAvailableBalance(&coin_control);
