@@ -17,7 +17,7 @@ Base build dependencies
 -----------------------
 
 ```bash
-brew install automake libtool --c++11 pkg-config
+brew install automake libtool pkg-config
 ```
 
 If you want to build the disk image with `make deploy` (.dmg / optional), you need RSVG
