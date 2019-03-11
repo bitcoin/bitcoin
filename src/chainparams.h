@@ -55,6 +55,7 @@ public:
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const arith_uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
+    void SetProofOfWorkLimit(const arith_uint256& limit) { bnProofOfWorkLimit = limit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     /** Used to check majorities for block version upgrade */
     int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }

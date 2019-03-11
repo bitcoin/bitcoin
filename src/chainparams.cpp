@@ -155,17 +155,14 @@ static const Checkpoints::CCheckpointData data = {
 
 static Checkpoints::MapCheckpoints mapCheckpointsTestnet =
         boost::assign::map_list_of
-        ( 0, uint256S("0x00008f72785c0713a31a5457c4169a17088338540410b548f302c92bc17c1bc1"))
-        ( 9820, uint256S("0x000007e98d19383421f4ff13528e364edb19cda8c302df0290b2aef16936d9b2"))
-        ( 9950, uint256S("0x000006ef1474fad5c76c503cd6896f6a09339a2c6fb66c7727566380567b1c7b"))
-        ( 10007, uint256S("0x485e03be7d12c2802e0e49f0410011da36d0070746c48fb9bf347eff550943fa"))
+        ( 0, uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"))
         ;
 static const Checkpoints::CCheckpointData dataTestnet = {
         &mapCheckpointsTestnet,
-        1543018925, // * UNIX timestamp of last checkpoint block
-        10205,          // * total number of transactions between genesis and last checkpoint
+        1412760826, // * UNIX timestamp of last checkpoint block
+        0,          // * total number of transactions between genesis and last checkpoint
                     //   (the tx=... number in the SetBestChain debug.log lines)
-        2000           // * estimated number of transactions per day after checkpoint
+        0           // * estimated number of transactions per day after checkpoint
     };
 
 static Checkpoints::MapCheckpoints mapCheckpointsDevnet =
@@ -344,16 +341,11 @@ public:
         nTargetTimespan = 2 * 24 * 60 * 60;  // 2 days
         nTargetSpacing = 1.5 * 60;      // 1.5 minutes
         nMaxTipAge = 0x7fffffff;
-        nBlockPoSStart = 10000;
+        nBlockPoSStart = 141000;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
-        genesis.nTime    = 1536962431;
-        genesis.nNonce   = 1112529522;
-        arith_uint256 nCompact = 0;
-        nCompact = ~nCompact;
-        nCompact >>= 16;
-        bnProofOfWorkLimit = nCompact;
-        genesis.nBits    = nCompact.GetCompact();
+        genesis.nTime    = 1412760826;
+        genesis.nNonce   = 1612467894;
 
 //	if (true && genesis.GetHash() != hashGenesisBlock)
 //                       {
@@ -384,7 +376,7 @@ public:
 //                       }
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256S("0x00008f72785c0713a31a5457c4169a17088338540410b548f302c92bc17c1bc1"));
+        assert(hashGenesisBlock == uint256S("0x0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da"));
         assert(genesis.hashMerkleRoot == uint256S("0x80ad356118a9ab8db192db66ef77146cc36d958f959251feace550e4ca3d1446"));
 
         vFixedSeeds.clear();

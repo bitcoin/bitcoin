@@ -11,6 +11,7 @@
 #include "pow.h"
 #include "tinyformat.h"
 #include "uint256.h"
+#include "chainparams.h"
 
 #include <vector>
 
@@ -324,8 +325,12 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        READWRITE(fProofOfStake);
-        if (fProofOfStake) {
+        if (nHeight >= Params().PoSStartHeight())
+        {
+            READWRITE(fProofOfStake);
+        }
+        if (fProofOfStake)
+        {
             READWRITE(stakeSource);
         }
     }
