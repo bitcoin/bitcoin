@@ -1981,8 +1981,8 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
     }
     if (calc_fee) {
         // Get the output amount
-        CAmount out_amt = std::accumulate(psbtx.tx->vout.begin(), psbtx.tx->vout.end(), 0,
-            [](int a, const CTxOut& b) {
+        CAmount out_amt = std::accumulate(psbtx.tx->vout.begin(), psbtx.tx->vout.end(), CAmount(0),
+            [](CAmount a, const CTxOut& b) {
                 return a += b.nValue;
             }
         );
