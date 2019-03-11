@@ -67,15 +67,15 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ceci sont vos addresses Bitcoin pour envoyer vos paiements. Il faut toujours verifier les montants et l'addresse de reception avant de valider la transaction.</translation>
+        <translation>Ce sont vos adresses Bitcoin pour envoyer des paiements. Il faut toujours verifier les montants et l'addresse de reception avant de valider la transaction.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ceci sont vos addresses Bitcoin pour recevoir vos paiements. Il est recommandé d'utiliser une nouvelle adresse de recepetion pour chaque transaction</translation>
+        <translation>Ce sont vos adresses Bitcoin pour recevoir des paiements. Il est recommandé d'utiliser une nouvelle adresse de réception pour chaque transaction</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Copie Adresse</translation>
+        <translation>&amp;Copier l'adresse</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -99,7 +99,7 @@
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Une erreur s'est produite en enregistrant la list d'adresses à %1. Merci de reéssayer.</translation>
+        <translation>Une erreur s'est produite en enregistrant la liste d'adresses à %1. Merci de réessayer.</translation>
     </message>
 </context>
 <context>
@@ -161,7 +161,7 @@
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Décrypter le porte-monnaie</translation>
+        <translation>Déchiffrer le porte-monnaie</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Êtes-vous sûr de de vouloir crypter votre portefeuille ? </translation>
+        <translation>Êtes-vous sûr de de vouloir chiffrer votre portefeuille ? </translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -189,11 +189,11 @@
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 va à présent se fermer pour terminer la procédure de cryptage. N'oubliez pas que le chiffrement de votre porte-monnaie ne peut pas fournir une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
+        <translation>%1 va à présent se fermer pour terminer la procédure de chiffrement. N'oubliez pas que le chiffrement de votre porte-monnaie ne peut pas fournir une protection totale contre le vol par des logiciels malveillants qui infecteraient votre ordinateur.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANT: Toute sauvegarde préalable de votre porte-monnais devrait être emplacée par le fichier nouvellement généré et encrypté.</translation>
+        <translation>IMPORTANT: Toute sauvegarde préalable de votre porte-monnaie devrait être remplacée par le fichier nouvellement généré et chiffré. Pour des raisons de sécurité, le fichier de sauvegarde du porte-monnaie précédent non chiffré deviendra inutile dés lors que vous commencerez à utiliser le nouveau porte-monnaie chiffré.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -213,11 +213,11 @@
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La phrase de passe entrée pour décrypter le porte-monnaie était incorrecte.</translation>
+        <translation>La phrase de passe entrée pour déchiffrer le porte-monnaie est incorrecte.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
-        <translation>Le décryptage du porte-monnaie a échoué</translation>
+        <translation>Le déchiffrement du porte-monnaie a échoué</translation>
     </message>
     <message>
         <source>Wallet passphrase was successfully changed.</source>
@@ -225,14 +225,14 @@
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>Attention : La touche majuscule est enfoncé.</translation>
+        <translation>Attention : La touche majuscule est enfoncée.</translation>
     </message>
 </context>
 <context>
     <name>BanTableModel</name>
     <message>
         <source>IP/Netmask</source>
-        <translation>IP/Masque de sous réseau</translation>
+        <translation>IP/Masque de sous-réseau</translation>
     </message>
     <message>
         <source>Banned Until</source>
@@ -259,7 +259,7 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Affiche une vue d'ensemble du porte-monnaie</translation>
+        <translation>Afficher une vue d'ensemble du porte-monnaie</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -355,7 +355,7 @@
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Modifier la phrase de passe utilisée pour le cryptage du porte-monnaie</translation>
+        <translation>Modifier la phrase de passe utilisée pour le chiffrement du porte-monnaie</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
@@ -395,7 +395,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Crypter les clé privées qui appartiennent votre portefeuille</translation>
+        <translation>Chiffrer les clé privées qui appartiennent à votre portefeuille</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -463,7 +463,7 @@
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
-        <translation>Les transactions ne seront plus visible après ceci.</translation>
+        <translation>Les transactions ne seront plus visibles après ceci.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -491,41 +491,31 @@
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Connexion au pairs...</translation>
+        <translation>Connexion aux pairs...</translation>
     </message>
     <message>
         <source>Catching up...</source>
         <translation>Rattrapage...</translation>
     </message>
     <message>
-        <source>Date: %1
-</source>
-        <translation>Date: %1
-</translation>
+        <source>Date: %1</source>
+        <translation>Date: %1</translation>
     </message>
     <message>
-        <source>Amount: %1
-</source>
-        <translation>Montant:%1
-</translation>
+        <source>Amount: %1</source>
+        <translation>Montant:%1</translation>
     </message>
     <message>
-        <source>Type: %1
-</source>
-        <translation>Type: %1
-</translation>
+        <source>Type: %1</source>
+        <translation>Type: %1</translation>
     </message>
     <message>
-        <source>Label: %1
-</source>
-        <translation>Étiquette: %1
-</translation>
+        <source>Label: %1</source>
+        <translation>Étiquette: %1</translation>
     </message>
     <message>
-        <source>Address: %1
-</source>
-        <translation>Adresse: %1
-</translation>
+        <source>Address: %1</source>
+        <translation>Adresse: %1</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -572,7 +562,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Montant :</translation>
+        <translation>Montant:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -600,7 +590,7 @@
     </message>
     <message>
         <source>List mode</source>
-        <translation>Mode list</translation>
+        <translation>Mode liste</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -608,7 +598,7 @@
     </message>
     <message>
         <source>Received with label</source>
-        <translation>Reçu avec : </translation>
+        <translation>Reçu avec l'étiquette </translation>
     </message>
     <message>
         <source>Received with address</source>
@@ -672,7 +662,7 @@
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Copier changement </translation>
+        <translation>Copier le change </translation>
     </message>
     <message>
         <source>(%1 locked)</source>
@@ -723,7 +713,7 @@
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
-        <translation>L'adresse associée avec cette entrée du carnet d'adresses. Ne peut être modifiée que pour les adresses d'envoi.</translation>
+        <translation>L'adresse associée à cette entrée du carnet d'adresses. Ne peut être modifiée que pour les adresses d'envoi.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -866,7 +856,7 @@
     </message>
     <message>
         <source>Select payment request file</source>
-        <translation>Sélectionner un fichier de demande de paiement</translation>
+        <translation>Sélectionnez un fichier de demande de paiement</translation>
     </message>
     <message>
         <source>Select payment request file to open</source>
@@ -1016,7 +1006,7 @@
     </message>
     <message>
         <source>Available:</source>
-        <translation>Disponible: </translation>
+        <translation>Disponible:</translation>
     </message>
     <message>
         <source>Pending:</source>
@@ -1040,11 +1030,11 @@
     </message>
     <message>
         <source>Spendable:</source>
-        <translation>Dépensable: </translation>
+        <translation>Dépensable:</translation>
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation>Transactions récentes </translation>
+        <translation>Transactions récentes</translation>
     </message>
     </context>
 <context>
@@ -1094,7 +1084,7 @@
     </message>
     <message>
         <source>Node/Service</source>
-        <translation>Nœud/Service </translation>
+        <translation>Nœud/Service</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1102,7 +1092,7 @@
     </message>
     <message>
         <source>Received</source>
-        <translation>Reçu </translation>
+        <translation>Reçu</translation>
     </message>
 </context>
 <context>
@@ -1206,7 +1196,7 @@
     </message>
     <message>
         <source>Debug window</source>
-        <translation>Fenêtre de débogage </translation>
+        <translation>Fenêtre de débogage</translation>
     </message>
     <message>
         <source>General</source>
@@ -1214,7 +1204,7 @@
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Version BerkeleyDButilisée </translation>
+        <translation>Version BerkeleyDButilisée</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1234,7 +1224,7 @@
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Chaîne de bloc </translation>
+        <translation>Chaîne de bloc</translation>
     </message>
     <message>
         <source>Current number of blocks</source>
@@ -1254,7 +1244,7 @@
     </message>
     <message>
         <source>Received</source>
-        <translation>Reçu </translation>
+        <translation>Reçu</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1286,7 +1276,7 @@
     </message>
     <message>
         <source>Synced Blocks</source>
-        <translation>Blocs Synchronisés </translation>
+        <translation>Blocs Synchronisés</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1433,7 +1423,7 @@
     </message>
     <message>
         <source>Copy message</source>
-        <translation>Copier message</translation>
+        <translation>Copier le message</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -1534,7 +1524,7 @@
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Fonds insuffisants</translation>
+        <translation>Fonds insuffisants!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1546,7 +1536,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Montant :</translation>
+        <translation>Montant:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -1562,7 +1552,7 @@
     </message>
     <message>
         <source>Transaction Fee:</source>
-        <translation>Frais de transaction</translation>
+        <translation>Frais de transaction:</translation>
     </message>
     <message>
         <source>Choose...</source>
@@ -1578,7 +1568,7 @@
     </message>
     <message>
         <source>Recommended:</source>
-        <translation>Recommandé: </translation>
+        <translation>Recommandé:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1606,7 +1596,7 @@
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>E&amp;voyer</translation>
+        <translation>E&amp;nvoyer</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1642,7 +1632,7 @@
     </message>
     <message>
         <source>Are you sure you want to send?</source>
-        <translation>Êtes-vous sûr de vouloir envoyer ?</translation>
+        <translation>Êtes-vous sûr de vouloir envoyer?</translation>
     </message>
     <message>
         <source>or</source>
@@ -1662,11 +1652,11 @@
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>Le montant excède votre balance. </translation>
+        <translation>Le montant excède votre balance.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>Échec de la création de la transaction  </translation>
+        <translation>Échec de la création de la transaction!</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -1689,19 +1679,19 @@
     <name>SendCoinsEntry</name>
     <message>
         <source>A&amp;mount:</source>
-        <translation>&amp;Montant :</translation>
+        <translation>&amp;Montant:</translation>
     </message>
     <message>
         <source>Pay &amp;To:</source>
-        <translation>Payer &amp;à :</translation>
+        <translation>Payer &amp;à:</translation>
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>&amp;Étiquette :</translation>
+        <translation>&amp;Étiquette:</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Choisir une adresse précédemment utilisée </translation>
+        <translation>Choisir une adresse précédemment utilisée</translation>
     </message>
     <message>
         <source>This is a normal payment.</source>
@@ -1725,11 +1715,11 @@
     </message>
     <message>
         <source>Message:</source>
-        <translation>Message :</translation>
+        <translation>Message:</translation>
     </message>
     <message>
         <source>Pay To:</source>
-        <translation>Payer à :</translation>
+        <translation>Payer à:</translation>
     </message>
     <message>
         <source>Memo:</source>
@@ -1758,7 +1748,7 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Choisir une adresse précédemment utilisée </translation>
+        <translation>Choisir une adresse précédemment utilisée</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -1782,7 +1772,7 @@
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copier l'adresse courante dans le presse papier</translation>
+        <translation>Copier l'adresse courante dans le presse-papier</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -1822,7 +1812,7 @@
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Message vérifié. </translation>
+        <translation>Message vérifié.</translation>
     </message>
 </context>
 <context>
@@ -1895,7 +1885,7 @@
     </message>
     <message>
         <source>label</source>
-        <translation>Étiquette </translation>
+        <translation>Étiquette</translation>
     </message>
     <message>
         <source>Credit</source>
@@ -1915,7 +1905,7 @@
     </message>
     <message>
         <source>Total credit</source>
-        <translation>Crédit total </translation>
+        <translation>Crédit total</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -1931,7 +1921,7 @@
     </message>
     <message>
         <source>Comment</source>
-        <translation>Commentaire </translation>
+        <translation>Commentaire</translation>
     </message>
     <message>
         <source>Transaction ID</source>
@@ -1943,7 +1933,7 @@
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Information de débogage </translation>
+        <translation>Information de débogage</translation>
     </message>
     <message>
         <source>Transaction</source>
@@ -2124,7 +2114,7 @@
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Copier l'ID de transaction</translation>
+        <translation>Copier l'ID de la transaction</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2172,7 +2162,7 @@
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation>Export réalisé avec sucés </translation>
+        <translation>Export réalisé avec succès </translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2190,7 +2180,7 @@
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation>Aucun portefeuille a été chargé.</translation>
+        <translation>Aucun portefeuille n'a été chargé.</translation>
     </message>
 </context>
 <context>
@@ -2239,8 +2229,7 @@
     </message>
     <message>
         <source>Importing...</source>
-        <translation>
-Importation ...</translation>
+        <translation>Importation ...</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2260,7 +2249,7 @@ Importation ...</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
-        <translation>Transaction signée échouée</translation>
+        <translation>La signature de la transaction a échouée</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2268,15 +2257,15 @@ Importation ...</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Montant de la transaction trop bas</translation>
+        <translation>Le montant de la transaction est trop bas</translation>
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
-        <translation>Montant de la transaction trop élevé pour la politique de frais</translation>
+        <translation>Le montant de la transaction est trop élevé par rapport aux frais</translation>
     </message>
     <message>
         <source>Transaction too large</source>
-        <translation>Transaction trop grande</translation>
+        <translation>La transaction est trop grande</translation>
     </message>
     <message>
         <source>Warning</source>
