@@ -1059,7 +1059,9 @@ bool CSigSharesManager::SendMessages()
 
     bool didSend = false;
 
-    g_connman->ForEachNode([&](CNode* pnode) {
+    std::vector<CNode*> vNodesCopy = g_connman->CopyNodeVector(CConnman::FullyConnectedOnly);
+
+    for (auto& pnode : vNodesCopy) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
 
         auto it1 = sigSessionAnnouncements.find(pnode->id);
@@ -1145,9 +1147,10 @@ bool CSigSharesManager::SendMessages()
                 didSend = true;
             }
         }
+    }
 
-        return true;
-    });
+    // looped through all nodes, release them
+    g_connman->ReleaseNodeVector(vNodesCopy);
 
     if (didSend) {
         g_connman->WakeSelect();
