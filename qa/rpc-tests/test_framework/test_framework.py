@@ -329,6 +329,7 @@ class DashTestFramework(BitcoinTestFramework):
             args = ['-masternode=1',
                     '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
             node = start_node(idx + start_idx, self.options.tmpdir, args)
+            self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = node
             self.nodes[idx + start_idx] = node
             wait_to_sync(node, True)
