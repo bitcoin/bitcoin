@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UNORDERED_LRU_CACHE_H
-#define BITCOIN_UNORDERED_LRU_CACHE_H
+#ifndef DASH_UNORDERED_LRU_CACHE_H
+#define DASH_UNORDERED_LRU_CACHE_H
 
 #include <unordered_map>
 
@@ -107,4 +107,4 @@ private:
     }
 };
 
-#endif // BITCOIN_UNORDERED_LRU_CACHE_H
+#endif // DASH_UNORDERED_LRU_CACHE_H
