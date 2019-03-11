@@ -9,6 +9,9 @@
 #include "util.h"
 #include "sync.h"
 #include "addrman.h"
+#include "mn-pos/blockwitness.h"
+#include "mn-pos/prooftracker.h"
+
 #include <boost/lexical_cast.hpp>
 
 // keep track of the scanning errors I've seen
@@ -759,6 +762,9 @@ CMasternodePing::CMasternodePing()
     blockHash = uint256();
     sigTime = 0;
     vchSig = std::vector<unsigned char>();
+    vchSigPrevBlocks = std::vector<unsigned char>();
+    vPrevBlockHash = std::vector<uint256>();
+    nVersion = 2;
 }
 
 CMasternodePing::CMasternodePing(const CTxIn& newVin)
@@ -767,6 +773,15 @@ CMasternodePing::CMasternodePing(const CTxIn& newVin)
     blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
     sigTime = GetAdjustedTime();
     vchSig = std::vector<unsigned char>();
+    vchSigPrevBlocks = std::vector<unsigned char>();
+    vPrevBlockHash = std::vector<uint256>();
+
+    //Add previous 10 blocks
+    for (unsigned int i = 0; i < 10; i ++) {
+        vPrevBlockHash.emplace_back(chainActive[chainActive.Height() - i]->GetBlockHash());
+    }
+
+    nVersion = 2;
 }
 
 
@@ -788,6 +803,17 @@ bool CMasternodePing::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMaste
         return false;
     }
 
+    uint256 hash = Hash(vPrevBlockHash.begin(), vPrevBlockHash.end());
+    if(!legacySigner.SignMessage(hash.GetHex(), errorMessage, vchSigPrevBlocks, keyMasternode)) {
+        LogPrintf("CMasternodePing::Sign() - Error signing previous blocks: %s\n", errorMessage);
+        return false;
+    }
+
+    if(!legacySigner.VerifyMessage(pubKeyMasternode, vchSigPrevBlocks, hash.GetHex(), errorMessage)) {
+        LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage);
+        return false;
+    }
+
     return true;
 }
 
@@ -802,6 +828,17 @@ bool CMasternodePing::VerifySignature(const CPubKey& pubKeyMasternode, int &nDos
         nDos = 33;
         return false;
     }
+
+    //Also check signature of previous blockhashes
+    if (nVersion > 1) {
+        uint256 hash = Hash(vPrevBlockHash.begin(), vPrevBlockHash.end());
+        if (!legacySigner.VerifyMessage(pubKeyMasternode, vchSigPrevBlocks, hash.GetHex(), errorMessage)) {
+            LogPrintf("CMasternodePing::VerifySignature - Got bad Masternode signature for previous blocks %s Error: %s\n", vin.ToString(), errorMessage);
+            nDos = 33;
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -871,6 +908,13 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled, bool fChec
 
             pmn->Check(true);
             if(!pmn->IsEnabled()) return false;
+
+            if (this->nVersion > 1) {
+                for (const uint256& hashBlock : vPrevBlockHash) {
+                    LogPrint("masternode", "%s: Adding witness for block %s from mn %s\n", __func__, hashBlock.GetHex(), vin.ToString());
+                    g_proofTracker->AddWitness(BlockWitness(pmn->vin, hashBlock));
+                }
+            }
 
             LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Masternode ping accepted, vin: %s\n", vin.ToString());
 

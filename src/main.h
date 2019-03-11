@@ -44,6 +44,7 @@ class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
+class ProofTracker;
 class CScriptCheck;
 class CValidationInterface;
 class CValidationState;
@@ -151,6 +152,7 @@ extern std::map<uint256, int64_t> mapRejectedBlocks;
 
 typedef uint256 PointerHash;
 extern std::map<PointerHash, uint256> mapUsedStakePointers; //pointer hash matched to blockhash that it is in
+extern ProofTracker* g_proofTracker;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
@@ -506,6 +508,7 @@ private:
         MODE_VALID,   //! everything ok
         MODE_INVALID, //! network rule violation (DoS value may be set)
         MODE_ERROR,   //! run-time error
+        MODE_SUSPICIOUS, //! state seems wrong, but do not have all context needed to know that for sure
     } mode;
     int nDoS;
     std::string strRejectReason;
@@ -539,6 +542,10 @@ public:
         AbortNode(msg);
         return Error(msg);
     }
+    bool Suspicious(const std::string &msg) {
+        mode = MODE_SUSPICIOUS;
+        return Error(msg);
+    }
     bool IsValid() const {
         return mode == MODE_VALID;
     }
@@ -554,6 +561,9 @@ public:
             return true;
         }
         return false;
+    }
+    bool IsSuspicious() const {
+        return mode == MODE_SUSPICIOUS;
     }
     bool CorruptionPossible() const {
         return corruptionPossible;

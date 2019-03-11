@@ -796,6 +796,7 @@ Value masternodebroadcast(const Array& params, bool fHelp)
             bool fResult;
             if (mnb.VerifySignature()) {
                 if (fSafe) {
+                    LOCK(cs_main);
                     fResult = mnodeman.CheckMnbAndUpdateMasternodeList(mnb, nDos);
                 } else {
                     mnodeman.UpdateMasternodeList(mnb);

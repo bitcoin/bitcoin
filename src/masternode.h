@@ -43,6 +43,12 @@ public:
     uint256 blockHash;
     int64_t sigTime; //mnb message times
     std::vector<unsigned char> vchSig;
+
+    //Version 2 and above
+    int8_t nVersion;
+    std::vector<uint256> vPrevBlockHash; //10 previous blocks
+    std::vector<unsigned char> vchSigPrevBlocks;
+
     //removed stop
 
     CMasternodePing();
@@ -57,6 +63,13 @@ public:
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
+
+        //New versioning is set externally before serialization
+        if (this->nVersion >= 2) {
+            READWRITE(this->nVersion);
+            READWRITE(vPrevBlockHash);
+            READWRITE(vchSigPrevBlocks);
+        }
     }
 
     bool CheckAndUpdate(int& nDos, bool fRequireEnabled = true, bool fCheckSigTimeOnly = false) const;

@@ -30,7 +30,6 @@
 #include "util.h"
 #include "spork.h"
 #include "utilmoneystr.h"
-#include "mn-pos/stakevalidation.h"
 
 #include <sstream>
 
@@ -39,6 +38,8 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
+#include <mn-pos/blockwitness.h>
+#include <mn-pos/prooftracker.h>
 #include <mn-pos/stakevalidation.h>
 #include <mn-pos/stakepointer.h>
 
@@ -58,6 +59,7 @@ CCriticalSection cs_main;
 BlockMap mapBlockIndex;
 CChain chainActive;
 std::map<PointerHash, uint256> mapUsedStakePointers;
+ProofTracker* g_proofTracker = new ProofTracker();
 CBlockIndex *pindexBestHeader = NULL;
 int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
@@ -2170,7 +2172,7 @@ bool CheckBlockProofPointer(const CBlockIndex* pindex, const CBlock& block, CPub
         return error("%s: Stake pointer from height %d is too recent", __func__, pindexFrom->nHeight);
 
     //No stakepointers from budgetblocks
-    if (budget.IsBudgetPaymentBlock(pindexFrom->nHeight))
+    if (GetAdjustedTime() - block.GetBlockTime() < 24*60*60 && budget.IsBudgetPaymentBlock(pindexFrom->nHeight))
         return error("%s: Stake pointers cannot be from budget blocks", __func__);
 
     //Ensure that this stake pointer is not already used by another block in the chain
@@ -2226,7 +2228,7 @@ bool IsMasternodeOrSystemnodeReward(const CTransaction& tx, const COutPoint& out
     return outpoint.n == MN_PMT_SLOT || outpoint.n == SN_PMT_SLOT;
 }
 
-bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
+bool CheckStake(const CBlockIndex* pindex, const CBlock& block, uint256& hashProofOfStake)
 {
     AssertLockHeld(cs_main);
     //Coinbase has to be 0 value
@@ -2249,7 +2251,7 @@ bool CheckStake(const CBlockIndex* pindex, const CBlock& block)
 
     //cs_main is locked and mapblockindex checks for hashblock in CheckBlockProofPointer. Fine to access directly.
     CBlockIndex* pindexFrom = mapBlockIndex.at(block.stakePointer.hashBlock);
-    return CheckProofOfStake(block, pindexFrom, outpointStakePointer);
+    return CheckProofOfStake(block, pindexFrom, outpointStakePointer, hashProofOfStake);
 }
 
 static int64_t nTimeVerify = 0;
@@ -2271,7 +2273,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             return state.DoS(100, error("%s: Proof of Work block submitted after PoW end", __func__), REJECT_INVALID,
                     "pow-end");
 
-        if (!CheckStake(pindex, block))
+        uint256 hashProofOfStake;
+        if (!CheckStake(pindex, block, hashProofOfStake))
             return state.DoS(100, error("%s: Block has invalid proof of stake", __func__), REJECT_INVALID, "pos-invalid");
 
     } else if (block.IsProofOfStake()) {
@@ -3506,6 +3509,20 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
         return false;
     }
 
+    if (pindex->nHeight > Params().PoSStartHeight()) {
+        uint256 hashProofOfStake;
+        if (!CheckStake(pindex, block, hashProofOfStake))
+            return error("%s: Proof of stake check failed", __func__);
+
+        // Check if this proof hash has been used to package other blocks
+        if (g_proofTracker->IsSuspicious(hashProofOfStake, pindex->GetBlockHash())) {
+            //Stake has been packaged into many different blocks. At this point we wait until enough masternodes have approved
+            //this block as on the main chain
+            return state.Suspicious(strprintf("%s: hashProofOfStake has appeared in too many blocks, waiting for masternode approval for "
+                         "block %s", __func__, pindex->GetBlockHash().GetHex()));
+        }
+    }
+
     int nHeight = pindex->nHeight;
 
     // Write block to history file
@@ -4591,21 +4608,37 @@ void static ProcessGetData(CNode* pfrom)
                 }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
+                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
+                        auto mnb = mnodeman.mapSeenMasternodeBroadcast[inv.hash];
+                        std::string strCommand = "mnb_new";
+                        if (pfrom->nVersion < MIN_MNW_PING_VERSION) {
+                            //Make sure this serializes to a format that is readable by the peer we are sending to
+                            mnb.lastPing.nVersion = 1;
+                        }
+                        if (mnb.lastPing.nVersion == 1)
+                            strCommand = "mnb";
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenMasternodeBroadcast[inv.hash];
-                        pfrom->PushMessage("mnb", ss);
+                        ss << mnb;
+                        pfrom->PushMessage(strCommand.c_str(), ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_MASTERNODE_PING) {
                     if(mnodeman.mapSeenMasternodePing.count(inv.hash)){
+                        auto mnp = mnodeman.mapSeenMasternodePing[inv.hash];
+                        std::string strCommand = "mnp_new";
+                        if (pfrom->nVersion < MIN_MNW_PING_VERSION) {
+                            //Make sure this serializes to a format that is readable by the peer we are sending to
+                            mnp.nVersion = 1;
+                        }
+                        if (mnp.nVersion == 1)
+                            strCommand = "mnp";
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenMasternodePing[inv.hash];
-                        pfrom->PushMessage("mnp", ss);
+                        ss << mnp;
+                        pfrom->PushMessage(strCommand.c_str(), ss);
                         pushed = true;
                     }
                 }
@@ -4691,7 +4724,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CAddress addrFrom;
         uint64_t nNonce = 1;
         vRecv >> pfrom->nVersion >> pfrom->nServices >> nTime >> addrMe;
-        if (pfrom->nVersion != PROTOCOL_VERSION)
+        if (pfrom->nVersion < MinPeerProtoVersion())
         {
             // disconnect from peers older than this proto version
             LogPrintf("peer=%d using obsolete version %i; disconnecting\n", pfrom->id, pfrom->nVersion);
@@ -5266,6 +5299,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
                 }
             }
+            if (state.IsSuspicious()) {
+                //Tell the peer we consider this block suspicious
+                pfrom->PushMessage("reject", strCommand, 0, std::string("block-suspicious"), inv.hash);
+            }
         } else {
             if (pfrom->setBlockAskedFor.count(hashBlock)) {
                 //we already asked for this block, so lets work backwards and ask for the previous block
@@ -5476,28 +5513,74 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->fRelayTxes = true;
     }
 
+    else if (strCommand == "blockproof")
+    {
+        uint256 hashBlock;
+        vRecv >> hashBlock;
+
+        std::vector<CMasternodePing> vPings;
+        vRecv >> vPings;
+
+        LOCK(cs_main);
+        for (auto& ping : vPings) {
+            int nDoS;
+            ping.CheckAndUpdate(nDoS);
+        }
+
+        //If the pings processed correctly, the prooftracker will be updated
+        if (g_proofTracker->HasSufficientProof(hashBlock)) {
+            MarkBlockAsInFlight(pfrom->GetId(), hashBlock);
+            std::vector<CInv> vGetData = {CInv("block", hashBlock)};
+            pfrom->PushMessage("GetData", vGetData);
+        }
+    }
 
     else if (strCommand == "reject")
     {
-        if (fDebug) {
-            try {
-                string strMsg; unsigned char ccode; string strReason;
-                vRecv >> LIMITED_STRING(strMsg, CMessageHeader::COMMAND_SIZE) >> ccode >> LIMITED_STRING(strReason, MAX_REJECT_MESSAGE_LENGTH);
+        try {
+            string strMsg; unsigned char ccode; string strReason;
+            vRecv >> LIMITED_STRING(strMsg, CMessageHeader::COMMAND_SIZE) >> ccode >> LIMITED_STRING(strReason, MAX_REJECT_MESSAGE_LENGTH);
 
-                ostringstream ss;
-                ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
+            ostringstream ss;
+            ss << strMsg << " code " << itostr(ccode) << ": " << strReason;
 
-                if (strMsg == "block" || strMsg == "tx")
-                {
-                    uint256 hash;
-                    vRecv >> hash;
-                    ss << ": hash " << hash.ToString();
+            if (strMsg == "block" || strMsg == "tx")
+            {
+                uint256 hash;
+                vRecv >> hash;
+                ss << ": hash " << hash.ToString();
+
+                //if this is a suspicious block rejection, and we have proof, send it
+                if (strReason == "block-suspicious") {
+                    LOCK(cs_main);
+                    if (g_proofTracker->HasSufficientProof(hash)) {
+                        auto setWitness = g_proofTracker->GetWitnesses(hash);
+                        //collect pings from witnesses
+                        std::vector<CMasternodePing> vPingsToSend;
+                        for (auto witness : setWitness) {
+                            CMasternode* pmn = mnodeman.Find(witness.m_vin);
+                            if (!pmn)
+                                continue;
+                            const auto& ping = pmn->lastPing;
+                            if (ping.nVersion > 1) {
+                                if (std::find(ping.vPrevBlockHash.begin(), ping.vPrevBlockHash.end(), hash) != ping.vPrevBlockHash.end()) {
+                                    //Found proof in masternode ping
+                                    vPingsToSend.emplace_back(ping);
+                                }
+                            }
+                        }
+
+                        // Send pings back to peer
+                        pfrom->PushMessage("blockproof", hash, vPingsToSend);
+                    }
                 }
-                LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
-            } catch (std::ios_base::failure& e) {
-                // Avoid feedback loops by preventing reject messages from triggering a new reject message.
-                LogPrint("net", "Unparseable reject message received\n");
             }
+            if (fDebug)
+                LogPrint("net", "Reject %s\n", SanitizeString(ss.str()));
+        } catch (std::ios_base::failure& e) {
+            // Avoid feedback loops by preventing reject messages from triggering a new reject message.
+            if (fDebug)
+                LogPrint("net", "Unparseable reject message received\n");
         }
     }
     else

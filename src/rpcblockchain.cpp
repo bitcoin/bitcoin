@@ -9,6 +9,7 @@
 #include "rpcserver.h"
 #include "sync.h"
 #include "util.h"
+#include "mn-pos/prooftracker.h"
 
 #include <stdint.h>
 
@@ -86,6 +87,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
     result.push_back(Pair("bits", strprintf("%08x", block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
+    result.push_back(Pair("block_witnesses", (int64_t)g_proofTracker->GetWitnessCount(block.GetHash())));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
