@@ -115,7 +115,10 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Active masternode is not ready to start sending pings\n");
         return false;
     }
-
+    if(pmn->nActiveState != MASTERNODE_ENABLED) {
+        LogPrint(BCLog::MN, "CActiveMasternode::SendMasternodePing -- Active masternode is not enabled so it cannot send pings\n");
+        return false;
+    }
     // ensure that we should only create ping if in the winners list
     const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
     bool foundPayee = false;
