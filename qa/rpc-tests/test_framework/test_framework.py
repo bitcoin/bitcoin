@@ -473,7 +473,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return False
         return True
 
-    def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=15):
+    def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=30):
         t = time()
         while time() - t < timeout:
             all_ok = True
