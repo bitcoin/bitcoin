@@ -9,5 +9,5 @@ export LC_ALL=C.UTF-8
 export HOST=i686-pc-linux-gnu
 export PACKAGES="g++-multilib python3-zmq"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+export BITCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
 export CONFIG_SHELL="/bin/dash"
