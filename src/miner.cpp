@@ -369,9 +369,14 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         }
 
         // Masternode and general budget payments
-        if (IsSporkActive(SPORK_4_ENABLE_MASTERNODE_PAYMENTS)) {
+        if (IsSporkActive(SPORK_4_ENABLE_MASTERNODE_PAYMENTS))
+        {
             FillBlockPayee(txCoinbase, nFees);
             SNFillBlockPayee(txCoinbase, nFees);
+        }
+        else
+        {
+            txCoinbase.vout[0].nValue = GetBlockValue(pindexPrev->nHeight, nFees);
         }
 
         // Proof of stake blocks pay the mining reward in the coinstake transaction
@@ -412,6 +417,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 pblock->payeeSN = txCoinbase.vout[SN_PMT_SLOT].scriptPubKey;
             }
         }
+
 
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
