@@ -21,7 +21,7 @@ class CDKGSessionManager
     static const int64_t MAX_CONTRIBUTION_CACHE_TIME = 60 * 1000;
 
 private:
-    CEvoDB& evoDb;
+    CDBWrapper& llmqDb;
     CBLSWorker& blsWorker;
     ctpl::thread_pool messageHandlerPool;
 
@@ -47,7 +47,7 @@ private:
     std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache;
 
 public:
-    CDKGSessionManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker);
+    CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWorker);
     ~CDKGSessionManager();
 
     void StartMessageHandlerPool();

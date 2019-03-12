@@ -83,13 +83,12 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CEvoDB& _evoDb, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctpl::thread_pool& _messageHandlerPool, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
     params(_params),
-    evoDb(_evoDb),
     messageHandlerPool(_messageHandlerPool),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
-    curSession(std::make_shared<CDKGSession>(_params, _evoDb, _blsWorker, _dkgManager)),
+    curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
     pendingContributions((size_t)_params.size * 2), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
     pendingComplaints((size_t)_params.size * 2),
     pendingJustifications((size_t)_params.size * 2),
@@ -146,7 +145,7 @@ bool CDKGSessionHandler::InitNewQuorum(int newQuorumHeight, const uint256& newQu
 
     const auto& consensus = Params().GetConsensus();
 
-    curSession = std::make_shared<CDKGSession>(params, evoDb, blsWorker, dkgManager);
+    curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
     if (!deterministicMNManager->IsDIP3Enforced(newQuorumHeight)) {
         return false;

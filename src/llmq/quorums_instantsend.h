@@ -8,6 +8,7 @@
 #include "quorums_signing.h"
 
 #include "coins.h"
+#include "unordered_lru_cache.h"
 #include "primitives/transaction.h"
 
 #include <unordered_map>
@@ -39,19 +40,29 @@ public:
     uint256 GetRequestId() const;
 };
 
-class CInstantSendLockInfo
-{
-public:
-    // might be nullptr when islock is received before the TX itself
-    CTransactionRef tx;
-    CInstantSendLock islock;
-    // only valid when recovered sig was received
-    uint256 islockHash;
-    // time when it was created/received
-    int64_t time;
+typedef std::shared_ptr<CInstantSendLock> CInstantSendLockPtr;
 
-    // might be null initially (when TX was not mined yet) and will later be filled by SyncTransaction
-    const CBlockIndex* pindexMined{nullptr};
+class CInstantSendDb
+{
+private:
+    CDBWrapper& db;
+
+    unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache;
+    unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache;
+    unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache;
+
+public:
+    CInstantSendDb(CDBWrapper& _db) : db(_db) {}
+
+    void WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock);
+    void RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock);
+
+    CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash);
+    CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
+    CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint);
+
+    void WriteLastChainLockBlock(const uint256& hashBlock);
+    uint256 GetLastChainLockBlock();
 };
 
 class CInstantSendManager : public CRecoveredSigsListener
@@ -59,40 +70,29 @@ class CInstantSendManager : public CRecoveredSigsListener
 private:
     CCriticalSection cs;
     CScheduler* scheduler;
+    CInstantSendDb db;
 
     /**
-     * These are the votes/signatures we performed locally. It's indexed by the LLMQ requestId, which is
-     * hash(TXLOCK_REQUESTID_PREFIX, prevout). The map values are the txids we voted for. This map is used to
-     * avoid voting for the same input twice.
+     * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
+     * in-progress input lock.
      */
-    std::unordered_map<uint256, uint256, StaticSaltedHasher> inputVotes;
+    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds;
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
      * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the islock.
      * When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
-    std::unordered_map<uint256, CInstantSendLockInfo, StaticSaltedHasher> creatingInstantSendLocks;
+    std::unordered_map<uint256, CInstantSendLock, StaticSaltedHasher> creatingInstantSendLocks;
     // maps from txid to the in-progress islock
-    std::unordered_map<uint256, CInstantSendLockInfo*, StaticSaltedHasher> txToCreatingInstantSendLocks;
-
-    /**
-     * These are the final islocks, indexed by their own hash. The other maps are used to get from TXs, inputs and blocks
-     * to islocks.
-     */
-    std::unordered_map<uint256, CInstantSendLockInfo, StaticSaltedHasher> finalInstantSendLocks;
-    std::unordered_map<uint256, CInstantSendLockInfo*, StaticSaltedHasher> txToInstantSendLock;
-    std::unordered_map<COutPoint, CInstantSendLockInfo*, SaltedOutpointHasher> inputToInstantSendLock;
-    std::unordered_multimap<uint256, CInstantSendLockInfo*, StaticSaltedHasher> blockToInstantSendLocks;
-
-    const CBlockIndex* pindexLastChainLock{nullptr};
+    std::unordered_map<uint256, CInstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks;
 
     // Incoming and not verified yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>> pendingInstantSendLocks;
     bool hasScheduledProcessPending{false};
 
 public:
-    CInstantSendManager(CScheduler* _scheduler);
+    CInstantSendManager(CScheduler* _scheduler, CDBWrapper& _llmqDb);
     ~CInstantSendManager();
 
     void RegisterAsRecoveredSigsListener();
@@ -117,12 +117,11 @@ public:
     bool PreVerifyInstantSendLock(NodeId nodeId, const CInstantSendLock& islock, bool& retBan);
     void ProcessPendingInstantSendLocks();
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
-    void UpdateWalletTransaction(const uint256& txid);
+    void UpdateWalletTransaction(const uint256& txid, const CTransactionRef& tx);
 
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void NotifyChainLock(const CBlockIndex* pindex);
-    void UpdateISLockMinedBlock(CInstantSendLockInfo* islockInfo, const CBlockIndex* pindex);
-    void RemoveFinalISLock(const uint256& hash);
+    void RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void RetryLockMempoolTxs(const uint256& lockedParentTx);

@@ -14,6 +14,7 @@
 #include "quorums_signing.h"
 #include "quorums_signing_shares.h"
 
+#include "dbwrapper.h"
 #include "scheduler.h"
 
 namespace llmq
@@ -21,16 +22,20 @@ namespace llmq
 
 static CBLSWorker blsWorker;
 
+CDBWrapper* llmqDb;
+
 void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
 {
+    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests);
+
     quorumDKGDebugManager = new CDKGDebugManager(scheduler);
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(evoDb, blsWorker);
+    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, blsWorker);
     quorumManager = new CQuorumManager(evoDb, blsWorker, *quorumDKGSessionManager);
     quorumSigSharesManager = new CSigSharesManager();
-    quorumSigningManager = new CSigningManager(unitTests);
+    quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
     chainLocksHandler = new CChainLocksHandler(scheduler);
-    quorumInstantSendManager = new CInstantSendManager(scheduler);
+    quorumInstantSendManager = new CInstantSendManager(scheduler, *llmqDb);
 }
 
 void DestroyLLMQSystem()
@@ -51,6 +56,8 @@ void DestroyLLMQSystem()
     quorumBlockProcessor = nullptr;
     delete quorumDKGDebugManager;
     quorumDKGDebugManager = nullptr;
+    delete llmqDb;
+    llmqDb = nullptr;
 }
 
 void StartLLMQSystem()
