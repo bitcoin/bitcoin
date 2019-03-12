@@ -1177,8 +1177,8 @@ class msg_getheaders(object):
 class msg_headers(object):
     command = b"headers"
 
-    def __init__(self):
-        self.headers = []
+    def __init__(self, headers=None):
+        self.headers = headers if headers is not None else []
 
     def deserialize(self, f):
         # comment in dashd indicates these should be deserialized as blocks

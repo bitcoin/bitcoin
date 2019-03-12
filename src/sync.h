@@ -76,14 +76,17 @@ void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs
 void LeaveCritical();
 std::string LocksHeld();
 void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
 void DeleteLock(void* cs);
 #else
 void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
 void static inline LeaveCritical() {}
 void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
+void static inline AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
 void static inline DeleteLock(void* cs) {}
 #endif
 #define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
+#define AssertLockNotHeld(cs) AssertLockNotHeldInternal(#cs, __FILE__, __LINE__, &cs)
 
 /**
  * Wrapped boost mutex: supports recursive locking, but no waiting
