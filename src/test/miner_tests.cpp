@@ -257,6 +257,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         createAndProcessEmptyBlock();
     }
 
+    {
     LOCK(cs_main);
 
     // Just to make sure we can still make simple blocks
@@ -507,8 +508,12 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
         chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
 
+    } // unlock cs_main while calling createAndProcessEmptyBlock
+
     // Mine an empty block
     createAndProcessEmptyBlock();
+
+    LOCK(cs_main);
 
     SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
 
