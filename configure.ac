@@ -223,10 +223,10 @@ AC_ARG_ENABLE([zmq],
   [use_zmq=$enableval],
   [use_zmq=yes])
 AC_ARG_ENABLE([bip70],
-  [AS_HELP_STRING([--disable-bip70],
-  [disable BIP70 (payment protocol) support in GUI (enabled by default)])],
+  [AS_HELP_STRING([--enable-bip70],
+  [enable BIP70 (payment protocol) support in the GUI (default is to disable)])],
   [enable_bip70=$enableval],
-  [enable_bip70=auto])
+  [enable_bip70=no])
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
