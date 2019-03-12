@@ -7,6 +7,7 @@
 If an stale block more than a month old or its header are requested by a peer,
 the node should pretend that it does not have it to avoid fingerprinting.
 """
+import threading
 
 import time
 
@@ -15,7 +16,7 @@ from test_framework.mininode import (
     CInv,
     NetworkThread,
     NodeConn,
-    NodeConnCB,
+    SingleNodeConnCB,
     msg_headers,
     msg_block,
     msg_getdata,
@@ -26,12 +27,23 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     p2p_port,
-)
+    start_nodes)
 
 class P2PFingerprintTest(BitcoinTestFramework):
+    def __init__(self):
+        BitcoinTestFramework.__init__(self)
+        # TODO When this asserts, you have probably backported bitcoin#11121, so you'll have to remove this constructor
+        assert(not callable(getattr(BitcoinTestFramework(), "set_test_params", None)))
+        self.set_test_params()
+
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
+
+    # TODO also remove this when bitcoin#11121 is backported
+    def setup_network(self, split=False):
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
+        self.is_network_split = False
 
     # Build a chain of blocks on top of given one
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
@@ -77,7 +89,26 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # This does not currently test that stale blocks timestamped within the
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
-        node0 = NodeConnCB()
+        # TODO remove this when mininode is up-to-date with Bitcoin
+        class MyNodeConnCB(SingleNodeConnCB):
+            def __init__(self):
+                SingleNodeConnCB.__init__(self)
+                self.cond = threading.Condition()
+                self.last_message = {}
+
+            def deliver(self, conn, message):
+                SingleNodeConnCB.deliver(self, conn, message)
+                command = message.command.decode('ascii')
+                self.last_message[command] = message
+                with self.cond:
+                    self.cond.notify_all()
+
+            def wait_for_getdata(self):
+                with self.cond:
+                    assert(self.cond.wait_for(lambda: "getdata" in self.last_message, timeout=15))
+
+
+        node0 = MyNodeConnCB()
 
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
