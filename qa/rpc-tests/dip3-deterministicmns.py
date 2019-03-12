@@ -194,48 +194,6 @@ class DIP3Test(BitcoinTestFramework):
         self.log.info("testing instant send with replaced MNs")
         self.test_instantsend(10, 3, timeout=20)
 
-        self.log.info("testing simple PoSe")
-        self.assert_mnlists(mns)
-        self.nodes[0].spork('SPORK_17_QUORUM_DKG_ENABLED', 0)
-        self.wait_for_sporks()
-
-        height = self.nodes[0].getblockcount()
-        skip_count = 24 - (height % 24)
-        if skip_count != 0:
-            self.nodes[0].generate(skip_count)
-
-        for i in range(len(mns), len(mns) - 2, -1):
-            mn = mns[len(mns) - 1]
-            mns.remove(mn)
-            self.stop_node(mn.idx)
-            self.nodes.remove(mn.node)
-
-            punished = False
-            banned = False
-            t = time.time()
-            while (not punished or not banned) and (time.time() - t) < 120:
-                # Init phase needs some time
-                time.sleep(0.5)
-
-                # all phases
-                for j in range(6):
-                    self.nodes[0].generate(2)
-                    self.sync_all()
-                    time.sleep(2)
-
-                info = self.nodes[0].protx('info', mn.protx_hash)
-                if not punished:
-                    if info['state']['PoSePenalty'] > 0:
-                        punished = True
-                if not banned:
-                    if info['state']['PoSeBanHeight'] != -1:
-                        banned = True
-
-                # Fast-forward to next DKG session
-                self.nodes[0].generate(24 - (self.nodes[0].getblockcount() % 24))
-                self.sync_all()
-            assert(punished and banned)
-
     def prepare_mn(self, node, idx, alias):
         mn = Masternode()
         mn.idx = idx

@@ -329,6 +329,7 @@ class DashTestFramework(BitcoinTestFramework):
             args = ['-masternode=1',
                     '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
             node = start_node(idx + start_idx, self.options.tmpdir, args)
+            self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = node
             self.nodes[idx + start_idx] = node
             wait_to_sync(node, True)
@@ -472,7 +473,7 @@ class DashTestFramework(BitcoinTestFramework):
                 return False
         return True
 
-    def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=15):
+    def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=30):
         t = time()
         while time() - t < timeout:
             all_ok = True

@@ -216,11 +216,6 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
 {
     auto members = CLLMQUtils::GetAllQuorumMembers(llmqType, quorumHash);
 
-    if (validMembers.size() != members.size()) {
-        // should never happen as we should always call this method with correct params
-        return false;
-    }
-
     memberIndexesRet.clear();
     vvecsRet.clear();
     skContributionsRet.clear();
