@@ -37,6 +37,13 @@ showdiff() {
   fi
 }
 
+showmodifiedfiles() {
+  if ! git diff --name-only "${TRAVIS_COMMIT_RANGE}" -- "." ":(exclude)depends/patches/" ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
+    echo "Failed to list modified files"
+    exit 1
+  fi
+}
+
 showcodediff() {
   if ! git diff -U0 "${TRAVIS_COMMIT_RANGE}" -- *.cpp *.h *.md *.py *.sh ":(exclude)src/leveldb/" ":(exclude)src/secp256k1/" ":(exclude)src/univalue/" ":(exclude)doc/release-notes/"; then
     echo "Failed to get a diff"
@@ -109,5 +116,20 @@ if showcodediff | perl -nle '$MATCH++ if m{^\+.*\t}; END{exit 1 unless $MATCH>0}
   done < <(showcodediff | perl -nle 'print if m{^(diff --git |@@|\+.*\t)}')
   RET=1
 fi
+
+# Check for modified text files not ending with a newline (\n)
+for MODIFIED_FILE in $(showmodifiedfiles); do
+    if [[ ! -e ${MODIFIED_FILE} || ${MODIFIED_FILE} =~ \.(svg|ts)$ ]]; then
+        continue
+    fi
+    if ! grep -qIl "" "${MODIFIED_FILE}"; then
+        # Not a text file
+        continue
+    fi
+    if [[ "$(tail -c1 "${MODIFIED_FILE}" | tr -d '\0')" ]]; then
+        echo "Modified text file does not end with a newline: ${MODIFIED_FILE}"
+        RET=1
+    fi
+done
 
 exit $RET
