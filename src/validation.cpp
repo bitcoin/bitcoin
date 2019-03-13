@@ -2888,6 +2888,11 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     // sanely for performance or correctness!
     AssertLockNotHeld(cs_main);
 
+    // make sure that no matter what, only one thread is executing ActivateBestChain. This avoids a race condition when
+    // validation signals are invoked, which might result in out-of-order execution.
+    static CCriticalSection cs_activateBestChain;
+    LOCK(cs_activateBestChain);
+
     CBlockIndex *pindexMostWork = NULL;
     CBlockIndex *pindexNewTip = NULL;
     do {

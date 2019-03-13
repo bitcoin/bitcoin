@@ -553,7 +553,7 @@ void CDKGSessionHandler::PhaseHandlerThread()
                 status.aborted = true;
                 return true;
             });
-            LogPrintf("CDKGSessionHandler::%s -- aborted current DKG session\n", __func__);
+            LogPrintf("CDKGSessionHandler::%s -- aborted current DKG session for llmq=%s\n", __func__, params.name);
         }
     }
 }
