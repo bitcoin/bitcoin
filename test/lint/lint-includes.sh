@@ -59,6 +59,7 @@ EXPECTED_BOOST_INCLUDES=(
     boost/multi_index/sequenced_index.hpp
     boost/multi_index_container.hpp
     boost/optional.hpp
+    boost/optional/optional_io.hpp
     boost/preprocessor/cat.hpp
     boost/preprocessor/stringize.hpp
     boost/process.hpp
