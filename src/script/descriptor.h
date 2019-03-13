@@ -5,6 +5,8 @@
 #ifndef BITCOIN_SCRIPT_DESCRIPTOR_H
 #define BITCOIN_SCRIPT_DESCRIPTOR_H
 
+#include <addresstype.h>
+#include <optional.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -42,6 +44,9 @@ struct Descriptor {
 
     /** Convert the descriptor to a private string. This fails if the provided provider does not have the relevant private keys. */
     virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;
+
+    /** What address type this descriptor produces when converted to a string. */
+    virtual Optional<AddressType> GetAddressType() const = 0;
 
     /** Expand a descriptor at a specified position.
      *

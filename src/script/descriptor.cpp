@@ -420,6 +420,10 @@ public:
         return ret;
     }
 
+    Optional<AddressType> GetAddressType() const override {
+        return nullopt;
+    }
+
     bool ExpandHelper(int pos, const SigningProvider& arg, Span<const unsigned char>* cache_read, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache_write) const
     {
         std::vector<std::pair<CPubKey, KeyOriginInfo>> entries;
@@ -550,6 +554,11 @@ protected:
     }
 public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "pkh") {}
+
+    Optional<AddressType> GetAddressType() const override final
+    {
+        return AddressType::BASE58;
+    }
 };
 
 /** A parsed wpkh(P) descriptor. */
@@ -564,6 +573,11 @@ protected:
     }
 public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Singleton(std::move(prov)), {}, "wpkh") {}
+
+    Optional<AddressType> GetAddressType() const override final
+    {
+        return AddressType::BECH32;
+    }
 };
 
 /** A parsed combo(P) descriptor. */
@@ -607,6 +621,11 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(ScriptHash(*script))); }
 public:
     SHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
+
+    Optional<AddressType> GetAddressType() const override final
+    {
+        return AddressType::BASE58;
+    }
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -616,6 +635,11 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Singleton(GetScriptForDestination(WitnessV0ScriptHash(*script))); }
 public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
+
+    Optional<AddressType> GetAddressType() const override final
+    {
+        return AddressType::BECH32;
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////
