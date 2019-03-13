@@ -100,7 +100,7 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.13.1.0.
 
 ### Backports
 
-- [`2516a6e19`](https://github.com/dashpay/dash/commit/2516a6e19) Bump version to 0.13.2
+- [`548a48918`](https://github.com/dashpay/dash/commit/548a48918) Move IS block filtering into ConnectBlock (#2766)
 - [`6374dce99`](https://github.com/dashpay/dash/commit/6374dce99) Fix error message for invalid voting addresses (#2747)
 - [`25222b378`](https://github.com/dashpay/dash/commit/25222b378) Make -masternodeblsprivkey mandatory when -masternode is given (#2745)
 - [`0364e033a`](https://github.com/dashpay/dash/commit/0364e033a) Implement 2-stage commit for CEvoDB to avoid inconsistencies after crashes (#2744)
@@ -113,6 +113,7 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.13.1.0.
 
 ### Other
 
+- [`2516a6e19`](https://github.com/dashpay/dash/commit/2516a6e19) Bump version to 0.13.2
 - [`9dd16cdbe`](https://github.com/dashpay/dash/commit/9dd16cdbe) Bump minChainWork and AssumeValid to block #1033120 (#2750)
 - [`18f087b27`](https://github.com/dashpay/dash/commit/18f087b27) Fix some typos in doc/guide-startmany.md (#2711)
 - [`709ab6d3e`](https://github.com/dashpay/dash/commit/709ab6d3e) Minimal fix for litemode vs bad-protx-key-not-same issue (#2694)
