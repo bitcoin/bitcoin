@@ -244,6 +244,12 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
 
+    if (Params().NetworkID() == CBaseChainParams::TESTNET && chainActive.Height() >= 140394)
+    {
+        // Increase testnet difficulty
+        Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
+    }
+
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())
         return error("CheckProofOfWork() : nBits below minimum work");
