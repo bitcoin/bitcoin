@@ -81,6 +81,7 @@ FUZZ_SUITE_LD_COMMON = \
 BITCOIN_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
+  test/addresstype_tests.cpp \
   test/addrman_tests.cpp \
   test/amount_tests.cpp \
   test/allocator_tests.cpp \
