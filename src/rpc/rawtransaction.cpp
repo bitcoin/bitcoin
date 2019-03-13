@@ -1862,21 +1862,21 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
                 "      \"has_utxo\" : true|false     (boolean) Whether a UTXO is provided\n"
                 "      \"is_final\" : true|false     (boolean) Whether the input is finalized\n"
                 "      \"missing\" : {               (json object, optional) Things that are missing that are required to complete this input\n"
-                "        \"pubkeys\" : [             (array)\n"
+                "        \"pubkeys\" : [             (array, optional)\n"
                 "          \"keyid\"                 (string) Public key ID, hash160 of the public key, of a public key whose BIP 32 derivation path is missing\n"
                 "        ]\n"
-                "        \"signatures\" : [          (array)\n"
+                "        \"signatures\" : [          (array, optional)\n"
                 "          \"keyid\"                 (string) Public key ID, hash160 of the public key, of a public key whose signature is missing\n"
                 "        ]\n"
-                "        \"redeemscript\" : \"hash\"   (string) Hash160 of the redeemScript that is missing\n"
-                "        \"witnessscript\" : \"hash\"  (string) SHA256 of the witnessScript that is missing\n"
+                "        \"redeemscript\" : \"hash\"   (string, optional) Hash160 of the redeemScript that is missing\n"
+                "        \"witnessscript\" : \"hash\"  (string, optional) SHA256 of the witnessScript that is missing\n"
                 "      }\n"
-                "      \"next\" : \"role\"           (string) Role of the next person that this input needs to go to\n"
+                "      \"next\" : \"role\"             (string, optional) Role of the next person that this input needs to go to\n"
                 "    }\n"
                 "    ,...\n"
                 "  ]\n"
-                "  \"estimated_vsize\" : vsize       (numeric) Estimated vsize of the final signed transaction\n"
-                "  \"estimated_feerate\" : feerate   (numeric, optional) Estimated feerate of the final signed transaction. Shown only if all UTXO slots in the PSBT have been filled.\n"
+                "  \"estimated_vsize\" : vsize       (numeric, optional) Estimated vsize of the final signed transaction\n"
+                "  \"estimated_feerate\" : feerate   (numeric, optional) Estimated feerate of the final signed transaction in " + CURRENCY_UNIT + "/kB. Shown only if all UTXO slots in the PSBT have been filled.\n"
                 "  \"fee\" : fee                     (numeric, optional) The transaction fee paid. Shown only if all UTXO slots in the PSBT have been filled.\n"
                 "  \"next\" : \"role\"                 (string) Role of the next person that this psbt needs to go to\n"
                 "}\n"
@@ -2021,7 +2021,7 @@ UniValue analyzepsbt(const JSONRPCRequest& request)
             result.pushKV("estimated_vsize", (int)size);
             // Estimate fee rate
             CFeeRate feerate(fee, size);
-            result.pushKV("estimated_feerate", feerate.ToString());
+            result.pushKV("estimated_feerate", ValueFromAmount(feerate.GetFeePerK()));
         }
         result.pushKV("fee", ValueFromAmount(fee));
 
