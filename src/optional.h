@@ -8,6 +8,7 @@
 #include <utility>
 
 #include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 
 //! Substitute for C++17 std::optional
 template <typename T>
