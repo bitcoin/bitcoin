@@ -2595,15 +2595,19 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     size_t max_ancestors = (size_t)std::max<int64_t>(1, gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT));
     size_t max_descendants = (size_t)std::max<int64_t>(1, gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
     bool fRejectLongChains = gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS);
+    const auto conf = [&coin_control](const int conf_in) {
+        // Return the passed in conf_in or what is prescribed by coin_control, whichever is higher
+        return coin_control.m_min_conf_depth ? std::max(*coin_control.m_min_conf_depth, conf_in) : conf_in;
+    };
 
     bool res = nTargetValue <= nValueFromPresetInputs ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+               SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(1), conf(6), 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+               SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(1), conf(1), 0), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used) ||
+               (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(0), conf(1), 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+               (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(0), conf(1), std::min((size_t)4, max_ancestors / 3), std::min((size_t)4, max_descendants / 3)), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+               (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(0), conf(1), max_ancestors / 2, max_descendants / 2), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+               (m_spend_zero_conf_change && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(0), conf(1), max_ancestors - 1, max_descendants - 1), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) ||
+               (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(nTargetValue - nValueFromPresetInputs, CoinEligibilityFilter(conf(0), conf(1), std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, coin_selection_params, bnb_used));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);

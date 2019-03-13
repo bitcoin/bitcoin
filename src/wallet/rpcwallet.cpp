@@ -807,9 +807,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
-        throw std::runtime_error(
-            RPCHelpMan{"sendmany",
+    const RPCHelpMan help{"sendmany",
                 "\nSend multiple times. Amounts are double-precision floating point numbers." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
@@ -850,7 +848,11 @@ static UniValue sendmany(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendmany", "\"\", {\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\":0.01,\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\":0.02}, 6, \"testing\"")
                 },
-            }.ToString());
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
+    }
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -867,9 +869,6 @@ static UniValue sendmany(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"\"");
     }
     UniValue sendTo = request.params[1].get_obj();
-    int nMinDepth = 1;
-    if (!request.params[2].isNull())
-        nMinDepth = request.params[2].get_int();
 
     mapValue_t mapValue;
     if (!request.params[3].isNull() && !request.params[3].get_str().empty())
@@ -880,6 +879,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
         subtractFeeFromAmount = request.params[4].get_array();
 
     CCoinControl coin_control;
+    coin_control.m_min_conf_depth = request.params[2].isNull() ? 1 : request.params[2].get_int();
     if (!request.params[5].isNull()) {
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
@@ -897,7 +897,6 @@ static UniValue sendmany(const JSONRPCRequest& request)
     std::set<CTxDestination> destinations;
     std::vector<CRecipient> vecSend;
 
-    CAmount totalAmount = 0;
     std::vector<std::string> keys = sendTo.getKeys();
     for (const std::string& name_ : keys) {
         CTxDestination dest = DecodeDestination(name_);
@@ -914,7 +913,6 @@ static UniValue sendmany(const JSONRPCRequest& request)
         CAmount nAmount = AmountFromValue(sendTo[name_]);
         if (nAmount <= 0)
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-        totalAmount += nAmount;
 
         bool fSubtractFeeFromAmount = false;
         for (unsigned int idx = 0; idx < subtractFeeFromAmount.size(); idx++) {
@@ -928,11 +926,6 @@ static UniValue sendmany(const JSONRPCRequest& request)
     }
 
     EnsureWalletIsUnlocked(pwallet);
-
-    // Check funds
-    if (totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth)) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Wallet has insufficient funds");
-    }
 
     // Shuffle recipient list
     std::shuffle(vecSend.begin(), vecSend.end(), FastRandomContext());
