@@ -516,7 +516,8 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     int last_client = CLIENT_VERSION;
     ReadVersion(last_client);
 
-    pwallet->WalletLogPrintf("nFileVersion = %d\n", last_client);
+    int wallet_version = pwallet->GetVersion();
+    pwallet->WalletLogPrintf("Wallet File Version = %d\n", wallet_version > 0 ? wallet_version : last_client);
 
     pwallet->WalletLogPrintf("Keys: %u plaintext, %u encrypted, %u w/ metadata, %u total. Unknown wallet records: %u\n",
            wss.nKeys, wss.nCKeys, wss.nKeyMeta, wss.nKeys + wss.nCKeys, wss.m_unknown_records);
