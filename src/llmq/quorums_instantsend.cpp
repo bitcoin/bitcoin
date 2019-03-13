@@ -659,12 +659,14 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         if (db.GetInstantSendLockByHash(hash)) {
             return;
         }
-        if (otherIsLock = db.GetInstantSendLockByTxid(islock.txid)) {
+        otherIsLock = db.GetInstantSendLockByTxid(islock.txid);
+        if (otherIsLock != nullptr) {
             LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s, islock=%s: duplicate islock, other islock=%s, peer=%d\n", __func__,
                      islock.txid.ToString(), hash.ToString(), ::SerializeHash(*otherIsLock).ToString(), from);
         }
         for (auto& in : islock.inputs) {
-            if (otherIsLock = db.GetInstantSendLockByInput(in)) {
+            otherIsLock = db.GetInstantSendLockByInput(in);
+            if (otherIsLock != nullptr) {
                 LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s, islock=%s: conflicting input in islock. input=%s, other islock=%s, peer=%d\n", __func__,
                          islock.txid.ToString(), hash.ToString(), in.ToStringShort(), ::SerializeHash(*otherIsLock).ToString(), from);
             }
