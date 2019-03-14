@@ -250,6 +250,9 @@ void *PosixLockedPageAllocator::AllocateLocked(size_t len, bool *lockingSuccess)
     addr = mmap(nullptr, len, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
     if (addr) {
         *lockingSuccess = mlock(addr, len) == 0;
+#ifdef MADV_DONTDUMP
+        madvise(addr, len, MADV_DONTDUMP);
+#endif
     }
     return addr;
 }
