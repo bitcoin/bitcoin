@@ -12,6 +12,7 @@
 #include <txdb.h>
 #include <consensus/validation.h>
 #include <random.h>
+#include <script/interpreter.h>
 
 #include <boost/assign/list_of.hpp>
 
@@ -561,11 +562,15 @@ bool CheckProofOfStake(CValidationState &state, CBlockIndex* pindexPrev, const C
             return error("%s() : txid mismatch in CheckProofOfStake()", __PRETTY_FUNCTION__);
     }
 
-    //ppcTODO - do we need to verify it here? Wasn't it already verified in script/interpreter.cpp?
-//    // Verify signature
-//    Coin coin(txPrev, 0);
-//    if (!VerifySignature(coin, tx, 0, SCRIPT_VERIFY_P2SH, 0))
-//        return state.DoS(100, error("CheckProofOfStake() : VerifySignature failed on coinstake %s", tx.GetHash().ToString()));
+    // Verify signature
+    {
+        int nIn = 0;
+        const CTxOut& prevOut = txPrev->vout[tx->vin[nIn].prevout.n];
+        TransactionSignatureChecker checker(&(*tx), nIn, prevOut.nValue, PrecomputedTransactionData(*tx));
+
+        if (!VerifyScript(tx->vin[nIn].scriptSig, prevOut.scriptPubKey, &(tx->vin[nIn].scriptWitness), SCRIPT_VERIFY_P2SH, checker, nullptr))
+            return state.DoS(100, false, REJECT_INVALID, "invalid-pos-script", false, strprintf("%s: VerifyScript failed on coinstake %s", __func__, tx->GetHash().ToString()));
+    }
 
     if (!CheckStakeKernelHash(nBits, pindexPrev, header, postx.nTxOffset + CBlockHeader::NORMAL_SERIALIZE_SIZE, txPrev, txin.prevout, tx->nTime, hashProofOfStake, gArgs.GetBoolArg("-debug", false)))
         return state.DoS(1, error("CheckProofOfStake() : INFO: check kernel failed on coinstake %s, hashProof=%s", tx->GetHash().ToString(), hashProofOfStake.ToString())); // may occur during initial download or if behind on block chain sync
