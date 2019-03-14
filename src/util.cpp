@@ -1057,7 +1057,7 @@ void KillProcess(const pid_t& pid){
     #ifndef WIN32
         int result = 0;
         for(int i =0;i<10;i++){
-            MilliSleep(10);
+            MilliSleep(500);
             result = kill( pid, SIGINT ) ;
             if(result == 0){
                 LogPrintf("%s: Killing with SIGINT %d\n", __func__, pid);
@@ -1067,7 +1067,7 @@ void KillProcess(const pid_t& pid){
             return;
         }
         for(int i =0;i<10;i++){
-            MilliSleep(10);
+            MilliSleep(500);
             result = kill( pid, SIGTERM ) ;
             if(result == 0){
                 LogPrintf("%s: Killing with SIGTERM %d\n", __func__, pid);
@@ -1077,7 +1077,7 @@ void KillProcess(const pid_t& pid){
             return;
         }
         for(int i =0;i<10;i++){
-            MilliSleep(10);
+            MilliSleep(500);
             result = kill( pid, SIGKILL ) ;
             if(result == 0){
                 LogPrintf("%s: Killing with SIGKILL %d\n", __func__, pid);
