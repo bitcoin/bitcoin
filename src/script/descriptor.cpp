@@ -428,6 +428,14 @@ public:
         return nullopt;
     }
 
+    bool IsSegWit() const override
+    {
+        if (m_subdescriptor_arg) {
+            if (m_subdescriptor_arg->IsSegWit()) return true;
+        }
+        return false;
+    }
+
     bool ExpandHelper(int pos, const SigningProvider& arg, Span<const unsigned char>* cache_read, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache_write) const
     {
         std::vector<std::pair<CPubKey, KeyOriginInfo>> entries;
@@ -579,6 +587,8 @@ public:
     {
         return AddressType::BECH32;
     }
+
+    bool IsSegWit() const final { return true; }
     bool IsSingleType() const final { return true; }
 };
 
@@ -653,6 +663,8 @@ public:
     {
         return AddressType::BECH32;
     }
+
+    bool IsSegWit() const final { return true; }
     bool IsSingleType() const final { return true; }
 };
 
