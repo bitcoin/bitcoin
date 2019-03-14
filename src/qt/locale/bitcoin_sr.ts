@@ -478,6 +478,10 @@
         <translation>Прикажи  поруку помоћи %1 за листу са могућим опцијама Биткоин командне линије</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>подразумевани новчаник</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 клијент</translation>
     </message>
@@ -1202,6 +1206,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

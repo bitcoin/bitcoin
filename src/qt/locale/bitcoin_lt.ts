@@ -434,6 +434,10 @@
         <translation>Atnaujinta</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>numatyta piniginė</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Langas</translation>
     </message>
@@ -1283,6 +1287,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

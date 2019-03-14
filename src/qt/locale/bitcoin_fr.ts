@@ -486,8 +486,36 @@
         <translation>&amp;Adresses de réception</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Ouvrir le porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Ouvrir un porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Fermer le porte-monnaie…</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermer le porte-monnaie</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Afficher le message d’aide de %1 pour obtenir la liste des options de ligne de commande Bitcoin possibles.</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>porte-monnaie par défaut</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Ouverture du porte-monnaie &lt;b&gt;%1&lt;/b&gt;…</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Échec d’ouverture du porte-monnaie</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -956,8 +984,8 @@
         <translation>Cacher</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Inconnu. Synchronisation des en-têtes (%1)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Inconnu. Synchronisation des en-têtes (%1, %2)…</translation>
     </message>
 </context>
 <context>
@@ -3085,6 +3113,21 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermer le porte-monnaie</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Voulez-vous vraiment fermer le porte-monnaie &lt;i&gt;%1&lt;/i&gt; ?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Fermer le porte-monnaie trop longtemps peut impliquer de devoir resynchroniser la chaîne entière si l’élagage est activé.</translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3214,6 +3257,10 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>The %s developers</source>
         <translation>Les développeurs de %s</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Impossible de générer une clé d’adresse de monnaie. Il n’y a pas de clés dans la réserve de clés et il est impossible d’en générer.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3370,6 +3417,10 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Le répertoire des blocs indiqué « %s » n’existe pas.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Impossible de créer le fichier PID '%s' : %s</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3574,10 +3625,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
         <translation>La taille totale de la chaîne de version de réseau (%i) dépasse la longueur maximale (%i). Réduire le nombre ou la taille des commentaires uacomments.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Avertissement : Des versions de blocs inconnues sont minées ! Il est possible que des règles inconnues soient en vigueur.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Avertissement : Le fichier du porte-monnaie est corrompu, les données ont été récupérées ! Le fichier %s original a été enregistré en tant que %s dans %s ; si votre solde ou vos transactions sont incorrects, vous devriez restaurer une sauvegarde.</translation>
     </message>
@@ -3628,10 +3675,6 @@ Note : Les frais étant calculés par octet, des frais de « 100 satoshis par
     <message>
         <source>Insufficient funds</source>
         <translation>Fonds insuffisants</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>Impossible de générer une clé d’adresse de monnaie. Les clés privées sont désactivées pour ce porte-monnaie.</translation>
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>

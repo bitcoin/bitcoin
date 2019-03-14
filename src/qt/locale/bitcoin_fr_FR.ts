@@ -474,6 +474,10 @@
         <translation>Afficher le %1 message d'aide pour récupérer une liste des options de ligne de commande Bitcoin</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>portefeuille par défaut</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Fenêtre</translation>
     </message>
@@ -2177,6 +2181,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -2237,6 +2244,10 @@
 Importation ...</translation>
     </message>
     <message>
+        <source>Upgrading UTXO database</source>
+        <translation>Mise à jour de la base de données des UTXO</translation>
+    </message>
+    <message>
         <source>Verifying blocks...</source>
         <translation>Vérifications des blocs...</translation>
     </message>
@@ -2271,6 +2282,10 @@ Importation ...</translation>
     <message>
         <source>Transaction too large</source>
         <translation>Transaction trop grande</translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Impossible de générer la clé initiale</translation>
     </message>
     <message>
         <source>Warning</source>

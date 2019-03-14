@@ -325,6 +325,10 @@
         <source>Change the passphrase used for wallet encryption</source>
         <translation>지갑 암호화에 사용될 암호문 바꾸기</translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>기본 지갑</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -419,6 +423,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

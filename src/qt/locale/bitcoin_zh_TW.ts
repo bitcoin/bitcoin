@@ -188,6 +188,10 @@
         <translation>錢包已加密</translation>
     </message>
     <message>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>錢包已經加密了。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取錢幣。</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>重要須知: 請改用新造出來、有加密的錢包檔，來取代舊錢包檔的備份。為了安全起見，當你開始使用新的有加密的錢包後，舊錢包檔的備份就沒有用了。</translation>
     </message>
@@ -474,8 +478,44 @@
         <translation>最新狀態</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>付款位址(&amp;S)</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>收款位址(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>打開錢包</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>打開一個錢包檔</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>關上錢包...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>關上錢包</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>顯示 %1 的說明訊息，來取得可用命令列選項的列表</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>預設錢包</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>正在開啟錢包檔&lt;b&gt;%1&lt;/b&gt;中...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>打開錢包失敗了</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -928,8 +968,8 @@
         <translation>隱藏</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>不明。正在同步前導資料(%1)中...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>不明。正在同步前導資料中(%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -2151,6 +2191,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>零散錢:</translation>
     </message>
     <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>手續費太低的話可能會造成永遠無法確認的交易(請參考提示)</translation>
+    </message>
+    <message>
         <source>Confirmation time target:</source>
         <translation>目標確認時間:</translation>
     </message>
@@ -3017,6 +3061,21 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>關閉錢包</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>確定要關上錢包&lt;i&gt;%1&lt;/i&gt;嗎？</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>關上錢包太久的話且修剪模式又有開啟的話，可能會造成日後需要重新同步整個區塊鏈。</translation>
+    </message>
+</context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3500,10 +3559,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>網路版本字串的總長度(%i)超過最大長度(%i)了。請減少 uacomment 參數的數目或長度。</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>警告: 有礦工正在開採不明版本的區塊！這表示有不明的交易規則正在作用中</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>警告: 錢包檔壞掉，但資料被救回來了！原來的檔案 %s 改儲存為 %s，在目錄 %s 下。 如果餘額或交易資料有誤的話，你應該要從備份資料復原回來。</translation>
     </message>
@@ -3554,10 +3609,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Insufficient funds</source>
         <translation>累積金額不足</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>沒辦法造出密鑰給找零位址使用，因為目前這個錢包不允許有私鑰。</translation>
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>

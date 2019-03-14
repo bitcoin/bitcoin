@@ -419,6 +419,11 @@ Alihkan fail data ke dalam tab semasa</translation>
         <translation>Tunjukkan senarai alamat dan label yang digunakan
 </translation>
     </message>
+    <message>
+        <source>default wallet</source>
+        <translation>dompet lalai
+</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -581,6 +586,9 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

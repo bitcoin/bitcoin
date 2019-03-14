@@ -821,11 +821,7 @@
         <source>Hide</source>
         <translation>Versteek</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Onbekend. Besig Met Sinchroniseer Van Hoofde (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2011,6 +2007,9 @@ word die fooi eweredig verdeel.</translation>
 </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

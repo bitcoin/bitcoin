@@ -486,8 +486,36 @@
         <translation>&amp;Endereços de receção</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Abrir Carteira</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Abrir uma carteira</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Fechar Carteira...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fechar a carteira</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostrar a mensagem de ajuda %1 para obter uma lista com possíveis opções a usar na linha de comandos.</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>carteira predefinida</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>A abrir a carteira &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>A abertura da carteira falhou</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -952,8 +980,8 @@
         <translation>Ocultar</translation>
     </message>
     <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Desconhecido. Sincronização de Cabeçalhos (%1)...</translation>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Desconhecido. A sincronizar cabeçalhos (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -3063,6 +3091,17 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por u
     </message>
 </context>
 <context>
+    <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fechar a carteira</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Tem a certeza que quer fechar a carteira &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    </context>
+<context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
@@ -3351,6 +3390,10 @@ Nota: como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por u
 A pasta de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Não foi possível criar o ficheiro PID '%s': %s</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>A atualizar a base de dados txindex</translation>
     </message>
@@ -3565,10 +3608,6 @@ A pasta de blocos especificados "%s" não existe.</translation>
         <translation>Comprimento total da entrada da versão de rede (%i) excede o comprimento máximo (%i). Reduzir o número ou o tamanho de uacomments.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Atenção: Versões desconhecidas de blocos estão a ser mineradas! É possível que regras desconhecias estão a ser efetuadas</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Atenção: o ficheiro da carteira está corrompido, foram recuperados dados! Original %s guardado como %s em %s; se o seu saldo ou as transações estiverem incorretos, deve fazer o restauro de uma cópia de segurança.</translation>
     </message>
@@ -3619,10 +3658,6 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>Insufficient funds</source>
         <translation>Fundos insuficientes</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>Não é possível gerar uma chave de alterar endereço. As chaves privadas estão desativadas para essa carteira.</translation>
     </message>
     <message>
         <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>

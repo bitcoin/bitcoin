@@ -927,6 +927,9 @@
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -960,10 +963,6 @@
     <message>
         <source>Warning</source>
         <translation>Viðvörun</translation>
-    </message>
-    <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>Viðvörun: Óþekkt blokkarútgáfa í námavinnslu! Það er mögulegt að óþekktum reglum sé fylgt</translation>
     </message>
     <message>
         <source>Error</source>

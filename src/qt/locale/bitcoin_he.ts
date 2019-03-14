@@ -474,6 +474,10 @@
         <translation>יש להציג את הודעת העזרה של %1 כדי להציג רשימה עם אפשרויות שורת פקודה לביטקוין</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>ארנק בררת מחדל</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;חלון</translation>
     </message>
@@ -919,11 +923,7 @@
         <source>Hide</source>
         <translation>הסתר</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>לא ידוע. הכותרות מתעדכנות (%1)…</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2956,6 +2956,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>יחידת המידה להצגת הסכומים. יש ללחוץ כדי לבחור ביחידת מידה אחרת.</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>

@@ -907,11 +907,7 @@
         <source>Hide</source>
         <translation>إخفاء</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>غير معروف. مزامنة الرؤوس (%1) ...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2816,6 +2812,9 @@
         <translation>الوحدة لإظهار المبالغ فيها. انقر لتحديد وحدة أخرى.</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>

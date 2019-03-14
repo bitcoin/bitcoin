@@ -462,6 +462,10 @@
         <translation>Ενημερωμένο</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>Προεπιλεγμένο πορτοφόλι</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Παράθυρο</translation>
     </message>
@@ -1932,6 +1936,9 @@
         <translation>Μονάδα μέτρησης προβολής ποσών. Κάντε κλικ για επιλογή άλλης μονάδας.</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    </context>
 <context>
     <name>WalletFrame</name>
     </context>

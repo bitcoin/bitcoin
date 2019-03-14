@@ -430,6 +430,10 @@
         <translation>განახლებულია</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>ნაგულისხმევი საფულე</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;ფანჯარა</translation>
     </message>
@@ -1487,6 +1491,9 @@
     </context>
 <context>
     <name>UnitDisplayStatusBarControl</name>
+    </context>
+<context>
+    <name>WalletController</name>
     </context>
 <context>
     <name>WalletFrame</name>

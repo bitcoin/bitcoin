@@ -466,6 +466,10 @@
         <translation>به روز</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>کیف پول پیش‌فرض</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>پنجره</translation>
     </message>
@@ -2153,6 +2157,9 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>UnitDisplayStatusBarControl</name>
     </context>
 <context>
+    <name>WalletController</name>
+    </context>
+<context>
     <name>WalletFrame</name>
     </context>
 <context>
@@ -2328,10 +2335,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>این هزینه تراکنشی است که در صورت عدم وجود هزینه تخمینی، پرداخت می کنید.</translation>
     </message>
     <message>
-        <source>Warning: Unknown block versions being mined! It's possible unknown rules are in effect</source>
-        <translation>هشدار:یک بلاک از یک نسخه ناشناس در حال ماین شدن است.در این اتفاق ممکن است قوانین ناشناسی اثرات نامعلوم بگذارند.</translation>
-    </message>
-    <message>
         <source>%s is set very high!</source>
         <translation>%s بسیار بزرگ انتخاب شده است.</translation>
     </message>
@@ -2358,10 +2361,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Insufficient funds</source>
         <translation>وجوه ناکافی</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
-        <translation>نمیتوان تغییر-آدرس کلید را تولید کرد.کلید های خصوصی در این کیف پول غیر فعال شده اند.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

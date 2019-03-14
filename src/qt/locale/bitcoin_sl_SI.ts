@@ -470,6 +470,10 @@
         <translation>Posodobljeno</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>privzeta denarnica</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>O&amp;kno</translation>
     </message>
@@ -1718,6 +1722,9 @@
         <translation>Merska enota za prikaz zneskov. Kliknite za izbiro druge enote.</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    </context>
 <context>
     <name>WalletFrame</name>
     </context>

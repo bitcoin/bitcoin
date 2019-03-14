@@ -849,11 +849,7 @@
         <source>Hide</source>
         <translation>Amaga</translation>
     </message>
-    <message>
-        <source>Unknown. Syncing Headers (%1)...</source>
-        <translation>Desconegut. Sincronització de les capçaleres (%1)...</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -2634,6 +2630,9 @@
         <translation>Unitat en què mostrar els imports. Feu clic per seleccionar una altra unitat.</translation>
     </message>
 </context>
+<context>
+    <name>WalletController</name>
+    </context>
 <context>
     <name>WalletFrame</name>
     <message>
