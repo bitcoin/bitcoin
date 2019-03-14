@@ -946,7 +946,7 @@ AC_LINK_IFELSE(
 )
 
 # Define to 1 if std::system or ::wsystem (Windows) is available
-AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [HAVE_WSYSTEM])
+AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
 
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
