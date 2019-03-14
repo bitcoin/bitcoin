@@ -1,5 +1,6 @@
 ---
 name: "bitcoin-dmg-signer"
+distro: "ubuntu"
 suites:
 - "bionic"
 architectures:

@@ -1,6 +1,7 @@
 ---
 name: "bitcoin-core-linux-0.19"
 enable_cache: true
+distro: "ubuntu"
 suites:
 - "bionic"
 architectures:
