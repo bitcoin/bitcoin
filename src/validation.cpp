@@ -288,8 +288,8 @@ std::atomic_bool g_is_mempool_loaded{false};
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
-
-const std::string strMessageMagic = "Syscoin Signed Message:\n";
+// SYSCOIN keep this as bitcoin
+const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
 // Internal stuff
 namespace {
