@@ -90,7 +90,9 @@ fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+#if defined(HAVE_SYSTEM)
 void runCommand(const std::string& strCommand);
+#endif
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
