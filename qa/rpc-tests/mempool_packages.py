@@ -103,7 +103,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
 
         # Check that ancestor modified fees includes fee deltas from
         # prioritisetransaction
-        self.nodes[0].prioritisetransaction(chain[0], 0, 1000)
+        self.nodes[0].prioritisetransaction(chain[0], 1000)
         mempool = self.nodes[0].getrawmempool(True)
         ancestor_fees = 0
         for x in chain:
@@ -111,11 +111,11 @@ class MempoolPackagesTest(BitcoinTestFramework):
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN + 1000)
         
         # Undo the prioritisetransaction for later tests
-        self.nodes[0].prioritisetransaction(chain[0], 0, -1000)
+        self.nodes[0].prioritisetransaction(chain[0], -1000)
 
         # Check that descendant modified fees includes fee deltas from
         # prioritisetransaction
-        self.nodes[0].prioritisetransaction(chain[-1], 0, 1000)
+        self.nodes[0].prioritisetransaction(chain[-1], 1000)
         mempool = self.nodes[0].getrawmempool(True)
 
         descendant_fees = 0
@@ -136,7 +136,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         # Prioritise a transaction that has been mined, then add it back to the
         # mempool by using invalidateblock.
-        self.nodes[0].prioritisetransaction(chain[-1], 0, 2000)
+        self.nodes[0].prioritisetransaction(chain[-1], 2000)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         # Keep node1's tip synced with node0
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())

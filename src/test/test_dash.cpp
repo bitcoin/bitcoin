@@ -203,14 +203,14 @@ TestChainSetup::~TestChainSetup()
 }
 
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx, CTxMemPool *pool) {
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction &tx) {
     CTransaction txn(tx);
-    return FromTx(txn, pool);
+    return FromTx(txn);
 }
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPool *pool) {
-    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, dPriority, nHeight,
-                           txn.GetValueOut(), spendsCoinbase, sigOpCount, lp);
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn) {
+    return CTxMemPoolEntry(MakeTransactionRef(txn), nFee, nTime, nHeight,
+                           spendsCoinbase, sigOpCount, lp);
 }
 
 void Shutdown(void* parg)
