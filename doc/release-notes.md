@@ -78,13 +78,6 @@ Configuration option changes
   documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/zmq.md#usage)
   for details.
 
-- The `enablebip61` option (introduced in Bitcoin Core 0.17.0) is
-  used to toggle sending of BIP 61 reject messages. Reject messages have no use
-  case on the P2P network and are only logged for debugging by most network
-  nodes. The option will now by default be off for improved privacy and security
-  as well as reduced upload usage. The option can explicitly be turned on for
-  local-network debugging purposes.
-
 - The `rpcallowip` option can no longer be used to automatically listen
   on all network interfaces.  Instead, the `rpcbind` parameter must also
   be used to specify the IP addresses to listen on.  Listening for RPC
@@ -180,6 +173,16 @@ Deprecated or removed RPCs
   RPC gives the same functionality as the old `generate` RPC.  To
   continue using `generate` in this version, restart bitcoind with the
   `-deprecatedrpc=generate` configuration option.
+
+Deprecated P2P messages
+-----------------------
+
+- BIP 61 reject messages are now deprecated. Reject messages have no use
+  case on the P2P network and are only logged for debugging by most network
+  nodes. Furthermore, they increase bandwidth and can be harmful for privacy
+  and security. It has been possible to disable BIP 61 messages since v0.17
+  with the `-enablebip61=0` option. BIP 61 messages will be disabled by default
+  in a future version, before being removed entirely.
 
 New RPCs
 --------
