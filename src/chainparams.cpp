@@ -162,13 +162,13 @@ public:
         nDefaultPort = 8369;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1552236240, 452710, 0x1e0ffff0, 1, 50 * COIN, consensus.nAuxpowChainId);
-        /*uint256 hash;
+        genesis = CreateGenesisBlock(1552236241, 887699, 0x1e0ffff0, 1, 50 * COIN, consensus.nAuxpowChainId);
+       /* uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x00000093d7bae1bbae6fd3f1890dc6cb0fc6d86193b7c2e71af849be7d3a2610"));
-        assert(consensus.hashGenesisBlock == uint256S("0x1b4ab9f52fb1cfe8a20008b444ff3b11bcf277c985f530941e7bcca92ca14473"));
+        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x00000fb809e5c563d0dcb36b795670237aa1d0d522d0632ff3d189ec835afbf1"));
+        assert(consensus.hashGenesisBlock == uint256S("0x9a248c17b4cad29fbbd5f13935918c9882434e3aeadba10a78714479c78b26aa"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
