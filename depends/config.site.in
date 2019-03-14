@@ -67,7 +67,7 @@ fi
 if test -n "@CXX@" -a -z "${CXX}"; then
   CXX="@CXX@"
 fi
-PYTHONPATH=$depends_prefix/native/lib/python/dist-packages:$PYTHONPATH
+PYTHONPATH=$depends_prefix/native/lib/python3/dist-packages:$PYTHONPATH
 
 if test -n "@AR@"; then
   AR=@AR@
