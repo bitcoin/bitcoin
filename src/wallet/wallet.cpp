@@ -4256,7 +4256,6 @@ CTxDestination CWallet::AddAndGetDestinationForScript(const CScript& script, Out
 
 
 // peercoin: create coin stake transaction
-//ppcTODO: replace int64_t with CAmount where it deals with peercoin amounts.
 typedef std::vector<unsigned char> valtype;
 bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int64_t nSearchInterval, CMutableTransaction& txNew)
 {
@@ -4281,22 +4280,22 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     scriptEmpty.clear();
     txNew.vout.push_back(CTxOut(0, scriptEmpty));
     // Choose coins to use
-    int64_t nBalance = GetBalance();
-    int64_t nReserveBalance = 0;
+    CAmount nBalance = GetBalance();
+    CAmount nReserveBalance = 0;
     if (gArgs.IsArgSet("-reservebalance") && !ParseMoney(gArgs.GetArg("-reservebalance", ""), nReserveBalance))
         return error("CreateCoinStake : invalid reserve balance amount");
     if (nBalance <= nReserveBalance)
         return false;
     std::set<CInputCoin> setCoins;
     std::vector<CTransactionRef> vwtxPrev;
-    int64_t nValueIn = 0;
+    CAmount nValueIn = 0;
     std::vector<COutput> vAvailableCoins;
     AvailableCoins(vAvailableCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, txNew.nTime);
     if (!SelectCoins(vAvailableCoins, nBalance - nReserveBalance, setCoins, nValueIn, nullptr))
         return false;
     if (setCoins.empty())
         return false;
-    int64_t nCredit = 0;
+    CAmount nCredit = 0;
     CScript scriptPubKeyKernel;
     for (const auto& pcoin : setCoins)
     {
@@ -4434,7 +4433,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         if (!GetCoinAge(txNew, view, nCoinAge))
             return error("CreateCoinStake : failed to calculate coin age");
 
-        int64_t nReward = GetProofOfStakeReward(nCoinAge);
+        CAmount nReward = GetProofOfStakeReward(nCoinAge);
         // Refuse to create mint that has zero or negative reward
         if(nReward <= 0) {
           return false;
@@ -4442,8 +4441,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         nCredit += nReward;
     }
 
-    int64_t nMinFee = 0;
-    int64_t nMinFeeBase = (IsProtocolV07(txNew.nTime) ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
+    CAmount nMinFee = 0;
+    CAmount nMinFeeBase = (IsProtocolV07(txNew.nTime) ? MIN_TX_FEE : MIN_TX_FEE_PREV7);
     while(true)
     {
         // Set output amount
