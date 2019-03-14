@@ -76,7 +76,7 @@ Writing code
 
 ### Format C/C++/Protobuf diffs with `clang-format-diff.py`
 
-See [contrib/devtools/README.md](contrib/devtools/README.md#clang-format-diff.py).
+See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.py).
 
 ### Format Python diffs with `yapf-diff.py`
 
@@ -136,7 +136,7 @@ This will add an `upstream-pull` remote to your git repository, which can be fet
 
 ### Diff the diffs with `git range-diff`
 
-It is very common for contributors to rebase their pull requests, or make changes to commits (perhaps in response to review) that are not at the head of their branch. This poses a problem for reviewers as when the contributor force pushes, the reviewer is no longer sure that his previous reviews of commits are still valid (as the commit hashes can now be different even though the diff is semantically the same). `git range-diff` can help solve this problem by diffing the diffs.
+It is very common for contributors to rebase their pull requests, or make changes to commits (perhaps in response to review) that are not at the head of their branch. This poses a problem for reviewers as when the contributor force pushes, the reviewer is no longer sure that his previous reviews of commits are still valid (as the commit hashes can now be different even though the diff is semantically the same). [git range-diff](https://git-scm.com/docs/git-range-diff) (Git >= 2.19) can help solve this problem by diffing the diffs.
 
 For example, to identify the differences between your previously reviewed diffs P1-5, and the new diffs P1-2,N3-4 as illustrated below:
 ```
@@ -152,7 +152,19 @@ You can do:
 git range-diff master previously-reviewed-head new-head
 ```
 
-Note that `git range-diff` also work for rebases.
+Note that `git range-diff` also work for rebases:
+
+```
+       P1--P2--P3--P4--P5   <-- previously-reviewed-head
+      /
+...--m--m1--m2--m3   <-- master
+                  \
+                   P1--P2--N3--N4  <-- new-head (with P3 modified, P4 & P5 squashed)
+
+PREV=P5 N=4 && git range-diff `git merge-base --all HEAD $PREV`...$PREV HEAD~$N...HEAD
+```
+
+Where `P5` is the commit you last reviewed and `4` is the number of commits in the new version.
 
 -----
 
