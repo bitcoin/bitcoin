@@ -437,7 +437,7 @@ public:
             vec[p] = (vBytes[p / 8] & (1 << (p % 8))) != 0;
         if (vBytes.size() * 8 != size) {
             size_t rem = vBytes.size() * 8 - size;
-            uint8_t m = (uint8_t)(0xff << rem);
+            uint8_t m = ~(uint8_t)(0xff >> rem);
             if (vBytes[vBytes.size() - 1] & m) {
                 throw std::ios_base::failure("Out-of-range bits set");
             }

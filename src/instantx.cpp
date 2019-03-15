@@ -47,8 +47,8 @@ const std::string CInstantSend::SERIALIZATION_VERSION_STRING = "CInstantSend-Ver
 // Transaction Locks
 //
 // step 1) Some node announces intention to lock transaction inputs via "txlockrequest" message (ix)
-// step 2) Top COutPointLock::SIGNATURES_TOTAL masternodes per each spent outpoint push "txlockvote" message (txlvote)
-// step 3) Once there are COutPointLock::SIGNATURES_REQUIRED valid "txlockvote" messages (txlvote) per each spent outpoint
+// step 2) Top nInstantSendSigsTotal masternodes per each spent outpoint push "txlockvote" message (txlvote)
+// step 3) Once there are nInstantSendSigsRequired valid "txlockvote" messages (txlvote) per each spent outpoint
 //         for a corresponding "txlockrequest" message (ix), all outpoints from that tx are treated as locked
 
 //
@@ -252,7 +252,7 @@ void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
             continue;
         }
 
-        int nSignaturesTotal = COutPointLock::SIGNATURES_TOTAL;
+        int nSignaturesTotal = Params().GetConsensus().nInstantSendSigsTotal;
         if (nRank > nSignaturesTotal) {
             LogPrint("instantsend", "CInstantSend::Vote -- Masternode not in the top %d (%d)\n", nSignaturesTotal, nRank);
             continue;
@@ -1025,7 +1025,7 @@ CAmount CTxLockRequest::GetMinFee(bool fForceMinFee) const
 
 int CTxLockRequest::GetMaxSignatures() const
 {
-    return tx->vin.size() * COutPointLock::SIGNATURES_TOTAL;
+    return tx->vin.size() * Params().GetConsensus().nInstantSendSigsTotal;
 }
 
 bool CTxLockRequest::IsSimple() const
@@ -1087,7 +1087,7 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
 
     LogPrint("instantsend", "CTxLockVote::IsValid -- Masternode %s, rank=%d\n", outpointMasternode.ToStringShort(), nRank);
 
-    int nSignaturesTotal = COutPointLock::SIGNATURES_TOTAL;
+    int nSignaturesTotal = Params().GetConsensus().nInstantSendSigsTotal;
     if (nRank > nSignaturesTotal) {
         LogPrint("instantsend", "CTxLockVote::IsValid -- Masternode %s is not in the top %d (%d), vote hash=%s\n",
                 outpointMasternode.ToStringShort(), nSignaturesTotal, nRank, GetHash().ToString());
@@ -1194,6 +1194,11 @@ std::vector<CTxLockVote> COutPointLock::GetVotes() const
 bool COutPointLock::HasMasternodeVoted(const COutPoint& outpointMasternodeIn) const
 {
     return mapMasternodeVotes.count(outpointMasternodeIn);
+}
+
+bool COutPointLock::IsReady() const
+{
+    return !fAttacked && CountVotes() >= Params().GetConsensus().nInstantSendSigsRequired;
 }
 
 void COutPointLock::Relay(CConnman& connman) const

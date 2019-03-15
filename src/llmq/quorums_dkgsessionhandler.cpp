@@ -376,7 +376,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
 
     for (const auto& p : msgs) {
         if (!p.second) {
-            LogPrint("net", "%s -- failed to deserialize message, peer=%d", __func__, p.first);
+            LogPrint("net", "%s -- failed to deserialize message, peer=%d\n", __func__, p.first);
             {
                 LOCK(cs_main);
                 Misbehaving(p.first, 100);

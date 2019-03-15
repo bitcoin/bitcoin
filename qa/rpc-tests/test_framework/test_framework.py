@@ -479,10 +479,10 @@ class DashTestFramework(BitcoinTestFramework):
             all_ok = True
             for mn in self.mninfo:
                 s = mn.node.quorum("dkgstatus")["session"]
-                if "llmq_10" not in s:
+                if "llmq_5_60" not in s:
                     all_ok = False
                     break
-                s = s["llmq_10"]
+                s = s["llmq_5_60"]
                 if "phase" not in s:
                     all_ok = False
                     break
@@ -508,7 +508,7 @@ class DashTestFramework(BitcoinTestFramework):
                     all_ok = False
                     break
                 s = s["minableCommitments"]
-                if "llmq_10" not in s:
+                if "llmq_5_60" not in s:
                     all_ok = False
                     break
             if all_ok:
@@ -516,7 +516,7 @@ class DashTestFramework(BitcoinTestFramework):
             sleep(0.1)
         raise AssertionError("wait_for_quorum_commitment timed out")
 
-    def mine_quorum(self, expected_valid_count=10):
+    def mine_quorum(self, expected_valid_count=5):
         quorums = self.nodes[0].quorum("list")
 
         # move forward to next DKG
@@ -544,7 +544,7 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 3 (complain) and received all complaints
-        self.wait_for_quorum_phase(3, "receivedComplaints" if expected_valid_count != 10 else None, expected_valid_count)
+        self.wait_for_quorum_phase(3, "receivedComplaints" if expected_valid_count != 5 else None, expected_valid_count)
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)

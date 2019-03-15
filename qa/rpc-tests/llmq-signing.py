@@ -17,7 +17,7 @@ Checks LLMQs signing sessions
 
 class LLMQSigningTest(DashTestFramework):
     def __init__(self):
-        super().__init__(11, 10, [], fast_dip3_enforcement=True)
+        super().__init__(6, 5, [], fast_dip3_enforcement=True)
 
     def run_test(self):
 
@@ -57,13 +57,13 @@ class LLMQSigningTest(DashTestFramework):
         # Initial state
         wait_for_sigs(False, False, False, 1)
 
-        # Sign 5 shares, should not result in recovered sig
-        for i in range(5):
+        # Sign 2 shares, should not result in recovered sig
+        for i in range(2):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
-        self.mninfo[6].node.quorum("sign", 100, id, msgHash)
+        self.mninfo[2].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
@@ -86,9 +86,9 @@ class LLMQSigningTest(DashTestFramework):
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
-        for i in range(4):
+        for i in range(2):
             self.mninfo[i].node.quorum("sign", 100, id, msgHashConflict)
-        for i in range(4, 10):
+        for i in range(2, 5):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 

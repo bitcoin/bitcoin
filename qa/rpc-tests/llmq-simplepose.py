@@ -16,7 +16,7 @@ Checks simple PoSe system based on LLMQ commitments
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def __init__(self):
-        super().__init__(11, 10, [], fast_dip3_enforcement=True)
+        super().__init__(6, 5, [], fast_dip3_enforcement=True)
 
     def run_test(self):
 
@@ -25,7 +25,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # check if mining quorums with all nodes being online succeeds without punishment/banning
         for i in range(3):
-            self.mine_quorum(expected_valid_count=10)
+            self.mine_quorum()
         for mn in self.mninfo:
             assert(not self.check_punished(mn) and not self.check_punished(mn))
 

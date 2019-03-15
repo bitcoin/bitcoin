@@ -14,11 +14,11 @@ InstantSendTest -- test InstantSend functionality (prevent doublespend for uncon
 
 class InstantSendTest(DashTestFramework):
     def __init__(self):
-        super().__init__(14, 10, [], fast_dip3_enforcement=True)
+        super().__init__(9, 5, [], fast_dip3_enforcement=True)
         # set sender,  receiver,  isolated nodes
-        self.isolated_idx = self.num_nodes - 1
-        self.receiver_idx = self.num_nodes - 2
-        self.sender_idx = self.num_nodes - 3
+        self.isolated_idx = 1
+        self.receiver_idx = 2
+        self.sender_idx = 3
 
     def run_test(self):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
@@ -50,7 +50,7 @@ class InstantSendTest(DashTestFramework):
                                        self.nodes[self.isolated_idx],
                                        0.5, 1, 100)
         # stop one node to isolate it from network
-        stop_node(self.nodes[self.isolated_idx], self.isolated_idx)
+        self.nodes[self.isolated_idx].setnetworkactive(False)
         # instantsend to receiver
         receiver_addr = self.nodes[self.receiver_idx].getnewaddress()
         is_id = self.nodes[self.sender_idx].instantsendtoaddress(receiver_addr, 0.9)
@@ -66,10 +66,6 @@ class InstantSendTest(DashTestFramework):
                 break
             sleep(0.1)
         assert(locked)
-        # start last node
-        self.nodes[self.isolated_idx] = start_node(self.isolated_idx,
-                                                   self.options.tmpdir,
-                                                   self.extra_args)
         # send doublespend transaction to isolated node
         self.nodes[self.isolated_idx].sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
@@ -78,11 +74,14 @@ class InstantSendTest(DashTestFramework):
         self.nodes[self.isolated_idx].generate(1)
         wrong_block = self.nodes[self.isolated_idx].getbestblockhash()
         # connect isolated block to network
+        self.nodes[self.isolated_idx].setnetworkactive(True)
         for i in range(0, self.isolated_idx):
             connect_nodes(self.nodes[i], self.isolated_idx)
         # check doublespend block is rejected by other nodes
         timeout = 10
-        for i in range(0, self.isolated_idx):
+        for i in range(0, self.num_nodes):
+            if i == self.isolated_idx:
+                continue
             res = self.nodes[i].waitforblock(wrong_block, timeout)
             assert (res['hash'] != wrong_block)
             # wait for long time only for first node

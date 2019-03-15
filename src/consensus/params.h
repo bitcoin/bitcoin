@@ -48,7 +48,7 @@ enum LLMQType : uint8_t
     LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
 
     // for testing only
-    LLMQ_10_60 = 100, // 10 members, 6 (60%) threshold, one per hour
+    LLMQ_5_60 = 100, // 5 members, 3 (60%) threshold, one per hour
 };
 
 // Configures a LLMQ and its DKG
@@ -124,6 +124,8 @@ struct Params {
     int nMasternodePaymentsIncreasePeriod; // in blocks
     int nInstantSendConfirmationsRequired; // in blocks
     int nInstantSendKeepLock; // in blocks
+    int nInstantSendSigsRequired;
+    int nInstantSendSigsTotal;
     int nBudgetPaymentsStartBlock;
     int nBudgetPaymentsCycleBlocks;
     int nBudgetPaymentsWindowBlocks;

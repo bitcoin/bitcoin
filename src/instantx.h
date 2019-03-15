@@ -310,9 +310,6 @@ private:
     bool fAttacked = false;
 
 public:
-    static const int SIGNATURES_REQUIRED        = 6;
-    static const int SIGNATURES_TOTAL           = 10;
-
     COutPointLock() {}
 
     COutPointLock(const COutPoint& outpointIn) :
@@ -335,7 +332,7 @@ public:
     std::vector<CTxLockVote> GetVotes() const;
     bool HasMasternodeVoted(const COutPoint& outpointMasternodeIn) const;
     int CountVotes() const { return fAttacked ? 0 : mapMasternodeVotes.size(); }
-    bool IsReady() const { return !fAttacked && CountVotes() >= SIGNATURES_REQUIRED; }
+    bool IsReady() const;
     void MarkAsAttacked() { fAttacked = true; }
 
     void Relay(CConnman& connman) const;
