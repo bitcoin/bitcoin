@@ -24,11 +24,11 @@
 #include <outputtype.h>
 
 CMasternode::CMasternode() :
-    masternode_info_t{ MASTERNODE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime(), 0}
+    masternode_info_t{ MASTERNODE_PRE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime(), 0}
 {}
 
 CMasternode::CMasternode(CService addr, COutPoint outpoint, CPubKey pubKeyCollateralAddress, CPubKey pubKeyMasternode, int nProtocolVersionIn, int retries) :
-    masternode_info_t{ MASTERNODE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
+    masternode_info_t{ MASTERNODE_PRE_ENABLED, nProtocolVersionIn, GetAdjustedTime(),
                        outpoint, addr, pubKeyCollateralAddress, pubKeyMasternode, retries}
 {}
 
