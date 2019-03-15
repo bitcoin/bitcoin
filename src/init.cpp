@@ -417,7 +417,7 @@ void SetupServerArgs()
     gArgs.AddArg("-enablebip61", strprintf("Send reject messages per BIP61 (default: %u)", DEFAULT_ENABLE_BIP61), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-externalip=<ip>", "Specify your own public address", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-forcednsseed", strprintf("Always query for peer addresses via DNS lookup (default: %u)", DEFAULT_FORCEDNSSEED), false, OptionsCategory::CONNECTION);
-    gArgs.AddArg("-listen", "Accept connections from outside (default: 1 if no -proxy or -connect)", false, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-listen", DEFAULT_LISTEN, "Accept connections from outside (default: 1 if no -proxy or -connect)", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-listenonion", strprintf("Automatically create Tor hidden service (default: %d)", DEFAULT_LISTEN_ONION), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-maxconnections=<n>", strprintf("Maintain at most <n> connections to peers (default: %u)", DEFAULT_MAX_PEER_CONNECTIONS), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-maxreceivebuffer=<n>", strprintf("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)", DEFAULT_MAXRECEIVEBUFFER), false, OptionsCategory::CONNECTION);
@@ -802,7 +802,7 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -proxy set -> setting -discover=0\n", __func__);
     }
 
-    if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+    if (!gArgs.GetBoolArg("-listen")) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
         if (gArgs.SoftSetBoolArg("-upnp", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -upnp=0\n", __func__);
@@ -963,7 +963,7 @@ bool AppInitParameterInteraction()
 
     // -bind and -whitebind can't be set when not listening
     size_t nUserBind = gArgs.GetArgs("-bind").size() + gArgs.GetArgs("-whitebind").size();
-    if (nUserBind != 0 && !gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
+    if (nUserBind != 0 && !gArgs.GetBoolArg("-listen")) {
         return InitError("Cannot set -bind or -whitebind together with -listen=0");
     }
 
@@ -1410,7 +1410,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
 
     // see Step 2: parameter interactions for more information about these
-    fListen = gArgs.GetBoolArg("-listen", DEFAULT_LISTEN);
+    fListen = gArgs.GetBoolArg("-listen");
     fDiscover = gArgs.GetBoolArg("-discover", true);
     fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 

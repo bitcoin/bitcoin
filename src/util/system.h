@@ -34,7 +34,9 @@
 #include <utility>
 #include <vector>
 
+#include <boost/optional.hpp>
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
+#include <boost/variant.hpp>
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
@@ -137,7 +139,7 @@ protected:
         std::string m_help_param;
         std::string m_help_text;
         bool m_debug_only;
-
+        boost::optional<boost::variant<bool, std::string, int64_t>> default_value;
         Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
     };
 
@@ -259,6 +261,7 @@ public:
      * Add argument
      */
     void AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat);
+    void AddArg(const std::string& name, bool default_value, const std::string& help, const bool debug_only, const OptionsCategory& cat);
 
     /**
      * Add many hidden arguments
@@ -282,6 +285,8 @@ public:
      * Check whether we know of this arg
      */
     bool IsArgKnown(const std::string& key) const;
+
+    void Print() const;
 };
 
 extern ArgsManager gArgs;

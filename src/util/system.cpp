@@ -320,6 +320,50 @@ ArgsManager::ArgsManager() :
     // nothing to do
 }
 
+void ArgsManager::Print() const
+{
+    fprintf(stdout, " datadir:   %s\n", GetDataDir(false).c_str());
+    fprintf(stdout, " blocksdir: %s\n", GetBlocksDir().c_str());
+
+    LOCK(cs_args);
+
+    {
+      fprintf(stdout, "---------\n");
+      for (auto x : m_config_args) {
+        for (auto y : x.second) {
+            fprintf(stdout, " * %s: %s\n", x.first.c_str(), y.c_str());
+        }
+      }
+    }
+    {
+      fprintf(stdout, "---------\n");
+      for (auto x : m_override_args) {
+        for (auto y : x.second) {
+            fprintf(stdout, " * %s: %s\n", x.first.c_str(), y.c_str());
+        }
+      }
+    }
+    {
+        fprintf(stdout, "---------\n");
+        for (auto x : m_available_args) {
+            for (auto y : x.second) {
+                if (!y.second.default_value) continue;
+                fprintf(stdout, "%s=", y.first.c_str());
+                auto default_value = *y.second.default_value;
+                if (default_value.which() == 0) {
+                    fprintf(stdout, GetBoolArg(y.first, boost::get<bool>(default_value)) ? "true" : "false");
+                }
+                printf("\n");
+                // for (auto z : ) {
+                //     fprintf(stdout, " * %s: %s\n", y.first.c_str(), z.c_str());
+                // }
+            }
+        }
+    }
+
+    //std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
+
+}
 const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
 {
     std::set<std::string> unsuitables;
@@ -550,6 +594,21 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, const
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
     auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    assert(ret.second); // Make sure an insertion actually happened
+}
+
+void ArgsManager::AddArg(const std::string& name, bool default_value, const std::string& help, const bool debug_only, const OptionsCategory& cat)
+{
+    // Split arg name from its help param
+    size_t eq_index = name.find('=');
+    if (eq_index == std::string::npos) {
+        eq_index = name.size();
+    }
+
+    LOCK(cs_args);
+    std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    auto ret = arg_map.emplace(name.substr(0, eq_index), Arg(name.substr(eq_index, name.size() - eq_index), help, debug_only));
+    ret.first->second.default_value = default_value;
     assert(ret.second); // Make sure an insertion actually happened
 }
 
