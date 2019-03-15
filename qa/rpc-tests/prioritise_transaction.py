@@ -131,7 +131,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         mock_time = get_mocktime()
         self.nodes[0].setmocktime(mock_time)
         template = self.nodes[0].getblocktemplate()
-        self.nodes[0].prioritisetransaction(tx2_id, -int(self.relayfee*COIN))
+        self.nodes[0].prioritisetransaction(tx_id, -int(self.relayfee*COIN))
         self.nodes[0].setmocktime(mock_time+10)
         new_template = self.nodes[0].getblocktemplate()
 

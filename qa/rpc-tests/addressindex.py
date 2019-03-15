@@ -120,7 +120,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True, False, True)
+        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
 
         self.nodes[0].generate(1)
         self.sync_all()
@@ -144,12 +144,13 @@ class AddressIndexTest(BitcoinTestFramework):
 
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
+        tx_fee_sat = 1000
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
-        amount = int(unspent[0]["amount"] * 100000000)
+        amount = int(unspent[0]["amount"] * 100000000) - tx_fee_sat
         tx.vout = [CTxOut(amount, scriptPubKey2)]
         tx.rehash()
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True, False, True)
+        spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()
         balance1 = self.nodes[1].getaddressbalance(address2)
@@ -163,7 +164,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True, False, True)
+        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -241,17 +242,17 @@ class AddressIndexTest(BitcoinTestFramework):
 
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
-        amount = int(unspent[0]["amount"] * 100000000)
+        amount = int(unspent[0]["amount"] * 100000000) - tx_fee_sat
         tx.vout = [CTxOut(amount, scriptPubKey3)]
         tx.rehash()
         signed_tx = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True, False, True)
+        memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
         set_mocktime(get_mocktime() + 2)
         set_node_times(self.nodes, get_mocktime())
 
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
-        amount = int(unspent[1]["amount"] * 100000000)
+        amount = int(unspent[1]["amount"] * 100000000) - tx_fee_sat
         tx2.vout = [
             CTxOut(int(amount / 4), scriptPubKey3),
             CTxOut(int(amount / 4), scriptPubKey3),
@@ -260,7 +261,7 @@ class AddressIndexTest(BitcoinTestFramework):
         ]
         tx2.rehash()
         signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
-        memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True, False, True)
+        memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
         set_mocktime(get_mocktime() + 2)
         set_node_times(self.nodes, get_mocktime())
 
@@ -288,7 +289,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
         signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True, False, True)
+        memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
         set_mocktime(get_mocktime() + 2)
         set_node_times(self.nodes, get_mocktime())
 
@@ -321,7 +322,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.rehash()
         self.nodes[0].importprivkey(privkey1)
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        mem_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True, False, True)
+        mem_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
 
         self.sync_all()
         mempool_deltas = self.nodes[2].getaddressmempool({"addresses": [address1]})

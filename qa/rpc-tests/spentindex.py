@@ -52,13 +52,15 @@ class SpentIndexTest(BitcoinTestFramework):
         scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
-        amount = int(unspent[0]["amount"] * COIN)
+        tx_fee = Decimal('0.00001')
+        tx_fee_sat = int(tx_fee * COIN)
+        amount = int(unspent[0]["amount"] * COIN) - tx_fee_sat
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
-        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True, False, True)
+        txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -81,7 +83,7 @@ class SpentIndexTest(BitcoinTestFramework):
         # Check that verbose raw transaction includes input values
         txVerbose2 = self.nodes[3].getrawtransaction(txid, 1)
         assert_equal(txVerbose2["vin"][0]["value"], Decimal(unspent[0]["amount"]))
-        assert_equal(txVerbose2["vin"][0]["valueSat"], amount)
+        assert_equal(txVerbose2["vin"][0]["valueSat"] - tx_fee_sat, amount)
 
         # Check that verbose raw transaction includes address values and input values
         privkey2 = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
@@ -94,13 +96,13 @@ class SpentIndexTest(BitcoinTestFramework):
         tx2.rehash()
         self.nodes[0].importprivkey(privkey)
         signed_tx2 = self.nodes[0].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
-        txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True, False, True)
+        txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True)
 
         # Check the mempool index
         self.sync_all()
         txVerbose3 = self.nodes[1].getrawtransaction(txid2, 1)
         assert_equal(txVerbose3["vin"][0]["address"], address2)
-        assert_equal(txVerbose3["vin"][0]["value"], Decimal(unspent[0]["amount"]))
+        assert_equal(txVerbose3["vin"][0]["value"], Decimal(unspent[0]["amount"]) - tx_fee)
         assert_equal(txVerbose3["vin"][0]["valueSat"], amount)
 
         # Check the database index
@@ -109,7 +111,7 @@ class SpentIndexTest(BitcoinTestFramework):
 
         txVerbose4 = self.nodes[3].getrawtransaction(txid2, 1)
         assert_equal(txVerbose4["vin"][0]["address"], address2)
-        assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
+        assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]) - tx_fee)
         assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
 
         self.log.info("Passed")

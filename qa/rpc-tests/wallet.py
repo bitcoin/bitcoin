@@ -92,27 +92,30 @@ class WalletTest (BitcoinTestFramework):
         node0utxos = self.nodes[0].listunspent(1)
         assert_equal(len(node0utxos), 2)
 
+        fee_per_input = Decimal('0.00001')
+        totalfee = 0
         # create both transactions
         txns_to_send = []
         for utxo in node0utxos:
             inputs = []
             outputs = {}
             inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]})
-            outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"]
+            outputs[self.nodes[2].getnewaddress("from1")] = utxo["amount"] - fee_per_input
             raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
             txns_to_send.append(self.nodes[0].signrawtransaction(raw_tx))
+            totalfee += fee_per_input
 
         # Have node 1 (miner) send the transactions
-        self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"], True, False, True)
-        self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"], True, False, True)
+        self.nodes[1].sendrawtransaction(txns_to_send[0]["hex"])
+        self.nodes[1].sendrawtransaction(txns_to_send[1]["hex"])
 
         # Have node1 mine a block to confirm transactions:
         self.nodes[1].generate(1)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), 1000)
-        assert_equal(self.nodes[2].getbalance("from1"), 1000-210)
+        assert_equal(self.nodes[2].getbalance(), 1000 - totalfee)
+        assert_equal(self.nodes[2].getbalance("from1"), 1000 - 210 - totalfee)
 
         # Send 100 DASH normal
         address = self.nodes[0].getnewaddress("test")
@@ -121,7 +124,7 @@ class WalletTest (BitcoinTestFramework):
         txid = self.nodes[2].sendtoaddress(address, 100, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all()
-        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('900'), fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
+        node_2_bal = self.check_fee_amount(self.nodes[2].getbalance(), Decimal('900') - totalfee, fee_per_byte, count_bytes(self.nodes[2].getrawtransaction(txid)))
         assert_equal(self.nodes[0].getbalance(), Decimal('100'))
 
         # Send 100 DASH with subtract fee from amount
