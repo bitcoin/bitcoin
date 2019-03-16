@@ -836,6 +836,16 @@ UniValue dumpwallet(const JSONRPCRequest& request)
             file << strprintf("%d ", p.second->m_purpose);
             file << strprintf("%s", p.second->m_descriptor->ToString().c_str());
             file << "\n";
+            if (p.second->m_addresses.size()) {
+                for (auto& a : p.second->m_addresses) {
+                    CTxDestination dest = p.second->GetDestination(a);
+                    file << strprintf("%lu ", p.second->m_id);
+                    file << strprintf("%lu ", a.m_index);
+                    file << strprintf("%s ", EncodeDestination(dest).c_str());
+                    file << strprintf("%s", a.m_label.c_str());
+                    file << "\n";
+                }
+            }
         }
     } else {
         // add the base58check encoded extended master if the wallet uses HD
