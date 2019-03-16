@@ -22,6 +22,23 @@
 #include <boost/thread.hpp>
 
 //
+// WalletDescriptor
+//
+
+CTxDestination WalletDescriptor::GetDestination(DescriptorAddress& dAddr) {
+    std::vector<CScript> output_scripts;
+    bool success = m_descriptor->ExpandFromCache(dAddr.m_index, dAddr.m_cache, output_scripts, m_provider);
+    assert(success);
+    assert(output_scripts.size() == 1);
+
+    CTxDestination dest;
+    success = ExtractDestination(output_scripts[0], dest);
+    assert(success);
+
+    return dest;
+}
+
+//
 // WalletBatch
 //
 
@@ -123,6 +140,11 @@ bool WalletBatch::WriteDescriptor(WalletDescriptor* wdesc)
 {
     assert(wdesc != nullptr);
     return WriteIC(std::make_pair(std::string("descriptor"), wdesc->m_id), *wdesc, true);
+}
+
+bool WalletBatch::WriteDescriptorAddress(uint64_t wdesc_id, DescriptorAddress& descAddr)
+{
+    return WriteIC(std::make_pair(std::string("descriptor_address"), std::make_pair(wdesc_id, descAddr.m_index)), descAddr, true);
 }
 
 bool WalletBatch::WriteBestBlock(const CBlockLocator& locator)
@@ -441,6 +463,16 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: unable to process descriptor";
                 return false;
             }
+        } else if (strType == "descriptor_address") {
+            uint64_t wdesc_id;
+            ssKey >> wdesc_id;
+            uint64_t index;
+            ssKey >> index;
+
+            DescriptorAddress wAddr;
+            ssValue >> wAddr;
+
+            pwallet->LoadDescriptorAddress(wdesc_id, index, wAddr);
         } else if (strType != "bestblock" && strType != "bestblock_nomerkle" &&
                 strType != "minversion" && strType != "acentry") {
             wss.m_unknown_records++;

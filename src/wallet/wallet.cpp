@@ -527,6 +527,68 @@ bool CWallet::HaveAddressSourceDescriptor(bool internal, AddressType address_typ
     return false;
 }
 
+bool CWallet::PickFromAddressSourceDescriptor(CTxDestination &newAddress, bool internal, AddressType address_type, std::string label)
+{
+    for (auto& pair : m_descriptors) {
+        if (
+            pair.second->m_purpose == (internal ? DESCRIPTOR_PURPOSE_CHANGE_CURRENT : DESCRIPTOR_PURPOSE_RECEIVE_CURRENT)
+            && pair.second->m_descriptor->GetAddressType() == address_type
+        ) {
+            auto& desc = pair.second->m_descriptor;
+
+            int64_t index = pair.second->m_addresses.size();
+
+            FlatSigningProvider provider;
+            std::vector<CScript> scripts;
+            std::vector<unsigned char> cache;
+            if (!desc->Expand(index, pair.second->m_provider, scripts, pair.second->m_provider, &cache)) {
+                // Cannot derive script without private keys
+                assert(false);
+            }
+
+            assert(scripts.size() == 1);
+
+            if (!ExtractDestination(scripts[0], newAddress)) {
+                // Descriptor does not have a corresponding address (this is prevented by importdescriptor)
+                assert(false);
+            }
+
+            // TODO: notification similar to NotifyAddressBookChanged
+
+            if (!AddDescriptorAddress(pair.second->m_id, index, label, &cache)) {
+                assert(false);
+            }
+
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CWallet::LoadDescriptorAddress(uint64_t wdesc_id, uint64_t index, DescriptorAddress dAddr)
+{
+    assert(m_descriptors.size() >= wdesc_id); // WalletDescriptor is stored and loaded before its WalletAddress entries
+    auto &wDesc = m_descriptors[wdesc_id];
+    assert(wDesc->m_addresses.size() == index); // WalletAddress entries are stored and loaded in sequence
+    wDesc->m_addresses.push_back(dAddr);
+    return true;
+}
+
+bool CWallet::AddDescriptorAddress(uint64_t wdesc_id, uint64_t index, std::string label, std::vector<unsigned char>* cache)
+{
+    assert(m_descriptors.size() >= wdesc_id);
+    int64_t nCreateTime = GetTime();
+    assert(cache != nullptr);
+    DescriptorAddress dAddr(nCreateTime, index, label, *cache);
+
+    if (!WalletBatch(*database).WriteDescriptorAddress(wdesc_id, dAddr)) {
+        return false;
+    }
+
+    bool res = LoadDescriptorAddress(wdesc_id, index, dAddr);
+    return res;
+}
+
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
 {
     CCrypter crypter;

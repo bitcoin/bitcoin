@@ -11,6 +11,7 @@
 #include <primitives/transaction.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
+#include <script/standard.h>
 #include <wallet/db.h>
 
 #include <list>
@@ -143,6 +144,39 @@ public:
     }
 };
 
+/* Descriptor address model for the wallet */
+class DescriptorAddress
+{
+public:
+    static const int VERSION_BASIC=1;
+    static const int CURRENT_VERSION=VERSION_BASIC;
+    int nVersion;
+    int64_t nCreateTime;
+    int64_t m_index;
+    std::string m_label;
+    std::vector<unsigned char> m_cache;
+
+    DescriptorAddress() {}
+
+    explicit DescriptorAddress(int64_t nCreateTime_, int64_t index_, std::string label_, std::vector<unsigned char> cache_) :
+        nCreateTime(nCreateTime_), m_index(index_), m_label(label_), m_cache(cache_)
+    {
+        nVersion = DescriptorAddress::CURRENT_VERSION;
+        m_index = index_;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(this->nVersion);
+        READWRITE(nCreateTime);
+        READWRITE(m_index);
+        READWRITE(m_label);
+        READWRITE(m_cache);
+    }
+};
+
 static const int DESCRIPTOR_PURPOSE_RECEIVE_CURRENT = 1;
 static const int DESCRIPTOR_PURPOSE_CHANGE_CURRENT  = 2;
 static const int DESCRIPTOR_PURPOSE_RECEIVE_ARCHIVE = 3;
@@ -162,6 +196,8 @@ public:
     int m_purpose;
     FlatSigningProvider m_provider;
 
+    std::vector<DescriptorAddress> m_addresses;
+
     WalletDescriptor() {}
 
     explicit WalletDescriptor(std::unique_ptr<Descriptor>descriptor_, int64_t nCreateTime_, uint64_t id_, int purpose_) :
@@ -180,6 +216,8 @@ public:
             m_descriptor = Parse(m_descriptor_string, m_provider, /* require_checksum = */ true);
         }
     }
+
+    CTxDestination GetDestination(DescriptorAddress& dAddr);
 
     ADD_SERIALIZE_METHODS;
 
@@ -250,6 +288,8 @@ public:
     bool EraseWatchOnly(const CScript &script);
 
     bool WriteDescriptor(WalletDescriptor *wdesc);
+
+    bool WriteDescriptorAddress(uint64_t wdesc_id, DescriptorAddress& descAddr);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);

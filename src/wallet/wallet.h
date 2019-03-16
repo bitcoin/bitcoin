@@ -911,6 +911,11 @@ public:
     bool AddDescriptor(std::unique_ptr<Descriptor>descriptor, int purpose, int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool HaveAddressSourceDescriptor(bool internal, AddressType address_type) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
+    bool PickFromAddressSourceDescriptor(CTxDestination &newAddress, bool internal, AddressType address_type, std::string label) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
+    bool LoadDescriptorAddress(uint64_t wdesc_id, uint64_t index, DescriptorAddress dAddr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddDescriptorAddress(uint64_t wdesc_id, uint64_t index, std::string label, std::vector<unsigned char>* cache) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime = 0;
 
