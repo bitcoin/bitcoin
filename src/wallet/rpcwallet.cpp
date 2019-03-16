@@ -160,7 +160,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
                 "so payments received with the address will be associated with 'label'.\n",
                 {
                     {"label", RPCArg::Type::STR, /* default */ "\"\"", "The label name for the address to be linked to. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name."},
-                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
+                    {"address_type", RPCArg::Type::STR, /* default */ "set by -addresstype", "The address type to use. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\". Use \"legacy\" instead of \"p2sh-segwit\" in descriptor based wallets."},
                 },
                 RPCResult{
             "\"address\"    (string) The new bitcoin address\n"
@@ -172,10 +172,6 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
             }.ToString());
 
     LOCK(pwallet->cs_wallet);
-
-    if (!pwallet->CanGetAddresses()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
-    }
 
     // Parse the label first so we don't generate a key if there's an error
     std::string label;
@@ -189,21 +185,59 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
         }
     }
 
-    if (!pwallet->IsLocked()) {
-        pwallet->TopUpKeyPool();
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        AddressType address_type;
+        switch (output_type) {
+        case OutputType::LEGACY:
+            address_type = AddressType::BASE58;
+            break;
+        case OutputType::BECH32:
+            address_type = AddressType::BECH32;
+            break;
+        case OutputType::P2SH_SEGWIT:
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("address_type must be %s or %s. Use %s for base58 addresses, including p2sh wrapped SegWit.", FormatAddressType(AddressType::BASE58), FormatAddressType(AddressType::BECH32), FormatAddressType(AddressType::BASE58)));
+        default:
+            assert(false);
+        }
+
+        // TODO: expand any descriptors with hardened derivation if wallet is unlocked
+        // if (!pwallet->IsLocked()) {
+        //     pwallet->TopUpKeyPool();
+        // }
+
+        if (!pwallet->HaveAddressSourceDescriptor(/* change */ false, address_type)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error: This wallet has no descriptor for %s receive addresses", FormatAddressType(address_type)));
+        }
+
+        CTxDestination newAddress;
+        if (!pwallet->PickFromAddressSourceDescriptor(newAddress, /* change */ false, address_type, label)) {
+            assert(false);
+            // TODO: if wallet is unlocked, a descriptor with hardened derivation needs to be expanded first
+            // throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        }
+
+        return EncodeDestination(newAddress);
+    } else {
+        if (!pwallet->CanGetAddresses()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
+        }
+
+        if (!pwallet->IsLocked()) {
+            pwallet->TopUpKeyPool();
+        }
+
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwallet->GetKeyFromPool(newKey)) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        }
+        pwallet->LearnRelatedScripts(newKey, output_type);
+        CTxDestination dest = GetDestinationForKey(newKey, output_type);
+
+        pwallet->SetAddressBook(dest, label, "receive");
+
+        return EncodeDestination(dest);
     }
-
-    // Generate a new key that is added to wallet
-    CPubKey newKey;
-    if (!pwallet->GetKeyFromPool(newKey)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    }
-    pwallet->LearnRelatedScripts(newKey, output_type);
-    CTxDestination dest = GetDestinationForKey(newKey, output_type);
-
-    pwallet->SetAddressBook(dest, label, "receive");
-
-    return EncodeDestination(dest);
 }
 
 static UniValue getrawchangeaddress(const JSONRPCRequest& request)
