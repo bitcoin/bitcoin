@@ -17,6 +17,17 @@
 # error "Dash Core cannot be compiled without assertions."
 #endif
 
+// Assumption: We assume a C++11 (ISO/IEC 14882:2011) compiler (minimum requirement).
+// Example(s): We assume the presence of C++11 features everywhere :-)
+// Note:       MSVC does not report the expected __cplusplus value due to legacy
+//             reasons.
+#if !defined(_MSC_VER)
+// ISO Standard C++11 [cpp.predefined]p1:
+// "The name __cplusplus is defined to the value 201103L when compiling a C++
+//  translation unit."
+static_assert(__cplusplus >= 201103L, "C++11 standard assumed");
+#endif
+
 // Assumption: We assume the floating-point types to fulfill the requirements of
 //             IEC 559 (IEEE 754) standard.
 // Example(s): Floating-point division by zero in ConnectBlock, CreateTransaction
@@ -40,8 +51,13 @@ static_assert(sizeof(double) == 8, "64-bit double assumed");
 static_assert(sizeof(short) == 2, "16-bit short assumed");
 static_assert(sizeof(int) == 4, "32-bit int assumed");
 
+// Assumption: We assume size_t to be 32-bit or 64-bit.
+// Example(s): size_t assumed to be at least 32-bit in ecdsa_signature_parse_der_lax(...).
+//             size_t assumed to be 32-bit or 64-bit in MallocUsage(...).
+static_assert(sizeof(size_t) == 4 || sizeof(size_t) == 8, "size_t assumed to be 32-bit or 64-bit");
+static_assert(sizeof(size_t) == sizeof(void*), "Sizes of size_t and void* assumed to be equal");
+
 // Some important things we are NOT assuming (non-exhaustive list):
-// * We are NOT assuming a specific value for sizeof(std::size_t).
 // * We are NOT assuming a specific value for std::endian::native.
 // * We are NOT assuming a specific value for std::locale("").name().
 // * We are NOT assuming a specific value for std::numeric_limits<char>::is_signed.
