@@ -2959,58 +2959,37 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     if (strCommand == NetMsgType::PONG) {
-        int64_t pingUsecEnd = nTimeReceived;
+        // We didn't send a ping, there shouldn't be a pong
+        if (pfrom->nPingNonceSent == 0) {
+            LogPrint(BCLog::NET, "pong peer=%d: unsolicited pong\n", pfrom->GetId());
+            return true;
+        }
+
         uint64_t nonce = 0;
         size_t nAvail = vRecv.in_avail();
-        bool bPingFinished = false;
-        std::string sProblem;
-
-        if (nAvail >= sizeof(nonce)) {
-            vRecv >> nonce;
-
-            // Only process pong message if there is an outstanding ping (old ping without nonce should never pong)
-            if (pfrom->nPingNonceSent != 0) {
-                if (nonce == pfrom->nPingNonceSent) {
-                    // Matching pong received, this ping is no longer outstanding
-                    bPingFinished = true;
-                    int64_t pingUsecTime = pingUsecEnd - pfrom->nPingUsecStart;
-                    if (pingUsecTime > 0) {
-                        // Successful ping time measurement, replace previous
-                        pfrom->nPingUsecTime = pingUsecTime;
-                        pfrom->nMinPingUsecTime = std::min(pfrom->nMinPingUsecTime.load(), pingUsecTime);
-                    } else {
-                        // This should never happen
-                        sProblem = "Timing mishap";
-                    }
-                } else {
-                    // Nonce mismatches are normal when pings are overlapping
-                    sProblem = "Nonce mismatch";
-                    if (nonce == 0) {
-                        // This is most likely a bug in another implementation somewhere; cancel this ping
-                        bPingFinished = true;
-                        sProblem = "Nonce zero";
-                    }
-                }
-            } else {
-                sProblem = "Unsolicited pong without ping";
-            }
-        } else {
-            // This is most likely a bug in another implementation somewhere; cancel this ping
-            bPingFinished = true;
-            sProblem = "Short payload";
-        }
-
-        if (!(sProblem.empty())) {
-            LogPrint(BCLog::NET, "pong peer=%d: %s, %x expected, %x received, %u bytes\n",
-                pfrom->GetId(),
-                sProblem,
-                pfrom->nPingNonceSent,
-                nonce,
-                nAvail);
-        }
-        if (bPingFinished) {
+        if (nAvail != sizeof(nonce)) {
+            LogPrint(BCLog::NET, "pong peer=%d: bad buffer length, expected %u actual %u\n", pfrom->GetId(), sizeof(nonce), nAvail);
             pfrom->nPingNonceSent = 0;
+            return true;
         }
+
+        vRecv >> nonce;
+        if (nonce != pfrom->nPingNonceSent) {
+            LogPrint(BCLog::NET, "pong peer=%d: nonce mismatch, expected %x actual %x\n", pfrom->GetId(), pfrom->nPingNonceSent, nonce);
+            pfrom->nPingNonceSent = 0;
+            return true;
+        }
+
+        int64_t pingUsecTime = nTimeReceived - pfrom->nPingUsecStart;
+        if (pingUsecTime >= 0) {
+            // Successful ping time measurement, replace previous
+            pfrom->nPingUsecTime = pingUsecTime;
+            pfrom->nMinPingUsecTime = std::min(pfrom->nMinPingUsecTime.load(), pingUsecTime);
+        } else {
+            LogPrint(BCLog::NET, "pong peer=%d: received pong before ping sent, maybe clock changed?\n", pfrom->GetId());
+        }
+
+        pfrom->nPingNonceSent = 0;
         return true;
     }
 
