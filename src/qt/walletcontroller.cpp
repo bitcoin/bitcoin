@@ -9,6 +9,7 @@
 
 #include <algorithm>
 
+#include <QApplication>
 #include <QMessageBox>
 #include <QMutexLocker>
 #include <QThread>
@@ -97,7 +98,16 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     m_wallets.push_back(wallet_model);
 
     connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
-        removeAndDeleteWallet(wallet_model);
+        // Defer removeAndDeleteWallet when no modal widget is active.
+        if (QApplication::activeModalWidget()) {
+            connect(qApp, &QApplication::focusChanged, wallet_model, [this, wallet_model]() {
+                if (!QApplication::activeModalWidget()) {
+                    removeAndDeleteWallet(wallet_model);
+                }
+            }, Qt::QueuedConnection);
+        } else {
+            removeAndDeleteWallet(wallet_model);
+        }
     });
 
     // Re-emit coinsSent signal from wallet model.
