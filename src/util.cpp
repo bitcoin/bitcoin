@@ -1141,7 +1141,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
-    LogPrintf("%s: Starting geth...\n", __func__);
+    LogPrintf("%s: Starting geth on wsport (testnet=%d)...\n", __func__, websocketport, bGethTestnet? 1:0);
     std::string gethFilename = GetGethFilename();
     
     // stop any geth nodes before starting
@@ -1204,7 +1204,8 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
     #endif
-    LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
+    if(pid > 0)
+        LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
     return true;
 }
 
@@ -1265,7 +1266,7 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
 {
     if(fUnitTest || fTPSTest)
         return true;
-    LogPrintf("%s: Starting relayer...\n", __func__);
+    LogPrintf("%s: Starting relayer on port %d, rpcuser %s, rpcpassword %s, wsport %d...\n", __func__, rpcport, rpcuser, rpcpassword, websocketport);
     std::string relayerFilename = GetRelayerFilename();
     
     // stop any relayer process  before starting
@@ -1295,7 +1296,6 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
-            LogPrintf("StartRelayerNode: Starting with parameters %s %s %s %s %s %s %s %s\n", argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7], argv[8]);       
             execvp(argv[0], &argv[0]);
         }
         else{
@@ -1309,8 +1309,7 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
 				std::string("--ethwsport ") + portStr + 
 				std::string(" --sysrpcuser ") + rpcuser +
 				std::string(" --sysrpcpw ") + rpcpassword +
-				std::string(" --sysrpcport ") + rpcPortStr;
-        LogPrintf("StartRelayerNode: Starting with parameters %s\n", args);               
+				std::string(" --sysrpcport ") + rpcPortStr;              
         pid = fork(fpath.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Could not start Relayer\n");
@@ -1319,7 +1318,8 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
         boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
 	#endif
-    LogPrintf("%s: Relayer started with pid %d\n", __func__, pid);
+    if(pid > 0)
+        LogPrintf("%s: Relayer started with pid %d\n", __func__, pid);
     return true;
 }
 #ifndef WIN32
