@@ -1152,7 +1152,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         CloseSocket(hSocket);
         return;
     }
-    if(!fGethSynced && !fLiteMode && !fUnitTest && !fTPSTest) {
+    if(fMasternodeMode && !fGethSynced && !fUnitTest && !fTPSTest) {
         LogPrintf("AcceptConnection -- Geth is not synced yet, skipping inbound connection attempt\n");
         CloseSocket(hSocket);
         return;

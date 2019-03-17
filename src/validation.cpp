@@ -575,11 +575,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
     }
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
-    if(!ibd && !fLiteMode && fLoaded){
-        if(!fGethSynced){
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Geth is not synced");
-            return state.DoS(0, false, REJECT_INVALID, errorMessage);
-        }
+    if(!ibd && !fLiteMode && fLoaded && fGethSynced){
         std::vector<unsigned char> vchTxRoot;
         int32_t cutoffHeight;
        
