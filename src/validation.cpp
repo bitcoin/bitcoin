@@ -3130,26 +3130,6 @@ static int GetWitnessCommitmentIndex(const CBlock& block)
     return commitpos;
 }
 
-// Compute at which vout of the block's coinbase transaction the signet
-// signature occurs, or -1 if not found.
-static int GetSignetSignatureIndex(const CBlock& block)
-{
-    if (!block.vtx.empty()) {
-        for (size_t o = 0; o < block.vtx[0]->vout.size(); o++) {
-            if (block.vtx[0]->vout[o].scriptPubKey.size() >= 68     // at minimum 64 byte signature plus script/header data
-             && block.vtx[0]->vout[o].scriptPubKey[0] == OP_RETURN  // unspendable
-             && block.vtx[0]->vout[o].scriptPubKey[1] == block.vtx[0]->vout[o].scriptPubKey.size() - 1 // push the rest
-             && block.vtx[0]->vout[o].scriptPubKey[2] == 0xec       // 's' ^ 0x9f
-             && block.vtx[0]->vout[o].scriptPubKey[3] == 0xc7       // 'i' ^ 0xae
-             && block.vtx[0]->vout[o].scriptPubKey[4] == 0xda       // 'g' ^ 0xbd
-             && block.vtx[0]->vout[o].scriptPubKey[5] == 0xa2) {    // 'n' ^ 0xcc
-                return (int)o;
-            }
-        }
-    }
-    return -1;
-}
-
 void UpdateUncommittedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
     int commitpos = GetWitnessCommitmentIndex(block);
