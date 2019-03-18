@@ -321,7 +321,10 @@ public:
         READWRITE(protocolVersion);
         READWRITE(lastPing);
         READWRITE(nLastDsq);
-        READWRITE(vchSignover);
+        if (protocolVersion >= PROTOCOL_POS_START)
+        {
+            READWRITE(vchSignover);
+        }
     }
 
     uint256 GetHash() const

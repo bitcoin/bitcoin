@@ -705,11 +705,15 @@ std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight) const
 
 CAmount CBudgetManager::GetTotalBudget(int nHeight)
 {
-
     if(chainActive.Tip() == NULL) return 0;
 
     //get min block value and calculate from that
     CAmount nSubsidy = 12 * COIN;
+    if (nHeight >= Params().PoSStartHeight())
+    {
+        nSubsidy = 10 * COIN;
+    }
+
     int halvings = nHeight / Params().SubsidyHalvingInterval();
 
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.

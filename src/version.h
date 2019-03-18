@@ -9,8 +9,8 @@
 /**
  * network protocol versioning
  */
-static const int PROTOCOL_VERSION = 71060;
-static const int PROTOCOL_POS_START = 71060;
+static const int PROTOCOL_VERSION = 71061;
+static const int PROTOCOL_POS_START = 71061;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -29,7 +29,7 @@ static const int MIN_BUDGET_PEER_PROTO_VERSION = PROTOCOL_POS_START;
 static const int MIN_MNW_PEER_PROTO_VERSION = PROTOCOL_POS_START;
 
 //! minimum version to get version 2 masternode ping messages
-static const int MIN_MNW_PING_VERSION = 71060;
+static const int MIN_MNW_PING_VERSION = 71061;
 
 //! minimum peer version that can receive masternode payments
 // V1 - Last protocol version before update

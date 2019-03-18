@@ -215,6 +215,7 @@ public:
         nTargetSpacing = 1 * 60; // Crown: 1 minutes
         nMaxTipAge = 6 * 60 * 60;
 
+        nBlockPoSStart = 2330000;
         nAuxpowChainId = 20;
         nPoSChainId = 22;
         nStakePointerValidityPeriod = 1440; //Stake pointers are valid to stake with for the next 1 day worth of blocks

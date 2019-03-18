@@ -801,6 +801,12 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (nFD - MIN_CORE_FILEDESCRIPTORS < nMaxConnections)
         nMaxConnections = nFD - MIN_CORE_FILEDESCRIPTORS;
 
+    // -masternode or -systemnode imply staking
+    if (GetBoolArg("-masternode", false) || GetBoolArg("-systemnode", false)) {
+        if (SoftSetBoolArg("-staking", true))
+            LogPrintf("AppInit2 : parameter interaction: -masternode or -systemnode -> setting -staking=1\n");
+    }
+
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     fDebug = !mapMultiArgs["-debug"].empty();

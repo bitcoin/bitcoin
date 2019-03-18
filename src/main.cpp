@@ -1646,9 +1646,14 @@ double ConvertBitsToDouble(unsigned int nBits)
     return dDiff;
 }
 
-int64_t GetBlockValue(int nHeight, const CAmount &nFees)
+int64_t GetSubsidy(int nHeight, const CAmount &nFees)
 {
     int64_t nSubsidy = 12 * COIN;
+    if (nHeight >= Params().PoSStartHeight())
+    {
+        nSubsidy = 10 * COIN;
+    }
+
     int halvings = nHeight / Params().SubsidyHalvingInterval();
 
     // Force block reward to zero when right shift is undefined.
@@ -1657,22 +1662,28 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
 
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
+    return nSubsidy;
+}
 
+int64_t GetBlockValue(int nHeight, const CAmount &nFees)
+{
+    int64_t nSubsidy = GetSubsidy(nHeight, nFees);
     if (Params().NetworkID() == CBaseChainParams::DEVNET)
     {
         if (nHeight == 2)
             return 1000000 * COIN;
     }
 
+    int64_t budgetValue = nSubsidy * 0.25; // budget payment is 25%
     if (Params().NetworkID() == CBaseChainParams::TESTNET)
     {
         if (nHeight > 20000)
-            nSubsidy -= nSubsidy * 0.25; // budget payment is 25%
+            nSubsidy -= budgetValue;
     } 
     else
     {
         if (nHeight > 1265000)
-            nSubsidy -= nSubsidy * 0.25; // budget payment is 25%
+            nSubsidy -= budgetValue;
     }
 
     return nSubsidy + nFees;
@@ -1680,14 +1691,23 @@ int64_t GetBlockValue(int nHeight, const CAmount &nFees)
 
 int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
 {
-    int64_t ret = blockValue*0.5; // start at 50%
-
+    // 25% percent is already taken for budget
+    int64_t ret = (blockValue * 37.5) / 75; // 37.5%
+    if (nHeight >= Params().PoSStartHeight())
+    {
+        ret = (blockValue * 37) / 75; // 37%
+    }
     return ret;
 }
 
 int64_t GetSystemnodePayment(int nHeight, int64_t blockValue)
 {
-    int64_t ret = blockValue * 0.1; // start at 10%
+    // 25% percent is already taken for budget
+    int64_t ret = (blockValue * 7.5) / 75; // 7.5%
+    if (nHeight >= Params().PoSStartHeight())
+    {
+        ret = (blockValue * 8) / 75; // 8%
+    }
     return ret;
 }
 

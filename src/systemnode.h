@@ -275,7 +275,10 @@ public:
         READWRITE(sigTime);
         READWRITE(protocolVersion);
         READWRITE(lastPing);
-        READWRITE(vchSignover);
+        if (protocolVersion >= PROTOCOL_POS_START)
+        {
+            READWRITE(vchSignover);
+        }
     }
 
     uint256 GetHash() const
