@@ -34,9 +34,12 @@ class InstantSendTest(DashTestFramework):
         self.log.info("Test new InstantSend")
         self.test_doublespend()
 
-    def test_doublespend(self):
+    def test_doublespend(self, new_is = False):
+        sender = self.nodes[self.sender_idx]
+        receiver = self.nodes[self.receiver_idx]
+        isolated = self.nodes[self.isolated_idx]
         # feed the sender with some balance
-        sender_addr = self.nodes[self.sender_idx].getnewaddress()
+        sender_addr = sender.getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
         # make sender funds mature for InstantSend
         for i in range(0, 2):
@@ -46,35 +49,22 @@ class InstantSendTest(DashTestFramework):
         self.sync_all()
 
         # create doublepending transaction,  but don't relay it
-        dblspnd_tx = self.create_raw_trx(self.nodes[self.sender_idx],
-                                       self.nodes[self.isolated_idx],
-                                       0.5, 1, 100)
+        dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
         # stop one node to isolate it from network
-        self.nodes[self.isolated_idx].setnetworkactive(False)
+        isolated.setnetworkactive(False)
         # instantsend to receiver
-        receiver_addr = self.nodes[self.receiver_idx].getnewaddress()
-        is_id = self.nodes[self.sender_idx].instantsendtoaddress(receiver_addr, 0.9)
-        # wait for instantsend locks
-        start = time()
-        locked = False
-        while True:
-            is_trx = self.nodes[self.sender_idx].gettransaction(is_id)
-            if is_trx['instantlock']:
-                locked = True
-                break
-            if time() > start + 10:
-                break
-            sleep(0.1)
-        assert(locked)
+        receiver_addr = receiver.getnewaddress()
+        is_id = sender.instantsendtoaddress(receiver_addr, 0.9)
+        self.wait_for_instantlock(is_id, sender)
         # send doublespend transaction to isolated node
-        self.nodes[self.isolated_idx].sendrawtransaction(dblspnd_tx['hex'])
+        isolated.sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
-        self.nodes[self.isolated_idx].generate(1)
-        wrong_block = self.nodes[self.isolated_idx].getbestblockhash()
+        isolated.generate(1)
+        wrong_block = isolated.getbestblockhash()
         # connect isolated block to network
-        self.nodes[self.isolated_idx].setnetworkactive(True)
+        isolated.setnetworkactive(True)
         for i in range(0, self.isolated_idx):
             connect_nodes(self.nodes[i], self.isolated_idx)
         # check doublespend block is rejected by other nodes

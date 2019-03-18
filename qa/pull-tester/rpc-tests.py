@@ -36,7 +36,7 @@ BASE_SCRIPTS= [
     'fundrawtransaction.py',
     'fundrawtransaction-hd.py',
     'p2p-autoinstantsend.py',
-    'autoix-mempool.py',
+    'autois-mempool.py',
     # vv Tests less than 2m vv
     'p2p-instantsend.py',
     'wallet.py',
