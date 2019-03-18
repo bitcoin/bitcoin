@@ -610,9 +610,7 @@ static UniValue decoderawtransaction(const JSONRPCRequest& request)
 
 static UniValue decodescript(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
-            RPCHelpMan{"decodescript",
+    const RPCHelpMan help{"decodescript",
                 "\nDecode a hex-encoded script.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the hex-encoded script"},
@@ -643,7 +641,11 @@ static UniValue decodescript(const JSONRPCRequest& request)
                     HelpExampleCli("decodescript", "\"hexstring\"")
             + HelpExampleRpc("decodescript", "\"hexstring\"")
                 },
-            }.ToString());
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
+    }
 
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
