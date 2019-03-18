@@ -235,10 +235,12 @@ bool CSporkManager::UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman)
             LogPrintf("CSporkManager::UpdateSpork: failed to find keyid for private key\n");
             return false;
         }
+        {
+            LOCK(cs);
+            mapSporksByHash[spork.GetHash()] = spork;
+            mapSporksActive[nSporkID][keyIDSigner] = spork;
+        }
         spork.Relay(connman);
-        LOCK(cs);
-        mapSporksByHash[spork.GetHash()] = spork;
-        mapSporksActive[nSporkID][keyIDSigner] = spork;
         return true;
     }
 
