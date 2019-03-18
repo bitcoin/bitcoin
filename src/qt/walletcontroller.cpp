@@ -4,6 +4,8 @@
 
 #include <qt/walletcontroller.h>
 
+#include <qt/askpassphrasedialog.h>
+
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 
@@ -98,10 +100,11 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     m_wallets.push_back(wallet_model);
 
     connect(wallet_model, &WalletModel::unload, [this, wallet_model] {
-        // Defer removeAndDeleteWallet when no modal widget is active.
-        if (QApplication::activeModalWidget()) {
+        // Remove wallet when there are no non-closable modal interaction
+        if (QApplication::activeModalWidget() && qobject_cast<AskPassphraseDialog*>(QApplication::activeModalWidget()) == nullptr) {
             connect(qApp, &QApplication::focusChanged, wallet_model, [this, wallet_model]() {
-                if (!QApplication::activeModalWidget()) {
+                // If user closed a dialog, check if we can safely remove the walletmodel
+                if (!QApplication::activeModalWidget() || qobject_cast<AskPassphraseDialog*>(QApplication::activeModalWidget()) != nullptr) {
                     removeAndDeleteWallet(wallet_model);
                 }
             }, Qt::QueuedConnection);
