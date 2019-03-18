@@ -4981,7 +4981,7 @@ bool CWallet::Verify(const WalletLocation& location, bool salvage_wallet, std::s
 
 std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const WalletLocation& location, uint64_t wallet_creation_flags)
 {
-    const std::string& walletFile = location.GetName();
+    const std::string& walletFile = WalletDataFilePath(location.GetPath()).string();
 
     // needed to restore wallet transaction meta data after -zapwallettxes
     std::vector<CWalletTx> vWtx;
