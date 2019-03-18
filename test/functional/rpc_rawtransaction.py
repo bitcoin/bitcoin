@@ -285,11 +285,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         txDetails = self.nodes[0].gettransaction(txId, True)
         rawTx = self.nodes[0].decoderawtransaction(txDetails['hex'])
-        vout = False
-        for outpoint in rawTx['vout']:
-            if outpoint['value'] == Decimal('2.20000000'):
-                vout = outpoint
-                break
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('2.20000000'))
 
         bal = self.nodes[0].getbalance()
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "amount" : vout['value']}]
@@ -330,11 +326,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         txDetails = self.nodes[0].gettransaction(txId, True)
         rawTx2 = self.nodes[0].decoderawtransaction(txDetails['hex'])
-        vout = False
-        for outpoint in rawTx2['vout']:
-            if outpoint['value'] == Decimal('2.20000000'):
-                vout = outpoint
-                break
+        vout = next(o for o in rawTx2['vout'] if o['value'] == Decimal('2.20000000'))
 
         bal = self.nodes[0].getbalance()
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex'], "redeemScript" : mSigObjValid['hex'], "amount" : vout['value']}]
@@ -433,6 +425,31 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx = ToHex(tx)
         decrawtx = self.nodes[0].decoderawtransaction(rawtx)
         assert_equal(decrawtx['version'], 0x7fffffff)
+
+        self.log.info('sendrawtransaction/testmempoolaccept with maxfeerate')
+
+        txId = self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.0)
+        rawTx = self.nodes[0].getrawtransaction(txId, True)
+        vout = next(o for o in rawTx['vout'] if o['value'] == Decimal('1.00000000'))
+
+        self.sync_all()
+        inputs = [{ "txid" : txId, "vout" : vout['n'] }]
+        outputs = { self.nodes[0].getnewaddress() : Decimal("0.99999000") } # 1000 sat fee
+        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
+        rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
+        assert_equal(rawTxSigned['complete'], True)
+        # 1000 sat fee, ~200 b transaction, fee rate should land around 5 sat/b = 0.00005000 BTC/kB
+        # Thus, testmempoolaccept should reject
+        testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000)[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], '256: absurdly-high-fee')
+        # and sendrawtransaction should throw
+        assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
+        # And below calls should both succeed
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate=0.00007000)[0]
+        assert_equal(testres['allowed'], True)
+        self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate=0.00007000)
+
 
 if __name__ == '__main__':
     RawTransactionsTest().main()

@@ -65,7 +65,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     # the ScriptSig that will satisfy the ScriptPubKey.
     for inp in tx.vin:
         inp.scriptSig = SCRIPT_SIG[inp.prevout.n]
-    txid = from_node.sendrawtransaction(ToHex(tx), True)
+    txid = from_node.sendrawtransaction(hexstring=ToHex(tx), maxfeerate=0)
     unconflist.append({"txid": txid, "vout": 0, "amount": total_in - amount - fee})
     unconflist.append({"txid": txid, "vout": 1, "amount": amount})
 
@@ -95,7 +95,7 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     else:
         tx.vin[0].scriptSig = SCRIPT_SIG[prevtxout["vout"]]
         completetx = ToHex(tx)
-    txid = from_node.sendrawtransaction(completetx, True)
+    txid = from_node.sendrawtransaction(hexstring=completetx, maxfeerate=0)
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
