@@ -67,6 +67,16 @@ namespace Platform
         return { candidate, ConvertVote(vote), time, voterId };
     }
 
+    void VoteTx::ToJson(json_spirit::Object & result) const
+    {
+        result.push_back(json_spirit::Pair("voterId", voterId.ToString()));
+        result.push_back(json_spirit::Pair("electionCode", electionCode));
+        result.push_back(json_spirit::Pair("vote", vote));
+        result.push_back(json_spirit::Pair("time", time));
+        result.push_back(json_spirit::Pair("candidate", candidate.ToString()));
+        result.push_back(json_spirit::Pair("keyId", CBitcoinAddress(keyId).ToString()));
+    }
+
     std::string VoteTx::ToString() const
     {
         return strprintf(

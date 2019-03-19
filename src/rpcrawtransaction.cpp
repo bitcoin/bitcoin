@@ -21,6 +21,10 @@
 #include "wallet.h"
 #endif
 
+#include "platform/specialtx.h"
+#include "platform/nf-token/nf-token-reg-tx.h"
+#include "platform/governance-vote.h"
+
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -95,6 +99,27 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     if (!tx.extraPayload.empty()) {
         entry.push_back(Pair("extraPayloadSize", (int)tx.extraPayload.size()));
         entry.push_back(Pair("extraPayload", HexStr(tx.extraPayload)));
+    }
+
+    if (tx.nType == TRANSACTION_NF_TOKEN_REGISTER)
+    {
+        Platform::NfTokenRegTx nftRegTx;
+        if (Platform::GetTxPayload(tx, nftRegTx))
+        {
+            Object nftRegTxObj;
+            nftRegTx.ToJson(nftRegTxObj);
+            entry.push_back(Pair("nftRegTx", nftRegTxObj));
+        }
+    }
+    else if (tx.nType == TRANSACTION_GOVERNANCE_VOTE)
+    {
+        Platform::VoteTx voteTx;
+        if (Platform::GetTxPayload(tx, voteTx))
+        {
+            Object voteTxObj;
+            voteTx.ToJson(voteTxObj);
+            entry.push_back(Pair("voteTx", voteTxObj));
+        }
     }
 
     if (!hashBlock.IsNull()) {
