@@ -497,10 +497,6 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
             return error("PeercoinMiner: generated block is stale");
     }
 
-    //ppcTODO - check if this is still needed
-    // Inform about the new block
-    //GetMainSignals().BlockFound(pblock->GetHash());
-
     // Process this block the same as if we had received it from another node
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
     if (!ProcessNewBlock(Params(), shared_pblock, true, NULL))

@@ -2367,7 +2367,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         const CBlockIndex *pindex = nullptr;
         CValidationState state;
 
-        //ppcTODO - do we care about nPoSTemperature inside CMPCTBLOCK?
         uint32_t tmp1;
         uint256 tmp2;
         if (!ProcessNewBlockHeaders(tmp1, tmp2, {cmpctblock.header}, false, state, chainparams, &pindex)) {
