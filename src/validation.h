@@ -22,6 +22,7 @@
 #include <spentindex.h>
 
 #include <algorithm>
+#include <atomic>
 #include <exception>
 #include <map>
 #include <memory>
@@ -31,10 +32,9 @@
 #include <utility>
 #include <vector>
 
-#include <atomic>
-
 class CBlockIndex;
 class CBlockTreeDB;
+class CBlockUndo;
 class CChainParams;
 class CCoinsViewDB;
 class CInv;
@@ -371,6 +371,8 @@ void InitScriptExecutionCache();
 /** Functions for disk access for blocks */
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
+
+bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 
 /** Functions for validating blocks and updating the block tree */
 
