@@ -55,7 +55,9 @@ class InstantSendTest(DashTestFramework):
         # instantsend to receiver
         receiver_addr = receiver.getnewaddress()
         is_id = sender.instantsendtoaddress(receiver_addr, 0.9)
-        self.wait_for_instantlock(is_id, sender)
+        for node in self.nodes:
+            if node is not isolated:
+                self.wait_for_instantlock(is_id, node)
         # send doublespend transaction to isolated node
         isolated.sendrawtransaction(dblspnd_tx['hex'])
         # generate block on isolated node with doublespend transaction

@@ -2165,7 +2165,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
 
             if (nInvType != MSG_TXLOCK_REQUEST) {
-                llmq::quorumInstantSendManager->ProcessTx(pfrom, tx, connman, chainparams.GetConsensus());
+                llmq::quorumInstantSendManager->ProcessTx(tx, chainparams.GetConsensus());
             }
 
             mempool.check(pcoinsTip);
@@ -2213,7 +2213,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                         }
                         vEraseQueue.push_back(orphanHash);
 
-                        llmq::quorumInstantSendManager->ProcessTx(pfrom, orphanTx, connman, chainparams.GetConsensus());
+                        llmq::quorumInstantSendManager->ProcessTx(orphanTx, chainparams.GetConsensus());
                     }
                     else if (!fMissingInputs2)
                     {

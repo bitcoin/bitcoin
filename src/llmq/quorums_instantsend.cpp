@@ -174,7 +174,7 @@ void CInstantSendManager::UnregisterAsRecoveredSigsListener()
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
-bool CInstantSendManager::ProcessTx(CNode* pfrom, const CTransaction& tx, CConnman& connman, const Consensus::Params& params)
+bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Params& params)
 {
     if (!IsNewInstantSendEnabled()) {
         return true;
@@ -246,13 +246,15 @@ bool CInstantSendManager::CheckCanLock(const CTransaction& tx, bool printDebug, 
         return false;
     }
 
-    int nInstantSendConfirmationsRequired = params.nInstantSendConfirmationsRequired;
+    if (tx.vin.empty()) {
+        // can't lock TXs without inputs (e.g. quorum commitments)
+        return false;
+    }
 
-    uint256 txHash = tx.GetHash();
     CAmount nValueIn = 0;
     for (const auto& in : tx.vin) {
         CAmount v = 0;
-        if (!CheckCanLock(in.prevout, printDebug, &txHash, &v, params)) {
+        if (!CheckCanLock(in.prevout, printDebug, tx.GetHash(), &v, params)) {
             return false;
         }
 
@@ -274,7 +276,7 @@ bool CInstantSendManager::CheckCanLock(const CTransaction& tx, bool printDebug, 
     return true;
 }
 
-bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256* _txHash, CAmount* retValue, const Consensus::Params& params)
+bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params)
 {
     int nInstantSendConfirmationsRequired = params.nInstantSendConfirmationsRequired;
 
@@ -283,44 +285,36 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
         return true;
     }
 
-    static uint256 txHashNull;
-    const uint256* txHash = &txHashNull;
-    if (_txHash) {
-        txHash = _txHash;
-    }
-
     auto mempoolTx = mempool.get(outpoint.hash);
     if (mempoolTx) {
         if (printDebug) {
             LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: parent mempool TX %s is not locked\n", __func__,
-                     txHash->ToString(), outpoint.hash.ToString());
+                     txHash.ToString(), outpoint.hash.ToString());
         }
         return false;
     }
 
     Coin coin;
     const CBlockIndex* pindexMined = nullptr;
+    int nTxAge;
     {
         LOCK(cs_main);
         if (!pcoinsTip->GetCoin(outpoint, coin) || coin.IsSpent()) {
             if (printDebug) {
                 LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: failed to find UTXO %s\n", __func__,
-                         txHash->ToString(), outpoint.ToStringShort());
+                         txHash.ToString(), outpoint.ToStringShort());
             }
             return false;
         }
         pindexMined = chainActive[coin.nHeight];
+        nTxAge = chainActive.Height() - coin.nHeight + 1;
     }
 
-    int nTxAge = chainActive.Height() - coin.nHeight + 1;
-    // 1 less than the "send IX" gui requires, in case of a block propagating the network at the time
-    int nConfirmationsRequired = nInstantSendConfirmationsRequired - 1;
-
-    if (nTxAge < nConfirmationsRequired) {
+    if (nTxAge < nInstantSendConfirmationsRequired) {
         if (!llmq::chainLocksHandler->HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
             if (printDebug) {
-                LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: outpoint %s too new and not ChainLocked. nTxAge=%d, nConfirmationsRequired=%d\n", __func__,
-                         txHash->ToString(), outpoint.ToStringShort(), nTxAge, nConfirmationsRequired);
+                LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: outpoint %s too new and not ChainLocked. nTxAge=%d, nInstantSendConfirmationsRequired=%d\n", __func__,
+                         txHash.ToString(), outpoint.ToStringShort(), nTxAge, nInstantSendConfirmationsRequired);
             }
             return false;
         }
@@ -719,18 +713,19 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
     }
 }
 
-void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindex)
+void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 {
     uint256 lastChainLockBlock;
     {
         LOCK(cs);
-        db.GetLastChainLockBlock();
+        lastChainLockBlock = db.GetLastChainLockBlock();
     }
 
     // Let's find all islocks that correspond to TXs which are part of the freshly ChainLocked chain and then delete
     // the islocks. We do this because the ChainLocks imply locking and thus it's not needed to further track
     // or propagate the islocks
     std::unordered_set<uint256> toDelete;
+    auto pindex = pindexChainLock;
     while (pindex && pindex->GetBlockHash() != lastChainLockBlock) {
         CBlock block;
         {
@@ -758,7 +753,7 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindex)
 
     {
         LOCK(cs);
-        db.WriteLastChainLockBlock(pindex ? pindex->GetBlockHash() : uint256());
+        db.WriteLastChainLockBlock(pindexChainLock->GetBlockHash());
     }
 
     RetryLockMempoolTxs(uint256());
@@ -849,7 +844,7 @@ void CInstantSendManager::RetryLockMempoolTxs(const uint256& lockedParentTx)
                      tx->GetHash().ToString());
         }
 
-        ProcessTx(nullptr, *tx, *g_connman, Params().GetConsensus());
+        ProcessTx(*tx, Params().GetConsensus());
     }
 }
 

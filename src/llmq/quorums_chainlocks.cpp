@@ -333,11 +333,8 @@ void CChainLocksHandler::NewPoWValidBlock(const CBlockIndex* pindex, const std::
 
     auto txs = std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>();
     for (const auto& tx : block->vtx) {
-        if (tx->nVersion == 3) {
-            if (tx->nType == TRANSACTION_COINBASE ||
-                tx->nType == TRANSACTION_QUORUM_COMMITMENT) {
-                continue;
-            }
+        if (tx->IsCoinBase() || tx->vin.empty()) {
+            continue;
         }
         txs->emplace(tx->GetHash());
         txFirstSeenTime.emplace(tx->GetHash(), curTime);
@@ -347,11 +344,8 @@ void CChainLocksHandler::NewPoWValidBlock(const CBlockIndex* pindex, const std::
 
 void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
 {
-    if (tx.nVersion == 3) {
-        if (tx.nType == TRANSACTION_COINBASE ||
-            tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
-            return;
-        }
+    if (tx.IsCoinBase() || tx.vin.empty()) {
+        return;
     }
 
     LOCK(cs);
@@ -492,7 +486,7 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex, bool activ
 
         CValidationState state;
         if (!InvalidateBlock(state, params, pindex2)) {
-            LogPrintf("CChainLocksHandler::UpdatedBlockTip -- InvalidateBlock failed: %s\n", FormatStateMessage(state));
+            LogPrintf("CChainLocksHandler::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);
         }
@@ -500,7 +494,7 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex, bool activ
 
     CValidationState state;
     if (activateBestChain && !ActivateBestChain(state, params)) {
-        LogPrintf("CChainLocksHandler::UpdatedBlockTip -- ActivateBestChain failed: %s\n", FormatStateMessage(state));
+        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
         // This should not have happened and we are in a state were it's not safe to continue anymore
         assert(false);
     }

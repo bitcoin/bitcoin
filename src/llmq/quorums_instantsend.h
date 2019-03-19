@@ -99,9 +99,9 @@ public:
     void UnregisterAsRecoveredSigsListener();
 
 public:
-    bool ProcessTx(CNode* pfrom, const CTransaction& tx, CConnman& connman, const Consensus::Params& params);
+    bool ProcessTx(const CTransaction& tx, const Consensus::Params& params);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params);
-    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256* _txHash, CAmount* retValue, const Consensus::Params& params);
+    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params);
     bool IsLocked(const uint256& txHash);
     bool IsConflicted(const CTransaction& tx);
     bool GetConflictingTx(const CTransaction& tx, uint256& retConflictTxHash);
@@ -120,7 +120,7 @@ public:
     void UpdateWalletTransaction(const uint256& txid, const CTransactionRef& tx);
 
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
-    void NotifyChainLock(const CBlockIndex* pindex);
+    void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);

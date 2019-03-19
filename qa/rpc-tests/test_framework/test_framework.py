@@ -535,10 +535,14 @@ class DashTestFramework(BitcoinTestFramework):
         start = time()
         locked = False
         while True:
-            is_tx = node.getrawtransaction(txid, True)
-            if is_tx['instantlock']:
-                locked = True
-                break
+            try:
+                is_tx = node.getrawtransaction(txid, True)
+                if is_tx['instantlock']:
+                    locked = True
+                    break
+            except:
+                # TX not received yet?
+                pass
             if time() > start + 10:
                 break
             sleep(0.5)
