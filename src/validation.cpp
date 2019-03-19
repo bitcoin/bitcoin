@@ -3394,12 +3394,9 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
-    //ppcTODO: move this somewhere else, because at this point we did not do some PoS checks that can only be done in ConnectBlock()
-    // otherwise we might send a checkpoint on incorrect PoS block
-//    // peercoin: if responsible for sync-checkpoint send it
-//    if (pfrom && !CSyncCheckpoint::strMasterPrivKey.empty() &&
-//        (int)GetArg("-checkpointdepth", -1) >= 0)
-//        SendSyncCheckpoint(AutoSelectSyncCheckpoint());
+    // peercoin: if responsible for sync-checkpoint send it
+    if (!CSyncCheckpoint::strMasterPrivKey.empty() && (int)gArgs.GetArg("-checkpointdepth", -1) >= 0)
+        SendSyncCheckpoint(AutoSelectSyncCheckpoint());
 
     return true;
 }
