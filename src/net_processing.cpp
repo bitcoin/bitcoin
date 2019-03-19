@@ -2164,10 +2164,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 instantsend.Vote(tx.GetHash(), connman);
             }
 
-            if (nInvType != MSG_TXLOCK_REQUEST) {
-                llmq::quorumInstantSendManager->ProcessTx(tx, chainparams.GetConsensus());
-            }
-
             mempool.check(pcoinsTip);
             connman.RelayTransaction(tx);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -2212,8 +2208,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                             vWorkQueue.emplace_back(orphanHash, i);
                         }
                         vEraseQueue.push_back(orphanHash);
-
-                        llmq::quorumInstantSendManager->ProcessTx(orphanTx, chainparams.GetConsensus());
                     }
                     else if (!fMissingInputs2)
                     {

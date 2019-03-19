@@ -294,20 +294,23 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
         return false;
     }
 
-    Coin coin;
-    const CBlockIndex* pindexMined = nullptr;
+    CTransactionRef tx;
+    uint256 hashBlock;
+    // this relies on enabled txindex and won't work if we ever try to remove the requirement for txindex for masternodes
+    if (!GetTransaction(outpoint.hash, tx, params, hashBlock, false)) {
+        if (printDebug) {
+            LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: failed to find parent TX %s\n", __func__,
+                     txHash.ToString(), outpoint.hash.ToString());
+        }
+        return false;
+    }
+
+    const CBlockIndex* pindexMined;
     int nTxAge;
     {
         LOCK(cs_main);
-        if (!pcoinsTip->GetCoin(outpoint, coin) || coin.IsSpent()) {
-            if (printDebug) {
-                LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s: failed to find UTXO %s\n", __func__,
-                         txHash.ToString(), outpoint.ToStringShort());
-            }
-            return false;
-        }
-        pindexMined = chainActive[coin.nHeight];
-        nTxAge = chainActive.Height() - coin.nHeight + 1;
+        pindexMined = mapBlockIndex.at(hashBlock);
+        nTxAge = chainActive.Height() - pindexMined->nHeight + 1;
     }
 
     if (nTxAge < nInstantSendConfirmationsRequired) {
@@ -321,7 +324,7 @@ bool CInstantSendManager::CheckCanLock(const COutPoint& outpoint, bool printDebu
     }
 
     if (retValue) {
-        *retValue = coin.out.nValue;
+        *retValue = tx->vout[outpoint.n].nValue;
     }
 
     return true;
@@ -673,7 +676,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     g_connman->RelayInv(inv);
 
     RemoveMempoolConflictsForLock(hash, islock);
-    RetryLockMempoolTxs(islock.txid);
+    RetryLockTxs(islock.txid);
 
     UpdateWalletTransaction(islock.txid, tx);
 }
@@ -708,8 +711,17 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
         return;
     }
 
-    if (IsLocked(tx.GetHash())) {
-        RetryLockMempoolTxs(tx.GetHash());
+    if (tx.IsCoinBase() || tx.vin.empty()) {
+        // coinbase can't and TXs with no inputs be locked
+        return;
+    }
+
+    bool locked = IsLocked(tx.GetHash());
+    bool chainlocked = pindex && chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
+    if (locked || chainlocked) {
+        RetryLockTxs(tx.GetHash());
+    } else {
+        ProcessTx(tx, Params().GetConsensus());
     }
 }
 
@@ -756,7 +768,7 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
         db.WriteLastChainLockBlock(pindexChainLock->GetBlockHash());
     }
 
-    RetryLockMempoolTxs(uint256());
+    RetryLockTxs(uint256());
 }
 
 void CInstantSendManager::RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock)
@@ -795,9 +807,9 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
     }
 }
 
-void CInstantSendManager::RetryLockMempoolTxs(const uint256& lockedParentTx)
+void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
 {
-    // Let's retry all mempool TXs which don't have an islock yet and where the parents got ChainLocked now
+    // Let's retry all unlocked TXs from mempool and and recently connected blocks
 
     std::unordered_map<uint256, CTransactionRef> txs;
 
@@ -817,6 +829,57 @@ void CInstantSendManager::RetryLockMempoolTxs(const uint256& lockedParentTx)
             }
         }
     }
+
+    uint256 lastChainLockBlock;
+    const CBlockIndex* pindexLastChainLockBlock = nullptr;
+    const CBlockIndex* pindexWalk = nullptr;
+    {
+        LOCK(cs);
+        lastChainLockBlock = db.GetLastChainLockBlock();
+    }
+    {
+        LOCK(cs_main);
+        if (!lastChainLockBlock.IsNull()) {
+            pindexLastChainLockBlock = mapBlockIndex.at(lastChainLockBlock);
+            pindexWalk = chainActive.Tip();
+        }
+    }
+
+    // scan blocks until we hit the last chainlocked block we know of. Also stop scanning after a depth of 6 to avoid
+    // signing thousands of TXs at once. Also, after a depth of 6, blocks get eligible for ChainLocking even if unsafe
+    // TXs are included, so there is no need to retroactively sign these.
+    int depth = 0;
+    while (pindexWalk && pindexWalk != pindexLastChainLockBlock && depth < 6) {
+        CBlock block;
+        {
+            LOCK(cs_main);
+            if (!ReadBlockFromDisk(block, pindexWalk, Params().GetConsensus())) {
+                pindexWalk = pindexWalk->pprev;
+                continue;
+            }
+        }
+
+        for (const auto& tx : block.vtx) {
+            if (lockedParentTx.IsNull()) {
+                txs.emplace(tx->GetHash(), tx);
+            } else {
+                bool isChild  = false;
+                for (auto& in : tx->vin) {
+                    if (in.prevout.hash == lockedParentTx) {
+                        isChild = true;
+                        break;
+                    }
+                }
+                if (isChild) {
+                    txs.emplace(tx->GetHash(), tx);
+                }
+            }
+        }
+
+        pindexWalk = pindexWalk->pprev;
+        depth++;
+    }
+
     for (auto& p : txs) {
         auto& tx = p.second;
         {

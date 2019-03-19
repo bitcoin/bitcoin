@@ -87,7 +87,6 @@ public:
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork);
-    void NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block);
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void TrySignChainTip();
     void EnforceBestChainLock();

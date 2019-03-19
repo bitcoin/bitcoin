@@ -1921,8 +1921,6 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman, const std::string& str
                 }
             }
 
-            llmq::quorumInstantSendManager->ProcessTx(*this->tx, Params().GetConsensus());
-
             if (connman) {
                 connman->RelayTransaction((CTransaction)*this);
                 return true;

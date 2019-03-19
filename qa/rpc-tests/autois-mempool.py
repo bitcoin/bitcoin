@@ -56,6 +56,10 @@ class AutoISMempoolTest(DashTestFramework):
         self.log.info("Test old InstantSend")
         self.test_auto();
 
+        # Generate 6 block to avoid retroactive signing overloading Travis
+        self.nodes[0].generate(6)
+        sync_blocks(self.nodes)
+
         self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 0)
         self.wait_for_sporks_same()
 
@@ -100,9 +104,17 @@ class AutoISMempoolTest(DashTestFramework):
         assert(not self.send_regular_instantsend(sender, receiver, False) if new_is else self.send_regular_instantsend(sender, receiver))
 
         # generate one block to clean up mempool and retry auto and regular IS
-        # generate 2 more blocks to have enough confirmations for IS
-        self.nodes[0].generate(3)
+        # generate 5 more blocks to avoid retroactive signing (which would overload Travis)
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+        self.nodes[0].generate(6)
         self.sync_all()
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.wait_for_sporks_same()
         assert(self.send_simple_tx(sender, receiver))
         assert(self.send_regular_instantsend(sender, receiver, not new_is))
 

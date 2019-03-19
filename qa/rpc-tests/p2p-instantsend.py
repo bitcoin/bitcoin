@@ -28,6 +28,10 @@ class InstantSendTest(DashTestFramework):
         self.log.info("Test old InstantSend")
         self.test_doublespend()
 
+        # Generate 6 block to avoid retroactive signing overloading Travis
+        self.nodes[0].generate(6)
+        sync_blocks(self.nodes)
+
         self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 0)
         self.wait_for_sporks_same()
 

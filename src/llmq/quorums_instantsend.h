@@ -124,7 +124,7 @@ public:
     void RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
-    void RetryLockMempoolTxs(const uint256& lockedParentTx);
+    void RetryLockTxs(const uint256& lockedParentTx);
 
     bool AlreadyHave(const CInv& inv);
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);

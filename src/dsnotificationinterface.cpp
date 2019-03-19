@@ -71,11 +71,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
 }
 
-void CDSNotificationInterface::NewPoWValidBlock(const CBlockIndex* pindex, const std::shared_ptr<const CBlock>& block)
-{
-    llmq::chainLocksHandler->NewPoWValidBlock(pindex, block);
-}
-
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
 {
     llmq::quorumInstantSendManager->SyncTransaction(tx, pindex, posInBlock);

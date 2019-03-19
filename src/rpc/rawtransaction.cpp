@@ -1020,7 +1020,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
                 throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
             }
         }
-        llmq::quorumInstantSendManager->ProcessTx(*tx, Params().GetConsensus());
     } else if (fHaveChain) {
         throw JSONRPCError(RPC_TRANSACTION_ALREADY_IN_CHAIN, "transaction already in block chain");
     }

@@ -88,6 +88,38 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
 
+        # Enable LLMQ bases InstantSend, which also enables checks for "safe" transactions
+        self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 0)
+        self.wait_for_sporks_same()
+
+        # Isolate a node and let it create some transactions which won't get IS locked
+        self.nodes[0].setnetworkactive(False)
+        txs = []
+        for i in range(3):
+            txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
+        txs += self.create_chained_txs(self.nodes[0], 1)
+        # Assert that after block generation these TXs are NOT included (as they are "unsafe")
+        self.nodes[0].generate(1)
+        for txid in txs:
+            tx = self.nodes[0].getrawtransaction(txid, 1)
+            assert("confirmations" not in tx)
+        sleep(1)
+        assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
+        # Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)
+        self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 4070908800)
+        # Now the TXs should be included
+        self.nodes[0].generate(1)
+        self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 0)
+        # Assert that TXs got included now
+        for txid in txs:
+            tx = self.nodes[0].getrawtransaction(txid, 1)
+            assert("confirmations" in tx and tx["confirmations"] > 0)
+        # Enable network on first node again, which will cause the blocks to propagate and IS locks to happen retroactively
+        # for the mined TXs, which will then allow the network to create a CLSIG
+        self.nodes[0].setnetworkactive(True)
+        connect_nodes(self.nodes[0], 1)
+        self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
+
     def wait_for_chainlock_tip_all_nodes(self):
         for node in self.nodes:
             tip = node.getbestblockhash()
@@ -109,6 +141,24 @@ class LLMQChainLocksTest(DashTestFramework):
                 pass
             sleep(0.1)
         raise AssertionError("wait_for_chainlock timed out")
+
+    def create_chained_txs(self, node, amount):
+        txid = node.sendtoaddress(node.getnewaddress(), amount)
+        tx = node.getrawtransaction(txid, 1)
+        inputs = []
+        valueIn = 0
+        for txout in tx["vout"]:
+            inputs.append({"txid": txid, "vout": txout["n"]})
+            valueIn += txout["value"]
+        outputs = {
+            node.getnewaddress(): round(float(valueIn) - 0.0001, 6)
+        }
+
+        rawtx = node.createrawtransaction(inputs, outputs)
+        rawtx = node.signrawtransaction(rawtx)
+        rawtxid = node.sendrawtransaction(rawtx["hex"])
+
+        return [txid, rawtxid]
 
 
 if __name__ == '__main__':
