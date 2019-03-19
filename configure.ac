@@ -199,6 +199,17 @@ AC_ARG_ENABLE([stacktraces],
     [enable_stacktraces=$enableval],
     [enable_stacktraces=no])
 
+# Enable in-wallet miner
+AC_ARG_ENABLE([miner],
+    [AS_HELP_STRING([--enable-miner],
+                    [enable in-wallet miner (default is yes)])],
+    [enable_miner=$enableval],
+    [enable_miner=yes])
+AM_CONDITIONAL([ENABLE_MINER], [test x$enable_miner = xyes])
+if test "x$enable_miner" = xyes; then
+    AC_DEFINE(ENABLE_MINER, 1, [Define this symbol if in-wallet miner should be enabled])
+fi
+
 # Turn warnings into errors
 AC_ARG_ENABLE([werror],
     [AS_HELP_STRING([--enable-werror],
@@ -1243,6 +1254,7 @@ echo "  with bench    = $use_bench"
 echo "  with upnp     = $use_upnp"
 echo "  debug enabled = $enable_debug"
 echo "  stacktraces enabled = $enable_stacktraces"
+echo "  miner enabled = $enable_miner"
 echo "  werror        = $enable_werror"
 echo 
 echo "  target os     = $TARGET_OS"
