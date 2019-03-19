@@ -26,6 +26,9 @@ namespace Platform
         if (nfTokenRegTx.m_version != NfTokenRegTx::CURRENT_VERSION)
             return state.DoS(100, false, REJECT_INVALID, "bad-nf-token-reg-tx-version");
 
+        if (nfToken.tokenProtocolId == NfToken::UNKNOWN_TOKEN_PROTOCOL)
+            return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token-protocol");
+
         if (nfToken.tokenId.IsNull())
             return state.DoS(10, false, REJECT_INVALID, "bad-nf-token-reg-tx-token");
 
@@ -56,10 +59,6 @@ namespace Platform
         // should have been checked already
         assert(result);
 
-        //TODO: remove after extensive testing of release version
-        if (!result)
-            return state.DoS(100, false, REJECT_INVALID, "bad-tx-payload");
-
         auto nfToken = nfTokenRegTx.GetNfToken();
 
         if (!NfTokensManager::Instance().AddNfToken(nfToken, tx, pindex))
@@ -73,10 +72,6 @@ namespace Platform
         bool result = GetTxPayload(tx, nfTokenRegTx);
         // should have been checked already
         assert(result);
-
-        //TODO: remove after extensive testing of release version
-        if (!result)
-            return false;
 
         auto nfToken = nfTokenRegTx.GetNfToken();
         return NfTokensManager::Instance().Delete(nfToken.tokenProtocolId, nfToken.tokenId, pindex->nHeight);
