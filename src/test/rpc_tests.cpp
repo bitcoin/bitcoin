@@ -320,6 +320,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
 }
 
+#if ENABLE_MINER
 BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
 {
     UniValue result;
@@ -342,6 +343,7 @@ BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
     BOOST_CHECK_EQUAL(result[1].get_str(), "yTG8jLL3MvteKXgbEcHyaN7JvTPCejQpSh");
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 }
+#endif // ENABLE_MINER
 
 BOOST_AUTO_TEST_CASE(rpc_sentinel_ping)
 {
