@@ -14,6 +14,7 @@
 
 class CWallet;
 class CBlockIndex;
+class uint256;
 
 /** General change type (added, updated, removed). */
 enum ChangeType
@@ -87,9 +88,10 @@ public:
     boost::signals2::signal<void (bool networkActive)> NotifyNetworkActiveChanged;
 
     /**
-     * Status bar alerts changed.
+     * New, updated or cancelled alert.
+     * @note sometimes called with lock cs_mapAlerts held.
      */
-    boost::signals2::signal<void ()> NotifyAlertChanged;
+    boost::signals2::signal<void (const uint256 &hash, ChangeType status)> NotifyAlertChanged;
 
     /** A wallet has been loaded. */
     boost::signals2::signal<void (CWallet* wallet)> LoadWallet;

@@ -227,6 +227,7 @@ bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
+bool fAlerts = DEFAULT_ALERTS;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 uint256 hashAssumeValid;
@@ -989,9 +990,10 @@ bool IsInitialBlockDownload()
 
 CBlockIndex *pindexBestForkTip = nullptr, *pindexBestForkBase = nullptr;
 
-static void AlertNotify(const std::string& strMessage)
+void AlertNotify(const std::string& strMessage, bool fUpdateUI)
 {
-    uiInterface.NotifyAlertChanged();
+    if (fUpdateUI)
+        uiInterface.NotifyAlertChanged(uint256(), CT_UPDATED); // peercoin: we are using arguments that will have no effects in updateAlert()
     std::string strCmd = gArgs.GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
 

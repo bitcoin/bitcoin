@@ -45,6 +45,8 @@ struct ChainTxData;
 struct PrecomputedTransactionData;
 struct LockPoints;
 
+/** Default for accepting alerts from the P2P network. */
+static const bool DEFAULT_ALERTS = true;
 /** Default for -whitelistrelay. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for -whitelistforcerelay. */
@@ -164,6 +166,7 @@ extern bool fRequireStandard;
 extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
+extern bool fAlerts;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 extern int64_t nMaxTipAge;
 
@@ -259,6 +262,7 @@ void UnloadBlockIndex();
 void ThreadScriptCheck();
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
+void AlertNotify(const std::string& strMessage, bool fUpdateUI = true);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::Params& params, uint256& hashBlock, bool fAllowSlow = false, CBlockIndex* blockIndex = nullptr);
 /** Find the best known block, and make it the tip of the block chain */

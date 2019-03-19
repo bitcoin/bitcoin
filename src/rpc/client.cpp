@@ -135,6 +135,13 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "echojson", 9, "arg9" },
     { "rescanblockchain", 0, "start_height"},
     { "rescanblockchain", 1, "stop_height"},
+
+    // ppcoin:
+    { "sendalert", 2, "minver"},
+    { "sendalert", 3, "maxver"},
+    { "sendalert", 4, "priority"},
+    { "sendalert", 5, "id"},
+    { "sendalert", 6, "cancelupto"},
 };
 
 class CRPCConvertTable
