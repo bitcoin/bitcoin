@@ -16,7 +16,7 @@ CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay f
 
 The Crown Platform utilizes two additional tiers of nodes that offer different roles: Masternodes process instant transactions while Systemnodes will host applications via the CrownPlatform. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
 
-For more information, as well as an immediately useable, binary version Crown see https://crown.tech/wallet.
+For more information, as well as an immediately usable, binary version Crown see https://crown.tech/wallet.
 
 ## Community
 
@@ -56,7 +56,7 @@ See also: [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240
 
 ### Report a Bug
 
-Bugs can be reported via the Gitlab issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
+Bugs can be reported via the Gitlab issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channels in Discord or emailing [support@crown.tech](email:support@crown.tech)
 
 When describing a bug please include following information:
 * **Issue summary** - an issue header which outlines the actual defect to be solved
@@ -70,7 +70,7 @@ Crown core developers are working hard on bug fixes, platform enhancements, and 
 Some of these tasks may be completed by talented community members through the bounty program.
 Bounties are posted to the wiki and can be picked up by anyone who wants to submit new code to the project repository.
 If you want to be directly notified of new bounties matching your specific skillset, fill out the short intake survey to get onto the [InSource Community Job Board](https://crown.link/insource).
-If you have any questions regarding code submissions, please contact Josh 'fin' Wilcox (josh@crown.tech, or fin on mattermost) and ask about bounties.
+If you have any questions regarding code submissions, please contact Artem Brazhnikov through Discord and ask about bounties.
 
 ## License
 
