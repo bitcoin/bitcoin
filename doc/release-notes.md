@@ -10,7 +10,7 @@ It features 2 main changes over the previous v0.12.5.x version:
 ## New address prefixes
 When Crown originally forked from Bitcoin it retained the Bitcoin address format. 
 Nowadays that is not a desirable legacy because it prevents use of Crown with 
-hardware wallets such as Ledger and Trezor. Thos devices cannot distinguish 
+hardware wallets such as Ledger and Trezor. Those devices cannot distinguish 
 between different coins with the same address prefixes.
 
 v0.13.0 introduces new prefixes for both mainnet and testnet.
@@ -23,7 +23,7 @@ These unique and distinctive prefixes will enable the use of Crown with hardware
 wallets. We hope to see the first integration soon. 
 The change is friction-free from the user's perspective. Users who upgrade won't 
 need to do anything to explicitly convert their old wallet addresses.   
-blah blah blah
+TODO: add more details regarding interoperability
 
 ## Block generation change from Proof of Work to Proof of Stake
 New address prefixes are a substantial change but are dwarfed in scope by the
@@ -42,9 +42,9 @@ next block and receive the block reward. Hot-wallet staking means the user's
 wallet must be online and open to stake.
 
 The Crown implementation was designed and built by Tom Bradshaw (@presstab) at
-<company name> over a period of several months. It features cold-staking on the
-masternode and systemnode network. Users do not need to keep their wallets open
-and online in order to stake. Instead, their collateral balance(s) is/are 
+<TODO: company name> over a period of several months. It features cold-staking 
+on the masternode and systemnode network. Users do not need to keep their wallets 
+open and online in order to stake. Instead, their collateral balance(s) is/are 
 delegated to their masternode(s) and/or systemnode(s) to be staked there.
 
 Contemporary staking systems generally work on the entire balance of a user's
@@ -54,15 +54,14 @@ The Crown system works only on coins locked as collateral in masternodes
 or systemnodes. This encourages users to support the network by running one or
 more nodes in order to ensure they get a share of the staking rewards. 
 In the Crown system a user with 100,000 coins in their wallet only stakes with 
-the ones locked in a masternode or systemnode. If they choose not to support the
+those locked in a masternode or systemnode. If they choose not to support the
 network by not running any nodes then they have no chance to earn staking rewards.
 If they lock all of their coins in masternodes or systennodes then all of their
 coins are eligible to earn rewards. Therefore the minimum wallet balance which
 can stake is 500 coins and those coins must be locked as the collateral for a 
 systemnode. 
 
-more blah blah blah about our several advantages including fake stake threat 
-and how it's not an issue for us.
+TODO: more details about our several advantages.
 
 ### The switchover
 The switchover from PoW to PoS will take place at block height 2330000, approximately
