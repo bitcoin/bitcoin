@@ -66,8 +66,20 @@ platform.
 Notable changes
 ===============
 
-Example item
+Updated RPCs
 ------------
+
+Note: some low-level RPC changes mainly useful for testing are described in the
+Low-level Changes section below.
+
+* The `sendmany` RPC had an argument `minconf` that was not well specified and
+  would lead to RPC errors even when the wallet's coin selection would succeed.
+  The `sendtoaddress` RPC never had this check, so to normalize the behavior,
+  `minconf` is now ignored in `sendmany`. If the coin selection does not
+  succeed due to missing coins, it will still throw an RPC error. Be reminded
+  that coin selection is influenced by the `-spendzeroconfchange`,
+  `-limitancestorcount`, `-limitdescendantcount` and `-walletrejectlongchains`
+  command line arguments.
 
 
 Low-level changes
