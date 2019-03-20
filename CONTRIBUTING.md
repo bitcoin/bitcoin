@@ -212,7 +212,10 @@ consensus to merge a pull request (remember that discussions may have been
 spread out over GitHub, mailing list and IRC discussions). The following
 language is used within pull-request comments:
 
-  - ACK means "I have tested the code and I agree it should be merged";
+  - (t)ACK means "I have tested the code and I agree it should be merged", involving
+    change-specific manual testing in addition to running the unit and functional
+    tests, and in case it is not obvious how the manual testing was done, it should
+    be described;
   - NACK means "I disagree this should be merged", and must be accompanied by
     sound technical justification (or in certain cases of copyright/patent/licensing
     issues, legal justification). NACKs without accompanying reasoning may be
