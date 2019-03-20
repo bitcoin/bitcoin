@@ -13,8 +13,10 @@ Nowadays that is not a desirable legacy because it prevents use of Crown with
 hardware wallets such as Ledger and Trezor. Thos devices cannot distinguish 
 between different coins with the same address prefixes.
 
-v0.13.0 introduces new prefixes for both mainnet and testnet. 
+v0.13.0 introduces new prefixes for both mainnet and testnet.
+
 Mainnet addresses now begin with the prefix "CRW", eg:```CRWP934B9FbM5RaTUfT7zCH12a259j4PYbSE```
+
 and testnet addresses now begin with the prefix "tCRW", eg:```tCRWZpkQ8aJ4wyWx5MiZup23WG8aw5JmKRAaQ```
 
 These unique and distinctive prefixes will enable the use of Crown with hardware 
@@ -80,13 +82,31 @@ This replaces the reward previously given to the miner which generated a block.
 The node will also pay the usual per block masternode and systemnode rewards.
 
 ### PoS FAQ
-1. How much can I earn through staking?
-2. What's the minimum amount of Crown required for staking?
-3. What do I have to do to enable staking?
-4. Do I need to keep my wallet open to stake?
-5. What about the much publicised fake stake attack vector?
-6. What if I have a gazillion coins but don't want to lock them all up in masternodes or systemnodes?
-7. 
+#### 1. How much can I earn through staking?
+Every block minted earns a staking reward of 1.5CRW for the (owner of the) node
+which created it. The more coins you have locked as collateral for masternodes
+and/or systemnodes the greater chance you have of winning the staking reward on
+any block.
+#### 2. What's the minimum amount of Crown required for staking?
+One systemnode of locked coins, in other words, 500CRW.
+#### 3. What do I have to do to enable staking?
+Apart from locking some coins as systemnode or masternode collateral, nothing.
+If you really wanted to you could choose not to stake by setting ```staking=0```
+in the crown.conf of your masternode/systemnode.
+#### 4. Do I need to keep my wallet open to stake?
+No. Once you have activated your masternode/systemnode the coins locked for
+that node will keep staking for as long as your node is running.
+#### 5. What about the much publicised fake stake attack vector?
+There were 2 aspects to the fake stake attack. The first involved headers-first
+syncing, but the Crown PoS implementation doesn't use headers-first so this 
+is a complete non-issue. The second possible attack vector involved resource
+exhaustion where a valid stake is required to begin the attack. This has been
+avoided by leveraging the masternode network as trusted witnesses to the 
+validity of a block.
+#### 6. What if I have a gazillion coins but don't want to lock them all up in masternodes or systemnodes?
+In that case you won't be able to earn staking rewards for the non-collateral
+coins. The chosen system is uniquely egalitarian and rewards people for 
+supporting the network. 
 
 
 ## Changelog
