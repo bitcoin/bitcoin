@@ -2738,7 +2738,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            AvailableCoins(vAvailableCoins, true, &coin_control, txNew.nTime);
+            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, txNew.nTime);
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservekey so
