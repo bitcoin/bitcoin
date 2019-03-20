@@ -143,8 +143,11 @@ private:
     int64_t nDeletionTime;
     
     /// transaction collateral for the fee
-    CTransactionRef txCollateral;
+    uint256 nCollateralTxHash;
     
+    /// block collateral for the fee
+    uint256 nCollateralBlockHash;
+        
     /// Data field - can be used for anything
     std::vector<unsigned char> vchData;
     /// Masternode info for signed objects
@@ -190,7 +193,7 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nHeight, const CTransactionRef& txCollateralIn, const std::string& strDataHexIn);
+    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nHeight, const uint256& nCollateralTxHashIn, const uint256& nCollateralBlockHashIn, const std::string& strDataHexIn);
 
     CGovernanceObject(const CGovernanceObject& other);
 
@@ -207,15 +210,13 @@ public:
     int GetObjectType() const {
         return nObjectType;
     }
-    const uint256 GetCollateralHash() const {
-        if(!txCollateral->IsNull())
-            return txCollateral->GetHash();
-        else
-            return uint256();
+    const uint256 GetCollateralTxHash() const {
+        return nCollateralTxHash;
     }   
-    const CTransactionRef& GetCollateral() const {
-        return txCollateral;
-    }
+    const uint256 GetCollateralBlockHash() const {
+        return nCollateralTxHash;
+    }    
+
     const COutPoint& GetMasternodeOutpoint() const {
         return masternodeOutpoint;
     }
@@ -310,7 +311,8 @@ public:
         READWRITE(nHashParent);
         READWRITE(nRevision);
         READWRITE(nTime);
-        READWRITE(txCollateral);
+        READWRITE(nCollateralTxHash);
+        READWRITE(nCollateralBlockHash);
         // using new format directly
         READWRITE(vchData);
         
