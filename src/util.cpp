@@ -1141,7 +1141,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
-    LogPrintf("%s: Starting geth on wsport (testnet=%d)...\n", __func__, websocketport, bGethTestnet? 1:0);
+    LogPrintf("%s: Starting geth on wsport %d (testnet=%d)...\n", __func__, websocketport, bGethTestnet? 1:0);
     std::string gethFilename = GetGethFilename();
     
     // stop any geth nodes before starting

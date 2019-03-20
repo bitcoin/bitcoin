@@ -20,7 +20,7 @@
 #include "streams.h"
 #include <time.h>
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, const int32_t &nChainID)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
@@ -33,14 +33,11 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     CBlock genesis;
     genesis.nTime    = nTime;
     genesis.nBits    = nBits;
-    genesis.nNonce   = 0;
+    genesis.nNonce   = nNonce;
     genesis.nVersion = nVersion;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
     genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
-    genesis.SetBaseVersion(txNew.nVersion, nChainID);
-    CAuxPow::initAuxPow(genesis);
-    genesis.auxpow->parentBlock.nNonce = nNonce;
     return genesis;
 }
 
@@ -55,21 +52,22 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, const int32_t &nChainID)
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, nChainID);
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 // This will figure out a valid hash and Nonce if you're
 // creating a different genesis block:
-static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash){
+static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash)
+{
     arith_uint256 bnTarget;
     bnTarget.SetCompact(genesisBlock.nBits);
     uint32_t nOnce = 0;
     while (true) {
-        genesisBlock.auxpow->parentBlock.nNonce = nOnce;
-        const uint256 &hash = genesisBlock.auxpow->getParentBlockHash();
+        genesisBlock.nNonce = nOnce;
+        uint256 hash = genesisBlock.GetHash();
         if (UintToArith256(hash) <= bnTarget) {
             phash = hash;
             break;
@@ -77,9 +75,8 @@ static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash){
         nOnce++;
     }
     printf("genesis.nTime = %u \n", genesisBlock.nTime);
-    printf("genesis.nNonce = %u \n", genesisBlock.auxpow->parentBlock.nNonce );
-    printf("Generate parent hash = %s\n", phash.ToString().c_str());
-    printf("Generate hash = %s\n", genesisBlock.GetHash().GetHex().c_str());
+    printf("genesis.nNonce = %u \n", genesisBlock.nNonce);
+    printf("Generate hash = %s\n", phash.ToString().c_str());
     printf("genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
 }
 void CChainParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
@@ -162,13 +159,14 @@ public:
         nDefaultPort = 8369;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1552236241, 887699, 0x1e0ffff0, 1, 50 * COIN, consensus.nAuxpowChainId);
-       /* uint256 hash;
+        genesis = CreateGenesisBlock(1553040331, 4847196, 0x1e0ffff0, 1, 50 * COIN);
+        
+        /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x00000fb809e5c563d0dcb36b795670237aa1d0d522d0632ff3d189ec835afbf1"));
-        assert(consensus.hashGenesisBlock == uint256S("0x9a248c17b4cad29fbbd5f13935918c9882434e3aeadba10a78714479c78b26aa"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000978a70b30e06014aaee001965bb0a9a03e38ca99ff6d79e34df7805f7be"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
@@ -249,7 +247,7 @@ public:
         consensus.BIP34Hash = uint256();
         consensus.BIP65Height = 1;
         consensus.BIP66Height = 1;
-        consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -281,13 +279,14 @@ public:
         nDefaultPort = 18369;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1549295742, 181343, 0x1e0ffff0, 1, 50 * COIN, consensus.nAuxpowChainId);
-        /*uint256 hash;
+        genesis = CreateGenesisBlock(1553041506, 1018586, 0x1e0ffff0, 1, 50 * COIN);
+        
+       /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x0000094876776eec6abceed079099e285163357ab41f495edf3b440397db3b0b"));
-        assert(consensus.hashGenesisBlock == uint256S("0x245141da036dce50106d9de56a0a406793663d0c18d1b5ae1268012e4f8a2d31"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000007f96fcbdbdfbc2560b63bb545648f8d9f27c15ae8f5bbc350218198704e"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
         
 
@@ -308,7 +307,8 @@ public:
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
 
-
+        // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
+        strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
        /* checkpointData = {
             {
                 {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
@@ -377,14 +377,14 @@ public:
         pchMessageStart[3] = 0xda;
         nDefaultPort = 18444;
         nPruneAfterHeight = 1000;
-        genesis = CreateGenesisBlock(1549295742, 0, 0x207fffff, 1, 50 * COIN, consensus.nAuxpowChainId);
-       /*uint256 hash;
+        genesis = CreateGenesisBlock(1553040331, 3, 0x207fffff, 1, 50 * COIN);
+        
+        /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        //printf("consensus.hashGenesisBlock  %s\n", consensus.hashGenesisBlock.GetHex().c_str());
-        assert(genesis.auxpow->getParentBlockHash() == uint256S("0x34fc9bcafeadd9ce09c1738827e2ecc8e759399384cd5113d227a16a4a4c48f3"));
-        assert(consensus.hashGenesisBlock == uint256S("0x992634ae5086a018fe4a677a1583a31dbbb07387fc7d7802d9334392823f6555"));
+        assert(consensus.hashGenesisBlock == uint256S("0x28a2c2d251f46fac05ade79085cbcb2ae4ec67ea24f1f1c7b40a348c00521194"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
