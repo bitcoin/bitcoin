@@ -110,4 +110,175 @@ supporting the network.
 
 
 ## Changelog
-Possibly include changelog here or make it a separate file for ease of maintenance.
+```
+Ashot Khachatryan (61):
+      Keep auxpow from headers and use for blocks later
+      Use auxpow received with headers
+      Added 'CRW' and 'tCRW' prefixes
+      Change old address to new one in GUI
+      Convert old address to new one in walletdb
+      Added address types identity, app service, title
+      Added unit tests for the new pubkey address prefix
+      Resolve discussions #143. Added more test cases
+      Changed isOld to enum type
+      Added GetVersionBytes() function
+      Resolve discussion !143
+      Fixed sync issue from old wallets
+      Resolved discussions !137
+      Fixed private key version byte size
+      Used m_versionBytesPrivateKey
+      Resolved discussions
+      Added CLI converter for old Crown addresses
+      Fixed test case
+      Check if alias contains white-space characters
+      Fixed out-of-memory issue caused many txlock/ix requests
+      Changed 'oldtonewaddress' to 'convertaddress'
+      Resolved discussions
+      Deploy .dmg for MacOS
+      Changed package name
+      Added release version
+      Changed release order
+      Changed icon
+      Autoconf require C++11
+      Added c++11 support for boost
+      Updated boost version
+      Changed darwin version
+      Changed darwin version in .gitlab-ci.yml
+      Fixed unit test error
+      Compile qt with c++11 option
+      Experiment with c++11
+      Added GOAL to configs
+      Updated script to use v0.12.5.2 version
+      Changed update.json to use v0.12.5.2 version
+      Added path for .dmg
+      Added -dmg postfix
+      Fixed postfix
+      Revert back sync optimization
+      Used even build version to be release
+      Changed CLIENT_VERSION_BUILD to CLIENT_VERSION_REVISION
+      Changed release version
+      Changed release version in configure.ac
+      Fixed dmg build
+      Changed build version
+      Changed protocol and build versions
+      Removed comments for seed nodes
+      Added new spork to disable/enable masternode payments
+      Fixed budget payment bug. Increased release and protocol versions
+      Don't take immature coinstake for a new transaction. #281
+      Removed TransactionRecord::MasterNodeReward, TransactionRecord::SystemNodeReward. #307
+      Added tags to .gitlab-ci.yml
+      Changed 'staking' to be true by default #308
+      Changed DoS score to 50. #309
+      Revert back main testnet parameters
+      Changed version
+      Used GetBlockValue if masternode payment is disabled
+      Fixed pow check
+
+Benjamin Allred (5):
+      BlockUndo to treat coinstake as if it were coinbase
+      MN/SN adds stakepointer and signs new block
+      Added stake modifier generation
+      Systemnode staking
+      A stakepointer can only be used once in a chain
+
+IgorDurovic (1):
+      proof hash checking added to connect block
+
+Mark Brooker (3):
+      Account for 32-/64-bit environment when downloading package #224
+      Clear up potential installer problems #228
+
+Volodymyr Shamray (17):
+      Change CLIENT_VERSION_IS_RELEASE to false
+      Add synchronization to BudgetManager
+      Fix test
+      Add more synchronization
+      Fix m_votes and m_obsoleteVotes maps usage
+      Pulled in Dash devnets
+      Make devneds work with Crown
+      Make devnet MNs possible to run on localhost
+      Change devnet prefixes
+      Fix Windows cross-compilaion
+      Fix Windows cross-compilation
+      Implement basic sandbox control script
+      Fix some bugs
+      Merge missing checks, add devnet premine
+      Fix incorrect devnet merge
+      Fix devnet bugs
+      Fix various bugs
+
+ashot@crown.tech (1):
+      Changed block rewards. Adapted compatibility with mainnet.
+
+presstab (70):
+      basic outline of certain staking functions.
+      Require c++11
+      Unit tests for proof hash and stake miner
+      Add Proof Pointer
+      Fix Styling
+      Fix error compiling with undefined class
+      Add block type check and tests. Add block signature.
+      Add block signature tests
+      Use OP_PROOFOFSTAKE for CoinStake CTxIn.
+      Add PoS to CBlock and Header
+      Add coinstake checks
+      in progress validation
+      Stake mining thread
+      New testnet genesis
+      testnet premine
+      Add stakepointer.h to Makefile.am
+      Use signover pubkey to stake with. Fix serialization errors.
+      Reduce stake weight for smoother difficulty switchover
+      Fix masternode signover signature serialization
+      Miner checks should only happen for PoS
+      Add some spacing if blocks are coming in too fast
+      Add testnet checkpoint
+      Add -jumpstart flag for when the chain is stalled
+      Do not pay both coinstake and coinbase
+      Refactor stake pointer double spend tracking
+      Only connect to the same protocol version
+      Reduce rigidity of stakepointer double stake check to allow reorg
+      Add null check
+      Enforce that stakepointers can only be 1440 blocks deep
+      Add maxreorg depth and reject stakepointers that are more recent than maxreorg
+      Clarify comments
+      Place connectblock() stake checks into their own method
+      Remove unused proof of stake code
+      Harden proofpointer checks. Rename items for legibility.
+      Remove dead code. Refactor some of the mining code.
+      Enforce MN/SN payment positions in coinbase tx
+      Do not allow stakepointers from budget payment blocks
+      Enforce 0 value coinbase
+      Only reject when sporks are synced.
+      Add exception for jumpstart
+      Double check pointer's depth before trying to stake it
+      Subtract masternode/systemnode payments from coinstake's value
+      Add another jumpstart exclusion
+      Blockchain sync state
+      Fix miner reward
+      Add final check for used stakepointer in miner.cpp
+      Ensure that the full block is being processed, not just header.
+      Set Proof of Stake in the block header version
+      Use template for stakepointer selection
+      Do not delete record of used stake pointer on disconnect if just verifying db.
+      Bump protocol and client version. Add checkpoints for easier sync.
+      Fix datacorruption on restart when looking at blockundo.
+      Don't reject mn payment if the chain has stalled
+      Adjust validation code to have knowledge of full value created in block.
+      Make stakepointer check more legible.
+      Do not consider coinstake txin's as conflicting spends.
+      Add staking_active to getinfo RPC
+      Fix partially filled out CBlockIndex. Fix first load txundo error on PoW blocks.
+      Add hack to prevent segfault on ResetSync() with -jumpstart enabled
+      Add tx fees to stake reward.
+      Do not load coinstake transactions to mempool.
+      Sort transactions by date.
+      Don't try to stake too recent of stake pointers.
+      Add compatibility with newer openssl versions.
+      Fix timestamp for Transaction Records. Add Masternode and Systemnode txrecord types.
+      Lock cs_main early if a block is found.
+      Masternode based block spam filtering.
+      Relay block proofs if peer requests.
+      Update serialization for masternode ping.
+      Make MasternodePing serialization compatible with old and new protocols.
+```
