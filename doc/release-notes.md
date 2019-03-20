@@ -1,9 +1,9 @@
-# Crown 0.12.4 Release Notes
+# Crown 0.13.0 Release Notes
 
-Crown Core tree 0.12.x release notes can be found here:
-- [v0.12.0](release-notes/crown/release-notes-0.12.0.md)
+Crown Core tree 0.13.x release notes can be found here:
+- [v0.13.0](release-notes/crown/release-notes-0.13.0.md)
 
-Crown Core tree 0.12.x is a fork of Bitcoin Core tree 0.10.2
+Crown Core tree 0.13.x was originally forked from Bitcoin Core tree 0.10.2
 
 Bitcoind can now (optionally) asynchronously notify clients through a
 ZMQ-based PUB socket of the arrival of new transactions and blocks.
