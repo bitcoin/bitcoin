@@ -23,7 +23,8 @@ CGovernanceObject::CGovernanceObject():
     nRevision(0),
     nTime(0),
     nDeletionTime(0),
-    txCollateral(),
+    nCollateralTxHash(),
+    nCollateralBlockHash(),
     vchData(),
     masternodeOutpoint(),
     vchSig(),
@@ -44,14 +45,15 @@ CGovernanceObject::CGovernanceObject():
     LoadData();
 }
 
-CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const CTransactionRef& txCollateralIn, const std::string& strDataHexIn):
+CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const uint256& nCollateralTxHashIn, const uint256& nCollateralBlockHashIn, const std::string& strDataHexIn):
     cs(),
     nObjectType(GOVERNANCE_OBJECT_UNKNOWN),
     nHashParent(nHashParentIn),
     nRevision(nRevisionIn),
     nTime(nTimeIn),
     nDeletionTime(0),
-    txCollateral(txCollateralIn),
+    nCollateralTxHash(nCollateralTxHashIn),
+    nCollateralBlockHash(nCollateralBlockHashIn),
     vchData(ParseHex(strDataHexIn)),
     masternodeOutpoint(),
     vchSig(),
@@ -79,7 +81,8 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other):
     nRevision(other.nRevision),
     nTime(other.nTime),
     nDeletionTime(other.nDeletionTime),
-    txCollateral(other.txCollateral),
+    nCollateralTxHash(other.nCollateralTxHash),
+    nCollateralBlockHash(other.nCollateralBlockHash),
     vchData(other.vchData),
     masternodeOutpoint(other.masternodeOutpoint),
     vchSig(other.vchSig),
@@ -230,7 +233,8 @@ std::string CGovernanceObject::GetSignatureMessage() const
         boost::lexical_cast<std::string>(nTime) + "|" +
         GetDataAsHexString() + "|" +
         masternodeOutpoint.ToStringShort() + "|" +
-        GetCollateralHash().GetHex();
+        nCollateralTxHash.ToString() + "|" +
+        nCollateralBlockHash.ToString();
 
     return strMessage;
 }
@@ -512,30 +516,28 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
 {
     strError = "";
     fMissingConfirmations = false;
-    const CAmount &nMinFee = GetMinCollateralFee();
-    const uint256 &nExpectedHash = GetHash();
-    
-    
-    if(txCollateral->IsNull()){
-        strError = strprintf("Invalid collateral tx");
-        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
-        return false;    
-    }
-   
+ 
     int nConfirmationsIn = 0;
     // RETRIEVE TRANSACTION IN QUESTION
-    {
-        const uint256& collateralHash = GetCollateralHash();
-        LOCK(cs_main);
-        const Coin& coin = AccessByTxid(*pcoinsTip, collateralHash);
-        if (!coin.IsSpent())
-            nConfirmationsIn = chainActive.Height() - coin.nHeight + 1;
-        else{
-            strError = strprintf("Can't find collateral tx %s", collateralHash.ToString());
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
-            return false;       
-        }
+    uint256 hash_block;
+    CBlockIndex* blockindex = nullptr;
+    CTransactionRef txCollateral;
+
+    blockindex = LookupBlockIndex(GetCollateralBlockHash());
+    if(!blockindex){
+        strError = strprintf("Can't find collateral blockhash %s", GetCollateralBlockHash().ToString());
+        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        return false;   
     }
+     
+    if (GetTransaction(GetCollateralTxHash(), txCollateral, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+        nConfirmationsIn = chainActive.Height() - blockindex->nHeight + 1;
+    else{
+        strError = strprintf("Can't find collateral tx %s", GetCollateralTxHash().ToString());
+        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        return false;       
+    }
+    
 
     if(txCollateral->vout.size() < 1) {
         strError = strprintf("tx vout size less than 1 | %d", txCollateral->vout.size());
@@ -547,7 +549,8 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
-
+    const CAmount &nMinFee = GetMinCollateralFee();
+    const uint256 &nExpectedHash = GetHash();
     // LOOK FOR SPECIALIZED GOVERNANCE SCRIPT (PROOF OF BURN)
 
     CScript findScript;
