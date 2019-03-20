@@ -673,7 +673,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     }
 
     CInv inv(MSG_ISLOCK, hash);
-    g_connman->RelayInv(inv);
+    g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
 
     RemoveMempoolConflictsForLock(hash, islock);
     RetryLockTxs(islock.txid);

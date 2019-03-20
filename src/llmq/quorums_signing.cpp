@@ -519,7 +519,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
     }
 
     CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig.GetHash());
-    g_connman->RelayInv(inv);
+    g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
 
     for (auto& l : listeners) {
         l->HandleNewRecoveredSig(recoveredSig);
