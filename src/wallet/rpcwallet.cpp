@@ -3694,52 +3694,70 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
-    isminetype mine = IsMine(*pwallet, dest);
-    ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
-    bool solvable = IsSolvable(*pwallet, scriptPubKey);
-    ret.pushKV("solvable", solvable);
-    if (solvable) {
-       ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
-    }
-    ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
-    UniValue detail = DescribeWalletAddress(pwallet, dest);
-    ret.pushKVs(detail);
-    if (pwallet->mapAddressBook.count(dest)) {
-        ret.pushKV("label", pwallet->mapAddressBook[dest].name);
-    }
-    ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
-    const CKeyMetadata* meta = nullptr;
-    CKeyID key_id = GetKeyForDestination(*pwallet, dest);
-    if (!key_id.IsNull()) {
-        auto it = pwallet->mapKeyMetadata.find(key_id);
-        if (it != pwallet->mapKeyMetadata.end()) {
-            meta = &it->second;
-        }
-    }
-    if (!meta) {
-        auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
-        if (it != pwallet->m_script_metadata.end()) {
-            meta = &it->second;
-        }
-    }
-    if (meta) {
-        ret.pushKV("timestamp", meta->nCreateTime);
-        if (meta->has_key_origin) {
-            ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
-            ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
-            ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint, meta->key_origin.fingerprint + 4));
-        }
-    }
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        DescriptorAddress dAddr;
+        WalletDescriptor* wDesc = nullptr;
 
-    // Currently only one label can be associated with an address, return an array
-    // so the API remains stable if we allow multiple labels to be associated with
-    // an address.
-    UniValue labels(UniValue::VARR);
-    std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
-    if (mi != pwallet->mapAddressBook.end()) {
-        labels.push_back(AddressBookDataToJSON(mi->second, true));
+        if (pwallet->FindDescriptorAddress(dAddr, wDesc, scriptPubKey)) {
+            assert(wDesc != nullptr);
+            ret.pushKV("desc", wDesc->m_descriptor->ToString());
+            if (wDesc->m_descriptor->IsRange()) {
+                ret.pushKV("index", dAddr.m_index);
+            }
+            ret.pushKV("solvable", wDesc->m_descriptor->IsSolvable());
+            // TODO: add ismine or iswatchonly
+            ret.pushKV("ischange", wDesc->m_purpose == DESCRIPTOR_PURPOSE_CHANGE_CURRENT || wDesc->m_purpose == DESCRIPTOR_PURPOSE_CHANGE_ARCHIVE);
+            ret.pushKV("label", dAddr.m_label);
+            ret.pushKV("timestamp", dAddr.nCreateTime);
+        }
+    } else {
+        isminetype mine = IsMine(*pwallet, dest);
+        ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
+        bool solvable = IsSolvable(*pwallet, scriptPubKey);
+        ret.pushKV("solvable", solvable);
+        if (solvable) {
+           ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
+        }
+        ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
+        UniValue detail = DescribeWalletAddress(pwallet, dest);
+        ret.pushKVs(detail);
+        if (pwallet->mapAddressBook.count(dest)) {
+            ret.pushKV("label", pwallet->mapAddressBook[dest].name);
+        }
+        ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
+        const CKeyMetadata* meta = nullptr;
+        CKeyID key_id = GetKeyForDestination(*pwallet, dest);
+        if (!key_id.IsNull()) {
+            auto it = pwallet->mapKeyMetadata.find(key_id);
+            if (it != pwallet->mapKeyMetadata.end()) {
+                meta = &it->second;
+            }
+        }
+        if (!meta) {
+            auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
+            if (it != pwallet->m_script_metadata.end()) {
+                meta = &it->second;
+            }
+        }
+        if (meta) {
+            ret.pushKV("timestamp", meta->nCreateTime);
+            if (meta->has_key_origin) {
+                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+                ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
+                ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint, meta->key_origin.fingerprint + 4));
+            }
+        }
+
+        // Currently only one label can be associated with an address, return an array
+        // so the API remains stable if we allow multiple labels to be associated with
+        // an address.
+        UniValue labels(UniValue::VARR);
+        std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
+        if (mi != pwallet->mapAddressBook.end()) {
+            labels.push_back(AddressBookDataToJSON(mi->second, true));
+        }
+        ret.pushKV("labels", std::move(labels));
     }
-    ret.pushKV("labels", std::move(labels));
 
     return ret;
 }
