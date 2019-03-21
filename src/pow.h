@@ -11,6 +11,7 @@
 class CBlockHeader;
 class CBlockIndex;
 class uint256;
+class CChain;
 class arith_uint256;
 
 // Define difficulty retarget algorithms
@@ -26,5 +27,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits);
 arith_uint256 GetBlockProof(const CBlockIndex& block);
+extern CChain chainActive;
 
 #endif // BITCOIN_POW_H

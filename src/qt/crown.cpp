@@ -618,7 +618,7 @@ int main(int argc, char *argv[])
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     if (!SelectParamsFromCommandLine()) {
-        QMessageBox::critical(0, QObject::tr("Crown Core"), QObject::tr("Error: Invalid combination of -regtest and -testnet."));
+        QMessageBox::critical(0, QObject::tr("Crown Core"), QObject::tr("Error: Only one of -regtest, -testnet or -devnet can be used."));
         return 1;
     }
 #ifdef ENABLE_WALLET

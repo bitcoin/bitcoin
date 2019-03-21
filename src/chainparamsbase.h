@@ -20,6 +20,7 @@ public:
         TESTNET,
         REGTEST,
         UNITTEST,
+        DEVNET,
 
         MAX_NETWORK_TYPES
     };
@@ -55,6 +56,8 @@ CBaseChainParams::Network NetworkIdFromCommandLine();
  * Returns false if an invalid combination is given.
  */
 bool SelectBaseParamsFromCommandLine();
+
+std::string GetDevNetName();
 
 /**
  * Return true if SelectBaseParamsFromCommandLine() has been called to select

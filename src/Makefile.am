@@ -142,6 +142,12 @@ BITCOIN_CORE_H = \
   masternode-sync.h \
   masternodeman.h \
   masternodeconfig.h \
+  mn-pos/blockwitness.h \
+  mn-pos/kernel.h \
+  mn-pos/prooftracker.h \
+  mn-pos/stakepointer.h \
+  mn-pos/stakeminer.h \
+  mn-pos/stakevalidation.h \
   nodeconfig.h \
   systemnode.h \
   systemnode-payments.h \
@@ -201,6 +207,11 @@ libbitcoin_server_a_SOURCES = \
   main.cpp \
   merkleblock.cpp \
   miner.cpp \
+  mn-pos/kernel.cpp \
+  mn-pos/prooftracker.cpp \
+  mn-pos/stakeminer.cpp \
+  mn-pos/stakepointer.cpp \
+  mn-pos/stakevalidation.cpp \
   net.cpp \
   noui.cpp \
   pow.cpp \
@@ -239,6 +250,7 @@ libbitcoin_wallet_a_SOURCES = \
   masternode-payments.cpp \
   masternode-sync.cpp \
   masternodeconfig.cpp \
+  mn-pos/stakeminer.cpp \
   nodeconfig.cpp \
   masternodeman.cpp \
   systemnode-sync.cpp \

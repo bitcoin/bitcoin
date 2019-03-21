@@ -51,5 +51,6 @@ static const int MAX_URI_LENGTH = 255;
 #define QAPP_ORG_DOMAIN "crown.tech"
 #define QAPP_APP_NAME_DEFAULT "Crown-Qt"
 #define QAPP_APP_NAME_TESTNET "Crown-Qt-testnet"
+#define QAPP_APP_NAME_DEVNET "Crown-Qt-%s"
 
 #endif // BITCOIN_QT_GUICONSTANTS_H

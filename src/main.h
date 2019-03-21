@@ -44,6 +44,7 @@ class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
 class CInv;
+class ProofTracker;
 class CScriptCheck;
 class CValidationInterface;
 class CValidationState;
@@ -116,6 +117,12 @@ struct BlockHasher
     size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
 };
 
+typedef std::pair<uint256, unsigned int> SPIdentifier;
+struct SPHasher
+{
+    size_t operator()(const SPIdentifier& spID) const { return spID.first.GetHash(uint256S(std::to_string(spID.second))); }
+};
+
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
 extern CTxMemPool mempool;
@@ -129,6 +136,7 @@ extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
 extern bool fImporting;
 extern bool fReindex;
+extern bool fVerifying;
 extern int nScriptCheckThreads;
 extern bool fTxIndex;
 extern bool fIsBareMultisigStd;
@@ -136,11 +144,15 @@ extern bool fCheckBlockIndex;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
-
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
+extern int nLastStakeAttempt;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
+
+typedef uint256 PointerHash;
+extern std::map<PointerHash, uint256> mapUsedStakePointers; //pointer hash matched to blockhash that it is in
+extern ProofTracker* g_proofTracker;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
@@ -226,11 +238,11 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue);
 int64_t GetSystemnodePayment(int nHeight, int64_t blockValue);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock);
 
-bool ActivateBestChain(CValidationState &state, CBlock *pblock = NULL);
+bool ActivateBestChain(CValidationState &state, const CBlock *pblock = NULL);
 int64_t GetBlockValue(int nHeight, const CAmount &nFees);
 
 /** Create a new block index entry for a given block hash */
-CBlockIndex * InsertBlockIndex(uint256 hash);
+CBlockIndex * InsertBlockIndex(uint256 hash, bool fProofOfStake);
 /** Abort with a message */
 bool AbortNode(const std::string &msg, const std::string &userMessage="");
 /** Get statistics from node state */
@@ -400,7 +412,7 @@ public:
 
 
 /** Functions for disk access for blocks */
-bool WriteBlockToDisk(CBlock& block, CDiskBlockPos& pos);
+bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex);
 bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex);
 
@@ -431,7 +443,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
 
 /** Store block on disk. If dbp is provided, the file is known to already reside on disk */
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex **pindex, CDiskBlockPos* dbp = NULL);
-bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex **ppindex= NULL);
+bool AcceptBlockHeader(const CBlockHeader& block, bool fProofOfStake, CValidationState& state, CBlockIndex **ppindex= NULL);
 
 
 
@@ -496,6 +508,7 @@ private:
         MODE_VALID,   //! everything ok
         MODE_INVALID, //! network rule violation (DoS value may be set)
         MODE_ERROR,   //! run-time error
+        MODE_SUSPICIOUS, //! state seems wrong, but do not have all context needed to know that for sure
     } mode;
     int nDoS;
     std::string strRejectReason;
@@ -529,6 +542,10 @@ public:
         AbortNode(msg);
         return Error(msg);
     }
+    bool Suspicious(const std::string &msg) {
+        mode = MODE_SUSPICIOUS;
+        return Error(msg);
+    }
     bool IsValid() const {
         return mode == MODE_VALID;
     }
@@ -544,6 +561,9 @@ public:
             return true;
         }
         return false;
+    }
+    bool IsSuspicious() const {
+        return mode == MODE_SUSPICIOUS;
     }
     bool CorruptionPossible() const {
         return corruptionPossible;

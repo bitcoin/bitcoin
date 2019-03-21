@@ -32,6 +32,9 @@ public:
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
+        IDENTITY_ADDRESS,
+        APP_SERVICE_ADDRESS,
+        TITLE_ADDRESS,
         SECRET_KEY,     // BIP16
         EXT_PUBLIC_KEY, // BIP32
         EXT_SECRET_KEY, // BIP32
@@ -40,11 +43,19 @@ public:
         MAX_BASE58_TYPES
     };
 
+    enum AddressType
+    {
+        NEW_ADDRESS_TYPE,
+        DEPRECATED_ADDRESS_TYPE
+    };
+
     const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
+    const uint256& HashDevnetGenesisBlock() const { return hashDevnetGenesisBlock; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const arith_uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
+    void SetProofOfWorkLimit(const arith_uint256& limit) { bnProofOfWorkLimit = limit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     /** Used to check majorities for block version upgrade */
     int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
@@ -54,6 +65,7 @@ public:
     /** Used if GenerateBitcoins is called with a negative number of threads */
     int DefaultMinerThreads() const { return nMinerThreads; }
     const CBlock& GenesisBlock() const { return genesis; }
+    const CBlock& DevNetGenesisBlock() const { return devnetGenesis; }
     bool RequireRPCPassword() const { return fRequireRPCPassword; }
     /** Make miner wait to have peers to avoid wasting work */
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
@@ -74,7 +86,14 @@ public:
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
-    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
+    const std::vector<unsigned char>& Base58Prefix(Base58Type type, AddressType addressType = NEW_ADDRESS_TYPE) const
+    {
+        if (addressType == DEPRECATED_ADDRESS_TYPE)
+        {
+            return base58PrefixesOld[type];
+        }
+        return base58Prefixes[type];
+    }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
@@ -84,7 +103,13 @@ public:
     int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the auxpow chain ID.  */
-    inline int32_t AuxpowChainId () const { return 20; }
+    inline int32_t AuxpowChainId () const { return nAuxpowChainId; }
+    int32_t PoSChainId () const { return nPoSChainId; }
+    int PoSStartHeight() const { return nBlockPoSStart; }
+    int ValidStakePointerDuration() const { return nStakePointerValidityPeriod; }
+    int MaxReorganizationDepth() const { return nMaxReorgDepth; }
+    int KernelModifierOffset() const { return nKernelModifierOffset; }
+    int ChainStallDuration() const { return nChainStallDuration; }
     /* Return start height of auxpow and the retarget interval change.  */
     virtual int AuxpowStartHeight() const = 0;
     /* Return whether or not to enforce strict chain ID checks.  */
@@ -96,6 +121,7 @@ protected:
     CChainParams() {}
 
     uint256 hashGenesisBlock;
+    uint256 hashDevnetGenesisBlock;
     CMessageHeader::MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
@@ -111,9 +137,11 @@ protected:
     long nMaxTipAge;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    std::vector<unsigned char> base58PrefixesOld[MAX_BASE58_TYPES];
     CBaseChainParams::Network networkID;
     std::string strNetworkID;
     CBlock genesis;
+    CBlock devnetGenesis;
     std::vector<CAddress> vFixedSeeds;
     bool fRequireRPCPassword;
     bool fMiningRequiresPeers;
@@ -127,6 +155,13 @@ protected:
     std::string strLegacySignerDummyAddress;
     std::string strDevfundAddress;
     int64_t nStartMasternodePayments;
+    int32_t nAuxpowChainId;
+    int32_t nPoSChainId;
+    int nBlockPoSStart;
+    int nStakePointerValidityPeriod;
+    int nMaxReorgDepth;
+    int nKernelModifierOffset;
+    int nChainStallDuration;
 };
 
 /** 

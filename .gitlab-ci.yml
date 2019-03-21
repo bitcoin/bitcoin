@@ -1,5 +1,5 @@
 variables:
-  RELEASE_VERSION: "0.12.5.2"
+  RELEASE_VERSION: "0.12.7.4"
   GIT_STRATEGY: "clone"
   MAKEJOBS: "-j4"
   CCACHE_SIZE: "100M"
@@ -30,9 +30,11 @@ cache:
     - cd crown-$HOST
     - ./configure --cache-file=../config.cache $CROWN_CONFIG_ALL $CROWN_CONFIG
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
-    - if [ -n "$OSX_SDK" ]; then cp Crown-Qt.dmg ../../Crown-Qt.dmg; fi
+    - if [ -n "$DMG" ]; then cp Crown-Qt.dmg ../../Crown-Qt.dmg; fi
 
 .job_template: &win64_definition
+  tags:
+    - windows
   variables:
     CROWN_CONFIG: "--enable-mingw"
     HOST: "x86_64-w64-mingw32"
@@ -41,6 +43,8 @@ cache:
     PACKAGES: "nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 wine1.6 bc"
 
 .job_template: &win32_definition
+  tags:
+    - windows
   variables:
     CROWN_CONFIG: ""
     HOST: "i686-w64-mingw32"
@@ -49,6 +53,8 @@ cache:
     PACKAGES: "nsis g++-mingw-w64-i686 gcc-mingw-w64-i686 binutils-mingw-w64-i686 wine1.6 bc"
 
 .job_template: &linux64_definition
+  tags:
+    - linux64
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "x86_64-unknown-linux-gnu"
@@ -57,6 +63,8 @@ cache:
     DEP_OPTS: "USE_LINUX_STATIC_QT5=1"
 
 .job_template: &linux32_definition
+  tags:
+    - linux32
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "i686-pc-linux-gnu"
@@ -66,6 +74,8 @@ cache:
     PACKAGES: "g++-multilib bc"
 
 .job_template: &raspberrypi_definition
+  tags:
+    - raspi
   variables:
     CROWN_CONFIG: "--enable-glibc-back-compat"
     HOST: "arm-linux-gnueabihf"
@@ -74,11 +84,25 @@ cache:
     PACKAGES: "g++-arm-linux-gnueabihf"
 
 .job_template: &osx_definition
+  tags:
+    - osx
   variables:
     CROWN_CONFIG: ""
-    HOST: "x86_64-apple-darwin11"
-    GOAL: "install deploy"
-    OSX_SDK: "10.7"
+    HOST: "x86_64-apple-darwin14"
+    OSX_SDK: "10.8"
+    GOAL: "install"
+    OUTDIR: "Crown-${RELEASE_VERSION}-Osx"
+    PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
+
+.job_template: &osx_dmg_definition
+  tags:
+    - osx
+  variables:
+    CROWN_CONFIG: ""
+    HOST: "x86_64-apple-darwin14"
+    OSX_SDK: "10.8"
+    DMG: "True"
+    GOAL: "deploy"
     OUTDIR: "Crown-${RELEASE_VERSION}-Osx"
     PACKAGES: "cmake gcc-multilib g++-multilib libcap-dev libbz2-dev"
 
@@ -102,23 +126,24 @@ cache:
     - master
     - tags
 
-.job_template: &macos_release_definition
+.job_template: &dmg_release_definition
   artifacts:
+    name: "$OUTDIR-dmg"
     paths:
     - Crown-Qt.dmg
   only:
     - master
     - tags
 
-.job_template: &macos_snapshot_definition
+.job_template: &dmg_snapshot_definition
   artifacts:
+    name: "$OUTDIR-dmg"
     paths:
     - Crown-Qt.dmg
     expire_in: 2 weeks
   except:
     - master
     - tags
-
 
 # Job definitions for releases
 Win64:
@@ -152,9 +177,9 @@ Osx:
   <<: *release_definition
 
 Osx-dmg:
-  <<: *osx_definition
+  <<: *osx_dmg_definition
   <<: *job_definition 
-  <<: *macos_release_definition
+  <<: *dmg_release_definition
 
 # Job definitions for temporary builds (snapshots)
 Win64-snapshot:
@@ -187,10 +212,10 @@ Osx-snapshot:
   <<: *job_definition 
   <<: *snapshot_definition 
 
-Osx-snapshot-dmg:
-  <<: *osx_definition
+Osx-dmg-snapshot:
+  <<: *osx_dmg_definition
   <<: *job_definition 
-  <<: *macos_snapshot_definition 
+  <<: *dmg_snapshot_definition
 
 # Trigger the docker build and delivery
 trigger_docker_build:

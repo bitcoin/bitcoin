@@ -25,7 +25,6 @@ class BudgetDraft;
 class BudgetDraftVote;
 class CBudgetProposal;
 class CBudgetProposalBroadcast;
-class CBudgetVote;
 class CTxBudgetPayment;
 
 #define VOTE_ABSTAIN  0
@@ -51,6 +50,58 @@ CAmount GetVotingThreshold();
 
 //Check the collateral transaction for the budget proposal/finalized budget
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
+
+//
+// CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
+//
+
+class CBudgetVote
+{
+public:
+    bool fValid; //if the vote is currently valid / counted
+    bool fSynced; //if we've sent this to our peers
+    CTxIn vin;
+    uint256 nProposalHash;
+    int nVote;
+    int64_t nTime;
+    std::vector<unsigned char> vchSig;
+
+    CBudgetVote();
+    CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
+
+    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
+    bool SignatureValid(bool fSignatureCheck) const;
+    void Relay();
+
+    std::string GetVoteString() const {
+        std::string ret = "ABSTAIN";
+        if(nVote == VOTE_YES) ret = "YES";
+        if(nVote == VOTE_NO) ret = "NO";
+        return ret;
+    }
+
+    uint256 GetHash() const {
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << vin;
+        ss << nProposalHash;
+        ss << nVote;
+        ss << nTime;
+        return ss.GetHash();
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin);
+        READWRITE(nProposalHash);
+        READWRITE(nVote);
+        READWRITE(nTime);
+        READWRITE(vchSig);
+    }
+};
+
+
 
 //
 // Budget Manager : Contains all proposals for the budget
@@ -120,7 +171,7 @@ public:
         LOCK(cs);
 
         return
-            mapSeenMasternodeBudgetProposals.count(hash) ||
+            //mapSeenMasternodeBudgetProposals.count(hash) ||
             mapSeenMasternodeBudgetVotes.count(hash) ||
             mapSeenBudgetDrafts.count(hash) ||
             mapSeenBudgetDraftVotes.count(hash);
@@ -523,103 +574,55 @@ public:
 // Proposals are cast then sent to peers with this object, which leaves the votes out
 class CBudgetProposalBroadcast : public CBudgetProposal
 {
-public:
-    CBudgetProposalBroadcast() : CBudgetProposal(){}
-    CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
-    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other){}
-    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
+    public:
+        CBudgetProposalBroadcast() : CBudgetProposal(){}
+        CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
+        CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other){}
+        CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
-    void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
+        void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
+        {
+            // enable ADL (not necessary in our case, but good practice)
+            using std::swap;
 
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.strProposalName, second.strProposalName);
-        swap(first.nBlockStart, second.nBlockStart);
-        swap(first.strURL, second.strURL);
-        swap(first.nBlockEnd, second.nBlockEnd);
-        swap(first.nAmount, second.nAmount);
-        swap(first.address, second.address);
-        swap(first.nTime, second.nTime);
-        swap(first.nFeeTXHash, second.nFeeTXHash);
-        first.mapVotes.swap(second.mapVotes);
-    }
+            // by swapping the members of two classes,
+            // the two classes are effectively swapped
+            swap(first.strProposalName, second.strProposalName);
+            swap(first.nBlockStart, second.nBlockStart);
+            swap(first.strURL, second.strURL);
+            swap(first.nBlockEnd, second.nBlockEnd);
+            swap(first.nAmount, second.nAmount);
+            swap(first.address, second.address);
+            swap(first.nTime, second.nTime);
+            swap(first.nFeeTXHash, second.nFeeTXHash);
+            first.mapVotes.swap(second.mapVotes);
+        }
 
-    CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
-    {
-        swap(*this, from);
-        return *this;
-    }
+        CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
+        {
+            swap(*this, from);
+            return *this;
+        }
 
-    void Relay();
+        void Relay();
 
-    ADD_SERIALIZE_METHODS;
+        ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        //for syncing with other clients
+        template <typename Stream, typename Operation>
+            inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+                //for syncing with other clients
 
-        READWRITE(LIMITED_STRING(strProposalName, 20));
-        READWRITE(LIMITED_STRING(strURL, 64));
-        READWRITE(nTime);
-        READWRITE(nBlockStart);
-        READWRITE(nBlockEnd);
-        READWRITE(nAmount);
-        READWRITE(*(CScriptBase*)(&address));
-        READWRITE(nFeeTXHash);
-    }
+                READWRITE(LIMITED_STRING(strProposalName, 20));
+                READWRITE(LIMITED_STRING(strURL, 64));
+                READWRITE(nTime);
+                READWRITE(nBlockStart);
+                READWRITE(nBlockEnd);
+                READWRITE(nAmount);
+                READWRITE(*(CScriptBase*)(&address));
+                READWRITE(nFeeTXHash);
+            }
 };
 
-//
-// CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
-//
 
-class CBudgetVote
-{
-public:
-    bool fValid; //if the vote is currently valid / counted
-    bool fSynced; //if we've sent this to our peers
-    CTxIn vin;
-    uint256 nProposalHash;
-    int nVote;
-    int64_t nTime;
-    std::vector<unsigned char> vchSig;
-
-    CBudgetVote();
-    CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
-
-    bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid(bool fSignatureCheck) const;
-    void Relay();
-
-    std::string GetVoteString() const {
-        std::string ret = "ABSTAIN";
-        if(nVote == VOTE_YES) ret = "YES";
-        if(nVote == VOTE_NO) ret = "NO";
-        return ret;
-    }
-
-    uint256 GetHash() const {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
-        ss << nProposalHash;
-        ss << nVote;
-        ss << nTime;
-        return ss.GetHash();
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(vin);
-        READWRITE(nProposalHash);
-        READWRITE(nVote);
-        READWRITE(nTime);
-        READWRITE(vchSig);
-    }
-};
 
 #endif

@@ -69,6 +69,13 @@ bool CreateNodeDialog::CheckAlias()
         QMessageBox::warning(this, windowTitle(), tr("Alias is Required"), QMessageBox::Ok, QMessageBox::Ok);
         return false;
     }
+    // Check white-space characters
+    if (ui->aliasEdit->text().contains(QRegExp("\\s")))
+    {
+        ui->aliasEdit->setValid(false);
+        QMessageBox::warning(this, windowTitle(), tr("Alias cannot contain white-space characters"), QMessageBox::Ok, QMessageBox::Ok);
+        return false;
+    }
     // Check if alias exists
     if (aliasExists(ui->aliasEdit->text()))
     {
