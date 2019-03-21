@@ -544,7 +544,6 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                 const int& nOut = find_value(utxoObj, "vout").get_int();
                 const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
                 const CScript& scriptPubKey = CScript(data.begin(), data.end());
-                LogPrintf("asm script: %s", ScriptToAsmStr(scriptPubKey));
                 const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
                 const CTxIn txIn(txid, nOut, scriptPubKey);
                 const COutPoint outPoint(txid, nOut);
