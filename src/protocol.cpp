@@ -58,6 +58,7 @@ const char *MNGOVERNANCEOBJECT="govobj";
 const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
 const char *GETMNLISTDIFF="getmnlistd";
 const char *MNLISTDIFF="mnlistdiff";
+const char *QSENDRECSIGS="qsendrecsigs";
 const char *QFCOMMITMENT="qfcommit";
 const char *QCONTRIB="qcontrib";
 const char *QCOMPLAINT="qcomplaint";
@@ -161,6 +162,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::MNGOVERNANCEOBJECTVOTE,
     NetMsgType::GETMNLISTDIFF,
     NetMsgType::MNLISTDIFF,
+    NetMsgType::QSENDRECSIGS,
     NetMsgType::QFCOMMITMENT,
     NetMsgType::QCONTRIB,
     NetMsgType::QCOMPLAINT,

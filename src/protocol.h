@@ -264,6 +264,7 @@ extern const char *MNGOVERNANCEOBJECT;
 extern const char *MNGOVERNANCEOBJECTVOTE;
 extern const char *GETMNLISTDIFF;
 extern const char *MNLISTDIFF;
+extern const char *QSENDRECSIGS;
 extern const char *QFCOMMITMENT;
 extern const char *QCONTRIB;
 extern const char *QCOMPLAINT;
