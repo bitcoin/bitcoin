@@ -258,6 +258,7 @@ extern const char *DSCOMPLETE;
 extern const char *DSSTATUSUPDATE;
 extern const char *DSTX;
 extern const char *DSQUEUE;
+extern const char *SENDDSQUEUE;
 extern const char *SYNCSTATUSCOUNT;
 extern const char *MNGOVERNANCESYNC;
 extern const char *MNGOVERNANCEOBJECT;

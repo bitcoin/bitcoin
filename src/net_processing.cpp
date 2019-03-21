@@ -1681,6 +1681,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
 
+        if (pfrom->nVersion >= SENDDSQUEUE_PROTO_VERSION) {
+            // Tell our peer that he should send us PrivateSend queue messages
+            connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
+        } else {
+            // older nodes do not support SENDDSQUEUE and expect us to always send PrivateSend queue messages
+            // TODO we can remove this compatibility code in 0.15.0
+            pfrom->fSendDSQueue = true;
+        }
+
         if (pfrom->nVersion >= LLMQS_PROTO_VERSION) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
@@ -1768,6 +1777,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             State(pfrom->GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
             State(pfrom->GetId())->fSupportsDesiredCmpctVersion = true;
         }
+    }
+
+
+    else if (strCommand == NetMsgType::SENDDSQUEUE)
+    {
+        bool b;
+        vRecv >> b;
+        pfrom->fSendDSQueue = b;
     }
 
 

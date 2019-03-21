@@ -52,6 +52,7 @@ const char *DSCOMPLETE="dsc";
 const char *DSSTATUSUPDATE="dssu";
 const char *DSTX="dstx";
 const char *DSQUEUE="dsq";
+const char *SENDDSQUEUE="senddsq";
 const char *SYNCSTATUSCOUNT="ssc";
 const char *MNGOVERNANCESYNC="govsync";
 const char *MNGOVERNANCEOBJECT="govobj";
@@ -148,6 +149,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
+    NetMsgType::SENDDSQUEUE,
     NetMsgType::DSACCEPT,
     NetMsgType::DSVIN,
     NetMsgType::DSFINALTX,

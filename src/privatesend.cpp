@@ -72,7 +72,7 @@ bool CPrivateSendQueue::Relay(CConnman& connman)
 {
     connman.ForEachNode([&connman, this](CNode* pnode) {
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
-        if (pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION)
+        if (pnode->nVersion >= MIN_PRIVATESEND_PEER_PROTO_VERSION && pnode->fSendDSQueue)
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSQUEUE, (*this)));
     });
     return true;
