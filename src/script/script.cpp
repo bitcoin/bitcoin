@@ -197,7 +197,7 @@ bool CScript::IsPayToWitnessPublicKeyHash() const
     // SYSCOIN
     CScript scriptOut;
     CScript scriptPubKeyOut;
-    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+    if (scriptOut.size() != 22 && RemoveSyscoinScript(*this, scriptPubKeyOut))
         scriptOut = scriptPubKeyOut;
     else
         scriptOut = *this;
@@ -211,7 +211,7 @@ bool CScript::IsPayToScriptHash() const
     // SYSCOIN
     CScript scriptOut;
     CScript scriptPubKeyOut;
-    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+    if (scriptOut.size() != 23 && RemoveSyscoinScript(*this, scriptPubKeyOut))
         scriptOut = scriptPubKeyOut;
     else
         scriptOut = *this;
@@ -227,7 +227,7 @@ bool CScript::IsPayToWitnessScriptHash() const
     // SYSCOIN
     CScript scriptOut;
     CScript scriptPubKeyOut;
-    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
+    if (scriptOut.size() != 34 && RemoveSyscoinScript(*this, scriptPubKeyOut))
         scriptOut = scriptPubKeyOut;
     else
         scriptOut = *this;

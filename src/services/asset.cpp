@@ -387,8 +387,12 @@ UniValue syscointxfund_helper(const string &vchWitness, vector<CRecipient> &vecS
 			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress);
 		}
 		Coin pcoinW;
-		if (GetUTXOCoin(witnessOutpoint, pcoinW))
-			txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
+		if (GetUTXOCoin(witnessOutpoint, pcoinW)){
+            CScript scriptSigStripped;
+            if(RemoveSyscoinScript(pcoinW.out.scriptPubKey, scriptSigStripped))
+                LogPrintf("Removed syscoin script from input\n");
+			txNew.vin.push_back(CTxIn(witnessOutpoint, scriptSigStripped));
+        }
 	}
 
 	// vouts to the payees
