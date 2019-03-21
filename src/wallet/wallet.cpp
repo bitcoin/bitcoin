@@ -589,6 +589,18 @@ bool CWallet::FindDescriptorAddress(DescriptorAddress& dAddr, WalletDescriptor*&
     return FindDescriptorAddress(dAddr, wDesc, scriptPubKey);
 }
 
+std::vector<std::pair<DescriptorAddress, WalletDescriptor*>> CWallet::FindDescriptorAddressesForLabel(std::string label) {
+    std::vector<std::pair<DescriptorAddress, WalletDescriptor*>> result;
+    for (auto& p : m_descriptors) {
+        for (auto& a : p.second->m_addresses) {
+            if (a.m_label == label) {
+                result.push_back(std::pair<DescriptorAddress, WalletDescriptor*>(a, p.second.get()));
+            }
+        }
+    }
+    return result;
+}
+
 bool CWallet::LoadDescriptorAddress(uint64_t wdesc_id, uint64_t index, DescriptorAddress dAddr)
 {
     assert(m_descriptors.size() >= wdesc_id); // WalletDescriptor is stored and loaded before its WalletAddress entries
