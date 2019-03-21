@@ -9,39 +9,39 @@
 /**
  * network protocol versioning
  */
-static const int PROTOCOL_VERSION = 71061;
-static const int PROTOCOL_POS_START = 71061;
+static const int PROTOCOL_VERSION = 70055;
+static const int PROTOCOL_POS_START = 70055;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 
 //! disconnect from peers older than this proto version
-static const int MIN_PEER_PROTO_VERSION_PREV = PROTOCOL_POS_START;
-static const int MIN_PEER_PROTO_VERSION_CURR = PROTOCOL_POS_START;
+static const int MIN_PEER_PROTO_VERSION_PREV = 70054;
+static const int MIN_PEER_PROTO_VERSION_CURR = 70055;
 
 //! minimum peer version accepted by legacySigner
-static const int MIN_POOL_PEER_PROTO_VERSION = PROTOCOL_POS_START;
+static const int MIN_POOL_PEER_PROTO_VERSION = 70054;
 
 //! minimum peer version for masternode budgets
-static const int MIN_BUDGET_PEER_PROTO_VERSION = PROTOCOL_POS_START;
+static const int MIN_BUDGET_PEER_PROTO_VERSION = 70054;
 
 //! minimum peer version for masternode winner broadcasts
-static const int MIN_MNW_PEER_PROTO_VERSION = PROTOCOL_POS_START;
+static const int MIN_MNW_PEER_PROTO_VERSION = 70054;
 
 //! minimum version to get version 2 masternode ping messages
-static const int MIN_MNW_PING_VERSION = 71061;
+static const int MIN_MNW_PING_VERSION = 70055;
 
 //! minimum peer version that can receive masternode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_PREV = PROTOCOL_POS_START;
-static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_CURR = PROTOCOL_POS_START;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_PREV = 70054;
+static const int MIN_MASTERNODE_PAYMENT_PROTO_VERSION_CURR = 70055;
 
 //! minimum peer version that can receive systemnode payments
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_PREV = PROTOCOL_POS_START;
-static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_CURR = PROTOCOL_POS_START;
+static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_PREV = 70054;
+static const int MIN_SYSTEMNODE_PAYMENT_PROTO_VERSION_CURR = 70055;
 
 //! nTime field added to CAddress, starting with this version;
 //! if possible, avoid requesting addresses nodes older than this
