@@ -43,6 +43,9 @@ class WalletMultisigTest(BitcoinTestFramework):
         # TODO: add one private key, because addmultisigaddress is only intended for use with non-watchonly addresses
         w1.addmultisigaddress(2, [compressed_1, compressed_2])
 
+        self.log.info("Descriptor based wallets do not support addmultisigaddress")
+        assert_raises_rpc_error(-4, "addmultisigaddress is not available for a descriptor based wallet, use importdescriptor instead.", w2.addmultisigaddress, 2, [compressed_1, compressed_2])
+
 
 if __name__ == '__main__':
     WalletMultisigTest().main()

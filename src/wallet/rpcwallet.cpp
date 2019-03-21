@@ -1035,6 +1035,10 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "addmultisigaddress is not available for a descriptor based wallet, use importdescriptor instead.");
+    }
+
     std::string label;
     if (!request.params[2].isNull())
         label = LabelFromValue(request.params[2]);
