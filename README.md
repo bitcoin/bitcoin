@@ -1,4 +1,4 @@
-# Crown Platform 0.12.5
+# Crown Platform 0.13.0
 
 [![pipeline status](http://gitlab.crown.tech/crown/crown-core/badges/master/pipeline.svg)](http://gitlab.crown.tech/crown/crown-core/commits/master)
 
@@ -6,40 +6,39 @@ http://www.crown.tech
 
 ## What is Crown?
 
-Crown is both a leading digital token (known as CRW) and a self-sustainable blockchain platform for building and running economy applications. Our community uses the Crown Platform as a payment service, proof of data integrity and a support structure for projects ranging from cloud businesses to apps. As more users lend their talents and passion to the platform, Crown’s potential to promote innovation grows exponentially. 
+Crown is both a leading digital token (known as CRW) and a self-sustaining blockchain platform for building and running economy applications. Our community uses the Crown Platform as a payment service, proof of data integrity and a support structure for projects ranging from cloud businesses to apps. As more users lend their talents and passion to the platform, Crown’s potential to promote innovation grows exponentially. 
 
 ###  A Digital Token
 
-CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay for a wide variety of products and services. CRW can also be traded against other altcoins through an online exchange.
+CRW tokens are a type of cryptocurrency. Like bitcoins, CRW can be used to pay for a wide variety of products and services. CRW can also be traded against other altcoins through online exchanges.
 
 ### Blockchain Application Platform
 
 The Crown Platform utilizes two additional tiers of nodes that offer different roles: Masternodes process instant transactions while Systemnodes will host applications via the CrownPlatform. Members of the Crown Community can set up their own incentivized nodes to earn CRW while helping to maintain the network.
 
-For more information, as well as an immediately useable, binary version Crown see http://crown.tech/wallet.
+For more information, as well as an immediately usable, binary version Crown see https://crown.tech/wallet.
 
 ## Community
 
-Crown is ultimately a community-driven platform. Its potential to bring social and echnological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
+Crown is ultimately a community-driven platform. Its potential to bring social and technological growth is contingent on the ideas and support its users provide. We invite you to lend your voice and imagination to this burgeoning platform and share in its success. Together, there’s no limit to what we can accomplish.
 
 * Crown Forum: https://forum.crown.tech
-* Mattermost: https://mm.crownlab.eu
 * Discord: https://discord.gg/Tcrkazc
 * Telegram: https://t.me/crownplatform
 * Guides & How-to: https://forum.crown.tech/index.php?board=5.0
 
 ## Governance
 
-Crown’s governance system has two core functions: choosing platform direction and funding. Unlike blockchain projects that rely on donations and pre-mined endowments, Crown uses 10% of each block reward to fund its own development. This allocation of funds allows us to reward miners and node operators for their contributions without compromising the platform’s coding and optimization efforts.
+Crown’s governance system has two core functions: choosing platform direction and funding. Unlike blockchain projects that rely on donations and pre-mined endowments, Crown uses 25% of each block reward to fund its own development. This allocation of funds allows us to reward miners and node operators for their contributions without compromising the platform’s coding and optimization efforts.
 
 Crown’s governance system also enables its community to vote on which changes (ranging from projects to network updates) will be implemented onto the blockchain. Any platform user can submit a proposal to grow or change the network. 
 
-* View proposals: http://crown.today/proposals
-* How to create proposal:https://forum.crown.tech/index.php?topic=11.0
+* View [proposals](https://crown.today/proposals)
+* Learn [how to create a proposal](https://forum.crown.tech/index.php?topic=11.0)
 
 ## Server Nodes
 
-Crown uses two types of server nodes to build and protect its network — Systemnodes and Masternodes. Each of these dedicated servers are unique and provide vital infrastructure. By creating and running them, you can help our community grow while consistently earning CRW as a reward. 
+Crown uses two types of server nodes to build and protect its network — Systemnodes and Masternodes. Each of these dedicated servers are unique and provide vital infrastructure. By creating and running them, you can help our community grow while consistently earning CRW as a reward. With the switch from Proof of Work (PoW) to Proof of Stake (PoS) in v0.13 systemnodes and masternodes take over the responsibility of block generation from miners. This new generation process is referred to as "minting".
 
 ### Masternodes
 
@@ -57,12 +56,12 @@ See also: [Systemnode Setup Guide](https://forum.crown.tech/index.php?topic=1240
 
 ### Report a Bug
 
-Bugs can be reported via the Gitlab issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channel in [Mattermost](https://mm.crownlab.eu/crown/channels/tech-support) or emailing [support@crown.tech](email:support@crown.tech)
+Bugs can be reported via the Gitlab issues page: https://gitlab.crown.tech/crown/crown-core/issues, tech support channels in Discord or emailing [support@crown.tech](email:support@crown.tech)
 
 When describing a bug please include following information:
 * **Issue summary** - an issue header which outlines the actual defect to be solved
 * **Product** - for example *Desktop Wallet x64, Windows 10*
-* **Build Found In** - for example *0.12.3.3*; this is very important as you may be using an old build and the issue may already have been resolved.
+* **Build Found In** - for example *0.13.0.0*; this is very important as you may be using an old build and the issue may already have been resolved.
 * **Steps to reproduce** - the steps to recreate exactly how the error occurred when you found the issue
 * **Expected behavior** -  what you would expect to see instead of the issue; this can be useful as it may trigger a conversation between yourself and the developer (or the team) about a better fix or possible solutions.
 
@@ -71,7 +70,7 @@ Crown core developers are working hard on bug fixes, platform enhancements, and 
 Some of these tasks may be completed by talented community members through the bounty program.
 Bounties are posted to the wiki and can be picked up by anyone who wants to submit new code to the project repository.
 If you want to be directly notified of new bounties matching your specific skillset, fill out the short intake survey to get onto the [InSource Community Job Board](https://crown.link/insource).
-If you have any questions regarding code submissions, please contact Josh 'fin' Wilcox (josh@crown.tech, or fin on mattermost) and ask about bounties.
+If you have any questions regarding code submissions, please contact Artem Brazhnikov through Discord and ask about bounties.
 
 ## License
 
@@ -83,4 +82,4 @@ Copyright © 2009-2018, Bitcoin Core Developers
 
 Copyright © 2014-2016, Dash Core Developers
 
-Copyright © 2014-2018, Crown Developers
+Copyright © 2014-2019, Crown Developers
