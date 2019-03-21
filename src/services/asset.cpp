@@ -384,15 +384,11 @@ UniValue syscointxfund_helper(const string &vchWitness, vector<CRecipient> &vecS
 		addressunspent(strWitnessAddress, witnessOutpoint);
 		if (witnessOutpoint.IsNull())
 		{
-			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress);
+			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress + _(". Please make sure the address is funded with a small output to cover fees, current fee rate: ") + ValueFromAmount(GetFee(3000)).write() + " SYS");
 		}
 		Coin pcoinW;
-		if (GetUTXOCoin(witnessOutpoint, pcoinW)){
-            CScript scriptSigStripped;
-            if(RemoveSyscoinScript(pcoinW.out.scriptPubKey, scriptSigStripped))
-                LogPrintf("Removed syscoin script from input\n");
-			txNew.vin.push_back(CTxIn(witnessOutpoint, scriptSigStripped));
-        }
+		if (GetUTXOCoin(witnessOutpoint, pcoinW))
+			txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
 	}
 
 	// vouts to the payees
@@ -461,7 +457,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	if (request.fHelp || 1 > params.size() || 3 < params.size())
 		throw runtime_error(
 			"syscointxfund\n"
-			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified.\n"
+			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added everytime you call this function.\n"
 			"\nArguments:\n"
 			"  \"hexstring\" (string, required) The raw syscoin transaction output given from rpc (ie: assetnew, assetupdate)\n"
 			"  \"address\"  (string, required) Address belonging to this asset transaction. \n"
@@ -498,9 +494,6 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     CAmount nCurrentAmount = 0;
 
     LOCK(cs_main);
-    CCoinsViewCache view(pcoinsTip.get());
-    // get value of inputs
-    nCurrentAmount = view.GetValueIn(txIn_t);
 
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees = GetFee(10 + 34);
@@ -551,6 +544,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                 const int& nOut = find_value(utxoObj, "vout").get_int();
                 const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
                 const CScript& scriptPubKey = CScript(data.begin(), data.end());
+                LogPrintf("asm script: %s", ScriptToAsmStr(scriptPubKey));
                 const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
                 const CTxIn txIn(txid, nOut, scriptPubKey);
                 const COutPoint outPoint(txid, nOut);
@@ -744,7 +738,7 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
         addressunspent(strWitnessAddress, witnessOutpoint);
         if (witnessOutpoint.IsNull())
         {
-            throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress);
+            throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress + _(". Please make sure the address is funded with a small output to cover fees, current fee rate: ") + ValueFromAmount(GetFee(3000)).write() + " SYS");
         }
         Coin pcoinW;
         if (GetUTXOCoin(witnessOutpoint, pcoinW))

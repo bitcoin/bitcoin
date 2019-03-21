@@ -363,10 +363,12 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
 // SYSCOIN
 bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
 {
-    if (!RemoveAssetAllocationScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
-        if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
+    if (!RemoveAssetAllocationScriptPrefix(scriptPubKeyIn, scriptPubKeyOut)){
+        if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut)){
             return false;
-        return true;
+        }
+    }
+    return true;
 }
 
 bool DecodeAssetScript(const CScript& script, int& op,
