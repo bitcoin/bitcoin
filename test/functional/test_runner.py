@@ -91,6 +91,7 @@ BASE_SCRIPTS = [
     'wallet_zapwallettxes.py',
     'wallet_importmulti.py',
     'wallet_importdescriptor.py',
+    'wallet_multisig.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
