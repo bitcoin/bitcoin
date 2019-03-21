@@ -138,6 +138,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "dumpprivkey is not available for a descriptor based wallet");
+    }
+
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
@@ -734,6 +738,10 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importprivkey is not available for a descriptor based wallet");
+    }
 
     EnsureWalletIsUnlocked(pwallet);
 
