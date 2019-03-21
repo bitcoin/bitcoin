@@ -310,6 +310,9 @@ UniValue importaddress(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importaddress is not available for a descriptor based wallet, use importdescriptor instead.");
+    }
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -499,6 +502,9 @@ UniValue importpubkey(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importpubkey is not available for a descriptor based wallet, use importdescriptor instead.");
+    }
 
     std::string strLabel;
     if (!request.params[1].isNull())
