@@ -3805,9 +3805,20 @@ static UniValue getaddressesbylabel(const JSONRPCRequest& request)
 
     // Find all addresses that have the given label
     UniValue ret(UniValue::VOBJ);
-    for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
-        if (item.second.name == label) {
-            ret.pushKV(EncodeDestination(item.first), AddressBookDataToJSON(item.second, false));
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        std::vector<std::pair<DescriptorAddress, WalletDescriptor*>> matches = pwallet->FindDescriptorAddressesForLabel(label);
+
+        for (auto& match : matches) {
+            CTxDestination dest = match.second->GetDestination(match.first);
+            ret.pushKV(EncodeDestination(dest), match.second->m_purpose == DESCRIPTOR_PURPOSE_CHANGE_CURRENT || match.second->m_purpose == DESCRIPTOR_PURPOSE_CHANGE_ARCHIVE ? "change" : "receive");
+        }
+
+    } else {
+        for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+            if (item.second.name == label) {
+                ret.pushKV(EncodeDestination(item.first), AddressBookDataToJSON(item.second, false));
+            }
         }
     }
 
