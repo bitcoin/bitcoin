@@ -519,14 +519,22 @@ static UniValue listaddressgroupings(const JSONRPCRequest& request)
     std::map<CTxDestination, CAmount> balances = pwallet->GetAddressBalances(*locked_chain);
     for (const std::set<CTxDestination>& grouping : pwallet->GetAddressGroupings()) {
         UniValue jsonGrouping(UniValue::VARR);
-        for (const CTxDestination& address : grouping)
+        for (const CTxDestination& dest : grouping)
         {
             UniValue addressInfo(UniValue::VARR);
-            addressInfo.push_back(EncodeDestination(address));
-            addressInfo.push_back(ValueFromAmount(balances[address]));
+            addressInfo.push_back(EncodeDestination(dest));
+            addressInfo.push_back(ValueFromAmount(balances[dest]));
             {
-                if (pwallet->mapAddressBook.find(address) != pwallet->mapAddressBook.end()) {
-                    addressInfo.push_back(pwallet->mapAddressBook.find(address)->second.name);
+                if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+                    DescriptorAddress dAddr;
+                    WalletDescriptor* wDesc = nullptr;
+                    if (pwallet->FindDescriptorAddress(dAddr, wDesc, dest)) {
+                        addressInfo.push_back(dAddr.m_label);
+                    }
+                } else {
+                    if (pwallet->mapAddressBook.find(dest) != pwallet->mapAddressBook.end()) {
+                        addressInfo.push_back(pwallet->mapAddressBook.find(dest)->second.name);
+                    }
                 }
             }
             jsonGrouping.push_back(addressInfo);
