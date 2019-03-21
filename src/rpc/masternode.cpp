@@ -249,7 +249,7 @@ UniValue GetNextMasternodeForPayment(int heightShift)
     auto payees = mnList.GetProjectedMNPayees(heightShift);
     if (payees.empty())
         return "unknown";
-    auto payee = payees[heightShift - 9];
+    auto payee = payees.back();
     CScript payeeScript = payee->pdmnState->scriptPayout;
 
     CTxDestination payeeDest;
