@@ -1915,6 +1915,10 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTOR_WALLET)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "keypoolrefill is not available for a descriptor based wallet");
+    }
+
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
