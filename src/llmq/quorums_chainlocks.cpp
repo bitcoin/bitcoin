@@ -156,7 +156,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         EnforceBestChainLock();
     }, 0);
 
-    LogPrintf("CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
+    LogPrint("chainlocks", "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
 }
 
@@ -244,7 +244,7 @@ void CChainLocksHandler::TrySignChainTip()
         }
     }
 
-    LogPrintf("CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
+    LogPrint("chainlocks", "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, pindex->GetBlockHash().ToString(), pindex->nHeight);
 
     // When the new IX system is activated, we only try to ChainLock blocks which include safe transactions. A TX is
     // considered safe when it is ixlocked or at least known since 10 minutes (from mempool or block). These checks are
@@ -256,12 +256,12 @@ void CChainLocksHandler::TrySignChainTip()
             if (pindex->nHeight - pindexWalk->nHeight > 5) {
                 // no need to check further down, 6 confs is safe to assume that TXs below this height won't be
                 // ixlocked anymore if they aren't already
-                LogPrintf("CChainLocksHandler::%s -- tip and previous 5 blocks all safe\n", __func__);
+                LogPrint("chainlocks", "CChainLocksHandler::%s -- tip and previous 5 blocks all safe\n", __func__);
                 break;
             }
             if (HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
                 // we don't care about ixlocks for TXs that are ChainLocked already
-                LogPrintf("CChainLocksHandler::%s -- chainlock at height %d \n", __func__, pindexWalk->nHeight);
+                LogPrint("chainlocks", "CChainLocksHandler::%s -- chainlock at height %d \n", __func__, pindexWalk->nHeight);
                 break;
             }
 
@@ -289,7 +289,7 @@ void CChainLocksHandler::TrySignChainTip()
                 }
 
                 if (txAge < WAIT_FOR_ISLOCK_TIMEOUT && !quorumInstantSendManager->IsLocked(txid)) {
-                    LogPrintf("CChainLocksHandler::%s -- not signing block %s due to TX %s not being ixlocked and not old enough. age=%d\n", __func__,
+                    LogPrint("chainlocks", "CChainLocksHandler::%s -- not signing block %s due to TX %s not being ixlocked and not old enough. age=%d\n", __func__,
                               pindexWalk->GetBlockHash().ToString(), txid.ToString(), txAge);
                     return;
                 }

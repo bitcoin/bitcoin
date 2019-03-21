@@ -10,15 +10,19 @@
 class CBatchedLogger
 {
 private:
+    bool accept;
     std::string header;
     std::string msg;
 public:
-    CBatchedLogger(const std::string& _header);
+    CBatchedLogger(const std::string& _category, const std::string& _header);
     virtual ~CBatchedLogger();
 
     template<typename... Args>
     void Batch(const std::string& fmt, const Args&... args)
     {
+        if (!accept) {
+            return;
+        }
         msg += "    " + strprintf(fmt, args...) + "\n";
     }
 

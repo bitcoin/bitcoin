@@ -46,7 +46,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
 
         if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)qc.llmqType)) {
             LOCK(cs_main);
-            LogPrintf("CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
+            LogPrintf("llmq""CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                     qc.llmqType, pfrom->id);
             Misbehaving(pfrom->id, 100);
             return;
@@ -106,7 +106,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             return;
         }
 
-        LogPrintf("CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
+        LogPrint("llmq", "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
                   qc.quorumHash.ToString(), qc.llmqType, qc.CountValidMembers(), qc.CountSigners(), pfrom->id);
 
         AddMinableCommitment(qc);
@@ -204,7 +204,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindex, const C
         hasMinedCommitmentCache.erase(std::make_pair(params.type, quorumHash));
     }
 
-    LogPrintf("CQuorumBlockProcessor::%s -- processed commitment from block. type=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s\n", __func__,
+    LogPrint("llmq", "CQuorumBlockProcessor::%s -- processed commitment from block. type=%d, quorumHash=%s, signers=%s, validMembers=%d, quorumPublicKey=%s\n", __func__,
               qc.llmqType, quorumHash.ToString(), qc.CountSigners(), qc.CountValidMembers(), qc.quorumPublicKey.ToString());
 
     return true;
