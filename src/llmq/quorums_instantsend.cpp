@@ -101,13 +101,13 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash
     return ret;
 }
 
-CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByTxid(const uint256& txid)
+uint256 CInstantSendDb::GetInstantSendLockHashByTxid(const uint256& txid)
 {
     uint256 islockHash;
 
     bool found = txidCache.get(txid, islockHash);
     if (found && islockHash.IsNull()) {
-        return nullptr;
+        return uint256();
     }
 
     if (!found) {
@@ -116,6 +116,15 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByTxid(const uint256& txid
     }
 
     if (!found) {
+        return uint256();
+    }
+    return islockHash;
+}
+
+CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByTxid(const uint256& txid)
+{
+    uint256 islockHash = GetInstantSendLockHashByTxid(txid);
+    if (islockHash.IsNull()) {
         return nullptr;
     }
     return GetInstantSendLockByHash(islockHash);
@@ -191,6 +200,18 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
     // Ignore any InstantSend messages until blockchain is synced
     if (!masternodeSync.IsBlockchainSynced()) {
         return true;
+    }
+
+    // In case the islock was received before the TX, filtered announcement might have missed this islock because
+    // we were unable to check for filter matches deep inside the TX. Now we have the TX, so we should retry.
+    uint256 islockHash;
+    {
+        LOCK(cs);
+        islockHash = db.GetInstantSendLockHashByTxid(tx.GetHash());
+    }
+    if (!islockHash.IsNull()) {
+        CInv inv(MSG_ISLOCK, islockHash);
+        g_connman->RelayInvFiltered(inv, tx, LLMQS_PROTO_VERSION);
     }
 
     if (IsConflicted(tx)) {
@@ -673,7 +694,13 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     }
 
     CInv inv(MSG_ISLOCK, hash);
-    g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
+    if (tx != nullptr) {
+        g_connman->RelayInvFiltered(inv, *tx, LLMQS_PROTO_VERSION);
+    } else {
+        // we don't have the TX yet, so we only filter based on txid. Later when that TX arrives, we will re-announce
+        // with the TX taken into account.
+        g_connman->RelayInvFiltered(inv, islock.txid, LLMQS_PROTO_VERSION);
+    }
 
     RemoveMempoolConflictsForLock(hash, islock);
     RetryLockTxs(islock.txid);

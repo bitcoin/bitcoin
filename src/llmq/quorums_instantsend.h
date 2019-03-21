@@ -58,6 +58,7 @@ public:
     void RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock);
 
     CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash);
+    uint256 GetInstantSendLockHashByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint);
 
