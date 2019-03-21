@@ -915,6 +915,8 @@ public:
 
     bool LoadDescriptorAddress(uint64_t wdesc_id, uint64_t index, DescriptorAddress dAddr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     bool AddDescriptorAddress(uint64_t wdesc_id, uint64_t index, std::string label, std::vector<unsigned char>* cache) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool FindDescriptorAddress(DescriptorAddress& dAddr, WalletDescriptor*& wDesc, CScript scriptPubKey) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool FindDescriptorAddress(DescriptorAddress& dAddr, WalletDescriptor*& wDesc, CTxDestination dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime = 0;

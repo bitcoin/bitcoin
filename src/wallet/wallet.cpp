@@ -565,6 +565,30 @@ bool CWallet::PickFromAddressSourceDescriptor(CTxDestination &newAddress, bool i
     return false;
 }
 
+bool CWallet::FindDescriptorAddress(DescriptorAddress& dAddr, WalletDescriptor*& wDesc, CScript scriptPubKey) {
+    for (auto& p : m_descriptors) {
+        for (auto& a : p.second->m_addresses) {
+            std::vector<CScript> output_scripts;
+            bool success = p.second->m_descriptor->ExpandFromCache(a.m_index, a.m_cache, output_scripts, p.second->m_provider);
+            if (success) {
+                for (CScript script : output_scripts) {
+                    if (script == scriptPubKey) {
+                        wDesc = p.second.get();
+                        dAddr = a;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool CWallet::FindDescriptorAddress(DescriptorAddress& dAddr, WalletDescriptor*& wDesc, CTxDestination dest) {
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    return FindDescriptorAddress(dAddr, wDesc, scriptPubKey);
+}
+
 bool CWallet::LoadDescriptorAddress(uint64_t wdesc_id, uint64_t index, DescriptorAddress dAddr)
 {
     assert(m_descriptors.size() >= wdesc_id); // WalletDescriptor is stored and loaded before its WalletAddress entries
