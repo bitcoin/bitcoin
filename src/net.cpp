@@ -91,9 +91,13 @@ void CConnman::AddOneShot(const std::string& strDest)
     vOneShots.push_back(strDest);
 }
 
-unsigned short GetListenPort()
+int64_t GetListenPort()
 {
-    return (unsigned short)(gArgs.GetArg("-port", Params().GetDefaultPort()));
+    int default_port = Params().GetDefaultPort();
+    // A hard-coded, invalid default port is most likely a bug
+    assert(CheckListenPort(default_port));
+    // An int that fits in uint16_t always fits in int64_t
+    return gArgs.GetArg("-port", default_port);
 }
 
 // find 'best' local address for a particular peer

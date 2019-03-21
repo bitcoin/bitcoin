@@ -24,6 +24,7 @@
 #include <threadinterrupt.h>
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
 #include <stdint.h>
 #include <thread>
@@ -447,7 +448,9 @@ void Discover();
 void StartMapPort();
 void InterruptMapPort();
 void StopMapPort();
-unsigned short GetListenPort();
+// We don't support the reserved port 0 for system-allocated dynamic ports yet.
+constexpr bool CheckListenPort(intmax_t port) { return 0 < port && port <= UINT16_MAX; }
+int64_t GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
 
 struct CombinerAll

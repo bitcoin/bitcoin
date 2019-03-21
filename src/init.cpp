@@ -1413,6 +1413,12 @@ bool AppInitMain(InitInterfaces& interfaces)
     fDiscover = gArgs.GetBoolArg("-discover", true);
     fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
+    int64_t listen_port = GetListenPort();
+    // Error nicely on user input error
+    if (!CheckListenPort(listen_port)) {
+        return InitError(strprintf(_("Invalid port specified in -port: '%i'"), listen_port));
+    }
+
     for (const std::string& strAddr : gArgs.GetArgs("-externalip")) {
         CService addrLocal;
         if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
@@ -1732,7 +1738,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     LogPrintf("nBestHeight = %d\n", chain_active_height);
 
     if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
-        StartTorControl();
+        StartTorControl(gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), listen_port);
 
     Discover();
 
