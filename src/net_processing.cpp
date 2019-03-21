@@ -2714,6 +2714,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 State(pfrom.GetId())->fProvidesHeaderAndIDs = true;
                 State(pfrom.GetId())->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
             }
+            // ignore HB requests from peers without witness support
+            fAnnounceUsingCMPCTBLOCK = fAnnounceUsingCMPCTBLOCK && (nCMPCTBLOCKVersion == 2);
             if (State(pfrom.GetId())->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) { // ignore later version announces
                 State(pfrom.GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
                 // save whether peer selects us as BIP152 high-bandwidth peer
