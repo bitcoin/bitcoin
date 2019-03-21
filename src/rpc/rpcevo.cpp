@@ -762,7 +762,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     if (request.params.size() > 3) {
         int32_t nReason = ParseInt32V(request.params[3], "reason");
-        if (nReason < 0 || nReason >= CProUpRevTx::REASON_LAST) {
+        if (nReason < 0 || nReason > CProUpRevTx::REASON_LAST) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("invalid reason %d, must be between 0 and %d", nReason, CProUpRevTx::REASON_LAST));
         }
         ptx.nReason = (uint16_t)nReason;
