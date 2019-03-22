@@ -21,9 +21,30 @@ and testnet addresses now begin with the prefix "tCRW", eg:```tCRWZpkQ8aJ4wyWx5M
 
 These unique and distinctive prefixes will enable the use of Crown with hardware 
 wallets. We hope to see the first integration soon. 
-The change is friction-free from the user's perspective. Users who upgrade won't 
-need to do anything to explicitly convert their old wallet addresses.   
-TODO: add more details regarding interoperability
+
+The change is largely friction-free from the user's perspective. 
+Once users update to v 0.13.0, they will be able to receive CRW sent to old 
+addresses from old wallets.
+
+New wallets cannot send CRW to an old address.
+
+Old wallets cannot send CRW to a new address.
+
+If an updated wallet wants to send any amount of CRW to the old address it needs 
+to be converted via Crown command line. For example:
+```
+crown-cli convertaddress 15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L
+```
+Result ```CRWGZiLqSUbCTWkm3ABp5qpXdun2h8DJCKYF```
+
+If the equivalent new address of ```15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L``` is
+```CRWGZiLqSUbCTWkm3ABp5qpXdun2h8DJCKYF``` you can send CRW from the old wallet 
+(v 0.12.5.3) using ```15bj2HB2UbmjEZgXyEW4M8MhUL5TXGCN8L``` 
+and from new one (v 0.13.0) using ```CRWGZiLqSUbCTWkm3ABp5qpXdun2h8DJCKYF```.
+
+Both old and new wallets will be able to see the CRW! This does not mean there
+are 2 copies of the CRW, only that the old and new wallets have different ways
+of referring to the same address.
 
 ## Block generation change from Proof of Work to Proof of Stake
 New address prefixes are a substantial change but are dwarfed in scope by the
@@ -42,7 +63,7 @@ next block and receive the block reward. Hot-wallet staking means the user's
 wallet must be online and open to stake.
 
 The Crown implementation was designed and built by Tom Bradshaw (@presstab) at
-<TODO: company name> over a period of several months. It features cold-staking 
+Paddington Solutions over a period of several months. It features cold-staking 
 on the masternode and systemnode network. Users do not need to keep their wallets 
 open and online in order to stake. Instead, their collateral balance(s) is/are 
 delegated to their masternode(s) and/or systemnode(s) to be staked there.
@@ -67,9 +88,9 @@ TODO: more details about our several advantages.
 The switchover from PoW to PoS will take place at block height 2330000, approximately
 2 weeks after release of v0.13.0.
 This will allow time for users and exchanges to upgrade and get accustomed to the
-new address prefixes and for the network to stabilise. At a dynamically determined
-block height (about a day before the consensus change kicks in) nodes which have
-not upgraded will be excluded from the network by activation of a spork. Nodes
+new address prefixes and for the network to stabilise. At block height 2327000 
+(about 2 days before the consensus change kicks in) nodes which have
+not upgraded will be excluded from the network. Nodes
 which have upgraded will continue on the network uninterrupted. The network will
 have time to stabilise again until at block height
 2330000 it will say goodbye to the miners and the first PoS block will 
