@@ -191,19 +191,19 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
         }
 
         if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->quorumHash)) {
-            std::set<CService> connections;
+            std::map<CService, uint256> connections;
             if (quorum->IsMember(myProTxHash)) {
                 connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->quorumHash, myProTxHash);
             } else {
                 auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->quorumHash, quorum->members.size(), 1);
                 for (auto idx : cindexes) {
-                    connections.emplace(quorum->members[idx]->pdmnState->addr);
+                    connections.emplace(quorum->members[idx]->pdmnState->addr, quorum->members[idx]->proTxHash);
                 }
             }
             if (!connections.empty()) {
                 std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->quorumHash.ToString());
                 for (auto& c : connections) {
-                    debugMsg += strprintf("  %s\n", c.ToString(false));
+                    debugMsg += strprintf("  %s\n", c.first.ToString(false));
                 }
                 LogPrint("llmq", debugMsg);
                 g_connman->AddMasternodeQuorumNodes(llmqType, quorum->quorumHash, connections);

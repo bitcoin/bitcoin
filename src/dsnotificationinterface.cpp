@@ -15,6 +15,7 @@
 #include "validation.h"
 
 #include "evo/deterministicmns.h"
+#include "evo/mnauth.h"
 
 #include "llmq/quorums.h"
 #include "llmq/quorums_chainlocks.h"
@@ -81,6 +82,7 @@ void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBl
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(const CDeterministicMNList& newList)
 {
+    CMNAuth::NotifyMasternodeListChanged(newList);
     governance.CheckMasternodeOrphanObjects(connman);
     governance.CheckMasternodeOrphanVotes(connman);
     governance.UpdateCachesAndClean();

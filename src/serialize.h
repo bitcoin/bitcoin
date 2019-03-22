@@ -903,41 +903,49 @@ void Unserialize(Stream& is, std::pair<K, T>& item)
 /**
  * tuple
  */
-template<typename Stream, bool for_read, int index, typename... Ts>
-struct SerializeDeserializeTuple {
+template<typename Stream, int index, typename... Ts>
+struct SerializeTuple {
     void operator() (Stream&s, std::tuple<Ts...>& t) {
-        SerializeDeserializeTuple<Stream, for_read, index - 1, Ts...>{}(s, t);
-        if (for_read) {
-            s >> std::get<index>(t);
-        } else {
-            s << std::get<index>(t);
-        }
+        SerializeTuple<Stream, index - 1, Ts...>{}(s, t);
+        s << std::get<index>(t);
     }
 };
 
-template<typename Stream, bool for_read, typename... Ts>
-struct SerializeDeserializeTuple<Stream, for_read, 0, Ts...> {
+template<typename Stream, typename... Ts>
+struct SerializeTuple<Stream, 0, Ts...> {
     void operator() (Stream&s, std::tuple<Ts...>& t) {
-        if (for_read) {
-            s >> std::get<0>(t);
-        } else {
-            s << std::get<0>(t);
-        }
+        s << std::get<0>(t);
     }
 };
+
+template<typename Stream, int index, typename... Ts>
+struct DeserializeTuple {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        DeserializeTuple<Stream, index - 1, Ts...>{}(s, t);
+        s >> std::get<index>(t);
+    }
+};
+
+template<typename Stream, typename... Ts>
+struct DeserializeTuple<Stream, 0, Ts...> {
+    void operator() (Stream&s, std::tuple<Ts...>& t) {
+        s >> std::get<0>(t);
+    }
+};
+
 
 template<typename Stream, typename... Elements>
 void Serialize(Stream& os, const std::tuple<Elements...>& item)
 {
     const auto size = std::tuple_size<std::tuple<Elements...>>::value;
-    SerializeDeserializeTuple<Stream, false, size - 1, Elements...>{}(os, const_cast<std::tuple<Elements...>&>(item));
+    SerializeTuple<Stream, size - 1, Elements...>{}(os, const_cast<std::tuple<Elements...>&>(item));
 }
 
 template<typename Stream, typename... Elements>
 void Unserialize(Stream& is, std::tuple<Elements...>& item)
 {
     const auto size = std::tuple_size<std::tuple<Elements...>>::value;
-    SerializeDeserializeTuple<Stream, true, size - 1, Elements...>{}(is, item);
+    DeserializeTuple<Stream, size - 1, Elements...>{}(is, item);
 }
 
 

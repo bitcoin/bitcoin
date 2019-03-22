@@ -476,26 +476,28 @@ void CDKGSessionHandler::HandleDKGRound()
     });
 
     if (curSession->AreWeMember() || GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
-        std::set<CService> connections;
+        std::map<CService, uint256> connections;
         if (curSession->AreWeMember()) {
             connections = CLLMQUtils::GetQuorumConnections(params.type, curQuorumHash, curSession->myProTxHash);
         } else {
             auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(params.type, curQuorumHash, curSession->members.size(), 1);
             for (auto idx : cindexes) {
-                connections.emplace(curSession->members[idx]->dmn->pdmnState->addr);
+                connections.emplace(curSession->members[idx]->dmn->pdmnState->addr, curSession->members[idx]->dmn->proTxHash);
             }
         }
         if (!connections.empty()) {
             std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->quorumHash.ToString());
             for (const auto& c : connections) {
-                debugMsg += strprintf("  %s\n", c.ToString(false));
+                debugMsg += strprintf("  %s\n", c.first.ToString(false));
             }
             LogPrint("llmq", debugMsg);
             g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
 
             auto participatingNodesTmp = g_connman->GetMasternodeQuorumAddresses(params.type, curQuorumHash);
             LOCK(curSession->invCs);
-            curSession->participatingNodes = std::move(participatingNodesTmp);
+            for (auto& p : participatingNodesTmp) {
+                curSession->participatingNodes.emplace(p.first);
+            }
         }
     }
 

@@ -74,6 +74,7 @@ const char *QBSIGSHARES="qbsigs";
 const char *QSIGREC="qsigrec";
 const char *CLSIG="clsig";
 const char *ISLOCK="islock";
+const char *MNAUTH="mnauth";
 };
 
 static const char* ppszTypeName[] =
@@ -179,6 +180,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QSIGREC,
     NetMsgType::CLSIG,
     NetMsgType::ISLOCK,
+    NetMsgType::MNAUTH,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

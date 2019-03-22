@@ -31,7 +31,7 @@ public:
         return BuildSignHash((Consensus::LLMQType)s.llmqType, s.quorumHash, s.id, s.msgHash);
     }
 
-    static std::set<CService> GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember);
+    static std::map<CService, uint256> GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember);
     static std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, const uint256& blockHash, size_t memberCount, size_t connectionCount);
 
     static bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);

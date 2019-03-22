@@ -280,6 +280,7 @@ extern const char *QBSIGSHARES;
 extern const char *QSIGREC;
 extern const char *CLSIG;
 extern const char *ISLOCK;
+extern const char *MNAUTH;
 };
 
 /* Get a vector of all valid message types (see above) */
