@@ -59,7 +59,8 @@ install:
     - ls -lah $HOST_CACHE_DIR && ls -lah $HOST_CACHE_DIR/depends && ls -lah $HOST_CACHE_DIR/ccache && ls -lah $HOST_CACHE_DIR/docker
     # Load cached builder image
     - if [ -f $HOST_CACHE_DIR/docker/dash-builder-$BUILD_TARGET.tar.gz ]; then zcat $HOST_CACHE_DIR/docker/dash-builder-$BUILD_TARGET.tar.gz | docker load || true; fi
-    - docker build --pull -t $BUILDER_IMAGE_NAME --build-arg=USER_ID=$UID --build-arg=GROUP_ID=$UID --build-arg=BUILD_TARGET=$BUILD_TARGET -f ci/Dockerfile.builder ci
+    - travis_retry docker pull ubuntu:bionic
+    - travis_retry docker build -t $BUILDER_IMAGE_NAME --build-arg=USER_ID=$UID --build-arg=GROUP_ID=$UID --build-arg=BUILD_TARGET=$BUILD_TARGET -f ci/Dockerfile.builder ci
 before_script:
     # Make sure stdout is in blocking mode. Otherwise builds will fail due to large writes to stdout
     # See https://github.com/travis-ci/travis-ci/issues/4704. If this gets fixed, this line can also be removed.
