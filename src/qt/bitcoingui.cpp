@@ -329,7 +329,7 @@ void BitcoinGUI::createActions()
     multisigAction->setStatusTip(tr("UI to create multisig addresses"));
     multisigAction->setToolTip(multisigAction->statusTip());
     multisigAction->setCheckable(true);
-    multisigAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_7));
+    multisigAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_6));
     tabGroup->addAction(multisigAction);
 
 #ifdef ENABLE_WALLET
@@ -459,7 +459,6 @@ void BitcoinGUI::createMenuBar()
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
-        file->addAction(multisigAction);
         file->addSeparator();
         file->addAction(usedSendingAddressesAction);
         file->addAction(usedReceivingAddressesAction);
@@ -509,6 +508,7 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
         toolbar->addAction(mintingAction);
+        toolbar->addAction(multisigAction);
         overviewAction->setChecked(true);
     }
 }
