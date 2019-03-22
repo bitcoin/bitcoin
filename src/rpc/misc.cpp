@@ -34,11 +34,7 @@ static UniValue validateaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             RPCHelpMan{"validateaddress",
-                "\nReturn information about the given bitcoin address.\n"
-                "DEPRECATION WARNING: Parts of this command have been deprecated and moved to getaddressinfo. Clients must\n"
-                "transition to using getaddressinfo to access this information before upgrading to v0.18. The following deprecated\n"
-                "fields have moved to getaddressinfo and will only be shown here with -deprecatedrpc=validateaddress: ismine, iswatchonly,\n"
-                "script, hex, pubkeys, sigsrequired, pubkey, addresses, embedded, iscompressed, account, timestamp, hdkeypath, kdmasterkeyid.\n",
+                "\nReturn information about the given bitcoin address.\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The bitcoin address to validate"},
                 },
