@@ -48,6 +48,7 @@ public:
     void setFocus();
 
 public Q_SLOTS:
+    void setRemoveEnabled(bool enabled);
     void clear();
     void checkSubtractFeeFromAmount();
 

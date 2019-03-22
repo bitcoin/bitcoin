@@ -106,15 +106,15 @@ void MultisigDialog::updateRemoveEnabled()
     }
 
 
-    //ppcTODO - this was removed in 84b695cc9d4dc90b1ccb99e2d92e1e76e138d911
-    // is it still needed?
-//    enabled = (ui->outputs->count() > 1);
-//    for(int i = 0; i < ui->outputs->count(); i++)
-//    {
-//        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry *>(ui->outputs->itemAt(i)->widget());
-//        if(entry)
-//            entry->setRemoveEnabled(enabled);
-//    }
+    enabled = (ui->outputs->count() > 1);
+    for(int i = 0; i < ui->outputs->count(); i++)
+    {
+        SendCoinsEntry *entry = qobject_cast<SendCoinsEntry *>(ui->outputs->itemAt(i)->widget());
+        if(entry)
+            entry->setRemoveEnabled(enabled);
+    }
+
+    updateAmounts();
 }
 
 void MultisigDialog::on_createAddressButton_clicked()

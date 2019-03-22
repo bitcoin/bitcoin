@@ -89,6 +89,11 @@ void SendCoinsEntry::setModel(WalletModel *_model)
     clear();
 }
 
+void SendCoinsEntry::setRemoveEnabled(bool enabled)
+{
+    ui->deleteButton->setEnabled(enabled);
+}
+
 void SendCoinsEntry::clear()
 {
     // clear UI elements for normal payment
