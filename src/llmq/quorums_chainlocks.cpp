@@ -40,6 +40,7 @@ void CChainLocksHandler::Start()
 {
     quorumSigningManager->RegisterRecoveredSigsListener(this);
     scheduler->scheduleEvery([&]() {
+        CheckActiveState();
         EnforceBestChainLock();
         // regularly retry signing the current chaintip as it might have failed before due to missing ixlocks
         TrySignChainTip();
@@ -153,6 +154,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
     }
 
     scheduler->scheduleFromNow([&]() {
+        CheckActiveState();
         EnforceBestChainLock();
     }, 0);
 
@@ -177,6 +179,7 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
         // when EnforceBestChainLock is called later, it might end up invalidating other chains but not activating the
         // CLSIG locked chain. This happens when only the header is known but the block is still missing yet. The usual
         // block processing logic will handle this when the block arrives
+        bestChainLockWithKnownBlock = bestChainLock;
         bestChainLockBlockIndex = pindexNew;
     }
 }
@@ -192,11 +195,36 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
     }
     tryLockChainTipScheduled = true;
     scheduler->scheduleFromNow([&]() {
+        CheckActiveState();
         EnforceBestChainLock();
         TrySignChainTip();
         LOCK(cs);
         tryLockChainTipScheduled = false;
     }, 0);
+}
+
+void CChainLocksHandler::CheckActiveState()
+{
+    bool fDIP0008Active;
+    {
+        LOCK(cs_main);
+        fDIP0008Active = VersionBitsState(chainActive.Tip()->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
+    }
+
+    LOCK(cs);
+    bool oldIsEnforced = isEnforced;
+    isSporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+    isEnforced = fDIP0008Active && isSporkActive;
+
+
+    if (!oldIsEnforced && isEnforced) {
+        // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
+        // us with some stale values which we should not try to enforce anymore (there probably was a good reason to
+        // to disable spork19)
+        bestChainLockHash = uint256();
+        bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
+        bestChainLockBlockIndex = lastNotifyChainLockBlockIndex = nullptr;
+    }
 }
 
 void CChainLocksHandler::TrySignChainTip()
@@ -215,9 +243,6 @@ void CChainLocksHandler::TrySignChainTip()
     if (!pindex->pprev) {
         return;
     }
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
-        return;
-    }
 
     // DIP8 defines a process called "Signing attempts" which should run before the CLSIG is finalized
     // To simplify the initial implementation, we skip this process and directly try to create a CLSIG
@@ -226,6 +251,10 @@ void CChainLocksHandler::TrySignChainTip()
 
     {
         LOCK(cs);
+
+        if (!isSporkActive) {
+            return;
+        }
 
         if (pindex->nHeight == lastSignedHeight) {
             // already signed this one
@@ -348,7 +377,7 @@ void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockInd
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED) || !sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (!sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
         return true;
     }
     if (!IsNewInstantSendEnabled()) {
@@ -358,6 +387,9 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
     int64_t txAge = 0;
     {
         LOCK(cs);
+        if (!isEnforced) {
+            return true;
+        }
         auto it = txFirstSeenTime.find(txid);
         if (it != txFirstSeenTime.end()) {
             txAge = GetAdjustedTime() - it->second;
@@ -379,6 +411,11 @@ void CChainLocksHandler::EnforceBestChainLock()
     const CBlockIndex* currentBestChainLockBlockIndex;
     {
         LOCK(cs);
+
+        if (!isEnforced) {
+            return;
+        }
+
         clsig = bestChainLockWithKnownBlock;
         pindex = currentBestChainLockBlockIndex = this->bestChainLockBlockIndex;
 
@@ -442,13 +479,13 @@ void CChainLocksHandler::EnforceBestChainLock()
 
 void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recoveredSig)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
-        return;
-    }
-
     CChainLockSig clsig;
     {
         LOCK(cs);
+
+        if (!isSporkActive) {
+            return;
+        }
 
         if (recoveredSig.id != lastSignedRequestId || recoveredSig.msgHash != lastSignedMsgHash) {
             // this is not what we signed, so lets not create a CLSIG for it
@@ -495,10 +532,6 @@ void CChainLocksHandler::DoInvalidateBlock(const CBlockIndex* pindex, bool activ
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
-        return false;
-    }
-
     LOCK(cs);
     return InternalHasChainLock(nHeight, blockHash);
 }
@@ -506,6 +539,10 @@ bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
 bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockHash)
 {
     AssertLockHeld(cs);
+
+    if (!isEnforced) {
+        return false;
+    }
 
     if (!bestChainLockBlockIndex) {
         return false;
@@ -525,10 +562,6 @@ bool CChainLocksHandler::InternalHasChainLock(int nHeight, const uint256& blockH
 
 bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blockHash)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
-        return false;
-    }
-
     LOCK(cs);
     return InternalHasConflictingChainLock(nHeight, blockHash);
 }
@@ -536,6 +569,10 @@ bool CChainLocksHandler::HasConflictingChainLock(int nHeight, const uint256& blo
 bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint256& blockHash)
 {
     AssertLockHeld(cs);
+
+    if (!isEnforced) {
+        return false;
+    }
 
     if (!bestChainLockBlockIndex) {
         return false;

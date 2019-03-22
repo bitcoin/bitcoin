@@ -53,6 +53,8 @@ private:
     CScheduler* scheduler;
     CCriticalSection cs;
     bool tryLockChainTipScheduled{false};
+    bool isSporkActive{false};
+    bool isEnforced{false};
 
     uint256 bestChainLockHash;
     CChainLockSig bestChainLock;
@@ -88,6 +90,7 @@ public:
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork);
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void CheckActiveState();
     void TrySignChainTip();
     void EnforceBestChainLock();
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
