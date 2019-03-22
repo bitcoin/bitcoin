@@ -644,13 +644,7 @@ void CSigSharesManager::ProcessPendingSigSharesFromNode(NodeId nodeId,
 
     cxxtimer::Timer t(true);
     for (auto& sigShare : sigShares) {
-        // he sent us some valid sig shares, so he must be part of this quorum and is thus interested in our sig shares as well
-        // if this is the first time we received a sig share from this node, we won't announce the currently locally known sig shares to him.
-        // only the upcoming sig shares will be announced to him. this means the first signing session for a fresh quorum will be a bit
-        // slower than for older ones. TODO: fix this (risk of DoS when announcing all at once?)
         auto quorumKey = std::make_pair((Consensus::LLMQType)sigShare.llmqType, sigShare.quorumHash);
-        nodeState.interestedIn.emplace(quorumKey);
-
         ProcessSigShare(nodeId, sigShare, connman, quorums.at(quorumKey));
     }
     t.stop();
@@ -670,10 +664,6 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
     std::set<NodeId> quorumNodes;
     if (sigShare.quorumMember == quorum->GetMemberIndex(activeMasternodeInfo.proTxHash)) {
         quorumNodes = connman.GetMasternodeQuorumNodes((Consensus::LLMQType) sigShare.llmqType, sigShare.quorumHash);
-        // make sure node states are created for these nodes (we might have not received any message from these yet)
-        for (auto otherNodeId : quorumNodes) {
-            nodeStates[otherNodeId].interestedIn.emplace(std::make_pair((Consensus::LLMQType)sigShare.llmqType, sigShare.quorumHash));
-        }
     }
 
     if (quorumSigningManager->HasRecoveredSigForId(llmqType, sigShare.id)) {
@@ -702,12 +692,9 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
         if (!quorumNodes.empty()) {
             // don't announce and wait for other nodes to request this share and directly send it to them
             // there is no way the other nodes know about this share as this is the one created on this node
-            // this will also indicate interest to the other nodes in sig shares for this quorum
-            for (auto& p : nodeStates) {
-                if (!quorumNodes.count(p.first) && !p.second.interestedIn.count(std::make_pair((Consensus::LLMQType)sigShare.llmqType, sigShare.quorumHash))) {
-                    continue;
-                }
-                auto& session = p.second.GetOrCreateSessionFromShare(sigShare);
+            for (auto otherNodeId : quorumNodes) {
+                auto& nodeState = nodeStates[otherNodeId];
+                auto& session = nodeState.GetOrCreateSessionFromShare(sigShare);
                 session.quorum = quorum;
                 session.requested.Set(sigShare.quorumMember, true);
                 session.knows.Set(sigShare.quorumMember, true);
@@ -942,7 +929,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 {
     AssertLockHeld(cs);
 
-    std::unordered_set<std::pair<Consensus::LLMQType, uint256>, StaticSaltedHasher> quorumNodesPrepared;
+    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
 
     this->sigSharesToAnnounce.ForEach([&](const SigShareKey& sigShareKey, bool) {
         auto& signHash = sigShareKey.first;
@@ -952,30 +939,20 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
             return;
         }
 
+        // announce to the nodes which we know through the intra-quorum-communication system
         auto quorumKey = std::make_pair((Consensus::LLMQType)sigShare->llmqType, sigShare->quorumHash);
-        if (quorumNodesPrepared.emplace(quorumKey).second) {
-            // make sure we announce to at least the nodes which we know through the inter-quorum-communication system
+        auto it = quorumNodesMap.find(quorumKey);
+        if (it == quorumNodesMap.end()) {
             auto nodeIds = g_connman->GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second);
-            for (auto nodeId : nodeIds) {
-                auto& nodeState = nodeStates[nodeId];
-                nodeState.interestedIn.emplace(quorumKey);
-            }
+            it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
         }
 
-        for (auto& p : nodeStates) {
-            auto nodeId = p.first;
-            auto& nodeState = p.second;
+        auto& quorumNodes = it->second;
+
+        for (auto& nodeId : quorumNodes) {
+            auto& nodeState = nodeStates[nodeId];
 
             if (nodeState.banned) {
-                continue;
-            }
-
-            if (!nodeState.interestedIn.count(quorumKey)) {
-                // node is not interested in this sig share
-                // we only consider nodes to be interested if they sent us valid sig share before
-                // the sig share that we sign by ourself circumvents the inv system and is directly sent to all quorum members
-                // which are known by the deterministic inter-quorum-communication system. This is also the sig share that
-                // will tell the other nodes that we are interested in future sig shares
                 continue;
             }
 
@@ -997,9 +974,6 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
     });
 
     // don't announce these anymore
-    // nodes which did not send us a valid sig share before were left out now, but this is ok as it only results in slower
-    // propagation for the first signing session of a fresh quorum. The sig shares should still arrive on all nodes due to
-    // the deterministic inter-quorum-communication system
     this->sigSharesToAnnounce.Clear();
 }
 

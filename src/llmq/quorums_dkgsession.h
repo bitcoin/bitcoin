@@ -277,7 +277,6 @@ private:
     std::map<uint256, CDKGJustification> justifications;
     std::map<uint256, CDKGPrematureCommitment> prematureCommitments;
     std::set<CInv> invSet;
-    std::set<CService> participatingNodes;
 
     std::vector<size_t> pendingContributionVerifications;
 
@@ -336,7 +335,6 @@ public:
     bool AreWeMember() const { return !myProTxHash.IsNull(); }
     void MarkBadMember(size_t idx);
 
-    void AddParticipatingNode(NodeId nodeId);
     void RelayInvToParticipants(const CInv& inv) const;
 
 public:

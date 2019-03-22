@@ -2749,16 +2749,6 @@ std::set<uint256> CConnman::GetMasternodeQuorums(Consensus::LLMQType llmqType)
     return result;
 }
 
-std::map<CService, uint256> CConnman::GetMasternodeQuorumAddresses(Consensus::LLMQType llmqType, const uint256& quorumHash) const
-{
-    LOCK(cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
-    if (it == masternodeQuorumNodes.end()) {
-        return {};
-    }
-    return it->second;
-}
-
 std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const
 {
     LOCK2(cs_vNodes, cs_vPendingMasternodes);
@@ -2766,12 +2756,18 @@ std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType
     if (it == masternodeQuorumNodes.end()) {
         return {};
     }
+    std::set<uint256> proRegTxHashes;
+    for (auto& p : it->second) {
+        proRegTxHashes.emplace(p.second);
+    }
+
     std::set<NodeId> nodes;
     for (const auto pnode : vNodes) {
         if (pnode->fDisconnect) {
             continue;
         }
-        if (!pnode->qwatch && !it->second.count(pnode->addr)) {
+        if (!pnode->qwatch && !it->second.count(pnode->addr) &&
+            (pnode->verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(pnode->verifiedProRegTxHash))) {
             continue;
         }
         nodes.emplace(pnode->id);
@@ -2785,12 +2781,17 @@ void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const u
     masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
 }
 
-bool CConnman::IsMasternodeQuorumNode(const CService& addr)
+bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
 {
     LOCK(cs_vPendingMasternodes);
     for (const auto& p : masternodeQuorumNodes) {
-        if (p.second.count(addr)) {
-            return true;
+        for (const auto& p2 : p.second) {
+            if (p2.first == (CService)pnode->addr) {
+                return true;
+            }
+            if (!pnode->verifiedProRegTxHash.IsNull() && p2.second == pnode->verifiedProRegTxHash) {
+                return true;
+            }
         }
     }
     return false;

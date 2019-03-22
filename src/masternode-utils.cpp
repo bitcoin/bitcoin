@@ -73,7 +73,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 #endif // ENABLE_WALLET
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (pnode->fMasternode && !connman.IsMasternodeQuorumNode(pnode->addr)) {
+        if (pnode->fMasternode && !connman.IsMasternodeQuorumNode(pnode)) {
 #ifdef ENABLE_WALLET
             bool fFound = false;
             for (const auto& dmn : vecDmns) {

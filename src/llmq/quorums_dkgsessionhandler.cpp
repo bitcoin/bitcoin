@@ -435,14 +435,6 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         }
     }
 
-    for (const auto& p : preverifiedMessages) {
-        NodeId nodeId = p.first;
-        if (badNodes.count(nodeId)) {
-            continue;
-        }
-        session.AddParticipatingNode(nodeId);
-    }
-
     return true;
 }
 
@@ -492,12 +484,6 @@ void CDKGSessionHandler::HandleDKGRound()
             }
             LogPrint("llmq", debugMsg);
             g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
-
-            auto participatingNodesTmp = g_connman->GetMasternodeQuorumAddresses(params.type, curQuorumHash);
-            LOCK(curSession->invCs);
-            for (auto& p : participatingNodesTmp) {
-                curSession->participatingNodes.emplace(p.first);
-            }
         }
     }
 

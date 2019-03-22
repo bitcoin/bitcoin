@@ -81,10 +81,6 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
     if (strCommand == NetMsgType::QWATCH) {
         pfrom->qwatch = true;
-        for (auto& p : dkgSessionHandlers) {
-            LOCK2(p.second.cs, p.second.curSession->invCs);
-            p.second.curSession->participatingNodes.emplace(pfrom->addr);
-        }
         return;
     }
 

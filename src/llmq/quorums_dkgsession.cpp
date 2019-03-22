@@ -1244,26 +1244,17 @@ void CDKGSession::MarkBadMember(size_t idx)
     member->bad = true;
 }
 
-void CDKGSession::AddParticipatingNode(NodeId nodeId)
-{
-    LOCK(invCs);
-    g_connman->ForNode(nodeId, [&](CNode* pnode) {
-        if (!participatingNodes.emplace(pnode->addr).second) {
-            return true;
-        }
-
-        for (const auto& inv : invSet) {
-            pnode->PushInventory(inv);
-        }
-        return true;
-    });
-}
-
 void CDKGSession::RelayInvToParticipants(const CInv& inv) const
 {
     LOCK(invCs);
     g_connman->ForEachNode([&](CNode* pnode) {
-        if (participatingNodes.count(pnode->addr)) {
+        bool relay = false;
+        if (pnode->qwatch) {
+            relay = true;
+        } else if (!pnode->verifiedProRegTxHash.IsNull() && membersMap.count(pnode->verifiedProRegTxHash)) {
+            relay = true;
+        }
+        if (relay) {
             pnode->PushInventory(inv);
         }
     });

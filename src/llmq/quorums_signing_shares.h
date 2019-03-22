@@ -316,10 +316,6 @@ public:
     SigShareMap<CSigShare> pendingIncomingSigShares;
     SigShareMap<int64_t> requestedSigShares;
 
-    // elements are added whenever we receive a valid sig share from this node
-    // this triggers us to send inventory items to him as he seems to be interested in these
-    std::unordered_set<std::pair<Consensus::LLMQType, uint256>, StaticSaltedHasher> interestedIn;
-
     bool banned{false};
 
     Session& GetOrCreateSessionFromShare(const CSigShare& sigShare);
