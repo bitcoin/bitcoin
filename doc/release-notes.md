@@ -77,7 +77,7 @@ Configuration
 ------------
 
 * An error is issued where previously a warning was issued when a setting in
-  the config file was specified in the default section, but not overriden for
+  the config file was specified in the default section, but not overridden for
   the selected network. This change takes only effect if the selected network
   is not mainnet.
 
