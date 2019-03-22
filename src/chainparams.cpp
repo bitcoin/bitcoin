@@ -159,14 +159,14 @@ public:
         nDefaultPort = 8369;
         nPruneAfterHeight = 100000;
 
-        genesis = CreateGenesisBlock(1553040331, 4847196, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1552606660, 1104721, 0x1e0ffff0, 1, 50 * COIN);
         
-        /*uint256 hash;
+       /* uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000978a70b30e06014aaee001965bb0a9a03e38ca99ff6d79e34df7805f7be"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000009e388d0cb406b36ed70bf89d21a4f7a3b1adea23a21e7948bac2dbb9fcc"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
