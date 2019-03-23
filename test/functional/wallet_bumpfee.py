@@ -77,6 +77,18 @@ class BumpFeeTest(BitcoinTestFramework):
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(rbf_node, dest_address)
         test_no_more_inputs_fails(rbf_node, dest_address)
+
+        rbf_node.generatetoaddress(1, dest_address)
+        txid = rbf_node.sendmany('', {
+            rbf_node.getrawchangeaddress(): '0.1',
+            dest_address: '0.1',
+        })
+        tx = rbf_node.getrawtransaction(txid, True)
+        assert_equal(len(tx['vout']), 3)
+        txid = rbf_node.bumpfee(txid)['txid']
+        tx = rbf_node.getrawtransaction(txid, True)
+        assert_equal(len(tx['vout']), 3)
+
         self.log.info("Success")
 
 

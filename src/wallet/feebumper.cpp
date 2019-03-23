@@ -222,14 +222,16 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
 
     // Fill in recipients(and preserve a change key)
     std::vector<CRecipient> recipients;
+    bool change_set = false;
     for (const auto& output : wtx.tx->vout) {
-        if (!wallet->IsChange(output)) {
+        if (change_set || !wallet->IsChange(output)) {
             CRecipient recipient = {output.scriptPubKey, output.nValue, false};
             recipients.push_back(recipient);
         } else {
             CTxDestination change_dest;
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
+            change_set = true;
         }
     }
 
