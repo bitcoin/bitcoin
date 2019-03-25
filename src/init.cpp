@@ -817,16 +817,19 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
-    bool fDIP003Active;
-    {
-        LOCK(cs_main);
-        if (chainActive.Tip()->pprev) {
-            fDIP003Active = VersionBitsState(chainActive.Tip()->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+    if (fMasternodeMode) {
+        bool fDIP003Active{false};
+        {
+            LOCK(cs_main);
+            if (chainActive.Tip()->pprev) {
+                fDIP003Active = VersionBitsState(chainActive.Tip()->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+            }
+        }
+        if (fDIP003Active) {
+            assert(activeMasternodeManager);
+            activeMasternodeManager->Init();
         }
     }
-
-    if (activeMasternodeManager && fDIP003Active)
-        activeMasternodeManager->Init();
 
 #ifdef ENABLE_WALLET
     // we can't do this before DIP3 is fully initialized
@@ -1908,41 +1911,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    // ********************************************************* Step 10: import blocks
-
-    if (!CheckDiskSpace())
-        return false;
-
-    // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
-    // No locking, as this happens before any background thread is started.
-    if (chainActive.Tip() == NULL) {
-        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
-    } else {
-        fHaveGenesis = true;
-    }
-
-    if (IsArgSet("-blocknotify"))
-        uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
-
-    std::vector<boost::filesystem::path> vImportFiles;
-    if (mapMultiArgs.count("-loadblock"))
-    {
-        BOOST_FOREACH(const std::string& strFile, mapMultiArgs.at("-loadblock"))
-            vImportFiles.push_back(strFile);
-    }
-
-    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
-
-    // Wait for genesis block to be processed
-    {
-        boost::unique_lock<boost::mutex> lock(cs_GenesisWait);
-        while (!fHaveGenesis) {
-            condvar_GenesisWait.wait(lock);
-        }
-        uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
-    }
-
-    // ********************************************************* Step 11a: setup Masternode related stuff
+    // ********************************************************* Step 10a: Prepare Masternode related stuff
     fMasternodeMode = GetBoolArg("-masternode", false);
     // TODO: masternode should have no wallet
 
@@ -1969,7 +1938,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("You must specify a masternodeblsprivkey in the configuration. Please see documentation for help."));
         }
 
-        // init and register activeMasternodeManager
+        // Create and register activeMasternodeManager, will init later in ThreadImport
         activeMasternodeManager = new CActiveMasternodeManager();
         RegisterValidationInterface(activeMasternodeManager);
     }
@@ -1981,9 +1950,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
     }
 
-#ifdef ENABLE_WALLET
-    // ********************************************************* Step 11b: setup PrivateSend
+    // ********************************************************* Step 10b: setup PrivateSend
 
+#ifdef ENABLE_WALLET
     privateSendClient.nLiquidityProvider = std::min(std::max((int)GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
     int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
     if(privateSendClient.nLiquidityProvider) {
@@ -2005,11 +1974,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     CPrivateSend::InitStandardDenominations();
 
-    // ********************************************************* Step 11c: setup InstantSend
+    // ********************************************************* Step 10b: setup InstantSend
 
     fEnableInstantSend = GetBoolArg("-enableinstantsend", 1);
 
-    // ********************************************************* Step 11d: Load cache data
+    // ********************************************************* Step 10c: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
@@ -2050,7 +2019,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    // ********************************************************* Step 11c: schedule Dash-specific tasks
+    // ********************************************************* Step 10d: schedule Dash-specific tasks
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
@@ -2070,6 +2039,40 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     llmq::StartLLMQSystem();
+
+    // ********************************************************* Step 11: import blocks
+
+    if (!CheckDiskSpace())
+        return false;
+
+    // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
+    // No locking, as this happens before any background thread is started.
+    if (chainActive.Tip() == NULL) {
+        uiInterface.NotifyBlockTip.connect(BlockNotifyGenesisWait);
+    } else {
+        fHaveGenesis = true;
+    }
+
+    if (IsArgSet("-blocknotify"))
+        uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
+
+    std::vector<boost::filesystem::path> vImportFiles;
+    if (mapMultiArgs.count("-loadblock"))
+    {
+        BOOST_FOREACH(const std::string& strFile, mapMultiArgs.at("-loadblock"))
+            vImportFiles.push_back(strFile);
+    }
+
+    threadGroup.create_thread(boost::bind(&ThreadImport, vImportFiles));
+
+    // Wait for genesis block to be processed
+    {
+        boost::unique_lock<boost::mutex> lock(cs_GenesisWait);
+        while (!fHaveGenesis) {
+            condvar_GenesisWait.wait(lock);
+        }
+        uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
+    }
 
     // ********************************************************* Step 12: start node
 
