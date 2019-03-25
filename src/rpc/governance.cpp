@@ -2,8 +2,6 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//#define ENABLE_DASH_DEBUG
-
 #include "activemasternode.h"
 #include "consensus/validation.h"
 #include "governance.h"
@@ -225,11 +223,8 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
     }
 
-    DBG( std::cout << "gobject: prepare "
-         << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
-         << ", hash = " << govobj.GetHash().GetHex()
-         << ", txidFee = " << wtx.GetHash().GetHex()
-         << std::endl; );
+    LogPrint("gobject", "gobject_prepare -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
+                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), wtx.GetHash().ToString());
 
     return wtx.GetHash().ToString();
 }
@@ -261,10 +256,9 @@ UniValue gobject_submit(const JSONRPCRequest& request)
     auto mnList = deterministicMNManager->GetListAtChainTip();
     bool fMnFound = mnList.HasValidMNByCollateral(activeMasternodeInfo.outpoint);
 
-    DBG( std::cout << "gobject: submit activeMasternodeInfo.pubKeyOperator = " << (activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A")
-         << ", outpoint = " << activeMasternodeInfo.outpoint.ToStringShort()
-         << ", params.size() = " << request.params.size()
-         << ", fMnFound = " << fMnFound << std::endl; );
+    LogPrint("gobject", "gobject_submit -- pubKeyOperator = %s, outpoint = %s, params.size() = %lld, fMnFound = %d\n",
+            (activeMasternodeInfo.blsPubKeyOperator ? activeMasternodeInfo.blsPubKeyOperator->ToString() : "N/A"),
+            activeMasternodeInfo.outpoint.ToStringShort(), request.params.size(), fMnFound);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -290,11 +284,8 @@ UniValue gobject_submit(const JSONRPCRequest& request)
 
     CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
 
-    DBG( std::cout << "gobject: submit "
-         << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
-         << ", hash = " << govobj.GetHash().GetHex()
-         << ", txidFee = " << txidFee.GetHex()
-         << std::endl; );
+    LogPrint("gobject", "gobject_submit -- GetDataAsPlainString = %s, hash = %s, txid = %s\n",
+                govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), request.params[5].get_str());
 
     if (govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
         CProposalValidator validator(strDataHex, false);

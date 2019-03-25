@@ -4,8 +4,6 @@
 #ifndef GOVERNANCE_CLASSES_H
 #define GOVERNANCE_CLASSES_H
 
-//#define ENABLE_DASH_DEBUG
-
 #include "base58.h"
 #include "governance.h"
 #include "key.h"

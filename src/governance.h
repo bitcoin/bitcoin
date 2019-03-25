@@ -5,8 +5,6 @@
 #ifndef GOVERNANCE_H
 #define GOVERNANCE_H
 
-//#define ENABLE_DASH_DEBUG
-
 #include "bloom.h"
 #include "cachemap.h"
 #include "cachemultimap.h"

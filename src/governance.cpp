@@ -296,8 +296,6 @@ void CGovernanceManager::CheckOrphanVotes(CGovernanceObject& govobj, CGovernance
 
 void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman& connman, CNode* pfrom)
 {
-    DBG(std::cout << "CGovernanceManager::AddGovernanceObject START" << std::endl;);
-
     uint256 nHash = govobj.GetHash();
     std::string strHash = nHash.ToString();
 
@@ -328,13 +326,10 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANANGERS?
 
-    DBG(std::cout << "CGovernanceManager::AddGovernanceObject Before trigger block, GetDataAsPlainString = "
-                  << govobj.GetDataAsPlainString()
-                  << ", nObjectType = " << govobj.nObjectType
-                  << std::endl;);
+    LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
+                govobj.GetDataAsPlainString(), govobj.nObjectType);
 
     if (govobj.nObjectType == GOVERNANCE_OBJECT_TRIGGER) {
-        DBG(std::cout << "CGovernanceManager::AddGovernanceObject Before AddNewTrigger" << std::endl;);
         if (!triggerman.AddNewTrigger(nHash)) {
             LogPrint("gobject", "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
             CGovernanceObject& objref = objpair.first->second;
@@ -344,7 +339,6 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
             }
             return;
         }
-        DBG(std::cout << "CGovernanceManager::AddGovernanceObject After AddNewTrigger" << std::endl;);
     }
 
     LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from %s\n", strHash, pfrom ? pfrom->GetAddrName() : "nullptr");
@@ -362,9 +356,6 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(govobj);
-
-
-    DBG(std::cout << "CGovernanceManager::AddGovernanceObject END" << std::endl;);
 }
 
 void CGovernanceManager::UpdateCachesAndClean()
