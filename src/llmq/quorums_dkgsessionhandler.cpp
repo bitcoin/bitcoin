@@ -45,7 +45,7 @@ void CDKGPendingMessages::PushPendingMessage(NodeId from, CDataStream& vRecv)
     LOCK2(cs_main, cs);
 
     if (!seenMessages.emplace(hash).second) {
-        LogPrint("llmq", "CDKGPendingMessages::%s -- already seen %s, peer=%d", __func__, from);
+        LogPrint("llmq-dkg", "CDKGPendingMessages::%s -- already seen %s, peer=%d", __func__, from);
         return;
     }
 
@@ -482,7 +482,7 @@ void CDKGSessionHandler::HandleDKGRound()
             for (const auto& c : connections) {
                 debugMsg += strprintf("  %s\n", c.first.ToString(false));
             }
-            LogPrint("llmq", debugMsg);
+            LogPrint("llmq-dkg", debugMsg);
             g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
         }
     }
@@ -541,7 +541,7 @@ void CDKGSessionHandler::PhaseHandlerThread()
                 status.aborted = true;
                 return true;
             });
-            LogPrint("llmq", "CDKGSessionHandler::%s -- aborted current DKG session for llmq=%s\n", __func__, params.name);
+            LogPrint("llmq-dkg", "CDKGSessionHandler::%s -- aborted current DKG session for llmq=%s\n", __func__, params.name);
         }
     }
 }

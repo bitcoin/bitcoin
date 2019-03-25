@@ -286,6 +286,8 @@ bool LogAcceptCategory(const char* category)
                     ptrCategory->insert(std::string("instantsend"));
                     ptrCategory->insert(std::string("keepass"));
                     ptrCategory->insert(std::string("llmq"));
+                    ptrCategory->insert(std::string("llmq-dkg"));
+                    ptrCategory->insert(std::string("llmq-sigs"));
                     ptrCategory->insert(std::string("masternode"));
                     ptrCategory->insert(std::string("mnpayments"));
                     ptrCategory->insert(std::string("mnsync"));
