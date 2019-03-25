@@ -243,7 +243,7 @@ fi
 
 AM_CONDITIONAL([ENABLE_STACKTRACES], [test x$enable_stacktraces = xyes])
 if test "x$enable_stacktraces" = xyes; then
-    AC_DEFINE(ENABLE_STACKTRACES, 1, [Define this symbol if stacktraces should be enables])
+    AC_DEFINE(ENABLE_STACKTRACES, 1, [Define this symbol if stacktraces should be enabled])
 fi
 AX_CHECK_LINK_FLAG([-Wl,-wrap=__cxa_allocate_exception], [LINK_WRAP_SUPPORTED=yes],,,)
 AX_CHECK_COMPILE_FLAG([-rdynamic], [RDYNAMIC_SUPPORTED=yes],,,)
@@ -1242,28 +1242,28 @@ esac
 
 echo 
 echo "Options used to compile and link:"
-echo "  with wallet   = $enable_wallet"
-echo "  with gui / qt = $bitcoin_enable_qt"
+echo "  with wallet         = $enable_wallet"
+echo "  with gui / qt       = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then
-    echo "    qt version  = $bitcoin_qt_got_major_vers"
-    echo "    with qr     = $use_qr"
+    echo "    qt version        = $bitcoin_qt_got_major_vers"
+    echo "    with qr           = $use_qr"
 fi
-echo "  with zmq      = $use_zmq"
-echo "  with test     = $use_tests"
-echo "  with bench    = $use_bench"
-echo "  with upnp     = $use_upnp"
-echo "  debug enabled = $enable_debug"
+echo "  with zmq            = $use_zmq"
+echo "  with test           = $use_tests"
+echo "  with bench          = $use_bench"
+echo "  with upnp           = $use_upnp"
+echo "  debug enabled       = $enable_debug"
 echo "  stacktraces enabled = $enable_stacktraces"
-echo "  miner enabled = $enable_miner"
-echo "  werror        = $enable_werror"
+echo "  miner enabled       = $enable_miner"
+echo "  werror              = $enable_werror"
 echo 
-echo "  target os     = $TARGET_OS"
-echo "  build os      = $BUILD_OS"
+echo "  target os           = $TARGET_OS"
+echo "  build os            = $BUILD_OS"
 echo
-echo "  CC            = $CC"
-echo "  CFLAGS        = $CFLAGS"
-echo "  CPPFLAGS      = $CPPFLAGS"
-echo "  CXX           = $CXX"
-echo "  CXXFLAGS      = $CXXFLAGS"
-echo "  LDFLAGS       = $LDFLAGS"
+echo "  CC                  = $CC"
+echo "  CFLAGS              = $CFLAGS"
+echo "  CPPFLAGS            = $CPPFLAGS"
+echo "  CXX                 = $CXX"
+echo "  CXXFLAGS            = $CXXFLAGS"
+echo "  LDFLAGS             = $LDFLAGS"
 echo 
