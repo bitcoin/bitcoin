@@ -91,6 +91,8 @@ bool SetupNetworking();
 
 /** Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
+/** Reset internal log category caching (call this when debug categories have changed) */
+void ResetLogAcceptCategoryCache();
 /** Send a string to the log output */
 int LogPrintStr(const std::string &str);
 
