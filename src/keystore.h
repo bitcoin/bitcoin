@@ -36,6 +36,9 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
     virtual bool HaveWatchOnly(const CScript &dest) const =0;
     virtual bool HaveWatchOnly() const =0;
+    virtual bool HaveScriptPubKey(const CScript& script) const =0;
+    virtual bool HaveScriptPubKeys() const =0;
+    virtual bool AddScriptPubKey(const CScript& script) =0;
 };
 
 /** Basic key store, that keeps keys in an address->secret map */
@@ -48,11 +51,13 @@ protected:
     using WatchKeyMap = std::map<CKeyID, CPubKey>;
     using ScriptMap = std::map<CScriptID, CScript>;
     using WatchOnlySet = std::set<CScript>;
+    using ScriptPubKeySet = std::set<CScript>;
 
     KeyMap mapKeys GUARDED_BY(cs_KeyStore);
     WatchKeyMap mapWatchKeys GUARDED_BY(cs_KeyStore);
     ScriptMap mapScripts GUARDED_BY(cs_KeyStore);
     WatchOnlySet setWatchOnly GUARDED_BY(cs_KeyStore);
+    ScriptPubKeySet m_set_scriptPubKey GUARDED_BY(cs_KeyStore);
 
     void ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
@@ -72,6 +77,10 @@ public:
     bool RemoveWatchOnly(const CScript &dest) override;
     bool HaveWatchOnly(const CScript &dest) const override;
     bool HaveWatchOnly() const override;
+    bool HaveScriptPubKey(const CScript& script) const override;
+    bool HaveScriptPubKeys() const override;
+    bool AddScriptPubKey(const CScript& script) override;
+
 };
 
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */

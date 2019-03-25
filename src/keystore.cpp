@@ -174,6 +174,25 @@ bool CBasicKeyStore::HaveWatchOnly() const
     return (!setWatchOnly.empty());
 }
 
+bool CBasicKeyStore::HaveScriptPubKey(const CScript& script) const
+{
+    LOCK(cs_KeyStore);
+    return m_set_scriptPubKey.count(script) > 0;
+}
+
+bool CBasicKeyStore::HaveScriptPubKeys() const
+{
+    LOCK(cs_KeyStore);
+    return !m_set_scriptPubKey.empty();
+}
+
+bool CBasicKeyStore::AddScriptPubKey(const CScript& script)
+{
+    LOCK(cs_KeyStore);
+    m_set_scriptPubKey.insert(script);
+    return true;
+}
+
 CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
 {
     // Only supports destinations which map to single public keys, i.e. P2PKH,

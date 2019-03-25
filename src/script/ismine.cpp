@@ -174,6 +174,9 @@ IsMineResult IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey,
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
 {
+    if (keystore.HaveScriptPubKey(scriptPubKey)) {
+        return ISMINE_SPENDABLE;
+    }
     switch (IsMineInner(keystore, scriptPubKey, IsMineSigVersion::TOP)) {
     case IsMineResult::INVALID:
     case IsMineResult::NO:
