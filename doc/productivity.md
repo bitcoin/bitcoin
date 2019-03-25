@@ -8,6 +8,7 @@ Table of Contents
    * [Cache compilations with `ccache`](#cache-compilations-with-ccache)
    * [Disable features with `./configure`](#disable-features-with-configure)
    * [Make use of your threads with `make -j`](#make-use-of-your-threads-with-make--j)
+   * [Only build what you need](#only-build-what-you-need)
    * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
 * [Writing code](#writing-code)
    * [Format C/C++/Protobuf diffs with `clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy)
@@ -32,6 +33,17 @@ Install `ccache` through your distribution's package manager, and run `./configu
 
 To use ccache for all your C/C++ projects, follow the symlinks method [here](https://ccache.samba.org/manual/latest.html#_run_modes) to set it up.
 
+To get the most out of ccache, put something like this in `~/.ccache/ccache.conf`:
+
+```
+max_size = 50.0G  # or whatever cache size you prefer; default is 5G; 0 means unlimited
+base_dir = /home/yourname  # or wherever you keep your source files
+```
+
+Note: base_dir is required for ccache to share cached compiles of the same file across different repositories / paths; it will only do this for paths under base_dir. So this option is required for effective use of ccache with git worktrees (described below).
+
+You _must not_ set base_dir to "/", or anywhere that contains system headers (according to the ccache docs).
+
 ### Disable features with `./configure`
 
 After running `./autogen.sh`, which generates the `./configure` file, use `./configure --help` to identify features that you can disable to save on compilation time. A few common flags:
@@ -43,6 +55,8 @@ After running `./autogen.sh`, which generates the `./configure` file, use `./con
 --without-gui
 ```
 
+If you do need the wallet enabled, it is common for devs to add `--with-incompatible-bdb`. This uses your system bdb version for the wallet, so you don't have to find a copy of bdb 4.8. Wallets from such a build will be incompatible with any release binary (and vice versa), so use with caution on mainnet.
+
 ### Make use of your threads with `make -j`
 
 If you have multiple threads on your machine, you can tell `make` to utilize all of them with:
@@ -50,6 +64,20 @@ If you have multiple threads on your machine, you can tell `make` to utilize all
 ```sh
 make -j"$(($(nproc)+1))"
 ```
+
+### Only build what you need
+
+When rebuilding during development, note that running `make`, without giving a target, will do a lot of work you probably don't need. It will build the GUI (unless you've disabled it) and all the tests (which take much longer to build than the app does).
+
+Obviously, it is important to build and run the tests at appropriate times -- but when you just want a quick compile to check your work, consider picking one or a set of build targets relevant to what you're working on, e.g.:
+
+```sh
+make src/bitcoind src/bitcoin-cli
+make src/qt/bitcoin-qt
+make -C src bitcoin_bench
+```
+
+(You can and should combine this with `-j`, as above, for a parallel build.)
 
 ### Multiple working directories with `git worktrees`
 
