@@ -38,6 +38,12 @@
 class CScheduler;
 class CNode;
 class BanMan;
+class CTxMemPool;
+class CTransaction;
+
+using CTransactionRef = std::shared_ptr<const CTransaction>;
+
+using MapRelay = std::map<uint256, CTransactionRef>;
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
@@ -298,6 +304,9 @@ public:
 
     void SetBestHeight(int height);
     int GetBestHeight() const;
+
+    /** Announce transaction to all peers */
+    void RelayTransaction(bool initial, const uint256& txid, const CTxMemPool& tx_pool) const;
 
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
@@ -700,15 +709,18 @@ public:
     int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
 
     // inventory based relay
+    RecursiveMutex cs_inventory;
     CRollingBloomFilter filterInventoryKnown GUARDED_BY(cs_inventory);
     // Set of transaction ids we still have to announce.
     // They are sorted by the mempool before relay, so the order is not important.
     std::set<uint256> setInventoryTxToSend;
+    /** Set of one-hop transactions to relay to this peer */
+    std::set<uint256> m_set_one_hop_tx_to_send GUARDED_BY(cs_inventory);
+    MapRelay m_map_one_hop_tx_to_send;
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
     std::vector<uint256> vInventoryBlockToSend GUARDED_BY(cs_inventory);
-    CCriticalSection cs_inventory;
     int64_t nNextInvSend{0};
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
@@ -807,7 +819,14 @@ public:
         nRefCount--;
     }
 
-
+    /** If this peer is not yet connected or soon to be disconnected */
+    bool IsEphemeral() const
+    {
+        return !fSuccessfullyConnected &&
+               fDisconnect &&
+               fOneShot &&
+               fFeeler;
+    }
 
     void AddAddressKnown(const CAddress& _addr)
     {
@@ -834,6 +853,14 @@ public:
         {
             LOCK(cs_inventory);
             filterInventoryKnown.insert(inv.hash);
+        }
+    }
+
+    void PushInventoryOneHopTx(const uint256& txid)
+    {
+        LOCK(cs_inventory);
+        if (!filterInventoryKnown.contains(txid)) {
+            m_set_one_hop_tx_to_send.insert(txid);
         }
     }
 

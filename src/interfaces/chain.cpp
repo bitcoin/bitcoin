@@ -306,10 +306,9 @@ public:
         auto it = ::mempool.GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
     }
-    void relayTransaction(const uint256& txid) override
+    void relayTransaction(const bool initial, const uint256& txid) override
     {
-        CInv inv(MSG_TX, txid);
-        g_connman->ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+        g_connman->RelayTransaction(initial, txid, ::mempool);
     }
     void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) override
     {

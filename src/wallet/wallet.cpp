@@ -1892,7 +1892,7 @@ void CWallet::ReacceptWalletTransactions()
     }
 }
 
-bool CWalletTx::RelayWalletTransaction(interfaces::Chain::Lock& locked_chain)
+bool CWalletTx::RelayWalletTransaction(const bool initial, interfaces::Chain::Lock& locked_chain)
 {
     assert(pwallet->GetBroadcastTransactions());
     if (!IsCoinBase() && !isAbandoned() && GetDepthInMainChain(locked_chain) == 0)
@@ -1902,7 +1902,7 @@ bool CWalletTx::RelayWalletTransaction(interfaces::Chain::Lock& locked_chain)
         if (InMempool() || AcceptToMemoryPool(locked_chain, state)) {
             pwallet->WalletLogPrintf("Relaying wtx %s\n", GetHash().ToString());
             if (pwallet->chain().p2pEnabled()) {
-                pwallet->chain().relayTransaction(GetHash());
+                pwallet->chain().relayTransaction(initial, GetHash());
                 return true;
             }
         }
@@ -2131,7 +2131,7 @@ std::vector<uint256> CWallet::ResendWalletTransactionsBefore(interfaces::Chain::
     for (const std::pair<const unsigned int, CWalletTx*>& item : mapSorted)
     {
         CWalletTx& wtx = *item.second;
-        if (wtx.RelayWalletTransaction(locked_chain)) {
+        if (wtx.RelayWalletTransaction(/* initial */ false, locked_chain)) {
             result.push_back(wtx.GetHash());
         }
     }
@@ -3182,11 +3182,11 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         if (fBroadcastTransactions)
         {
             // Broadcast
-            if (!wtx.AcceptToMemoryPool(*locked_chain, state)) {
+            if (wtx.AcceptToMemoryPool(*locked_chain, state)) {
+                wtx.RelayWalletTransaction(/* initial */ true, *locked_chain);
+            } else {
                 WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", FormatStateMessage(state));
                 // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
-            } else {
-                wtx.RelayWalletTransaction(*locked_chain);
             }
         }
     }

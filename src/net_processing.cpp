@@ -170,10 +170,11 @@ namespace {
     std::atomic<int64_t> g_last_tip_update(0);
 
     /** Relay map */
-    typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
     /** Expiration-time ordered list of (expire time, relay map entry) pairs. */
     std::deque<std::pair<int64_t, MapRelay::iterator>> vRelayExpiration GUARDED_BY(cs_main);
+    /** Expiration-time ordered list of (expire time, node id, node relay map entry) tuples. */
+    std::deque<std::tuple<int64_t, NodeId, MapRelay::iterator>> g_relay_expiration_next_hop GUARDED_BY(cs_main);
 
     std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
 
@@ -1426,10 +1427,14 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
             // Send stream from relay memory
             bool push = false;
-            auto mi = mapRelay.find(inv.hash);
+            MapRelay::const_iterator mi;
             int nSendFlags = (inv.type == MSG_TX ? SERIALIZE_TRANSACTION_NO_WITNESS : 0);
-            if (mi != mapRelay.end()) {
+            if ((mi = mapRelay.find(inv.hash)) != mapRelay.end()) {
                 connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
+                push = true;
+            } else if ((mi = pfrom->m_map_one_hop_tx_to_send.find(inv.hash)) != pfrom->m_map_one_hop_tx_to_send.end()) {
+                connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::TX, *mi->second));
+                pfrom->m_map_one_hop_tx_to_send.erase(mi);
                 push = true;
             } else if (pfrom->timeLastMempoolReq) {
                 auto txinfo = mempool.info(inv.hash);
@@ -3418,11 +3423,11 @@ public:
         mp = _mempool;
     }
 
-    bool operator()(std::set<uint256>::iterator a, std::set<uint256>::iterator b)
+    bool operator()(std::pair<bool, std::set<uint256>::iterator> a, std::pair<bool, std::set<uint256>::iterator> b) const
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return mp->CompareDepthAndScore(*b, *a);
+        return mp->CompareDepthAndScore(*(b.second), *(a.second));
     }
 };
 }
@@ -3754,10 +3759,13 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
             // Determine transactions to relay
             if (fSendTrickle) {
                 // Produce a vector with all candidates for sending
-                std::vector<std::set<uint256>::iterator> vInvTx;
-                vInvTx.reserve(pto->setInventoryTxToSend.size());
-                for (std::set<uint256>::iterator it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); it++) {
-                    vInvTx.push_back(it);
+                std::vector<std::pair</* type (last_hop) */ bool, std::set<uint256>::iterator>> vInvTx;
+                vInvTx.reserve(pto->setInventoryTxToSend.size() + pto->m_set_one_hop_tx_to_send.size());
+                for (auto it = pto->setInventoryTxToSend.begin(); it != pto->setInventoryTxToSend.end(); ++it) {
+                    vInvTx.emplace_back(false, it);
+                }
+                for (auto it = pto->m_set_one_hop_tx_to_send.begin(); it != pto->m_set_one_hop_tx_to_send.end(); ++it) {
+                    vInvTx.emplace_back(true, it);
                 }
                 CAmount filterrate = 0;
                 {
@@ -3775,11 +3783,12 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX) {
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                    std::set<uint256>::iterator it = vInvTx.back();
+                    auto tx_inv = vInvTx.back();
                     vInvTx.pop_back();
-                    uint256 hash = *it;
+                    const uint256& hash = *(tx_inv.second);
+                    const bool tx_last_hop = tx_inv.first;
                     // Remove it from the to-be-sent set
-                    pto->setInventoryTxToSend.erase(it);
+                    tx_last_hop ? pto->m_set_one_hop_tx_to_send.erase(tx_inv.second) : pto->setInventoryTxToSend.erase(tx_inv.second);
                     // Check if not in the filter already
                     if (pto->filterInventoryKnown.contains(hash)) {
                         continue;
@@ -3804,11 +3813,37 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             vRelayExpiration.pop_front();
                         }
 
-                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
-                        if (ret.second) {
-                            vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
+                        // Expire old one-hop relay messages
+                        std::set<uint256> expired_one_hop_txs;
+                        while (!g_relay_expiration_next_hop.empty() && std::get<0>(g_relay_expiration_next_hop.front()) < nNow) {
+                            NodeId id;
+                            MapRelay::const_iterator it;
+                            std::tie(std::ignore, id, it) = g_relay_expiration_next_hop.front();
+                            connman->ForNode(id, [&it, &expired_one_hop_txs](CNode* node) {
+                                expired_one_hop_txs.emplace(it->first);
+                                node->m_map_one_hop_tx_to_send.erase(it);
+                                return /* ignored */ true;
+                            });
+                            g_relay_expiration_next_hop.pop_front();
+                        }
+
+                        for (const auto& txid : expired_one_hop_txs) {
+                            g_connman->RelayTransaction(/* initial */ false, txid, ::mempool);
                         }
                     }
+
+                    if (tx_last_hop) {
+                        auto ret = pto->m_map_one_hop_tx_to_send.emplace(hash, std::move(txinfo.tx));
+                        if (ret.second) {
+                            g_relay_expiration_next_hop.emplace_back(nNow + 20 * 1000000, pto->GetId(), ret.first);
+                        }
+                    } else {
+                        auto ret = mapRelay.insert(std::make_pair(hash, std::move(txinfo.tx)));
+                        if (ret.second) {
+                            vRelayExpiration.emplace_back(nNow + 15 * 60 * 1000000, ret.first);
+                        }
+                    }
+
                     if (vInv.size() == MAX_INV_SZ) {
                         connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
                         vInv.clear();

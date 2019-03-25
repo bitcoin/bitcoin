@@ -15,9 +15,10 @@
 #include <consensus/consensus.h>
 #include <crypto/common.h>
 #include <crypto/sha256.h>
-#include <primitives/transaction.h>
 #include <netbase.h>
+#include <primitives/transaction.h>
 #include <scheduler.h>
+#include <txmempool.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
 
@@ -2608,6 +2609,44 @@ void CConnman::SetBestHeight(int height)
 int CConnman::GetBestHeight() const
 {
     return nBestHeight.load(std::memory_order_acquire);
+}
+
+void CConnman::RelayTransaction(bool initial, const uint256& txid, const CTxMemPool& tx_pool) const
+{
+    if (initial) {
+        const auto& it = tx_pool.GetIter(txid);
+        if (!it) return;
+        const CFeeRate tx_fee_rate{(*it)->GetFee(), (*it)->GetTxSize()};
+        std::vector<CNode*> candidates;
+        g_connman->ForEachNode([&tx_fee_rate, &candidates](CNode* node) {
+            // Exclude nodes that will drop this tx on the floor
+            if (!node->fRelayTxes) return;
+            if (node->fSendMempool) return;
+            if (node->fClient) return;
+            if (!node->minFeeFilter) return;
+            if (tx_fee_rate.GetFeePerK() < node->minFeeFilter) return;
+            if (node->IsEphemeral()) return;
+            if (!(node->nServices & NODE_WITNESS)) return;
+            if (!node->nLastTXTime) return;
+
+            // Exclude inbound nodes
+            if (node->fInbound) return;
+
+            candidates.push_back(node);
+        });
+
+        std::sort(candidates.begin(), candidates.end(), [](const CNode* a, const CNode* b) { return a->nLastTXTime > b->nLastTXTime; });
+        // Pick the better half of all candidates
+        for (int remove = candidates.size() / 2; remove > 0; --remove) {
+            candidates.pop_back();
+        }
+        for (CNode* node : candidates) {
+            node->PushInventoryOneHopTx(txid);
+        }
+    } else {
+        const CInv inv(MSG_TX, txid);
+        ForEachNode([&inv](CNode* node) { node->PushInventory(inv); });
+    }
 }
 
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
