@@ -586,7 +586,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     bool fNoncriticalErrors = false;
     DBErrors result = DB_LOAD_OK;
 
-    LOCK(pwallet->cs_wallet);
+    LOCK2(cs_main, pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
         if (Read((std::string)"minversion", nMinVersion))

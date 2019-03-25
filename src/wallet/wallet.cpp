@@ -1249,7 +1249,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
 
 void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
 {
-    LOCK2(cs_main, cs_wallet);
+    LOCK2(cs_main, cs_wallet); // check "LOCK2(cs_main, pwallet->cs_wallet);" in CWalletDB::LoadWallet()
 
     int conflictconfirms = 0;
     if (mapBlockIndex.count(hashBlock)) {
