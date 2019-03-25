@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+      <BuildDependsOn>
+          CopyBitcoinConfig;
+          CopySecp256k1Config;
+          $(BuildDependsOn);
+      </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="CopyBitcoinConfig"
+          Inputs="$(MSBuildThisFileDirectory)bitcoin_config.h"
+          Outputs="$(MSBuildThisFileDirectory)..\src\config\bitcoin-config.h">
+      <Copy SourceFiles="$(MSBuildThisFileDirectory)bitcoin_config.h" DestinationFiles="$(MSBuildThisFileDirectory)..\src\config\bitcoin-config.h" />
+  </Target>
+  <Target Name="CopySecp256k1Config"
+          Inputs="$(MSBuildThisFileDirectory)libsecp256k1_config.h"
+          Outputs="$(MSBuildThisFileDirectory)..\src\secp256k1\src\libsecp256k1-config.h">
+      <Copy SourceFiles="$(MSBuildThisFileDirectory)libsecp256k1_config.h" DestinationFiles="$(MSBuildThisFileDirectory)..\src\secp256k1\src\libsecp256k1-config.h" />
+  </Target>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>4018;4244;4267;4715;4805;</DisableSpecificWarnings>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <PreprocessorDefinitions>_WIN32_WINNT=0x0601;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src;..\..\src\univalue\include;..\..\src\secp256k1\include;..\..\src\leveldb\include;..\..\src\leveldb\helpers\memenv;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

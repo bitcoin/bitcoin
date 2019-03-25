@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,15 +7,21 @@
 #endif
 
 #include <chainparams.h>
+#include <interfaces/node.h>
+#include <qt/bitcoin.h>
+#include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
-#include <util.h>
+#include <util/system.h>
 #include <qt/test/uritests.h>
 #include <qt/test/compattests.h>
 
 #ifdef ENABLE_WALLET
+#include <qt/test/addressbooktests.h>
+#ifdef ENABLE_BIP70
 #include <qt/test/paymentservertests.h>
+#endif // ENABLE_BIP70
 #include <qt/test/wallettests.h>
-#endif
+#endif // ENABLE_WALLET
 
 #include <QApplication>
 #include <QObject>
@@ -25,12 +31,6 @@
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
-#if QT_VERSION < 0x050000
-Q_IMPORT_PLUGIN(qcncodecs)
-Q_IMPORT_PLUGIN(qjpcodecs)
-Q_IMPORT_PLUGIN(qtwcodecs)
-Q_IMPORT_PLUGIN(qkrcodecs)
-#else
 #if defined(QT_QPA_PLATFORM_MINIMAL)
 Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin);
 #endif
@@ -42,7 +42,6 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
-#endif
 
 extern void noui_connect();
 
@@ -51,12 +50,13 @@ int main(int argc, char *argv[])
 {
     SetupEnvironment();
     SetupNetworking();
-    SelectParams(CBaseChainParams::MAIN);
+    SelectParams(CBaseChainParams::REGTEST);
     noui_connect();
     ClearDatadirCache();
     fs::path pathTemp = fs::temp_directory_path() / strprintf("test_bitcoin-qt_%lu_%i", (unsigned long)GetTime(), (int)GetRand(100000));
     fs::create_directories(pathTemp);
     gArgs.ForceSetArg("-datadir", pathTemp.string());
+    auto node = interfaces::MakeNode();
 
     bool fInvalid = false;
 
@@ -71,16 +71,20 @@ int main(int argc, char *argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    QApplication app(argc, argv);
+    BitcoinApplication app(*node, argc, argv);
     app.setApplicationName("Bitcoin-Qt-test");
 
     SSL_library_init();
 
+    AppTests app_tests(app);
+    if (QTest::qExec(&app_tests) != 0) {
+        fInvalid = true;
+    }
     URITests test1;
     if (QTest::qExec(&test1) != 0) {
         fInvalid = true;
     }
-#ifdef ENABLE_WALLET
+#if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
     PaymentServerTests test2;
     if (QTest::qExec(&test2) != 0) {
         fInvalid = true;
@@ -97,6 +101,10 @@ int main(int argc, char *argv[])
 #ifdef ENABLE_WALLET
     WalletTests test5;
     if (QTest::qExec(&test5) != 0) {
+        fInvalid = true;
+    }
+    AddressBookTests test6;
+    if (QTest::qExec(&test6) != 0) {
         fInvalid = true;
     }
 #endif

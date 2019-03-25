@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,8 @@
 #include <fs.h>
 #include <serialize.h>
 #include <streams.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 #include <version.h>
 
 #include <leveldb/db.h>
@@ -223,6 +223,9 @@ public:
      */
     CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
     ~CDBWrapper();
+
+    CDBWrapper(const CDBWrapper&) = delete;
+    CDBWrapper& operator=(const CDBWrapper&) = delete;
 
     template <typename K, typename V>
     bool Read(const K& key, V& value) const

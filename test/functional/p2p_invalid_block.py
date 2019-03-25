@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid blocks.
@@ -12,9 +12,9 @@ re-requested.
 """
 import copy
 
-from test_framework.blocktools import create_block, create_coinbase, create_transaction
+from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
 from test_framework.messages import COIN
-from test_framework.mininode import network_thread_start, P2PDataStore
+from test_framework.mininode import P2PDataStore
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 
@@ -29,9 +29,6 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         node = self.nodes[0]  # convenience reference to the node
         node.add_p2p_connection(P2PDataStore())
 
-        network_thread_start()
-        node.p2p.wait_for_verack()
-
         best_block = node.getblock(node.getbestblockhash())
         tip = int(node.getbestblockhash(), 16)
         height = best_block["height"] + 1
@@ -45,10 +42,10 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         # Save the coinbase for later
         block1 = block
         tip = block.sha256
-        node.p2p.send_blocks_and_test([block1], node, True)
+        node.p2p.send_blocks_and_test([block1], node, success=True)
 
         self.log.info("Mature the block.")
-        node.generate(100)
+        node.generatetoaddress(100, node.get_deterministic_priv_key().address)
 
         best_block = node.getblock(node.getbestblockhash())
         tip = int(node.getbestblockhash(), 16)
@@ -66,8 +63,8 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block_time += 1
 
         # b'0x51' is OP_TRUE
-        tx1 = create_transaction(block1.vtx[0], 0, b'\x51', 50 * COIN)
-        tx2 = create_transaction(tx1, 0, b'\x51', 50 * COIN)
+        tx1 = create_tx_with_script(block1.vtx[0], 0, script_sig=b'\x51', amount=50 * COIN)
+        tx2 = create_tx_with_script(tx1, 0, script_sig=b'\x51', amount=50 * COIN)
 
         block2.vtx.extend([tx1, tx2])
         block2.hashMerkleRoot = block2.calc_merkle_root()
@@ -80,9 +77,19 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block2.vtx.append(tx2)
         assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
         assert_equal(orig_hash, block2.rehash())
-        assert(block2_orig.vtx != block2.vtx)
+        assert block2_orig.vtx != block2.vtx
 
-        node.p2p.send_blocks_and_test([block2], node, False, False, 16, b'bad-txns-duplicate')
+        node.p2p.send_blocks_and_test([block2], node, success=False, reject_reason='bad-txns-duplicate')
+
+        # Check transactions for duplicate inputs
+        self.log.info("Test duplicate input block.")
+
+        block2_orig.vtx[2].vin.append(block2_orig.vtx[2].vin[0])
+        block2_orig.vtx[2].rehash()
+        block2_orig.hashMerkleRoot = block2_orig.calc_merkle_root()
+        block2_orig.rehash()
+        block2_orig.solve()
+        node.p2p.send_blocks_and_test([block2_orig], node, success=False, reject_reason='bad-txns-inputs-duplicate')
 
         self.log.info("Test very broken block.")
 
@@ -95,7 +102,8 @@ class InvalidBlockRequestTest(BitcoinTestFramework):
         block3.rehash()
         block3.solve()
 
-        node.p2p.send_blocks_and_test([block3], node, False, False, 16, b'bad-cb-amount')
+        node.p2p.send_blocks_and_test([block3], node, success=False, reject_reason='bad-cb-amount')
+
 
 if __name__ == '__main__':
     InvalidBlockRequestTest().main()

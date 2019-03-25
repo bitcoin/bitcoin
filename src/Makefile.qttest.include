@@ -6,20 +6,28 @@ bin_PROGRAMS += qt/test/test_bitcoin-qt
 TESTS += qt/test/test_bitcoin-qt
 
 TEST_QT_MOC_CPP = \
+  qt/test/moc_apptests.cpp \
   qt/test/moc_compattests.cpp \
   qt/test/moc_rpcnestedtests.cpp \
   qt/test/moc_uritests.cpp
 
 if ENABLE_WALLET
 TEST_QT_MOC_CPP += \
-  qt/test/moc_paymentservertests.cpp \
+  qt/test/moc_addressbooktests.cpp \
   qt/test/moc_wallettests.cpp
-endif
+if ENABLE_BIP70
+TEST_QT_MOC_CPP += \
+  qt/test/moc_paymentservertests.cpp
+endif # ENABLE_BIP70
+endif # ENABLE_WALLET
 
 TEST_QT_H = \
+  qt/test/addressbooktests.h \
+  qt/test/apptests.h \
   qt/test/compattests.h \
   qt/test/rpcnestedtests.h \
   qt/test/uritests.h \
+  qt/test/util.h \
   qt/test/paymentrequestdata.h \
   qt/test/paymentservertests.h \
   qt/test/wallettests.h
@@ -34,25 +42,31 @@ qt_test_test_bitcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_
   $(QT_INCLUDES) $(QT_TEST_INCLUDES) $(PROTOBUF_CFLAGS)
 
 qt_test_test_bitcoin_qt_SOURCES = \
+  qt/test/apptests.cpp \
   qt/test/compattests.cpp \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
   qt/test/uritests.cpp \
+  qt/test/util.cpp \
   $(TEST_QT_H) \
   $(TEST_BITCOIN_CPP) \
   $(TEST_BITCOIN_H)
 if ENABLE_WALLET
 qt_test_test_bitcoin_qt_SOURCES += \
-  qt/test/paymentservertests.cpp \
+  qt/test/addressbooktests.cpp \
   qt/test/wallettests.cpp \
   wallet/test/wallet_test_fixture.cpp
-endif
+if ENABLE_BIP70
+qt_test_test_bitcoin_qt_SOURCES += \
+  qt/test/paymentservertests.cpp
+endif # ENABLE_BIP70
+endif # ENABLE_WALLET
 
 nodist_qt_test_test_bitcoin_qt_SOURCES = $(TEST_QT_MOC_CPP)
 
 qt_test_test_bitcoin_qt_LDADD = $(LIBBITCOINQT) $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
-qt_test_test_bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+qt_test_test_bitcoin_qt_LDADD += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
 qt_test_test_bitcoin_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)

@@ -30,6 +30,10 @@
         <translation>Forigi la elektitan adreson el la listo</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Tajpu adreson aŭ etikedon por serĉi</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksporti la datumojn el la aktuala langeto al dosiero</translation>
     </message>
@@ -571,19 +575,7 @@
         <source>Command-line options</source>
         <translation>Komandliniaj agordaĵoj</translation>
     </message>
-    <message>
-        <source>Usage:</source>
-        <translation>Uzado:</translation>
-    </message>
-    <message>
-        <source>command-line options</source>
-        <translation>komandliniaj agordaĵoj</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Uzantinterfaco ebloj:</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1099,6 +1091,10 @@
         <translation>Mesaĝo</translation>
     </message>
     <message>
+        <source>Wallet</source>
+        <translation>Monujo</translation>
+    </message>
+    <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>La rezultanta URI estas tro longa. Provu malplilongigi la tekston de la etikedo / mesaĝo.</translation>
     </message>
@@ -1245,16 +1241,12 @@
         <translation>Ĉu vi certas, ke vi volas sendi?</translation>
     </message>
     <message>
-        <source>added as transaction fee</source>
-        <translation>aldonita kiel krompago</translation>
-    </message>
-    <message>
-        <source>Total Amount %1</source>
-        <translation>Totala sumo %1</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>aŭ</translation>
+    </message>
+    <message>
+        <source>Transaction fee</source>
+        <translation>Krompago</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -1498,10 +1490,6 @@
         <translation>Malferma ĝis %1</translation>
     </message>
     <message>
-        <source>%1/offline</source>
-        <translation>%1/senkonekte</translation>
-    </message>
-    <message>
         <source>%1/unconfirmed</source>
         <translation>%1/nekonfirmite</translation>
     </message>
@@ -1512,10 +1500,6 @@
     <message>
         <source>Status</source>
         <translation>Stato</translation>
-    </message>
-    <message>
-        <source>, has not been successfully broadcast yet</source>
-        <translation>, ankoraŭ ne elsendita sukcese</translation>
     </message>
     <message>
         <source>Date</source>
@@ -1640,20 +1624,12 @@
         <translation>Malferma ĝis %1</translation>
     </message>
     <message>
-        <source>Offline</source>
-        <translation>Senkonekte</translation>
-    </message>
-    <message>
         <source>Unconfirmed</source>
         <translation>Nekonfirmita</translation>
     </message>
     <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Konfirmita (%1 konfirmoj)</translation>
-    </message>
-    <message>
-        <source>This block was not received by any other nodes and will probably not be accepted!</source>
-        <translation>Tiun ĉi blokon ne ricevis ajna alia nodo, kaj ĝi verŝajne ne akceptiĝos!</translation>
     </message>
     <message>
         <source>Generated but not accepted</source>
@@ -1866,40 +1842,8 @@
 <context>
     <name>bitcoin-core</name>
     <message>
-        <source>Options:</source>
-        <translation>Agordoj:</translation>
-    </message>
-    <message>
-        <source>Specify data directory</source>
-        <translation>Specifi dosieron por datumoj</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect</source>
-        <translation>Konekti al nodo por ricevi adresojn de samtavolanoj, kaj malkonekti</translation>
-    </message>
-    <message>
-        <source>Specify your own public address</source>
-        <translation>Specifi vian propran publikan adreson</translation>
-    </message>
-    <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Akcepti komandojn JSON-RPC kaj el komandlinio</translation>
-    </message>
-    <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
-    </message>
-    <message>
         <source>Bitcoin Core</source>
         <translation>Kerno de Bitmono</translation>
-    </message>
-    <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Bindi al donita adreso kaj ĉiam aŭskulti per ĝi. Uzu la formaton [gastigo]:pordo por IPv6</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Plenumi komandon kiam monuja transakcio ŝanĝiĝas (%s en cmd anstataŭiĝas per TxID)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -1912,18 +1856,6 @@
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
-    </message>
-    <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; povas esti:</translation>
-    </message>
-    <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Blok-kreaj agordaĵoj:</translation>
     </message>
     <message>
         <source>Corrupted block database detected</source>
@@ -1966,32 +1898,12 @@
         <translation>Nesufiĉa nombro de dosierpriskribiloj disponeblas.</translation>
     </message>
     <message>
-        <source>Specify wallet file (within data directory)</source>
-        <translation>Specifi monujan dosieron (ene de dosierujo por datumoj)</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Kontrolado de blokoj...</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Monujaj opcioj:</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Plenumi komandon kiam rilata alerto riceviĝas, aŭ kiam ni vidas tre longan forkon (%s en cms anstataŭiĝas per mesaĝo)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informoj</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console instead of debug.log file</source>
-        <translation>Sendi spurajn/sencimigajn informojn al la konzolo anstataŭ al dosiero debug.log</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Malpligrandigi la sencimigan protokol-dosieron kiam kliento lanĉiĝas (defaŭlte: 1 kiam mankas -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
@@ -2010,28 +1922,8 @@
         <translation>Transakcio estas tro granda</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Salutnomo por konektoj JSON-RPC</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Averto</translation>
-    </message>
-    <message>
-        <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation>Vi devas rekontrui la datumbazon kun -reindex por ŝanĝi -txindex</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Pasvorto por konektoj JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Plenumi komandon kiam plej bona bloko ŝanĝiĝas (%s en cmd anstataŭiĝas per bloka haketaĵo)</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Permesi DNS-elserĉojn por -addnote, -seednote kaj -connect</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

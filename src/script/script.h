@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2017 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,6 +37,12 @@ static const int MAX_STACK_SIZE = 1000;
 // Threshold for nLockTime: below this value it is interpreted as block number,
 // otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+
+// Maximum nLockTime. Since a lock time indicates the last invalid timestamp, a
+// transaction with this lock time will never be valid unless lock time
+// checking is disabled (by setting all input sequence numbers to
+// SEQUENCE_FINAL).
+static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
@@ -180,13 +186,6 @@ enum opcodetype
     OP_NOP8 = 0xb7,
     OP_NOP9 = 0xb8,
     OP_NOP10 = 0xb9,
-
-
-    // template matching params
-    OP_SMALLINTEGER = 0xfa,
-    OP_PUBKEYS = 0xfb,
-    OP_PUBKEYHASH = 0xfd,
-    OP_PUBKEY = 0xfe,
 
     OP_INVALIDOPCODE = 0xff,
 };
@@ -385,6 +384,8 @@ private:
  */
 typedef prevector<28, unsigned char> CScriptBase;
 
+bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet);
+
 /** Serialized script, used inside transaction inputs and outputs */
 class CScript : public CScriptBase
 {
@@ -415,7 +416,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(static_cast<CScriptBase&>(*this));
+        READWRITEAS(CScriptBase, *this);
     }
 
     CScript& operator+=(const CScript& b)
@@ -493,84 +494,16 @@ public:
     }
 
 
-    bool GetOp(iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet)
-    {
-         // Wrapper so it can be called with either iterator or const_iterator
-         const_iterator pc2 = pc;
-         bool fRet = GetOp2(pc2, opcodeRet, &vchRet);
-         pc = begin() + (pc2 - begin());
-         return fRet;
-    }
-
-    bool GetOp(iterator& pc, opcodetype& opcodeRet)
-    {
-         const_iterator pc2 = pc;
-         bool fRet = GetOp2(pc2, opcodeRet, nullptr);
-         pc = begin() + (pc2 - begin());
-         return fRet;
-    }
-
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>& vchRet) const
     {
-        return GetOp2(pc, opcodeRet, &vchRet);
+        return GetScriptOp(pc, end(), opcodeRet, &vchRet);
     }
 
     bool GetOp(const_iterator& pc, opcodetype& opcodeRet) const
     {
-        return GetOp2(pc, opcodeRet, nullptr);
+        return GetScriptOp(pc, end(), opcodeRet, nullptr);
     }
 
-    bool GetOp2(const_iterator& pc, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet) const
-    {
-        opcodeRet = OP_INVALIDOPCODE;
-        if (pvchRet)
-            pvchRet->clear();
-        if (pc >= end())
-            return false;
-
-        // Read instruction
-        if (end() - pc < 1)
-            return false;
-        unsigned int opcode = *pc++;
-
-        // Immediate operand
-        if (opcode <= OP_PUSHDATA4)
-        {
-            unsigned int nSize = 0;
-            if (opcode < OP_PUSHDATA1)
-            {
-                nSize = opcode;
-            }
-            else if (opcode == OP_PUSHDATA1)
-            {
-                if (end() - pc < 1)
-                    return false;
-                nSize = *pc++;
-            }
-            else if (opcode == OP_PUSHDATA2)
-            {
-                if (end() - pc < 2)
-                    return false;
-                nSize = ReadLE16(&pc[0]);
-                pc += 2;
-            }
-            else if (opcode == OP_PUSHDATA4)
-            {
-                if (end() - pc < 4)
-                    return false;
-                nSize = ReadLE32(&pc[0]);
-                pc += 4;
-            }
-            if (end() - pc < 0 || (unsigned int)(end() - pc) < nSize)
-                return false;
-            if (pvchRet)
-                pvchRet->assign(pc, pc + nSize);
-            pc += nSize;
-        }
-
-        opcodeRet = static_cast<opcodetype>(opcode);
-        return true;
-    }
 
     /** Encode/decode small integers: */
     static int DecodeOP_N(opcodetype opcode)
@@ -586,43 +519,6 @@ public:
         if (n == 0)
             return OP_0;
         return (opcodetype)(OP_1+n-1);
-    }
-
-    int FindAndDelete(const CScript& b)
-    {
-        int nFound = 0;
-        if (b.empty())
-            return nFound;
-        CScript result;
-        iterator pc = begin(), pc2 = begin();
-        opcodetype opcode;
-        do
-        {
-            result.insert(result.end(), pc2, pc);
-            while (static_cast<size_t>(end() - pc) >= b.size() && std::equal(b.begin(), b.end(), pc))
-            {
-                pc = pc + b.size();
-                ++nFound;
-            }
-            pc2 = pc;
-        }
-        while (GetOp(pc, opcode));
-
-        if (nFound > 0) {
-            result.insert(result.end(), pc2, end());
-            *this = result;
-        }
-
-        return nFound;
-    }
-    int Find(opcodetype op) const
-    {
-        int nFound = 0;
-        opcodetype opcode;
-        for (const_iterator pc = begin(); pc != end() && GetOp(pc, opcode);)
-            if (opcode == op)
-                ++nFound;
-        return nFound;
     }
 
     /**

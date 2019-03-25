@@ -1,6 +1,30 @@
 <TS language="zh" version="2.1">
 <context>
     <name>AddressBookPage</name>
+    <message>
+        <source>Right-click to edit address or label</source>
+        <translation>右键单击来编辑地址或者标签</translation>
+    </message>
+    <message>
+        <source>Create a new address</source>
+        <translation>创建一个新地址</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>复制当前已选地址到系统剪切板</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>从列表中删除当前已选地址</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>将当前选项卡中的数据导出到文件</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>选择想要发送币的地址</translation>
+    </message>
     </context>
 <context>
     <name>AddressTableModel</name>
@@ -168,6 +192,10 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>将当前选项卡中的数据导出到文件</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

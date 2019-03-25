@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2017 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Dummy Socks5 server for testing."""
 
-import socket, threading, queue
+import socket
+import threading
+import queue
 import logging
 
 logger = logging.getLogger("TestFramework.socks5")
 
-### Protocol constants
+# Protocol constants
 class Command:
     CONNECT = 0x01
 
@@ -18,7 +20,7 @@ class AddressType:
     DOMAINNAME = 0x03
     IPV6 = 0x04
 
-### Utility functions
+# Utility functions
 def recvall(s, n):
     """Receive n bytes from a socket, or fail."""
     rv = bytearray()
@@ -30,7 +32,7 @@ def recvall(s, n):
         n -= len(d)
     return rv
 
-### Implementation classes
+# Implementation classes
 class Socks5Configuration():
     """Proxy configuration."""
     def __init__(self):
@@ -52,10 +54,9 @@ class Socks5Command():
         return 'Socks5Command(%s,%s,%s,%s,%s,%s)' % (self.cmd, self.atyp, self.addr, self.port, self.username, self.password)
 
 class Socks5Connection():
-    def __init__(self, serv, conn, peer):
+    def __init__(self, serv, conn):
         self.serv = serv
         self.conn = conn
-        self.peer = peer
 
     def handle(self):
         """Handle socks5 request according to RFC192."""
@@ -135,15 +136,15 @@ class Socks5Server():
 
     def run(self):
         while self.running:
-            (sockconn, peer) = self.s.accept()
+            (sockconn, _) = self.s.accept()
             if self.running:
-                conn = Socks5Connection(self, sockconn, peer)
+                conn = Socks5Connection(self, sockconn)
                 thread = threading.Thread(None, conn.handle)
                 thread.daemon = True
                 thread.start()
-    
+
     def start(self):
-        assert(not self.running)
+        assert not self.running
         self.running = True
         self.thread = threading.Thread(None, self.run)
         self.thread.daemon = True

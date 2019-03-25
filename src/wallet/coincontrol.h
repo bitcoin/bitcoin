@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,20 +18,22 @@ class CCoinControl
 public:
     //! Custom change destination, if not set an address is generated
     CTxDestination destChange;
-    //! Custom change type, ignored if destChange is set, defaults to g_change_type
-    OutputType change_type;
+    //! Override the default change type if set, ignored if destChange is set
+    boost::optional<OutputType> m_change_type;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
-    //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
+    //! Includes watch only addresses which are solvable
     bool fAllowWatchOnly;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate;
-    //! Override the default payTxFee if set
+    //! Override the wallet's m_pay_tx_fee if set
     boost::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
     boost::optional<unsigned int> m_confirm_target;
-    //! Signal BIP-125 replace by fee.
-    bool signalRbf;
+    //! Override the wallet's m_signal_rbf if set
+    boost::optional<bool> m_signal_bip125_rbf;
+    //! Avoid partial use of funds sent to a given address
+    bool m_avoid_partial_spends;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
 
@@ -40,19 +42,7 @@ public:
         SetNull();
     }
 
-    void SetNull()
-    {
-        destChange = CNoDestination();
-        change_type = g_change_type;
-        fAllowOtherInputs = false;
-        fAllowWatchOnly = false;
-        setSelected.clear();
-        m_feerate.reset();
-        fOverrideFeeRate = false;
-        m_confirm_target.reset();
-        signalRbf = fWalletRbf;
-        m_fee_mode = FeeEstimateMode::UNSET;
-    }
+    void SetNull();
 
     bool HasSelected() const
     {

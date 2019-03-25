@@ -8,8 +8,6 @@
 #include "univalue.h"
 #include "univalue_utffilter.h"
 
-using namespace std;
-
 static bool json_isdigit(int ch)
 {
     return ((ch >= '0') && (ch <= '9'));
@@ -42,7 +40,7 @@ static const char *hatoui(const char *first, const char *last,
     return first;
 }
 
-enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
+enum jtokentype getJsonToken(std::string& tokenVal, unsigned int& consumed,
                             const char *raw, const char *end)
 {
     tokenVal.clear();
@@ -114,7 +112,7 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
     case '8':
     case '9': {
         // part 1: int
-        string numStr;
+        std::string numStr;
 
         const char *first = raw;
 
@@ -174,7 +172,7 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
     case '"': {
         raw++;                                // skip "
 
-        string valStr;
+        std::string valStr;
         JSONUTF8StringFilter writer(valStr);
 
         while (true) {
@@ -255,9 +253,9 @@ bool UniValue::read(const char *raw, size_t size)
     clear();
 
     uint32_t expectMask = 0;
-    vector<UniValue*> stack;
+    std::vector<UniValue*> stack;
 
-    string tokenVal;
+    std::string tokenVal;
     unsigned int consumed;
     enum jtokentype tok = JTOK_NONE;
     enum jtokentype last_tok = JTOK_NONE;

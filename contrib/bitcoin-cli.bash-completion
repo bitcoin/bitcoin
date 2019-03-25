@@ -50,7 +50,7 @@ _bitcoin_cli() {
                 COMPREPLY=( $( compgen -W "true false" -- "$cur" ) )
                 return 0
                 ;;
-            signrawtransaction)
+            signrawtransactionwithkey|signrawtransactionwithwallet)
                 COMPREPLY=( $( compgen -W "ALL NONE SINGLE ALL|ANYONECANPAY NONE|ANYONECANPAY SINGLE|ANYONECANPAY" -- "$cur" ) )
                 return 0
                 ;;

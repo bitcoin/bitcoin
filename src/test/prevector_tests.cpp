@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2017 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(PrevectorTests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(prevector_tests, TestingSetup)
 
 template<unsigned int N, typename T>
 class prevector_tester {
@@ -36,7 +36,7 @@ class prevector_tester {
         {
             local_check(a == b);
         }
-    void local_check(bool b) 
+    void local_check(bool b)
     {
         passed &= b;
     }
@@ -189,8 +189,8 @@ public:
 
     prevector_tester() {
         SeedInsecureRand();
-        rand_seed = insecure_rand_seed;
-        rand_cache = insecure_rand_ctx;
+        rand_seed = InsecureRand256();
+        rand_cache = FastRandomContext(rand_seed);
     }
 };
 

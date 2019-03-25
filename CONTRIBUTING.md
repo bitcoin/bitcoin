@@ -14,6 +14,28 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
+If you're looking for somewhere to start contributing, check out the
+[good first issue](https://github.com/bitcoin/bitcoin/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+list.
+
+Communication Channels
+----------------------
+
+Most communication about Bitcoin Core development happens on IRC, in the
+#bitcoin-core-dev channel on Freenode. The easiest way to participate on IRC is
+with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
+history logs can be found
+on [http://www.erisian.com.au/bitcoin-core-dev/](http://www.erisian.com.au/bitcoin-core-dev/)
+and [http://gnusha.org/bitcoin-core-dev/](http://gnusha.org/bitcoin-core-dev/).
+
+Discussion about code base improvements happens in GitHub issues and on pull
+requests.
+
+The developer
+[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+should be used to discuss complicated or controversial changes before working on
+a patch set.
+
 
 Contributor Workflow
 --------------------
@@ -40,11 +62,13 @@ Commit messages should be verbose by default consisting of a short subject line
 paragraph(s), unless the title alone is self-explanatory (like "Corrected typo
 in init.cpp") in which case a single title line is sufficient. Commit messages should be
 helpful to people reading your code in the future, so explain the reasoning for
-your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
+your decisions. Further explanation [here](https://chris.beams.io/posts/git-commit/).
 
 If a particular commit references another issue, please add the reference. For
 example: `refs #1234` or `fixes #4321`. Using the `fixes` or `closes` keywords
 will cause the corresponding issue to be closed when the pull request is merged.
+
+Commit messages should never contain any `@` mentions.
 
 Please refer to the [Git manual](https://git-scm.com/doc) for more information
 about Git.
@@ -98,6 +122,8 @@ At this stage one should expect comments and review from other contributors. You
 can add more commits to your pull request by committing them locally and pushing
 to your fork until you have satisfied all feedback.
 
+Note: Code review is a burdensome but important part of the development process, and as such, certain types of pull requests are rejected. In general, if the **improvements** do not warrant the **review effort** required, the PR has a high chance of being rejected. It is up to the PR author to convince the reviewers that the changes warrant the review effort, and if reviewers are "Concept NAK'ing" the PR, the author may need to present arguments and/or do research backing their suggested changes.
+
 Squashing Commits
 ---------------------------
 If your pull request is accepted for merging, you may be asked by a maintainer
@@ -106,11 +132,15 @@ before it will be merged. The basic squashing workflow is shown below.
 
     git checkout your_branch_name
     git rebase -i HEAD~n
-    # n is normally the number of commits in the pull
-    # set commits from 'pick' to 'squash', save and quit
-    # on the next screen, edit/refine commit messages
-    # save and quit
+    # n is normally the number of commits in the pull request.
+    # Set commits (except the one in the first line) from 'pick' to 'squash', save and quit.
+    # On the next screen, edit/refine commit messages.
+    # Save and quit.
     git push -f # (force push to GitHub)
+
+Please update the resulting commit message if needed, it should read as a
+coherent message. In most cases this means that you should not just list the
+interim commits.
 
 If you have problems with squashing (or other workflows with `git`), you can
 alternatively enable "Allow edits from maintainers" in the right GitHub
@@ -209,7 +239,10 @@ consensus to merge a pull request (remember that discussions may have been
 spread out over GitHub, mailing list and IRC discussions). The following
 language is used within pull-request comments:
 
-  - ACK means "I have tested the code and I agree it should be merged";
+  - (t)ACK means "I have tested the code and I agree it should be merged", involving
+    change-specific manual testing in addition to running the unit and functional
+    tests, and in case it is not obvious how the manual testing was done, it should
+    be described;
   - NACK means "I disagree this should be merged", and must be accompanied by
     sound technical justification (or in certain cases of copyright/patent/licensing
     issues, legal justification). NACKs without accompanying reasoning may be
