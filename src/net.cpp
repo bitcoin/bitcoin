@@ -348,7 +348,12 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
     return true;
 }
 
-/** Get the bind address for a socket as CAddress */
+/**
+ * Get the bind address for the specified socket as a CAddress.
+ *
+ * @returns The corresponding CAddress if the specified socket is valid and
+ *          getsockname suceeded. Otherwise, the default CAddress.
+ */
 static CAddress GetBindAddress(SOCKET sock)
 {
     CAddress addr_bind;
