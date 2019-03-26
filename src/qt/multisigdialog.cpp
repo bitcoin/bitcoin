@@ -6,6 +6,7 @@
 #include <qt/sendcoinsentry.h>
 
 #include <wallet/wallet.h>
+#include <policy/policy.h>
 #include <validation.h>
 #include <txmempool.h>
 #include <consensus/validation.h>
@@ -433,30 +434,41 @@ void MultisigDialog::on_signTransactionButton_clicked()
         return;
 
     //ppcTODO - not sure how to fix this properly
-//    // Sign what we can
+    // Sign what we can
     bool fComplete = true;
-//    for(int i = 0; i < mergedTx.vin.size(); i++)
-//    {
-//        CTxIn& txin = mergedTx.vin[i];
-//        CCoins coins;
-//        if (view.GetCoins(txin.prevout.hash, coins)) {
-//            const CScript& prevPubKey = coins.vout[txin.prevout.n].scriptPubKey;
+    const CTransaction txConst(mergedTx);
+    for(int i = 0; i < mergedTx.vin.size(); i++)
+    {
+        CTxIn& txin = mergedTx.vin[i];
+        const Coin& coin = view.AccessCoin(txin.prevout);
+        if (coin.IsSpent()) {
+            fComplete = false;
+            continue;
+        }
+        const CScript& prevPubKey = coin.out.scriptPubKey;
+        const CAmount& amount = coin.out.nValue;
 
-//            txin.scriptSig.clear();
-//            SignSignature(*wallet, prevPubKey, mergedTx, i, SIGHASH_ALL);
-//            txin.scriptSig = CombineSignatures(prevPubKey, mergedTx, i, txin.scriptSig, tx.vin[i].scriptSig);
-//            if(!VerifyScript(txin.scriptSig, prevPubKey, mergedTx, i, true, 0))
-//            {
-//              fComplete = false;
-//            }
+        SignatureData sigdata;
 
-//        }
-//        else
-//        {
-//            fComplete = false;
-//            continue;
-//        }
-//    }
+        const CMutableTransaction& txv = mergedTx;
+
+        if (txv.vin.size() > i) {
+            sigdata = CombineSignatures(prevPubKey, TransactionSignatureChecker(&txConst, i, amount), sigdata, DataFromTransaction(txv, i));
+        }
+
+        UpdateTransaction(mergedTx, i, sigdata);
+
+        ScriptError serror = SCRIPT_ERR_OK;
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount), &serror)) {
+            fComplete = false;
+            if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
+                // Unable to sign input and verification failed (possible attempt to partially sign).
+                LogPrintf("unable to sign\n");
+            } else {
+                LogPrintf("unable to sign with error %s\n", ScriptErrorString(serror));
+            }
+        }
+    }
 
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << mergedTx;
