@@ -103,7 +103,8 @@ bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
         return false;
 
     int nBestScore = -1;
-    int nBestReachability = -1;
+    // TODO: Use Reachability enum
+    int nBestReachability = 1;
     {
         LOCK(cs_mapLocalHost);
         for (const auto& entry : mapLocalHost)
