@@ -96,7 +96,14 @@ unsigned short GetListenPort()
     return (unsigned short)(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
-// find 'best' local address for a particular peer
+/**
+ * Find the local service with the best reachability from a particular peer,
+ * breaking ties by their scores.
+ *
+ * @param[out]	addr	The local service, if found.
+ *
+ * @returns Whether or not a local service was found.
+ */
 bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
 {
     if (!fListen)
