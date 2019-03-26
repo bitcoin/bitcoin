@@ -101,7 +101,7 @@ coins are eligible to earn rewards. Therefore the minimum wallet balance which
 can stake is 500 coins and those coins must be locked as the collateral for a 
 systemnode. 
 
-The system is described in more detail in [Crown-MNPoS.md](https://gitlab.crown.tech/walkjivefly/crown-core/blob/v0.13_preparation/doc/Crown-masternode-Proof-of-Stake-consensus-overview.md)
+The system is described in more detail in [Crown-MNPoS.md](https://gitlab.crown.tech/walkjivefly/crown-core/blob/v0.13_preparation/doc/Crown-MNPoS.md)
 
 ### The switchover
 The switchover from PoW to PoS will take place at block height 2330000, approximately
