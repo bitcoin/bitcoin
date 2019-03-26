@@ -77,12 +77,12 @@ more nodes in order to ensure they get a share of the staking rewards.
 In the Crown system a user with 100,000 coins in their wallet only stakes with 
 those locked in a masternode or systemnode. If they choose not to support the
 network by not running any nodes then they have no chance to earn staking rewards.
-If they lock all of their coins in masternodes or systennodes then all of their
+If they lock all of their coins in masternodes or systemnodes then all of their
 coins are eligible to earn rewards. Therefore the minimum wallet balance which
 can stake is 500 coins and those coins must be locked as the collateral for a 
 systemnode. 
 
-TODO: more details about our several advantages.
+The system is described in more detail in [Crown-MNPoS.md](https://gitlab.crown.tech/walkjivefly/crown-core/blob/v0.13_preparation/doc/Crown-masternode-Proof-of-Stake-consensus-overview.md)
 
 ### The switchover
 The switchover from PoW to PoS will take place at block height 2330000, approximately
