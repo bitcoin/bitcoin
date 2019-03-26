@@ -156,6 +156,11 @@ bool WalletBatch::WriteMinVersion(int nVersion)
     return WriteIC(std::string("minversion"), nVersion);
 }
 
+bool WalletBatch::WriteDescriptor(const WalletDescriptor& descriptor)
+{
+    return WriteIC(std::make_pair(std::string("descriptor"), DescriptorID(*descriptor.descriptor)), descriptor);
+}
+
 class CWalletScanState {
 public:
     unsigned int nKeys{0};

@@ -40,6 +40,7 @@ class CWallet;
 class CWalletTx;
 class uint160;
 class uint256;
+class WalletDescriptor;
 
 /** Backend-agnostic database type. */
 using WalletDatabase = BerkeleyDatabase;
@@ -214,6 +215,8 @@ public:
     bool ReadPool(int64_t nPool, CKeyPool& keypool);
     bool WritePool(int64_t nPool, const CKeyPool& keypool);
     bool ErasePool(int64_t nPool);
+
+    bool WriteDescriptor(const WalletDescriptor& descriptor);
 
     bool WriteMinVersion(int nVersion);
 
