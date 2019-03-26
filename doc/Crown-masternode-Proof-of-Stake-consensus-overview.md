@@ -77,11 +77,11 @@ At the most technical level, a stake pointer is simply the transaction hash and 
 
 Like traditional proof systems such as proof of work and most implementations of proof of stake, Crown uses a target difficulty for each block and the proof hash must be below the target value. A proof hash is done by hashing together the following inputs:
 
-    • Stakepointer Hash: The transaction hash that the node reward was paid. 
-    • Stakepointer Output Index: The position in the vout vector that the reward was paid. 
-    • Stake Modifier: The block hash that is 100 blocks before the stakepointer.
-    • Timestamp of Stakepointer: The time that the stakepointer was created. 
-    • Timestamp of the New Stake: The time that the new stake was created. 
+- Stakepointer Hash: The transaction hash that the node reward was paid. 
+- Stakepointer Output Index: The position in the vout vector that the reward was paid. 
+- Stake Modifier: The block hash that is 100 blocks before the stakepointer.
+- Timestamp of Stakepointer: The time that the stakepointer was created. 
+- Timestamp of the New Stake: The time that the new stake was created. 
 
 By hashing the above inputs, a 256 bit proof hash is created. The value of the proof hash is then compared to the difficulty target value multiplied by the value of collateral that the node is holding (10,000 for masternode, 500 for systemnode). If the proof hash is less than the new target, then the stake is considered valid and can be used to package a block and and it to the blockchain. By multiplying the target value by the collateral amount, this means that the target is easier to hit for masternodes than it is for systemnodes. 
 
