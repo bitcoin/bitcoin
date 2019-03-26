@@ -270,7 +270,11 @@ bool IsReachable(const CNetAddr &addr)
     return IsReachable(addr.GetNetwork());
 }
 
-/** vote for a local address */
+/**
+ * Try to vote for a local address by incrementing its score.
+ *
+ * @returns Whether or not the local address is known.
+ */
 bool SeenLocal(const CService& addr)
 {
     {
