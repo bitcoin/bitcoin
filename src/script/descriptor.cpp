@@ -878,6 +878,12 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
 } // namespace
 
+DescriptorID::DescriptorID(const Descriptor& desc)
+{
+    std::string desc_str = desc.ToString();
+    CSHA256().Write((unsigned char*)desc_str.data(), desc_str.size()).Finalize(begin());
+}
+
 std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum)
 {
     Span<const char> sp(descriptor.data(), descriptor.size());

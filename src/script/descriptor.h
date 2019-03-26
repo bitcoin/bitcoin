@@ -7,6 +7,7 @@
 
 #include <script/script.h>
 #include <script/sign.h>
+#include <uint256.h>
 
 #include <vector>
 
@@ -60,6 +61,14 @@ struct Descriptor {
      * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
      */
     virtual bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
+};
+
+struct DescriptorID : public uint256
+{
+    DescriptorID() : uint256() {}
+    explicit DescriptorID(const uint256& hash) : uint256(hash) {}
+    explicit DescriptorID(const Descriptor& desc);
+    using uint256::uint256;
 };
 
 /** Parse a descriptor string. Included private keys are put in out.
