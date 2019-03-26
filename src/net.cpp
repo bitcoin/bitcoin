@@ -207,7 +207,12 @@ void AdvertiseLocal(CNode *pnode)
     }
 }
 
-// learn a new local address
+/**
+ * Try to learn a new local service and its associated score, incrementing its
+ * score if its address is already known.
+ *
+ * @returns Whether or not the new local service was learned.
+ */
 bool AddLocal(const CService& addr, int nScore)
 {
     if (!addr.IsRoutable())
