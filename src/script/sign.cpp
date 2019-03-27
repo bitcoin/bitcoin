@@ -176,12 +176,8 @@ static CScript PushAll(const std::vector<valtype>& values)
     return result;
 }
 
-bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& fromPubKeyIn, SignatureData& sigdata)
+bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreator& creator, const CScript& fromPubKeyOut, SignatureData& sigdata)
 {
-    // SYSCOIN
-    CScript fromPubKeyOut;
-    if (!RemoveSyscoinScript(fromPubKeyIn, fromPubKeyOut))
-        fromPubKeyOut = fromPubKeyIn;
     if (sigdata.complete) return true;
 
     std::vector<valtype> result;

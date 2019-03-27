@@ -16,14 +16,11 @@ class CCoinsViewCache;
 class CBlock;
 class CAsset;
 class CMintSyscoin;
-bool DecodeAssetAllocationTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch);
-bool DecodeAndParseAssetAllocationTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
-bool DecodeAssetAllocationScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry);
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry);
 
-std::string assetAllocationFromOp(int op);
+std::string assetAllocationFromTx(const int &nVersion);
 
 class CWitnessAddress{
 public:
@@ -199,7 +196,7 @@ public:
         return Read(assetAllocationTuple, assetallocation);
     }
     bool Flush(const AssetAllocationMap &mapAssetAllocations);
-	void WriteAssetAllocationIndex(const int& op, const CTransaction &tx, const CAsset& dbAsset, const bool& confirmed, int nHeight);
+	void WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const bool& confirmed, int nHeight);
     void WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight);
 	bool ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
@@ -224,13 +221,13 @@ public:
     bool ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
 };
 static CAssetAllocation emptyAllocation;
-bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool& bOverflow, bool bSanityCheck = false, bool bMiner = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool& bOverflow, bool bSanityCheck = false, bool bMiner = false);
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
 bool ResetAssetAllocation(const std::string &senderStr, const uint256 &txHash, const bool &bMiner=false, const bool &bExpiryOnly=false);
 void ResyncAssetAllocationStates();
-bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, CAssetAllocation& assetallocation);
-bool AssetAllocationTxToJSON(const int &op, const CTransaction &tx, UniValue &entry);
+bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, CAssetAllocation& assetallocation);
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
 void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);

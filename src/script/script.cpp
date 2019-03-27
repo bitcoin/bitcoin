@@ -192,71 +192,36 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     CScript subscript(vData.begin(), vData.end());
     return subscript.GetSigOpCount(true);
 }
-bool CScript::IsPayToWitnessPublicKeyHash() const
-{
-    // SYSCOIN
-    CScript scriptOut;
-    CScript scriptPubKeyOut;
-    if (scriptOut.size() != 22 && RemoveSyscoinScript(*this, scriptPubKeyOut))
-        scriptOut = scriptPubKeyOut;
-    else
-        scriptOut = *this;
-    // Extra-fast test for pay-to-witness-pubkey-hash CScripts:
-    return (scriptOut.size() == 22 &&
-            scriptOut[0] == OP_0 &&
-            scriptOut[1] == 0x14);
-}
 bool CScript::IsPayToScriptHash() const
 {
-    // SYSCOIN
-    CScript scriptOut;
-    CScript scriptPubKeyOut;
-    if (scriptOut.size() != 23 && RemoveSyscoinScript(*this, scriptPubKeyOut))
-        scriptOut = scriptPubKeyOut;
-    else
-        scriptOut = *this;
     // Extra-fast test for pay-to-script-hash CScripts:
-    return (scriptOut.size() == 23 &&
-            scriptOut[0] == OP_HASH160 &&
-            scriptOut[1] == 0x14 &&
-            scriptOut[22] == OP_EQUAL);
+    return (this->size() == 23 &&
+            (*this)[0] == OP_HASH160 &&
+            (*this)[1] == 0x14 &&
+            (*this)[22] == OP_EQUAL);
 }
 
 bool CScript::IsPayToWitnessScriptHash() const
 {
-    // SYSCOIN
-    CScript scriptOut;
-    CScript scriptPubKeyOut;
-    if (scriptOut.size() != 34 && RemoveSyscoinScript(*this, scriptPubKeyOut))
-        scriptOut = scriptPubKeyOut;
-    else
-        scriptOut = *this;
     // Extra-fast test for pay-to-witness-script-hash CScripts:
-    return (scriptOut.size() == 34 &&
-            scriptOut[0] == OP_0 &&
-            scriptOut[1] == 0x20);
+    return (this->size() == 34 &&
+            (*this)[0] == OP_0 &&
+            (*this)[1] == 0x20);
 }
 
 // A witness program is any valid CScript that consists of a 1-byte push opcode
 // followed by a data push between 2 and 40 bytes.
 bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program) const
 {
-    // SYSCOIN
-    CScript scriptOut;
-    CScript scriptPubKeyOut;
-    if (RemoveSyscoinScript(*this, scriptPubKeyOut))
-        scriptOut = scriptPubKeyOut;
-    else
-        scriptOut = *this;
-    if (scriptOut.size() < 4 || scriptOut.size() > 42) {
+    if (this->size() < 4 || this->size() > 42) {
         return false;
     }
-    if (scriptOut[0] != OP_0 && (scriptOut[0] < OP_1 || scriptOut[0] > OP_16)) {
+    if ((*this)[0] != OP_0 && ((*this)[0] < OP_1 || (*this)[0] > OP_16)) {
         return false;
     }
-    if ((size_t)(scriptOut[1] + 2) == scriptOut.size()) {
-        version = DecodeOP_N((opcodetype)scriptOut[0]);
-        program = std::vector<unsigned char>(scriptOut.begin() + 2, scriptOut.end());
+    if ((size_t)((*this)[1] + 2) == this->size()) {
+        version = DecodeOP_N((opcodetype)(*this)[0]);
+        program = std::vector<unsigned char>(this->begin() + 2, this->end());
         return true;
     }
     return false;
@@ -359,137 +324,4 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
 
     opcodeRet = static_cast<opcodetype>(opcode);
     return true;
-}
-// SYSCOIN
-bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
-{
-    if (!RemoveAssetAllocationScriptPrefix(scriptPubKeyIn, scriptPubKeyOut)){
-        if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut)){
-            return false;
-        }
-    }
-    return true;
-}
-
-bool DecodeAssetScript(const CScript& script, int& op,
-        std::vector<std::vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
-    opcodetype opcode;
-    vvch.clear();
-    if (!script.GetOp(pc, opcode)) return false;
-    if (opcode < OP_1 || opcode > OP_16) return false;
-    op = CScript::DecodeOP_N(opcode);
-    if (op != OP_SYSCOIN_ASSET)
-        return false;
-    if (!script.GetOp(pc, opcode))
-        return false;
-    if (opcode < OP_1 || opcode > OP_16)
-        return false;
-    op = CScript::DecodeOP_N(opcode);
-    if (!IsAssetOp(op))
-        return false;
-
-    bool found = false;
-    for (;;) {
-        std::vector<unsigned char> vch;
-        if (!script.GetOp(pc, opcode, vch))
-            return false;
-        if (opcode == OP_DROP || opcode == OP_2DROP)
-        {
-            found = true;
-            break;
-        }
-        if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
-            return false;
-        vvch.emplace_back(std::move(vch));
-    }
-
-    // move the pc to after any DROP or NOP
-    while (opcode == OP_DROP || opcode == OP_2DROP) {
-        if (!script.GetOp(pc, opcode))
-            break;
-    }
-
-    pc--;
-    return found;
-}
-bool DecodeAssetScript(const CScript& script, int& op,
-        std::vector<std::vector<unsigned char> > &vvch) {
-    CScript::const_iterator pc = script.begin();
-    return DecodeAssetScript(script, op, vvch, pc);
-}
-
-bool DecodeAssetAllocationScript(const CScript& script, int& op,
-        std::vector<std::vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
-    opcodetype opcode;
-    vvch.clear();
-    if (!script.GetOp(pc, opcode)) return false;
-    if (opcode < OP_1 || opcode > OP_16) return false;
-    op = CScript::DecodeOP_N(opcode);
-    if (op != OP_SYSCOIN_ASSET_ALLOCATION)
-        return false;
-    if (!script.GetOp(pc, opcode))
-        return false;
-    if (opcode < OP_1 || opcode > OP_16)
-        return false;
-    op = CScript::DecodeOP_N(opcode);
-    if (!IsAssetAllocationOp(op))
-        return false;
-
-    bool found = false;
-    for (;;) {
-        std::vector<unsigned char> vch;
-        if (!script.GetOp(pc, opcode, vch))
-            return false;
-        if (opcode == OP_DROP || opcode == OP_2DROP)
-        {
-            found = true;
-            break;
-        }
-        if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
-            return false;
-        vvch.emplace_back(std::move(vch));
-    }
-
-    // move the pc to after any DROP or NOP
-    while (opcode == OP_DROP || opcode == OP_2DROP) {
-        if (!script.GetOp(pc, opcode))
-            break;
-    }
-
-    pc--;
-    return found;
-}
-bool DecodeAssetAllocationScript(const CScript& script, int& op,
-        std::vector<std::vector<unsigned char> > &vvch) {
-    CScript::const_iterator pc = script.begin();
-    return DecodeAssetAllocationScript(script, op, vvch, pc);
-}
-bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
-    int op;
-    std::vector<std::vector<unsigned char> > vvch;
-    CScript::const_iterator pc = scriptIn.begin();
-
-    if (!DecodeAssetAllocationScript(scriptIn, op, vvch, pc))
-        return false;
-    scriptOut = CScript(pc, scriptIn.end());
-    return true;
-}
-bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
-    int op;
-    std::vector<std::vector<unsigned char> > vvch;
-    CScript::const_iterator pc = scriptIn.begin();
-
-    if (!DecodeAssetScript(scriptIn, op, vvch, pc))
-        return false;
-    scriptOut = CScript(pc, scriptIn.end());
-    return true;
-}
-bool IsAssetOp(int op) {
-    return op == OP_ASSET_ACTIVATE
-        || op == OP_ASSET_UPDATE
-        || op == OP_ASSET_TRANSFER
-        || op == OP_ASSET_SEND;
-}
-bool IsAssetAllocationOp(int op) {
-    return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_ALLOCATION_BURN;
 }

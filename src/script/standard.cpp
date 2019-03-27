@@ -84,16 +84,9 @@ static bool MatchMultisig(const CScript& script, unsigned int& required, std::ve
     return (it + 1 == script.end());
 }
 
-bool Solver(const CScript& scriptPubKeyIn, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, std::vector<std::vector<unsigned char> >& vSolutionsRet)
 {
     vSolutionsRet.clear();
-    // SYSCOIN check to see if this is a syscoin service transaction, if so get the scriptPubKey by extracting service specific script information
-    CScript scriptPubKey;
-    CScript scriptPubKeyOut;
-    if (RemoveSyscoinScript(scriptPubKeyIn, scriptPubKeyOut))
-        scriptPubKey = scriptPubKeyOut;
-    else
-        scriptPubKey = scriptPubKeyIn;
         
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
