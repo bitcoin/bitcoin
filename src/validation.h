@@ -575,6 +575,9 @@ bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, C
 /** Remove invalidity status from a block and its descendants. */
 void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+/** @returns the most-work valid chainstate. */
+CChainState& ChainstateActive();
+
 /** @returns the most-work chain. */
 CChain& ChainActive();
 
