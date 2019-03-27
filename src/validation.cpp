@@ -220,6 +220,8 @@ private:
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 } g_chainstate;
 
+CChain& ChainActive() { return g_chainstate.m_chain; }
+
 /**
  * Mutex to guard access to validation specific variables, such as reading
  * or changing the chainstate.
