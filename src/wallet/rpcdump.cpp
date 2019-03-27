@@ -348,7 +348,11 @@ UniValue importaddress(const JSONRPCRequest& request)
     if (fRescan)
     {
         RescanWallet(*pwallet, reserver);
-        pwallet->ReacceptWalletTransactions();
+        {
+            auto locked_chain = pwallet->chain().lock();
+            LOCK(pwallet->cs_wallet);
+            pwallet->ReacceptWalletTransactions(*locked_chain);
+        }
     }
 
     return NullUniValue;
@@ -532,7 +536,11 @@ UniValue importpubkey(const JSONRPCRequest& request)
     if (fRescan)
     {
         RescanWallet(*pwallet, reserver);
-        pwallet->ReacceptWalletTransactions();
+        {
+            auto locked_chain = pwallet->chain().lock();
+            LOCK(pwallet->cs_wallet);
+            pwallet->ReacceptWalletTransactions(*locked_chain);
+        }
     }
 
     return NullUniValue;
@@ -1468,7 +1476,11 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
     }
     if (fRescan && fRunScan && requests.size()) {
         int64_t scannedTime = pwallet->RescanFromTime(nLowestTimestamp, reserver, true /* update */);
-        pwallet->ReacceptWalletTransactions();
+        {
+            auto locked_chain = pwallet->chain().lock();
+            LOCK(pwallet->cs_wallet);
+            pwallet->ReacceptWalletTransactions(*locked_chain);
+        }
 
         if (pwallet->IsAbortingRescan()) {
             throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
