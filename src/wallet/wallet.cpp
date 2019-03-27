@@ -37,6 +37,7 @@
 #include "evo/providertx.h"
 
 #include "llmq/quorums_instantsend.h"
+#include "llmq/quorums_chainlocks.h"
 
 #include <assert.h>
 
@@ -5402,6 +5403,16 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 bool CMerkleTx::IsLockedByInstantSend() const
 {
     return instantsend.IsLockedInstantSendTransaction(GetHash()) || llmq::quorumInstantSendManager->IsLocked(GetHash());
+}
+
+bool CMerkleTx::IsChainLocked() const
+{
+    AssertLockHeld(cs_main);
+    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+    if (mi != mapBlockIndex.end() && mi->second != nullptr) {
+        return llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+    }
+    return false;
 }
 
 int CMerkleTx::GetBlocksToMaturity() const

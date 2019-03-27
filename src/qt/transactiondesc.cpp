@@ -43,15 +43,20 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 
         QString strTxStatus;
         bool fOffline = (GetAdjustedTime() - wtx.nTimeReceived > 2 * 60) && (wtx.GetRequestCount() == 0);
+        bool fChainLocked = wtx.IsChainLocked();
 
         if (fOffline) {
             strTxStatus = tr("%1/offline").arg(nDepth);
         } else if (nDepth == 0) {
             strTxStatus = tr("0/unconfirmed, %1").arg((wtx.InMempool() ? tr("in memory pool") : tr("not in memory pool"))) + (wtx.isAbandoned() ? ", "+tr("abandoned") : "");
-        } else if (nDepth < 6) {
+        } else if (!fChainLocked && nDepth < 6) {
             strTxStatus = tr("%1/unconfirmed").arg(nDepth);
         } else {
             strTxStatus = tr("%1 confirmations").arg(nDepth);
+            if (fChainLocked) {
+                strTxStatus += " (" + tr("locked via LLMQ based ChainLocks") + ")";
+                return strTxStatus;
+            }
         }
 
         if (llmq::quorumInstantSendManager->IsLocked(wtx.GetHash())) {
