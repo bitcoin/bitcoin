@@ -4402,6 +4402,9 @@ void CWallet::postInitProcess()
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions(*locked_chain);
+
+    // Update wallet transactions with current mempool transactions.
+    chain().requestMempoolTransactions(*this);
 }
 
 bool CWallet::BackupWallet(const std::string& strDest)
