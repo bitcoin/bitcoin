@@ -64,9 +64,19 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, Object& entry)
     Array vin;
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
         Object in;
-        if (tx.IsCoinBase())
+        if (tx.IsCoinBase()) {
             in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
-        else {
+        } else if (tx.IsCoinStake()) {
+            in.push_back(Pair("coinstake", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+            if (!hashBlock.IsNull()) {
+                BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+                if (mi != mapBlockIndex.end() && (*mi).second) {
+                    auto pindex = (*mi).second;
+                    in.push_back(Pair("pointer_hash", pindex->stakeSource.first.GetHex()));
+                    in.push_back(Pair("pointer_n", (int64_t)pindex->stakeSource.second));
+                }
+            }
+        } else {
             in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
             in.push_back(Pair("vout", (int64_t)txin.prevout.n));
             Object o;
