@@ -37,18 +37,18 @@ class ToolWalletTest(SyscoinTestFramework):
         assert_equal(stdout, output)
 
     def run_test(self):
-
+        self.log.info('Testing that various invalid commands raise with specific error messages')
         self.assert_raises_tool_error('Invalid command: foo', 'foo')
-        # `syscoin-wallet help` is an error. Use `syscoin-wallet -help`
+        # `syscoin-wallet help` raises an error. Use `syscoin-wallet -help`.
         self.assert_raises_tool_error('Invalid command: help', 'help')
         self.assert_raises_tool_error('Error: two methods provided (info and create). Only one method should be provided.', 'info', 'create')
         self.assert_raises_tool_error('Error parsing command line arguments: Invalid parameter -foo', '-foo')
         self.assert_raises_tool_error('Error loading wallet.dat. Is wallet being used by other process?', '-wallet=wallet.dat', 'info')
         self.assert_raises_tool_error('Error: no wallet file at nonexistent.dat', '-wallet=nonexistent.dat', 'info')
 
-        # stop the node to close the wallet to call info command
+        # Stop the node to close the wallet to call the info command.
         self.stop_node(0)
-
+        self.log.info('Calling wallet tool info, testing output')
         out = textwrap.dedent('''\
             Wallet info
             ===========
@@ -60,11 +60,13 @@ class ToolWalletTest(SyscoinTestFramework):
         ''')
         self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
 
-        # mutate the wallet to check the info command output changes accordingly
+        # Mutate wallet to verify info command output changes accordingly.
         self.start_node(0)
+        self.log.info('Generating transaction to mutate wallet')
         self.nodes[0].generate(1)
         self.stop_node(0)
 
+        self.log.info('Calling wallet tool info after generating a transaction, testing output')
         out = textwrap.dedent('''\
             Wallet info
             ===========
@@ -76,6 +78,7 @@ class ToolWalletTest(SyscoinTestFramework):
         ''')
         self.assert_tool_output(out, '-wallet=wallet.dat', 'info')
 
+        self.log.info('Calling wallet tool create on an existing wallet, testing output')
         out = textwrap.dedent('''\
             Topping up keypool...
             Wallet info
@@ -88,7 +91,10 @@ class ToolWalletTest(SyscoinTestFramework):
         ''')
         self.assert_tool_output(out, '-wallet=foo', 'create')
 
+        self.log.info('Starting node with arg -wallet=foo')
         self.start_node(0, ['-wallet=foo'])
+
+        self.log.info('Calling getwalletinfo on a different wallet ("foo"), testing output')
         out = self.nodes[0].getwalletinfo()
         self.stop_node(0)
 
