@@ -269,6 +269,16 @@ public:
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
     virtual std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) = 0;
+
+    //! Synchronously send TransactionAddedToMempool notifications about all
+    //! current mempool transactions to the specified handler and return after
+    //! the last one is sent. These notifications aren't coordinated with async
+    //! notifications sent by handleNotifications, so out of date async
+    //! notifications from handleNotifications can arrive during and after
+    //! synchronous notifications from requestMempoolTransactions. Clients need
+    //! to be prepared to handle this by ignoring notifications about unknown
+    //! removed transactions and already added new transactions.
+    virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

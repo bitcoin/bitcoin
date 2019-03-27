@@ -367,6 +367,13 @@ public:
     {
         return MakeUnique<RpcHandlerImpl>(command);
     }
+    void requestMempoolTransactions(Notifications& notifications) override
+    {
+        LOCK2(::cs_main, ::mempool.cs);
+        for (const CTxMemPoolEntry& entry : ::mempool.mapTx) {
+            notifications.TransactionAddedToMempool(entry.GetSharedTx());
+        }
+    }
 };
 } // namespace
 
