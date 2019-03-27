@@ -3,11 +3,11 @@
 Crown Core v0.13.0 is a major release and a mandatory upgrade.
 It is available for download from:
 
-[](https://crown.tech/downloads)
+https://crown.tech/downloads
 
 Please report bugs using the issue tracker at Gitlab:
 
-[](https://gitlab.crown.tech/crown/crown-core/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=)
+https://gitlab.crown.tech/crown/crown-core/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=
 
 ## How to upgrade
 
