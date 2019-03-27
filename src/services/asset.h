@@ -7,7 +7,6 @@
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
-#include "script/script.h"
 #include "script/standard.h"
 #include "serialize.h"
 #include "primitives/transaction.h"
@@ -22,9 +21,18 @@ class COutPoint;
 class UniValue;
 class CTxOut;
 class CWallet;
-const int SYSCOIN_TX_VERSION_ASSET = 0x7401;
-const int SYSCOIN_TX_VERSION_MINT_SYSCOIN = 0x7402;
-const int SYSCOIN_TX_VERSION_MINT_ASSET = 0x7403;
+
+const int SYSCOIN_TX_VERSION_MINT = 0x7400;
+const int SYSCOIN_TX_VERSION_BURN = 0x7401;
+const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 0x7402;
+const int SYSCOIN_TX_VERSION_ASSET_UPDATE = 0x7403;
+const int SYSCOIN_TX_VERSION_ASSET_TRANSFER = 0x7404;
+const int SYSCOIN_TX_VERSION_ASSET_SEND = 0x7405;
+const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT = 0x7406;
+const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN = 0x7407;
+const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND = 0x7408;
+
+    
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
 static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
@@ -40,25 +48,31 @@ void CreateAssetRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient);
 unsigned int addressunspent(const std::string& strAddressFrom, COutPoint& outpoint);
 int GetSyscoinDataOutput(const CTransaction& tx);
-bool DecodeAndParseSyscoinTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char &type);
-bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut, int &op);
-bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData,  int &op);
-bool SysTxToJSON(const int &op, const CTransaction &tx, UniValue &entry, const char& type);
-std::string GetSyscoinTransactionDescription(const CTransaction& tx, const int op, std::string& responseEnglish, const char &type, std::string& responseGUID);
+bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
+bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
+bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData);
+bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation);
+bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchContract, std::vector<unsigned char> &vchEthAddress);
+bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
+bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
+std::string GetSyscoinTransactionDescription(const CTransaction& tx, std::string& responseEnglish, const char &type, std::string& responseGUID);
 bool IsOutpointMature(const COutPoint& outpoint);
-UniValue syscointxfund_helper(const std::string &vchWitness, std::vector<CRecipient> &vecSend, const int nVersion = SYSCOIN_TX_VERSION_ASSET);
+UniValue syscointxfund_helper(const int &nVersion, const std::string &vchWitness, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
+bool IsAssetAllocationTx(const int &nVersion);
+bool IsSyscoinTx(const int &nVersion);
+bool IsAssetTx(const int &nVersion);
+bool IsSyscoinMintTx(const int &nVersion);
 CWallet* GetDefaultWallet();
 CAmount GetFee(const size_t nBytes);
-bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
 
 int GenerateSyscoinGuid();
 
 
-bool AssetTxToJSON(const int &op, const CTransaction& tx, UniValue &entry);
-bool AssetTxToJSON(const int &op, const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry);
-std::string assetFromOp(int op);
+bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
+bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry);
+std::string assetFromTx(const int &nVersion);
 /** Upper bound for mantissa.
 * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
 * Larger integers cannot consist of arbitrary combinations of 0-9:
@@ -217,7 +231,7 @@ public:
     bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
     } 
-	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& op, const int& nHeight);
+	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight);
 	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
 };
@@ -357,8 +371,7 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
-bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const std::vector<std::vector<unsigned char> > &vvchArgs, bool fJustCheck, int nHeight, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
-bool DecodeAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch);
+bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;

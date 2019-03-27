@@ -6,9 +6,7 @@
 using namespace std;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
-	std::vector<vector<unsigned char> > vvchArgs;
 	std::vector<CTransactionRef> orderedVtx;
-	int op;
 	AssertLockHeld(cs_main);
 	CCoinsViewCache view(pcoinsTip.get());
 	// order the arrival times in ascending order using a map
@@ -18,23 +16,20 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 		if (!txRef)
 			continue;
 		const CTransaction &tx = *txRef;
-		if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET)
+		if (IsAssetAllocationTx(tx.nVersion))
 		{
-			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
-			{
-				LOCK(cs_assetallocationarrival);
-				
-				CAssetAllocation assetallocation(tx);
-				ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetallocation.assetAllocationTuple.ToString()];
+			LOCK(cs_assetallocationarrival);
+			
+			CAssetAllocation assetallocation(tx);
+			ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetallocation.assetAllocationTuple.ToString()];
 
-				ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
-				if (it != arrivalTimes.end())
-					orderedIndexes.insert(make_pair((*it).second, n));
-				// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
-				else
-					orderedIndexes.insert(make_pair(INT64_MAX, n));
-				continue;
-			}
+			ArrivalTimesMap::iterator it = arrivalTimes.find(tx.GetHash());
+			if (it != arrivalTimes.end())
+				orderedIndexes.insert(make_pair((*it).second, n));
+			// we don't have this in our arrival times list, means it must be rejected via consensus so add it to the end
+			else
+				orderedIndexes.insert(make_pair(INT64_MAX, n));
+			continue;	
 		}
 		// add normal tx's to orderedvtx, 
 		orderedVtx.emplace_back(txRef);

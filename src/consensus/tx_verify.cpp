@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2017 The Syscoin Core developers
+﻿// Copyright (c) 2017-2017 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -235,7 +235,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
     }
 
     // SYSCOIN
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT_SYSCOIN){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT){
         if(tx.vout.size() < 2 || tx.vout.size() > 3)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-mint-outputs-wrong");
     }
