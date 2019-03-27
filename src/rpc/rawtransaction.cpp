@@ -40,6 +40,11 @@
 
 #include <univalue.h>
 
+/** High fee for sendrawtransaction and testmempoolaccept.
+ * By default, transaction with a fee higher than this will be rejected by the
+ * RPCs. This can be overriden with the maxfeerate argument.
+ */
+constexpr static CAmount DEFAULT_MAX_RAW_TX_FEE{COIN / 10};
 
 static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -1023,14 +1028,12 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
 
 static UniValue sendrawtransaction(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
-        throw std::runtime_error(
-            RPCHelpMan{"sendrawtransaction",
+    const RPCHelpMan help{"sendrawtransaction",
                 "\nSubmits raw transaction (serialized, hex-encoded) to local node and network.\n"
                 "\nAlso see createrawtransaction and signrawtransactionwithkey calls.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
-                    {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(maxTxFee), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
+                    {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
                 },
                 RPCResult{
             "\"hex\"             (string) The transaction hash in hex\n"
@@ -1045,7 +1048,11 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("sendrawtransaction", "\"signedhex\"")
                 },
-            }.ToString());
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
+    }
 
     RPCTypeCheck(request.params, {
         UniValue::VSTR,
@@ -1058,7 +1065,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
 
-    CAmount max_raw_tx_fee = maxTxFee;
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE;
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
@@ -1085,9 +1092,7 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
 
 static UniValue testmempoolaccept(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
-        throw std::runtime_error(
-            RPCHelpMan{"testmempoolaccept",
+    const RPCHelpMan help{"testmempoolaccept",
                 "\nReturns result of mempool acceptance tests indicating if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
                 "\nThis checks if the transaction violates the consensus or policy rules.\n"
                 "\nSee sendrawtransaction call.\n",
@@ -1098,7 +1103,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
                             {"rawtx", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, ""},
                         },
                         },
-                    {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(maxTxFee), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
+                    {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
                 },
                 RPCResult{
             "[                   (array) The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -1120,7 +1125,10 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("testmempoolaccept", "[\"signedhex\"]")
                 },
-            }.ToString());
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
     }
 
     RPCTypeCheck(request.params, {
@@ -1139,7 +1147,7 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     const uint256& tx_hash = tx->GetHash();
 
-    CAmount max_raw_tx_fee = maxTxFee;
+    CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE;
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Second argument must be numeric (maxfeerate) and no longer supports a boolean. To allow a transaction with high fees, set maxfeerate to 0.");
