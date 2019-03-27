@@ -39,10 +39,10 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
     auto chain = interfaces::MakeChain();
 
     // Cap last block file size, and mine new block in a new block file.
-    CBlockIndex* oldTip = chainActive.Tip();
+    CBlockIndex* oldTip = ::ChainActive().Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    CBlockIndex* newTip = chainActive.Tip();
+    CBlockIndex* newTip = ::ChainActive().Tip();
 
     LockAnnotation lock(::cs_main);
     auto locked_chain = chain->lock();
@@ -119,10 +119,10 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
     auto chain = interfaces::MakeChain();
 
     // Cap last block file size, and mine new block in a new block file.
-    CBlockIndex* oldTip = chainActive.Tip();
+    CBlockIndex* oldTip = ::ChainActive().Tip();
     GetBlockFileInfo(oldTip->GetBlockPos().nFile)->nSize = MAX_BLOCKFILE_SIZE;
     CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
-    CBlockIndex* newTip = chainActive.Tip();
+    CBlockIndex* newTip = ::ChainActive().Tip();
 
     LockAnnotation lock(::cs_main);
     auto locked_chain = chain->lock();
@@ -181,7 +181,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     // Create two blocks with same timestamp to verify that importwallet rescan
     // will pick up both blocks, not just the first.
-    const int64_t BLOCK_TIME = chainActive.Tip()->GetBlockTimeMax() + 5;
+    const int64_t BLOCK_TIME = ::ChainActive().Tip()->GetBlockTimeMax() + 5;
     SetMockTime(BLOCK_TIME);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
     m_coinbase_txns.emplace_back(CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey())).vtx[0]);
@@ -249,7 +249,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
     auto locked_chain = chain->lock();
     LOCK(wallet.cs_wallet);
-    wtx.hashBlock = chainActive.Tip()->GetBlockHash();
+    wtx.hashBlock = ::ChainActive().Tip()->GetBlockHash();
     wtx.nIndex = 0;
 
     // Call GetImmatureCredit() once before adding the key to the wallet to
@@ -346,10 +346,10 @@ public:
         AddKey(*wallet, coinbaseKey);
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(chainActive.Genesis()->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
         BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
-        BOOST_CHECK_EQUAL(result.last_scanned_block, chainActive.Tip()->GetBlockHash());
-        BOOST_CHECK_EQUAL(*result.last_scanned_height, chainActive.Height());
+        BOOST_CHECK_EQUAL(result.last_scanned_block, ::ChainActive().Tip()->GetBlockHash());
+        BOOST_CHECK_EQUAL(*result.last_scanned_height, ::ChainActive().Height());
         BOOST_CHECK(result.last_failed_block.IsNull());
     }
 
@@ -378,7 +378,7 @@ public:
         LOCK(wallet->cs_wallet);
         auto it = wallet->mapWallet.find(tx->GetHash());
         BOOST_CHECK(it != wallet->mapWallet.end());
-        it->second.SetMerkleBranch(chainActive.Tip()->GetBlockHash(), 1);
+        it->second.SetMerkleBranch(::ChainActive().Tip()->GetBlockHash(), 1);
         return it->second;
     }
 

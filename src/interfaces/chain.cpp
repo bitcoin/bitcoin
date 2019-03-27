@@ -41,7 +41,7 @@ class LockImpl : public Chain::Lock
 {
     Optional<int> getHeight() override
     {
-        int height = ::chainActive.Height();
+        int height = ::ChainActive().Height();
         if (height >= 0) {
             return height;
         }
@@ -50,7 +50,7 @@ class LockImpl : public Chain::Lock
     Optional<int> getBlockHeight(const uint256& hash) override
     {
         CBlockIndex* block = LookupBlockIndex(hash);
-        if (block && ::chainActive.Contains(block)) {
+        if (block && ::ChainActive().Contains(block)) {
             return block->nHeight;
         }
         return nullopt;
@@ -63,30 +63,30 @@ class LockImpl : public Chain::Lock
     }
     uint256 getBlockHash(int height) override
     {
-        CBlockIndex* block = ::chainActive[height];
+        CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetBlockHash();
     }
     int64_t getBlockTime(int height) override
     {
-        CBlockIndex* block = ::chainActive[height];
+        CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetBlockTime();
     }
     int64_t getBlockMedianTimePast(int height) override
     {
-        CBlockIndex* block = ::chainActive[height];
+        CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetMedianTimePast();
     }
     bool haveBlockOnDisk(int height) override
     {
-        CBlockIndex* block = ::chainActive[height];
+        CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
     Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) override
     {
-        CBlockIndex* block = ::chainActive.FindEarliestAtLeast(time, height);
+        CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time, height);
         if (block) {
             if (hash) *hash = block->GetBlockHash();
             return block->nHeight;
@@ -96,7 +96,7 @@ class LockImpl : public Chain::Lock
     Optional<int> findPruned(int start_height, Optional<int> stop_height) override
     {
         if (::fPruneMode) {
-            CBlockIndex* block = stop_height ? ::chainActive[*stop_height] : ::chainActive.Tip();
+            CBlockIndex* block = stop_height ? ::ChainActive()[*stop_height] : ::ChainActive().Tip();
             while (block && block->nHeight >= start_height) {
                 if ((block->nStatus & BLOCK_HAVE_DATA) == 0) {
                     return block->nHeight;
@@ -109,7 +109,7 @@ class LockImpl : public Chain::Lock
     Optional<int> findFork(const uint256& hash, Optional<int>* height) override
     {
         const CBlockIndex* block = LookupBlockIndex(hash);
-        const CBlockIndex* fork = block ? ::chainActive.FindFork(block) : nullptr;
+        const CBlockIndex* fork = block ? ::ChainActive().FindFork(block) : nullptr;
         if (height) {
             if (block) {
                 *height = block->nHeight;
@@ -122,11 +122,11 @@ class LockImpl : public Chain::Lock
         }
         return nullopt;
     }
-    CBlockLocator getTipLocator() override { return ::chainActive.GetLocator(); }
+    CBlockLocator getTipLocator() override { return ::ChainActive().GetLocator(); }
     Optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LockAnnotation lock(::cs_main);
-        if (CBlockIndex* fork = FindForkInGlobalIndex(::chainActive, locator)) {
+        if (CBlockIndex* fork = FindForkInGlobalIndex(::ChainActive(), locator)) {
             return fork->nHeight;
         }
         return nullopt;
@@ -341,9 +341,9 @@ public:
     {
         if (!old_tip.IsNull()) {
             LOCK(::cs_main);
-            if (old_tip == ::chainActive.Tip()->GetBlockHash()) return;
+            if (old_tip == ::ChainActive().Tip()->GetBlockHash()) return;
             CBlockIndex* block = LookupBlockIndex(old_tip);
-            if (block && block->GetAncestor(::chainActive.Height()) == ::chainActive.Tip()) return;
+            if (block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip()) return;
         }
         SyncWithValidationInterfaceQueue();
     }
