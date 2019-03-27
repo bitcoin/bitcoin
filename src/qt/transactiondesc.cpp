@@ -21,8 +21,6 @@
 
 #include "instantx.h"
 
-#include "llmq/quorums_instantsend.h"
-
 #include <stdint.h>
 #include <string>
 
@@ -59,8 +57,8 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
             }
         }
 
-        if (llmq::quorumInstantSendManager->IsLocked(wtx.GetHash())) {
-            strTxStatus += tr(" (verified via LLMQ based InstantSend)");
+        if (wtx.IsLockedByLLMQInstantSend()) {
+            strTxStatus += " (" + tr("verified via LLMQ based InstantSend") + ")";
             return strTxStatus;
         }
 
