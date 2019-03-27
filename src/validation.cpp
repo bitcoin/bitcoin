@@ -235,7 +235,6 @@ CChain& ChainActive() { return g_chainstate.m_chain; }
 RecursiveMutex cs_main;
 
 BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
-CChain& chainActive = g_chainstate.m_chain;
 CBlockIndex *pindexBestHeader = nullptr;
 Mutex g_best_block_mutex;
 std::condition_variable g_best_block_cv;
