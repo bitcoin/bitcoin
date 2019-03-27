@@ -31,6 +31,7 @@
 #include <utility>
 #include <vector>
 
+class CChainState;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBlockUndo;
@@ -277,10 +278,6 @@ void PruneOneBlockFile(const int fileNumber) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
  */
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 
-/** Flush all state, indexes and buffers to disk. */
-void FlushStateToDisk();
-/** Prune block files and flush state to disk. */
-void PruneAndFlush();
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(int nManualPruneHeight);
 
@@ -432,6 +429,14 @@ enum DisconnectResult
 
 class ConnectTrace;
 
+/** @see CChainState::FlushStateToDisk */
+enum class FlushStateMode {
+    NONE,
+    IF_NEEDED,
+    PERIODIC,
+    ALWAYS
+};
+
 struct CBlockIndexWorkComparator
 {
     bool operator()(const CBlockIndex *pa, const CBlockIndex *pb) const;
@@ -507,6 +512,28 @@ public:
     CBlockIndex *pindexBestInvalid = nullptr;
 
     bool LoadBlockIndex(const Consensus::Params& consensus_params, CBlockTreeDB& blocktree) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Update the on-disk chain state.
+     * The caches and indexes are flushed depending on the mode we're called with
+     * if they're too large, if it's been a while since the last write,
+     * or always and in all cases if we're in prune mode and are deleting files.
+     *
+     * If FlushStateMode::NONE is used, then FlushStateToDisk(...) won't do anything
+     * besides checking if we need to prune.
+     */
+    bool FlushStateToDisk(
+        const CChainParams& chainparams,
+        CValidationState &state,
+        FlushStateMode mode,
+        int nManualPruneHeight = 0);
+
+    //! Unconditionally flush all changes to disk.
+    void ForceFlushStateToDisk();
+
+    //! Prune blockfiles from the disk if necessary and then flush chainstate changes
+    //! if we pruned.
+    void PruneAndFlush();
 
     bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock) LOCKS_EXCLUDED(cs_main);
 
