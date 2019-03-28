@@ -1276,6 +1276,10 @@ void CWallet::BlockDisconnected(const CBlock& block) {
     }
 }
 
+void CWallet::UpdatedBlockTip()
+{
+    m_best_block_time = GetTime();
+}
 
 
 void CWallet::BlockUntilSyncedToCurrentChain() {
@@ -2110,7 +2114,7 @@ bool CWalletTx::IsEquivalentTo(const CWalletTx& _tx) const
         return CTransaction(tx1) == CTransaction(tx2);
 }
 
-void CWallet::ResendWalletTransactions(interfaces::Chain::Lock& locked_chain, int64_t nBestBlockTime)
+void CWallet::ResendWalletTransactions(interfaces::Chain::Lock& locked_chain)
 {
     // Do this infrequently and randomly to avoid giving away
     // that these are our transactions.
@@ -2120,7 +2124,7 @@ void CWallet::ResendWalletTransactions(interfaces::Chain::Lock& locked_chain, in
     if (fFirst) return;
 
     // Only do it if there's been a new block since last time
-    if (nBestBlockTime < nLastResend) return;
+    if (m_best_block_time < nLastResend) return;
     nLastResend = GetTime();
 
     int relayed_tx_count = 0;
@@ -2133,7 +2137,7 @@ void CWallet::ResendWalletTransactions(interfaces::Chain::Lock& locked_chain, in
             CWalletTx& wtx = item.second;
             // only rebroadcast unconfirmed txes older than 5 minutes before the
             // last block was found
-            if (wtx.nTimeReceived > nBestBlockTime - 5 * 60) continue;
+            if (wtx.nTimeReceived > m_best_block_time - 5 * 60) continue;
             relayed_tx_count += wtx.RelayWalletTransaction(locked_chain) ? 1 : 0;
         }
     } // cs_wallet
