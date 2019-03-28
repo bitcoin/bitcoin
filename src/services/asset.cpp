@@ -272,7 +272,7 @@ bool CAsset::UnserializeFromTx(const CTransaction &tx) {
 bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
     vector<unsigned char> vchData;
     int nOut;
-    if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT || !GetSyscoinData(tx, vchData, nOut))
+    if (!IsSyscoinMintTx(tx.nVersion) || !GetSyscoinData(tx, vchData, nOut))
     {
         SetNull();
         return false;
@@ -656,7 +656,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                     }
                 }
             }
-            if (countInputs <= 0 && !fTPSTestEnabled && tx.nVersion != SYSCOIN_TX_VERSION_MINT && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
+            if (countInputs <= 0 && !fTPSTestEnabled && !IsSyscoinMintTx(tx.nVersion))
             {
                 for (unsigned int i = 0; i < MAX_UPDATES_PER_BLOCK; i++){
                     nDesiredAmount += addressRecipient.nAmount;
@@ -1227,7 +1227,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 	vector<unsigned char> vchData;
 
 	int nDataOut;
-	if(!GetSyscoinData(tx, vchData, nDataOut) || (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND || !theAsset.UnserializeFromData(vchData)) || (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || !theAssetAllocation.UnserializeFromData(vchData)))
+	if(!GetSyscoinData(tx, vchData, nDataOut) || (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && !theAsset.UnserializeFromData(vchData)) || (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND && !theAssetAllocation.UnserializeFromData(vchData)))
 	{
 		errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR ERRCODE: 2000 - " + _("Cannot unserialize data inside of this transaction relating to an asset");
 		return error(errorMessage.c_str());
@@ -1236,7 +1236,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 
 	if(fJustCheck)
 	{
-		if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_UPDATE) {
+		if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND) {
 			if (theAsset.vchPubData.size() > MAX_VALUE_LENGTH)
 			{
 				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2004 - " + _("Asset public data too big");
