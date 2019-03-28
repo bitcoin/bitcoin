@@ -1,5 +1,12 @@
 (note: this is a temporary file, to be added-to by anybody, and moved to
-release-notes at release time)
+release-notes at release time
+
+See [/doc/developer-notes.md#release-notes](/doc/developer-notes.md#release-notes) for the process.
+
+Release notes are handled in a wiki for major versions of Bitcoin Core after
+branching off:
+https://github.com/bitcoin-core/bitcoin-devwiki/wiki/*version*-Release-Notes-Draft
+)
 
 Bitcoin Core version *version* is now available from:
 

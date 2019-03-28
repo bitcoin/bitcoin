@@ -26,7 +26,9 @@ Before every major release:
 * Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
   [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
-* Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
+* Clear the release notes before branch-off and move them to the wiki
+* Update the link to the release notes draft in `doc/release-notes.md` after branch-off
+* Update version of `contrib/gitian-descriptors/*.yml` on master after branching off the release
 
 ### First time / New builders
 
