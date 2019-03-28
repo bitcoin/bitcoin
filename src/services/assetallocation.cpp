@@ -10,6 +10,7 @@
 #include "util.h"
 #include "core_io.h"
 #include "wallet/wallet.h"
+#include "wallet/rpcwallet.h"
 #include "chainparams.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
