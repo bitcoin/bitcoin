@@ -9,7 +9,7 @@
 #include <tinyformat.h>
 #include <utilstrencodings.h>
 // SYSCOIN
-const int SYSCOIN_TX_VERSION_MINT_SYSCOIN = 0x7402;
+const int SYSCOIN_TX_VERSION_MINT = 0x7400;
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -100,7 +100,7 @@ CAmount CTransaction::GetValueOut() const
     bool bFirstOutput = true;
     for (const auto& tx_out : vout) {
         // SYSCOIN
-        if(bFirstOutput && nVersion == SYSCOIN_TX_VERSION_MINT_SYSCOIN){
+        if(bFirstOutput && nVersion == SYSCOIN_TX_VERSION_MINT){
             bFirstOutput = false;
             continue;
         }

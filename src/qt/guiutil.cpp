@@ -373,6 +373,7 @@ void openMNConfigfile()
         QDesktopServices::openUrl(QUrl::fromLocalFile(boostPathToQString(pathConfig)));
 }
 
+
 void bringToFront(QWidget* w)
 {
 #ifdef Q_OS_MAC

@@ -51,21 +51,6 @@ enum opcodetype
 {    
     // push value
     OP_0 = 0x00,
-    
-
-    // distributed asset system
-    OP_ASSET_ACTIVATE = 0x01,
-    OP_ASSET_UPDATE = 0x02,
-    OP_ASSET_TRANSFER = 0x03,
-    OP_ASSET_SEND = 0x04,
-
-    OP_ASSET_ALLOCATION_SEND = 0x01,
-    OP_ASSET_ALLOCATION_BURN = 0x02,
-
-    // syscoin extended reserved 
-    OP_SYSCOIN_ASSET = 0x01,
-    OP_SYSCOIN_ASSET_ALLOCATION = 0x02,
-    OP_SYSCOIN_MINT = 0x03,
     OP_FALSE = OP_0,
     OP_PUSHDATA1 = 0x4c,
     OP_PUSHDATA2 = 0x4d,
@@ -601,11 +586,4 @@ public:
     CReserveScript() {}
     virtual ~CReserveScript() {}
 };
-// SYSCOIN
-bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
-bool DecodeAssetScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
-bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
-bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
-bool IsAssetOp(int op);
-bool IsAssetAllocationOp(int op);
 #endif // SYSCOIN_SCRIPT_SCRIPT_H

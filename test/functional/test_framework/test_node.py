@@ -304,15 +304,7 @@ class TestNode():
                 else:
                     assert_msg = "syscoind should have exited with expected error " + expected_msg
                 self._raise_assertion_error(assert_msg)
-
-    def node_encrypt_wallet(self, passphrase):
-        """"Encrypts the wallet.
-
-        This causes syscoind to shutdown, so this method takes
-        care of cleaning up resources."""
-        self.encryptwallet(passphrase)
-        self.wait_until_stopped()
-
+                
     def add_p2p_connection(self, p2p_conn, *, wait_for_verack=True, **kwargs):
         """Add a p2p connection to the node.
 

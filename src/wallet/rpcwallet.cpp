@@ -2754,7 +2754,6 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
             "will require the passphrase to be set prior the making these calls.\n"
             "Use the walletpassphrase call for this, and then walletlock call.\n"
             "If the wallet is already encrypted, use the walletpassphrasechange call.\n"
-            "Note that this will shutdown the server.\n"
             "\nArguments:\n"
             "1. \"passphrase\"    (string) The pass phrase to encrypt the wallet with. It must be at least 1 character, but should be long.\n"
             "\nExamples:\n"
@@ -2791,12 +2790,8 @@ static UniValue encryptwallet(const JSONRPCRequest& request)
     if (!pwallet->EncryptWallet(strWalletPass)) {
         throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Failed to encrypt the wallet.");
     }
-
-    // BDB seems to have a bad habit of writing old data into
-    // slack space in .dat files; that is bad if the old data is
-    // unencrypted private keys. So:
-    StartShutdown();
-    return "wallet encrypted; Syscoin server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
+    
+    return "wallet encrypted; The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
 }
 
 static UniValue lockunspent(const JSONRPCRequest& request)
@@ -3131,26 +3126,26 @@ static UniValue loadwallet(const JSONRPCRequest& request)
             + HelpExampleCli("loadwallet", "\"test.dat\"")
             + HelpExampleRpc("loadwallet", "\"test.dat\"")
         );
-    std::string wallet_file = request.params[0].get_str();
+
+    WalletLocation location(request.params[0].get_str());
     std::string error;
 
-    fs::path wallet_path = fs::absolute(wallet_file, GetWalletDir());
-    if (fs::symlink_status(wallet_path).type() == fs::file_not_found) {
-        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet " + wallet_file + " not found.");
-    } else if (fs::is_directory(wallet_path)) {
+    if (!location.Exists()) {
+        throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Wallet " + location.GetName() + " not found.");
+    } else if (fs::is_directory(location.GetPath())) {
         // The given filename is a directory. Check that there's a wallet.dat file.
-        fs::path wallet_dat_file = wallet_path / "wallet.dat";
+        fs::path wallet_dat_file = location.GetPath() / "wallet.dat";
         if (fs::symlink_status(wallet_dat_file).type() == fs::file_not_found) {
-            throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Directory " + wallet_file + " does not contain a wallet.dat file.");
+            throw JSONRPCError(RPC_WALLET_NOT_FOUND, "Directory " + location.GetName() + " does not contain a wallet.dat file.");
         }
     }
 
     std::string warning;
-    if (!CWallet::Verify(wallet_file, false, error, warning)) {
+    if (!CWallet::Verify(location, false, error, warning)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
     }
 
-    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_file, fs::absolute(wallet_file, GetWalletDir()));
+    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(location);
     if (!wallet) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet loading failed.");
     }
@@ -3184,7 +3179,6 @@ static UniValue createwallet(const JSONRPCRequest& request)
             + HelpExampleRpc("createwallet", "\"testwallet\"")
         );
     }
-    std::string wallet_name = request.params[0].get_str();
     std::string error;
     std::string warning;
 
@@ -3193,17 +3187,17 @@ static UniValue createwallet(const JSONRPCRequest& request)
         disable_privatekeys = request.params[1].get_bool();
     }
 
-    fs::path wallet_path = fs::absolute(wallet_name, GetWalletDir());
-    if (fs::symlink_status(wallet_path).type() != fs::file_not_found) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + wallet_name + " already exists.");
+    WalletLocation location(request.params[0].get_str());
+    if (location.Exists()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + location.GetName() + " already exists.");
     }
 
     // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
-    if (!CWallet::Verify(wallet_name, false, error, warning)) {
+    if (!CWallet::Verify(location, false, error, warning)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
     }
 
-    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(wallet_name, fs::absolute(wallet_name, GetWalletDir()), (disable_privatekeys ? (uint64_t)WALLET_FLAG_DISABLE_PRIVATE_KEYS : 0));
+    std::shared_ptr<CWallet> const wallet = CWallet::CreateWalletFromFile(location, (disable_privatekeys ? (uint64_t)WALLET_FLAG_DISABLE_PRIVATE_KEYS : 0));
     if (!wallet) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed.");
     }

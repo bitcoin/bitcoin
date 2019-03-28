@@ -26,7 +26,8 @@
 #include <stdio.h>
 
 #include <boost/algorithm/string.hpp>
-
+// SYSCOIN
+#include <services/asset.h>
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
 static const int CONTINUE_EXECUTION=-1;
@@ -193,7 +194,7 @@ static CAmount ExtractAndValidateValue(const std::string& strValue)
 static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
 {
     int64_t newVersion;
-    if (!ParseInt64(cmdVal, &newVersion) || newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_VERSION)
+    if (!ParseInt64(cmdVal, &newVersion) || ((newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_VERSION) && !IsSyscoinTx(newVersion)))
         throw std::runtime_error("Invalid TX version requested: '" + cmdVal + "'");
 
     tx.nVersion = (int) newVersion;
@@ -526,18 +527,6 @@ static bool findSighashFlags(int& flags, const std::string& flagStr)
     }
 
     return false;
-}
-
-static CAmount AmountFromValue(const UniValue& value)
-{
-    if (!value.isNum() && !value.isStr())
-        throw std::runtime_error("Amount is not a number or string");
-    CAmount amount;
-    if (!ParseFixedPoint(value.getValStr(), 8, &amount))
-        throw std::runtime_error("Invalid amount");
-    if (!MoneyRange(amount))
-        throw std::runtime_error("Amount out of range");
-    return amount;
 }
 
 static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
