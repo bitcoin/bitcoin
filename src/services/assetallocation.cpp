@@ -928,7 +928,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
 
 	CScript scriptData;
-	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram << ParseHex(amountHex) << theAsset.vchContract << ParseHex(ethAddress);
+	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << theAsset.vchContract << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
