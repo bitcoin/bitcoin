@@ -141,33 +141,53 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
 } 
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchContract, std::vector<unsigned char> &vchEthAddress)
 {
-    int nOut = GetSyscoinDataOutput(tx);
-    if (nOut == -1)
+    if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
         return false;
+    }
+    int nOut = GetSyscoinDataOutput(tx);
+    if (nOut == -1){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Data index must be positive\n");
+        return false;
+    }
 
     const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
     std::vector<std::vector< unsigned char> > vvchArgs;
-    if(!GetSyscoinBurnData(scriptPubKey, vvchArgs))
+    if(!GetSyscoinBurnData(scriptPubKey, vvchArgs)){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Cannot get burn data\n");
         return false;
+    }
         
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN && vvchArgs.size() != 6)
+    if(vvchArgs.size() != 6){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Wrong argument size %d\n", vvchArgs.size());
         return false;
+    }
           
-    if(vvchArgs[0].size() != 4)
+    if(vvchArgs[0].size() != 4){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: nAssetFromScript - Wrong argument size %d\n", vvchArgs[0].size());
         return false;
+    }
         
     nAssetFromScript  = static_cast<uint32_t>(vvchArgs[0][3]);
     nAssetFromScript |= static_cast<uint32_t>(vvchArgs[0][2]) << 8;
     nAssetFromScript |= static_cast<uint32_t>(vvchArgs[0][1]) << 16;
     nAssetFromScript |= static_cast<uint32_t>(vvchArgs[0][0]) << 24;
             
-    if(vvchArgs[1].size() != 1)
+    if(vvchArgs[1].size() != 1){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address version - Wrong argument size %d\n", vvchArgs[1].size());
         return false;
-    if(vvchArgs[2].empty())
-        return false;      
-    burnWitnessAddress = CWitnessAddress(static_cast<unsigned char>(vvchArgs[1][0]), vvchArgs[2]);   
-    if(vvchArgs[3].size() != 8)
+    }
+    if(vvchArgs[2].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
+        return false;
+    }     
+    unsigned char nWitnessVersion = static_cast<unsigned char>(vvchArgs[1][0]);
+
+    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[2]);   
+    if(vvchArgs[3].size() != 8){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: nAmountFromScript - Wrong argument size %d\n", vvchArgs[3].size());
         return false; 
+    }
     nAmountFromScript  = static_cast<uint64_t>(vvchArgs[3][7]);
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][6]) << 8;
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][5]) << 16;
@@ -176,11 +196,15 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][2]) << 40;  
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][1]) << 48;  
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][0]) << 56;   
-    if(vvchArgs[4].empty())
+    if(vvchArgs[4].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Contract empty\n");
         return false;
+    }
     vchContract = vvchArgs[4];
-    if(vvchArgs[5].empty())
+    if(vvchArgs[5].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum address empty\n");
         return false; 
+    }
     vchEthAddress = vvchArgs[5]; 
     return true; 
 }
@@ -878,11 +902,11 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
 bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 {
     bool found = false;
-	if (IsAssetTx(tx.nVersion))
+	if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
 		found = AssetTxToJSON(tx, output);
     else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
         found = SysBurnTxToJSON(tx, output);        
-	else if (IsAssetAllocationTx(tx.nVersion))
+	else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
 		found = AssetAllocationTxToJSON(tx, output);
     return found;
 }
@@ -1055,7 +1079,8 @@ void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
 void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight) {
 	if (fZMQAsset || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
-        if(AssetTxToJSON(tx, dbAsset, nHeight, oName)){
+        // assetsends write allocation indexes
+        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, dbAsset, nHeight, oName)){
             if(fZMQAsset)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
@@ -1417,7 +1442,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                     if (receiverAllocation.assetAllocationTuple.IsNull()) {
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
-                        if(fAssetIndex){
+                        if(fAssetIndex && !fJustCheck){
                             std::vector<uint32_t> assetGuids;
                             passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
                             if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())

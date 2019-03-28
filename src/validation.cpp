@@ -774,7 +774,9 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         {
 
             good = true;
-            const CTransaction &tx = *(block.vtx[i]);        
+            const CTransaction &tx = *(block.vtx[i]); 
+            if(tx.IsCoinBase()) 
+                continue;       
             if(fAssetIndex){
                 if(!passetindexdb->WriteBlockHash(tx.GetHash(), block.GetHash())){
                     return state.DoS(0, false, REJECT_INVALID, "Could not write block hash to asset index db");
