@@ -123,10 +123,18 @@ UniValue debug(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "debug ( 0|1|addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool"
-            "|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|"
-            "dash|privatesend|instantsend|masternode|spork|keepass|mnpayments|gobject )\n"
+            "debug \"category\"\n"
             "Change debug category on the fly. Specify single category or use '+' to specify many.\n"
+            "\nArguments:\n"
+            "1. \"category\"          (string, required) The name of the debug category to turn on. Can be one of the following:\n"
+            "                       addrman, alert, bench, cmpctblock, coindb, db, http, leveldb, libevent, lock, mempool,\n"
+            "                       mempoolrej, net, proxy, prune, qt, rand, reindex, rpc, selectcoins, tor, zmq, dash\n"
+            "                       (or specifically: chainlocks, gobject, instantsend, keepass, llmq, llmq-dkg, llmq-sigs,\n"
+            "                       masternode, mnpayments, mnsync, privatesend, spork).\n"
+            "                       Can also use \"1\" to turn all categories on at once and \"0\" to turn them off.\n"
+            "                       Note: If specified category doesn't match any of the above, no error is thrown.\n"
+            "\nResult:\n"
+            "  result               (string) \"Debug mode: \" followed by the specified category.\n"
             "\nExamples:\n"
             + HelpExampleCli("debug", "dash")
             + HelpExampleRpc("debug", "dash+net")
