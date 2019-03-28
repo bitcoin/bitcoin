@@ -235,6 +235,12 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     return true;
 }
 
+void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name)
+{
+    std::lock_guard<std::mutex> lock(cs_dir_locks);
+    dir_locks.erase((directory / lockfile_name).string());
+}
+
 void ReleaseDirectoryLocks()
 {
     std::lock_guard<std::mutex> ulock(cs_dir_locks);

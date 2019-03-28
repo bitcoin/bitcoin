@@ -217,8 +217,15 @@ class MultiWalletTest(SyscoinTestFramework):
         # Fail to load duplicate wallets
         assert_raises_rpc_error(-4, 'Wallet file verification failed: Error loading wallet w1. Duplicate -wallet filename specified.', self.nodes[0].loadwallet, wallet_names[0])
 
+        # Fail to load duplicate wallets by different ways (directory and filepath)
+        assert_raises_rpc_error(-4, "Wallet file verification failed: Error loading wallet wallet.dat. Duplicate -wallet filename specified.", self.nodes[0].loadwallet, 'wallet.dat')
+
         # Fail to load if one wallet is a copy of another
         assert_raises_rpc_error(-1, "BerkeleyBatch: Can't open database w8_copy (duplicates fileid", self.nodes[0].loadwallet, 'w8_copy')
+
+        # Fail to load if one wallet is a copy of another, test this twice to make sure that we don't re-introduce #14304
+        assert_raises_rpc_error(-1, "BerkeleyBatch: Can't open database w8_copy (duplicates fileid", self.nodes[0].loadwallet, 'w8_copy')
+
 
         # Fail to load if wallet file is a symlink
         assert_raises_rpc_error(-4, "Wallet file verification failed: Invalid -wallet path 'w8_symlink'", self.nodes[0].loadwallet, 'w8_symlink')
@@ -303,6 +310,14 @@ class MultiWalletTest(SyscoinTestFramework):
             shutil.copyfile(backup, wallet_file(wallet_name))
             self.nodes[0].loadwallet(wallet_name)
             assert_equal(rpc.getaddressinfo(addr)['ismine'], True)
+
+        # Test .walletlock file is closed
+        self.start_node(1)
+        wallet = os.path.join(self.options.tmpdir, 'my_wallet')
+        self.nodes[0].createwallet(wallet)
+        assert_raises_rpc_error(-4, "Error initializing wallet database environment", self.nodes[1].loadwallet, wallet)
+        self.nodes[0].unloadwallet(wallet)
+        self.nodes[1].loadwallet(wallet)
 
 
 if __name__ == '__main__':

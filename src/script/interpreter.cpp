@@ -1467,16 +1467,8 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
     return true;
 }
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKeyIn, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
-{
-    // SYSCOIN
-    CScript scriptPubKey;
-    CScript scriptPubKeyOut;
-    if (RemoveSyscoinScript(scriptPubKeyIn, scriptPubKeyOut))
-        scriptPubKey = scriptPubKeyOut;
-    else
-        scriptPubKey = scriptPubKeyIn;
-        
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+{     
     static const CScriptWitness emptyWitness;
     if (witness == nullptr) {
         witness = &emptyWitness;
