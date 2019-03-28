@@ -65,10 +65,11 @@ private:
     bool Commit();
 
 protected:
-    void BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
+    void BlockConnected(const CChainState& chainstate,
+                        const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
                         const std::vector<CTransactionRef>& txn_conflicted) override;
 
-    void ChainStateFlushed(const CBlockLocator& locator) override;
+    void ChainStateFlushed(const CChainState& chainstate, const CBlockLocator& locator) override;
 
     /// Initialize internal state from the database and block index.
     virtual bool Init();

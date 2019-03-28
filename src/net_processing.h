@@ -33,19 +33,19 @@ public:
     /**
      * Overridden from CValidationInterface.
      */
-    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
+    void BlockConnected(const CChainState& chainstate, const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected, const std::vector<CTransactionRef>& vtxConflicted) override;
     /**
      * Overridden from CValidationInterface.
      */
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    void UpdatedBlockTip(const CChainState& chainstate, const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
     /**
      * Overridden from CValidationInterface.
      */
-    void BlockChecked(const CBlock& block, const CValidationState& state) override;
+    void BlockChecked(const CChainState& chainstate, const CBlock& block, const CValidationState& state) override;
     /**
      * Overridden from CValidationInterface.
      */
-    void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
+    void NewPoWValidBlock(const CChainState& chainstate, const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
 
     /** Initialize a peer by adding it to mapNodeState and pushing a message requesting its version */
     void InitializeNode(CNode* pnode) override;

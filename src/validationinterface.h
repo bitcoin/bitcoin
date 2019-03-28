@@ -13,6 +13,7 @@
 #include <memory>
 
 extern CCriticalSection cs_main;
+class CChainState;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
@@ -84,7 +85,11 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
+    virtual void UpdatedBlockTip(
+        const CChainState& chainstate,
+        const CBlockIndex *pindexNew,
+        const CBlockIndex *pindexFork,
+        bool fInitialDownload) {}
     /**
      * Notifies listeners of a transaction having been added to mempool.
      *
@@ -108,13 +113,19 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex, const std::vector<CTransactionRef> &txnConflicted) {}
+    virtual void BlockConnected(
+        const CChainState& chainstate,
+        const std::shared_ptr<const CBlock> &block,
+        const CBlockIndex *pindex,
+        const std::vector<CTransactionRef> &txnConflicted) {}
     /**
      * Notifies listeners of a block being disconnected
      *
      * Called on a background thread.
      */
-    virtual void BlockDisconnected(const std::shared_ptr<const CBlock> &block) {}
+    virtual void BlockDisconnected(
+        const CChainState& chainstate,
+        const std::shared_ptr<const CBlock> &block) {}
     /**
      * Notifies listeners of the new active block chain on-disk.
      *
@@ -131,18 +142,18 @@ protected:
      *
      * Called on a background thread.
      */
-    virtual void ChainStateFlushed(const CBlockLocator &locator) {}
+    virtual void ChainStateFlushed(const CChainState& chainstate, const CBlockLocator &locator) {}
     /**
      * Notifies listeners of a block validation result.
      * If the provided CValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
      * callback was generated (not necessarily now)
      */
-    virtual void BlockChecked(const CBlock&, const CValidationState&) {}
+    virtual void BlockChecked(const CChainState& chainstate, const CBlock&, const CValidationState&) {}
     /**
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
-    virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    virtual void NewPoWValidBlock(const CChainState& chainstate, const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
     friend void ::RegisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterValidationInterface(CValidationInterface*);
     friend void ::UnregisterAllValidationInterfaces();
@@ -175,13 +186,13 @@ public:
     /** Unregister with mempool */
     void UnregisterWithMempoolSignals(CTxMemPool& pool);
 
-    void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
+    void UpdatedBlockTip(const CChainState& chainstate, const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef &);
-    void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
-    void BlockDisconnected(const std::shared_ptr<const CBlock> &);
-    void ChainStateFlushed(const CBlockLocator &);
-    void BlockChecked(const CBlock&, const CValidationState&);
-    void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+    void BlockConnected(const CChainState& chainstate, const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
+    void BlockDisconnected(const CChainState& chainstate, const std::shared_ptr<const CBlock> &);
+    void ChainStateFlushed(const CChainState& chainstate, const CBlockLocator &);
+    void BlockChecked(const CChainState& chainstate, const CBlock&, const CValidationState&);
+    void NewPoWValidBlock(const CChainState& chainstate, const CBlockIndex *, const std::shared_ptr<const CBlock>&);
 };
 
 CMainSignals& GetMainSignals();

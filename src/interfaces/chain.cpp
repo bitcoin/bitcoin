@@ -183,21 +183,25 @@ public:
     {
         m_notifications->TransactionRemovedFromMempool(tx);
     }
-    void BlockConnected(const std::shared_ptr<const CBlock>& block,
+    void BlockConnected(const CChainState& chainstate,
+        const std::shared_ptr<const CBlock>& block,
         const CBlockIndex* index,
         const std::vector<CTransactionRef>& tx_conflicted) override
     {
         m_notifications->BlockConnected(*block, tx_conflicted);
     }
-    void BlockDisconnected(const std::shared_ptr<const CBlock>& block) override
+    void BlockDisconnected(const CChainState& chainstate, const std::shared_ptr<const CBlock>& block) override
     {
         m_notifications->BlockDisconnected(*block);
     }
-    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
+    void ChainStateFlushed(const CChainState& chainstate, const CBlockLocator& locator) override
+    {
+        m_notifications->ChainStateFlushed(locator);
+    }
+    void UpdatedBlockTip(const CChainState& chainstate, const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
         m_notifications->UpdatedBlockTip();
     }
-    void ChainStateFlushed(const CBlockLocator& locator) override { m_notifications->ChainStateFlushed(locator); }
     Chain& m_chain;
     Chain::Notifications* m_notifications;
 };
