@@ -96,7 +96,7 @@ bool CAssetAllocation::UnserializeFromData(const vector<unsigned char> &vchData)
 bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
 	vector<unsigned char> vchData;
 	int nOut;
-	if (!IsAssetAllocationTx(tx.nVersion))
+	if (!IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
 	{
 		SetNull();
 		return false;
@@ -455,7 +455,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 
 	// unserialize assetallocation from txn, check for valid
 	CAssetAllocation theAssetAllocation(tx);
-	if(theAssetAllocation.IsNull())
+	if(theAssetAllocation.assetAllocationTuple.IsNull())
 	{
 		errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocation");
 		return error(errorMessage.c_str());
@@ -919,7 +919,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     
     // convert to hex string because otherwise cscript will push a cscriptnum which is 4 bytes but we want 8 byte hex representation of an int64 pushed
     const std::string amountHex = int_to_hex(amount);
-    
+    const std::string witnessVersionHex = int_to_hex(assetAllocationTuple.witnessAddress.nVersion);
     const std::string assetHex = int_to_hex(nAsset);
 
     
@@ -927,7 +927,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
 
 	CScript scriptData;
-	scriptData << OP_RETURN << ParseHex(assetHex) << assetAllocationTuple.witnessAddress.nVersion << assetAllocationTuple.witnessAddress.vchWitnessProgram << ParseHex(amountHex) << theAsset.vchContract << ParseHex(ethAddress);
+	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram << ParseHex(amountHex) << theAsset.vchContract << ParseHex(ethAddress);
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
@@ -1133,7 +1133,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_SEND, strWitness, vecSend);
+	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
 }
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -1517,7 +1517,7 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
         return true;
     CDBBatch batch(*this);
     for (const auto &key : mapAssetAllocations) {
-        if(key.second.IsNull()){
+        if(key.second.nBalance <= 0){
             batch.Erase(key.second.assetAllocationTuple);
         }
         else{

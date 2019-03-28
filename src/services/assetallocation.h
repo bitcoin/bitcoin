@@ -182,7 +182,6 @@ public:
 		return !(a == b);
 	}
 	inline void SetNull() { ClearAssetAllocation(); nBalance = 0;}
-	inline bool IsNull() const { return (nBalance == 0); }
 	bool UnserializeFromTx(const CTransaction &tx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void Serialize(std::vector<unsigned char>& vchData);
