@@ -4020,7 +4020,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of &quot;100 satos
 <context>
     <name>WalletController</name>
     <message>
-        <location filename="../walletcontroller.cpp" line="+68"/>
+        <location filename="../walletcontroller.cpp" line="+70"/>
         <source>Close wallet</source>
         <translation type="unfinished"></translation>
     </message>

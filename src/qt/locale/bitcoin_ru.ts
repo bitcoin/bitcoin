@@ -188,8 +188,16 @@
         <translation>Кошелёк зашифрован</translation>
     </message>
     <message>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Бумажник зашифрован. Помните, что шифрование не способно полностью защитить Ваши биткоины, которые могут быть украдены вредоносным ПО</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>Не удалось зашифровать бумажник</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Сбой шифрования кошелька из-за внутренней ошибки. Ваш кошелёк не был зашифрован.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -268,6 +276,10 @@
     <message>
         <source>Wallet:</source>
         <translation>Кошелёк</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Переиндексация блоков на диске...</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>

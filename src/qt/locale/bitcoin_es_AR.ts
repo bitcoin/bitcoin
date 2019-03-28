@@ -122,8 +122,20 @@
         <translation>Repetí la nueva Frase de Contraseña</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Mostrar contraseña</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Ingrese la nueva Frase de Contraseña de la billetera.&lt;br/&gt;Por favor use una Frase de Contraseña de &lt;b&gt;diez o más caracteres aleatorios &lt;/b&gt;, u&lt;b&gt; ocho o más palabras.</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Encriptar billetera</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Esta operación necesita su Frase de Contraseña de la billetera para desbloquearla. </translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -132,6 +144,26 @@
     <message>
         <source>Decrypt wallet</source>
         <translation>Desencriptar la billetera</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Cambiar Frase de Contraseña</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Ingrese la anterior contraseña y la nueva contraseña de la billetera</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Confirmar cifrado de la billetera</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Advertencia: si usted cifra su billetera y olvida su Frase de Contraseña, usted &lt;b&gt; PERDERÁ TODOS SUS BITCOINS&lt;/b&gt;!</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>¿Está usted seguro que desea cifrar su billetera?</translation>
     </message>
     </context>
 <context>

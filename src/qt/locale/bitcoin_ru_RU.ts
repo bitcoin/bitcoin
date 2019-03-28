@@ -486,12 +486,36 @@
         <translation>&amp;Адреса для получений</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Открыть Кошелек</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Открыть кошелек</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Закрыть Кошелек...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Закрыть кошелек</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Показать помощь по %1, чтобы получить список доступных параметров командной строки</translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>Кошелек по умолчанию</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Кошелек открывается &lt;b&gt;%1&lt;/b&gt;... </translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Не удалось открыть кошелек</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -959,7 +983,11 @@
         <source>Hide</source>
         <translation>Спрятать</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Не известно. Синхронизация заголовков (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -3078,6 +3106,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Закрыть кошелек</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Вы уверены, что хотите закрыть кошелек &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>

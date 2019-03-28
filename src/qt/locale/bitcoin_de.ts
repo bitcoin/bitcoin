@@ -486,12 +486,36 @@
         <translation>&amp;Empfangsadressen</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Wallet öffnen</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Eine Wallet öffnen</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Wallet schließen...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Wallet schließen</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Zeige den "%1"-Hilfetext, um eine Liste mit möglichen Kommandozeilenoptionen zu erhalten</translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>Standard Brieftasche</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Öffne Wallet&lt;b&gt;%1&lt;/b&gt; ...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Wallet öffnen fehlgeschlagen</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -959,7 +983,11 @@
         <source>Hide</source>
         <translation>Ausblenden</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Unbekannt. Synchronisiere Headers (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -3082,7 +3110,19 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
 </context>
 <context>
     <name>WalletController</name>
-    </context>
+    <message>
+        <source>Close wallet</source>
+        <translation>Wallet schließen</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Sind Sie sich sicher, dass Sie Ihre Brieftasche &lt;i&gt;%1&lt;/i&gt; schließen möchten?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Wenn Sie die Wallet zu lange schließen, kann es dazu kommen, dass Sie die gesamte Chain neu synchronisieren müssen, wenn Pruning aktiviert ist.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3213,6 +3253,10 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
     <message>
         <source>The %s developers</source>
         <translation>Die %s-Entwickler</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Kann kein Schlüssel für die Wechselgeld-Adresse generieren. Keine Schlüssel im internen Keypool und kann keine Schlüssel generieren.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3370,6 +3414,10 @@ Hinweis: Eine Gebühr von "100 Satoshis pro kB" bei einer Größe der Transaktio
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Angegebener Blöcke-Ordner "%s" existiert nicht.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Erstellung der PID-Datei '%s': %s ist nicht möglich</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>

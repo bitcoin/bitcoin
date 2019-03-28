@@ -177,7 +177,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Attenzione: perdendo la passphrase di un portamonete cifrato &lt;b&gt;TUTTI I PROPRI BITCOIN ANDRANNO PERSI&lt;/b&gt;!</translation>
+        <translation>Attenzione: perdendo la passphrase di un portafoglio cifrato &lt;b&gt;TUTTI I PROPRI BITCOIN ANDRANNO PERSI&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -193,7 +193,7 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>IMPORTANTE: qualsiasi backup del portafoglio effettuato in precedenza dovrà essere sostituito con il file del portamonete cifrato appena generato. Per ragioni di sicurezza, i precedenti backup del file del portafoglio non cifrato diventeranno inservibili non appena si inizierà ad utilizzare il nuovo portafoglio cifrato.</translation>
+        <translation>IMPORTANTE: qualsiasi backup del portafoglio effettuato in precedenza dovrà essere sostituito con il file del portafoglio cifrato appena generato. Per ragioni di sicurezza, i precedenti backup del file del portafoglio non cifrato diventeranno inservibili non appena si inizierà ad utilizzare il nuovo portafoglio cifrato.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -339,7 +339,7 @@
     </message>
     <message>
         <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
-        <translation>Il Proxy è &lt;b&gt;enabled&lt;/b&gt;:%1</translation>
+        <translation>Il Proxy è &lt;b&gt;abilitato&lt;/b&gt;:%1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -347,11 +347,11 @@
     </message>
     <message>
         <source>Backup wallet to another location</source>
-        <translation>Effettua il backup del portamonete</translation>
+        <translation>Effettua il backup del portafoglio</translation>
     </message>
     <message>
         <source>Change the passphrase used for wallet encryption</source>
-        <translation>Cambia la passphrase utilizzata per la cifratura del portamonete</translation>
+        <translation>Cambia la passphrase utilizzata per la cifratura del portafoglio</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
@@ -486,12 +486,36 @@
         <translation>Indirizzi di &amp;ricezione</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Apri il Portafoglio</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Apri un portafoglio</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Chiudi il Portafoglio...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Chiudi il portafoglio</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostra il messaggio di aiuto di %1 per ottenere una lista di opzioni di comando per Bitcoin </translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>Portafoglio predefinito:</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Aprendo il Portafoglio&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Apertura Portafoglio Fallita</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -579,7 +603,7 @@
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>Chiava privata (1 disabilitata 1)</translation>
+        <translation>Chiava privata &lt;b&gt; disabilitata &lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -784,8 +808,16 @@
         <translation>L'indirizzo inserito "%1" non è un indirizzo bitcoin valido.</translation>
     </message>
     <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>L'indirizzo "%1" esiste già come indirizzo di ricezione con l'etichetta "%2" e quindi non può essere aggiunto come indirizzo di invio.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>L'indirizzo inserito "%1" è già nella rubrica con l'etichetta "%2".</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
-        <translation>Impossibile sbloccare il portamonete.</translation>
+        <translation>Impossibile sbloccare il portafoglio.</translation>
     </message>
     <message>
         <source>New key generation failed.</source>
@@ -951,7 +983,11 @@
         <source>Hide</source>
         <translation>Nascondi</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Sconosciuto. Sincronizzando Headers (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1196,7 +1232,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
-        <translation>Le impostazioni sulla riga di comando o nell'archivio di configurazione hanno priecedenza su quelle impostate in questo pannello:</translation>
+        <translation>Le impostazioni sulla riga di comando o nell'archivio di configurazione hanno precedenza su quelle impostate in questo pannello:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1259,7 +1295,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Le informazioni visualizzate potrebbero non essere aggiornate. Il portamonete si sincronizza automaticamente con la rete Bitcoin una volta stabilita una connessione, ma questo processo non è ancora stato completato.</translation>
+        <translation>Le informazioni visualizzate potrebbero non essere aggiornate. Il portafoglio si sincronizza automaticamente con la rete Bitcoin una volta stabilita una connessione, ma questo processo non è ancora stato completato.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1342,11 +1378,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
-        <translation>'bitcoin: //' non è un URI valido. Usa invece "bitcoin:".</translation>
+        <translation>'bitcoin://' non è un URI valido. Usa invece 'bitcoin:'.</translation>
     </message>
     <message>
         <source>You are using a BIP70 URL which will be unsupported in the future.</source>
-        <translation>Sta usando un'URL BIP70 che, in futuro, sarà obsoleto</translation>
+        <translation>Stai usando un URL BIP70 che, in futuro, non sarà piú supportato.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1354,7 +1390,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>Non posso completare il pagamento perché non è stato incluso in fase di compilazione del supporto per BIP70.</translation>
+        <translation>Non posso completare la richiesta di pagamento perché il supporto per BIP70 non è stato incluso in fase di compilazione.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1550,8 +1586,16 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
 <context>
     <name>QObject::QObject</name>
     <message>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation>Errore durante l'analisi degli argomenti della riga di comando: %1.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Errore: La cartella dati "%1" specificata non esiste.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Errore: impossibile analizzare il file di configurazione: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1837,7 +1881,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and %1 to clear screen.</source>
-        <translation>Usa le flecce su e giú per navigare nella storia, e %1 per pulire lo schermo</translation>
+        <translation>Usa le frecce su e giú per navigare nella storia, e %1 per pulire lo schermo</translation>
     </message>
     <message>
         <source>Type %1 for an overview of available commands.</source>
@@ -1845,11 +1889,11 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>For more information on using this console type %1.</source>
-        <translation>Per maggiori informazioni su come usare questa console digita %1</translation>
+        <translation>Per maggiori informazioni su come usare questa console digita %1.</translation>
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>ATTENZIONE: I truffatori sono stati attivi in quest'area, cercando di convincere gli utenti a digitare linee di comando e rubando i contenuti dei loro portafogli. Non usare questa console senza la piena consapevolezza delle ramificazioni di un comando.</translation>
+        <translation>ATTENZIONE: I truffatori sono stati attivi in quest'area, cercando di convincere gli utenti a digitare linee di comando e rubando i contenuti dei loro portafogli. Non usare questa console senza la piena consapevolezza delle conseguenze di un comando.</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -1858,6 +1902,10 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Executing command without any wallet</source>
         <translation>Esecuzione del comando senza alcun portafoglio</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Esecuzione del comando usando il wallet "%1"</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2189,7 +2237,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Quando il volume delle transazioni è minore dello spazio nei blocchi, i minatori e in nidi di relay potrebbero imporre una commissione minima. Va benissimo pagare solo questa commissione minima, ma tieni presente che questo potrebbe risultare in una transazione che non si confermano mai se la richiesta di transazioni bitcoin dovesse superare la velocità con cui la rete riesce ad elaborarle.</translation>
+        <translation>Quando il volume delle transazioni è minore dello spazio nei blocchi, i minatori e in nodi di relay potrebbero imporre una commissione minima. Va benissimo pagare solo questa commissione minima, ma tieni presente che questo potrebbe risultare in una transazione che, se la richiesta di transazioni bitcoin dovesse superare la velocità con cui la rete riesce ad elaborarle, non viene mai confermata.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -2205,7 +2253,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
-        <translation>Con Replace-By-Fee (BIP-125) si puo' aumentare la commissione sulla transazione dopo averla inviata. Senza questa, una commissione piu' alta e' consigliabile per compensare l'aumento del rischio dovuto al ritardo della transazione.</translation>
+        <translation>Con Replace-By-Fee (BIP-125) si puó aumentare la commissione sulla transazione dopo averla inviata. Senza questa, una commissione piú alta è consigliabile per compensare l'aumento del rischio dovuto al ritardo della transazione.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2269,7 +2317,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
-        <translation>Si puo' aumentare la commissione successivamente (segnalando Replace-By-Fee, BIP-125).</translation>
+        <translation>Si puó aumentare la commissione successivamente (segnalando Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation>dal portafoglio %1</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2345,7 +2397,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>L'indirizzo selezionato per il cambio non fa parte di questo portafoglio. Alcuni o tutti i fondi nel tuo portafoglio potrebbero essere inviati a questo indirizzo. Sei sicuro?</translation>
+        <translation>L'indirizzo selezionato per il resto non fa parte di questo portafoglio. Alcuni o tutti i fondi nel tuo portafoglio potrebbero essere inviati a questo indirizzo. Sei sicuro?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2424,7 +2476,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>Messaggio incluso nel bitcoin URI e che sarà memorizzato con la transazione per vostro riferimento. Nota: Questo messaggio non sarà inviato attraverso la rete Bitcoin.</translation>
+        <translation>Messaggio incluso nel bitcoin URI e che sarà memorizzato con la transazione per tuo riferimento. Nota: Questo messaggio non sarà inviato attraverso la rete Bitcoin.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2469,11 +2521,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>È possibile firmare messaggi/accordi con i propri indirizzi in modo da dimostrare di poter ricevere bitcoin attraverso di essi. Si consiglia di prestare attenzione a non firmare dichiarazioni vaghe o casuali, attacchi di phishing potrebbero cercare di indurre ad apporre la firma su di esse. Si raccomanda di firmare esclusivamente dichiarazioni completamente dettagliate e delle quali si condivide in pieno il contenuto.</translation>
+        <translation>È possibile firmare messaggi/accordi con i propri indirizzi in modo da dimostrare di poter ricevere bitcoin attraverso di essi. Presta attenzione a non firmare dichiarazioni vaghe o casuali, perché attacchi di phishing potrebbero cercare di indurti ad apporre la firma su di esse. Firma esclusivamente dichiarazioni completamente dettagliate e delle quali condividi in pieno il contenuto.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
-        <translation>L'indirizzo Bitcoin da utilizzare per firmare il messaggio</translation>
+        <translation>Indirizzo Bitcoin da utilizzare per firmare il messaggio</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2561,7 +2613,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Wallet unlock was cancelled.</source>
-        <translation>Sblocco del portamonete annullato.</translation>
+        <translation>Sblocco del portafoglio annullato.</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -3055,12 +3107,24 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
 </context>
 <context>
     <name>WalletController</name>
-    </context>
+    <message>
+        <source>Close wallet</source>
+        <translation>Chiudi il portafoglio</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Sei sicuro di voler chiudere il portafoglio &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Chiudere il portafoglio per troppo tempo può causare la resincronizzazione dell'intera catena se la modalità "pruning" è attiva.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
         <source>No wallet has been loaded.</source>
-        <translation>Non è stato caricato alcun portamonete.</translation>
+        <translation>Non è stato caricato alcun portafoglio.</translation>
     </message>
 </context>
 <context>
@@ -3122,11 +3186,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Backup Wallet</source>
-        <translation>Backup Portamonete</translation>
+        <translation>Backup Portafoglio</translation>
     </message>
     <message>
         <source>Wallet Data (*.dat)</source>
-        <translation>Dati Portamonete (*.dat)</translation>
+        <translation>Dati Portafoglio (*.dat)</translation>
     </message>
     <message>
         <source>Backup Failed</source>
@@ -3134,7 +3198,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>There was an error trying to save the wallet data to %1.</source>
-        <translation>Si è verificato un errore durante il salvataggio dei dati del portamonete in %1.</translation>
+        <translation>Si è verificato un errore durante il salvataggio dei dati del portafoglio in %1.</translation>
     </message>
     <message>
         <source>Backup Successful</source>
@@ -3142,7 +3206,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>The wallet data was successfully saved to %1.</source>
-        <translation>Il portamonete è stato correttamente salvato in %1.</translation>
+        <translation>Il portafoglio è stato correttamente salvato in %1.</translation>
     </message>
     <message>
         <source>Cancel</source>
@@ -3157,15 +3221,15 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
-        <translation>La modalità prune è configurata al di sotto del minimo di %d MB. Si prega di utilizzare un valore più elevato.</translation>
+        <translation>La modalità "prune" è configurata al di sotto del minimo di %d MB. Si prega di utilizzare un valore più elevato.</translation>
     </message>
     <message>
         <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
-        <translation>Prune: l'ultima sincronizzazione del wallet risulta essere oltre la riduzione dei dati. È necessario eseguire un -reindex (scaricare nuovamente la blockchain in caso di nodo pruned)</translation>
+        <translation>Prune: l'ultima sincronizzazione del portafoglio risulta essere precedente alla eliminazione dei dati per via della modalità "pruning". È necessario eseguire un -reindex (scaricare nuovamente la blockchain in caso di nodo pruned).</translation>
     </message>
     <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Non è possibile un Rescan in modalità pruned. Sarà necessario utilizzare -reindex che farà scaricare nuovamente tutta la blockchain.</translation>
+        <translation>Non è possibile un rescan in modalità pruned. Sarà necessario utilizzare -reindex che farà scaricare nuovamente tutta la blockchain.</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
@@ -3188,12 +3252,16 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
         <translation>Sviluppatori di %s</translation>
     </message>
     <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Impossibile generare una chiave per il resto. Non c'è nessuna chiave nel keypool interno ed è impossibile generare altre chiavi.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Non è possibile ottenere i dati sulla cartella %s. Probabilmente %s è già in esecuzione.</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
-        <translation>Non e' possibile fornire connessioni specifiche e contemporaneamente usare addrman per trovare connessioni uscenti.  </translation>
+        <translation>Non è possibile fornire connessioni specifiche e contemporaneamente usare addrman per trovare connessioni uscenti.  </translation>
     </message>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
@@ -3277,7 +3345,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Error initializing wallet database environment %s!</source>
-        <translation>Errore durante l'inizializzazione dell'ambiente del database del portamonete %s!</translation>
+        <translation>Errore durante l'inizializzazione dell'ambiente del database del portafoglio %s!</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -3285,11 +3353,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
-        <translation>Errore caricamento %s: Portafoglio corrotto</translation>
+        <translation>Errore caricamento %s: portafoglio corrotto</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet requires newer version of %s</source>
-        <translation>Errore caricamento %s: il Portafoglio richiede una versione aggiornata di %s</translation>
+        <translation>Errore caricamento %s: il portafoglio richiede una versione aggiornata di %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -3338,6 +3406,10 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>La cartella specificata "%s" non esiste.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Impossibile creare il PID file '%s': %s</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3405,7 +3477,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
-        <translation>Il portamonete necessita di essere riscritto: riavviare %s per completare</translation>
+        <translation>Il portafoglio necessita di essere riscritto: riavviare %s per completare</translation>
     </message>
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
@@ -3425,7 +3497,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
-        <translation>Errore durante lalettura del database. Arresto in corso.</translation>
+        <translation>Errore durante la lettura del database. Arresto in corso.</translation>
     </message>
     <message>
         <source>Error upgrading chainstate database</source>
@@ -3433,7 +3505,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Error: Disk space is low for %s</source>
-        <translation>Errore; Lo spazio sul disco è troppo basso per %s</translation>
+        <translation>Errore: lo spazio sul disco è troppo poco per %s</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3477,7 +3549,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Specified -walletdir "%s" is a relative path</source>
-        <translation>-walletdir "%s" specificata e' un path relativo</translation>
+        <translation>-walletdir "%s" specificata è un path relativo</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
@@ -3486,7 +3558,8 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     <message>
         <source>The specified config file %s does not exist
 </source>
-        <translation>Lo specificato archivio di configurazione %s non esiste</translation>
+        <translation>Lo specificato archivio di configurazione %s non esiste
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3522,7 +3595,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Wallet %s resides outside wallet directory %s</source>
-        <translation>Il portafoglio %s e' situato fuori dalla directory del portafoglio %s </translation>
+        <translation>Il portafoglio %s è situato fuori dalla directory del portafoglio %s </translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3534,7 +3607,7 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
-        <translation>Eliminazione dal portamonete di tutte le transazioni...</translation>
+        <translation>Eliminazione dal portafoglio di tutte le transazioni...</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -3618,11 +3691,11 @@ Nota: poiché la commissione è calcolata su base per byte, una commissione di "
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Caricamento portamonete...</translation>
+        <translation>Caricamento portafoglio...</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
-        <translation>Non è possibile effettuare il downgrade del portamonete</translation>
+        <translation>Non è possibile effettuare il downgrade del portafoglio</translation>
     </message>
     <message>
         <source>Rescanning...</source>
