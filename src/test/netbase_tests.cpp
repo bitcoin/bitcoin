@@ -59,6 +59,7 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(ResolveIP("FC00::").IsRFC4193());
     BOOST_CHECK(ResolveIP("2001::2").IsRFC4380());
     BOOST_CHECK(ResolveIP("2001:10::").IsRFC4843());
+    BOOST_CHECK(ResolveIP("2001:20::").IsRFC7343());
     BOOST_CHECK(ResolveIP("FE80::").IsRFC4862());
     BOOST_CHECK(ResolveIP("64:FF9B::").IsRFC6052());
     BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor());
