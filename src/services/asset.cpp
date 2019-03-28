@@ -174,39 +174,41 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
     nAssetFromScript |= static_cast<uint32_t>(vvchArgs[0][1]) << 16;
     nAssetFromScript |= static_cast<uint32_t>(vvchArgs[0][0]) << 24;
             
-    if(vvchArgs[1].size() != 1){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address version - Wrong argument size %d\n", vvchArgs[1].size());
-        return false;
-    }
-    if(vvchArgs[2].empty()){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
-        return false;
-    }     
-    unsigned char nWitnessVersion = static_cast<unsigned char>(vvchArgs[1][0]);
-
-    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[2]);   
-    if(vvchArgs[3].size() != 8){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: nAmountFromScript - Wrong argument size %d\n", vvchArgs[3].size());
+    if(vvchArgs[1].size() != 8){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: nAmountFromScript - Wrong argument size %d\n", vvchArgs[1].size());
         return false; 
     }
-    nAmountFromScript  = static_cast<uint64_t>(vvchArgs[3][7]);
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][6]) << 8;
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][5]) << 16;
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][4]) << 24; 
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][3]) << 32;  
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][2]) << 40;  
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][1]) << 48;  
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[3][0]) << 56;   
-    if(vvchArgs[4].empty()){
+    nAmountFromScript  = static_cast<uint64_t>(vvchArgs[1][7]);
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][6]) << 8;
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][5]) << 16;
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][4]) << 24; 
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][3]) << 32;  
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][2]) << 40;  
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][1]) << 48;  
+    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][0]) << 56;   
+    if(vvchArgs[2].empty()){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Contract empty\n");
         return false;
     }
-    vchContract = vvchArgs[4];
-    if(vvchArgs[5].empty()){
+    vchContract = vvchArgs[2];
+    if(vvchArgs[3].empty()){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum address empty\n");
         return false; 
     }
-    vchEthAddress = vvchArgs[5]; 
+    vchEthAddress = vvchArgs[3]; 
+    if(vvchArgs[4].size() != 1){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address version - Wrong argument size %d\n", vvchArgs[5].size());
+        return false;
+    }
+    const unsigned char &nWitnessVersion = static_cast<unsigned char>(vvchArgs[4][0]);
+    
+    if(vvchArgs[5].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
+        return false;
+    }     
+    
+
+    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[5]);   
     return true; 
 }
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
