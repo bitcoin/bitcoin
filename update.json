@@ -1,29 +1,29 @@
 {  
    "Linux32":{  
-      "Url":"https://github.com/Crowndev/crowncoin/releases/download/v0.12.5.3/Crown-0.12.5.3-Linux32.zip",
-      "sha256sum":"d163e9b79d0dd3be0a05b6e9727d013914d627b42d938fd54d26580b8c6646e0"
+      "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.13.0/Crown-0.13.0.0-Linux32.zip",
+      "sha256sum":"f823e59204eb608fe16305be2ba8c3c4507d4f38ac9c20b62809e811d663c9b2"
    },
    "Linux64":{  
-      "Url":"https://github.com/Crowndev/crowncoin/releases/download/v0.12.5.3/Crown-0.12.5.3-Linux64.zip",
-      "sha256sum":"a1e11908c2b1a83bb4cf2aec571dcf275601ec2fcfd640ed28e852d37a00faf6"
+      "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.13.0/Crown-0.13.0.0-Linux64.zip",
+      "sha256sum":"23cde1605d2f9e1b218a9f6e7aa53df09cece7a628fae072fb921a785f883772"
    },
    "Osx":{
-       "Url":"https://github.com/Crowndev/crowncoin/releases/download/v0.12.5.3/Crown-0.12.5.3-Osx.zip",
-       "sha256sum":"2752f575135000705f3a22e8a94a645dd8402ce0849da0527130ce23b731bb9d"
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.13.0/Crown-0.13.0.0-Osx.zip",
+       "sha256sum":"efe2c140f26fd43fe4a37dce683b9a55e266c911485613a8bf4c0847fd32d413"
    },
    "Win32":{
-       "Url":"https://github.com/Crowndev/crowncoin/releases/download/v0.12.5.3/Crown-0.12.5.3-Win32.zip",
-       "sha256sum":"d6fad34336d3cf7b7803831db90366a5fa176f0ff71a171b86dc7e8ae06bf1a9"
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.13.0/Crown-0.13.0.0-Win32.zip",
+       "sha256sum":"a650dfa4542f1d68cb4180ff08eef4a88644cbb5585a2208b27c746ce9fd1c86"
    },
    "Win64":{
-       "Url":"https://github.com/Crowndev/crowncoin/releases/download/v0.12.5.3/Crown-0.12.5.3-Win64.zip",
-       "sha256sum":"c9264e367c694c503bf6a01321191f18b036970b8a520834146d67a6eb78c221"
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.13.0/Crown-0.13.0.0-Win64.zip",
+       "sha256sum":"64bc08ac1c129df9e79c8d1d658322372c088967114ab7bfc1ff935065906576"
    },
    "RaspberryPi":{
-       "Url":"https://github.com/Crowndev/crowncoin/releases/download/v0.12.5.3/Crown-0.12.5.3-RaspberryPi.zip",
-       "sha256sum":"fc38dc6eddee2d8b22cab72ae983e36f22afbe7a5d1e587a9c00ee209e3d640c"
+       "Url":"https://github.com/Crowndev/crown-core/releases/download/v0.13.0/Crown-0.13.0.0-RaspberryPi.zip",
+       "sha256sum":"dc9f1550ebf33583cd1ac5c7b2f5d7df1736f62418fa71d7ed200b2c91c66262"
    },
 
-   "Version":120503,
+   "Version":130000,
    "NeedToBeUpdated": true
 }
