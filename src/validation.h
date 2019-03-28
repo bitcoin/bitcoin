@@ -21,6 +21,7 @@
 #include <txmempool.h> // For CTxMemPool::cs
 #include <txdb.h>
 #include <versionbits.h>
+#include <serialize.h>
 
 #include <algorithm>
 #include <atomic>
