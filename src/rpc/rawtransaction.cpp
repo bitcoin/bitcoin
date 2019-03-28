@@ -72,7 +72,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
 
             "\nNOTE: By default this function only works for mempool transactions. If the -txindex option is\n"
             "enabled, it also works for blockchain transactions. If the block which contains the transaction\n"
-            "is known, its hash can be provided even for nodes without -txindex. Note that if a blockhash is\n"
+            "is known, its hash can be provided even for nodes without -txindex or -assetindex can also be enabled which will lookup the blockhash from the txid. Note that if a blockhash is\n"
             "provided, only that block will be searched and if the transaction is in the mempool or other\n"
             "blocks, or if this node does not have the given block available, the transaction will not be found.\n"
             "DEPRECATED: for now, it also works for transactions with unspent outputs.\n"
@@ -223,7 +223,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
             "\nNOTE: By default this function only works sometimes. This is when there is an\n"
             "unspent output in the utxo for this transaction. To make it always work,\n"
             "you need to maintain a transaction index, using the -txindex command line option or\n"
-            "specify the block in which the transaction is included manually (by blockhash).\n"
+            "specify the block in which the transaction is included manually (by blockhash) or -assetindex can also be enabled which will lookup the blockhash from the txid.\n"
             "\nArguments:\n"
             "1. \"txids\"       (string) A json array of txids to filter\n"
             "    [\n"
@@ -258,7 +258,15 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-    } else {
+        // SYSCOIN
+    } else if(fAssetIndex && setTxids.size() == 1){      
+        LOCK(cs_main);
+        uint256 blockhash;
+        if(!passetindexdb->ReadBlockHash(oneTxid, blockhash))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
+        pblockindex = LookupBlockIndex(blockhash);     
+    }
+    else {
         LOCK(cs_main);
 
         // Loop through txids and try to find which block they're in. Exit loop once a block is found.

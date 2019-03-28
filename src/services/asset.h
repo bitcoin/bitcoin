@@ -55,7 +55,6 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchContract, std::vector<unsigned char> &vchEthAddress);
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
-std::string GetSyscoinTransactionDescription(const CTransaction& tx, std::string& responseEnglish, const char &type, std::string& responseGUID);
 bool IsOutpointMature(const COutPoint& outpoint);
 UniValue syscointxfund_helper(const int &nVersion, const std::string &vchWitness, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();

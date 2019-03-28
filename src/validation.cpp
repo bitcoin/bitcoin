@@ -742,10 +742,12 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         nHeight = chainActive.Height()+1;   
     std::string errorMessage;
     bool good = true;
-    if(!IsSyscoinTx(tx.nVersion))
-        return true;
+
     bOverflow=false;
     if (block.vtx.empty()) {
+        if(!IsSyscoinTx(tx.nVersion))
+            return true;
+        
         if(tx.IsCoinBase())
             return true;
        
@@ -768,20 +770,18 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         return true;
     }
     else if (!block.vtx.empty()) {
-    
         for (unsigned int i = 0; i < block.vtx.size(); i++)
         {
 
             good = true;
-            const CTransaction &tx = *(block.vtx[i]);
-            if(tx.IsCoinBase())
-                continue;
+            const CTransaction &tx = *(block.vtx[i]);        
             if(fAssetIndex){
                 if(!passetindexdb->WriteBlockHash(tx.GetHash(), block.GetHash())){
                     return state.DoS(0, false, REJECT_INVALID, "Could not write block hash to asset index db");
                 }
             }                
-        
+            if(!IsSyscoinTx(tx.nVersion))
+                continue;      
             if (IsAssetAllocationTx(tx.nVersion))
             {
                 errorMessage.clear();
