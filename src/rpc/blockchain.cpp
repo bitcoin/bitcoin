@@ -15,6 +15,7 @@
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <node/coinstats.h>
+#include <node/utxo_snapshot.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -2245,6 +2246,113 @@ static UniValue getblockfilter(const JSONRPCRequest& request)
     return ret;
 }
 
+/**
+ * Serialize the UTXO set to a file for loading elsewhere.
+ *
+ * @see SnapshotMetadata
+ */
+UniValue dumptxoutset(const JSONRPCRequest& request)
+{
+    RPCHelpMan{
+        "dumptxoutset",
+        "\nWrite the serialized UTXO set to disk.\n"
+        "Incidentally flushes the latest coinsdb (leveldb) to disk.\n",
+        {
+            {"path",
+                RPCArg::Type::STR,
+                RPCArg::Optional::NO,
+                /* default_val */ "",
+                "path to the output file. If relative, will be prefixed by datadir."},
+        },
+        RPCResult{
+            "{\n"
+            "  \"coins_written\": n,   (numeric) the number of coins written in the snapshot\n"
+            "  \"base_hash\": \"...\",   (string) the hash of the base of the snapshot\n"
+            "  \"base_height\": n,     (string) the height of the base of the snapshot\n"
+            "  \"path\": \"...\"         (string) the absolute path that the snapshot was written to\n"
+            "]\n"
+        },
+        RPCExamples{
+            HelpExampleCli("dumptxoutset", "utxo.dat")
+        }
+    }.Check(request);
+
+    fs::path path = fs::absolute(request.params[0].get_str(), GetDataDir());
+    // Write to a temporary path and then move into `path` on completion
+    // to avoid confusion due to an interruption.
+    fs::path temppath = fs::absolute(request.params[0].get_str() + ".incomplete", GetDataDir());
+
+    if (fs::exists(path)) {
+        throw JSONRPCError(
+            RPC_INVALID_PARAMETER,
+            path.string() + " already exists. If you are sure this is what you want, "
+            "move it out of the way first");
+    }
+
+    FILE* file{fsbridge::fopen(temppath, "wb")};
+    CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
+    std::unique_ptr<CCoinsViewCursor> pcursor;
+    CCoinsStats stats;
+    CBlockIndex* tip;
+
+    {
+        // We need to lock cs_main to ensure that the coinsdb isn't written to
+        // between (i) flushing coins cache to disk (coinsdb), (ii) getting stats
+        // based upon the coinsdb, and (iii) constructing a cursor to the
+        // coinsdb for use below this block.
+        //
+        // Cursors returned by leveldb iterate over snapshots, so the contents
+        // of the pcursor will not be affected by simultaneous writes during
+        // use below this block.
+        //
+        // See discussion here:
+        //   https://github.com/bitcoin/bitcoin/pull/15606#discussion_r274479369
+        //
+        LOCK(::cs_main);
+
+        ::ChainstateActive().ForceFlushStateToDisk();
+
+        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats)) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
+        }
+
+        pcursor = std::unique_ptr<CCoinsViewCursor>(::ChainstateActive().CoinsDB().Cursor());
+        tip = LookupBlockIndex(stats.hashBlock);
+        CHECK_NONFATAL(tip);
+    }
+
+    SnapshotMetadata metadata{tip->GetBlockHash(), stats.coins_count, tip->nChainTx};
+
+    afile << metadata;
+
+    COutPoint key;
+    Coin coin;
+    unsigned int iter{0};
+
+    while (pcursor->Valid()) {
+        if (iter % 5000 == 0 && !IsRPCRunning()) {
+            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Shutting down");
+        }
+        ++iter;
+        if (pcursor->GetKey(key) && pcursor->GetValue(coin)) {
+            afile << key;
+            afile << coin;
+        }
+
+        pcursor->Next();
+    }
+
+    afile.fclose();
+    fs::rename(temppath, path);
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("coins_written", stats.coins_count);
+    result.pushKV("base_hash", tip->GetBlockHash().ToString());
+    result.pushKV("base_height", tip->nHeight);
+    result.pushKV("path", path.string());
+    return result;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -2281,6 +2389,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "waitforblock",           &waitforblock,           {"blockhash","timeout"} },
     { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
     { "hidden",             "syncwithvalidationinterfacequeue", &syncwithvalidationinterfacequeue, {} },
+    { "hidden",             "dumptxoutset",           &dumptxoutset,           {"path"} },
 };
 // clang-format on
 
