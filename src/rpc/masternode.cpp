@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <univalue.h>
 #include "wallet/wallet.h"
+#include "wallet/rpcwallet.h"
 UniValue masternodelist(const JSONRPCRequest& request);
 
 bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException);
