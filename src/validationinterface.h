@@ -29,7 +29,7 @@ enum class MemPoolRemovalReason;
 // These functions dispatch to one or all registered wallets
 
 /** Register a wallet to receive updates from core */
-void RegisterValidationInterface(CValidationInterface* pwalletIn);
+void RegisterValidationInterface(CValidationInterface* pwalletIn) LOCKS_EXCLUDED(cs_main);
 /** Unregister a wallet from core */
 void UnregisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister all wallets from core */
