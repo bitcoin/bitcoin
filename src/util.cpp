@@ -90,6 +90,7 @@ bool fLiteMode = false;
 bool fZMQAssetAllocation = false;
 bool fZMQAsset = false;
 bool fAssetIndex = false;
+bool fBlockIndex = false;
 int fAssetIndexPageSize = 25;
 std::vector<uint32_t> fAssetIndexGuids; 
 uint32_t fGethSyncHeight = 0;

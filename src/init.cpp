@@ -463,6 +463,7 @@ void SetupServerArgs()
     gArgs.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-blockindex=<n>", strprintf("Index Transactions based on Block hash for historical information. Useful when calling GetRawTransaction(only need to pass in txid to lookup raw transaction and do not need txindex) and Asset Indexed lookups (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindexpagesize=<n>", strprintf("Page size of results for Asset index, should match the paging mechanism of the consuming client. (10-1000, default: 25). Used in conjunction with -assetindex=1."), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma seperated. Used in conjunction with -assetindex=1. Leave empty for all."), false, OptionsCategory::OPTIONS);
       
@@ -1592,6 +1593,7 @@ bool AppInitMain()
                 }                
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
                 fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
+                fBlockIndex = gArgs.GetBoolArg("-blockindex", false);
                 if(fAssetIndex)
                     passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
                     
