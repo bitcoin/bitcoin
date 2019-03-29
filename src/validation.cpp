@@ -4091,13 +4091,14 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     return true;
 }
 
-bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
+bool CChainState::ReplayBlocks(const CChainParams& params)
 {
     LOCK(cs_main);
 
-    CCoinsViewCache cache(view);
+    CCoinsView& db = this->CoinsDB();
+    CCoinsViewCache cache(&db);
 
-    std::vector<uint256> hashHeads = view->GetHeadBlocks();
+    std::vector<uint256> hashHeads = db.GetHeadBlocks();
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
@@ -4155,10 +4156,6 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
     cache.Flush();
     uiInterface.ShowProgress("", 100, false);
     return true;
-}
-
-bool ReplayBlocks(const CChainParams& params, CCoinsView* view) {
-    return ::ChainstateActive().ReplayBlocks(params, view);
 }
 
 //! Helper for CChainState::RewindBlockIndex
