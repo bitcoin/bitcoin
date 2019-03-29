@@ -4021,6 +4021,8 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
 {
     AssertLockNotHeld(cs_main);
 
+    Chainstate* chainstate = WITH_LOCK(::cs_main, return &this->GetChainstateForNewBlock(block->GetHash()));
+
     {
         CBlockIndex *pindex = nullptr;
         if (new_block) *new_block = false;
@@ -4038,7 +4040,8 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         bool ret = CheckBlock(*block, state, GetConsensus());
         if (ret) {
             // Store to disk
-            ret = ActiveChainstate().AcceptBlock(block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
+            ret = chainstate->AcceptBlock(
+                block, state, &pindex, force_processing, nullptr, new_block, min_pow_checked);
         }
         if (!ret) {
             GetMainSignals().BlockChecked(*block, state);
@@ -4046,10 +4049,12 @@ bool ChainstateManager::ProcessNewBlock(const std::shared_ptr<const CBlock>& blo
         }
     }
 
-    NotifyHeaderTip(ActiveChainstate());
+    if (chainstate == &this->ActiveChainstate()) {
+        NotifyHeaderTip(*chainstate);
+    }
 
     BlockValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!ActiveChainstate().ActivateBestChain(state, block)) {
+    if (!chainstate->ActivateBestChain(state, block)) {
         return error("%s: ActivateBestChain failed (%s)", __func__, state.ToString());
     }
 
@@ -5541,6 +5546,29 @@ SnapshotCompletionResult ChainstateManager::MaybeCompleteSnapshotValidation(
     this->MaybeRebalanceCaches();
 
     return SnapshotCompletionResult::SUCCESS;
+}
+
+Chainstate& ChainstateManager::GetChainstateForNewBlock(const uint256& blockhash)
+{
+    AssertLockHeld(::cs_main);
+    // Early return to avoid unnecessary blockindex lookup when assumeutxo is not in use.
+    if (!m_snapshot_chainstate) {
+        return *Assert(m_ibd_chainstate);
+    }
+
+    const auto* pblock{m_blockman.LookupBlockIndex(blockhash)};
+    // If pblock is null, we haven't seen the header for this block.
+    // Because we expect to have received the headers for the IBD chain
+    // contents before receiving blocks, this means that any block for
+    // which we don't have headers should go in the snapshot chain.
+    //
+    // Note that searching the snapshot chain (as below) implicitly searches the ibd
+    // chain, since the former includes the latter.
+    if (m_snapshot_chainstate &&
+            (pblock == nullptr || !m_snapshot_chainstate->m_chain.Contains(pblock))) {
+        return *m_snapshot_chainstate.get();
+    }
+    return *Assert(m_ibd_chainstate);
 }
 
 Chainstate& ChainstateManager::ActiveChainstate() const
