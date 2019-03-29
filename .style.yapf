@@ -55,7 +55,7 @@ blank_line_before_nested_class_or_def=False
 coalesce_brackets=False
 
 # The column limit.
-column_limit=79
+column_limit=160
 
 # The style for continuation alignment. Possible values are:
 #
