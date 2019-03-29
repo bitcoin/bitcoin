@@ -24,3 +24,5 @@ are always checked by hash.
 
 You can find more information on this process in the `assumeutxo` design
 document (<https://github.com/bitcoin/bitcoin/blob/master/doc/design/assumeutxo.md>).
+
+`getchainstates` has been added to aid in monitoring the assumeutxo sync process.
