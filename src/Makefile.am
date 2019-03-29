@@ -9,6 +9,8 @@ AM_CXXFLAGS = $(DEBUG_CXXFLAGS) $(HARDENED_CXXFLAGS) $(WARN_CXXFLAGS) $(NOWARN_C
 AM_CPPFLAGS = $(DEBUG_CPPFLAGS) $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
+CLEANFILES =
+LIBBITCOIN_RUST_LIBS =
 
 if EMBEDDED_UNIVALUE
 LIBUNIVALUE = univalue/libunivalue.la
@@ -33,6 +35,9 @@ LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
+if ENABLE_RUSTY
+LIBBITCOIN_RUSTY = rusty/librusty.a
+endif
 if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
@@ -365,6 +370,22 @@ libbitcoin_wallet_tool_a_SOURCES = \
   wallet/wallettool.cpp \
   $(BITCOIN_CORE_H)
 
+# rustc only reqires the main .rs file as input, but rustc must also be invoked
+# if any of the other files change. List the main file first, then targets can
+# depend on $(LIBBITCOIN_RUSTY_SRCS), but only build the first source file ($<).
+LIBBITCOIN_RUSTY_SRCS= \
+  rusty/src/lib.rs
+
+# We force overflow checks on so that any integer overflows result in a panic
+# instead of, eg, attempting to alloc 4GB of memory (though we will catch such
+# an alloc and refuse it, generating a panic instead).
+# Also force panics to unwind (instead of calling abort()) as we want to catch
+# panics in the Rust threads and simply close the thread, instead of bringing
+# down the rest of Bitcoin Core.
+$(LIBBITCOIN_RUSTY): $(LIBBITCOIN_RUSTY_SRCS)
+	$(RUSTC) --crate-name rusty $< --crate-type=staticlib --emit=link $(RUST_FLAGS) -C overflow-checks=on -C panic=unwind --out-dir $(@D)
+	touch $@
+
 # crypto primitives library
 crypto_libbitcoin_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
 crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -571,7 +592,7 @@ bitcoind_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBBITCOIN_RUST_LIBS) $(DL_LIBS)
 
 # bitcoin-cli binary #
 bitcoin_cli_SOURCES = bitcoin-cli.cpp
@@ -663,7 +684,23 @@ CTAES_DIST += crypto/ctaes/ctaes.h
 CTAES_DIST += crypto/ctaes/README.md
 CTAES_DIST += crypto/ctaes/test.c
 
-CLEANFILES = $(EXTRA_LIBRARIES)
+BITCOIN_CORE_H += rusty/src/rust_bridge.h
+
+if ENABLE_RUSTY
+LIBBITCOIN_RUST_LIBS += $(LIBBITCOIN_RUSTY)
+
+RUSTY_TEST_BIN=rusty/test_rusty
+$(RUSTY_TEST_BIN): $(LIBBITCOIN_RUSTY_SRCS)
+	$(RUSTC) --crate-name test_rusty $< --emit=link --test $(RUST_FLAGS) low-checks=on --out-dir $(@D)
+
+## FIXME: always build RUSTY_TEST_BIN the same as we do test_bitcoin
+RUSTY_CHECK=rusty-check
+$(RUSTY_CHECK): $(RUSTY_TEST_BIN)
+	$(RUSTY_TEST_BIN)
+
+CLEANFILES += $(LIBBITCOIN_RUSTY)
+endif
+CLEANFILES += $(EXTRA_LIBRARIES)
 
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
@@ -679,7 +716,7 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-EXTRA_DIST = $(CTAES_DIST)
+EXTRA_DIST = $(CTAES_DIST) $(LIBBITCOIN_RUSTY_SRCS)
 
 
 config/bitcoin-config.h: config/stamp-h1
@@ -692,6 +729,7 @@ $(top_srcdir)/$(subdir)/config/bitcoin-config.h.in:  $(am__configure_deps)
 clean-local:
 	-$(MAKE) -C secp256k1 clean
 	-$(MAKE) -C univalue clean
+	-rm -rf rusty/test_rusty rusty/test_rusty.dSYM
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
