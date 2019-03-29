@@ -675,6 +675,8 @@ if TARGET_WINDOWS
 dashd_SOURCES += dashd-res.rc
 endif
 
+# Libraries below may be listed more than once to resolve circular dependencies (see
+# https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
 dashd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
