@@ -171,7 +171,7 @@ public:
         LOCK(cs);
 
         return
-            mapSeenMasternodeBudgetProposals.count(hash) ||
+            //mapSeenMasternodeBudgetProposals.count(hash) ||
             mapSeenMasternodeBudgetVotes.count(hash) ||
             mapSeenBudgetDrafts.count(hash) ||
             mapSeenBudgetDraftVotes.count(hash);
@@ -574,53 +574,55 @@ public:
 // Proposals are cast then sent to peers with this object, which leaves the votes out
 class CBudgetProposalBroadcast : public CBudgetProposal
 {
-public:
-    CBudgetProposalBroadcast() : CBudgetProposal(){}
-    CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
-    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other){}
-    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
+    public:
+        CBudgetProposalBroadcast() : CBudgetProposal(){}
+        CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
+        CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other){}
+        CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
-    void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
+        void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
+        {
+            // enable ADL (not necessary in our case, but good practice)
+            using std::swap;
 
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.strProposalName, second.strProposalName);
-        swap(first.nBlockStart, second.nBlockStart);
-        swap(first.strURL, second.strURL);
-        swap(first.nBlockEnd, second.nBlockEnd);
-        swap(first.nAmount, second.nAmount);
-        swap(first.address, second.address);
-        swap(first.nTime, second.nTime);
-        swap(first.nFeeTXHash, second.nFeeTXHash);
-        first.mapVotes.swap(second.mapVotes);
-    }
+            // by swapping the members of two classes,
+            // the two classes are effectively swapped
+            swap(first.strProposalName, second.strProposalName);
+            swap(first.nBlockStart, second.nBlockStart);
+            swap(first.strURL, second.strURL);
+            swap(first.nBlockEnd, second.nBlockEnd);
+            swap(first.nAmount, second.nAmount);
+            swap(first.address, second.address);
+            swap(first.nTime, second.nTime);
+            swap(first.nFeeTXHash, second.nFeeTXHash);
+            first.mapVotes.swap(second.mapVotes);
+        }
 
-    CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
-    {
-        swap(*this, from);
-        return *this;
-    }
+        CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
+        {
+            swap(*this, from);
+            return *this;
+        }
 
-    void Relay();
+        void Relay();
 
-    ADD_SERIALIZE_METHODS;
+        ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        //for syncing with other clients
+        template <typename Stream, typename Operation>
+            inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+                //for syncing with other clients
 
-        READWRITE(LIMITED_STRING(strProposalName, 20));
-        READWRITE(LIMITED_STRING(strURL, 64));
-        READWRITE(nTime);
-        READWRITE(nBlockStart);
-        READWRITE(nBlockEnd);
-        READWRITE(nAmount);
-        READWRITE(*(CScriptBase*)(&address));
-        READWRITE(nFeeTXHash);
-    }
+                READWRITE(LIMITED_STRING(strProposalName, 20));
+                READWRITE(LIMITED_STRING(strURL, 64));
+                READWRITE(nTime);
+                READWRITE(nBlockStart);
+                READWRITE(nBlockEnd);
+                READWRITE(nAmount);
+                READWRITE(*(CScriptBase*)(&address));
+                READWRITE(nFeeTXHash);
+            }
 };
+
+
 
 #endif

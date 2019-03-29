@@ -24,6 +24,11 @@ void CBlockHeader::SetAuxpow (CAuxPow* apow)
     }
 }
 
+void CBlockHeader::SetProofOfStake(bool fProofOfStake)
+{
+    nVersion.SetProofOfStake(fProofOfStake);
+}
+
 uint256 CBlock::BuildMerkleTree(bool* fMutated) const
 {
     /* WARNING! If you're reading this because you're learning about crypto
@@ -116,6 +121,16 @@ uint256 CBlock::CheckMerkleBranch(uint256 hash, const std::vector<uint256>& vMer
         nIndex >>= 1;
     }
     return hash;
+}
+
+bool CBlock::IsProofOfStake() const
+{
+    return vtx.size() > 1 && vtx[1].IsCoinStake();
+}
+
+bool CBlock::IsProofOfWork() const
+{
+    return !IsProofOfStake();
 }
 
 std::string CBlock::ToString() const

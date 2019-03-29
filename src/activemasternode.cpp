@@ -31,7 +31,19 @@ void CActiveMasternode::ManageStatus()
         pmn = mnodeman.Find(pubKeyMasternode);
         if(pmn != NULL) {
             pmn->Check();
-            if(pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) EnableHotColdMasterNode(pmn->vin, pmn->addr);
+            if (pmn->IsEnabled() && pmn->protocolVersion == PROTOCOL_VERSION) {
+                EnableHotColdMasterNode(pmn->vin, pmn->addr);
+                if (!pmn->vchSignover.empty()) {
+                    if (pmn->pubkey.Verify(pubKeyMasternode.GetHash(), pmn->vchSignover)) {
+                        LogPrintf("%s: Verified pubkey2 signover for staking\n", __func__);
+                        activeMasternode.vchSigSignover = pmn->vchSignover;
+                    } else {
+                        LogPrintf("%s: Failed to verify pubkey on signover!\n", __func__);
+                    }
+                } else {
+                    LogPrintf("%s: NOT SIGNOVER!\n", __func__);
+                }
+            }
         }
     }
 
@@ -111,7 +123,8 @@ void CActiveMasternode::ManageStatus()
             }
 
             CMasternodeBroadcast mnb;
-            if(!CMasternodeBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb)) {
+            bool fSignOver = true;
+            if(!CMasternodeBroadcast::Create(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, fSignOver, errorMessage, mnb)) {
                 notCapableReason = "Error on CreateBroadcast: " + errorMessage;
                 LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
                 return;

@@ -143,6 +143,18 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast->nHeight + 1 >= 1059780) retarget = DIFF_DGW;
     else retarget = DIFF_BTC;
 
+    if (Params().NetworkID() == CBaseChainParams::TESTNET && pindexLast->nHeight >= 140400)
+    {
+        // Use Dark Gravity Wave like in mainnet
+        retarget = DIFF_DGW;
+    }
+
+    if (Params().NetworkID() == CBaseChainParams::TESTNET && pindexLast->nHeight >= 140394)
+    {
+        // Increase testnet difficulty
+        Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
+    }
+
     // Default Bitcoin style retargeting
     if (retarget == DIFF_BTC)
     {
@@ -231,6 +243,12 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     arith_uint256 bnTarget;
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
+
+    if (Params().NetworkID() == CBaseChainParams::TESTNET && chainActive.Height() >= 140394)
+    {
+        // Increase testnet difficulty
+        Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
+    }
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > Params().ProofOfWorkLimit())

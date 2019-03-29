@@ -705,11 +705,15 @@ std::string CBudgetManager::GetRequiredPaymentsString(int nBlockHeight) const
 
 CAmount CBudgetManager::GetTotalBudget(int nHeight)
 {
-
     if(chainActive.Tip() == NULL) return 0;
 
     //get min block value and calculate from that
     CAmount nSubsidy = 12 * COIN;
+    if (nHeight >= Params().PoSStartHeight())
+    {
+        nSubsidy = 10 * COIN;
+    }
+
     int halvings = nHeight / Params().SubsidyHalvingInterval();
 
     // Subsidy is cut in half every 2,100,000 blocks which will occur approximately every 4 years.
@@ -1047,7 +1051,9 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 void CBudgetManager::ResetSync()
 {
     LOCK(cs);
-
+    // Jump start should only be used for brief moment to start the chain.
+    if (GetBoolArg("-jumpstart", false))
+        return;
 
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
@@ -1235,6 +1241,7 @@ bool CBudgetManager::SubmitProposalVote(const CBudgetVote& vote, std::string& st
         mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         return true;
     }
+    return false;
 }
 
 bool CBudgetManager::CanSubmitVotes(int blockStart, int blockEnd)

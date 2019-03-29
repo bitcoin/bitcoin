@@ -47,7 +47,7 @@ bool CSystemnodeSync::IsBlockchainSynced()
     if(pindex == NULL) return false;
 
 
-    if(pindex->nTime + 60*60 < GetTime())
+    if(!GetBoolArg("-jumpstart", false) && pindex->nTime + 60*60 < GetTime())
         return false;
 
     fBlockchainSynced = true;

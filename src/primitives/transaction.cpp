@@ -151,6 +151,22 @@ unsigned int CTransaction::CalculateModifiedSize(unsigned int nTxSize) const
     return nTxSize;
 }
 
+bool CTransaction::IsCoinBase() const
+{
+    return (vin.size() == 1 && vin[0].prevout.IsNull() && !vin[0].scriptSig.IsProofOfStakeMarker());
+}
+
+bool CTransaction::IsCoinStake() const
+{
+    if (vin.size() != 1 || vout.size() != 1)
+        return false;
+
+    if (!vin[0].prevout.IsNull())
+        return false;
+
+    return vin[0].scriptSig.IsProofOfStakeMarker();
+}
+
 std::string CTransaction::ToString() const
 {
     std::string str;

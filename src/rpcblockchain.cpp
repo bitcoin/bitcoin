@@ -9,6 +9,7 @@
 #include "rpcserver.h"
 #include "sync.h"
 #include "util.h"
+#include "mn-pos/prooftracker.h"
 
 #include <stdint.h>
 
@@ -64,6 +65,9 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
     result.push_back(Pair("version", block.nVersion.GetFullVersion()));
+    result.push_back(Pair("proof_type", block.IsProofOfStake() ? "PoS" : "PoW"));
+    if (block.IsProofOfStake())
+        result.push_back(Pair("stake_source", COutPoint(block.stakePointer.txid, block.stakePointer.nPos).ToString()));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     Array txs;
     BOOST_FOREACH(const CTransaction&tx, block.vtx)
@@ -83,6 +87,7 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
     result.push_back(Pair("bits", strprintf("%08x", block.nBits)));
     result.push_back(Pair("difficulty", GetDifficulty(blockindex)));
     result.push_back(Pair("chainwork", blockindex->nChainWork.GetHex()));
+    result.push_back(Pair("block_witnesses", (int64_t)g_proofTracker->GetWitnessCount(block.GetHash())));
 
     if (blockindex->pprev)
         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
@@ -483,7 +488,7 @@ Value gettxout(const Array& params, bool fHelp)
     ScriptPubKeyToJSON(coins.vout[n].scriptPubKey, o, true);
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
-    ret.push_back(Pair("coinbase", coins.fCoinBase));
+    ret.push_back(Pair("blockreward", coins.fBlockReward));
 
     return ret;
 }

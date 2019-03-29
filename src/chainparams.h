@@ -55,6 +55,7 @@ public:
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
     const arith_uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
+    void SetProofOfWorkLimit(const arith_uint256& limit) { bnProofOfWorkLimit = limit; }
     int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
     /** Used to check majorities for block version upgrade */
     int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
@@ -102,7 +103,13 @@ public:
     int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     CBaseChainParams::Network NetworkID() const { return networkID; }
     /* Return the auxpow chain ID.  */
-    inline int32_t AuxpowChainId () const { return 20; }
+    inline int32_t AuxpowChainId () const { return nAuxpowChainId; }
+    int32_t PoSChainId () const { return nPoSChainId; }
+    int PoSStartHeight() const { return nBlockPoSStart; }
+    int ValidStakePointerDuration() const { return nStakePointerValidityPeriod; }
+    int MaxReorganizationDepth() const { return nMaxReorgDepth; }
+    int KernelModifierOffset() const { return nKernelModifierOffset; }
+    int ChainStallDuration() const { return nChainStallDuration; }
     /* Return start height of auxpow and the retarget interval change.  */
     virtual int AuxpowStartHeight() const = 0;
     /* Return whether or not to enforce strict chain ID checks.  */
@@ -148,6 +155,13 @@ protected:
     std::string strLegacySignerDummyAddress;
     std::string strDevfundAddress;
     int64_t nStartMasternodePayments;
+    int32_t nAuxpowChainId;
+    int32_t nPoSChainId;
+    int nBlockPoSStart;
+    int nStakePointerValidityPeriod;
+    int nMaxReorgDepth;
+    int nKernelModifierOffset;
+    int nChainStallDuration;
 };
 
 /** 
