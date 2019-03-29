@@ -2085,7 +2085,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 }
 
                 // ReplayBlocks is a no-op if we cleared the coinsviewdb with -reindex or -reindex-chainstate
-                if (!ReplayBlocks(chainparams, &::ChainstateActive().CoinsDB())) {
+                if (!::ChainstateActive().ReplayBlocks(chainparams)) {
                     strLoadError = _("Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.");
                     break;
                 }
@@ -2103,8 +2103,8 @@ bool AppInitMain(InitInterfaces& interfaces)
                 bool is_coinsview_empty = fReset || fReindexChainState ||
                     ::ChainstateActive().CoinsTip().GetBestBlock().IsNull();
                 if (!is_coinsview_empty) {
-                    // LoadChainTip sets ::ChainActive() based on CoinsTip()'s best block
-                    if (!LoadChainTip(chainparams)) {
+                    // LoadChainTip initializes the chain based on CoinsTip()'s best block
+                    if (!::ChainstateActive().LoadChainTip(chainparams)) {
                         strLoadError = _("Error initializing block database");
                         break;
                     }
