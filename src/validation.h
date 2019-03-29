@@ -678,9 +678,13 @@ public:
      * we avoid holding cs_main for an extended period of time; the length of this
      * call may be quite long during reindexing or a substantial reorg.
      *
+     * May not be called with cs_main held. May not be called in a
+     * validationinterface callback.
+     *
      * @returns true unless a system error occurred
      */
-    bool ActivateBestChain(CValidationState& state,
+    bool ActivateBestChain(
+        CValidationState& state,
         const CChainParams& chainparams,
         std::shared_ptr<const CBlock> pblock) LOCKS_EXCLUDED(cs_main);
 
