@@ -1,0 +1,14 @@
+[package]
+name = "rusty"
+version = "0.1.0"
+authors = ["Jeremy Rubin <j@rubin.io>"]
+edition = "2018"
+build = "build.rs"
+
+[dependencies]
+
+[lib]
+crate-type = ["staticlib"]
+
+[build-dependencies]
+cbindgen = {git="https://github.com/eqrion/cbindgen", rev="60d8234bf3a287da75699936aa00ed9ec9762cc8"} # tag = v0.8.2

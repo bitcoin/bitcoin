@@ -352,8 +352,16 @@ static void OnRPCStopped()
     LogPrint(BCLog::RPC, "RPC stopped.\n");
 }
 
+#if ENABLE_RUSTY
+#include <rusty/out/rusty.hpp>
+#endif
+
 void SetupServerArgs()
 {
+#if ENABLE_RUSTY
+    assert(rust_hello_world_example::RUST_CONSTANT == 43);
+    rust_hello_world_example::hello_world();
+#endif
     SetupHelpOptions(gArgs);
     gArgs.AddArg("-help-debug", "Print help message with debugging options and exit", false, OptionsCategory::DEBUG_TEST); // server-only for now
 
