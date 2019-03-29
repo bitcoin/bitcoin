@@ -264,6 +264,12 @@ AC_ARG_ENABLE([asm],
   [use_asm=$enableval],
   [use_asm=yes])
 
+AC_ARG_ENABLE([experimental-rust],
+  [AS_HELP_STRING([--enable-experimental-rust],
+  [Enable experimental rust code (default is no)])],
+  [use_rust=$enableval],
+  [use_rust=no])
+
 if test "x$use_asm" = xyes; then
   AC_DEFINE(USE_ASM, 1, [Define this symbol to build in assembly routines])
 fi
@@ -637,6 +643,24 @@ AC_ARG_WITH([daemon],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
+if test "x$use_rust" = xyes; then
+  AC_PATH_PROG(CARGO,cargo)
+  if test x$CARGO = xnone; then
+    use_rust=no
+    AC_MSG_ERROR("Cargo required to enable experimental rust support.")
+  fi
+
+  case $host in
+    ${host_cpu}-w64-mingw*) RUST_TARGET=${host_cpu}-pc-windows-gnu ;;
+    ${host_cpu}-pc-linux*) RUST_TARGET="${host_cpu}-unknown-${host_os}" ;;
+    ${host_cpu}-apple-darwin*) RUST_TARGET=${host_cpu}-apple-darwin ;;
+    *) RUST_TARGET="${host}" ;;
+  esac
+
+  dnl TODO: create a rust test project and check host_alias as well as host.
+  AC_DEFINE(ENABLE_RUSTY, [true], [Use Rusty])
+fi
+
 case $host in
   *mingw*)
      TARGET_OS=windows
@@ -654,6 +678,7 @@ case $host in
      AC_CHECK_LIB([ws2_32],   [WSAStartup],, AC_MSG_ERROR(libws2_32 missing))
      AC_CHECK_LIB([shlwapi],  [PathRemoveFileSpecW],, AC_MSG_ERROR(libshlwapi missing))
      AC_CHECK_LIB([iphlpapi], [GetAdaptersAddresses],, AC_MSG_ERROR(libiphlpapi missing))
+     AC_CHECK_LIB([userenv],      [main],, AC_MSG_ERROR(libuserenv missing))
 
      dnl -static is interpreted by libtool, where it has a different meaning.
      dnl In libtool-speak, it's -all-static.
@@ -761,6 +786,14 @@ case $host in
      TARGET_OS=linux
      ;;
 esac
+
+dnl Find the additional lib (if any) responsible for handling
+dnl dlopen/dlsym/etc.
+TEMP_LIBS="$LIBS"
+LIBS=
+AC_SEARCH_LIBS([dlsym],[dl])
+DL_LIBS="$LIBS"
+LIBS="$TEMP_LIBS"
 
 if test x$use_extended_functional_tests != xno; then
   AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)
@@ -1806,6 +1839,7 @@ AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
 AM_CONDITIONAL([WORDS_BIGENDIAN],[test x$ac_cv_c_bigendian = xyes])
 AM_CONDITIONAL([USE_NATPMP],[test x$use_natpmp = xyes])
 AM_CONDITIONAL([USE_UPNP],[test x$use_upnp = xyes])
+AM_CONDITIONAL([ENABLE_RUSTY], [test x$use_rust = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
@@ -1880,6 +1914,8 @@ AC_SUBST(HAVE_MM_PREFETCH)
 AC_SUBST(HAVE_STRONG_GETAUXVAL)
 AC_SUBST(HAVE_WEAK_GETAUXVAL)
 AC_SUBST(ANDROID_ARCH)
+AC_SUBST(RUST_TARGET)
+AC_SUBST(DL_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/config.ini])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
 AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/Doxyfile])])
@@ -1963,6 +1999,7 @@ echo "  sanitizers      = $use_sanitizers"
 echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"
 echo "  werror          = $enable_werror"
+echo "  rust enabled    = $use_rust"
 echo
 echo "  target os       = $TARGET_OS"
 echo "  build os        = $build_os"

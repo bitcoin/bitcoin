@@ -1,0 +1,49 @@
+[package]
+name = "cuckoofilter"
+version = "0.5.0"
+authors = [
+  "Seif Lotfy <seif.lotfy@gmail.com>",
+  "Seif Lotfy <seif@axiom.co>",
+  "Florian Jacob <accounts+git@florianjacob.de>",
+  "The cuckoofilter contributors",
+]
+
+# A short blurb about the package. This is not rendered in any format when
+# uploaded to crates.io (aka this is not markdown)
+description = "Cuckoo Filter: Practically Better Than Bloom"
+
+# These URLs point to more information about the repository
+homepage = "http://axiom.co"
+repository = "https://github.com/axiomhq/rust-cuckoofilter"
+
+# This points to a file in the repository (relative to this Cargo.toml). The
+# contents of this file are stored and indexed in the registry.
+readme = "./README.md"
+
+# This is a small list of keywords used to categorize and search for this
+# package.
+keywords = ["bloomfilter", "cuckoohashing", "cuckoofilter"]
+
+# This is a string description of the license for this package. Currently
+# crates.io will validate the license provided against a whitelist of known
+# license identifiers from http://spdx.org/licenses/. Multiple licenses can
+# be separated with a `/`
+license = "MIT"
+
+edition = "2018"
+
+[features]
+default = []
+serde_support = ["serde", "serde_derive", "serde_bytes"]
+
+[dependencies]
+byteorder = "1.3.4"
+rand = "0.7.3"
+serde = {version = "1.0.114", optional = true}
+serde_derive = {version = "1.0.114", optional = true}
+serde_bytes = {version = "0.11.5", optional = true}
+fnv = "1.0.7"
+farmhash = {version = "1.1.5", optional = true}
+
+[dev-dependencies]
+serde_json = "1.0"

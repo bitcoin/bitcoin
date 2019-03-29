@@ -60,6 +60,10 @@ if USE_NATPMP
 FUZZ_SUITE_LD_COMMON += $(NATPMP_LIBS)
 endif
 
+if ENABLE_RUSTY
+FUZZ_SUITE_LD_COMMON += $(LIBBITCOIN_RUST_LIBS) $(DL_LIBS)
+endif
+
 # test_bitcoin binary #
 BITCOIN_TESTS =\
   test/arith_uint256_tests.cpp \
@@ -186,7 +190,7 @@ test_test_bitcoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_C
   $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
 test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_bitcoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS)
+test_test_bitcoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS) $(LIBBITCOIN_RUST_LIBS) $(DL_LIBS)
 test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
 
 if ENABLE_ZMQ
@@ -331,7 +335,7 @@ bitcoin_test_check: $(TEST_BINARY) FORCE
 bitcoin_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
 
-check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
+check-local: $(RUST_CHECK) $(BITCOIN_TESTS:.cpp=.cpp.test)
 if BUILD_BITCOIN_TX
 	@echo "Running test/util/bitcoin-util-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py

@@ -151,3 +151,5 @@ dist/
 *.background.tiff
 
 /guix-build-*
+
+src/rusty/out
