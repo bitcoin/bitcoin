@@ -45,7 +45,11 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     // TODO: fix the code to support SegWit blocks.
     gArgs.ForceSetArg("-vbparams", strprintf("segwit:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
     SelectParams(chainName);
-    noui_connect();
+    static bool noui_connected = false;
+    if (!noui_connected) {
+        noui_connect();
+        noui_connected = true;
+    }
 }
 
 BasicTestingSetup::~BasicTestingSetup()
