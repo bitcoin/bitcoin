@@ -69,6 +69,7 @@ TEST_EXIT_SKIPPED = 77
 BASE_SCRIPTS = [
     # Scripts that are run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
+    'feature_pruning.py',
     'feature_fee_estimation.py',
     'wallet_hd.py',
     'wallet_backup.py',
@@ -207,7 +208,6 @@ BASE_SCRIPTS = [
 EXTENDED_SCRIPTS = [
     # These tests are not run by the travis build process.
     # Longest test should go first, to favor running tests in parallel
-    'feature_pruning.py',
     'feature_dbcrash.py',
 ]
 
