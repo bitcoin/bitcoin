@@ -59,6 +59,7 @@ extern bool fLoaded;
 extern pid_t gethPID;
 extern pid_t relayerPID;
 extern bool fAssetIndex;
+extern bool fBlockIndex;
 extern int fAssetIndexPageSize;
 extern std::vector<uint32_t> fAssetIndexGuids; 
 typedef struct {
