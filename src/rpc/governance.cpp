@@ -184,10 +184,6 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
     }
 
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Watchdogs are deprecated");
-    }
-
     LOCK2(cs_main, pwallet->cs_wallet);
 
     std::string strError = "";
@@ -292,10 +288,6 @@ UniValue gobject_submit(const JSONRPCRequest& request)
         if (!validator.Validate()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid proposal data, error messages:" + validator.GetErrorMessages());
         }
-    }
-
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Watchdogs are deprecated");
     }
 
     // Attempt to sign triggers if we are a MN

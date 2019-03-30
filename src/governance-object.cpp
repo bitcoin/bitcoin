@@ -454,10 +454,6 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
     }
 
     switch (nObjectType) {
-    case GOVERNANCE_OBJECT_WATCHDOG: {
-        // watchdogs are deprecated
-        return false;
-    }
     case GOVERNANCE_OBJECT_PROPOSAL: {
         CProposalValidator validator(GetDataAsHexString(), true);
         // Note: It's ok to have expired proposals
@@ -518,8 +514,6 @@ CAmount CGovernanceObject::GetMinCollateralFee() const
     case GOVERNANCE_OBJECT_PROPOSAL:
         return GOVERNANCE_PROPOSAL_FEE_TX;
     case GOVERNANCE_OBJECT_TRIGGER:
-        return 0;
-    case GOVERNANCE_OBJECT_WATCHDOG:
         return 0;
     default:
         return MAX_MONEY;
