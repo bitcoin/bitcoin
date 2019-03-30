@@ -229,13 +229,9 @@ void CGovernanceObject::ClearMasternodeVotes()
     }
 }
 
-std::set<uint256> CGovernanceObject::RemoveInvalidProposalVotes(const COutPoint& mnOutpoint)
+std::set<uint256> CGovernanceObject::RemoveInvalidVotes(const COutPoint& mnOutpoint)
 {
     LOCK(cs);
-
-    if (nObjectType != GOVERNANCE_OBJECT_PROPOSAL) {
-        return {};
-    }
 
     auto it = mapCurrentMNVotes.find(mnOutpoint);
     if (it == mapCurrentMNVotes.end()) {
@@ -243,7 +239,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidProposalVotes(const COutPoint&
         return {};
     }
 
-    auto removedVotes = fileVotes.RemoveInvalidProposalVotes(mnOutpoint);
+    auto removedVotes = fileVotes.RemoveInvalidVotes(mnOutpoint, nObjectType == GOVERNANCE_OBJECT_PROPOSAL);
     if (removedVotes.empty()) {
         return {};
     }
@@ -267,7 +263,7 @@ std::set<uint256> CGovernanceObject::RemoveInvalidProposalVotes(const COutPoint&
         for (auto& h : removedVotes) {
             removedStr += strprintf("  %s\n", h.ToString());
         }
-        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s\n", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr);
+        LogPrintf("CGovernanceObject::%s -- Removed %d invalid votes for %s from MN %s:\n%s", __func__, removedVotes.size(), nParentHash.ToString(), mnOutpoint.ToString(), removedStr);
         fDirtyCache = true;
     }
 

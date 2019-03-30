@@ -68,14 +68,15 @@ void CGovernanceObjectVoteFile::RemoveVotesFromMasternode(const COutPoint& outpo
     }
 }
 
-std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidProposalVotes(const COutPoint& outpointMasternode)
+std::set<uint256> CGovernanceObjectVoteFile::RemoveInvalidVotes(const COutPoint& outpointMasternode, bool fProposal)
 {
     std::set<uint256> removedVotes;
 
     vote_l_it it = listVotes.begin();
     while (it != listVotes.end()) {
-        if (it->GetSignal() == VOTE_SIGNAL_FUNDING && it->GetMasternodeOutpoint() == outpointMasternode) {
-            if (!it->IsValid(true)) {
+        if (it->GetMasternodeOutpoint() == outpointMasternode) {
+            bool useVotingKey = fProposal && (it->GetSignal() == VOTE_SIGNAL_FUNDING);
+            if (!it->IsValid(useVotingKey)) {
                 removedVotes.emplace(it->GetHash());
                 --nMemoryVotes;
                 mapVoteIndex.erase(it->GetHash());

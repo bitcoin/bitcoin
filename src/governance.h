@@ -453,7 +453,7 @@ private:
 
     void CleanOrphanObjects();
 
-    void RemoveInvalidProposalVotes();
+    void RemoveInvalidVotes();
 
 };
 

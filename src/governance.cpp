@@ -571,7 +571,7 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
     if (fLiteMode || !masternodeSync.IsSynced() || ShutdownRequested()) return;
 
     if (deterministicMNManager->IsDIP3Enforced()) {
-        RemoveInvalidProposalVotes();
+        RemoveInvalidVotes();
     }
 
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
@@ -1286,7 +1286,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex* pindex, CConnman& co
     LogPrint("gobject", "CGovernanceManager::UpdatedBlockTip -- nCachedBlockHeight: %d\n", nCachedBlockHeight);
 
     if (deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
-        RemoveInvalidProposalVotes();
+        RemoveInvalidVotes();
     }
 
     CheckPostponedObjects(connman);
@@ -1341,7 +1341,7 @@ void CGovernanceManager::CleanOrphanObjects()
     }
 }
 
-void CGovernanceManager::RemoveInvalidProposalVotes()
+void CGovernanceManager::RemoveInvalidVotes()
 {
     auto curMNList = deterministicMNManager->GetListAtChainTip();
     auto diff = lastMNListForVotingKeys.BuildDiff(curMNList);
@@ -1353,6 +1353,8 @@ void CGovernanceManager::RemoveInvalidProposalVotes()
         auto oldDmn = lastMNListForVotingKeys.GetMN(p.first);
         if (p.second->keyIDVoting != oldDmn->pdmnState->keyIDVoting) {
             changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
+        } else if (p.second->pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
+            changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
         }
     }
     for (const auto& proTxHash : diff.removedMns) {
@@ -1362,7 +1364,7 @@ void CGovernanceManager::RemoveInvalidProposalVotes()
 
     for (const auto& outpoint : changedKeyMNs) {
         for (auto& p : mapObjects) {
-            auto removed = p.second.RemoveInvalidProposalVotes(outpoint);
+            auto removed = p.second.RemoveInvalidVotes(outpoint);
             if (removed.empty()) {
                 continue;
             }
