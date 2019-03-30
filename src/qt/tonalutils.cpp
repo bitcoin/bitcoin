@@ -10,10 +10,31 @@
 #include <QRegExpValidator>
 #include <QString>
 
+static const QList<QChar> tonal_digits{0xe9df, 0xe9de, 0xe9dd, 0xe9dc, 0xe9db, 0xe9da, 0xe9d9, '8', '7', '6', '5', '4', '3', '2', '1', '0'};
+
+namespace {
+
+bool font_supports_tonal(const QFont& font)
+{
+    const QFontMetrics fm(font);
+    QString s = "000";
+    const QSize sz = fm.size(0, s);
+    for (const auto& c : tonal_digits) {
+        if (!fm.inFont(c)) return false;
+        if (sz != fm.size(0, s)) return false;
+    }
+    return true;
+}
+
+} // anon namespace
+
 bool TonalUtils::Supported()
 {
-    QFontMetrics fm = QFontMetrics(QFont());
-    return fm.inFont(0xe9d9);
+    QFont default_font;
+    if (font_supports_tonal(default_font)) return true;
+    QFont last_resort_font(default_font.lastResortFamily());
+    if (font_supports_tonal(last_resort_font)) return true;
+    return false;
 }
 
 static QRegExpValidator tv(QRegExp("-?(?:[\\d\\xe9d9-\\xe9df]+\\.?|[\\d\\xe9d9-\\xe9df]*\\.[\\d\\xe9d9-\\xe9df]*)"), NULL);
