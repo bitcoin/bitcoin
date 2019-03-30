@@ -176,9 +176,9 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
                  << ", time delta = " << nTimeDelta;
             LogPrint("gobject", "%s\n", ostr.str());
             exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_TEMPORARY_ERROR);
-            nVoteTimeUpdate = nNow;
             return false;
         }
+        nVoteTimeUpdate = nNow;
     }
 
     bool onlyVotingKeyAllowed = nObjectType == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
