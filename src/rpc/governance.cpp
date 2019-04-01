@@ -812,49 +812,6 @@ UniValue gobject_get(const JSONRPCRequest& request)
     return objResult;
 }
 
-void gobject_getvotes_help()
-{
-    throw std::runtime_error(
-                "gobject getvotes <governance-hash>\n"
-                "Get all votes for a governance object hash (including old votes)\n"
-                "\nArguments:\n"
-                "1. governance-hash   (string, required) object id\n"
-                );
-}
-
-UniValue gobject_getvotes(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 2)
-        gobject_getvotes_help();
-
-    // COLLECT PARAMETERS FROM USER
-
-    uint256 hash = ParseHashV(request.params[1], "Governance hash");
-
-    // FIND OBJECT USER IS LOOKING FOR
-
-    LOCK(governance.cs);
-
-    CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
-
-    if (pGovObj == nullptr) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
-    }
-
-    // REPORT RESULTS TO USER
-
-    UniValue bResult(UniValue::VOBJ);
-
-    // GET MATCHING VOTES BY HASH, THEN SHOW USERS VOTE INFORMATION
-
-    std::vector<CGovernanceVote> vecVotes = governance.GetMatchingVotes(hash);
-    for (const auto& vote : vecVotes) {
-        bResult.push_back(Pair(vote.GetHash().ToString(),  vote.ToString()));
-    }
-
-    return bResult;
-}
-
 void gobject_getcurrentvotes_help()
 {
     throw std::runtime_error(
@@ -921,7 +878,6 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  deserialize        - Deserialize governance object from hex string to JSON\n"
             "  count              - Count governance objects and votes (additional param: 'json' or 'all', default: 'json')\n"
             "  get                - Get governance object by hash\n"
-            "  getvotes           - Get all votes for a governance object hash (including old votes)\n"
             "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
             "  list               - List governance objects (can be filtered by signal and/or object type)\n"
             "  diff               - List differences since last diff\n"
@@ -978,11 +934,8 @@ UniValue gobject(const JSONRPCRequest& request)
     } else if (strCommand == "get") {
         // GET SPECIFIC GOVERNANCE ENTRY
         return gobject_get(request);
-    } else if (strCommand == "getvotes") {
-        // GETVOTES FOR SPECIFIC GOVERNANCE OBJECT
-        return gobject_getvotes(request);
     } else if (strCommand == "getcurrentvotes") {
-        // GETVOTES FOR SPECIFIC GOVERNANCE OBJECT
+        // GET VOTES FOR SPECIFIC GOVERNANCE OBJECT
         return gobject_getcurrentvotes(request);
     } else {
         gobject_help();

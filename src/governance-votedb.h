@@ -88,6 +88,9 @@ public:
     }
 
 private:
+    // Drop older votes for the same gobject from the same masternode
+    void RemoveOldVotes(const CGovernanceVote& vote);
+
     void RebuildIndex();
 };
 

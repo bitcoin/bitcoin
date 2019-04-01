@@ -309,7 +309,6 @@ public:
     CGovernanceObject* FindGovernanceObject(const uint256& nHash);
 
     // These commands are only used in RPC
-    std::vector<CGovernanceVote> GetMatchingVotes(const uint256& nParentHash) const;
     std::vector<CGovernanceVote> GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const;
     std::vector<const CGovernanceObject*> GetAllNewerThan(int64_t nMoreThanTime) const;
 

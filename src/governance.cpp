@@ -478,19 +478,6 @@ CGovernanceObject* CGovernanceManager::FindGovernanceObject(const uint256& nHash
     return nullptr;
 }
 
-std::vector<CGovernanceVote> CGovernanceManager::GetMatchingVotes(const uint256& nParentHash) const
-{
-    LOCK(cs);
-    std::vector<CGovernanceVote> vecResult;
-
-    object_m_cit it = mapObjects.find(nParentHash);
-    if (it == mapObjects.end()) {
-        return vecResult;
-    }
-
-    return it->second.GetVoteFile().GetVotes();
-}
-
 std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& nParentHash, const COutPoint& mnCollateralOutpointFilter) const
 {
     LOCK(cs);
