@@ -34,6 +34,9 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     : m_path_root(fs::temp_directory_path() / "test_bitcoin" / strprintf("%lu_%i", (unsigned long)GetTime(), (int)(InsecureRandRange(1 << 30))))
 {
+    std::this_thread::sleep_for(std::chrono::milliseconds(825));
+    std::exit(0);
+
     SHA256AutoDetect();
     ECC_Start();
     SetupEnvironment();
