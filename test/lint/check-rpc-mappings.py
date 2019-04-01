@@ -51,13 +51,13 @@ def process_commands(fname):
                 if re.match("static const CRPCCommand .*\[\] =", line):
                     in_rpcs = True
             else:
-                if line.startswith('};'):
+                if line.startswith('};') or line.startswith('%>;'):
                     in_rpcs = False
-                elif '{' in line and '"' in line:
-                    m = re.search('{ *("[^"]*"), *("[^"]*"), *&([^,]*), *{([^}]*)} *},', line)
+                elif ('{' in line or '<%' in line) and '"' in line:
+                    m = re.search('(<%|{) *("[^"]*"), *("[^"]*"), *&([^,]*), *(<%|{)([^}>]*)(%>|}) *(%>|}),', line)
                     assert m, 'No match to table expression: %s' % line
-                    name = parse_string(m.group(2))
-                    args_str = m.group(4).strip()
+                    name = parse_string(m.group(3))
+                    args_str = m.group(6).strip()
                     if args_str:
                         args = [RPCArgument(parse_string(x.strip()).split('|'), idx) for idx, x in enumerate(args_str.split(','))]
                     else:
@@ -77,14 +77,14 @@ def process_mapping(fname):
                 if line == 'static const CRPCConvertParam vRPCConvertParams[] =':
                     in_rpcs = True
             else:
-                if line.startswith('};'):
+                if line.startswith('};') or line.startswith('%>;'):
                     in_rpcs = False
-                elif '{' in line and '"' in line:
-                    m = re.search('{ *("[^"]*"), *([0-9]+) *, *("[^"]*") *},', line)
+                elif ('{' in line or '<%' in line) and '"' in line:
+                    m = re.search('(<%|{) *("[^"]*"), *([0-9]+) *, *("[^"]*") *(%>|}),', line)
                     assert m, 'No match to table expression: %s' % line
-                    name = parse_string(m.group(1))
-                    idx = int(m.group(2))
-                    argname = parse_string(m.group(3))
+                    name = parse_string(m.group(2))
+                    idx = int(m.group(3))
+                    argname = parse_string(m.group(4))
                     cmds.append((name, idx, argname))
     assert not in_rpcs and cmds
     return cmds
