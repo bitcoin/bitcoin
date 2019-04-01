@@ -8,9 +8,10 @@
 
 #pragma once
 
+#include <cassert>
+#include <cstddef>
 #include <immer/config.hpp>
 #include <immer/heap/identity_heap.hpp>
-#include <cassert>
 
 namespace immer {
 
@@ -23,20 +24,23 @@ namespace immer {
 template <typename Base>
 struct debug_size_heap
 {
+    // temporary fix until https://github.com/arximboldi/immer/issues/78 is fixed
+    constexpr static auto extra_size = sizeof(void*) * 2; //alignof(std::max_align_t);
+
     template <typename... Tags>
     static void* allocate(std::size_t size, Tags... tags)
     {
-        auto p = (std::size_t*) Base::allocate(size + sizeof(std::size_t), tags...);
+        auto p = (std::size_t*) Base::allocate(size + extra_size, tags...);
         *p = size;
-        return p + 1;
+        return ((char*)p) + extra_size;
     }
 
     template <typename... Tags>
     static void deallocate(std::size_t size, void* data, Tags... tags)
     {
-        auto p = ((std::size_t*) data) - 1;
+        auto p = (std::size_t*) (((char*) data) - extra_size);
         assert(*p == size);
-        Base::deallocate(size + sizeof(std::size_t), p, tags...);
+        Base::deallocate(size + extra_size, p, tags...);
     }
 };
 

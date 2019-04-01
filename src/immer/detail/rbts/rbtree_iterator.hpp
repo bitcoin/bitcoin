@@ -20,7 +20,9 @@ struct rbtree_iterator
     : iterator_facade<rbtree_iterator<T, MP, B, BL>,
                       std::random_access_iterator_tag,
                       T,
-                      const T&>
+                      const T&,
+                      std::ptrdiff_t,
+                      const T*>
 {
     using tree_t = rbtree<T, MP, B, BL>;
 

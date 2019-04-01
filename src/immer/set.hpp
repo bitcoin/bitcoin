@@ -54,9 +54,9 @@ class set_transient;
  *
  */
 template <typename T,
-          typename Hash          = std::hash<T>,
-          typename Equal         = std::equal_to<T>,
-          typename MemoryPolicy  = default_memory_policy,
+          typename Hash           = std::hash<T>,
+          typename Equal          = std::equal_to<T>,
+          typename MemoryPolicy   = default_memory_policy,
           detail::hamts::bits_t B = default_bits>
 class set
 {

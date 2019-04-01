@@ -20,7 +20,9 @@ struct rrbtree_iterator
     : iterator_facade<rrbtree_iterator<T, MP, B, BL>,
                       std::random_access_iterator_tag,
                       T,
-                      const T&>
+                      const T&,
+                      std::ptrdiff_t,
+                      const T*>
 {
     using tree_t   = rrbtree<T, MP, B, BL>;
     using region_t = std::tuple<const T*, size_t, size_t>;

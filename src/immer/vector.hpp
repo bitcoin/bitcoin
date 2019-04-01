@@ -111,10 +111,12 @@ public:
 
     /*!
      * Constructs a vector containing the elements in the range
-     * defined by the input iterators `first` and `last`.
+     * defined by the input iterator `first` and range sentinel `last`.
      */
-    template <typename Iter>
-    vector(Iter first, Iter last)
+    template <typename Iter, typename Sent,
+              std::enable_if_t
+              <detail::compatible_sentinel_v<Iter, Sent>, bool> = true>
+    vector(Iter first, Sent last)
         : impl_{impl_t::from_range(first, last)}
     {}
 

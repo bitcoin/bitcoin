@@ -24,86 +24,86 @@ namespace detail {
 namespace rbts {
 
 template <typename T>
-struct array_for_visitor
+struct array_for_visitor : visitor_base<array_for_visitor<T>>
 {
     using this_t = array_for_visitor;
 
     template <typename PosT>
-    friend T* visit_inner(this_t, PosT&& pos, size_t idx)
+    static T* visit_inner(PosT&& pos, size_t idx)
     { return pos.descend(this_t{}, idx); }
 
     template <typename PosT>
-    friend T* visit_leaf(this_t, PosT&& pos, size_t)
+    static T* visit_leaf(PosT&& pos, size_t)
     { return pos.node()->leaf(); }
 };
 
 template <typename T>
-struct region_for_visitor
+struct region_for_visitor : visitor_base<region_for_visitor<T>>
 {
     using this_t = region_for_visitor;
     using result_t = std::tuple<T*, size_t, size_t>;
 
     template <typename PosT>
-    friend result_t visit_inner(this_t, PosT&& pos, size_t idx)
+    static result_t visit_inner(PosT&& pos, size_t idx)
     { return pos.towards(this_t{}, idx); }
 
     template <typename PosT>
-    friend result_t visit_leaf(this_t, PosT&& pos, size_t idx)
+    static result_t visit_leaf(PosT&& pos, size_t idx)
     { return { pos.node()->leaf(), pos.index(idx), pos.count() }; }
 };
 
 template <typename T>
-struct get_visitor
+struct get_visitor : visitor_base<get_visitor<T>>
 {
     using this_t = get_visitor;
 
     template <typename PosT>
-    friend const T& visit_inner(this_t, PosT&& pos, size_t idx)
+    static const T& visit_inner(PosT&& pos, size_t idx)
     { return pos.descend(this_t{}, idx); }
 
     template <typename PosT>
-    friend const T& visit_leaf(this_t, PosT&& pos, size_t idx)
+    static const T& visit_leaf(PosT&& pos, size_t idx)
     { return pos.node()->leaf() [pos.index(idx)]; }
 };
 
-struct for_each_chunk_visitor
+struct for_each_chunk_visitor : visitor_base<for_each_chunk_visitor>
 {
     using this_t = for_each_chunk_visitor;
 
     template <typename Pos, typename Fn>
-    friend void visit_inner(this_t, Pos&& pos, Fn&& fn)
+    static void visit_inner(Pos&& pos, Fn&& fn)
     { pos.each(this_t{}, fn); }
 
     template <typename Pos, typename Fn>
-    friend void visit_leaf(this_t, Pos&& pos, Fn&& fn)
+    static void visit_leaf(Pos&& pos, Fn&& fn)
     {
         auto data = pos.node()->leaf();
         fn(data, data + pos.count());
     }
 };
 
-struct for_each_chunk_p_visitor
+struct for_each_chunk_p_visitor : visitor_base<for_each_chunk_p_visitor>
 {
     using this_t = for_each_chunk_p_visitor;
 
     template <typename Pos, typename Fn>
-    friend bool visit_inner(this_t, Pos&& pos, Fn&& fn)
+    static bool visit_inner(Pos&& pos, Fn&& fn)
     { return pos.each_pred(this_t{}, fn); }
 
     template <typename Pos, typename Fn>
-    friend bool visit_leaf(this_t, Pos&& pos, Fn&& fn)
+    static bool visit_leaf(Pos&& pos, Fn&& fn)
     {
         auto data = pos.node()->leaf();
         return fn(data, data + pos.count());
     }
 };
 
-struct for_each_chunk_left_visitor
+struct for_each_chunk_left_visitor : visitor_base<for_each_chunk_left_visitor>
 {
     using this_t = for_each_chunk_left_visitor;
 
     template <typename Pos, typename Fn>
-    friend void visit_inner(this_t, Pos&& pos,
+    static void visit_inner(Pos&& pos,
                             size_t last, Fn&& fn)
     {
         auto l = pos.index(last);
@@ -112,7 +112,7 @@ struct for_each_chunk_left_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend void visit_leaf(this_t, Pos&& pos,
+    static void visit_leaf(Pos&& pos,
                            size_t last,
                            Fn&& fn)
     {
@@ -122,12 +122,12 @@ struct for_each_chunk_left_visitor
     }
 };
 
-struct for_each_chunk_right_visitor
+struct for_each_chunk_right_visitor : visitor_base<for_each_chunk_right_visitor>
 {
     using this_t = for_each_chunk_right_visitor;
 
     template <typename Pos, typename Fn>
-    friend void visit_inner(this_t, Pos&& pos,
+    static void visit_inner(Pos&& pos,
                             size_t first, Fn&& fn)
     {
         auto f = pos.index(first);
@@ -136,7 +136,7 @@ struct for_each_chunk_right_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend void visit_leaf(this_t, Pos&& pos,
+    static void visit_leaf(Pos&& pos,
                            size_t first,
                            Fn&& fn)
     {
@@ -146,12 +146,12 @@ struct for_each_chunk_right_visitor
     }
 };
 
-struct for_each_chunk_i_visitor
+struct for_each_chunk_i_visitor : visitor_base<for_each_chunk_i_visitor>
 {
     using this_t = for_each_chunk_i_visitor;
 
     template <typename Pos, typename Fn>
-    friend void visit_relaxed(this_t, Pos&& pos,
+    static void visit_relaxed(Pos&& pos,
                               size_t first, size_t last,
                               Fn&& fn)
     {
@@ -173,7 +173,7 @@ struct for_each_chunk_i_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend void visit_regular(this_t, Pos&& pos,
+    static void visit_regular(Pos&& pos,
                               size_t first, size_t last,
                               Fn&& fn)
     {
@@ -192,7 +192,7 @@ struct for_each_chunk_i_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend void visit_leaf(this_t, Pos&& pos,
+    static void visit_leaf(Pos&& pos,
                            size_t first, size_t last,
                            Fn&& fn)
     {
@@ -206,11 +206,12 @@ struct for_each_chunk_i_visitor
 };
 
 struct for_each_chunk_p_left_visitor
+    : visitor_base<for_each_chunk_p_left_visitor>
 {
     using this_t = for_each_chunk_p_left_visitor;
 
     template <typename Pos, typename Fn>
-    friend bool visit_inner(this_t, Pos&& pos,
+    static bool visit_inner(Pos&& pos,
                             size_t last, Fn&& fn)
     {
         auto l = pos.index(last);
@@ -219,7 +220,7 @@ struct for_each_chunk_p_left_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend bool visit_leaf(this_t, Pos&& pos,
+    static bool visit_leaf(Pos&& pos,
                            size_t last,
                            Fn&& fn)
     {
@@ -230,11 +231,12 @@ struct for_each_chunk_p_left_visitor
 };
 
 struct for_each_chunk_p_right_visitor
+    : visitor_base<for_each_chunk_p_right_visitor>
 {
     using this_t = for_each_chunk_p_right_visitor;
 
     template <typename Pos, typename Fn>
-    friend bool visit_inner(this_t, Pos&& pos,
+    static bool visit_inner(Pos&& pos,
                             size_t first, Fn&& fn)
     {
         auto f = pos.index(first);
@@ -243,7 +245,7 @@ struct for_each_chunk_p_right_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend bool visit_leaf(this_t, Pos&& pos,
+    static bool visit_leaf(Pos&& pos,
                            size_t first,
                            Fn&& fn)
     {
@@ -253,12 +255,12 @@ struct for_each_chunk_p_right_visitor
     }
 };
 
-struct for_each_chunk_p_i_visitor
+struct for_each_chunk_p_i_visitor : visitor_base<for_each_chunk_p_i_visitor>
 {
     using this_t = for_each_chunk_p_i_visitor;
 
     template <typename Pos, typename Fn>
-    friend bool visit_relaxed(this_t, Pos&& pos,
+    static bool visit_relaxed(Pos&& pos,
                               size_t first, size_t last,
                               Fn&& fn)
     {
@@ -281,7 +283,7 @@ struct for_each_chunk_p_i_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend bool visit_regular(this_t, Pos&& pos,
+    static bool visit_regular(Pos&& pos,
                               size_t first, size_t last,
                               Fn&& fn)
     {
@@ -301,7 +303,7 @@ struct for_each_chunk_p_i_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend bool visit_leaf(this_t, Pos&& pos,
+    static bool visit_leaf(Pos&& pos,
                            size_t first, size_t last,
                            Fn&& fn)
     {
@@ -315,29 +317,29 @@ struct for_each_chunk_p_i_visitor
     }
 };
 
-struct equals_visitor
+struct equals_visitor : visitor_base<equals_visitor>
 {
     using this_t = equals_visitor;
 
-    struct this_aux_t
+    struct this_aux_t : visitor_base<this_aux_t>
     {
         template <typename PosR, typename PosL,typename Iter>
-        friend bool visit_inner(this_aux_t, PosR&& posr,
-                               count_t i, PosL&& posl,
-                               Iter&& first, size_t idx)
+        static bool visit_inner(PosR&& posr,
+                                count_t i, PosL&& posl,
+                                Iter&& first, size_t idx)
         { return posl.nth_sub(i, this_t{}, posr, first, idx); }
 
         template <typename PosR, typename PosL,typename Iter>
-        friend bool visit_leaf(this_aux_t, PosR&& posr,
+        static bool visit_leaf(PosR&& posr,
                                count_t i, PosL&& posl,
                                Iter&& first, size_t idx)
         { return posl.nth_sub_leaf(i, this_t{}, posr, first, idx); }
     };
 
-    struct rrb
+    struct rrb : visitor_base<rrb>
     {
         template <typename PosR, typename Iter, typename Node>
-        friend bool visit_node(rrb, PosR&& posr, Iter&& first,
+        static bool visit_node(PosR&& posr, Iter&& first,
                                Node* rootl, shift_t shiftl, size_t sizel)
         {
             assert(shiftl <= posr.shift());
@@ -364,7 +366,7 @@ struct equals_visitor
     }
 
     template <typename PosL, typename PosR, typename Iter>
-    friend bool visit_relaxed(this_t, PosL&& posl, PosR&& posr,
+    static bool visit_relaxed(PosL&& posl, PosR&& posr,
                               Iter&& first, size_t idx)
     {
         auto nl = posl.node();
@@ -390,23 +392,23 @@ struct equals_visitor
     }
 
     template <typename PosL, typename PosR, typename Iter>
-    friend std::enable_if_t<is_relaxed_v<PosR>, bool>
-    visit_regular(this_t, PosL&& posl, PosR&& posr, Iter&& first, size_t idx)
+    static std::enable_if_t<is_relaxed_v<PosR>, bool>
+    visit_regular(PosL&& posl, PosR&& posr, Iter&& first, size_t idx)
     {
-        return visit_relaxed(this_t{}, posl, posr, first, idx);
+        return this_t::visit_relaxed(posl, posr, first, idx);
     }
 
     template <typename PosL, typename PosR, typename Iter>
-    friend std::enable_if_t<!is_relaxed_v<PosR>, bool>
-    visit_regular(this_t, PosL&& posl, PosR&& posr, Iter&& first, size_t idx)
+    static std::enable_if_t<!is_relaxed_v<PosR>, bool>
+    visit_regular(PosL&& posl, PosR&& posr, Iter&& first, size_t idx)
     {
         return posl.count() >= posr.count()
-            ? visit_regular(this_t{}, posl, posr.node())
-            : visit_regular(this_t{}, posr, posl.node());
+            ? this_t::visit_regular(posl, posr.node())
+            : this_t::visit_regular(posr, posl.node());
     }
 
     template <typename PosL, typename PosR, typename Iter>
-    friend bool visit_leaf(this_t, PosL&& posl,
+    static bool visit_leaf(PosL&& posl,
                            PosR&& posr, Iter&& first, size_t idx)
     {
         if (posl.node() == posr.node())
@@ -424,7 +426,7 @@ struct equals_visitor
     }
 
     template <typename Pos, typename NodeT>
-    friend bool visit_regular(this_t, Pos&& pos, NodeT* other)
+    static bool visit_regular(Pos&& pos, NodeT* other)
     {
         auto node = pos.node();
         return node == other
@@ -432,7 +434,7 @@ struct equals_visitor
     }
 
     template <typename Pos, typename NodeT>
-    friend bool visit_leaf(this_t, Pos&& pos, NodeT* other)
+    static bool visit_leaf(Pos&& pos, NodeT* other)
     {
         auto node = pos.node();
         return node == other
@@ -442,13 +444,13 @@ struct equals_visitor
 };
 
 template <typename NodeT>
-struct update_visitor
+struct update_visitor : visitor_base<update_visitor<NodeT>>
 {
     using node_t = NodeT;
     using this_t = update_visitor;
 
     template <typename Pos, typename Fn>
-    friend node_t* visit_relaxed(this_t, Pos&& pos, size_t idx, Fn&& fn)
+    static node_t* visit_relaxed(Pos&& pos, size_t idx, Fn&& fn)
     {
         auto offset  = pos.index(idx);
         auto count   = pos.count();
@@ -466,7 +468,7 @@ struct update_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend node_t* visit_regular(this_t, Pos&& pos, size_t idx, Fn&& fn)
+    static node_t* visit_regular(Pos&& pos, size_t idx, Fn&& fn)
     {
         auto offset  = pos.index(idx);
         auto count   = pos.count();
@@ -484,7 +486,7 @@ struct update_visitor
     }
 
     template <typename Pos, typename Fn>
-    friend node_t* visit_leaf(this_t, Pos&& pos, size_t idx, Fn&& fn)
+    static node_t* visit_leaf(Pos&& pos, size_t idx, Fn&& fn)
     {
         auto offset  = pos.index(idx);
         auto node    = node_t::copy_leaf(pos.node(), pos.count());
@@ -499,12 +501,12 @@ struct update_visitor
     }
 };
 
-struct dec_visitor
+struct dec_visitor : visitor_base<dec_visitor>
 {
     using this_t = dec_visitor;
 
     template <typename Pos>
-    friend void visit_relaxed(this_t, Pos&& p)
+    static void visit_relaxed(Pos&& p)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -515,7 +517,7 @@ struct dec_visitor
     }
 
     template <typename Pos>
-    friend void visit_regular(this_t, Pos&& p)
+    static void visit_regular(Pos&& p)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -526,7 +528,7 @@ struct dec_visitor
     }
 
     template <typename Pos>
-    friend void visit_leaf(this_t, Pos&& p)
+    static void visit_leaf(Pos&& p)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -567,7 +569,7 @@ void dec_empty_regular(NodeT* node)
 }
 
 template <typename NodeT>
-struct get_mut_visitor
+struct get_mut_visitor : visitor_base<get_mut_visitor<NodeT>>
 {
     using node_t  = NodeT;
     using this_t  = get_mut_visitor;
@@ -575,7 +577,7 @@ struct get_mut_visitor
     using edit_t  = typename NodeT::edit_t;
 
     template <typename Pos>
-    friend value_t& visit_relaxed(this_t, Pos&& pos, size_t idx,
+    static value_t& visit_relaxed(Pos&& pos, size_t idx,
                                   edit_t e, node_t** location)
     {
         auto offset  = pos.index(idx);
@@ -600,7 +602,7 @@ struct get_mut_visitor
     }
 
     template <typename Pos>
-    friend value_t& visit_regular(this_t, Pos&& pos, size_t idx,
+    static value_t& visit_regular(Pos&& pos, size_t idx,
                                   edit_t e, node_t** location)
     {
         assert(pos.node() == *location);
@@ -626,7 +628,7 @@ struct get_mut_visitor
     }
 
     template <typename Pos>
-    friend value_t& visit_leaf(this_t, Pos&& pos, size_t idx,
+    static value_t& visit_leaf(Pos&& pos, size_t idx,
                                edit_t e, node_t** location)
     {
         assert(pos.node() == *location);
@@ -644,6 +646,7 @@ struct get_mut_visitor
 
 template <typename NodeT, bool Mutating = true>
 struct push_tail_mut_visitor
+    : visitor_base<push_tail_mut_visitor<NodeT, Mutating>>
 {
     static constexpr auto B  = NodeT::bits;
     static constexpr auto BL = NodeT::bits_leaf;
@@ -654,7 +657,7 @@ struct push_tail_mut_visitor
     using edit_t = typename NodeT::edit_t;
 
     template <typename Pos>
-    friend node_t* visit_relaxed(this_t, Pos&& pos, edit_t e, node_t* tail, count_t ts)
+    static node_t* visit_relaxed(Pos&& pos, edit_t e, node_t* tail, count_t ts)
     {
         auto node        = pos.node();
         auto level       = pos.shift();
@@ -710,7 +713,7 @@ struct push_tail_mut_visitor
     }
 
     template <typename Pos, typename... Args>
-    friend node_t* visit_regular(this_t, Pos&& pos, edit_t e, node_t* tail, Args&&...)
+    static node_t* visit_regular(Pos&& pos, edit_t e, node_t* tail, Args&&...)
     {
         assert((pos.size() & mask<BL>) == 0);
         auto node        = pos.node();
@@ -739,12 +742,12 @@ struct push_tail_mut_visitor
     }
 
     template <typename Pos, typename... Args>
-    friend node_t* visit_leaf(this_t, Pos&& pos, edit_t e, node_t* tail, Args&&...)
+    static node_t* visit_leaf(Pos&& pos, edit_t e, node_t* tail, Args&&...)
     { IMMER_UNREACHABLE; }
 };
 
 template <typename NodeT>
-struct push_tail_visitor
+struct push_tail_visitor : visitor_base<push_tail_visitor<NodeT>>
 {
     static constexpr auto B  = NodeT::bits;
     static constexpr auto BL = NodeT::bits_leaf;
@@ -753,7 +756,7 @@ struct push_tail_visitor
     using node_t = NodeT;
 
     template <typename Pos>
-    friend node_t* visit_relaxed(this_t, Pos&& pos, node_t* tail, count_t ts)
+    static node_t* visit_relaxed(Pos&& pos, node_t* tail, count_t ts)
     {
         auto level       = pos.shift();
         auto idx         = pos.count() - 1;
@@ -793,7 +796,7 @@ struct push_tail_visitor
     }
 
     template <typename Pos, typename... Args>
-    friend node_t* visit_regular(this_t, Pos&& pos, node_t* tail, Args&&...)
+    static node_t* visit_regular(Pos&& pos, node_t* tail, Args&&...)
     {
         assert((pos.size() & mask<BL>) == 0);
         auto idx         = pos.index(pos.size() - 1);
@@ -812,17 +815,17 @@ struct push_tail_visitor
     }
 
     template <typename Pos, typename... Args>
-    friend node_t* visit_leaf(this_t, Pos&& pos, node_t* tail, Args&&...)
+    static node_t* visit_leaf(Pos&& pos, node_t* tail, Args&&...)
     { IMMER_UNREACHABLE; }
 };
 
-struct dec_right_visitor
+struct dec_right_visitor : visitor_base<dec_right_visitor>
 {
     using this_t = dec_right_visitor;
     using dec_t  = dec_visitor;
 
     template <typename Pos>
-    friend void visit_relaxed(this_t, Pos&& p, count_t idx)
+    static void visit_relaxed(Pos&& p, count_t idx)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -833,7 +836,7 @@ struct dec_right_visitor
     }
 
     template <typename Pos>
-    friend void visit_regular(this_t, Pos&& p, count_t idx)
+    static void visit_regular(Pos&& p, count_t idx)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -844,12 +847,13 @@ struct dec_right_visitor
     }
 
     template <typename Pos>
-    friend void visit_leaf(this_t, Pos&& p, count_t idx)
+    static void visit_leaf(Pos&& p, count_t idx)
     { IMMER_UNREACHABLE; }
 };
 
 template <typename NodeT, bool Collapse=true, bool Mutating=true>
 struct slice_right_mut_visitor
+    : visitor_base<slice_right_mut_visitor<NodeT, Collapse, Mutating>>
 {
     using node_t = NodeT;
     using this_t = slice_right_mut_visitor;
@@ -865,7 +869,7 @@ struct slice_right_mut_visitor
     static constexpr auto BL = NodeT::bits_leaf;
 
     template <typename PosT>
-    friend result_t visit_relaxed(this_t, PosT&& pos, size_t last, edit_t e)
+    static result_t visit_relaxed(PosT&& pos, size_t last, edit_t e)
     {
         auto idx = pos.index(last);
         auto node = pos.node();
@@ -934,7 +938,7 @@ struct slice_right_mut_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_regular(this_t, PosT&& pos, size_t last, edit_t e)
+    static result_t visit_regular(PosT&& pos, size_t last, edit_t e)
     {
         auto idx = pos.index(last);
         auto node = pos.node();
@@ -995,7 +999,7 @@ struct slice_right_mut_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_leaf(this_t, PosT&& pos, size_t last, edit_t e)
+    static result_t visit_leaf(PosT&& pos, size_t last, edit_t e)
     {
         auto old_tail_size = pos.count();
         auto new_tail_size = pos.index(last) + 1;
@@ -1017,7 +1021,7 @@ struct slice_right_mut_visitor
 };
 
 template <typename NodeT, bool Collapse=true>
-struct slice_right_visitor
+struct slice_right_visitor : visitor_base<slice_right_visitor<NodeT, Collapse>>
 {
     using node_t = NodeT;
     using this_t = slice_right_visitor;
@@ -1030,7 +1034,7 @@ struct slice_right_visitor
     static constexpr auto BL = NodeT::bits_leaf;
 
     template <typename PosT>
-    friend result_t visit_relaxed(this_t, PosT&& pos, size_t last)
+    static result_t visit_relaxed(PosT&& pos, size_t last)
     {
         auto idx = pos.index(last);
         if (Collapse && idx == 0) {
@@ -1070,7 +1074,7 @@ struct slice_right_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_regular(this_t, PosT&& pos, size_t last)
+    static result_t visit_regular(PosT&& pos, size_t last)
     {
         auto idx = pos.index(last);
         if (Collapse && idx == 0) {
@@ -1106,7 +1110,7 @@ struct slice_right_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_leaf(this_t, PosT&& pos, size_t last)
+    static result_t visit_leaf(PosT&& pos, size_t last)
     {
         auto old_tail_size = pos.count();
         auto new_tail_size = pos.index(last) + 1;
@@ -1117,13 +1121,13 @@ struct slice_right_visitor
     }
 };
 
-struct dec_left_visitor
+struct dec_left_visitor : visitor_base<dec_left_visitor>
 {
     using this_t = dec_left_visitor;
     using dec_t  = dec_visitor;
 
     template <typename Pos>
-    friend void visit_relaxed(this_t, Pos&& p, count_t idx)
+    static void visit_relaxed(Pos&& p, count_t idx)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -1134,7 +1138,7 @@ struct dec_left_visitor
     }
 
     template <typename Pos>
-    friend void visit_regular(this_t, Pos&& p, count_t idx)
+    static void visit_regular(Pos&& p, count_t idx)
     {
         using node_t = node_type<Pos>;
         auto node = p.node();
@@ -1145,12 +1149,13 @@ struct dec_left_visitor
     }
 
     template <typename Pos>
-    friend void visit_leaf(this_t, Pos&& p, count_t idx)
+    static void visit_leaf(Pos&& p, count_t idx)
     { IMMER_UNREACHABLE; }
 };
 
 template <typename NodeT, bool Collapse=true, bool Mutating=true>
 struct slice_left_mut_visitor
+    : visitor_base<slice_left_mut_visitor<NodeT, Collapse, Mutating>>
 {
     using node_t = NodeT;
     using this_t = slice_left_mut_visitor;
@@ -1168,7 +1173,7 @@ struct slice_left_mut_visitor
     static constexpr auto BL = NodeT::bits_leaf;
 
     template <typename PosT>
-    friend result_t visit_relaxed(this_t, PosT&& pos, size_t first, edit_t e)
+    static result_t visit_relaxed(PosT&& pos, size_t first, edit_t e)
     {
         auto idx    = pos.subindex(first);
         auto count  = pos.count();
@@ -1218,7 +1223,7 @@ struct slice_left_mut_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_regular(this_t, PosT&& pos, size_t first, edit_t e)
+    static result_t visit_regular(PosT&& pos, size_t first, edit_t e)
     {
         auto idx    = pos.subindex(first);
         auto count  = pos.count();
@@ -1287,7 +1292,7 @@ struct slice_left_mut_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_leaf(this_t, PosT&& pos, size_t first, edit_t e)
+    static result_t visit_leaf(PosT&& pos, size_t first, edit_t e)
     {
         auto node   = pos.node();
         auto idx    = pos.index(first);
@@ -1310,7 +1315,7 @@ struct slice_left_mut_visitor
 };
 
 template <typename NodeT, bool Collapse=true>
-struct slice_left_visitor
+struct slice_left_visitor : visitor_base<slice_left_visitor<NodeT, Collapse>>
 {
     using node_t = NodeT;
     using this_t = slice_left_visitor;
@@ -1323,7 +1328,7 @@ struct slice_left_visitor
     static constexpr auto BL = NodeT::bits_leaf;
 
     template <typename PosT>
-    friend result_t visit_inner(this_t, PosT&& pos, size_t first)
+    static result_t visit_inner(PosT&& pos, size_t first)
     {
         auto idx    = pos.subindex(first);
         auto count  = pos.count();
@@ -1360,7 +1365,7 @@ struct slice_left_visitor
     }
 
     template <typename PosT>
-    friend result_t visit_leaf(this_t, PosT&& pos, size_t first)
+    static result_t visit_leaf(PosT&& pos, size_t first)
     {
         auto n = node_t::copy_leaf(pos.node(), pos.index(first), pos.count());
         return { 0, n };
@@ -1587,25 +1592,26 @@ struct concat_merger
     }
 };
 
-struct concat_merger_visitor
+struct concat_merger_visitor : visitor_base<concat_merger_visitor>
 {
     using this_t = concat_merger_visitor;
 
     template <typename Pos, typename Merger>
-    friend void visit_inner(this_t, Pos&& p, Merger& merger)
+    static void visit_inner(Pos&& p, Merger& merger)
     { merger.merge_inner(p); }
 
     template <typename Pos, typename Merger>
-    friend void visit_leaf(this_t, Pos&& p, Merger& merger)
+    static void visit_leaf(Pos&& p, Merger& merger)
     { merger.merge_leaf(p); }
 };
 
 struct concat_rebalance_plan_fill_visitor
+    : visitor_base<concat_rebalance_plan_fill_visitor>
 {
     using this_t = concat_rebalance_plan_fill_visitor;
 
     template <typename Pos, typename Plan>
-    friend void visit_node(this_t, Pos&& p, Plan& plan)
+    static void visit_node(Pos&& p, Plan& plan)
     {
         auto count = p.count();
         assert(plan.n < Plan::max_children);
@@ -1637,8 +1643,10 @@ struct concat_rebalance_plan
     void shuffle(shift_t shift)
     {
         // gcc seems to not really understand this code... :(
+#if !defined(_MSC_VER)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
         constexpr count_t rrb_extras    = 2;
         constexpr count_t rrb_invariant = 1;
         const auto bits     = shift == BL ? BL : B;
@@ -1661,7 +1669,9 @@ struct concat_rebalance_plan
             --n;
             --i;
         }
+#if !defined(_MSC_VER)
 #pragma GCC diagnostic pop
+#endif
     }
 
     template <typename LPos, typename CPos, typename RPos>
@@ -1751,72 +1761,75 @@ concat_inners(LPos&& lpos, TPos&& tpos, RPos&& rpos)
 }
 
 template <typename Node>
-struct concat_left_visitor
+struct concat_left_visitor : visitor_base<concat_left_visitor<Node>>
 {
     using this_t = concat_left_visitor;
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_pos<Node>
-    visit_inner(this_t, LPos&& lpos, TPos&& tpos, RPos&& rpos)
+    static concat_center_pos<Node>
+    visit_inner(LPos&& lpos, TPos&& tpos, RPos&& rpos)
     { return concat_inners<Node>(lpos, tpos, rpos); }
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_pos<Node>
-    visit_leaf(this_t, LPos&& lpos, TPos&& tpos, RPos&& rpos)
+    static concat_center_pos<Node>
+    visit_leaf(LPos&& lpos, TPos&& tpos, RPos&& rpos)
     { IMMER_UNREACHABLE; }
 };
 
 template <typename Node>
-struct concat_right_visitor
+struct concat_right_visitor : visitor_base<concat_right_visitor<Node>>
 {
     using this_t = concat_right_visitor;
 
     template <typename RPos, typename LPos, typename TPos>
-    friend concat_center_pos<Node>
-    visit_inner(this_t, RPos&& rpos, LPos&& lpos, TPos&& tpos)
+    static concat_center_pos<Node>
+    visit_inner(RPos&& rpos, LPos&& lpos, TPos&& tpos)
     { return concat_inners<Node>(lpos, tpos, rpos); }
 
     template <typename RPos, typename LPos, typename TPos>
-    friend concat_center_pos<Node>
-    visit_leaf(this_t, RPos&& rpos, LPos&& lpos, TPos&& tpos)
+    static concat_center_pos<Node>
+    visit_leaf(RPos&& rpos, LPos&& lpos, TPos&& tpos)
     { return concat_leafs<Node>(lpos, tpos, rpos); }
 };
 
 template <typename Node>
 struct concat_both_visitor
+    : visitor_base<concat_both_visitor<Node>>
 {
     using this_t = concat_both_visitor;
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_pos<Node>
-    visit_inner(this_t, LPos&& lpos, TPos&& tpos, RPos&& rpos)
+    static concat_center_pos<Node>
+    visit_inner(LPos&& lpos, TPos&& tpos, RPos&& rpos)
     { return rpos.first_sub(concat_right_visitor<Node>{}, lpos, tpos); }
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_pos<Node>
-    visit_leaf(this_t, LPos&& lpos, TPos&& tpos, RPos&& rpos)
+    static concat_center_pos<Node>
+    visit_leaf(LPos&& lpos, TPos&& tpos, RPos&& rpos)
     { return rpos.first_sub_leaf(concat_right_visitor<Node>{}, lpos, tpos); }
 };
 
 template <typename Node>
 struct concat_trees_right_visitor
+    : visitor_base<concat_trees_right_visitor<Node>>
 {
     using this_t = concat_trees_right_visitor;
 
     template <typename RPos, typename LPos, typename TPos>
-    friend concat_center_pos<Node>
-    visit_node(this_t, RPos&& rpos, LPos&& lpos, TPos&& tpos)
+    static concat_center_pos<Node>
+    visit_node(RPos&& rpos, LPos&& lpos, TPos&& tpos)
     { return concat_inners<Node>(lpos, tpos, rpos); }
 };
 
 template <typename Node>
 struct concat_trees_left_visitor
+    : visitor_base<concat_trees_left_visitor<Node>>
 {
     using this_t = concat_trees_left_visitor;
 
     template <typename LPos, typename TPos, typename... Args>
-    friend concat_center_pos<Node>
-    visit_node(this_t, LPos&& lpos, TPos&& tpos, Args&& ...args)
+    static concat_center_pos<Node>
+    visit_node(LPos&& lpos, TPos&& tpos, Args&& ...args)
     { return visit_maybe_relaxed_sub(
             args...,
             concat_trees_right_visitor<Node>{},
@@ -2039,17 +2052,17 @@ struct concat_merger_mut
     }
 };
 
-struct concat_merger_mut_visitor
+struct concat_merger_mut_visitor : visitor_base<concat_merger_mut_visitor>
 {
     using this_t = concat_merger_mut_visitor;
 
     template <typename Pos, typename Merger>
-    friend void visit_inner(this_t, Pos&& p,
+    static void visit_inner(Pos&& p,
                             Merger& merger, edit_type<Pos> e)
     { merger.merge_inner(p, e); }
 
     template <typename Pos, typename Merger>
-    friend void visit_leaf(this_t, Pos&& p,
+    static void visit_leaf(Pos&& p,
                            Merger& merger, edit_type<Pos> e)
     { merger.merge_leaf(p, e); }
 };
@@ -2167,22 +2180,22 @@ concat_inners_mut(edit_type<Node> ec,
 }
 
 template <typename Node>
-struct concat_left_mut_visitor
+struct concat_left_mut_visitor : visitor_base<concat_left_mut_visitor<Node>>
 {
     using this_t = concat_left_mut_visitor;
     using edit_t = typename Node::edit_t;
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_mut_pos<Node>
-    visit_inner(this_t, LPos&& lpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_inner(LPos&& lpos, edit_t ec,
                 edit_t el, TPos&& tpos,
                 edit_t er, RPos&& rpos)
     { return concat_inners_mut<Node>(
             ec, el, lpos, tpos, er, rpos); }
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_mut_pos<Node>
-    visit_leaf(this_t, LPos&& lpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_leaf(LPos&& lpos, edit_t ec,
                edit_t el, TPos&& tpos,
                edit_t er, RPos&& rpos)
     { IMMER_UNREACHABLE; }
@@ -2190,21 +2203,22 @@ struct concat_left_mut_visitor
 
 template <typename Node>
 struct concat_right_mut_visitor
+    : visitor_base<concat_right_mut_visitor<Node>>
 {
     using this_t = concat_right_mut_visitor;
     using edit_t = typename Node::edit_t;
 
     template <typename RPos, typename LPos, typename TPos>
-    friend concat_center_mut_pos<Node>
-    visit_inner(this_t, RPos&& rpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_inner(RPos&& rpos, edit_t ec,
                 edit_t el, LPos&& lpos, TPos&& tpos,
                 edit_t er)
     { return concat_inners_mut<Node>(
             ec, el, lpos, tpos, er, rpos); }
 
     template <typename RPos, typename LPos, typename TPos>
-    friend concat_center_mut_pos<Node>
-    visit_leaf(this_t, RPos&& rpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_leaf(RPos&& rpos, edit_t ec,
                edit_t el, LPos&& lpos, TPos&& tpos,
                edit_t er)
     { return concat_leafs_mut<Node>(
@@ -2213,21 +2227,22 @@ struct concat_right_mut_visitor
 
 template <typename Node>
 struct concat_both_mut_visitor
+    : visitor_base<concat_both_mut_visitor<Node>>
 {
     using this_t = concat_both_mut_visitor;
     using edit_t = typename Node::edit_t;
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_mut_pos<Node>
-    visit_inner(this_t, LPos&& lpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_inner(LPos&& lpos, edit_t ec,
                 edit_t el, TPos&& tpos,
                 edit_t er, RPos&& rpos)
     { return rpos.first_sub(concat_right_mut_visitor<Node>{},
                             ec, el, lpos, tpos, er); }
 
     template <typename LPos, typename TPos, typename RPos>
-    friend concat_center_mut_pos<Node>
-    visit_leaf(this_t, LPos&& lpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_leaf(LPos&& lpos, edit_t ec,
                edit_t el, TPos&& tpos,
                edit_t er, RPos&& rpos)
     { return rpos.first_sub_leaf(concat_right_mut_visitor<Node>{},
@@ -2236,13 +2251,14 @@ struct concat_both_mut_visitor
 
 template <typename Node>
 struct concat_trees_right_mut_visitor
+    : visitor_base<concat_trees_right_mut_visitor<Node>>
 {
     using this_t = concat_trees_right_mut_visitor;
     using edit_t = typename Node::edit_t;
 
     template <typename RPos, typename LPos, typename TPos>
-    friend concat_center_mut_pos<Node>
-    visit_node(this_t, RPos&& rpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_node(RPos&& rpos, edit_t ec,
                edit_t el, LPos&& lpos, TPos&& tpos,
                edit_t er)
     { return concat_inners_mut<Node>(
@@ -2251,13 +2267,14 @@ struct concat_trees_right_mut_visitor
 
 template <typename Node>
 struct concat_trees_left_mut_visitor
+    : visitor_base<concat_trees_left_mut_visitor<Node>>
 {
     using this_t = concat_trees_left_mut_visitor;
     using edit_t = typename Node::edit_t;
 
     template <typename LPos, typename TPos, typename... Args>
-    friend concat_center_mut_pos<Node>
-    visit_node(this_t, LPos&& lpos, edit_t ec,
+    static concat_center_mut_pos<Node>
+    visit_node(LPos&& lpos, edit_t ec,
                edit_t el, TPos&& tpos,
                edit_t er, Args&& ...args)
     { return visit_maybe_relaxed_sub(

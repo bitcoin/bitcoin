@@ -13,6 +13,16 @@
 
 namespace immer {
 
+namespace detail {
+
+template <typename U, typename MP>
+struct gc_atom_impl;
+
+template <typename U, typename MP>
+struct refcount_atom_impl;
+
+} // namespace detail
+
 /*!
  * Immutable box for a single value of type `T`.
  *
@@ -21,9 +31,12 @@ namespace immer {
  * moving just copy the underlying pointers.
  */
 template <typename T,
-          typename MemoryPolicy   = default_memory_policy>
+          typename MemoryPolicy = default_memory_policy>
 class box
 {
+    friend struct detail::gc_atom_impl<T, MemoryPolicy>;
+    friend struct detail::refcount_atom_impl<T, MemoryPolicy>;
+
     struct holder : MemoryPolicy::refcount
     {
         T value;

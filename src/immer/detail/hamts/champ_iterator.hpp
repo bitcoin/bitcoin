@@ -20,7 +20,9 @@ struct champ_iterator
     : iterator_facade<champ_iterator<T, Hash, Eq, MP, B>,
                       std::forward_iterator_tag,
                       T,
-                      const T&>
+                      const T&,
+                      std::ptrdiff_t,
+                      const T*>
 {
     using tree_t = champ<T, Hash, Eq, MP, B>;
     using node_t = typename tree_t::node_t;
@@ -30,10 +32,14 @@ struct champ_iterator
     champ_iterator() = default;
 
     champ_iterator(const tree_t& v)
-        : cur_   { v.root->values()  }
-        , end_   { v.root->values() + popcount(v.root->datamap()) }
-        , depth_ { 0 }
+        : depth_ { 0 }
     {
+        if (v.root->datamap()) {
+            cur_ = v.root->values();
+            end_ = v.root->values() + popcount(v.root->datamap());
+        } else {
+            cur_ = end_ = nullptr;
+        }
         path_[0] = &v.root;
         ensure_valid_();
     }
@@ -77,8 +83,10 @@ private:
                 path_[depth_] = parent->children();
                 auto child = *path_[depth_];
                 if (depth_ < max_depth<B>) {
-                    cur_ = child->values();
-                    end_ = cur_ + popcount(child->datamap());
+                    if (child->datamap()) {
+                        cur_ = child->values();
+                        end_ = cur_ + popcount(child->datamap());
+                    }
                 } else {
                     cur_ = child->collisions();
                     end_ = cur_ + child->collision_count();
@@ -99,8 +107,10 @@ private:
                 path_[depth_] = next;
                 auto child = *path_[depth_];
                 if (depth_ < max_depth<B>) {
-                    cur_ = child->values();
-                    end_ = cur_ + popcount(child->datamap());
+                    if (child->datamap()) {
+                        cur_ = child->values();
+                        end_ = cur_ + popcount(child->datamap());
+                    }
                 } else {
                     cur_ = child->collisions();
                     end_ = cur_ + child->collision_count();

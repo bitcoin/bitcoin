@@ -12,6 +12,8 @@
 #include <immer/detail/rbts/position.hpp>
 #include <immer/detail/rbts/operations.hpp>
 
+#include <immer/detail/type_traits.hpp>
+
 #include <cassert>
 #include <memory>
 #include <numeric>
@@ -56,8 +58,10 @@ struct rbtree
         return result;
     }
 
-    template <typename Iter>
-    static auto from_range(Iter first, Iter last)
+    template <typename Iter, typename Sent,
+              std::enable_if_t
+              <compatible_sentinel_v<Iter, Sent>, bool> = true>
+    static auto from_range(Iter first, Sent last)
     {
         auto e = owner_t{};
         auto result = rbtree{empty()};

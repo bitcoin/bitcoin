@@ -111,10 +111,13 @@ struct with_capacity
         }
     }
 
-    template <typename Iter>
-    static with_capacity from_range(Iter first, Iter last)
+    template <typename Iter, typename Sent,
+              std::enable_if_t
+              <is_forward_iterator_v<Iter>
+               && compatible_sentinel_v<Iter, Sent>, bool> = true>
+    static with_capacity from_range(Iter first, Sent last)
     {
-        auto count = static_cast<size_t>(std::distance(first, last));
+        auto count = static_cast<size_t>(distance(first, last));
         return {
             node_t::copy_n(count, first, last),
             count,
