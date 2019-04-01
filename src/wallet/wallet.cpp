@@ -526,6 +526,16 @@ bool CWallet::LoadDescriptor(const WalletDescriptor& desc)
     return true;
 }
 
+std::set<std::tuple<std::shared_ptr<Descriptor>, int32_t, int32_t, uint64_t>> CWallet::GetDescriptors() const
+{
+    AssertLockHeld(cs_wallet);
+    std::set<std::tuple<std::shared_ptr<Descriptor>, int32_t, int32_t, uint64_t>> descriptors;
+    for (const auto& desc : m_map_descriptors) {
+        descriptors.emplace(desc.second.descriptor, desc.second.range_start, desc.second.range_end, desc.second.creation_time);
+    }
+    return descriptors;
+}
+
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
 {
     CCrypter crypter;

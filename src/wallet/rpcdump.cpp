@@ -626,6 +626,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         pwallet->chain().showProgress(strprintf("%s " + _("Importing..."), pwallet->GetDisplayName()), 0, false); // show progress dialog in GUI
         std::vector<std::tuple<CKey, int64_t, bool, std::string>> keys;
         std::vector<std::pair<CScript, int64_t>> scripts;
+        std::set<std::tuple<std::shared_ptr<Descriptor>, int32_t, int32_t, uint64_t>> descriptors;
         while (file.good()) {
             pwallet->chain().showProgress("", std::max(1, std::min(50, (int)(((double)file.tellg() / (double)nFilesize) * 100))), false);
             std::string line;
@@ -660,6 +661,13 @@ UniValue importwallet(const JSONRPCRequest& request)
                 CScript script = CScript(vData.begin(), vData.end());
                 int64_t birth_time = DecodeDumpTime(vstr[1]);
                 scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
+            } else {
+                FlatSigningProvider out_keys;
+                std::unique_ptr<Descriptor> desc = Parse(vstr[0], out_keys, true);
+                if (!desc) {
+                    continue;
+                }
+                descriptors.emplace(std::move(desc), stoi(vstr[1]), stoi(vstr[2]), DecodeDumpTime(vstr[3]));
             }
         }
         file.close();
@@ -668,7 +676,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
             throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when private keys are disabled");
         }
-        double total = (double)(keys.size() + scripts.size());
+        double total = (double)(keys.size() + scripts.size() + descriptors.size());
         double progress = 0;
         for (const auto& key_tuple : keys) {
             pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
@@ -712,6 +720,43 @@ UniValue importwallet(const JSONRPCRequest& request)
             if (time > 0) {
                 pwallet->m_script_metadata[id].nCreateTime = time;
                 nTimeBegin = std::min(nTimeBegin, time);
+            }
+            progress++;
+        }
+        for (const auto& desc_tuple : descriptors) {
+            pwallet->chain().showProgress("", std::max(50, std::min(75, (int)((progress / total) * 100) + 50)), false);
+            std::shared_ptr<Descriptor> desc = std::get<0>(desc_tuple);
+            int32_t range_start = std::get<1>(desc_tuple);
+            int32_t range_end = std::get<2>(desc_tuple);
+            uint64_t creation_time = std::get<3>(desc_tuple);
+            WalletDescriptor wallet_desc(desc, creation_time, range_start, range_end, range_end);
+
+            // Build the expansion cache
+            bool good_expansion = true;
+            for (int i = wallet_desc.range_start; i < wallet_desc.range_end; ++i) {
+                FlatSigningProvider out_keys;
+                std::vector<CScript> scripts_temp;
+                std::vector<unsigned char> cache;
+                if (!wallet_desc.descriptor->Expand(i, *pwallet, scripts_temp, out_keys, &cache)) {
+                    pwallet->WalletLogPrintf("Error expanding cache for descriptor %s\n", desc->ToString());
+                    fGood = false;
+                    good_expansion = false;
+                    continue;
+                }
+                wallet_desc.cache.push_back(std::move(cache));
+            }
+            if (!good_expansion) {
+                continue;
+            }
+
+            if (pwallet->HaveWalletDescriptor(DescriptorID(*wallet_desc.descriptor))) {
+                pwallet->WalletLogPrintf("Skipping import of %s (descriptor already present)\n", desc->ToString());
+                continue;
+            }
+            if (!pwallet->AddWalletDescriptor(wallet_desc)) {
+                pwallet->WalletLogPrintf("Error importing descriptor %s\n", desc->ToString());
+                fGood = false;
+                continue;
             }
             progress++;
         }
@@ -851,7 +896,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
     // add the base58check encoded extended master if the wallet uses HD
     CKeyID seed_id = pwallet->GetHDChain().seed_id;
-    if (!seed_id.IsNull())
+    if (!seed_id.IsNull() && !pwallet->IsDescriptor())
     {
         CKey seed;
         if (pwallet->GetKey(seed_id, seed)) {
@@ -860,6 +905,9 @@ UniValue dumpwallet(const JSONRPCRequest& request)
 
             file << "# extended private masterkey: " << EncodeExtKey(masterKey) << "\n\n";
         }
+    }
+    for (const auto& desc : pwallet->GetDescriptors()) {
+        file << strprintf("%s %d %d %s # \n", std::get<0>(desc)->ToString(), std::get<1>(desc), std::get<2>(desc), FormatISO8601DateTime(std::get<3>(desc)));
     }
     for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
         const CKeyID &keyid = it->second;
@@ -877,6 +925,8 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                 file << "reserve=1";
             } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "s") {
                 file << "inactivehdseed=1";
+            } else if (pwallet->mapKeyMetadata[keyid].hdKeypath == "m") {
+                file << "masterprivkey=1";
             } else {
                 file << "change=1";
             }

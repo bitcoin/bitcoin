@@ -24,12 +24,13 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
         found_script_addr = 0
         found_addr_chg = 0
         found_addr_rsv = 0
+        found_descriptors = 0
         hd_master_addr_ret = None
         for line in inputfile:
             # only read non comment lines
             if line[0] != "#" and len(line) > 10:
                 # split out some data
-                key_date_label, comment = line.split("#")
+                key_date_label, comment = line.split(" #")
                 key_date_label = key_date_label.split(" ")
                 # key = key_date_label[0]
                 date = key_date_label[1]
@@ -39,6 +40,11 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 if imported_key:
                     # Imported keys have multiple addresses, no label (keypath) and timestamp
                     # Skip them
+                    continue
+
+                # Descriptors don't have a comment
+                if comment.strip() == "":
+                    found_descriptors += 1
                     continue
 
                 addr_keypath = comment.split(" addr=")[1]
@@ -54,6 +60,8 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                 elif keytype == "script=1":
                     # scripts don't have keypaths
                     keypath = None
+                elif keytype == "masterprivkey=1":
+                    pass
                 else:
                     keypath = addr_keypath.rstrip().split("hdkeypath=")[1]
 
@@ -82,7 +90,7 @@ def read_dump(file_name, addrs, script_addrs, hd_master_addr_old):
                         found_script_addr += 1
                         break
 
-        return found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret
+        return found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_ret, found_descriptors
 
 
 class WalletDumpTest(BitcoinTestFramework):
@@ -126,7 +134,7 @@ class WalletDumpTest(BitcoinTestFramework):
         result = self.nodes[0].dumpwallet(wallet_unenc_dump)
         assert_equal(result['filename'], wallet_unenc_dump)
 
-        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc = \
+        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, hd_master_addr_unenc, _ = \
             read_dump(wallet_unenc_dump, addrs, [multisig_addr], None)
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump
@@ -142,7 +150,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
         self.nodes[0].dumpwallet(wallet_enc_dump)
 
-        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _ = \
+        found_legacy_addr, found_p2sh_segwit_addr, found_bech32_addr, found_script_addr, found_addr_chg, found_addr_rsv, _, _ = \
             read_dump(wallet_enc_dump, addrs, [multisig_addr], hd_master_addr_unenc)
         assert_equal(found_legacy_addr, test_addr_count)  # all keys must be in the dump
         assert_equal(found_p2sh_segwit_addr, test_addr_count)  # all keys must be in the dump

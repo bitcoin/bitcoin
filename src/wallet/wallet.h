@@ -1029,6 +1029,9 @@ public:
     //! Load a descriptor
     bool LoadDescriptor(const WalletDescriptor& desc);
 
+    //! Get all of the descriptors from the set
+    std::set<std::tuple<std::shared_ptr<Descriptor>, int32_t, int32_t, uint64_t>> GetDescriptors() const;
+
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime = 0;
 
