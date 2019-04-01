@@ -158,6 +158,21 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         LogPrint("gobject", "%s\n", ostr.str());
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
         return false;
+    } else if (vote.GetTimestamp() == voteInstanceRef.nCreationTime) {
+        // Someone is doing smth fishy, there can be no two votes from the same masternode
+        // with the same timestamp for the same object and signal and yet different hash/outcome.
+        std::ostringstream ostr;
+        ostr << "CGovernanceObject::ProcessVote -- Invalid vote, same timestamp for the different outcome";
+        if (vote.GetOutcome() < voteInstanceRef.eOutcome) {
+            // This is an arbitrary comparison, we have to agree on some way
+            // to pick the "winning" vote.
+            ostr << ", rejected";
+            LogPrint("gobject", "%s\n", ostr.str());
+            exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_NONE);
+            return false;
+        }
+        ostr << ", accepted";
+        LogPrint("gobject", "%s\n", ostr.str());
     }
 
     int64_t nNow = GetAdjustedTime();
