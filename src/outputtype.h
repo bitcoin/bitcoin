@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-enum class OutputType {
+enum class OutputType <%
     LEGACY,
     P2SH_SEGWIT,
     BECH32,
@@ -25,7 +25,7 @@ enum class OutputType {
      * CWallet::TransactionChangeType for details).
      */
     CHANGE_AUTO,
-};
+%>;
 
 NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);

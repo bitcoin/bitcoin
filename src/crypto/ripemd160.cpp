@@ -10,49 +10,49 @@
 
 // Internal implementation code.
 namespace
-{
+<%
 /// Internal RIPEMD-160 implementation.
 namespace ripemd160
-{
-uint32_t inline f1(uint32_t x, uint32_t y, uint32_t z) { return x ^ y ^ z; }
-uint32_t inline f2(uint32_t x, uint32_t y, uint32_t z) { return (x & y) | (~x & z); }
-uint32_t inline f3(uint32_t x, uint32_t y, uint32_t z) { return (x | ~y) ^ z; }
-uint32_t inline f4(uint32_t x, uint32_t y, uint32_t z) { return (x & z) | (y & ~z); }
-uint32_t inline f5(uint32_t x, uint32_t y, uint32_t z) { return x ^ (y | ~z); }
+<%
+uint32_t inline f1(uint32_t x, uint32_t y, uint32_t z) <% return x ^ y ^ z; %>
+uint32_t inline f2(uint32_t x, uint32_t y, uint32_t z) <% return (x & y) | (~x & z); %>
+uint32_t inline f3(uint32_t x, uint32_t y, uint32_t z) <% return (x | ~y) ^ z; %>
+uint32_t inline f4(uint32_t x, uint32_t y, uint32_t z) <% return (x & z) | (y & ~z); %>
+uint32_t inline f5(uint32_t x, uint32_t y, uint32_t z) <% return x ^ (y | ~z); %>
 
 /** Initialize RIPEMD-160 state. */
 void inline Initialize(uint32_t* s)
-{
+<%
     s[0] = 0x67452301ul;
     s[1] = 0xEFCDAB89ul;
     s[2] = 0x98BADCFEul;
     s[3] = 0x10325476ul;
     s[4] = 0xC3D2E1F0ul;
-}
+%>
 
-uint32_t inline rol(uint32_t x, int i) { return (x << i) | (x >> (32 - i)); }
+uint32_t inline rol(uint32_t x, int i) <% return (x << i) | (x >> (32 - i)); %>
 
 void inline Round(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t f, uint32_t x, uint32_t k, int r)
-{
+<%
     a = rol(a + f + x + k, r) + e;
     c = rol(c, 10);
-}
+%>
 
-void inline R11(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f1(b, c, d), x, 0, r); }
-void inline R21(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f2(b, c, d), x, 0x5A827999ul, r); }
-void inline R31(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f3(b, c, d), x, 0x6ED9EBA1ul, r); }
-void inline R41(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f4(b, c, d), x, 0x8F1BBCDCul, r); }
-void inline R51(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f5(b, c, d), x, 0xA953FD4Eul, r); }
+void inline R11(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f1(b, c, d), x, 0, r); %>
+void inline R21(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f2(b, c, d), x, 0x5A827999ul, r); %>
+void inline R31(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f3(b, c, d), x, 0x6ED9EBA1ul, r); %>
+void inline R41(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f4(b, c, d), x, 0x8F1BBCDCul, r); %>
+void inline R51(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f5(b, c, d), x, 0xA953FD4Eul, r); %>
 
-void inline R12(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f5(b, c, d), x, 0x50A28BE6ul, r); }
-void inline R22(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f4(b, c, d), x, 0x5C4DD124ul, r); }
-void inline R32(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f3(b, c, d), x, 0x6D703EF3ul, r); }
-void inline R42(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f2(b, c, d), x, 0x7A6D76E9ul, r); }
-void inline R52(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) { Round(a, b, c, d, e, f1(b, c, d), x, 0, r); }
+void inline R12(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f5(b, c, d), x, 0x50A28BE6ul, r); %>
+void inline R22(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f4(b, c, d), x, 0x5C4DD124ul, r); %>
+void inline R32(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f3(b, c, d), x, 0x6D703EF3ul, r); %>
+void inline R42(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f2(b, c, d), x, 0x7A6D76E9ul, r); %>
+void inline R52(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t x, int r) <% Round(a, b, c, d, e, f1(b, c, d), x, 0, r); %>
 
 /** Perform a RIPEMD-160 transformation, processing a 64-byte chunk. */
 void Transform(uint32_t* s, const unsigned char* chunk)
-{
+<%
     uint32_t a1 = s[0], b1 = s[1], c1 = s[2], d1 = s[3], e1 = s[4];
     uint32_t a2 = a1, b2 = b1, c2 = c1, d2 = d1, e2 = e1;
     uint32_t w0 = ReadLE32(chunk + 0), w1 = ReadLE32(chunk + 4), w2 = ReadLE32(chunk + 8), w3 = ReadLE32(chunk + 12);
@@ -231,48 +231,48 @@ void Transform(uint32_t* s, const unsigned char* chunk)
     s[2] = s[3] + e1 + a2;
     s[3] = s[4] + a1 + b2;
     s[4] = t + b1 + c2;
-}
+%>
 
-} // namespace ripemd160
+%> // namespace ripemd160
 
-} // namespace
+%> // namespace
 
 ////// RIPEMD160
 
 CRIPEMD160::CRIPEMD160() : bytes(0)
-{
+<%
     ripemd160::Initialize(s);
-}
+%>
 
 CRIPEMD160& CRIPEMD160::Write(const unsigned char* data, size_t len)
-{
+<%
     const unsigned char* end = data + len;
     size_t bufsize = bytes % 64;
-    if (bufsize && bufsize + len >= 64) {
+    if (bufsize && bufsize + len >= 64) <%
         // Fill the buffer, and process it.
         memcpy(buf + bufsize, data, 64 - bufsize);
         bytes += 64 - bufsize;
         data += 64 - bufsize;
         ripemd160::Transform(s, buf);
         bufsize = 0;
-    }
-    while (end >= data + 64) {
+    %>
+    while (end >= data + 64) <%
         // Process full chunks directly from the source.
         ripemd160::Transform(s, data);
         bytes += 64;
         data += 64;
-    }
-    if (end > data) {
+    %>
+    if (end > data) <%
         // Fill the buffer with what remains.
         memcpy(buf + bufsize, data, end - data);
         bytes += end - data;
-    }
+    %>
     return *this;
-}
+%>
 
 void CRIPEMD160::Finalize(unsigned char hash[OUTPUT_SIZE])
-{
-    static const unsigned char pad[64] = {0x80};
+<%
+    static const unsigned char pad[64] = <%0x80%>;
     unsigned char sizedesc[8];
     WriteLE64(sizedesc, bytes << 3);
     Write(pad, 1 + ((119 - (bytes % 64)) % 64));
@@ -282,11 +282,11 @@ void CRIPEMD160::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteLE32(hash + 8, s[2]);
     WriteLE32(hash + 12, s[3]);
     WriteLE32(hash + 16, s[4]);
-}
+%>
 
 CRIPEMD160& CRIPEMD160::Reset()
-{
+<%
     bytes = 0;
     ripemd160::Initialize(s);
     return *this;
-}
+%>

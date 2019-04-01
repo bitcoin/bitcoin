@@ -22,13 +22,13 @@ static const unsigned int MAX_HASH_FUNCS = 50;
  * The remaining bits are reserved
  */
 enum bloomflags
-{
+<%
     BLOOM_UPDATE_NONE = 0,
     BLOOM_UPDATE_ALL = 1,
     // Only adds outpoints to the filter if the output is a pay-to-pubkey/pay-to-multisig script
     BLOOM_UPDATE_P2PUBKEY_ONLY = 2,
     BLOOM_UPDATE_MASK = 3,
-};
+%>;
 
 /**
  * BloomFilter is a probabilistic filter which SPV clients provide
@@ -42,7 +42,7 @@ enum bloomflags
  * keys are controlled by them.
  */
 class CBloomFilter
-{
+<%
 private:
     std::vector<unsigned char> vData;
     bool isFull;
@@ -64,17 +64,17 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
-    CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
+    CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) <%%>
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
         READWRITE(vData);
         READWRITE(nHashFuncs);
         READWRITE(nTweak);
         READWRITE(nFlags);
-    }
+    %>
 
     void insert(const std::vector<unsigned char>& vKey);
     void insert(const COutPoint& outpoint);
@@ -96,7 +96,7 @@ public:
 
     //! Checks for empty and full filters to avoid wasting cpu
     void UpdateEmptyFull();
-};
+%>;
 
 /**
  * RollingBloomFilter is a probabilistic "keep track of most recently inserted" set.
@@ -113,7 +113,7 @@ public:
  * (More accurately: 3/(log(256)*log(2)) * log(1/fpRate) * nElements bytes)
  */
 class CRollingBloomFilter
-{
+<%
 public:
     // A random bloom filter calls GetRand() at creation time.
     // Don't create global CRollingBloomFilter objects, as they may be
@@ -134,6 +134,6 @@ private:
     std::vector<uint64_t> data;
     unsigned int nTweak;
     int nHashFuncs;
-};
+%>;
 
 #endif // BITCOIN_BLOOM_H

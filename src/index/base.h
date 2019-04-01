@@ -20,10 +20,10 @@ class CBlockIndex;
  * to their position in the active chain.
  */
 class BaseIndex : public CValidationInterface
-{
+<%
 protected:
     class DB : public CDBWrapper
-    {
+    <%
     public:
         DB(const fs::path& path, size_t n_cache_size,
            bool f_memory = false, bool f_wipe = false, bool f_obfuscate = false);
@@ -33,16 +33,16 @@ protected:
 
         /// Write block locator of the chain that the txindex is in sync with.
         bool WriteBestBlock(const CBlockLocator& locator);
-    };
+    %>;
 
 private:
     /// Whether the index is in sync with the main chain. The flag is flipped
     /// from false to true once, after which point this starts processing
     /// ValidationInterface notifications to stay in sync.
-    std::atomic<bool> m_synced{false};
+    std::atomic<bool> m_synced<%false%>;
 
     /// The last block in the chain that the index is in sync with.
-    std::atomic<const CBlockIndex*> m_best_block_index{nullptr};
+    std::atomic<const CBlockIndex*> m_best_block_index<%nullptr%>;
 
     std::thread m_thread_sync;
     CThreadInterrupt m_interrupt;
@@ -67,7 +67,7 @@ protected:
     virtual bool Init();
 
     /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) <% return true; %>
 
     virtual DB& GetDB() const = 0;
 
@@ -93,6 +93,6 @@ public:
 
     /// Stops the instance from staying in sync with blockchain updates.
     void Stop();
-};
+%>;
 
 #endif // BITCOIN_INDEX_BASE_H

@@ -10,9 +10,9 @@
 class CBlockIndex;
 
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
-{
+<%
 private:
-    uint32_t nSequence {0U}; //!< upcounting per message sequence number
+    uint32_t nSequence <%0U%>; //!< upcounting per message sequence number
 
 public:
 
@@ -26,30 +26,30 @@ public:
 
     bool Initialize(void *pcontext) override;
     void Shutdown() override;
-};
+%>;
 
 class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
-{
+<%
 public:
     bool NotifyBlock(const CBlockIndex *pindex) override;
-};
+%>;
 
 class CZMQPublishHashTransactionNotifier : public CZMQAbstractPublishNotifier
-{
+<%
 public:
     bool NotifyTransaction(const CTransaction &transaction) override;
-};
+%>;
 
 class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
-{
+<%
 public:
     bool NotifyBlock(const CBlockIndex *pindex) override;
-};
+%>;
 
 class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier
-{
+<%
 public:
     bool NotifyTransaction(const CTransaction &transaction) override;
-};
+%>;
 
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

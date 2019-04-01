@@ -15,7 +15,7 @@
 #include <compat/byteswap.h>
 
 void CompatTests::bswapTests()
-{
+<%
 	// Sibling in bitcoin/src/test/bswap_tests.cpp
 	uint16_t u1 = 0x1234;
 	uint32_t u2 = 0x56789abc;
@@ -26,4 +26,4 @@ void CompatTests::bswapTests()
 	QVERIFY(bswap_16(u1) == e1);
 	QVERIFY(bswap_32(u2) == e2);
 	QVERIFY(bswap_64(u3) == e3);
-}
+%>

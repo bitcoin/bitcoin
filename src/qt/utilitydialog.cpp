@@ -38,7 +38,7 @@
 HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about) :
     QDialog(parent),
     ui(new Ui::HelpMessageDialog)
-{
+<%
     ui->setupUi(this);
 
     QString version = tr(PACKAGE_NAME) + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
@@ -52,7 +52,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
 #endif
 
     if (about)
-    {
+    <%
         setWindowTitle(tr("About %1").arg(tr(PACKAGE_NAME)));
 
         std::string licenseInfo = LicenseInfo();
@@ -71,7 +71,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
         ui->aboutMessage->setText(version + "<br><br>" + licenseInfoHTML);
         ui->aboutMessage->setWordWrap(true);
         ui->helpMessage->setVisible(false);
-    } else {
+    %> else <%
         setWindowTitle(tr("Command-line options"));
         QString header = "Usage:  bitcoin-qt [command-line options]                     \n";
         QTextCursor cursor(ui->helpMessage->document());
@@ -95,45 +95,45 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
         QTextCharFormat bold;
         bold.setFontWeight(QFont::Bold);
 
-        for (const QString &line : coreOptions.split("\n")) {
+        for (const QString &line : coreOptions.split("\n")) <%
             if (line.startsWith("  -"))
-            {
+            <%
                 cursor.currentTable()->appendRows(1);
                 cursor.movePosition(QTextCursor::PreviousCell);
                 cursor.movePosition(QTextCursor::NextRow);
                 cursor.insertText(line.trimmed());
                 cursor.movePosition(QTextCursor::NextCell);
-            } else if (line.startsWith("   ")) {
+            %> else if (line.startsWith("   ")) <%
                 cursor.insertText(line.trimmed()+' ');
-            } else if (line.size() > 0) {
+            %> else if (line.size() > 0) <%
                 //Title of a group
                 if (cursor.currentTable())
                     cursor.currentTable()->appendRows(1);
                 cursor.movePosition(QTextCursor::Down);
                 cursor.insertText(line.trimmed(), bold);
                 cursor.insertTable(1, 2, tf);
-            }
-        }
+            %>
+        %>
 
         ui->helpMessage->moveCursor(QTextCursor::Start);
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
-    }
-}
+    %>
+%>
 
 HelpMessageDialog::~HelpMessageDialog()
-{
+<%
     delete ui;
-}
+%>
 
 void HelpMessageDialog::printToConsole()
-{
+<%
     // On other operating systems, the expected action is to print the message to the console.
     fprintf(stdout, "%s\n", qPrintable(text));
-}
+%>
 
 void HelpMessageDialog::showOrPrint()
-{
+<%
 #if defined(WIN32)
     // On Windows, show a message box, as there is no stderr/stdout in windowed applications
     exec();
@@ -141,27 +141,27 @@ void HelpMessageDialog::showOrPrint()
     // On other operating systems, print help text to console
     printToConsole();
 #endif
-}
+%>
 
 void HelpMessageDialog::on_okButton_accepted()
-{
+<%
     close();
-}
+%>
 
 
 /** "Shutdown" window */
 ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
     QWidget(parent, f)
-{
+<%
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
         tr("%1 is shutting down...").arg(tr(PACKAGE_NAME)) + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
-}
+%>
 
 QWidget *ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
-{
+<%
     if (!window)
         return nullptr;
 
@@ -174,9 +174,9 @@ QWidget *ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
     shutdownWindow->move(global.x() - shutdownWindow->width() / 2, global.y() - shutdownWindow->height() / 2);
     shutdownWindow->show();
     return shutdownWindow;
-}
+%>
 
 void ShutdownWindow::closeEvent(QCloseEvent *event)
-{
+<%
     event->ignore();
-}
+%>

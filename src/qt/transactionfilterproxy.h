@@ -12,7 +12,7 @@
 
 /** Filter the transaction list according to pre-specified rules. */
 class TransactionFilterProxy : public QSortFilterProxyModel
-{
+<%
     Q_OBJECT
 
 public:
@@ -25,14 +25,14 @@ public:
     /** Type filter bit field (all types) */
     static const quint32 ALL_TYPES = 0xFFFFFFFF;
 
-    static quint32 TYPE(int type) { return 1<<type; }
+    static quint32 TYPE(int type) <% return 1<<type; %>
 
     enum WatchOnlyFilter
-    {
+    <%
         WatchOnlyFilter_All,
         WatchOnlyFilter_Yes,
         WatchOnlyFilter_No
-    };
+    %>;
 
     void setDateRange(const QDateTime &from, const QDateTime &to);
     void setSearchString(const QString &);
@@ -63,6 +63,6 @@ private:
     CAmount minAmount;
     int limitRows;
     bool showInactive;
-};
+%>;
 
 #endif // BITCOIN_QT_TRANSACTIONFILTERPROXY_H

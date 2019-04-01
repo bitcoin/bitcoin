@@ -20,12 +20,12 @@
 
 /** Used by SanitizeString() */
 enum SafeChars
-{
+<%
     SAFE_CHARS_DEFAULT, //!< The full set of allowed chars
     SAFE_CHARS_UA_COMMENT, //!< BIP-0014 subset
     SAFE_CHARS_FILENAME, //!< Chars allowed in filenames
     SAFE_CHARS_URI, //!< Chars allowed in URIs (RFC 3986)
-};
+%>;
 
 /**
 * Remove unsafe chars. Safe chars chosen to allow simple messages/URLs/email
@@ -67,9 +67,9 @@ int atoi(const std::string& str);
  * @return          true if the argument is a decimal digit; otherwise false.
  */
 constexpr bool IsDigit(char c)
-{
+<%
     return c >= '0' && c <= '9';
-}
+%>
 
 /**
  * Tests if the given character is a whitespace character. The whitespace characters
@@ -82,9 +82,9 @@ constexpr bool IsDigit(char c)
  * @param[in] c     character to test
  * @return          true if the argument is a whitespace character; otherwise false
  */
-constexpr inline bool IsSpace(char c) noexcept {
+constexpr inline bool IsSpace(char c) noexcept <%
     return c == ' ' || c == '\f' || c == '\n' || c == '\r' || c == '\t' || c == '\v';
-}
+%>
 
 /**
  * Convert string to signed 32-bit integer with strict parse error feedback.
@@ -123,25 +123,25 @@ NODISCARD bool ParseDouble(const std::string& str, double *out);
 
 template<typename T>
 std::string HexStr(const T itbegin, const T itend)
-{
+<%
     std::string rv;
-    static const char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
-                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    static const char hexmap[16] = <% '0', '1', '2', '3', '4', '5', '6', '7',
+                                     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' %>;
     rv.reserve(std::distance(itbegin, itend) * 2);
     for(T it = itbegin; it < itend; ++it)
-    {
+    <%
         unsigned char val = (unsigned char)(*it);
         rv.push_back(hexmap[val>>4]);
         rv.push_back(hexmap[val&15]);
-    }
+    %>
     return rv;
-}
+%>
 
 template<typename T>
 inline std::string HexStr(const T& vch)
-{
+<%
     return HexStr(vch.begin(), vch.end());
-}
+%>
 
 /**
  * Format a paragraph of text to a fixed width, adding spaces for
@@ -156,13 +156,13 @@ std::string FormatParagraph(const std::string& in, size_t width = 79, size_t ind
  */
 template <typename T>
 bool TimingResistantEqual(const T& a, const T& b)
-{
+<%
     if (b.size() == 0) return a.size() == 0;
     size_t accumulator = a.size() ^ b.size();
     for (size_t i = 0; i < a.size(); i++)
         accumulator |= a[i] ^ b[i%b.size()];
     return accumulator == 0;
-}
+%>
 
 /** Parse number as fixed point according to JSON number syntax.
  * See http://json.org/number.gif
@@ -173,27 +173,27 @@ NODISCARD bool ParseFixedPoint(const std::string &val, int decimals, int64_t *am
 
 /** Convert from one power-of-2 number base to another. */
 template<int frombits, int tobits, bool pad, typename O, typename I>
-bool ConvertBits(const O& outfn, I it, I end) {
+bool ConvertBits(const O& outfn, I it, I end) <%
     size_t acc = 0;
     size_t bits = 0;
     constexpr size_t maxv = (1 << tobits) - 1;
     constexpr size_t max_acc = (1 << (frombits + tobits - 1)) - 1;
-    while (it != end) {
+    while (it != end) <%
         acc = ((acc << frombits) | *it) & max_acc;
         bits += frombits;
-        while (bits >= tobits) {
+        while (bits >= tobits) <%
             bits -= tobits;
             outfn((acc >> bits) & maxv);
-        }
+        %>
         ++it;
-    }
-    if (pad) {
+    %>
+    if (pad) <%
         if (bits) outfn((acc << (tobits - bits)) & maxv);
-    } else if (bits >= frombits || ((acc << (tobits - bits)) & maxv)) {
+    %> else if (bits >= frombits || ((acc << (tobits - bits)) & maxv)) <%
         return false;
-    }
+    %>
     return true;
-}
+%>
 
 /**
  * Converts the given character to its lowercase equivalent.
@@ -204,9 +204,9 @@ bool ConvertBits(const O& outfn, I it, I end) {
  *                  if no conversion is possible.
  */
 constexpr char ToLower(char c)
-{
+<%
     return (c >= 'A' && c <= 'Z' ? (c - 'A') + 'a' : c);
-}
+%>
 
 /**
  * Converts the given string to its lowercase equivalent.
@@ -225,9 +225,9 @@ void Downcase(std::string& str);
  *                  if no conversion is possible.
  */
 constexpr char ToUpper(char c)
-{
+<%
     return (c >= 'a' && c <= 'z' ? (c - 'a') + 'A' : c);
-}
+%>
 
 /**
  * Capitalizes the first character of the given string.

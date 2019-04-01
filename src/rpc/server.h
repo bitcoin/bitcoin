@@ -22,22 +22,22 @@ static const unsigned int DEFAULT_RPC_SERIALIZE_VERSION = 1;
 class CRPCCommand;
 
 namespace RPCServer
-{
+<%
     void OnStarted(std::function<void ()> slot);
     void OnStopped(std::function<void ()> slot);
-}
+%>
 
 /** Wrapper for UniValue::VType, which includes typeAny:
  * Used to denote don't care type. */
-struct UniValueType {
-    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) {}
-    UniValueType() : typeAny(true) {}
+struct UniValueType <%
+    UniValueType(UniValue::VType _type) : typeAny(false), type(_type) <%%>
+    UniValueType() : typeAny(true) <%%>
     bool typeAny;
     UniValue::VType type;
-};
+%>;
 
 class JSONRPCRequest
-{
+<%
 public:
     UniValue id;
     std::string strMethod;
@@ -47,9 +47,9 @@ public:
     std::string authUser;
     std::string peerAddr;
 
-    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
+    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) <%%>
     void parse(const UniValue& valRequest);
-};
+%>;
 
 /** Query whether RPC is running */
 bool IsRPCRunning();
@@ -90,18 +90,18 @@ void RPCTypeCheckObj(const UniValue& o,
  * cleans up the whole state.
  */
 class RPCTimerBase
-{
+<%
 public:
-    virtual ~RPCTimerBase() {}
-};
+    virtual ~RPCTimerBase() <%%>
+%>;
 
 /**
  * RPC timer "driver".
  */
 class RPCTimerInterface
-{
+<%
 public:
-    virtual ~RPCTimerInterface() {}
+    virtual ~RPCTimerInterface() <%%>
     /** Implementation name */
     virtual const char *Name() = 0;
     /** Factory function for timers.
@@ -111,7 +111,7 @@ public:
      * only GUI RPC console, and to break the dependency of pcserver on httprpc.
      */
     virtual RPCTimerBase* NewTimer(std::function<void()>& func, int64_t millis) = 0;
-};
+%>;
 
 /** Set the factory function for timers */
 void RPCSetTimerInterface(RPCTimerInterface *iface);
@@ -129,7 +129,7 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
 typedef UniValue(*rpcfn_type)(const JSONRPCRequest& jsonRequest);
 
 class CRPCCommand
-{
+<%
 public:
     //! RPC method handler reading request and assigning result. Should return
     //! true if request is fully handled, false if it should be passed on to
@@ -140,29 +140,29 @@ public:
     CRPCCommand(std::string category, std::string name, Actor actor, std::vector<std::string> args, intptr_t unique_id)
         : category(std::move(category)), name(std::move(name)), actor(std::move(actor)), argNames(std::move(args)),
           unique_id(unique_id)
-    {
-    }
+    <%
+    %>
 
     //! Simplified constructor taking plain rpcfn_type function pointer.
     CRPCCommand(const char* category, const char* name, rpcfn_type fn, std::initializer_list<const char*> args)
         : CRPCCommand(category, name,
-                      [fn](const JSONRPCRequest& request, UniValue& result, bool) { result = fn(request); return true; },
-                      {args.begin(), args.end()}, intptr_t(fn))
-    {
-    }
+                      [fn](const JSONRPCRequest& request, UniValue& result, bool) <% result = fn(request); return true; %>,
+                      <%args.begin(), args.end()%>, intptr_t(fn))
+    <%
+    %>
 
     std::string category;
     std::string name;
     Actor actor;
     std::vector<std::string> argNames;
     intptr_t unique_id;
-};
+%>;
 
 /**
  * Bitcoin RPC command dispatcher.
  */
 class CRPCTable
-{
+<%
 private:
     std::map<std::string, std::vector<const CRPCCommand*>> mapCommands;
 public:
@@ -198,7 +198,7 @@ public:
      */
     bool appendCommand(const std::string& name, const CRPCCommand* pcmd);
     bool removeCommand(const std::string& name, const CRPCCommand* pcmd);
-};
+%>;
 
 bool IsDeprecatedRPCEnabled(const std::string& method);
 

@@ -14,72 +14,72 @@
 #include <crypto/common.h>
 
 
-namespace {
+namespace <%
 
 const __m128i MASK = _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);
 const __m128i INIT0 = _mm_set_epi64x(0x6a09e667bb67ae85ull, 0x510e527f9b05688cull);
 const __m128i INIT1 = _mm_set_epi64x(0x3c6ef372a54ff53aull, 0x1f83d9ab5be0cd19ull);
 
 void inline  __attribute__((always_inline)) QuadRound(__m128i& state0, __m128i& state1, uint64_t k1, uint64_t k0)
-{
+<%
     const __m128i msg = _mm_set_epi64x(k1, k0);
     state1 = _mm_sha256rnds2_epu32(state1, state0, msg);
     state0 = _mm_sha256rnds2_epu32(state0, state1, _mm_shuffle_epi32(msg, 0x0e));
-}
+%>
 
 void inline  __attribute__((always_inline)) QuadRound(__m128i& state0, __m128i& state1, __m128i m, uint64_t k1, uint64_t k0)
-{
+<%
     const __m128i msg = _mm_add_epi32(m, _mm_set_epi64x(k1, k0));
     state1 = _mm_sha256rnds2_epu32(state1, state0, msg);
     state0 = _mm_sha256rnds2_epu32(state0, state1, _mm_shuffle_epi32(msg, 0x0e));
-}
+%>
 
 void inline  __attribute__((always_inline)) ShiftMessageA(__m128i& m0, __m128i m1)
-{
+<%
     m0 = _mm_sha256msg1_epu32(m0, m1);
-}
+%>
 
 void inline  __attribute__((always_inline)) ShiftMessageC(__m128i& m0, __m128i m1, __m128i& m2)
-{
+<%
     m2 = _mm_sha256msg2_epu32(_mm_add_epi32(m2, _mm_alignr_epi8(m1, m0, 4)), m1);
-}
+%>
 
 void inline __attribute__((always_inline)) ShiftMessageB(__m128i& m0, __m128i m1, __m128i& m2)
-{
+<%
     ShiftMessageC(m0, m1, m2);
     ShiftMessageA(m0, m1);
-}
+%>
 
 void inline __attribute__((always_inline)) Shuffle(__m128i& s0, __m128i& s1)
-{
+<%
     const __m128i t1 = _mm_shuffle_epi32(s0, 0xB1);
     const __m128i t2 = _mm_shuffle_epi32(s1, 0x1B);
     s0 = _mm_alignr_epi8(t1, t2, 0x08);
     s1 = _mm_blend_epi16(t2, t1, 0xF0);
-}
+%>
 
 void inline __attribute__((always_inline)) Unshuffle(__m128i& s0, __m128i& s1)
-{
+<%
     const __m128i t1 = _mm_shuffle_epi32(s0, 0x1B);
     const __m128i t2 = _mm_shuffle_epi32(s1, 0xB1);
     s0 = _mm_blend_epi16(t1, t2, 0xF0);
     s1 = _mm_alignr_epi8(t2, t1, 0x08);
-}
+%>
 
 __m128i inline  __attribute__((always_inline)) Load(const unsigned char* in)
-{
+<%
     return _mm_shuffle_epi8(_mm_loadu_si128((const __m128i*)in), MASK);
-}
+%>
 
 void inline  __attribute__((always_inline)) Save(unsigned char* out, __m128i s)
-{
+<%
     _mm_storeu_si128((__m128i*)out, _mm_shuffle_epi8(s, MASK));
-}
-}
+%>
+%>
 
-namespace sha256_shani {
+namespace sha256_shani <%
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
-{
+<%
     __m128i m0, m1, m2, m3, s0, s1, so0, so1;
 
     /* Load state */
@@ -87,7 +87,7 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
     s1 = _mm_loadu_si128((const __m128i*)(s + 4));
     Shuffle(s0, s1);
 
-    while (blocks--) {
+    while (blocks--) <%
         /* Remember old state */
         so0 = s0;
         so1 = s1;
@@ -134,18 +134,18 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 
         /* Advance */
         chunk += 64;
-    }
+    %>
 
     Unshuffle(s0, s1);
     _mm_storeu_si128((__m128i*)s, s0);
     _mm_storeu_si128((__m128i*)(s + 4), s1);
-}
-}
+%>
+%>
 
-namespace sha256d64_shani {
+namespace sha256d64_shani <%
 
 void Transform_2way(unsigned char* out, const unsigned char* in)
-{
+<%
     __m128i am0, am1, am2, am3, as0, as1, aso0, aso1;
     __m128i bm0, bm1, bm2, bm3, bs0, bs1, bso0, bso1;
 
@@ -352,8 +352,8 @@ void Transform_2way(unsigned char* out, const unsigned char* in)
     Save(out + 16, as1);
     Save(out + 32, bs0);
     Save(out + 48, bs1);
-}
+%>
 
-}
+%>
 
 #endif

@@ -14,7 +14,7 @@ class CBlockIndex;
 class CZMQAbstractNotifier;
 
 class CZMQNotificationInterface final : public CValidationInterface
-{
+<%
 public:
     virtual ~CZMQNotificationInterface();
 
@@ -37,7 +37,7 @@ private:
 
     void *pcontext;
     std::list<CZMQAbstractNotifier*> notifiers;
-};
+%>;
 
 extern CZMQNotificationInterface* g_zmq_notification_interface;
 

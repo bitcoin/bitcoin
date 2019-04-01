@@ -12,21 +12,21 @@
 #include <boost/test/unit_test.hpp>
 
 // Test if a string consists entirely of null characters
-static bool is_null_key(const std::vector<unsigned char>& key) {
+static bool is_null_key(const std::vector<unsigned char>& key) <%
     bool isnull = true;
 
     for (unsigned int i = 0; i < key.size(); i++)
         isnull &= (key[i] == '\x00');
 
     return isnull;
-}
+%>
 
 BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(dbwrapper)
-{
+<%
     // Perform tests both obfuscated and non-obfuscated.
-    for (const bool obfuscate : {false, true}) {
+    for (const bool obfuscate : <%false, true%>) <%
         fs::path ph = SetDataDir(std::string("dbwrapper").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
@@ -39,14 +39,14 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
         BOOST_CHECK(dbw.Write(key, in));
         BOOST_CHECK(dbw.Read(key, res));
         BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
-    }
-}
+    %>
+%>
 
 // Test batch operations
 BOOST_AUTO_TEST_CASE(dbwrapper_batch)
-{
+<%
     // Perform tests both obfuscated and non-obfuscated.
-    for (const bool obfuscate : {false, true}) {
+    for (const bool obfuscate : <%false, true%>) <%
         fs::path ph = SetDataDir(std::string("dbwrapper_batch").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -76,13 +76,13 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 
         // key3 should've never been written
         BOOST_CHECK(dbw.Read(key3, res) == false);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
-{
+<%
     // Perform tests both obfuscated and non-obfuscated.
-    for (const bool obfuscate : {false, true}) {
+    for (const bool obfuscate : <%false, true%>) <%
         fs::path ph = SetDataDir(std::string("dbwrapper_iterator").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -116,12 +116,12 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 
         it->Next();
         BOOST_CHECK_EQUAL(it->Valid(), false);
-    }
-}
+    %>
+%>
 
 // Test that we do not obfuscation if there is existing data.
 BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
-{
+<%
     // We're going to share this fs::path between two wrappers
     fs::path ph = SetDataDir("existing_data_no_obfuscate");
     create_directories(ph);
@@ -158,11 +158,11 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     BOOST_CHECK(odbw.Write(key, in2));
     BOOST_CHECK(odbw.Read(key, res3));
     BOOST_CHECK_EQUAL(res3.ToString(), in2.ToString());
-}
+%>
 
 // Ensure that we start obfuscating during a reindex.
 BOOST_AUTO_TEST_CASE(existing_data_reindex)
-{
+<%
     // We're going to share this fs::path between two wrappers
     fs::path ph = SetDataDir("existing_data_reindex");
     create_directories(ph);
@@ -195,108 +195,108 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     BOOST_CHECK(odbw.Write(key, in2));
     BOOST_CHECK(odbw.Read(key, res3));
     BOOST_CHECK_EQUAL(res3.ToString(), in2.ToString());
-}
+%>
 
 BOOST_AUTO_TEST_CASE(iterator_ordering)
-{
+<%
     fs::path ph = SetDataDir("iterator_ordering");
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
-    for (int x=0x00; x<256; ++x) {
+    for (int x=0x00; x<256; ++x) <%
         uint8_t key = x;
         uint32_t value = x*x;
         if (!(x & 1)) BOOST_CHECK(dbw.Write(key, value));
-    }
+    %>
 
     // Check that creating an iterator creates a snapshot
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
 
-    for (unsigned int x=0x00; x<256; ++x) {
+    for (unsigned int x=0x00; x<256; ++x) <%
         uint8_t key = x;
         uint32_t value = x*x;
         if (x & 1) BOOST_CHECK(dbw.Write(key, value));
-    }
+    %>
 
-    for (const int seek_start : {0x00, 0x80}) {
+    for (const int seek_start : <%0x00, 0x80%>) <%
         it->Seek((uint8_t)seek_start);
-        for (unsigned int x=seek_start; x<255; ++x) {
+        for (unsigned int x=seek_start; x<255; ++x) <%
             uint8_t key;
             uint32_t value;
             BOOST_CHECK(it->Valid());
             if (!it->Valid()) // Avoid spurious errors about invalid iterator's key and value in case of failure
                 break;
             BOOST_CHECK(it->GetKey(key));
-            if (x & 1) {
+            if (x & 1) <%
                 BOOST_CHECK_EQUAL(key, x + 1);
                 continue;
-            }
+            %>
             BOOST_CHECK(it->GetValue(value));
             BOOST_CHECK_EQUAL(key, x);
             BOOST_CHECK_EQUAL(value, x*x);
             it->Next();
-        }
+        %>
         BOOST_CHECK(!it->Valid());
-    }
-}
+    %>
+%>
 
-struct StringContentsSerializer {
+struct StringContentsSerializer <%
     // Used to make two serialized objects the same while letting them have different lengths
     // This is a terrible idea
     std::string str;
-    StringContentsSerializer() {}
-    explicit StringContentsSerializer(const std::string& inp) : str(inp) {}
+    StringContentsSerializer() <%%>
+    explicit StringContentsSerializer(const std::string& inp) : str(inp) <%%>
 
-    StringContentsSerializer& operator+=(const std::string& s) {
+    StringContentsSerializer& operator+=(const std::string& s) <%
         str += s;
         return *this;
-    }
-    StringContentsSerializer& operator+=(const StringContentsSerializer& s) { return *this += s.str; }
+    %>
+    StringContentsSerializer& operator+=(const StringContentsSerializer& s) <% return *this += s.str; %>
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        if (ser_action.ForRead()) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
+        if (ser_action.ForRead()) <%
             str.clear();
             char c = 0;
-            while (true) {
-                try {
+            while (true) <%
+                try <%
                     READWRITE(c);
                     str.push_back(c);
-                } catch (const std::ios_base::failure&) {
+                %> catch (const std::ios_base::failure&) <%
                     break;
-                }
-            }
-        } else {
+                %>
+            %>
+        %> else <%
             for (size_t i = 0; i < str.size(); i++)
                 READWRITE(str[i]);
-        }
-    }
-};
+        %>
+    %>
+%>;
 
 BOOST_AUTO_TEST_CASE(iterator_string_ordering)
-{
+<%
     char buf[10];
 
     fs::path ph = SetDataDir("iterator_string_ordering");
     CDBWrapper dbw(ph, (1 << 20), true, false, false);
-    for (int x=0x00; x<10; ++x) {
-        for (int y = 0; y < 10; y++) {
+    for (int x=0x00; x<10; ++x) <%
+        for (int y = 0; y < 10; y++) <%
             snprintf(buf, sizeof(buf), "%d", x);
             StringContentsSerializer key(buf);
             for (int z = 0; z < y; z++)
                 key += key;
             uint32_t value = x*x;
             BOOST_CHECK(dbw.Write(key, value));
-        }
-    }
+        %>
+    %>
 
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
-    for (const int seek_start : {0, 5}) {
+    for (const int seek_start : <%0, 5%>) <%
         snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);
-        for (unsigned int x=seek_start; x<10; ++x) {
-            for (int y = 0; y < 10; y++) {
+        for (unsigned int x=seek_start; x<10; ++x) <%
+            for (int y = 0; y < 10; y++) <%
                 snprintf(buf, sizeof(buf), "%d", x);
                 std::string exp_key(buf);
                 for (int z = 0; z < y; z++)
@@ -311,11 +311,11 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
                 BOOST_CHECK_EQUAL(key.str, exp_key);
                 BOOST_CHECK_EQUAL(value, x*x);
                 it->Next();
-            }
-        }
+            %>
+        %>
         BOOST_CHECK(!it->Valid());
-    }
-}
+    %>
+%>
 
 
 

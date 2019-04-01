@@ -41,8 +41,8 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseRange(const UniValue& value);
 
-struct RPCArg {
-    enum class Type {
+struct RPCArg <%
+    enum class Type <%
         OBJ,
         ARR,
         STR,
@@ -52,9 +52,9 @@ struct RPCArg {
         AMOUNT,        //!< Special type representing a floating point amount (can be either NUM or STR)
         STR_HEX,       //!< Special type that is a STR with only hex chars
         RANGE,         //!< Special type that is a NUM or [NUM,NUM]
-    };
+    %>;
 
-    enum class Optional {
+    enum class Optional <%
         /** Required arg */
         NO,
         /**
@@ -69,7 +69,7 @@ struct RPCArg {
          * When possible, the default value should be specified.
          */
         OMITTED,
-    };
+    %>;
     using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
     const std::string m_name; //!< The name of the arg (can be empty for inner args)
     const Type m_type;
@@ -85,16 +85,16 @@ struct RPCArg {
         const Fallback& fallback,
         const std::string& description,
         const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
-    {
+        const std::vector<std::string>& type_str = <%%>)
+        : m_name<%name%>,
+          m_type<%type%>,
+          m_fallback<%fallback%>,
+          m_description<%description%>,
+          m_oneline_description<%oneline_description%>,
+          m_type_str<%type_str%>
+    <%
         assert(type != Type::ARR && type != Type::OBJ);
-    }
+    %>
 
     RPCArg(
         const std::string& name,
@@ -103,17 +103,17 @@ struct RPCArg {
         const std::string& description,
         const std::vector<RPCArg>& inner,
         const std::string& oneline_description = "",
-        const std::vector<std::string>& type_str = {})
-        : m_name{name},
-          m_type{type},
-          m_inner{inner},
-          m_fallback{fallback},
-          m_description{description},
-          m_oneline_description{oneline_description},
-          m_type_str{type_str}
-    {
+        const std::vector<std::string>& type_str = <%%>)
+        : m_name<%name%>,
+          m_type<%type%>,
+          m_inner<%inner%>,
+          m_fallback<%fallback%>,
+          m_description<%description%>,
+          m_oneline_description<%oneline_description%>,
+          m_type_str<%type_str%>
+    <%
         assert(type == Type::ARR || type == Type::OBJ);
-    }
+    %>
 
     bool IsOptional() const;
 
@@ -132,62 +132,62 @@ struct RPCArg {
      * the argument is required.
      */
     std::string ToDescriptionString() const;
-};
+%>;
 
-struct RPCResult {
+struct RPCResult <%
     const std::string m_cond;
     const std::string m_result;
 
     explicit RPCResult(std::string result)
-        : m_cond{}, m_result{std::move(result)}
-    {
+        : m_cond<%%>, m_result<%std::move(result)%>
+    <%
         assert(!m_result.empty());
-    }
+    %>
 
     RPCResult(std::string cond, std::string result)
-        : m_cond{std::move(cond)}, m_result{std::move(result)}
-    {
+        : m_cond<%std::move(cond)%>, m_result<%std::move(result)%>
+    <%
         assert(!m_cond.empty());
         assert(!m_result.empty());
-    }
-};
+    %>
+%>;
 
-struct RPCResults {
+struct RPCResults <%
     const std::vector<RPCResult> m_results;
 
     RPCResults()
-        : m_results{}
-    {
-    }
+        : m_results<%%>
+    <%
+    %>
 
     RPCResults(RPCResult result)
-        : m_results{{result}}
-    {
-    }
+        : m_results<%<%result%>%>
+    <%
+    %>
 
     RPCResults(std::initializer_list<RPCResult> results)
-        : m_results{results}
-    {
-    }
+        : m_results<%results%>
+    <%
+    %>
 
     /**
      * Return the description string.
      */
     std::string ToDescriptionString() const;
-};
+%>;
 
-struct RPCExamples {
+struct RPCExamples <%
     const std::string m_examples;
     RPCExamples(
         std::string examples)
         : m_examples(std::move(examples))
-    {
-    }
+    <%
+    %>
     std::string ToDescriptionString() const;
-};
+%>;
 
 class RPCHelpMan
-{
+<%
 public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
 
@@ -201,6 +201,6 @@ private:
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;
     const RPCExamples m_examples;
-};
+%>;
 
 #endif // BITCOIN_RPC_UTIL_H

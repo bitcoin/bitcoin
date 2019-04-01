@@ -12,9 +12,9 @@
 #include <QDateTime>
 
 class RecentRequestEntry
-{
+<%
 public:
-    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) { }
+    RecentRequestEntry() : nVersion(RecentRequestEntry::CURRENT_VERSION), id(0) <% %>
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
@@ -25,7 +25,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
         unsigned int nDate = date.toTime_t();
 
         READWRITE(this->nVersion);
@@ -35,39 +35,39 @@ public:
 
         if (ser_action.ForRead())
             date = QDateTime::fromTime_t(nDate);
-    }
-};
+    %>
+%>;
 
 class RecentRequestEntryLessThan
-{
+<%
 public:
     RecentRequestEntryLessThan(int nColumn, Qt::SortOrder fOrder):
-        column(nColumn), order(fOrder) {}
+        column(nColumn), order(fOrder) <%%>
     bool operator()(RecentRequestEntry &left, RecentRequestEntry &right) const;
 
 private:
     int column;
     Qt::SortOrder order;
-};
+%>;
 
 /** Model for list of recently generated payment requests / bitcoin: URIs.
  * Part of wallet model.
  */
 class RecentRequestsTableModel: public QAbstractTableModel
-{
+<%
     Q_OBJECT
 
 public:
     explicit RecentRequestsTableModel(WalletModel *parent);
     ~RecentRequestsTableModel();
 
-    enum ColumnIndex {
+    enum ColumnIndex <%
         Date = 0,
         Label = 1,
         Message = 2,
         Amount = 3,
         NUMBER_OF_COLUMNS
-    };
+    %>;
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
@@ -81,7 +81,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     /*@}*/
 
-    const RecentRequestEntry &entry(int row) const { return list[row]; }
+    const RecentRequestEntry &entry(int row) const <% return list[row]; %>
     void addNewRequest(const SendCoinsRecipient &recipient);
     void addNewRequest(const std::string &recipient);
     void addNewRequest(RecentRequestEntry &recipient);
@@ -94,12 +94,12 @@ private:
     WalletModel *walletModel;
     QStringList columns;
     QList<RecentRequestEntry> list;
-    int64_t nReceiveRequestsMaxId{0};
+    int64_t nReceiveRequestsMaxId<%0%>;
 
     /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
     void updateAmountColumnTitle();
     /** Gets title for amount column including current display unit if optionsModel reference available. */
     QString getAmountTitle();
-};
+%>;
 
 #endif // BITCOIN_QT_RECENTREQUESTSTABLEMODEL_H

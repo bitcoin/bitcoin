@@ -11,10 +11,10 @@
 BOOST_FIXTURE_TEST_SUITE(streams_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(streams_vector_writer)
-{
+<%
     unsigned char a(1);
     unsigned char b(2);
-    unsigned char bytes[] = { 3, 4, 5, 6 };
+    unsigned char bytes[] = <% 3, 4, 5, 6 %>;
     std::vector<unsigned char> vch;
 
     // Each test runs twice. Serializing a second time at the same starting
@@ -22,55 +22,55 @@ BOOST_AUTO_TEST_CASE(streams_vector_writer)
     // vector.
 
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%1, 2%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%1, 2%>%>));
     vch.clear();
 
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 1, 2%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 1, 2%>%>));
     vch.clear();
 
     vch.resize(5, 0);
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 1, 2, 0%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 1, 2, 0}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 1, 2, 0%>%>));
     vch.clear();
 
     vch.resize(4, 0);
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 3, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 0, 1, 2%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 3, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 0, 1, 2%>%>));
     vch.clear();
 
     vch.resize(4, 0);
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 4, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 0, 0, 1, 2%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 4, a, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{0, 0, 0, 0, 1, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%0, 0, 0, 0, 1, 2%>%>));
     vch.clear();
 
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, bytes);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%3, 4, 5, 6%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 0, bytes);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{3, 4, 5, 6}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%3, 4, 5, 6%>%>));
     vch.clear();
 
     vch.resize(4, 8);
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, bytes, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%8, 8, 1, 3, 4, 5, 6, 2%>%>));
     CVectorWriter(SER_NETWORK, INIT_PROTO_VERSION, vch, 2, a, bytes, b);
-    BOOST_CHECK((vch == std::vector<unsigned char>{{8, 8, 1, 3, 4, 5, 6, 2}}));
+    BOOST_CHECK((vch == std::vector<unsigned char><%<%8, 8, 1, 3, 4, 5, 6, 2%>%>));
     vch.clear();
-}
+%>
 
 BOOST_AUTO_TEST_CASE(streams_vector_reader)
-{
-    std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
+<%
+    std::vector<unsigned char> vch = <%1, 255, 3, 4, 5, 6%>;
 
     VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
     BOOST_CHECK_EQUAL(reader.size(), 6);
@@ -111,10 +111,10 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     // Reading after end of byte vector throws an error even if the reader is
     // not totally empty.
     BOOST_CHECK_THROW(new_reader >> d, std::ios_base::failure);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
-{
+<%
     CDataStream data(SER_NETWORK, INIT_PROTO_VERSION);
 
     BitStreamWriter<CDataStream> bit_writer(data);
@@ -146,10 +146,10 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     BOOST_CHECK_EQUAL(bit_reader.Read(7), 7);
     BOOST_CHECK_EQUAL(bit_reader.Read(16), 30497);
     BOOST_CHECK_THROW(bit_reader.Read(8), std::ios_base::failure);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
-{
+<%
     std::vector<char> in;
     std::vector<char> expected_xor;
     std::vector<unsigned char> key;
@@ -201,6 +201,6 @@ BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
     BOOST_CHECK_EQUAL(
             std::string(expected_xor.begin(), expected_xor.end()),
             std::string(ds.begin(), ds.end()));
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

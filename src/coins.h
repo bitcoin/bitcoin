@@ -27,7 +27,7 @@
  * - the non-spent CTxOut (via CTxOutCompressor)
  */
 class Coin
-{
+<%
 public:
     //! unspent transaction output
     CTxOut out;
@@ -39,50 +39,50 @@ public:
     uint32_t nHeight : 31;
 
     //! construct a Coin from a CTxOut and height/coinbase information.
-    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) {}
-    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) {}
+    Coin(CTxOut&& outIn, int nHeightIn, bool fCoinBaseIn) : out(std::move(outIn)), fCoinBase(fCoinBaseIn), nHeight(nHeightIn) <%%>
+    Coin(const CTxOut& outIn, int nHeightIn, bool fCoinBaseIn) : out(outIn), fCoinBase(fCoinBaseIn),nHeight(nHeightIn) <%%>
 
-    void Clear() {
+    void Clear() <%
         out.SetNull();
         fCoinBase = false;
         nHeight = 0;
-    }
+    %>
 
     //! empty constructor
-    Coin() : fCoinBase(false), nHeight(0) { }
+    Coin() : fCoinBase(false), nHeight(0) <% %>
 
-    bool IsCoinBase() const {
+    bool IsCoinBase() const <%
         return fCoinBase;
-    }
+    %>
 
     template<typename Stream>
-    void Serialize(Stream &s) const {
+    void Serialize(Stream &s) const <%
         assert(!IsSpent());
         uint32_t code = nHeight * 2 + fCoinBase;
         ::Serialize(s, VARINT(code));
         ::Serialize(s, CTxOutCompressor(REF(out)));
-    }
+    %>
 
     template<typename Stream>
-    void Unserialize(Stream &s) {
+    void Unserialize(Stream &s) <%
         uint32_t code = 0;
         ::Unserialize(s, VARINT(code));
         nHeight = code >> 1;
         fCoinBase = code & 1;
         ::Unserialize(s, CTxOutCompressor(out));
-    }
+    %>
 
-    bool IsSpent() const {
+    bool IsSpent() const <%
         return out.IsNull();
-    }
+    %>
 
-    size_t DynamicMemoryUsage() const {
+    size_t DynamicMemoryUsage() const <%
         return memusage::DynamicUsage(out.scriptPubKey);
-    }
-};
+    %>
+%>;
 
 class SaltedOutpointHasher
-{
+<%
 private:
     /** Salt */
     const uint64_t k0, k1;
@@ -95,17 +95,17 @@ public:
      * unordered_map will behave unpredictably if the custom hasher returns a
      * uint64_t, resulting in failures when syncing the chain (#4634).
      */
-    size_t operator()(const COutPoint& id) const {
+    size_t operator()(const COutPoint& id) const <%
         return SipHashUint256Extra(k0, k1, id.hash, id.n);
-    }
-};
+    %>
+%>;
 
 struct CCoinsCacheEntry
-{
+<%
     Coin coin; // The actual cached data.
     unsigned char flags;
 
-    enum Flags {
+    enum Flags <%
         DIRTY = (1 << 0), // This cache entry is potentially different from the version in the parent view.
         FRESH = (1 << 1), // The parent view does not have this entry (or it is pruned).
         /* Note that FRESH is a performance optimization with which we can
@@ -113,20 +113,20 @@ struct CCoinsCacheEntry
          * flush the changes to the parent cache.  It is always safe to
          * not mark FRESH if that condition is not guaranteed.
          */
-    };
+    %>;
 
-    CCoinsCacheEntry() : flags(0) {}
-    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
-};
+    CCoinsCacheEntry() : flags(0) <%%>
+    explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) <%%>
+%>;
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
 
 /** Cursor for iterating over CoinsView state */
 class CCoinsViewCursor
-{
+<%
 public:
-    CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) {}
-    virtual ~CCoinsViewCursor() {}
+    CCoinsViewCursor(const uint256 &hashBlockIn): hashBlock(hashBlockIn) <%%>
+    virtual ~CCoinsViewCursor() <%%>
 
     virtual bool GetKey(COutPoint &key) const = 0;
     virtual bool GetValue(Coin &coin) const = 0;
@@ -136,14 +136,14 @@ public:
     virtual void Next() = 0;
 
     //! Get best block at the time this cursor was created
-    const uint256 &GetBestBlock() const { return hashBlock; }
+    const uint256 &GetBestBlock() const <% return hashBlock; %>
 private:
     uint256 hashBlock;
-};
+%>;
 
 /** Abstract view on the open txout dataset. */
 class CCoinsView
-{
+<%
 public:
     /** Retrieve the Coin (unspent transaction output) for a given outpoint.
      *  Returns true only when an unspent coin was found, which is returned in coin.
@@ -171,16 +171,16 @@ public:
     virtual CCoinsViewCursor *Cursor() const;
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
-    virtual ~CCoinsView() {}
+    virtual ~CCoinsView() <%%>
 
     //! Estimate database size (0 if not implemented)
-    virtual size_t EstimateSize() const { return 0; }
-};
+    virtual size_t EstimateSize() const <% return 0; %>
+%>;
 
 
 /** CCoinsView backed by another CCoinsView */
 class CCoinsViewBacked : public CCoinsView
-{
+<%
 protected:
     CCoinsView *base;
 
@@ -194,12 +194,12 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursor *Cursor() const override;
     size_t EstimateSize() const override;
-};
+%>;
 
 
 /** CCoinsView that adds a memory cache for transactions to another CCoinsView */
 class CCoinsViewCache : public CCoinsViewBacked
-{
+<%
 protected:
     /**
      * Make mutable so that we can "fill the cache" even from Get-methods
@@ -225,9 +225,9 @@ public:
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
-    CCoinsViewCursor* Cursor() const override {
+    CCoinsViewCursor* Cursor() const override <%
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
-    }
+    %>
 
     /**
      * Check if we have the given utxo already loaded in this cache.
@@ -295,7 +295,7 @@ public:
 
 private:
     CCoinsMap::iterator FetchCoin(const COutPoint &outpoint) const;
-};
+%>;
 
 //! Utility function to add all of a transaction's outputs to a cache.
 //! When check is false, this assumes that overwrites are only possible for coinbase transactions.

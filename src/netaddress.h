@@ -18,7 +18,7 @@
 #include <vector>
 
 enum Network
-{
+<%
     NET_UNROUTABLE = 0,
     NET_IPV4,
     NET_IPV6,
@@ -26,14 +26,14 @@ enum Network
     NET_INTERNAL,
 
     NET_MAX,
-};
+%>;
 
 /** IP address (IPv6, or IPv4 using mapped IPv6 range (::FFFF:0:0/96)) */
 class CNetAddr
-{
+<%
     protected:
         unsigned char ip[16]; // in network byte order
-        uint32_t scopeId{0}; // for scoped/link-local ipv6 addresses
+        uint32_t scopeId<%0%>; // for scoped/link-local ipv6 addresses
 
     public:
         CNetAddr();
@@ -89,21 +89,21 @@ class CNetAddr
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
-        friend bool operator!=(const CNetAddr& a, const CNetAddr& b) { return !(a == b); }
+        friend bool operator!=(const CNetAddr& a, const CNetAddr& b) <% return !(a == b); %>
         friend bool operator<(const CNetAddr& a, const CNetAddr& b);
 
         ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action) {
+        inline void SerializationOp(Stream& s, Operation ser_action) <%
             READWRITE(ip);
-        }
+        %>
 
         friend class CSubNet;
-};
+%>;
 
 class CSubNet
-{
+<%
     protected:
         /// Network (base) address
         CNetAddr network;
@@ -126,22 +126,22 @@ class CSubNet
         bool IsValid() const;
 
         friend bool operator==(const CSubNet& a, const CSubNet& b);
-        friend bool operator!=(const CSubNet& a, const CSubNet& b) { return !(a == b); }
+        friend bool operator!=(const CSubNet& a, const CSubNet& b) <% return !(a == b); %>
         friend bool operator<(const CSubNet& a, const CSubNet& b);
 
         ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action) {
+        inline void SerializationOp(Stream& s, Operation ser_action) <%
             READWRITE(network);
             READWRITE(netmask);
             READWRITE(valid);
-        }
-};
+        %>
+%>;
 
 /** A combination of a network address (CNetAddr) and a (TCP) port */
 class CService : public CNetAddr
-{
+<%
     protected:
         uint16_t port; // host order
 
@@ -154,7 +154,7 @@ class CService : public CNetAddr
         bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
         bool SetSockAddr(const struct sockaddr* paddr);
         friend bool operator==(const CService& a, const CService& b);
-        friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
+        friend bool operator!=(const CService& a, const CService& b) <% return !(a == b); %>
         friend bool operator<(const CService& a, const CService& b);
         std::vector<unsigned char> GetKey() const;
         std::string ToString() const;
@@ -167,10 +167,10 @@ class CService : public CNetAddr
         ADD_SERIALIZE_METHODS;
 
         template <typename Stream, typename Operation>
-        inline void SerializationOp(Stream& s, Operation ser_action) {
+        inline void SerializationOp(Stream& s, Operation ser_action) <%
             READWRITE(ip);
             READWRITE(WrapBigEndian(port));
-        }
-};
+        %>
+%>;
 
 #endif // BITCOIN_NETADDRESS_H

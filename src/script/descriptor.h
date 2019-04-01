@@ -26,7 +26,7 @@
 // doc/descriptors.md.
 
 /** Interface for parsed descriptor objects. */
-struct Descriptor {
+struct Descriptor <%
     virtual ~Descriptor() = default;
 
     /** Whether the expansion of this descriptor depends on the position. */
@@ -60,7 +60,7 @@ struct Descriptor {
      * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
      */
     virtual bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
-};
+%>;
 
 /** Parse a descriptor string. Included private keys are put in out.
  *

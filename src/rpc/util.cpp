@@ -12,134 +12,134 @@ InitInterfaces* g_rpc_interfaces = nullptr;
 
 // Converts a hex string to a public key if possible
 CPubKey HexToPubKey(const std::string& hex_in)
-{
-    if (!IsHex(hex_in)) {
+<%
+    if (!IsHex(hex_in)) <%
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid public key: " + hex_in);
-    }
+    %>
     CPubKey vchPubKey(ParseHex(hex_in));
-    if (!vchPubKey.IsFullyValid()) {
+    if (!vchPubKey.IsFullyValid()) <%
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid public key: " + hex_in);
-    }
+    %>
     return vchPubKey;
-}
+%>
 
 // Retrieves a public key for an address from the given CKeyStore
 CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in)
-{
+<%
     CTxDestination dest = DecodeDestination(addr_in);
-    if (!IsValidDestination(dest)) {
+    if (!IsValidDestination(dest)) <%
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address: " + addr_in);
-    }
+    %>
     CKeyID key = GetKeyForDestination(*keystore, dest);
-    if (key.IsNull()) {
+    if (key.IsNull()) <%
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("%s does not refer to a key", addr_in));
-    }
+    %>
     CPubKey vchPubKey;
-    if (!keystore->GetPubKey(key, vchPubKey)) {
+    if (!keystore->GetPubKey(key, vchPubKey)) <%
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("no full public key for address %s", addr_in));
-    }
-    if (!vchPubKey.IsFullyValid()) {
+    %>
+    if (!vchPubKey.IsFullyValid()) <%
        throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet contains an invalid public key");
-    }
+    %>
     return vchPubKey;
-}
+%>
 
 // Creates a multisig redeemscript from a given list of public keys and number required.
 CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys)
-{
+<%
     // Gather public keys
-    if (required < 1) {
+    if (required < 1) <%
         throw JSONRPCError(RPC_INVALID_PARAMETER, "a multisignature address must require at least one key to redeem");
-    }
-    if ((int)pubkeys.size() < required) {
+    %>
+    if ((int)pubkeys.size() < required) <%
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("not enough keys supplied (got %u keys, but need at least %d to redeem)", pubkeys.size(), required));
-    }
-    if (pubkeys.size() > 16) {
+    %>
+    if (pubkeys.size() > 16) <%
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Number of keys involved in the multisignature address creation > 16\nReduce the number");
-    }
+    %>
 
     CScript result = GetScriptForMultisig(required, pubkeys);
 
-    if (result.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+    if (result.size() > MAX_SCRIPT_ELEMENT_SIZE) <%
         throw JSONRPCError(RPC_INVALID_PARAMETER, (strprintf("redeemScript exceeds size limit: %d > %d", result.size(), MAX_SCRIPT_ELEMENT_SIZE)));
-    }
+    %>
 
     return result;
-}
+%>
 
 class DescribeAddressVisitor : public boost::static_visitor<UniValue>
-{
+<%
 public:
-    explicit DescribeAddressVisitor() {}
+    explicit DescribeAddressVisitor() <%%>
 
     UniValue operator()(const CNoDestination& dest) const
-    {
+    <%
         return UniValue(UniValue::VOBJ);
-    }
+    %>
 
     UniValue operator()(const CKeyID& keyID) const
-    {
+    <%
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", false);
         obj.pushKV("iswitness", false);
         return obj;
-    }
+    %>
 
     UniValue operator()(const CScriptID& scriptID) const
-    {
+    <%
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);
         obj.pushKV("iswitness", false);
         return obj;
-    }
+    %>
 
     UniValue operator()(const WitnessV0KeyHash& id) const
-    {
+    <%
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", false);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", 0);
         obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
         return obj;
-    }
+    %>
 
     UniValue operator()(const WitnessV0ScriptHash& id) const
-    {
+    <%
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("isscript", true);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", 0);
         obj.pushKV("witness_program", HexStr(id.begin(), id.end()));
         return obj;
-    }
+    %>
 
     UniValue operator()(const WitnessUnknown& id) const
-    {
+    <%
         UniValue obj(UniValue::VOBJ);
         obj.pushKV("iswitness", true);
         obj.pushKV("witness_version", (int)id.version);
         obj.pushKV("witness_program", HexStr(id.program, id.program + id.length));
         return obj;
-    }
-};
+    %>
+%>;
 
 UniValue DescribeAddress(const CTxDestination& dest)
-{
+<%
     return boost::apply_visitor(DescribeAddressVisitor(), dest);
-}
+%>
 
 unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target)
-{
+<%
     int target = value.get_int();
-    if (target < 1 || (unsigned int)target > max_target) {
+    if (target < 1 || (unsigned int)target > max_target) <%
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid conf_target, must be between %u - %u", 1, max_target));
-    }
+    %>
     return (unsigned int)target;
-}
+%>
 
 RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
-{
-    switch (terr) {
+<%
+    switch (terr) <%
         case TransactionError::MEMPOOL_REJECTED:
             return RPC_TRANSACTION_REJECTED;
         case TransactionError::ALREADY_IN_CHAIN:
@@ -152,105 +152,105 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr)
         case TransactionError::SIGHASH_MISMATCH:
             return RPC_DESERIALIZATION_ERROR;
         default: break;
-    }
+    %>
     return RPC_TRANSACTION_ERROR;
-}
+%>
 
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string)
-{
-    if (err_string.length() > 0) {
+<%
+    if (err_string.length() > 0) <%
         return JSONRPCError(RPCErrorFromTransactionError(terr), err_string);
-    } else {
+    %> else <%
         return JSONRPCError(RPCErrorFromTransactionError(terr), TransactionErrorString(terr));
-    }
-}
+    %>
+%>
 
-struct Section {
+struct Section <%
     Section(const std::string& left, const std::string& right)
-        : m_left{left}, m_right{right} {}
+        : m_left<%left%>, m_right<%right%> <%%>
     const std::string m_left;
     const std::string m_right;
-};
+%>;
 
-struct Sections {
+struct Sections <%
     std::vector<Section> m_sections;
-    size_t m_max_pad{0};
+    size_t m_max_pad<%0%>;
 
     void PushSection(const Section& s)
-    {
+    <%
         m_max_pad = std::max(m_max_pad, s.m_left.size());
         m_sections.push_back(s);
-    }
+    %>
 
-    enum class OuterType {
+    enum class OuterType <%
         ARR,
         OBJ,
         NAMED_ARG, // Only set on first recursion
-    };
+    %>;
 
     void Push(const RPCArg& arg, const size_t current_indent = 5, const OuterType outer_type = OuterType::NAMED_ARG)
-    {
+    <%
         const auto indent = std::string(current_indent, ' ');
         const auto indent_next = std::string(current_indent + 2, ' ');
-        switch (arg.m_type) {
+        switch (arg.m_type) <%
         case RPCArg::Type::STR_HEX:
         case RPCArg::Type::STR:
         case RPCArg::Type::NUM:
         case RPCArg::Type::AMOUNT:
         case RPCArg::Type::RANGE:
-        case RPCArg::Type::BOOL: {
+        case RPCArg::Type::BOOL: <%
             if (outer_type == OuterType::NAMED_ARG) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
-            if (arg.m_type_str.size() != 0 && outer_type == OuterType::OBJ) {
+            if (arg.m_type_str.size() != 0 && outer_type == OuterType::OBJ) <%
                 left += "\"" + arg.m_name + "\": " + arg.m_type_str.at(0);
-            } else {
+            %> else <%
                 left += outer_type == OuterType::OBJ ? arg.ToStringObj(/* oneline */ false) : arg.ToString(/* oneline */ false);
-            }
+            %>
             left += ",";
-            PushSection({left, arg.ToDescriptionString()});
+            PushSection(<%left, arg.ToDescriptionString()%>);
             break;
-        }
+        %>
         case RPCArg::Type::OBJ:
-        case RPCArg::Type::OBJ_USER_KEYS: {
+        case RPCArg::Type::OBJ_USER_KEYS: <%
             const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString();
-            PushSection({indent + "{", right});
-            for (const auto& arg_inner : arg.m_inner) {
+            PushSection(<%indent + "{", right%>);
+            for (const auto& arg_inner : arg.m_inner) <%
                 Push(arg_inner, current_indent + 2, OuterType::OBJ);
-            }
-            if (arg.m_type != RPCArg::Type::OBJ) {
-                PushSection({indent_next + "...", ""});
-            }
-            PushSection({indent + "}" + (outer_type != OuterType::NAMED_ARG ? "," : ""), ""});
+            %>
+            if (arg.m_type != RPCArg::Type::OBJ) <%
+                PushSection(<%indent_next + "...", ""%>);
+            %>
+            PushSection(<%indent + "}" + (outer_type != OuterType::NAMED_ARG ? "," : ""), ""%>);
             break;
-        }
-        case RPCArg::Type::ARR: {
+        %>
+        case RPCArg::Type::ARR: <%
             auto left = indent;
             left += outer_type == OuterType::OBJ ? "\"" + arg.m_name + "\": " : "";
             left += "[";
             const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString();
-            PushSection({left, right});
-            for (const auto& arg_inner : arg.m_inner) {
+            PushSection(<%left, right%>);
+            for (const auto& arg_inner : arg.m_inner) <%
                 Push(arg_inner, current_indent + 2, OuterType::ARR);
-            }
-            PushSection({indent_next + "...", ""});
-            PushSection({indent + "]" + (outer_type != OuterType::NAMED_ARG ? "," : ""), ""});
+            %>
+            PushSection(<%indent_next + "...", ""%>);
+            PushSection(<%indent + "]" + (outer_type != OuterType::NAMED_ARG ? "," : ""), ""%>);
             break;
-        }
+        %>
 
             // no default case, so the compiler can warn about missing cases
-        }
-    }
+        %>
+    %>
 
     std::string ToString() const
-    {
+    <%
         std::string ret;
         const size_t pad = m_max_pad + 4;
-        for (const auto& s : m_sections) {
-            if (s.m_right.empty()) {
+        for (const auto& s : m_sections) <%
+            if (s.m_right.empty()) <%
                 ret += s.m_left;
                 ret += "\n";
                 continue;
-            }
+            %>
 
             std::string left = s.m_left;
             left.resize(pad, ' ');
@@ -260,88 +260,88 @@ struct Sections {
             std::string right;
             size_t begin = 0;
             size_t new_line_pos = s.m_right.find_first_of('\n');
-            while (true) {
+            while (true) <%
                 right += s.m_right.substr(begin, new_line_pos - begin);
-                if (new_line_pos == std::string::npos) {
+                if (new_line_pos == std::string::npos) <%
                     break; //No new line
-                }
+                %>
                 right += "\n" + std::string(pad, ' ');
                 begin = s.m_right.find_first_not_of(' ', new_line_pos + 1);
-                if (begin == std::string::npos) {
+                if (begin == std::string::npos) <%
                     break; // Empty line
-                }
+                %>
                 new_line_pos = s.m_right.find_first_of('\n', begin + 1);
-            }
+            %>
             ret += right;
             ret += "\n";
-        }
+        %>
         return ret;
-    }
-};
+    %>
+%>;
 
 RPCHelpMan::RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples)
-    : m_name{std::move(name)},
-      m_description{std::move(description)},
-      m_args{std::move(args)},
-      m_results{std::move(results)},
-      m_examples{std::move(examples)}
-{
+    : m_name<%std::move(name)%>,
+      m_description<%std::move(description)%>,
+      m_args<%std::move(args)%>,
+      m_results<%std::move(results)%>,
+      m_examples<%std::move(examples)%>
+<%
     std::set<std::string> named_args;
-    for (const auto& arg : m_args) {
+    for (const auto& arg : m_args) <%
         // Should have unique named arguments
         assert(named_args.insert(arg.m_name).second);
-    }
-}
+    %>
+%>
 
 std::string RPCResults::ToDescriptionString() const
-{
+<%
     std::string result;
-    for (const auto& r : m_results) {
-        if (r.m_cond.empty()) {
+    for (const auto& r : m_results) <%
+        if (r.m_cond.empty()) <%
             result += "\nResult:\n";
-        } else {
+        %> else <%
             result += "\nResult (" + r.m_cond + "):\n";
-        }
+        %>
         result += r.m_result;
-    }
+    %>
     return result;
-}
+%>
 
 std::string RPCExamples::ToDescriptionString() const
-{
+<%
     return m_examples.empty() ? m_examples : "\nExamples:\n" + m_examples;
-}
+%>
 
 bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
-{
+<%
     size_t num_required_args = 0;
-    for (size_t n = m_args.size(); n > 0; --n) {
-        if (!m_args.at(n - 1).IsOptional()) {
+    for (size_t n = m_args.size(); n > 0; --n) <%
+        if (!m_args.at(n - 1).IsOptional()) <%
             num_required_args = n;
             break;
-        }
-    }
+        %>
+    %>
     return num_required_args <= num_args && num_args <= m_args.size();
-}
+%>
 std::string RPCHelpMan::ToString() const
-{
+<%
     std::string ret;
 
     // Oneline summary
     ret += m_name;
-    bool was_optional{false};
-    for (const auto& arg : m_args) {
+    bool was_optional<%false%>;
+    for (const auto& arg : m_args) <%
         const bool optional = arg.IsOptional();
         ret += " ";
-        if (optional) {
+        if (optional) <%
             if (!was_optional) ret += "( ";
             was_optional = true;
-        } else {
+        %> else <%
             if (was_optional) ret += ") ";
             was_optional = false;
-        }
+        %>
         ret += arg.ToString(/* oneline */ true);
-    }
+    %>
     if (was_optional) ret += " )";
     ret += "\n";
 
@@ -350,7 +350,7 @@ std::string RPCHelpMan::ToString() const
 
     // Arguments
     Sections sections;
-    for (size_t i{0}; i < m_args.size(); ++i) {
+    for (size_t i<%0%>; i < m_args.size(); ++i) <%
         const auto& arg = m_args.at(i);
 
         if (i == 0) ret += "\nArguments:\n";
@@ -361,7 +361,7 @@ std::string RPCHelpMan::ToString() const
 
         // Recursively push nested args
         sections.Push(arg);
-    }
+    %>
     ret += sections.ToString();
 
     // Result
@@ -371,95 +371,95 @@ std::string RPCHelpMan::ToString() const
     ret += m_examples.ToDescriptionString();
 
     return ret;
-}
+%>
 
 bool RPCArg::IsOptional() const
-{
-    if (m_fallback.which() == 1) {
+<%
+    if (m_fallback.which() == 1) <%
         return true;
-    } else {
+    %> else <%
         return RPCArg::Optional::NO != boost::get<RPCArg::Optional>(m_fallback);
-    }
-}
+    %>
+%>
 
 std::string RPCArg::ToDescriptionString() const
-{
+<%
     std::string ret;
     ret += "(";
-    if (m_type_str.size() != 0) {
+    if (m_type_str.size() != 0) <%
         ret += m_type_str.at(1);
-    } else {
-        switch (m_type) {
+    %> else <%
+        switch (m_type) <%
         case Type::STR_HEX:
-        case Type::STR: {
+        case Type::STR: <%
             ret += "string";
             break;
-        }
-        case Type::NUM: {
+        %>
+        case Type::NUM: <%
             ret += "numeric";
             break;
-        }
-        case Type::AMOUNT: {
+        %>
+        case Type::AMOUNT: <%
             ret += "numeric or string";
             break;
-        }
-        case Type::RANGE: {
+        %>
+        case Type::RANGE: <%
             ret += "numeric or array";
             break;
-        }
-        case Type::BOOL: {
+        %>
+        case Type::BOOL: <%
             ret += "boolean";
             break;
-        }
+        %>
         case Type::OBJ:
-        case Type::OBJ_USER_KEYS: {
+        case Type::OBJ_USER_KEYS: <%
             ret += "json object";
             break;
-        }
-        case Type::ARR: {
+        %>
+        case Type::ARR: <%
             ret += "json array";
             break;
-        }
+        %>
 
             // no default case, so the compiler can warn about missing cases
-        }
-    }
-    if (m_fallback.which() == 1) {
+        %>
+    %>
+    if (m_fallback.which() == 1) <%
         ret += ", optional, default=" + boost::get<std::string>(m_fallback);
-    } else {
-        switch (boost::get<RPCArg::Optional>(m_fallback)) {
-        case RPCArg::Optional::OMITTED: {
+    %> else <%
+        switch (boost::get<RPCArg::Optional>(m_fallback)) <%
+        case RPCArg::Optional::OMITTED: <%
             // nothing to do. Element is treated as if not present and has no default value
             break;
-        }
-        case RPCArg::Optional::OMITTED_NAMED_ARG: {
+        %>
+        case RPCArg::Optional::OMITTED_NAMED_ARG: <%
             ret += ", optional"; // Default value is "null"
             break;
-        }
-        case RPCArg::Optional::NO: {
+        %>
+        case RPCArg::Optional::NO: <%
             ret += ", required";
             break;
-        }
+        %>
 
             // no default case, so the compiler can warn about missing cases
-        }
-    }
+        %>
+    %>
     ret += ")";
     ret += m_description.empty() ? "" : " " + m_description;
     return ret;
-}
+%>
 
 std::string RPCArg::ToStringObj(const bool oneline) const
-{
+<%
     std::string res;
     res += "\"";
     res += m_name;
-    if (oneline) {
+    if (oneline) <%
         res += "\":";
-    } else {
+    %> else <%
         res += "\": ";
-    }
-    switch (m_type) {
+    %>
+    switch (m_type) <%
     case Type::STR:
         return res + "\"str\"";
     case Type::STR_HEX:
@@ -474,9 +474,9 @@ std::string RPCArg::ToStringObj(const bool oneline) const
         return res + "bool";
     case Type::ARR:
         res += "[";
-        for (const auto& i : m_inner) {
+        for (const auto& i : m_inner) <%
             res += i.ToString(oneline) + ",";
-        }
+        %>
         return res + "...]";
     case Type::OBJ:
     case Type::OBJ_USER_KEYS:
@@ -484,61 +484,61 @@ std::string RPCArg::ToStringObj(const bool oneline) const
         assert(false);
 
         // no default case, so the compiler can warn about missing cases
-    }
+    %>
     assert(false);
-}
+%>
 
 std::string RPCArg::ToString(const bool oneline) const
-{
+<%
     if (oneline && !m_oneline_description.empty()) return m_oneline_description;
 
-    switch (m_type) {
+    switch (m_type) <%
     case Type::STR_HEX:
-    case Type::STR: {
+    case Type::STR: <%
         return "\"" + m_name + "\"";
-    }
+    %>
     case Type::NUM:
     case Type::RANGE:
     case Type::AMOUNT:
-    case Type::BOOL: {
+    case Type::BOOL: <%
         return m_name;
-    }
+    %>
     case Type::OBJ:
-    case Type::OBJ_USER_KEYS: {
+    case Type::OBJ_USER_KEYS: <%
         std::string res;
-        for (size_t i = 0; i < m_inner.size();) {
+        for (size_t i = 0; i < m_inner.size();) <%
             res += m_inner[i].ToStringObj(oneline);
             if (++i < m_inner.size()) res += ",";
-        }
-        if (m_type == Type::OBJ) {
+        %>
+        if (m_type == Type::OBJ) <%
             return "{" + res + "}";
-        } else {
+        %> else <%
             return "{" + res + ",...}";
-        }
-    }
-    case Type::ARR: {
+        %>
+    %>
+    case Type::ARR: <%
         std::string res;
-        for (const auto& i : m_inner) {
+        for (const auto& i : m_inner) <%
             res += i.ToString(oneline) + ",";
-        }
+        %>
         return "[" + res + "...]";
-    }
+    %>
 
         // no default case, so the compiler can warn about missing cases
-    }
+    %>
     assert(false);
-}
+%>
 
 std::pair<int64_t, int64_t> ParseRange(const UniValue& value)
-{
-    if (value.isNum()) {
-        return {0, value.get_int64()};
-    }
-    if (value.isArray() && value.size() == 2 && value[0].isNum() && value[1].isNum()) {
+<%
+    if (value.isNum()) <%
+        return <%0, value.get_int64()%>;
+    %>
+    if (value.isArray() && value.size() == 2 && value[0].isNum() && value[1].isNum()) <%
         int64_t low = value[0].get_int64();
         int64_t high = value[1].get_int64();
         if (low > high) throw JSONRPCError(RPC_INVALID_PARAMETER, "Range specified as [begin,end] must not have begin after end");
-        return {low, high};
-    }
+        return <%low, high%>;
+    %>
     throw JSONRPCError(RPC_INVALID_PARAMETER, "Range must be specified as end or as [begin,end]");
-}
+%>

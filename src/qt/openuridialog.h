@@ -7,12 +7,12 @@
 
 #include <QDialog>
 
-namespace Ui {
+namespace Ui <%
     class OpenURIDialog;
-}
+%>
 
 class OpenURIDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -29,6 +29,6 @@ private Q_SLOTS:
 
 private:
     Ui::OpenURIDialog *ui;
-};
+%>;
 
 #endif // BITCOIN_QT_OPENURIDIALOG_H

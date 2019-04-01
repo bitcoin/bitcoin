@@ -20,20 +20,20 @@
 #include <QtGlobal>
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
-{
-    if (request.fHelp) {
+<%
+    if (request.fHelp) <%
         return "help message";
-    }
+    %>
     return request.params.write(0, 0);
-}
+%>
 
 static const CRPCCommand vRPCCommands[] =
-{
-    { "test", "rpcNestedTest", &rpcNestedTest_rpc, {} },
-};
+<%
+    <% "test", "rpcNestedTest", &rpcNestedTest_rpc, <%%> %>,
+%>;
 
 void RPCNestedTests::rpcNestedTests()
-{
+<%
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
@@ -130,4 +130,4 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(*node, result, "rpcNestedTest abc,,abc"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(*node, result, "rpcNestedTest(abc,,abc)"), std::runtime_error); //don't tollerate empty arguments when using ,
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(*node, result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
-}
+%>

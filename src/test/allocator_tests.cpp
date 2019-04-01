@@ -14,7 +14,7 @@
 BOOST_FIXTURE_TEST_SUITE(allocator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(arena_tests)
-{
+<%
     // Fake memory base address for testing
     // without actually using memory.
     void *synth_base = reinterpret_cast<void*>(0x08000000);
@@ -33,12 +33,12 @@ BOOST_AUTO_TEST_CASE(arena_tests)
 #endif
     BOOST_CHECK(b.stats().used == 0);
     BOOST_CHECK(b.stats().free == synth_size);
-    try { // Test exception on double-free
+    try <% // Test exception on double-free
         b.free(chunk);
         BOOST_CHECK(0);
-    } catch(std::runtime_error &)
-    {
-    }
+    %> catch(std::runtime_error &)
+    <%
+    %>
 
     void *a0 = b.alloc(128);
     void *a1 = b.alloc(256);
@@ -107,61 +107,61 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     for (int x=0; x<2048; ++x)
         addr.push_back(nullptr);
     uint32_t s = 0x12345678;
-    for (int x=0; x<5000; ++x) {
+    for (int x=0; x<5000; ++x) <%
         int idx = s & (addr.size()-1);
-        if (s & 0x80000000) {
+        if (s & 0x80000000) <%
             b.free(addr[idx]);
             addr[idx] = nullptr;
-        } else if(!addr[idx]) {
+        %> else if(!addr[idx]) <%
             addr[idx] = b.alloc((s >> 16) & 2047);
-        }
+        %>
         bool lsb = s & 1;
         s >>= 1;
         if (lsb)
             s ^= 0xf00f00f0; // LFSR period 0xf7ffffe0
-    }
+    %>
     for (void *ptr: addr)
         b.free(ptr);
     addr.clear();
 
     BOOST_CHECK(b.stats().total == synth_size);
     BOOST_CHECK(b.stats().free == synth_size);
-}
+%>
 
 /** Mock LockedPageAllocator for testing */
 class TestLockedPageAllocator: public LockedPageAllocator
-{
+<%
 public:
-    TestLockedPageAllocator(int count_in, int lockedcount_in): count(count_in), lockedcount(lockedcount_in) {}
+    TestLockedPageAllocator(int count_in, int lockedcount_in): count(count_in), lockedcount(lockedcount_in) <%%>
     void* AllocateLocked(size_t len, bool *lockingSuccess) override
-    {
+    <%
         *lockingSuccess = false;
-        if (count > 0) {
+        if (count > 0) <%
             --count;
 
-            if (lockedcount > 0) {
+            if (lockedcount > 0) <%
                 --lockedcount;
                 *lockingSuccess = true;
-            }
+            %>
 
-            return reinterpret_cast<void*>(uint64_t{static_cast<uint64_t>(0x08000000) + (count << 24)}); // Fake address, do not actually use this memory
-        }
+            return reinterpret_cast<void*>(uint64_t<%static_cast<uint64_t>(0x08000000) + (count << 24)%>); // Fake address, do not actually use this memory
+        %>
         return nullptr;
-    }
+    %>
     void FreeLocked(void* addr, size_t len) override
-    {
-    }
+    <%
+    %>
     size_t GetLimit() override
-    {
+    <%
         return std::numeric_limits<size_t>::max();
-    }
+    %>
 private:
     int count;
     int lockedcount;
-};
+%>;
 
 BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
-{
+<%
     // Test over three virtual arenas, of which one will succeed being locked
     std::unique_ptr<LockedPageAllocator> x = MakeUnique<TestLockedPageAllocator>(3, 1);
     LockedPool pool(std::move(x));
@@ -204,13 +204,13 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
     BOOST_CHECK(pool.stats().total == 3*LockedPool::ARENA_SIZE);
     BOOST_CHECK(pool.stats().locked == LockedPool::ARENA_SIZE);
     BOOST_CHECK(pool.stats().used == 0);
-}
+%>
 
 // These tests used the live LockedPoolManager object, this is also used
 // by other tests so the conditions are somewhat less controllable and thus the
 // tests are somewhat more error-prone.
 BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
-{
+<%
     LockedPoolManager &pool = LockedPoolManager::Instance();
     LockedPool::Stats initial = pool.stats();
 
@@ -221,16 +221,16 @@ BOOST_AUTO_TEST_CASE(lockedpool_tests_live)
     BOOST_CHECK(*((uint32_t*)a0) == 0x1234);
 
     pool.free(a0);
-    try { // Test exception on double-free
+    try <% // Test exception on double-free
         pool.free(a0);
         BOOST_CHECK(0);
-    } catch(std::runtime_error &)
-    {
-    }
+    %> catch(std::runtime_error &)
+    <%
+    %>
     // If more than one new arena was allocated for the above tests, something is wrong
     BOOST_CHECK(pool.stats().total <= (initial.total + LockedPool::ARENA_SIZE));
     // Usage must be back to where it started
     BOOST_CHECK(pool.stats().used == initial.used);
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

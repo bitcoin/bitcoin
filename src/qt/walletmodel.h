@@ -43,20 +43,20 @@ class COutput;
 class CPubKey;
 class uint256;
 
-namespace interfaces {
+namespace interfaces <%
 class Node;
-} // namespace interfaces
+%> // namespace interfaces
 
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
 class SendCoinsRecipient
-{
+<%
 public:
-    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) <% %>
     explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
-        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) <%%>
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -88,7 +88,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
         std::string sAddress = address.toStdString();
         std::string sLabel = label.toStdString();
         std::string sMessage = message.toStdString();
@@ -108,7 +108,7 @@ public:
         READWRITE(sAuthenticatedMerchant);
 
         if (ser_action.ForRead())
-        {
+        <%
             address = QString::fromStdString(sAddress);
             label = QString::fromStdString(sLabel);
             message = QString::fromStdString(sMessage);
@@ -117,13 +117,13 @@ public:
                 paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
 #endif
             authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
-        }
-    }
-};
+        %>
+    %>
+%>;
 
 /** Interface to Bitcoin wallet from Qt view code. */
 class WalletModel : public QObject
-{
+<%
     Q_OBJECT
 
 public:
@@ -131,7 +131,7 @@ public:
     ~WalletModel();
 
     enum StatusCode // Returned by sendCoins
-    {
+    <%
         OK,
         InvalidAmount,
         InvalidAddress,
@@ -142,14 +142,14 @@ public:
         TransactionCommitFailed,
         AbsurdFee,
         PaymentRequestExpired
-    };
+    %>;
 
     enum EncryptionStatus
-    {
+    <%
         Unencrypted,  // !wallet->IsCrypted()
         Locked,       // wallet->IsCrypted() && wallet->IsLocked()
         Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
-    };
+    %>;
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
@@ -163,15 +163,15 @@ public:
 
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
-    {
+    <%
         SendCoinsReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
             : status(_status),
               reasonCommitFailed(_reasonCommitFailed)
-        {
-        }
+        <%
+        %>
         StatusCode status;
         QString reasonCommitFailed;
-    };
+    %>;
 
     // prepare transaction for getting txfee before sending coins
     SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl);
@@ -187,23 +187,23 @@ public:
 
     // RAI object for unlocking wallet, returned by requestUnlock()
     class UnlockContext
-    {
+    <%
     public:
         UnlockContext(WalletModel *wallet, bool valid, bool relock);
         ~UnlockContext();
 
-        bool isValid() const { return valid; }
+        bool isValid() const <% return valid; %>
 
         // Copy operator and constructor transfer the context
-        UnlockContext(const UnlockContext& obj) { CopyFrom(obj); }
-        UnlockContext& operator=(const UnlockContext& rhs) { CopyFrom(rhs); return *this; }
+        UnlockContext(const UnlockContext& obj) <% CopyFrom(obj); %>
+        UnlockContext& operator=(const UnlockContext& rhs) <% CopyFrom(rhs); return *this; %>
     private:
         WalletModel *wallet;
         bool valid;
         mutable bool relock; // mutable, as it can be set to false by copying
 
         void CopyFrom(const UnlockContext& rhs);
-    };
+    %>;
 
     UnlockContext requestUnlock();
 
@@ -216,15 +216,15 @@ public:
     bool privateKeysDisabled() const;
     bool canGetAddresses() const;
 
-    interfaces::Node& node() const { return m_node; }
-    interfaces::Wallet& wallet() const { return *m_wallet; }
+    interfaces::Node& node() const <% return m_node; %>
+    interfaces::Wallet& wallet() const <% return *m_wallet; %>
 
     QString getWalletName() const;
     QString getDisplayName() const;
 
     bool isMultiwallet();
 
-    AddressTableModel* getAddressTableModel() const { return addressTableModel; }
+    AddressTableModel* getAddressTableModel() const <% return addressTableModel; %>
 private:
     std::unique_ptr<interfaces::Wallet> m_wallet;
     std::unique_ptr<interfaces::Handler> m_handler_unload;
@@ -237,7 +237,7 @@ private:
     interfaces::Node& m_node;
 
     bool fHaveWatchOnly;
-    bool fForceCheckBalanceChanged{false};
+    bool fForceCheckBalanceChanged<%false%>;
 
     // Wallet has an options model for wallet-specific options
     // (transaction fee, for example)
@@ -299,6 +299,6 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
-};
+%>;
 
 #endif // BITCOIN_QT_WALLETMODEL_H

@@ -10,7 +10,7 @@
 
 /** A PRNG class for ChaCha20. */
 class ChaCha20
-{
+<%
 private:
     uint32_t input[16];
 
@@ -21,6 +21,6 @@ public:
     void SetIV(uint64_t iv);
     void Seek(uint64_t pos);
     void Output(unsigned char* output, size_t bytes);
-};
+%>;
 
 #endif // BITCOIN_CRYPTO_CHACHA20_H

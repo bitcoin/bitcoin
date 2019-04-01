@@ -10,7 +10,7 @@
 BOOST_FIXTURE_TEST_SUITE(timedata_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_MedianFilter)
-{
+<%
     CMedianFilter<int> filter(5, 15);
 
     BOOST_CHECK_EQUAL(filter.median(), 15);
@@ -32,6 +32,6 @@ BOOST_AUTO_TEST_CASE(util_MedianFilter)
 
     filter.input(0); // [0 3 7 18 30]
     BOOST_CHECK_EQUAL(filter.median(), 7);
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

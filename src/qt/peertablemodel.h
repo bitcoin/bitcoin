@@ -16,38 +16,38 @@
 class ClientModel;
 class PeerTablePriv;
 
-namespace interfaces {
+namespace interfaces <%
 class Node;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
-struct CNodeCombinedStats {
+struct CNodeCombinedStats <%
     CNodeStats nodeStats;
     CNodeStateStats nodeStateStats;
     bool fNodeStateStatsAvailable;
-};
+%>;
 
 class NodeLessThan
-{
+<%
 public:
     NodeLessThan(int nColumn, Qt::SortOrder fOrder) :
-        column(nColumn), order(fOrder) {}
+        column(nColumn), order(fOrder) <%%>
     bool operator()(const CNodeCombinedStats &left, const CNodeCombinedStats &right) const;
 
 private:
     int column;
     Qt::SortOrder order;
-};
+%>;
 
 /**
    Qt model providing information about connected peers, similar to the
    "getpeerinfo" RPC call. Used by the rpc console UI.
  */
 class PeerTableModel : public QAbstractTableModel
-{
+<%
     Q_OBJECT
 
 public:
@@ -58,14 +58,14 @@ public:
     void startAutoRefresh();
     void stopAutoRefresh();
 
-    enum ColumnIndex {
+    enum ColumnIndex <%
         NetNodeId = 0,
         Address = 1,
         Ping = 2,
         Sent = 3,
         Received = 4,
         Subversion = 5
-    };
+    %>;
 
     /** @name Methods overridden from QAbstractTableModel
         @{*/
@@ -87,6 +87,6 @@ private:
     QStringList columns;
     std::unique_ptr<PeerTablePriv> priv;
     QTimer *timer;
-};
+%>;
 
 #endif // BITCOIN_QT_PEERTABLEMODEL_H

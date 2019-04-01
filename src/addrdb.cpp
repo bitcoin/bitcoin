@@ -14,27 +14,27 @@
 #include <tinyformat.h>
 #include <util/system.h>
 
-namespace {
+namespace <%
 
 template <typename Stream, typename Data>
 bool SerializeDB(Stream& stream, const Data& data)
-{
+<%
     // Write and commit header, data
-    try {
+    try <%
         CHashWriter hasher(SER_DISK, CLIENT_VERSION);
         stream << Params().MessageStart() << data;
         hasher << Params().MessageStart() << data;
         stream << hasher.GetHash();
-    } catch (const std::exception& e) {
+    %> catch (const std::exception& e) <%
         return error("%s: Serialize or I/O error - %s", __func__, e.what());
-    }
+    %>
 
     return true;
-}
+%>
 
 template <typename Data>
 bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data& data)
-{
+<%
     // Generate random temporary filename
     unsigned short randv = 0;
     GetRandBytes((unsigned char*)&randv, sizeof(randv));
@@ -58,12 +58,12 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
         return error("%s: Rename-into-place failed", __func__);
 
     return true;
-}
+%>
 
 template <typename Stream, typename Data>
 bool DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
-{
-    try {
+<%
+    try <%
         CHashVerifier<Stream> verifier(&stream);
         // de-serialize file header (network specific magic number) and ..
         unsigned char pchMsgTmp[4];
@@ -76,24 +76,24 @@ bool DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
         verifier >> data;
 
         // verify checksum
-        if (fCheckSum) {
+        if (fCheckSum) <%
             uint256 hashTmp;
             stream >> hashTmp;
-            if (hashTmp != verifier.GetHash()) {
+            if (hashTmp != verifier.GetHash()) <%
                 return error("%s: Checksum mismatch, data corrupted", __func__);
-            }
-        }
-    }
-    catch (const std::exception& e) {
+            %>
+        %>
+    %>
+    catch (const std::exception& e) <%
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
-    }
+    %>
 
     return true;
-}
+%>
 
 template <typename Data>
 bool DeserializeFileDB(const fs::path& path, Data& data)
-{
+<%
     // open input file, and associate with CAutoFile
     FILE *file = fsbridge::fopen(path, "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
@@ -101,45 +101,45 @@ bool DeserializeFileDB(const fs::path& path, Data& data)
         return error("%s: Failed to open file %s", __func__, path.string());
 
     return DeserializeDB(filein, data);
-}
+%>
 
-}
+%>
 
 CBanDB::CBanDB(fs::path ban_list_path) : m_ban_list_path(std::move(ban_list_path))
-{
-}
+<%
+%>
 
 bool CBanDB::Write(const banmap_t& banSet)
-{
+<%
     return SerializeFileDB("banlist", m_ban_list_path, banSet);
-}
+%>
 
 bool CBanDB::Read(banmap_t& banSet)
-{
+<%
     return DeserializeFileDB(m_ban_list_path, banSet);
-}
+%>
 
 CAddrDB::CAddrDB()
-{
+<%
     pathAddr = GetDataDir() / "peers.dat";
-}
+%>
 
 bool CAddrDB::Write(const CAddrMan& addr)
-{
+<%
     return SerializeFileDB("peers", pathAddr, addr);
-}
+%>
 
 bool CAddrDB::Read(CAddrMan& addr)
-{
+<%
     return DeserializeFileDB(pathAddr, addr);
-}
+%>
 
 bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
-{
+<%
     bool ret = DeserializeDB(ssPeers, addr, false);
-    if (!ret) {
+    if (!ret) <%
         // Ensure addrman is left in a clean state
         addr.Clear();
-    }
+    %>
     return ret;
-}
+%>

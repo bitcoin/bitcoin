@@ -55,7 +55,7 @@ struct event_base* EventBase();
  * Thin C++ wrapper around evhttp_request.
  */
 class HTTPRequest
-{
+<%
 private:
     struct evhttp_request* req;
     bool replySent;
@@ -64,13 +64,13 @@ public:
     explicit HTTPRequest(struct evhttp_request* req);
     ~HTTPRequest();
 
-    enum RequestMethod {
+    enum RequestMethod <%
         UNKNOWN,
         GET,
         POST,
         HEAD,
         PUT
-    };
+    %>;
 
     /** Get requested URI.
      */
@@ -114,21 +114,21 @@ public:
      * main thread, do not call any other HTTPRequest methods after calling this.
      */
     void WriteReply(int nStatus, const std::string& strReply = "");
-};
+%>;
 
 /** Event handler closure.
  */
 class HTTPClosure
-{
+<%
 public:
     virtual void operator()() = 0;
-    virtual ~HTTPClosure() {}
-};
+    virtual ~HTTPClosure() <%%>
+%>;
 
 /** Event class. This can be used either as a cross-thread trigger or as a timer.
  */
 class HTTPEvent
-{
+<%
 public:
     /** Create a new event.
      * deleteWhenTriggered deletes this event object after the event is triggered (and the handler called)
@@ -146,7 +146,7 @@ public:
     std::function<void()> handler;
 private:
     struct event* ev;
-};
+%>;
 
 std::string urlDecode(const std::string &urlEncoded);
 

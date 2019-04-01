@@ -22,41 +22,41 @@ static const unsigned int QUEUE_BATCH_SIZE = 128;
 // where checks all contain a prevector that is indirect 50% of the time
 // and there is a little bit of work done between calls to Add.
 static void CCheckQueueSpeedPrevectorJob(benchmark::State& state)
-{
-    struct PrevectorJob {
+<%
+    struct PrevectorJob <%
         prevector<PREVECTOR_SIZE, uint8_t> p;
-        PrevectorJob(){
-        }
-        explicit PrevectorJob(FastRandomContext& insecure_rand){
+        PrevectorJob()<%
+        %>
+        explicit PrevectorJob(FastRandomContext& insecure_rand)<%
             p.resize(insecure_rand.randrange(PREVECTOR_SIZE*2));
-        }
+        %>
         bool operator()()
-        {
+        <%
             return true;
-        }
-        void swap(PrevectorJob& x){p.swap(x.p);};
-    };
-    CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
+        %>
+        void swap(PrevectorJob& x)<%p.swap(x.p);%>;
+    %>;
+    CCheckQueue<PrevectorJob> queue <%QUEUE_BATCH_SIZE%>;
     boost::thread_group tg;
-    for (auto x = 0; x < std::max(MIN_CORES, GetNumCores()); ++x) {
-       tg.create_thread([&]{queue.Thread();});
-    }
-    while (state.KeepRunning()) {
+    for (auto x = 0; x < std::max(MIN_CORES, GetNumCores()); ++x) <%
+       tg.create_thread([&]<%queue.Thread();%>);
+    %>
+    while (state.KeepRunning()) <%
         // Make insecure_rand here so that each iteration is identical.
         FastRandomContext insecure_rand(true);
         CCheckQueueControl<PrevectorJob> control(&queue);
         std::vector<std::vector<PrevectorJob>> vBatches(BATCHES);
-        for (auto& vChecks : vBatches) {
+        for (auto& vChecks : vBatches) <%
             vChecks.reserve(BATCH_SIZE);
             for (size_t x = 0; x < BATCH_SIZE; ++x)
                 vChecks.emplace_back(insecure_rand);
             control.Add(vChecks);
-        }
+        %>
         // control waits for completion by RAII, but
         // it is done explicitly here for clarity
         control.Wait();
-    }
+    %>
     tg.interrupt_all();
     tg.join_all();
-}
+%>
 BENCHMARK(CCheckQueueSpeedPrevectorJob, 1400);

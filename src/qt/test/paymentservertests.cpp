@@ -23,21 +23,21 @@
 #include <QTemporaryFile>
 
 X509 *parse_b64der_cert(const char* cert_data)
-{
+<%
     std::vector<unsigned char> data = DecodeBase64(cert_data);
     assert(data.size() > 0);
     const unsigned char* dptr = data.data();
     X509 *cert = d2i_X509(nullptr, &dptr, data.size());
     assert(cert);
     return cert;
-}
+%>
 
 //
 // Test payment request handling
 //
 
 static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsigned char>& data)
-{
+<%
     RecipientCatcher sigCatcher;
     QObject::connect(server, &PaymentServer::receivedPaymentRequest,
         &sigCatcher, &RecipientCatcher::getRecipient);
@@ -62,10 +62,10 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 
     // Return results from sigCatcher
     return sigCatcher.recipient;
-}
+%>
 
 void PaymentServerTests::paymentServerTests()
-{
+<%
     SelectParams(CBaseChainParams::MAIN);
     auto node = interfaces::MakeNode();
     OptionsModel optionsModel(*node);
@@ -199,16 +199,16 @@ void PaymentServerTests::paymentServerTests()
     QVERIFY(r.paymentRequest.IsInitialized());
     // Extract address and amount from the request
     QList<std::pair<CScript, CAmount> > sendingTos = r.paymentRequest.getPayTo();
-    for (const std::pair<CScript, CAmount>& sendingTo : sendingTos) {
+    for (const std::pair<CScript, CAmount>& sendingTo : sendingTos) <%
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest))
             QCOMPARE(PaymentServer::verifyAmount(sendingTo.second), false);
-    }
+    %>
 
     delete server;
-}
+%>
 
 void RecipientCatcher::getRecipient(const SendCoinsRecipient& r)
-{
+<%
     recipient = r;
-}
+%>

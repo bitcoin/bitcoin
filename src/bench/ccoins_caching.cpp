@@ -18,16 +18,16 @@
 //
 static std::vector<CMutableTransaction>
 SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
-{
+<%
     std::vector<CMutableTransaction> dummyTransactions;
     dummyTransactions.resize(2);
 
     // Add some keys to the keystore:
     CKey key[4];
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) <%
         key[i].MakeNewKey(i % 2);
         keystoreRet.AddKey(key[i]);
-    }
+    %>
 
     // Create some dummy input transactions
     dummyTransactions[0].vout.resize(2);
@@ -45,7 +45,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
     AddCoins(coinsRet, CTransaction(dummyTransactions[1]), 0);
 
     return dummyTransactions;
-}
+%>
 
 // Microbenchmark for simple accesses to a CCoinsViewCache database. Note from
 // laanwj, "replicating the actual usage patterns of the client is hard though,
@@ -54,7 +54,7 @@ SetupDummyInputs(CBasicKeyStore& keystoreRet, CCoinsViewCache& coinsRet)
 // every benchmark."
 // (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
 static void CCoinsCaching(benchmark::State& state)
-{
+<%
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -77,12 +77,12 @@ static void CCoinsCaching(benchmark::State& state)
 
     // Benchmark.
     const CTransaction tx_1(t1);
-    while (state.KeepRunning()) {
+    while (state.KeepRunning()) <%
         bool success = AreInputsStandard(tx_1, coins);
         assert(success);
         CAmount value = coins.GetValueIn(tx_1);
         assert(value == (50 + 21 + 22) * COIN);
-    }
-}
+    %>
+%>
 
 BENCHMARK(CCoinsCaching, 170 * 1000);

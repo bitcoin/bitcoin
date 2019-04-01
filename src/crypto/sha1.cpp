@@ -10,32 +10,32 @@
 
 // Internal implementation code.
 namespace
-{
+<%
 /// Internal SHA-1 implementation.
 namespace sha1
-{
+<%
 /** One round of SHA-1. */
 void inline Round(uint32_t a, uint32_t& b, uint32_t c, uint32_t d, uint32_t& e, uint32_t f, uint32_t k, uint32_t w)
-{
+<%
     e += ((a << 5) | (a >> 27)) + f + k + w;
     b = (b << 30) | (b >> 2);
-}
+%>
 
-uint32_t inline f1(uint32_t b, uint32_t c, uint32_t d) { return d ^ (b & (c ^ d)); }
-uint32_t inline f2(uint32_t b, uint32_t c, uint32_t d) { return b ^ c ^ d; }
-uint32_t inline f3(uint32_t b, uint32_t c, uint32_t d) { return (b & c) | (d & (b | c)); }
+uint32_t inline f1(uint32_t b, uint32_t c, uint32_t d) <% return d ^ (b & (c ^ d)); %>
+uint32_t inline f2(uint32_t b, uint32_t c, uint32_t d) <% return b ^ c ^ d; %>
+uint32_t inline f3(uint32_t b, uint32_t c, uint32_t d) <% return (b & c) | (d & (b | c)); %>
 
-uint32_t inline left(uint32_t x) { return (x << 1) | (x >> 31); }
+uint32_t inline left(uint32_t x) <% return (x << 1) | (x >> 31); %>
 
 /** Initialize SHA-1 state. */
 void inline Initialize(uint32_t* s)
-{
+<%
     s[0] = 0x67452301ul;
     s[1] = 0xEFCDAB89ul;
     s[2] = 0x98BADCFEul;
     s[3] = 0x10325476ul;
     s[4] = 0xC3D2E1F0ul;
-}
+%>
 
 const uint32_t k1 = 0x5A827999ul;
 const uint32_t k2 = 0x6ED9EBA1ul;
@@ -44,7 +44,7 @@ const uint32_t k4 = 0xCA62C1D6ul;
 
 /** Perform a SHA-1 transformation, processing a 64-byte chunk. */
 void Transform(uint32_t* s, const unsigned char* chunk)
-{
+<%
     uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4];
     uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
 
@@ -138,48 +138,48 @@ void Transform(uint32_t* s, const unsigned char* chunk)
     s[2] += c;
     s[3] += d;
     s[4] += e;
-}
+%>
 
-} // namespace sha1
+%> // namespace sha1
 
-} // namespace
+%> // namespace
 
 ////// SHA1
 
 CSHA1::CSHA1() : bytes(0)
-{
+<%
     sha1::Initialize(s);
-}
+%>
 
 CSHA1& CSHA1::Write(const unsigned char* data, size_t len)
-{
+<%
     const unsigned char* end = data + len;
     size_t bufsize = bytes % 64;
-    if (bufsize && bufsize + len >= 64) {
+    if (bufsize && bufsize + len >= 64) <%
         // Fill the buffer, and process it.
         memcpy(buf + bufsize, data, 64 - bufsize);
         bytes += 64 - bufsize;
         data += 64 - bufsize;
         sha1::Transform(s, buf);
         bufsize = 0;
-    }
-    while (end >= data + 64) {
+    %>
+    while (end >= data + 64) <%
         // Process full chunks directly from the source.
         sha1::Transform(s, data);
         bytes += 64;
         data += 64;
-    }
-    if (end > data) {
+    %>
+    if (end > data) <%
         // Fill the buffer with what remains.
         memcpy(buf + bufsize, data, end - data);
         bytes += end - data;
-    }
+    %>
     return *this;
-}
+%>
 
 void CSHA1::Finalize(unsigned char hash[OUTPUT_SIZE])
-{
-    static const unsigned char pad[64] = {0x80};
+<%
+    static const unsigned char pad[64] = <%0x80%>;
     unsigned char sizedesc[8];
     WriteBE64(sizedesc, bytes << 3);
     Write(pad, 1 + ((119 - (bytes % 64)) % 64));
@@ -189,11 +189,11 @@ void CSHA1::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE32(hash + 8, s[2]);
     WriteBE32(hash + 12, s[3]);
     WriteBE32(hash + 16, s[4]);
-}
+%>
 
 CSHA1& CSHA1::Reset()
-{
+<%
     bytes = 0;
     sha1::Initialize(s);
     return *this;
-}
+%>

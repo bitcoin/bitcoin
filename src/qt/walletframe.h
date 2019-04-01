@@ -27,7 +27,7 @@ QT_END_NAMESPACE
  * reducing the risk of breaking top-level stuff.
  */
 class WalletFrame : public QFrame
-{
+<%
     Q_OBJECT
 
 public:
@@ -93,6 +93,6 @@ public Q_SLOTS:
     void usedReceivingAddresses();
     /** Pass on signal over requested out-of-sync-warning information */
     void outOfSyncWarningClicked();
-};
+%>;
 
 #endif // BITCOIN_QT_WALLETFRAME_H

@@ -18,7 +18,7 @@ QT_END_NAMESPACE
 /** Widget for entering bitcoin amounts.
   */
 class BitcoinAmountField: public QWidget
-{
+<%
     Q_OBJECT
 
     // ugly hack: for some unknown reason CAmount (instead of qint64) does not work here as expected
@@ -79,6 +79,6 @@ private:
 private Q_SLOTS:
     void unitChanged(int idx);
 
-};
+%>;
 
 #endif // BITCOIN_QT_BITCOINAMOUNTFIELD_H

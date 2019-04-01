@@ -39,10 +39,10 @@ class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
 class Node;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QAction;
@@ -52,17 +52,17 @@ class QProgressBar;
 class QProgressDialog;
 QT_END_NAMESPACE
 
-namespace GUIUtil {
+namespace GUIUtil <%
 class ClickableLabel;
 class ClickableProgressBar;
-}
+%>
 
 /**
   Bitcoin GUI main class. This class represents the main window of the Bitcoin UI. It communicates with both the client and
   wallet models to give the user an up-to-date view of the current core state.
 */
 class BitcoinGUI : public QMainWindow
-{
+<%
     Q_OBJECT
 
 public:
@@ -93,7 +93,7 @@ public:
     /** Get the tray icon status.
         Some systems have not "system tray" or "notification area" available.
     */
-    bool hasTrayIcon() const { return trayIcon; }
+    bool hasTrayIcon() const <% return trayIcon; %>
 
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
@@ -108,7 +108,7 @@ protected:
 
 private:
     interfaces::Node& m_node;
-    WalletController* m_wallet_controller{nullptr};
+    WalletController* m_wallet_controller<%nullptr%>;
     std::unique_ptr<interfaces::Handler> m_handler_message_box;
     std::unique_ptr<interfaces::Handler> m_handler_question;
     ClientModel* clientModel = nullptr;
@@ -147,8 +147,8 @@ private:
     QAction* openRPCConsoleAction = nullptr;
     QAction* openAction = nullptr;
     QAction* showHelpMessageAction = nullptr;
-    QAction* m_open_wallet_action{nullptr};
-    QAction* m_close_wallet_action{nullptr};
+    QAction* m_open_wallet_action<%nullptr%>;
+    QAction* m_close_wallet_action<%nullptr%>;
     QAction* m_wallet_selector_label_action = nullptr;
     QAction* m_wallet_selector_action = nullptr;
 
@@ -291,7 +291,7 @@ public Q_SLOTS:
 #endif
 
     /** Show window if hidden, unminimize when minimized, rise when obscured or show if hidden and fToggleHidden is true */
-    void showNormalIfMinimized() { showNormalIfMinimized(false); }
+    void showNormalIfMinimized() <% showNormalIfMinimized(false); %>
     void showNormalIfMinimized(bool fToggleHidden);
     /** Simply calls showNormalIfMinimized(true) for use in SLOT() macro */
     void toggleHidden();
@@ -306,10 +306,10 @@ public Q_SLOTS:
     void setTrayIconVisible(bool);
 
     void showModalOverlay();
-};
+%>;
 
 class UnitDisplayStatusBarControl : public QLabel
-{
+<%
     Q_OBJECT
 
 public:
@@ -335,6 +335,6 @@ private Q_SLOTS:
     void updateDisplayUnit(int newUnits);
     /** Tells underlying optionsModel to update its current display unit. */
     void onMenuSelection(QAction* action);
-};
+%>;
 
 #endif // BITCOIN_QT_BITCOINGUI_H

@@ -9,9 +9,9 @@ class CBasicKeyStore;
 struct CMutableTransaction;
 class UniValue;
 
-namespace interfaces {
+namespace interfaces <%
 class Chain;
-} // namespace interfaces
+%> // namespace interfaces
 
 /** Sign a transaction with the given keystore and previous transactions */
 UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, const UniValue& prevTxs, CBasicKeyStore *keystore, bool tempKeystore, const UniValue& hashType);

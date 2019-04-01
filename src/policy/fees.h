@@ -24,16 +24,16 @@ class TxConfirmStats;
 
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
-enum class FeeEstimateHorizon {
+enum class FeeEstimateHorizon <%
     SHORT_HALFLIFE = 0,
     MED_HALFLIFE = 1,
     LONG_HALFLIFE = 2
-};
+%>;
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
 
 /* Enumeration of reason for returned fee estimate */
-enum class FeeReason {
+enum class FeeReason <%
     NONE,
     HALF_ESTIMATE,
     FULL_ESTIMATE,
@@ -44,46 +44,46 @@ enum class FeeReason {
     FALLBACK,
     REQUIRED,
     MAXTXFEE,
-};
+%>;
 
 std::string StringForFeeReason(FeeReason reason);
 
 /* Used to determine type of fee estimation requested */
-enum class FeeEstimateMode {
+enum class FeeEstimateMode <%
     UNSET,        //!< Use default settings based on other criteria
     ECONOMICAL,   //!< Force estimateSmartFee to use non-conservative estimates
     CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
-};
+%>;
 
 bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
 
 /* Used to return detailed information about a feerate bucket */
 struct EstimatorBucket
-{
+<%
     double start = -1;
     double end = -1;
     double withinTarget = 0;
     double totalConfirmed = 0;
     double inMempool = 0;
     double leftMempool = 0;
-};
+%>;
 
 /* Used to return detailed information about a fee estimate calculation */
 struct EstimationResult
-{
+<%
     EstimatorBucket pass;
     EstimatorBucket fail;
     double decay = 0;
     unsigned int scale = 0;
-};
+%>;
 
 struct FeeCalculation
-{
+<%
     EstimationResult est;
     FeeReason reason = FeeReason::NONE;
     int desiredTarget = 0;
     int returnedTarget = 0;
-};
+%>;
 
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the feerate needed
@@ -134,7 +134,7 @@ struct FeeCalculation
  * stats on the transactions included in that block
  */
 class CBlockPolicyEstimator
-{
+<%
 private:
     /** Track confirm delays up to 12 blocks for short horizon */
     static constexpr unsigned int SHORT_BLOCK_PERIODS = 12;
@@ -236,11 +236,11 @@ private:
     unsigned int historicalBest GUARDED_BY(m_cs_fee_estimator);
 
     struct TxStatsInfo
-    {
+    <%
         unsigned int blockHeight;
         unsigned int bucketIndex;
-        TxStatsInfo() : blockHeight(0), bucketIndex(0) {}
-    };
+        TxStatsInfo() : blockHeight(0), bucketIndex(0) <%%>
+    %>;
 
     // map of txids to information about that transaction
     std::map<uint256, TxStatsInfo> mapMemPoolTxs GUARDED_BY(m_cs_fee_estimator);
@@ -269,10 +269,10 @@ private:
     unsigned int HistoricalBlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Calculation of highest target that reasonable estimate can be provided for */
     unsigned int MaxUsableEstimate() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
-};
+%>;
 
 class FeeFilterRounder
-{
+<%
 private:
     static constexpr double MAX_FILTER_FEERATE = 1e7;
     /** FEE_FILTER_SPACING is just used to provide some quantization of fee
@@ -291,6 +291,6 @@ public:
 private:
     std::set<double> feeset;
     FastRandomContext insecure_rand;
-};
+%>;
 
 #endif // BITCOIN_POLICY_FEES_H

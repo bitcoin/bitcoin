@@ -27,9 +27,9 @@ static const bool DEFAULT_SELFSIGNED_ROOTCERTS = false;
 //
 
 class PaymentRequestPlus
-{
+<%
 public:
-    PaymentRequestPlus() { }
+    PaymentRequestPlus() <% %>
 
     bool parse(const QByteArray& data);
     bool SerializeToString(std::string* output) const;
@@ -42,11 +42,11 @@ public:
     // Returns list of outputs, amount
     QList<std::pair<CScript,CAmount> > getPayTo() const;
 
-    const payments::PaymentDetails& getDetails() const { return details; }
+    const payments::PaymentDetails& getDetails() const <% return details; %>
 
 private:
     payments::PaymentRequest paymentRequest;
     payments::PaymentDetails details;
-};
+%>;
 
 #endif // BITCOIN_QT_PAYMENTREQUESTPLUS_H

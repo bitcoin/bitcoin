@@ -22,7 +22,7 @@
 #include <rpc/blockchain.h>
 
 UniValue CallRPC(std::string args)
-{
+<%
     std::vector<std::string> vArgs;
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
@@ -32,20 +32,20 @@ UniValue CallRPC(std::string args)
     request.params = RPCConvertValues(strMethod, vArgs);
     request.fHelp = false;
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
-    try {
+    try <%
         UniValue result = tableRPC.execute(request);
         return result;
-    }
-    catch (const UniValue& objError) {
+    %>
+    catch (const UniValue& objError) <%
         throw std::runtime_error(find_value(objError, "message").get_str());
-    }
-}
+    %>
+%>
 
 
 BOOST_FIXTURE_TEST_SUITE(rpc_tests, TestingSetup)
 
 BOOST_AUTO_TEST_CASE(rpc_rawparams)
-{
+<%
     // Test raw transaction API argument handling
     UniValue r;
 
@@ -77,10 +77,10 @@ BOOST_AUTO_TEST_CASE(rpc_rawparams)
     BOOST_CHECK_THROW(CallRPC("sendrawtransaction null"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC("sendrawtransaction DEADBEEF"), std::runtime_error);
     BOOST_CHECK_THROW(CallRPC(std::string("sendrawtransaction ")+rawtx+" extra"), std::runtime_error);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_togglenetwork)
-{
+<%
     UniValue r;
 
     r = CallRPC("getnetworkinfo");
@@ -99,10 +99,10 @@ BOOST_AUTO_TEST_CASE(rpc_togglenetwork)
     r = CallRPC("getnetworkinfo");
     netState = find_value(r.get_obj(), "networkactive").get_bool();
     BOOST_CHECK_EQUAL(netState, true);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_rawsign)
-{
+<%
     UniValue r;
     // input is a 1-of-2 multisig (so is output):
     std::string prevout =
@@ -122,10 +122,10 @@ BOOST_AUTO_TEST_CASE(rpc_rawsign)
     r = CallRPC(std::string("signrawtransactionwithkey ")+notsigned+" ["+privkey1+","+privkey2+"] "+prevout);
     BOOST_CHECK(find_value(r.get_obj(), "complete").get_bool() == true);
     g_rpc_interfaces = nullptr;
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
-{
+<%
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"data\":\"68656c6c6f776f726c64\"}"));
 
     // Key not "data" (bad address)
@@ -137,10 +137,10 @@ BOOST_AUTO_TEST_CASE(rpc_createraw_op_return)
 
     // Data 81 bytes long
     BOOST_CHECK_NO_THROW(CallRPC("createrawtransaction [{\"txid\":\"a3b807410df0b60fcb9736768df5823938b2f838694939ba45f3c0a1bff150ed\",\"vout\":0}] {\"data\":\"010203040506070809101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081\"}"));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
-{
+<%
     BOOST_CHECK(ValueFromAmount(0LL).write() == "0.00000000");
     BOOST_CHECK(ValueFromAmount(1LL).write() == "0.00000001");
     BOOST_CHECK(ValueFromAmount(17622195LL).write() == "0.17622195");
@@ -172,17 +172,17 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/1000000).write(), "0.00000100");
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/10000000).write(), "0.00000010");
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/100000000).write(), "0.00000001");
-}
+%>
 
 static UniValue ValueFromString(const std::string &str)
-{
+<%
     UniValue value;
     BOOST_CHECK(value.setNumStr(str));
     return value;
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
-{
+<%
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("-0.00000001")), UniValue);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0")), 0LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000000")), 0LL);
@@ -212,10 +212,10 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e+11")), UniValue); //overflow error
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e11")), UniValue); //overflow error signless
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("93e+9")), UniValue); //overflow error
-}
+%>
 
 BOOST_AUTO_TEST_CASE(json_parse_errors)
-{
+<%
     // Valid
     BOOST_CHECK_EQUAL(ParseNonRFCJSONValue("1.0").get_real(), 1.0);
     // Valid, with leading or trailing whitespace
@@ -233,10 +233,10 @@ BOOST_AUTO_TEST_CASE(json_parse_errors)
     // BTC addresses should fail parsing
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W"), std::runtime_error);
     BOOST_CHECK_THROW(ParseNonRFCJSONValue("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNL"), std::runtime_error);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_ban)
-{
+<%
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
 
     UniValue r;
@@ -316,44 +316,44 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
-{
+<%
     UniValue result;
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"101", "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a"}));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", <%"101", "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a"%>));
     BOOST_CHECK_EQUAL(result[0].get_int(), 101);
     BOOST_CHECK_EQUAL(result[1].get_str(), "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a");
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"101", "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU"}));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", <%"101", "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU"%>));
     BOOST_CHECK_EQUAL(result[0].get_int(), 101);
     BOOST_CHECK_EQUAL(result[1].get_str(), "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU");
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"1", "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a", "9"}));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", <%"1", "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a", "9"%>));
     BOOST_CHECK_EQUAL(result[0].get_int(), 1);
     BOOST_CHECK_EQUAL(result[1].get_str(), "mkESjLZW66TmHhiFX8MCaBjrhZ543PPh9a");
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
 
-    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", {"1", "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU", "9"}));
+    BOOST_CHECK_NO_THROW(result = RPCConvertValues("generatetoaddress", <%"1", "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU", "9"%>));
     BOOST_CHECK_EQUAL(result[0].get_int(), 1);
     BOOST_CHECK_EQUAL(result[1].get_str(), "mhMbmE2tE9xzJYCV9aNC8jKWN31vtGrguU");
     BOOST_CHECK_EQUAL(result[2].get_int(), 9);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
-{
+<%
     int64_t total_weight = 200;
     std::vector<std::pair<CAmount, int64_t>> feerates;
-    CAmount result[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    CAmount result[NUM_GETBLOCKSTATS_PERCENTILES] = <% 0 %>;
 
-    for (int64_t i = 0; i < 100; i++) {
+    for (int64_t i = 0; i < 100; i++) <%
         feerates.emplace_back(std::make_pair(1 ,1));
-    }
+    %>
 
-    for (int64_t i = 0; i < 100; i++) {
+    for (int64_t i = 0; i < 100; i++) <%
         feerates.emplace_back(std::make_pair(2 ,1));
-    }
+    %>
 
     CalculatePercentilesByWeight(result, feerates, total_weight);
     BOOST_CHECK_EQUAL(result[0], 1);
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 
     // Test with more pairs, and two pairs overlapping 2 percentiles.
     total_weight = 100;
-    CAmount result2[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    CAmount result2[NUM_GETBLOCKSTATS_PERCENTILES] = <% 0 %>;
     feerates.clear();
 
     feerates.emplace_back(std::make_pair(1, 9));
@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 
     // Same test as above, but one of the percentile-overlapping pairs is split in 2.
     total_weight = 100;
-    CAmount result3[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    CAmount result3[NUM_GETBLOCKSTATS_PERCENTILES] = <% 0 %>;
     feerates.clear();
 
     feerates.emplace_back(std::make_pair(1, 9));
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 
     // Test with one transaction spanning all percentiles.
     total_weight = 104;
-    CAmount result4[NUM_GETBLOCKSTATS_PERCENTILES] = { 0 };
+    CAmount result4[NUM_GETBLOCKSTATS_PERCENTILES] = <% 0 %>;
     feerates.clear();
 
     feerates.emplace_back(std::make_pair(1, 100));
@@ -414,9 +414,9 @@ BOOST_AUTO_TEST_CASE(rpc_getblockstats_calculate_percentiles_by_weight)
 
     CalculatePercentilesByWeight(result4, feerates, total_weight);
 
-    for (int64_t i = 0; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) {
+    for (int64_t i = 0; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) <%
         BOOST_CHECK_EQUAL(result4[i], 1);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

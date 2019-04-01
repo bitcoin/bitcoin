@@ -17,39 +17,39 @@ class PeerTableModel;
 
 class CBlockIndex;
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
 class Node;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QTimer;
 QT_END_NAMESPACE
 
-enum class BlockSource {
+enum class BlockSource <%
     NONE,
     REINDEX,
     DISK,
     NETWORK
-};
+%>;
 
-enum NumConnections {
+enum NumConnections <%
     CONNECTIONS_NONE = 0,
     CONNECTIONS_IN   = (1U << 0),
     CONNECTIONS_OUT  = (1U << 1),
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
-};
+%>;
 
 /** Model for Bitcoin network client. */
 class ClientModel : public QObject
-{
+<%
     Q_OBJECT
 
 public:
     explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
     ~ClientModel();
 
-    interfaces::Node& node() const { return m_node; }
+    interfaces::Node& node() const <% return m_node; %>
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
     BanTableModel *getBanTableModel();
@@ -115,6 +115,6 @@ public Q_SLOTS:
     void updateNetworkActive(bool networkActive);
     void updateAlert();
     void updateBanlist();
-};
+%>;
 
 #endif // BITCOIN_QT_CLIENTMODEL_H

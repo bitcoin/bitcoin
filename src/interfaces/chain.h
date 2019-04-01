@@ -25,7 +25,7 @@ enum class RBFTransactionState;
 struct CBlockLocator;
 struct FeeCalculation;
 
-namespace interfaces {
+namespace interfaces <%
 
 class Handler;
 class Wallet;
@@ -58,9 +58,9 @@ class Wallet;
 //!   communicate with each other without going through the node
 //!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).
 class Chain
-{
+<%
 public:
-    virtual ~Chain() {}
+    virtual ~Chain() <%%>
 
     //! Interface for querying locked chain state, used by legacy code that
     //! assumes state won't change between calls. New code should avoid using
@@ -68,9 +68,9 @@ public:
     //! that return more information so the chain doesn't need to stay locked
     //! between calls.
     class Lock
-    {
+    <%
     public:
-        virtual ~Lock() {}
+        virtual ~Lock() <%%>
 
         //! Get current chain height, not including genesis block (returns 0 if
         //! chain only contains genesis block, nullopt if chain does not contain
@@ -147,7 +147,7 @@ public:
         //! amount specified by absurd_fee. Returns false if the transaction
         //! could not be added due to the fee or for another reason.
         virtual bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) = 0;
-    };
+    %>;
 
     //! Return Lock interface. Chain is locked when this is called, and
     //! unlocked when the returned interface is freed.
@@ -249,16 +249,16 @@ public:
 
     //! Chain notifications.
     class Notifications
-    {
+    <%
     public:
-        virtual ~Notifications() {}
-        virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
-        virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
-        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
-        virtual void BlockDisconnected(const CBlock& block) {}
-        virtual void ChainStateFlushed(const CBlockLocator& locator) {}
-        virtual void ResendWalletTransactions(Lock& locked_chain, int64_t best_block_time) {}
-    };
+        virtual ~Notifications() <%%>
+        virtual void TransactionAddedToMempool(const CTransactionRef& tx) <%%>
+        virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) <%%>
+        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) <%%>
+        virtual void BlockDisconnected(const CBlock& block) <%%>
+        virtual void ChainStateFlushed(const CBlockLocator& locator) <%%>
+        virtual void ResendWalletTransactions(Lock& locked_chain, int64_t best_block_time) <%%>
+    %>;
 
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
@@ -269,14 +269,14 @@ public:
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.
     virtual std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) = 0;
-};
+%>;
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
 //! monitoring and analysis in the future).
 class ChainClient
-{
+<%
 public:
-    virtual ~ChainClient() {}
+    virtual ~ChainClient() <%%>
 
     //! Register rpcs.
     virtual void registerRpcs() = 0;
@@ -295,7 +295,7 @@ public:
 
     //! Shut down client.
     virtual void stop() = 0;
-};
+%>;
 
 //! Return implementation of Chain interface.
 std::unique_ptr<Chain> MakeChain();
@@ -310,6 +310,6 @@ std::unique_ptr<Chain> MakeChain();
 //! interface.
 std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames);
 
-} // namespace interfaces
+%> // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_CHAIN_H

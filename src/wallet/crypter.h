@@ -32,7 +32,7 @@ const unsigned int WALLET_CRYPTO_IV_SIZE = 16;
 
 /** Master key for wallet encryption */
 class CMasterKey
-{
+<%
 public:
     std::vector<unsigned char> vchCryptedKey;
     std::vector<unsigned char> vchSalt;
@@ -47,34 +47,34 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
         READWRITE(vchCryptedKey);
         READWRITE(vchSalt);
         READWRITE(nDerivationMethod);
         READWRITE(nDeriveIterations);
         READWRITE(vchOtherDerivationParameters);
-    }
+    %>
 
     CMasterKey()
-    {
+    <%
         // 25000 rounds is just under 0.1 seconds on a 1.86 GHz Pentium M
         // ie slightly lower than the lowest hardware we need bother supporting
         nDeriveIterations = 25000;
         nDerivationMethod = 0;
         vchOtherDerivationParameters = std::vector<unsigned char>(0);
-    }
-};
+    %>
+%>;
 
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CKeyingMaterial;
 
 namespace wallet_crypto_tests
-{
+<%
     class TestCrypter;
-}
+%>
 
 /** Encryption/decryption context with key information */
 class CCrypter
-{
+<%
 friend class wallet_crypto_tests::TestCrypter; // for test access to chKey/chIV
 private:
     std::vector<unsigned char, secure_allocator<unsigned char>> vchKey;
@@ -90,30 +90,30 @@ public:
     bool SetKey(const CKeyingMaterial& chNewKey, const std::vector<unsigned char>& chNewIV);
 
     void CleanKey()
-    {
+    <%
         memory_cleanse(vchKey.data(), vchKey.size());
         memory_cleanse(vchIV.data(), vchIV.size());
         fKeySet = false;
-    }
+    %>
 
     CCrypter()
-    {
+    <%
         fKeySet = false;
         vchKey.resize(WALLET_CRYPTO_KEY_SIZE);
         vchIV.resize(WALLET_CRYPTO_IV_SIZE);
-    }
+    %>
 
     ~CCrypter()
-    {
+    <%
         CleanKey();
-    }
-};
+    %>
+%>;
 
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
  */
 class CCryptoKeyStore : public CBasicKeyStore
-{
+<%
 private:
 
     CKeyingMaterial vMasterKey GUARDED_BY(cs_KeyStore);
@@ -138,10 +138,10 @@ protected:
 
 public:
     CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
-    {
-    }
+    <%
+    %>
 
-    bool IsCrypted() const { return fUseCrypto; }
+    bool IsCrypted() const <% return fUseCrypto; %>
     bool IsLocked() const;
     bool Lock();
 
@@ -157,6 +157,6 @@ public:
      * Note: Called without locks held.
      */
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
-};
+%>;
 
 #endif // BITCOIN_WALLET_CRYPTER_H

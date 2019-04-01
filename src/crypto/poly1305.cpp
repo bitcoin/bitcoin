@@ -12,7 +12,7 @@
 
 #define mul32x32_64(a,b) ((uint64_t)(a) * (b))
 
-void poly1305_auth(unsigned char out[POLY1305_TAGLEN], const unsigned char *m, size_t inlen, const unsigned char key[POLY1305_KEYLEN]) {
+void poly1305_auth(unsigned char out[POLY1305_TAGLEN], const unsigned char *m, size_t inlen, const unsigned char key[POLY1305_KEYLEN]) <%
     uint32_t t0,t1,t2,t3;
     uint32_t h0,h1,h2,h3,h4;
     uint32_t r0,r1,r2,r3,r4;
@@ -138,4 +138,4 @@ poly1305_donna_finish:
     WriteLE32(&out[ 4], f1); f2 += (f1 >> 32);
     WriteLE32(&out[ 8], f2); f3 += (f2 >> 32);
     WriteLE32(&out[12], f3);
-}
+%>

@@ -93,7 +93,7 @@ void RandAddSeedSleep();
  *
  * This class is not thread-safe.
  */
-class FastRandomContext {
+class FastRandomContext <%
 private:
     bool requires_seed;
     ChaCha20 rng;
@@ -107,19 +107,19 @@ private:
     void RandomSeed();
 
     void FillByteBuffer()
-    {
-        if (requires_seed) {
+    <%
+        if (requires_seed) <%
             RandomSeed();
-        }
+        %>
         rng.Output(bytebuf, sizeof(bytebuf));
         bytebuf_size = sizeof(bytebuf);
-    }
+    %>
 
     void FillBitBuffer()
-    {
+    <%
         bitbuf = rand64();
         bitbuf_size = 64;
-    }
+    %>
 
 public:
     explicit FastRandomContext(bool fDeterministic = false) noexcept;
@@ -137,57 +137,57 @@ public:
 
     /** Generate a random 64-bit integer. */
     uint64_t rand64() noexcept
-    {
+    <%
         if (bytebuf_size < 8) FillByteBuffer();
         uint64_t ret = ReadLE64(bytebuf + 64 - bytebuf_size);
         bytebuf_size -= 8;
         return ret;
-    }
+    %>
 
     /** Generate a random (bits)-bit integer. */
-    uint64_t randbits(int bits) noexcept {
-        if (bits == 0) {
+    uint64_t randbits(int bits) noexcept <%
+        if (bits == 0) <%
             return 0;
-        } else if (bits > 32) {
+        %> else if (bits > 32) <%
             return rand64() >> (64 - bits);
-        } else {
+        %> else <%
             if (bitbuf_size < bits) FillBitBuffer();
             uint64_t ret = bitbuf & (~(uint64_t)0 >> (64 - bits));
             bitbuf >>= bits;
             bitbuf_size -= bits;
             return ret;
-        }
-    }
+        %>
+    %>
 
     /** Generate a random integer in the range [0..range). */
     uint64_t randrange(uint64_t range) noexcept
-    {
+    <%
         --range;
         int bits = CountBits(range);
-        while (true) {
+        while (true) <%
             uint64_t ret = randbits(bits);
             if (ret <= range) return ret;
-        }
-    }
+        %>
+    %>
 
     /** Generate random bytes. */
     std::vector<unsigned char> randbytes(size_t len);
 
     /** Generate a random 32-bit integer. */
-    uint32_t rand32() noexcept { return randbits(32); }
+    uint32_t rand32() noexcept <% return randbits(32); %>
 
     /** generate a random uint256. */
     uint256 rand256() noexcept;
 
     /** Generate a random boolean. */
-    bool randbool() noexcept { return randbits(1); }
+    bool randbool() noexcept <% return randbits(1); %>
 
     // Compatibility with the C++11 UniformRandomBitGenerator concept
     typedef uint64_t result_type;
-    static constexpr uint64_t min() { return 0; }
-    static constexpr uint64_t max() { return std::numeric_limits<uint64_t>::max(); }
-    inline uint64_t operator()() noexcept { return rand64(); }
-};
+    static constexpr uint64_t min() <% return 0; %>
+    static constexpr uint64_t max() <% return std::numeric_limits<uint64_t>::max(); %>
+    inline uint64_t operator()() noexcept <% return rand64(); %>
+%>;
 
 /** More efficient than using std::shuffle on a FastRandomContext.
  *
@@ -201,16 +201,16 @@ public:
  */
 template<typename I, typename R>
 void Shuffle(I first, I last, R&& rng)
-{
-    while (first != last) {
+<%
+    while (first != last) <%
         size_t j = rng.randrange(last - first);
-        if (j) {
+        if (j) <%
             using std::swap;
             swap(*first, *(first + j));
-        }
+        %>
         ++first;
-    }
-}
+    %>
+%>
 
 /* Number of random bytes returned by GetOSRand.
  * When changing this constant make sure to change all call sites, and make

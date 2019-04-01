@@ -49,31 +49,31 @@ const uint256 MaxL = uint256(std::vector<unsigned char>(MaxArray,MaxArray+32));
 const uint160 MaxS = uint160(std::vector<unsigned char>(MaxArray,MaxArray+20));
 
 static std::string ArrayToString(const unsigned char A[], unsigned int width)
-{
+<%
     std::stringstream Stream;
     Stream << std::hex;
     for (unsigned int i = 0; i < width; ++i)
-    {
+    <%
         Stream<<std::setw(2)<<std::setfill('0')<<(unsigned int)A[width-i-1];
-    }
+    %>
     return Stream.str();
-}
+%>
 
 inline uint160 uint160S(const char *str)
-{
+<%
     uint160 rv;
     rv.SetHex(str);
     return rv;
-}
+%>
 inline uint160 uint160S(const std::string& str)
-{
+<%
     uint160 rv;
     rv.SetHex(str);
     return rv;
-}
+%>
 
 BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
-{
+<%
     BOOST_CHECK(1 == 0+1);
     // constructor uint256(vector<char>):
     BOOST_CHECK(R1L.ToString() == ArrayToString(R1Array,32));
@@ -122,17 +122,17 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK(uint160(R1S) == R1S);
     BOOST_CHECK(uint160(ZeroS) == ZeroS);
     BOOST_CHECK(uint160(OneS) == OneS);
-}
+%>
 
 BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
-{
+<%
     uint256 LastL;
-    for (int i = 255; i >= 0; --i) {
+    for (int i = 255; i >= 0; --i) <%
         uint256 TmpL;
         *(TmpL.begin() + (i>>3)) |= 1<<(7-(i&7));
         BOOST_CHECK( LastL < TmpL );
         LastL = TmpL;
-    }
+    %>
 
     BOOST_CHECK( ZeroL < R1L );
     BOOST_CHECK( R2L < R1L );
@@ -142,22 +142,22 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
     BOOST_CHECK( R2L < MaxL );
 
     uint160 LastS;
-    for (int i = 159; i >= 0; --i) {
+    for (int i = 159; i >= 0; --i) <%
         uint160 TmpS;
         *(TmpS.begin() + (i>>3)) |= 1<<(7-(i&7));
         BOOST_CHECK( LastS < TmpS );
         LastS = TmpS;
-    }
+    %>
     BOOST_CHECK( ZeroS < R1S );
     BOOST_CHECK( R2S < R1S );
     BOOST_CHECK( ZeroS < OneS );
     BOOST_CHECK( OneS < MaxS );
     BOOST_CHECK( R1S < MaxS );
     BOOST_CHECK( R2S < MaxS );
-}
+%>
 
 BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 GetSerializeSize, Serialize, Unserialize
-{
+<%
     BOOST_CHECK(R1L.GetHex() == R1L.ToString());
     BOOST_CHECK(R2L.GetHex() == R2L.ToString());
     BOOST_CHECK(OneL.GetHex() == OneL.ToString());
@@ -248,10 +248,10 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex begin() end() size() GetLow64 G
     ss >> TmpS;
     BOOST_CHECK(MaxS == TmpS);
     ss.clear();
-}
+%>
 
 BOOST_AUTO_TEST_CASE( conversion )
-{
+<%
     BOOST_CHECK(ArithToUint256(UintToArith256(ZeroL)) == ZeroL);
     BOOST_CHECK(ArithToUint256(UintToArith256(OneL)) == OneL);
     BOOST_CHECK(ArithToUint256(UintToArith256(R1L)) == R1L);
@@ -264,10 +264,10 @@ BOOST_AUTO_TEST_CASE( conversion )
     BOOST_CHECK(arith_uint256(R2L.GetHex()) == UintToArith256(R2L));
     BOOST_CHECK(R1L.GetHex() == UintToArith256(R1L).GetHex());
     BOOST_CHECK(R2L.GetHex() == UintToArith256(R2L).GetHex());
-}
+%>
 
 BOOST_AUTO_TEST_CASE( operator_with_self )
-{
+<%
     arith_uint256 v = UintToArith256(uint256S("02"));
     v *= v;
     BOOST_CHECK(v == UintToArith256(uint256S("04")));
@@ -277,6 +277,6 @@ BOOST_AUTO_TEST_CASE( operator_with_self )
     BOOST_CHECK(v == UintToArith256(uint256S("02")));
     v -= v;
     BOOST_CHECK(v == UintToArith256(uint256S("0")));
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

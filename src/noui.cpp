@@ -15,13 +15,13 @@
 #include <boost/signals2/connection.hpp>
 
 bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
-{
+<%
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
 
     std::string strCaption;
     // Check for usage of predefined caption
-    switch (style) {
+    switch (style) <%
     case CClientUIInterface::MSG_ERROR:
         strCaption += _("Error");
         break;
@@ -33,27 +33,27 @@ bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& ca
         break;
     default:
         strCaption += caption; // Use supplied caption (can be empty)
-    }
+    %>
 
     if (!fSecure)
         LogPrintf("%s: %s\n", strCaption, message);
     fprintf(stderr, "%s: %s\n", strCaption.c_str(), message.c_str());
     return false;
-}
+%>
 
 bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
-{
+<%
     return noui_ThreadSafeMessageBox(message, caption, style);
-}
+%>
 
 void noui_InitMessage(const std::string& message)
-{
+<%
     LogPrintf("init message: %s\n", message);
-}
+%>
 
 void noui_connect()
-{
+<%
     uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBox);
     uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestion);
     uiInterface.InitMessage_connect(noui_InitMessage);
-}
+%>

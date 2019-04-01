@@ -23,24 +23,24 @@ static const unsigned char REJECT_INSUFFICIENTFEE = 0x42;
 static const unsigned char REJECT_CHECKPOINT = 0x43;
 
 /** Capture information about block/transaction validation */
-class CValidationState {
+class CValidationState <%
 private:
-    enum mode_state {
+    enum mode_state <%
         MODE_VALID,   //!< everything ok
         MODE_INVALID, //!< network rule violation (DoS value may be set)
         MODE_ERROR,   //!< run-time error
-    } mode;
+    %> mode;
     int nDoS;
     std::string strRejectReason;
     unsigned int chRejectCode;
     bool corruptionPossible;
     std::string strDebugMessage;
 public:
-    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) {}
+    CValidationState() : mode(MODE_VALID), nDoS(0), chRejectCode(0), corruptionPossible(false) <%%>
     bool DoS(int level, bool ret = false,
              unsigned int chRejectCodeIn=0, const std::string &strRejectReasonIn="",
              bool corruptionIn=false,
-             const std::string &strDebugMessageIn="") {
+             const std::string &strDebugMessageIn="") <%
         chRejectCode = chRejectCodeIn;
         strRejectReason = strRejectReasonIn;
         corruptionPossible = corruptionIn;
@@ -50,61 +50,61 @@ public:
         nDoS += level;
         mode = MODE_INVALID;
         return ret;
-    }
+    %>
     bool Invalid(bool ret = false,
                  unsigned int _chRejectCode=0, const std::string &_strRejectReason="",
-                 const std::string &_strDebugMessage="") {
+                 const std::string &_strDebugMessage="") <%
         return DoS(0, ret, _chRejectCode, _strRejectReason, false, _strDebugMessage);
-    }
-    bool Error(const std::string& strRejectReasonIn) {
+    %>
+    bool Error(const std::string& strRejectReasonIn) <%
         if (mode == MODE_VALID)
             strRejectReason = strRejectReasonIn;
         mode = MODE_ERROR;
         return false;
-    }
-    bool IsValid() const {
+    %>
+    bool IsValid() const <%
         return mode == MODE_VALID;
-    }
-    bool IsInvalid() const {
+    %>
+    bool IsInvalid() const <%
         return mode == MODE_INVALID;
-    }
-    bool IsError() const {
+    %>
+    bool IsError() const <%
         return mode == MODE_ERROR;
-    }
-    bool IsInvalid(int &nDoSOut) const {
-        if (IsInvalid()) {
+    %>
+    bool IsInvalid(int &nDoSOut) const <%
+        if (IsInvalid()) <%
             nDoSOut = nDoS;
             return true;
-        }
+        %>
         return false;
-    }
-    bool CorruptionPossible() const {
+    %>
+    bool CorruptionPossible() const <%
         return corruptionPossible;
-    }
-    void SetCorruptionPossible() {
+    %>
+    void SetCorruptionPossible() <%
         corruptionPossible = true;
-    }
-    unsigned int GetRejectCode() const { return chRejectCode; }
-    std::string GetRejectReason() const { return strRejectReason; }
-    std::string GetDebugMessage() const { return strDebugMessage; }
-};
+    %>
+    unsigned int GetRejectCode() const <% return chRejectCode; %>
+    std::string GetRejectReason() const <% return strRejectReason; %>
+    std::string GetDebugMessage() const <% return strDebugMessage; %>
+%>;
 
 // These implement the weight = (stripped_size * 4) + witness_size formula,
 // using only serialization with and without witness data. As witness_size
 // is equal to total_size - stripped_size, this formula is identical to:
 // weight = (stripped_size * 3) + total_size.
 static inline int64_t GetTransactionWeight(const CTransaction& tx)
-{
+<%
     return ::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, PROTOCOL_VERSION);
-}
+%>
 static inline int64_t GetBlockWeight(const CBlock& block)
-{
+<%
     return ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, PROTOCOL_VERSION);
-}
+%>
 static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
-{
+<%
     // scriptWitness size is added here because witnesses and txins are split up in segwit serialization.
     return ::GetSerializeSize(txin, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, PROTOCOL_VERSION);
-}
+%>
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H

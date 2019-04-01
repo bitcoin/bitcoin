@@ -5,12 +5,12 @@
 #ifndef BITCOIN_VERSIONBITSINFO_H
 #define BITCOIN_VERSIONBITSINFO_H
 
-struct VBDeploymentInfo {
+struct VBDeploymentInfo <%
     /** Deployment name */
     const char *name;
     /** Whether GBT clients can safely ignore this rule in simplified usage */
     bool gbt_force;
-};
+%>;
 
 extern const struct VBDeploymentInfo VersionBitsDeploymentInfo[];
 

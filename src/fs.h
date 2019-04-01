@@ -18,11 +18,11 @@
 namespace fs = boost::filesystem;
 
 /** Bridge operations to C stdio */
-namespace fsbridge {
+namespace fsbridge <%
     FILE *fopen(const fs::path& p, const char *mode);
 
     class FileLock
-    {
+    <%
     public:
         FileLock() = delete;
         FileLock(const FileLock&) = delete;
@@ -30,7 +30,7 @@ namespace fsbridge {
         explicit FileLock(const fs::path& file);
         ~FileLock();
         bool TryLock();
-        std::string GetReason() { return reason; }
+        std::string GetReason() <% return reason; %>
 
     private:
         std::string reason;
@@ -39,7 +39,7 @@ namespace fsbridge {
 #else
         void* hFile = (void*)-1; // INVALID_HANDLE_VALUE
 #endif
-    };
+    %>;
 
     std::string get_filesystem_error_message(const fs::filesystem_error& e);
 
@@ -59,37 +59,37 @@ namespace fsbridge {
 
 #if defined WIN32 && defined __GLIBCXX__
     class ifstream : public std::istream
-    {
+    <%
     public:
         ifstream() = default;
-        explicit ifstream(const fs::path& p, std::ios_base::openmode mode = std::ios_base::in) { open(p, mode); }
-        ~ifstream() { close(); }
+        explicit ifstream(const fs::path& p, std::ios_base::openmode mode = std::ios_base::in) <% open(p, mode); %>
+        ~ifstream() <% close(); %>
         void open(const fs::path& p, std::ios_base::openmode mode = std::ios_base::in);
-        bool is_open() { return m_filebuf.is_open(); }
+        bool is_open() <% return m_filebuf.is_open(); %>
         void close();
 
     private:
         __gnu_cxx::stdio_filebuf<char> m_filebuf;
         FILE* m_file = nullptr;
-    };
+    %>;
     class ofstream : public std::ostream
-    {
+    <%
     public:
         ofstream() = default;
-        explicit ofstream(const fs::path& p, std::ios_base::openmode mode = std::ios_base::out) { open(p, mode); }
-        ~ofstream() { close(); }
+        explicit ofstream(const fs::path& p, std::ios_base::openmode mode = std::ios_base::out) <% open(p, mode); %>
+        ~ofstream() <% close(); %>
         void open(const fs::path& p, std::ios_base::openmode mode = std::ios_base::out);
-        bool is_open() { return m_filebuf.is_open(); }
+        bool is_open() <% return m_filebuf.is_open(); %>
         void close();
 
     private:
         __gnu_cxx::stdio_filebuf<char> m_filebuf;
         FILE* m_file = nullptr;
-    };
+    %>;
 #else  // !(WIN32 && __GLIBCXX__)
     typedef fs::ifstream ifstream;
     typedef fs::ofstream ofstream;
 #endif // WIN32 && __GLIBCXX__
-};
+%>;
 
 #endif // BITCOIN_FS_H

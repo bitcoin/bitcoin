@@ -26,16 +26,16 @@ static const int DEFAULT_CONNECT_TIMEOUT = 5000;
 static const int DEFAULT_NAME_LOOKUP = true;
 
 class proxyType
-{
+<%
 public:
-    proxyType(): randomize_credentials(false) {}
-    explicit proxyType(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) {}
+    proxyType(): randomize_credentials(false) <%%>
+    explicit proxyType(const CService &_proxy, bool _randomize_credentials=false): proxy(_proxy), randomize_credentials(_randomize_credentials) <%%>
 
-    bool IsValid() const { return proxy.IsValid(); }
+    bool IsValid() const <% return proxy.IsValid(); %>
 
     CService proxy;
     bool randomize_credentials;
-};
+%>;
 
 enum Network ParseNetwork(std::string net);
 std::string GetNetworkName(enum Network net);

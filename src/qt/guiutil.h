@@ -22,9 +22,9 @@ class QValidatedLineEdit;
 class SendCoinsRecipient;
 
 namespace interfaces
-{
+<%
     class Node;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QAbstractItemView;
@@ -39,7 +39,7 @@ QT_END_NAMESPACE
 /** Utility functions used by the Bitcoin Qt UI.
  */
 namespace GUIUtil
-{
+<%
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
@@ -130,7 +130,7 @@ namespace GUIUtil
       Tooltips longer than the provided size threshold (in characters) are wrapped.
      */
     class ToolTipToRichTextFilter : public QObject
-    {
+    <%
         Q_OBJECT
 
     public:
@@ -141,7 +141,7 @@ namespace GUIUtil
 
     private:
         int size_threshold;
-    };
+    %>;
 
     /**
      * Makes a QTableView last column feel as if it was being resized from its left border.
@@ -154,7 +154,7 @@ namespace GUIUtil
      *
      */
     class TableViewLastColumnResizingFixer: public QObject
-    {
+    <%
         Q_OBJECT
 
         public:
@@ -180,7 +180,7 @@ namespace GUIUtil
         private Q_SLOTS:
             void on_sectionResized(int logicalIndex, int oldSize, int newSize);
             void on_geometriesChanged();
-    };
+    %>;
 
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
@@ -210,7 +210,7 @@ namespace GUIUtil
     qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize = 4, qreal startPointSize = 14);
 
     class ClickableLabel : public QLabel
-    {
+    <%
         Q_OBJECT
 
     Q_SIGNALS:
@@ -220,10 +220,10 @@ namespace GUIUtil
         void clicked(const QPoint& point);
     protected:
         void mouseReleaseEvent(QMouseEvent *event);
-    };
+    %>;
 
     class ClickableProgressBar : public QProgressBar
-    {
+    <%
         Q_OBJECT
 
     Q_SIGNALS:
@@ -233,25 +233,25 @@ namespace GUIUtil
         void clicked(const QPoint& point);
     protected:
         void mouseReleaseEvent(QMouseEvent *event);
-    };
+    %>;
 
     typedef ClickableProgressBar ProgressBar;
 
     class ItemDelegate : public QItemDelegate
-    {
+    <%
         Q_OBJECT
     public:
-        ItemDelegate(QObject* parent) : QItemDelegate(parent) {}
+        ItemDelegate(QObject* parent) : QItemDelegate(parent) <%%>
 
     Q_SIGNALS:
         void keyEscapePressed();
 
     private:
         bool eventFilter(QObject *object, QEvent *event);
-    };
+    %>;
 
     // Fix known bugs in QProgressDialog class.
     void PolishProgressDialog(QProgressDialog* dialog);
-} // namespace GUIUtil
+%> // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

@@ -16,7 +16,7 @@ QT_END_NAMESPACE
     a spreadsheet.
  */
 class CSVModelWriter : public QObject
-{
+<%
     Q_OBJECT
 
 public:
@@ -35,12 +35,12 @@ private:
     const QAbstractItemModel *model;
 
     struct Column
-    {
+    <%
         QString title;
         int column;
         int role;
-    };
+    %>;
     QList<Column> columns;
-};
+%>;
 
 #endif // BITCOIN_QT_CSVMODELWRITER_H

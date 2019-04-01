@@ -16,7 +16,7 @@
 // out of memory and clears its contents before deletion.
 //
 template <typename T>
-struct secure_allocator : public std::allocator<T> {
+struct secure_allocator : public std::allocator<T> <%
     // MSVC8 default copy constructor is broken
     typedef std::allocator<T> base;
     typedef typename base::size_type size_type;
@@ -26,35 +26,35 @@ struct secure_allocator : public std::allocator<T> {
     typedef typename base::reference reference;
     typedef typename base::const_reference const_reference;
     typedef typename base::value_type value_type;
-    secure_allocator() noexcept {}
-    secure_allocator(const secure_allocator& a) noexcept : base(a) {}
+    secure_allocator() noexcept <%%>
+    secure_allocator(const secure_allocator& a) noexcept : base(a) <%%>
     template <typename U>
     secure_allocator(const secure_allocator<U>& a) noexcept : base(a)
-    {
-    }
-    ~secure_allocator() noexcept {}
+    <%
+    %>
+    ~secure_allocator() noexcept <%%>
     template <typename _Other>
-    struct rebind {
+    struct rebind <%
         typedef secure_allocator<_Other> other;
-    };
+    %>;
 
     T* allocate(std::size_t n, const void* hint = 0)
-    {
+    <%
         T* allocation = static_cast<T*>(LockedPoolManager::Instance().alloc(sizeof(T) * n));
-        if (!allocation) {
+        if (!allocation) <%
             throw std::bad_alloc();
-        }
+        %>
         return allocation;
-    }
+    %>
 
     void deallocate(T* p, std::size_t n)
-    {
-        if (p != nullptr) {
+    <%
+        if (p != nullptr) <%
             memory_cleanse(p, sizeof(T) * n);
-        }
+        %>
         LockedPoolManager::Instance().free(p);
-    }
-};
+    %>
+%>;
 
 // This is exactly like std::string, but with a custom allocator.
 typedef std::basic_string<char, std::char_traits<char>, secure_allocator<char> > SecureString;

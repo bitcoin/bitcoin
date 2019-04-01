@@ -15,7 +15,7 @@
  * location of each transaction by transaction hash.
  */
 class TxIndex final : public BaseIndex
-{
+<%
 protected:
     class DB;
 
@@ -30,7 +30,7 @@ protected:
 
     BaseIndex::DB& GetDB() const override;
 
-    const char* GetName() const override { return "txindex"; }
+    const char* GetName() const override <% return "txindex"; %>
 
 public:
     /// Constructs the index, which becomes available to be queried.
@@ -46,7 +46,7 @@ public:
     /// @param[out]  tx  The transaction itself.
     /// @return  true if transaction is found, false otherwise
     bool FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRef& tx) const;
-};
+%>;
 
 /// The global transaction index, used in GetTransaction. May be null.
 extern std::unique_ptr<TxIndex> g_txindex;

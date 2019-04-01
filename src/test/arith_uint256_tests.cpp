@@ -18,9 +18,9 @@ BOOST_FIXTURE_TEST_SUITE(arith_uint256_tests, BasicTestingSetup)
 
 /// Convert vector to arith_uint256, via uint256 blob
 static inline arith_uint256 arith_uint256V(const std::vector<unsigned char>& vch)
-{
+<%
     return UintToArith256(uint256(vch));
-}
+%>
 
 const unsigned char R1Array[] =
     "\x9c\x52\x4a\xdb\xcf\x56\x11\x12\x2b\x29\x12\x5e\x5d\x35\xd2\xd2"
@@ -54,18 +54,18 @@ const arith_uint256 MaxL = arith_uint256V(std::vector<unsigned char>(MaxArray,Ma
 
 const arith_uint256 HalfL = (OneL << 255);
 static std::string ArrayToString(const unsigned char A[], unsigned int width)
-{
+<%
     std::stringstream Stream;
     Stream << std::hex;
     for (unsigned int i = 0; i < width; ++i)
-    {
+    <%
         Stream<<std::setw(2)<<std::setfill('0')<<(unsigned int)A[width-i-1];
-    }
+    %>
     return Stream.str();
-}
+%>
 
 BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
-{
+<%
     BOOST_CHECK(1 == 0+1);
     // constructor arith_uint256(vector<char>):
     BOOST_CHECK(R1L.ToString() == ArrayToString(R1Array,32));
@@ -85,12 +85,12 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
 
     uint64_t Tmp64 = 0xc4dab720d9c7acaaULL;
     for (unsigned int i = 0; i < 256; ++i)
-    {
+    <%
         BOOST_CHECK(ZeroL != (OneL << i));
         BOOST_CHECK((OneL << i) != ZeroL);
         BOOST_CHECK(R1L != (R1L ^ (OneL << i)));
         BOOST_CHECK(((arith_uint256(Tmp64) ^ (OneL << i) ) != Tmp64 ));
-    }
+    %>
     BOOST_CHECK(ZeroL == (OneL << 256));
 
     // String Constructor and Copy Constructor
@@ -120,12 +120,12 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     tmpL = ~R1L; BOOST_CHECK(tmpL == ~R1L);
     tmpL = ~R2L; BOOST_CHECK(tmpL == ~R2L);
     tmpL = ~MaxL; BOOST_CHECK(tmpL == ~MaxL);
-}
+%>
 
 static void shiftArrayRight(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
-{
+<%
     for (unsigned int T=0; T < arrayLength; ++T)
-    {
+    <%
         unsigned int F = (T+bitsToShift/8);
         if (F < arrayLength)
             to[T]  = from[F] >> (bitsToShift%8);
@@ -133,31 +133,31 @@ static void shiftArrayRight(unsigned char* to, const unsigned char* from, unsign
             to[T] = 0;
         if (F + 1 < arrayLength)
             to[T] |= from[(F+1)] << (8-bitsToShift%8);
-    }
-}
+    %>
+%>
 
 static void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigned int arrayLength, unsigned int bitsToShift)
-{
+<%
     for (unsigned int T=0; T < arrayLength; ++T)
-    {
+    <%
         if (T >= bitsToShift/8)
-        {
+        <%
             unsigned int F = T-bitsToShift/8;
             to[T]  = from[F] << (bitsToShift%8);
             if (T >= bitsToShift/8+1)
                 to[T] |= from[F-1] >> (8-bitsToShift%8);
-        }
-        else {
+        %>
+        else <%
             to[T] = 0;
-        }
-    }
-}
+        %>
+    %>
+%>
 
-BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
+BOOST_AUTO_TEST_CASE( shifts ) <% // "<<"  ">>"  "<<="  ">>="
     unsigned char TmpArray[32];
     arith_uint256 TmpL;
     for (unsigned int i = 0; i < 256; ++i)
-    {
+    <%
         shiftArrayLeft(TmpArray, OneArray, 32, i);
         BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (OneL << i));
         TmpL = OneL; TmpL <<= i;
@@ -185,43 +185,43 @@ BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
         BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (MaxL >> i));
         TmpL = MaxL; TmpL >>= i;
         BOOST_CHECK(TmpL == (MaxL >> i));
-    }
+    %>
     arith_uint256 c1L = arith_uint256(0x0123456789abcdefULL);
     arith_uint256 c2L = c1L << 128;
-    for (unsigned int i = 0; i < 128; ++i) {
+    for (unsigned int i = 0; i < 128; ++i) <%
         BOOST_CHECK((c1L << i) == (c2L >> (128-i)));
-    }
-    for (unsigned int i = 128; i < 256; ++i) {
+    %>
+    for (unsigned int i = 128; i < 256; ++i) <%
         BOOST_CHECK((c1L << i) == (c2L << (i-128)));
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
-{
+<%
     BOOST_CHECK(~ZeroL == MaxL);
 
     unsigned char TmpArray[32];
-    for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = ~R1Array[i]; }
+    for (unsigned int i = 0; i < 32; ++i) <% TmpArray[i] = ~R1Array[i]; %>
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (~R1L));
 
     BOOST_CHECK(-ZeroL == ZeroL);
     BOOST_CHECK(-R1L == (~R1L)+1);
     for (unsigned int i = 0; i < 256; ++i)
         BOOST_CHECK(-(OneL<<i) == (MaxL << i));
-}
+%>
 
 
 // Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
 // element of Aarray and Barray, and then converting the result into an arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
-    for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
+    for (unsigned int i = 0; i < 32; ++i) <% TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; %> \
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
 
 #define CHECKASSIGNMENTOPERATOR(_A_,_B_,_OP_)                           \
     TmpL = _A_##L; TmpL _OP_##= _B_##L; BOOST_CHECK(TmpL == (_A_##L _OP_ _B_##L));
 
 BOOST_AUTO_TEST_CASE( bitwiseOperators )
-{
+<%
     unsigned char TmpArray[32];
 
     CHECKBITWISEOPERATOR(R1,R2,|)
@@ -262,12 +262,12 @@ BOOST_AUTO_TEST_CASE( bitwiseOperators )
     TmpL = R1L; TmpL |= 0; BOOST_CHECK(TmpL == R1L);
     TmpL ^= 0; BOOST_CHECK(TmpL == R1L);
     TmpL ^= Tmp64;  BOOST_CHECK(TmpL == (R1L ^ arith_uint256(Tmp64)));
-}
+%>
 
 BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
-{
+<%
     arith_uint256 TmpL;
-    for (unsigned int i = 0; i < 256; ++i) {
+    for (unsigned int i = 0; i < 256; ++i) <%
         TmpL= OneL<< i;
         BOOST_CHECK( TmpL >= ZeroL && TmpL > ZeroL && ZeroL < TmpL && ZeroL <= TmpL);
         BOOST_CHECK( TmpL >= 0 && TmpL > 0 && 0 < TmpL && 0 <= TmpL);
@@ -275,11 +275,11 @@ BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
         BOOST_CHECK( TmpL >= R1L ); BOOST_CHECK( (TmpL == R1L) != (TmpL > R1L)); BOOST_CHECK( (TmpL == R1L) || !( TmpL <= R1L));
         BOOST_CHECK( R1L <= TmpL ); BOOST_CHECK( (R1L == TmpL) != (R1L < TmpL)); BOOST_CHECK( (TmpL == R1L) || !( R1L >= TmpL));
         BOOST_CHECK(! (TmpL < R1L)); BOOST_CHECK(! (R1L > TmpL));
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE( plusMinus )
-{
+<%
     arith_uint256 TmpL = 0;
     BOOST_CHECK(R1L+R2L == arith_uint256(R1LplusR2L));
     TmpL += R1L;
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE( plusMinus )
     BOOST_CHECK(TmpL == R1L + R2L);
     BOOST_CHECK(OneL+MaxL == ZeroL);
     BOOST_CHECK(MaxL+OneL == ZeroL);
-    for (unsigned int i = 1; i < 256; ++i) {
+    for (unsigned int i = 1; i < 256; ++i) <%
         BOOST_CHECK( (MaxL >> i) + OneL == (HalfL >> (i-1)) );
         BOOST_CHECK( OneL + (MaxL >> i) == (HalfL >> (i-1)) );
         TmpL = (MaxL>>i); TmpL += OneL;
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE( plusMinus )
         TmpL = (MaxL>>i);
         BOOST_CHECK( TmpL++ == (MaxL>>i) );
         BOOST_CHECK( TmpL == (HalfL >> (i-1)));
-    }
+    %>
     BOOST_CHECK(arith_uint256(0xbedc77e27940a7ULL) + 0xee8d836fce66fbULL == arith_uint256(0xbedc77e27940a7ULL + 0xee8d836fce66fbULL));
     TmpL = arith_uint256(0xbedc77e27940a7ULL); TmpL += 0xee8d836fce66fbULL;
     BOOST_CHECK(TmpL == arith_uint256(0xbedc77e27940a7ULL+0xee8d836fce66fbULL));
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE( plusMinus )
     BOOST_CHECK(R1L -(-R2L) == R1L+R2L);
     BOOST_CHECK(R1L -(-OneL) == R1L+OneL);
     BOOST_CHECK(R1L - OneL == R1L+(-OneL));
-    for (unsigned int i = 1; i < 256; ++i) {
+    for (unsigned int i = 1; i < 256; ++i) <%
         BOOST_CHECK((MaxL>>i) - (-OneL)  == (HalfL >> (i-1)));
         BOOST_CHECK((HalfL >> (i-1)) - OneL == (MaxL>>i));
         TmpL = (HalfL >> (i-1));
@@ -317,13 +317,13 @@ BOOST_AUTO_TEST_CASE( plusMinus )
         BOOST_CHECK(TmpL == (MaxL >> i));
         TmpL = (HalfL >> (i-1));
         BOOST_CHECK(--TmpL == (MaxL >> i));
-    }
+    %>
     TmpL = R1L;
     BOOST_CHECK(--TmpL == R1L-1);
-}
+%>
 
 BOOST_AUTO_TEST_CASE( multiply )
-{
+<%
     BOOST_CHECK((R1L * R1L).ToString() == "62a38c0486f01e45879d7910a7761bf30d5237e9873f9bff3642a732c4d84f10");
     BOOST_CHECK((R1L * R2L).ToString() == "de37805e9986996cfba76ff6ba51c008df851987d9dd323f0e5de07760529c40");
     BOOST_CHECK((R1L * ZeroL) == ZeroL);
@@ -341,10 +341,10 @@ BOOST_AUTO_TEST_CASE( multiply )
     BOOST_CHECK((R1L * 1) == R1L);
     BOOST_CHECK((R1L * 3).ToString() == "7759b1c0ed14047f961ad09b20ff83687876a0181a367b813634046f91def7d4");
     BOOST_CHECK((R2L * 0x87654321UL).ToString() == "23f7816e30c4ae2017257b7a0fa64d60402f5234d46e746b61c960d09a26d070");
-}
+%>
 
 BOOST_AUTO_TEST_CASE( divide )
-{
+<%
     arith_uint256 D1L("AD7133AC1977FA2B7");
     arith_uint256 D2L("ECD751716");
     BOOST_CHECK((R1L / D1L).ToString() == "00000000000000000b8ac01106981635d9ed112290f8895545a7654dde28fb3a");
@@ -359,16 +359,16 @@ BOOST_AUTO_TEST_CASE( divide )
     BOOST_CHECK(R2L / MaxL == ZeroL);
     BOOST_CHECK(MaxL / R2L == 1);
     BOOST_CHECK_THROW(R2L / ZeroL, uint_error);
-}
+%>
 
 
 static bool almostEqual(double d1, double d2)
-{
+<%
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
-}
+%>
 
 BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex size() GetLow64 GetSerializeSize, Serialize, Unserialize
-{
+<%
     BOOST_CHECK(R1L.GetHex() == R1L.ToString());
     BOOST_CHECK(R2L.GetHex() == R2L.ToString());
     BOOST_CHECK(OneL.GetHex() == OneL.ToString());
@@ -389,21 +389,21 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex size() GetLow64 GetSerializeSiz
     BOOST_CHECK(OneL.GetLow64() ==0x0000000000000001ULL);
 
     for (unsigned int i = 0; i < 255; ++i)
-    {
+    <%
         BOOST_CHECK((OneL << i).getdouble() == ldexp(1.0,i));
-    }
+    %>
     BOOST_CHECK(ZeroL.getdouble() == 0.0);
     for (int i = 256; i > 53; --i)
         BOOST_CHECK(almostEqual((R1L>>(256-i)).getdouble(), ldexp(R1Ldouble,i)));
     uint64_t R1L64part = (R1L>>192).GetLow64();
     for (int i = 53; i > 0; --i) // doubles can store all integers in {0,...,2^54-1} exactly
-    {
+    <%
         BOOST_CHECK((R1L>>(256-i)).getdouble() == (double)(R1L64part >> (64-i)));
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(bignum_SetCompact)
-{
+<%
     arith_uint256 num;
     bool fNegative;
     bool fOverflow;
@@ -528,11 +528,11 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     num.SetCompact(0xff123456, &fNegative, &fOverflow);
     BOOST_CHECK_EQUAL(fNegative, false);
     BOOST_CHECK_EQUAL(fOverflow, true);
-}
+%>
 
 
 BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% coverage
-{
+<%
     // ~R1L give a base_uint<256>
     BOOST_CHECK((~~R1L >> 10) == (R1L >> 10));
     BOOST_CHECK((~~R1L << 10) == (R1L << 10));
@@ -555,6 +555,6 @@ BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% cover
     CHECKBITWISEOPERATOR(R1,~R2,|)
     CHECKBITWISEOPERATOR(R1,~R2,^)
     CHECKBITWISEOPERATOR(R1,~R2,&)
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

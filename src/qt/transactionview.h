@@ -31,7 +31,7 @@ QT_END_NAMESPACE
     Using the filter row, the user can view or export a subset of the transactions.
   */
 class TransactionView : public QWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -41,7 +41,7 @@ public:
 
     // Date ranges for filter
     enum DateEnum
-    {
+    <%
         All,
         Today,
         ThisWeek,
@@ -49,16 +49,16 @@ public:
         LastMonth,
         ThisYear,
         Range
-    };
+    %>;
 
-    enum ColumnWidths {
+    enum ColumnWidths <%
         STATUS_COLUMN_WIDTH = 30,
         WATCHONLY_COLUMN_WIDTH = 23,
         DATE_COLUMN_WIDTH = 120,
         TYPE_COLUMN_WIDTH = 113,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 120,
         MINIMUM_COLUMN_WIDTH = 23
-    };
+    %>;
 
 private:
     WalletModel *model;
@@ -121,6 +121,6 @@ public Q_SLOTS:
     void exportClicked();
     void focusTransaction(const QModelIndex&);
     void focusTransaction(const uint256& txid);
-};
+%>;
 
 #endif // BITCOIN_QT_TRANSACTIONVIEW_H

@@ -11,7 +11,7 @@
 
 /** SipHash-2-4 */
 class CSipHasher
-{
+<%
 private:
     uint64_t v[4];
     uint64_t tmp;
@@ -29,7 +29,7 @@ public:
     CSipHasher& Write(const unsigned char* data, size_t size);
     /** Compute the 64-bit SipHash-2-4 of the data written so far. The object remains untouched. */
     uint64_t Finalize() const;
-};
+%>;
 
 /** Optimized SipHash-2-4 implementation for uint256.
  *

@@ -18,13 +18,13 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     mapper(nullptr),
     mode(_mode),
     model(nullptr)
-{
+<%
     ui->setupUi(this);
 
     GUIUtil::setupAddressWidget(ui->addressEdit, this);
 
     switch(mode)
-    {
+    <%
     case NewSendingAddress:
         setWindowTitle(tr("New sending address"));
         break;
@@ -35,7 +35,7 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     case EditSendingAddress:
         setWindowTitle(tr("Edit sending address"));
         break;
-    }
+    %>
 
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
@@ -43,15 +43,15 @@ EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     GUIUtil::ItemDelegate* delegate = new GUIUtil::ItemDelegate(mapper);
     connect(delegate, &GUIUtil::ItemDelegate::keyEscapePressed, this, &EditAddressDialog::reject);
     mapper->setItemDelegate(delegate);
-}
+%>
 
 EditAddressDialog::~EditAddressDialog()
-{
+<%
     delete ui;
-}
+%>
 
 void EditAddressDialog::setModel(AddressTableModel *_model)
-{
+<%
     this->model = _model;
     if(!_model)
         return;
@@ -59,20 +59,20 @@ void EditAddressDialog::setModel(AddressTableModel *_model)
     mapper->setModel(_model);
     mapper->addMapping(ui->labelEdit, AddressTableModel::Label);
     mapper->addMapping(ui->addressEdit, AddressTableModel::Address);
-}
+%>
 
 void EditAddressDialog::loadRow(int row)
-{
+<%
     mapper->setCurrentIndex(row);
-}
+%>
 
 bool EditAddressDialog::saveCurrentRow()
-{
+<%
     if(!model)
         return false;
 
     switch(mode)
-    {
+    <%
     case NewSendingAddress:
         address = model->addRow(
                 AddressTableModel::Send,
@@ -83,23 +83,23 @@ bool EditAddressDialog::saveCurrentRow()
     case EditReceivingAddress:
     case EditSendingAddress:
         if(mapper->submit())
-        {
+        <%
             address = ui->addressEdit->text();
-        }
+        %>
         break;
-    }
+    %>
     return !address.isEmpty();
-}
+%>
 
 void EditAddressDialog::accept()
-{
+<%
     if(!model)
         return;
 
     if(!saveCurrentRow())
-    {
+    <%
         switch(model->getEditStatus())
-        {
+        <%
         case AddressTableModel::OK:
             // Failed with unknown reason. Just reject.
             break;
@@ -127,38 +127,38 @@ void EditAddressDialog::accept()
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
 
-        }
+        %>
         return;
-    }
+    %>
     QDialog::accept();
-}
+%>
 
 QString EditAddressDialog::getDuplicateAddressWarning() const
-{
+<%
     QString dup_address = ui->addressEdit->text();
     QString existing_label = model->labelForAddress(dup_address);
     QString existing_purpose = model->purposeForAddress(dup_address);
 
     if (existing_purpose == "receive" &&
-            (mode == NewSendingAddress || mode == EditSendingAddress)) {
+            (mode == NewSendingAddress || mode == EditSendingAddress)) <%
         return tr(
             "Address \"%1\" already exists as a receiving address with label "
             "\"%2\" and so cannot be added as a sending address."
             ).arg(dup_address).arg(existing_label);
-    }
+    %>
     return tr(
         "The entered address \"%1\" is already in the address book with "
         "label \"%2\"."
         ).arg(dup_address).arg(existing_label);
-}
+%>
 
 QString EditAddressDialog::getAddress() const
-{
+<%
     return address;
-}
+%>
 
 void EditAddressDialog::setAddress(const QString &_address)
-{
+<%
     this->address = _address;
     ui->addressEdit->setText(_address);
-}
+%>

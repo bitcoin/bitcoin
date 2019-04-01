@@ -15,35 +15,35 @@ QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
 QT_END_NAMESPACE
 
-namespace Ui {
+namespace Ui <%
 class OptionsDialog;
-}
+%>
 
 /** Proxy address widget validator, checks for a valid proxy address.
  */
 class ProxyAddressValidator : public QValidator
-{
+<%
     Q_OBJECT
 
 public:
     explicit ProxyAddressValidator(QObject *parent);
 
     State validate(QString &input, int &pos) const;
-};
+%>;
 
 /** Preferences dialog. */
 class OptionsDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
     explicit OptionsDialog(QWidget *parent, bool enableWallet);
     ~OptionsDialog();
 
-    enum Tab {
+    enum Tab <%
         TAB_MAIN,
         TAB_NETWORK,
-    };
+    %>;
 
     void setModel(OptionsModel *model);
     void setMapper();
@@ -73,6 +73,6 @@ private:
     Ui::OptionsDialog *ui;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
-};
+%>;
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H

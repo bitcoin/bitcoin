@@ -24,51 +24,51 @@
 BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
 
 template<typename Hasher, typename In, typename Out>
-static void TestVector(const Hasher &h, const In &in, const Out &out) {
+static void TestVector(const Hasher &h, const In &in, const Out &out) <%
     Out hash;
     BOOST_CHECK(out.size() == h.OUTPUT_SIZE);
     hash.resize(out.size());
-    {
+    <%
         // Test that writing the whole input string at once works.
         Hasher(h).Write((unsigned char*)&in[0], in.size()).Finalize(&hash[0]);
         BOOST_CHECK(hash == out);
-    }
-    for (int i=0; i<32; i++) {
+    %>
+    for (int i=0; i<32; i++) <%
         // Test that writing the string broken up in random pieces works.
         Hasher hasher(h);
         size_t pos = 0;
-        while (pos < in.size()) {
+        while (pos < in.size()) <%
             size_t len = InsecureRandRange((in.size() - pos + 1) / 2 + 1);
             hasher.Write((unsigned char*)&in[pos], len);
             pos += len;
-            if (pos > 0 && pos + 2 * out.size() > in.size() && pos < in.size()) {
+            if (pos > 0 && pos + 2 * out.size() > in.size() && pos < in.size()) <%
                 // Test that writing the rest at once to a copy of a hasher works.
                 Hasher(hasher).Write((unsigned char*)&in[pos], in.size() - pos).Finalize(&hash[0]);
                 BOOST_CHECK(hash == out);
-            }
-        }
+            %>
+        %>
         hasher.Finalize(&hash[0]);
         BOOST_CHECK(hash == out);
-    }
-}
+    %>
+%>
 
-static void TestSHA1(const std::string &in, const std::string &hexout) { TestVector(CSHA1(), in, ParseHex(hexout));}
-static void TestSHA256(const std::string &in, const std::string &hexout) { TestVector(CSHA256(), in, ParseHex(hexout));}
-static void TestSHA512(const std::string &in, const std::string &hexout) { TestVector(CSHA512(), in, ParseHex(hexout));}
-static void TestRIPEMD160(const std::string &in, const std::string &hexout) { TestVector(CRIPEMD160(), in, ParseHex(hexout));}
+static void TestSHA1(const std::string &in, const std::string &hexout) <% TestVector(CSHA1(), in, ParseHex(hexout));%>
+static void TestSHA256(const std::string &in, const std::string &hexout) <% TestVector(CSHA256(), in, ParseHex(hexout));%>
+static void TestSHA512(const std::string &in, const std::string &hexout) <% TestVector(CSHA512(), in, ParseHex(hexout));%>
+static void TestRIPEMD160(const std::string &in, const std::string &hexout) <% TestVector(CRIPEMD160(), in, ParseHex(hexout));%>
 
-static void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
+static void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const std::string &hexout) <%
     std::vector<unsigned char> key = ParseHex(hexkey);
     TestVector(CHMAC_SHA256(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
-}
+%>
 
-static void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
+static void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) <%
     std::vector<unsigned char> key = ParseHex(hexkey);
     TestVector(CHMAC_SHA512(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
-}
+%>
 
 static void TestAES256(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
-{
+<%
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> in = ParseHex(hexin);
     std::vector<unsigned char> correctout = ParseHex(hexout);
@@ -84,10 +84,10 @@ static void TestAES256(const std::string &hexkey, const std::string &hexin, cons
     AES256Decrypt dec(key.data());
     dec.Decrypt(buf.data(), buf.data());
     BOOST_CHECK(buf == in);
-}
+%>
 
 static void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad, const std::string &hexin, const std::string &hexout)
-{
+<%
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> iv = ParseHex(hexiv);
     std::vector<unsigned char> in = ParseHex(hexin);
@@ -111,24 +111,24 @@ static void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, b
 
     // Encrypt and re-decrypt substrings of the plaintext and verify that they equal each-other
     for(std::vector<unsigned char>::iterator i(in.begin()); i != in.end(); ++i)
-    {
+    <%
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);
         int _size = enc.Encrypt(sub.data(), sub.size(), subout.data());
         if (_size != 0)
-        {
+        <%
             subout.resize(_size);
             std::vector<unsigned char> subdecrypted(subout.size());
             _size = dec.Decrypt(subout.data(), subout.size(), subdecrypted.data());
             subdecrypted.resize(_size);
             BOOST_CHECK(decrypted.size() == in.size());
             BOOST_CHECK_MESSAGE(subdecrypted == sub, HexStr(subdecrypted) + std::string(" != ") + HexStr(sub));
-        }
-    }
-}
+        %>
+    %>
+%>
 
 static void TestChaCha20(const std::string &hexkey, uint64_t nonce, uint64_t seek, const std::string& hexout)
-{
+<%
     std::vector<unsigned char> key = ParseHex(hexkey);
     ChaCha20 rng(key.data(), key.size());
     rng.SetIV(nonce);
@@ -138,10 +138,10 @@ static void TestChaCha20(const std::string &hexkey, uint64_t nonce, uint64_t see
     outres.resize(out.size());
     rng.Output(outres.data(), outres.size());
     BOOST_CHECK(out == outres);
-}
+%>
 
 static void TestPoly1305(const std::string &hexmessage, const std::string &hexkey, const std::string& hextag)
-{
+<%
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> m = ParseHex(hexmessage);
     std::vector<unsigned char> tag = ParseHex(hextag);
@@ -149,23 +149,23 @@ static void TestPoly1305(const std::string &hexmessage, const std::string &hexke
     tagres.resize(POLY1305_TAGLEN);
     poly1305_auth(tagres.data(), m.data(), m.size(), key.data());
     BOOST_CHECK(tag == tagres);
-}
+%>
 
-static std::string LongTestString() {
+static std::string LongTestString() <%
     std::string ret;
-    for (int i=0; i<200000; i++) {
+    for (int i=0; i<200000; i++) <%
         ret += (unsigned char)(i);
         ret += (unsigned char)(i >> 4);
         ret += (unsigned char)(i >> 8);
         ret += (unsigned char)(i >> 12);
         ret += (unsigned char)(i >> 16);
-    }
+    %>
     return ret;
-}
+%>
 
 const std::string test1 = LongTestString();
 
-BOOST_AUTO_TEST_CASE(ripemd160_testvectors) {
+BOOST_AUTO_TEST_CASE(ripemd160_testvectors) <%
     TestRIPEMD160("", "9c1185a5c5e9fc54612808977ee8f548b2258d31");
     TestRIPEMD160("abc", "8eb208f7e05d987a9b044a8e98c6b087f15a0bfc");
     TestRIPEMD160("message digest", "5d0689ef49d2fae572b881b123a85ffa21595f36");
@@ -179,9 +179,9 @@ BOOST_AUTO_TEST_CASE(ripemd160_testvectors) {
                   "eda31d51d3a623b81e19eb02e24ff65d27d67b37");
     TestRIPEMD160(std::string(1000000, 'a'), "52783243c1697bdbe16d37f97f68f08325dc1528");
     TestRIPEMD160(test1, "464243587bd146ea835cdf57bdae582f25ec45f1");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(sha1_testvectors) {
+BOOST_AUTO_TEST_CASE(sha1_testvectors) <%
     TestSHA1("", "da39a3ee5e6b4b0d3255bfef95601890afd80709");
     TestSHA1("abc", "a9993e364706816aba3e25717850c26c9cd0d89d");
     TestSHA1("message digest", "c12252ceda8be8994d5fa0290a47231c1d16aae3");
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(sha1_testvectors) {
              "fb679f23e7d1ce053313e66e127ab1b444397057");
     TestSHA1(std::string(1000000, 'a'), "34aa973cd4c4daa4f61eeb2bdbad27316534016f");
     TestSHA1(test1, "b7755760681cbfd971451668f32af5774f4656b5");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(sha256_testvectors) {
+BOOST_AUTO_TEST_CASE(sha256_testvectors) <%
     TestSHA256("", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
     TestSHA256("abc", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
     TestSHA256("message digest",
@@ -217,9 +217,9 @@ BOOST_AUTO_TEST_CASE(sha256_testvectors) {
     TestSHA256(std::string(1000000, 'a'),
                "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0");
     TestSHA256(test1, "a316d55510b49662420f49d145d42fb83f31ef8dc016aa4e32df049991a91e26");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(sha512_testvectors) {
+BOOST_AUTO_TEST_CASE(sha512_testvectors) <%
     TestSHA512("",
                "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce"
                "47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");
@@ -254,9 +254,9 @@ BOOST_AUTO_TEST_CASE(sha512_testvectors) {
     TestSHA512(test1,
                "40cac46c147e6131c5193dd5f34e9d8bb4951395f27b08c558c65ff4ba2de594"
                "37de8c3ef5459d76a52cedc02dc499a3c9ed9dedbfb3281afd9653b8a112fafc");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(hmac_sha256_testvectors) {
+BOOST_AUTO_TEST_CASE(hmac_sha256_testvectors) <%
     // test cases 1, 2, 3, 4, 6 and 7 of RFC 4231
     TestHMACSHA256("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
                    "4869205468657265",
@@ -307,9 +307,9 @@ BOOST_AUTO_TEST_CASE(hmac_sha256_testvectors) {
                    "4a",
                    "7768617420646f2079612077616e7420666f72206e6f7468696e673f",
                    "d06af337f359a2330deffb8e3cbe4b5b7aa8ca1f208528cdbd245d5dc63c4483");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) {
+BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) <%
     // test cases 1, 2, 3, 4, 6 and 7 of RFC 4231
     TestHMACSHA512("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
                    "4869205468657265",
@@ -375,9 +375,9 @@ BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) {
                    "7768617420646f2079612077616e7420666f72206e6f7468696e673f",
                    "0b273325191cfc1b4b71d5075c8fcad67696309d292b1dad2cd23983a35feb8e"
                    "fb29795e79f2ef27f68cb1e16d76178c307a67beaad9456fac5fdffeadb16e2c");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(aes_testvectors) {
+BOOST_AUTO_TEST_CASE(aes_testvectors) <%
     // AES test vectors from FIPS 197.
     TestAES256("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "00112233445566778899aabbccddeeff", "8ea2b7ca516745bfeafc49904b496089");
 
@@ -386,9 +386,9 @@ BOOST_AUTO_TEST_CASE(aes_testvectors) {
     TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "ae2d8a571e03ac9c9eb76fac45af8e51", "591ccb10d410ed26dc5ba74a31362870");
     TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "30c81c46a35ce411e5fbc1191a0a52ef", "b6ed21b99ca6f4f9f153e7b1beafed1d");
     TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "f69f2445df4f9b17ad2b417be66c3710", "23304b7a39f9f3ff067d8d8f9e24ecc7");
-}
+%>
 
-BOOST_AUTO_TEST_CASE(aes_cbc_testvectors) {
+BOOST_AUTO_TEST_CASE(aes_cbc_testvectors) <%
     // NIST AES CBC 256-bit encryption test-vectors
     TestAES256CBC("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", \
                   "000102030405060708090A0B0C0D0E0F", false, "6bc1bee22e409f96e93d7e117393172a", \
@@ -416,11 +416,11 @@ BOOST_AUTO_TEST_CASE(aes_cbc_testvectors) {
     TestAES256CBC("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", \
                   "39F23369A9D9BACFA530E26304231461", true, "f69f2445df4f9b17ad2b417be66c3710", \
                   "b2eb05e2c39be9fcda6c19078c6a9d1b3f461796d6b0d6b2e0c2a72b4d80e644");
-}
+%>
 
 
 BOOST_AUTO_TEST_CASE(chacha20_testvector)
-{
+<%
     // Test vector from RFC 7539
     TestChaCha20("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", 0x4a000000UL, 1,
                  "224f51f3401bd9e12fde276fb8631ded8c131f823d2c06e27e4fcaec9ef3cf788a3b0aa372600a92b57974cded2b9334794cb"
@@ -447,10 +447,10 @@ BOOST_AUTO_TEST_CASE(chacha20_testvector)
                  "a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5"
                  "360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78"
                  "fab78c9");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(poly1305_testvector)
-{
+<%
     // RFC 7539, section 2.5.2.
     TestPoly1305("43727970746f6772617068696320466f72756d2052657365617263682047726f7570",
                  "85d6be7857556d337f4452fe42d506a80103808afb0db2fd4abff6af4149f51b",
@@ -517,44 +517,44 @@ BOOST_AUTO_TEST_CASE(poly1305_testvector)
     TestPoly1305("e33594d7505e43b900000000000000003394d7505e4379cd010000000000000000000000000000000000000000000000",
                  "0100000000000000040000000000000000000000000000000000000000000000",
                  "13000000000000000000000000000000");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(countbits_tests)
-{
+<%
     FastRandomContext ctx;
-    for (unsigned int i = 0; i <= 64; ++i) {
-        if (i == 0) {
+    for (unsigned int i = 0; i <= 64; ++i) <%
+        if (i == 0) <%
             // Check handling of zero.
             BOOST_CHECK_EQUAL(CountBits(0), 0U);
-        } else if (i < 10) {
-            for (uint64_t j = (uint64_t)1 << (i - 1); (j >> i) == 0; ++j) {
+        %> else if (i < 10) <%
+            for (uint64_t j = (uint64_t)1 << (i - 1); (j >> i) == 0; ++j) <%
                 // Exhaustively test up to 10 bits
                 BOOST_CHECK_EQUAL(CountBits(j), i);
-            }
-        } else {
-            for (int k = 0; k < 1000; k++) {
+            %>
+        %> else <%
+            for (int k = 0; k < 1000; k++) <%
                 // Randomly test 1000 samples of each length above 10 bits.
                 uint64_t j = ((uint64_t)1) << (i - 1) | ctx.randbits(i - 1);
                 BOOST_CHECK_EQUAL(CountBits(j), i);
-            }
-        }
-    }
-}
+            %>
+        %>
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(sha256d64)
-{
-    for (int i = 0; i <= 32; ++i) {
+<%
+    for (int i = 0; i <= 32; ++i) <%
         unsigned char in[64 * 32];
         unsigned char out1[32 * 32], out2[32 * 32];
-        for (int j = 0; j < 64 * i; ++j) {
+        for (int j = 0; j < 64 * i; ++j) <%
             in[j] = InsecureRandBits(8);
-        }
-        for (int j = 0; j < i; ++j) {
+        %>
+        for (int j = 0; j < i; ++j) <%
             CHash256().Write(in + 64 * j, 64).Finalize(out1 + 32 * j);
-        }
+        %>
         SHA256D64(out2, in, i);
         BOOST_CHECK(memcmp(out1, out2, 32 * i) == 0);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

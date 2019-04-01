@@ -7,8 +7,8 @@
 #include <wallet/test/init_test_fixture.h>
 
 InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainName): BasicTestingSetup(chainName)
-{
-    m_chain_client = MakeWalletClient(*m_chain, {});
+<%
+    m_chain_client = MakeWalletClient(*m_chain, <%%>);
 
     std::string sep;
     sep += fs::path::preferred_separator;
@@ -31,14 +31,14 @@ InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainNam
     fs::create_directories(m_walletdir_path_cases["relative"]);
     std::ofstream f(m_walletdir_path_cases["file"].BOOST_FILESYSTEM_C_STR);
     f.close();
-}
+%>
 
 InitWalletDirTestingSetup::~InitWalletDirTestingSetup()
-{
+<%
     fs::current_path(m_cwd);
-}
+%>
 
 void InitWalletDirTestingSetup::SetWalletDir(const fs::path& walletdir_path)
-{
+<%
     gArgs.ForceSetArg("-walletdir", walletdir_path.string());
-}
+%>

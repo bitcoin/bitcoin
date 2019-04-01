@@ -7,7 +7,7 @@
 #include <util/system.h>
 
 void CCoinControl::SetNull()
-{
+<%
     destChange = CNoDestination();
     m_change_type.reset();
     fAllowOtherInputs = false;
@@ -19,5 +19,5 @@ void CCoinControl::SetNull()
     m_confirm_target.reset();
     m_signal_bip125_rbf.reset();
     m_fee_mode = FeeEstimateMode::UNSET;
-}
+%>
 

@@ -42,7 +42,7 @@ static const int64_t nMaxCoinsDBCache = 8;
 
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB final : public CCoinsView
-{
+<%
 protected:
     CDBWrapper db;
 public:
@@ -58,13 +58,13 @@ public:
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
-};
+%>;
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */
 class CCoinsViewDBCursor: public CCoinsViewCursor
-{
+<%
 public:
-    ~CCoinsViewDBCursor() {}
+    ~CCoinsViewDBCursor() <%%>
 
     bool GetKey(COutPoint &key) const override;
     bool GetValue(Coin &coin) const override;
@@ -75,16 +75,16 @@ public:
 
 private:
     CCoinsViewDBCursor(CDBIterator* pcursorIn, const uint256 &hashBlockIn):
-        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) {}
+        CCoinsViewCursor(hashBlockIn), pcursor(pcursorIn) <%%>
     std::unique_ptr<CDBIterator> pcursor;
     std::pair<char, COutPoint> keyTmp;
 
     friend class CCoinsViewDB;
-};
+%>;
 
 /** Access to the block database (blocks/index/) */
 class CBlockTreeDB : public CDBWrapper
-{
+<%
 public:
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
@@ -96,6 +96,6 @@ public:
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts(const Consensus::Params& consensusParams, std::function<CBlockIndex*(const uint256&)> insertBlockIndex);
-};
+%>;
 
 #endif // BITCOIN_TXDB_H

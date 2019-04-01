@@ -16,7 +16,7 @@
 
 // FIXME: Dedup with BuildCreditingTransaction in test/script_tests.cpp.
 static CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey)
-{
+<%
     CMutableTransaction txCredit;
     txCredit.nVersion = 1;
     txCredit.nLockTime = 0;
@@ -29,11 +29,11 @@ static CMutableTransaction BuildCreditingTransaction(const CScript& scriptPubKey
     txCredit.vout[0].nValue = 1;
 
     return txCredit;
-}
+%>
 
 // FIXME: Dedup with BuildSpendingTransaction in test/script_tests.cpp.
 static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMutableTransaction& txCredit)
-{
+<%
     CMutableTransaction txSpend;
     txSpend.nVersion = 1;
     txSpend.nLockTime = 0;
@@ -47,22 +47,22 @@ static CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, co
     txSpend.vout[0].nValue = txCredit.vout[0].nValue;
 
     return txSpend;
-}
+%>
 
 // Microbenchmark for verification of a basic P2WPKH script. Can be easily
 // modified to measure performance of other types of scripts.
 static void VerifyScriptBench(benchmark::State& state)
-{
+<%
     const int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
     const int witnessversion = 0;
 
     // Keypair.
     CKey key;
-    static const std::array<unsigned char, 32> vchKey = {
-        {
+    static const std::array<unsigned char, 32> vchKey = <%
+        <%
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-        }
-    };
+        %>
+    %>;
     key.Set(vchKey.begin(), vchKey.end(), false);
     CPubKey pubkey = key.GetPubKey();
     uint160 pubkeyHash;
@@ -81,7 +81,7 @@ static void VerifyScriptBench(benchmark::State& state)
     witness.stack.push_back(ToByteVector(pubkey));
 
     // Benchmark.
-    while (state.KeepRunning()) {
+    while (state.KeepRunning()) <%
         ScriptError err;
         bool success = VerifyScript(
             txSpend.vin[0].scriptSig,
@@ -103,7 +103,7 @@ static void VerifyScriptBench(benchmark::State& state)
             (const unsigned char*)stream.data(), stream.size(), 0, flags, nullptr);
         assert(csuccess == 1);
 #endif
-    }
-}
+    %>
+%>
 
 BENCHMARK(VerifyScriptBench, 6300);

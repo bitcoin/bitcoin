@@ -10,12 +10,12 @@
 class PlatformStyle;
 class WalletModel;
 
-namespace Ui {
+namespace Ui <%
     class SignVerifyMessageDialog;
-}
+%>
 
 class SignVerifyMessageDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -48,6 +48,6 @@ private Q_SLOTS:
     void on_addressBookButton_VM_clicked();
     void on_verifyMessageButton_VM_clicked();
     void on_clearButton_VM_clicked();
-};
+%>;
 
 #endif // BITCOIN_QT_SIGNVERIFYMESSAGEDIALOG_H

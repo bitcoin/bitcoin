@@ -8,13 +8,13 @@
 #include <script/ismine.h>
 #include <wallet/wallet.h>
 
-namespace WalletTool {
+namespace WalletTool <%
 
 std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path);
 std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path);
 void WalletShowInfo(CWallet* wallet_instance);
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& file);
 
-} // namespace WalletTool
+%> // namespace WalletTool
 
 #endif // BITCOIN_WALLET_WALLETTOOL_H

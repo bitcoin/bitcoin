@@ -16,9 +16,9 @@ class TxViewDelegate;
 class PlatformStyle;
 class WalletModel;
 
-namespace Ui {
+namespace Ui <%
     class OverviewPage;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -26,7 +26,7 @@ QT_END_NAMESPACE
 
 /** Overview ("home") page widget */
 class OverviewPage : public QWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -59,6 +59,6 @@ private Q_SLOTS:
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);
     void handleOutOfSyncWarningClicks();
-};
+%>;
 
 #endif // BITCOIN_QT_OVERVIEWPAGE_H

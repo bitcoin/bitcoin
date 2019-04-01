@@ -17,9 +17,9 @@
  * Abstract base class.
  */
 class LockedPageAllocator
-{
+<%
 public:
-    virtual ~LockedPageAllocator() {}
+    virtual ~LockedPageAllocator() <%%>
     /** Allocate and lock memory pages.
      * If len is not a multiple of the system page size, it is rounded up.
      * Returns nullptr in case of allocation failure.
@@ -40,13 +40,13 @@ public:
      * is unknown. Return 0 if no memory can be locked at all.
      */
     virtual size_t GetLimit() = 0;
-};
+%>;
 
 /* An arena manages a contiguous region of memory by dividing it into
  * chunks.
  */
 class Arena
-{
+<%
 public:
     Arena(void *base, size_t size, size_t alignment);
     virtual ~Arena();
@@ -56,13 +56,13 @@ public:
 
     /** Memory statistics. */
     struct Stats
-    {
+    <%
         size_t used;
         size_t free;
         size_t total;
         size_t chunks_used;
         size_t chunks_free;
-    };
+    %>;
 
     /** Allocate size bytes from this arena.
      * Returns pointer on success, or 0 if memory is full or
@@ -87,7 +87,7 @@ public:
      * This returns base <= ptr < (base+size) so only use it for (inclusive)
      * chunk starting addresses.
      */
-    bool addressInArena(void *ptr) const { return ptr >= base && ptr < end; }
+    bool addressInArena(void *ptr) const <% return ptr >= base && ptr < end; %>
 private:
     typedef std::multimap<size_t, char*> SizeToChunkSortedMap;
     /** Map to enable O(log(n)) best-fit allocation, as it's sorted by size */
@@ -108,7 +108,7 @@ private:
     char* end;
     /** Minimum chunk alignment */
     size_t alignment;
-};
+%>;
 
 /** Pool for locked memory chunks.
  *
@@ -124,7 +124,7 @@ private:
  * the amount of memory that can be locked is small.
  */
 class LockedPool
-{
+<%
 public:
     /** Size of one arena of locked memory. This is a compromise.
      * Do not set this too low, as managing many arenas will increase
@@ -143,14 +143,14 @@ public:
 
     /** Memory statistics. */
     struct Stats
-    {
+    <%
         size_t used;
         size_t free;
         size_t total;
         size_t locked;
         size_t chunks_used;
         size_t chunks_free;
-    };
+    %>;
 
     /** Create a new LockedPool. This takes ownership of the MemoryPageLocker,
      * you can only instantiate this with LockedPool(std::move(...)).
@@ -184,7 +184,7 @@ private:
 
     /** Create an arena from locked pages */
     class LockedPageArena: public Arena
-    {
+    <%
     public:
         LockedPageArena(LockedPageAllocator *alloc_in, void *base_in, size_t size, size_t align);
         ~LockedPageArena();
@@ -192,7 +192,7 @@ private:
         void *base;
         size_t size;
         LockedPageAllocator *allocator;
-    };
+    %>;
 
     bool new_arena(size_t size, size_t align);
 
@@ -202,7 +202,7 @@ private:
     /** Mutex protects access to this pool's data structures, including arenas.
      */
     mutable std::mutex mutex;
-};
+%>;
 
 /**
  * Singleton class to keep track of locked (ie, non-swappable) memory, for use in
@@ -216,14 +216,14 @@ private:
  * static-initialized, it is created on demand.
  */
 class LockedPoolManager : public LockedPool
-{
+<%
 public:
     /** Return the current instance, or create it once */
     static LockedPoolManager& Instance()
-    {
+    <%
         std::call_once(LockedPoolManager::init_flag, LockedPoolManager::CreateInstance);
         return *LockedPoolManager::_instance;
-    }
+    %>
 
 private:
     explicit LockedPoolManager(std::unique_ptr<LockedPageAllocator> allocator);
@@ -235,6 +235,6 @@ private:
 
     static LockedPoolManager* _instance;
     static std::once_flag init_flag;
-};
+%>;
 
 #endif // BITCOIN_SUPPORT_LOCKEDPOOL_H

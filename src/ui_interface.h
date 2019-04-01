@@ -12,31 +12,31 @@
 #include <string>
 
 class CBlockIndex;
-namespace boost {
-namespace signals2 {
+namespace boost <%
+namespace signals2 <%
 class connection;
-}
-} // namespace boost
+%>
+%> // namespace boost
 
-namespace interfaces {
+namespace interfaces <%
 class Wallet;
-} // namespace interfaces
+%> // namespace interfaces
 
 /** General change type (added, updated, removed). */
 enum ChangeType
-{
+<%
     CT_NEW,
     CT_UPDATED,
     CT_DELETED
-};
+%>;
 
 /** Signals for UI communication. */
 class CClientUIInterface
-{
+<%
 public:
     /** Flags for CClientUIInterface::ThreadSafeMessageBox */
     enum MessageBoxFlags
-    {
+    <%
         ICON_INFORMATION    = 0,
         ICON_WARNING        = (1U << 0),
         ICON_ERROR          = (1U << 1),
@@ -76,7 +76,7 @@ public:
         MSG_INFORMATION = ICON_INFORMATION,
         MSG_WARNING = (ICON_WARNING | BTN_OK | MODAL),
         MSG_ERROR = (ICON_ERROR | BTN_OK | MODAL)
-    };
+    %>;
 
 #define ADD_SIGNALS_DECL_WRAPPER(signal_name, rtype, ...)                                  \
     rtype signal_name(__VA_ARGS__);                                                        \
@@ -121,7 +121,7 @@ public:
 
     /** Banlist did change. */
     ADD_SIGNALS_DECL_WRAPPER(BannedListChanged, void, void);
-};
+%>;
 
 /** Show warning message **/
 void InitWarning(const std::string& str);

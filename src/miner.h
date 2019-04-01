@@ -21,72 +21,72 @@ class CBlockIndex;
 class CChainParams;
 class CScript;
 
-namespace Consensus { struct Params; };
+namespace Consensus <% struct Params; %>;
 
 static const bool DEFAULT_PRINTPRIORITY = false;
 
 struct CBlockTemplate
-{
+<%
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
     std::vector<unsigned char> vchCoinbaseCommitment;
-};
+%>;
 
 // Container for tracking updates to ancestor feerate as we include (parent)
 // transactions in a block
-struct CTxMemPoolModifiedEntry {
+struct CTxMemPoolModifiedEntry <%
     explicit CTxMemPoolModifiedEntry(CTxMemPool::txiter entry)
-    {
+    <%
         iter = entry;
         nSizeWithAncestors = entry->GetSizeWithAncestors();
         nModFeesWithAncestors = entry->GetModFeesWithAncestors();
         nSigOpCostWithAncestors = entry->GetSigOpCostWithAncestors();
-    }
+    %>
 
-    int64_t GetModifiedFee() const { return iter->GetModifiedFee(); }
-    uint64_t GetSizeWithAncestors() const { return nSizeWithAncestors; }
-    CAmount GetModFeesWithAncestors() const { return nModFeesWithAncestors; }
-    size_t GetTxSize() const { return iter->GetTxSize(); }
-    const CTransaction& GetTx() const { return iter->GetTx(); }
+    int64_t GetModifiedFee() const <% return iter->GetModifiedFee(); %>
+    uint64_t GetSizeWithAncestors() const <% return nSizeWithAncestors; %>
+    CAmount GetModFeesWithAncestors() const <% return nModFeesWithAncestors; %>
+    size_t GetTxSize() const <% return iter->GetTxSize(); %>
+    const CTransaction& GetTx() const <% return iter->GetTx(); %>
 
     CTxMemPool::txiter iter;
     uint64_t nSizeWithAncestors;
     CAmount nModFeesWithAncestors;
     int64_t nSigOpCostWithAncestors;
-};
+%>;
 
 /** Comparator for CTxMemPool::txiter objects.
  *  It simply compares the internal memory address of the CTxMemPoolEntry object
  *  pointed to. This means it has no meaning, and is only useful for using them
  *  as key in other indexes.
  */
-struct CompareCTxMemPoolIter {
+struct CompareCTxMemPoolIter <%
     bool operator()(const CTxMemPool::txiter& a, const CTxMemPool::txiter& b) const
-    {
+    <%
         return &(*a) < &(*b);
-    }
-};
+    %>
+%>;
 
-struct modifiedentry_iter {
+struct modifiedentry_iter <%
     typedef CTxMemPool::txiter result_type;
     result_type operator() (const CTxMemPoolModifiedEntry &entry) const
-    {
+    <%
         return entry.iter;
-    }
-};
+    %>
+%>;
 
 // A comparator that sorts transactions based on number of ancestors.
 // This is sufficient to sort an ancestor package in an order that is valid
 // to appear in a block.
-struct CompareTxIterByAncestorCount {
+struct CompareTxIterByAncestorCount <%
     bool operator()(const CTxMemPool::txiter &a, const CTxMemPool::txiter &b) const
-    {
+    <%
         if (a->GetCountWithAncestors() != b->GetCountWithAncestors())
             return a->GetCountWithAncestors() < b->GetCountWithAncestors();
         return CTxMemPool::CompareIteratorByHash()(a, b);
-    }
-};
+    %>
+%>;
 
 typedef boost::multi_index_container<
     CTxMemPoolModifiedEntry,
@@ -109,22 +109,22 @@ typedef indexed_modified_transaction_set::nth_index<0>::type::iterator modtxiter
 typedef indexed_modified_transaction_set::index<ancestor_score>::type::iterator modtxscoreiter;
 
 struct update_for_parent_inclusion
-{
-    explicit update_for_parent_inclusion(CTxMemPool::txiter it) : iter(it) {}
+<%
+    explicit update_for_parent_inclusion(CTxMemPool::txiter it) : iter(it) <%%>
 
     void operator() (CTxMemPoolModifiedEntry &e)
-    {
+    <%
         e.nModFeesWithAncestors -= iter->GetFee();
         e.nSizeWithAncestors -= iter->GetTxSize();
         e.nSigOpCostWithAncestors -= iter->GetSigOpCost();
-    }
+    %>
 
     CTxMemPool::txiter iter;
-};
+%>;
 
 /** Generate a new block, without valid proof-of-work */
 class BlockAssembler
-{
+<%
 private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
@@ -149,11 +149,11 @@ private:
     const CChainParams& chainparams;
 
 public:
-    struct Options {
+    struct Options <%
         Options();
         size_t nBlockMaxWeight;
         CFeeRate blockMinFeeRate;
-    };
+    %>;
 
     explicit BlockAssembler(const CChainParams& params);
     BlockAssembler(const CChainParams& params, const Options& options);
@@ -196,7 +196,7 @@ private:
       * state updated assuming given transactions are inBlock. Returns number
       * of updated descendants. */
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx) EXCLUSIVE_LOCKS_REQUIRED(mempool.cs);
-};
+%>;
 
 /** Modify the extranonce in a block */
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);

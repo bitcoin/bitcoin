@@ -9,9 +9,9 @@
 #include <util/strencodings.h>
 
 const char* GetOpName(opcodetype opcode)
-{
+<%
     switch (opcode)
-    {
+    <%
     // push value
     case OP_0                      : return "0";
     case OP_PUSHDATA1              : return "OP_PUSHDATA1";
@@ -143,35 +143,35 @@ const char* GetOpName(opcodetype opcode)
 
     default:
         return "OP_UNKNOWN";
-    }
-}
+    %>
+%>
 
 unsigned int CScript::GetSigOpCount(bool fAccurate) const
-{
+<%
     unsigned int n = 0;
     const_iterator pc = begin();
     opcodetype lastOpcode = OP_INVALIDOPCODE;
     while (pc < end())
-    {
+    <%
         opcodetype opcode;
         if (!GetOp(pc, opcode))
             break;
         if (opcode == OP_CHECKSIG || opcode == OP_CHECKSIGVERIFY)
             n++;
         else if (opcode == OP_CHECKMULTISIG || opcode == OP_CHECKMULTISIGVERIFY)
-        {
+        <%
             if (fAccurate && lastOpcode >= OP_1 && lastOpcode <= OP_16)
                 n += DecodeOP_N(lastOpcode);
             else
                 n += MAX_PUBKEYS_PER_MULTISIG;
-        }
+        %>
         lastOpcode = opcode;
-    }
+    %>
     return n;
-}
+%>
 
 unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
-{
+<%
     if (!IsPayToScriptHash())
         return GetSigOpCount(true);
 
@@ -181,58 +181,58 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     const_iterator pc = scriptSig.begin();
     std::vector<unsigned char> vData;
     while (pc < scriptSig.end())
-    {
+    <%
         opcodetype opcode;
         if (!scriptSig.GetOp(pc, opcode, vData))
             return 0;
         if (opcode > OP_16)
             return 0;
-    }
+    %>
 
     /// ... and return its opcount:
     CScript subscript(vData.begin(), vData.end());
     return subscript.GetSigOpCount(true);
-}
+%>
 
 bool CScript::IsPayToScriptHash() const
-{
+<%
     // Extra-fast test for pay-to-script-hash CScripts:
     return (this->size() == 23 &&
             (*this)[0] == OP_HASH160 &&
             (*this)[1] == 0x14 &&
             (*this)[22] == OP_EQUAL);
-}
+%>
 
 bool CScript::IsPayToWitnessScriptHash() const
-{
+<%
     // Extra-fast test for pay-to-witness-script-hash CScripts:
     return (this->size() == 34 &&
             (*this)[0] == OP_0 &&
             (*this)[1] == 0x20);
-}
+%>
 
 // A witness program is any valid CScript that consists of a 1-byte push opcode
 // followed by a data push between 2 and 40 bytes.
 bool CScript::IsWitnessProgram(int& version, std::vector<unsigned char>& program) const
-{
-    if (this->size() < 4 || this->size() > 42) {
+<%
+    if (this->size() < 4 || this->size() > 42) <%
         return false;
-    }
-    if ((*this)[0] != OP_0 && ((*this)[0] < OP_1 || (*this)[0] > OP_16)) {
+    %>
+    if ((*this)[0] != OP_0 && ((*this)[0] < OP_1 || (*this)[0] > OP_16)) <%
         return false;
-    }
-    if ((size_t)((*this)[1] + 2) == this->size()) {
+    %>
+    if ((size_t)((*this)[1] + 2) == this->size()) <%
         version = DecodeOP_N((opcodetype)(*this)[0]);
         program = std::vector<unsigned char>(this->begin() + 2, this->end());
         return true;
-    }
+    %>
     return false;
-}
+%>
 
 bool CScript::IsPushOnly(const_iterator pc) const
-{
+<%
     while (pc < end())
-    {
+    <%
         opcodetype opcode;
         if (!GetOp(pc, opcode))
             return false;
@@ -242,42 +242,42 @@ bool CScript::IsPushOnly(const_iterator pc) const
         // the P2SH special validation code being executed.
         if (opcode > OP_16)
             return false;
-    }
+    %>
     return true;
-}
+%>
 
 bool CScript::IsPushOnly() const
-{
+<%
     return this->IsPushOnly(begin());
-}
+%>
 
 std::string CScriptWitness::ToString() const
-{
+<%
     std::string ret = "CScriptWitness(";
-    for (unsigned int i = 0; i < stack.size(); i++) {
-        if (i) {
+    for (unsigned int i = 0; i < stack.size(); i++) <%
+        if (i) <%
             ret += ", ";
-        }
+        %>
         ret += HexStr(stack[i]);
-    }
+    %>
     return ret + ")";
-}
+%>
 
 bool CScript::HasValidOps() const
-{
+<%
     CScript::const_iterator it = begin();
-    while (it < end()) {
+    while (it < end()) <%
         opcodetype opcode;
         std::vector<unsigned char> item;
-        if (!GetOp(it, opcode, item) || opcode > MAX_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+        if (!GetOp(it, opcode, item) || opcode > MAX_OPCODE || item.size() > MAX_SCRIPT_ELEMENT_SIZE) <%
             return false;
-        }
-    }
+        %>
+    %>
     return true;
-}
+%>
 
 bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator end, opcodetype& opcodeRet, std::vector<unsigned char>* pvchRet)
-{
+<%
     opcodeRet = OP_INVALIDOPCODE;
     if (pvchRet)
         pvchRet->clear();
@@ -291,39 +291,39 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
 
     // Immediate operand
     if (opcode <= OP_PUSHDATA4)
-    {
+    <%
         unsigned int nSize = 0;
         if (opcode < OP_PUSHDATA1)
-        {
+        <%
             nSize = opcode;
-        }
+        %>
         else if (opcode == OP_PUSHDATA1)
-        {
+        <%
             if (end - pc < 1)
                 return false;
             nSize = *pc++;
-        }
+        %>
         else if (opcode == OP_PUSHDATA2)
-        {
+        <%
             if (end - pc < 2)
                 return false;
             nSize = ReadLE16(&pc[0]);
             pc += 2;
-        }
+        %>
         else if (opcode == OP_PUSHDATA4)
-        {
+        <%
             if (end - pc < 4)
                 return false;
             nSize = ReadLE32(&pc[0]);
             pc += 4;
-        }
+        %>
         if (end - pc < 0 || (unsigned int)(end - pc) < nSize)
             return false;
         if (pvchRet)
             pvchRet->assign(pc, pc + nSize);
         pc += nSize;
-    }
+    %>
 
     opcodeRet = static_cast<opcodetype>(opcode);
     return true;
-}
+%>

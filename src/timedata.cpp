@@ -27,25 +27,25 @@ static int64_t nTimeOffset GUARDED_BY(cs_nTimeOffset) = 0;
  *  - The user (asking the user to fix the system clock if the first two disagree)
  */
 int64_t GetTimeOffset()
-{
+<%
     LOCK(cs_nTimeOffset);
     return nTimeOffset;
-}
+%>
 
 int64_t GetAdjustedTime()
-{
+<%
     return GetTime() + GetTimeOffset();
-}
+%>
 
 static int64_t abs64(int64_t n)
-{
+<%
     return (n >= 0 ? n : -n);
-}
+%>
 
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
-{
+<%
     LOCK(cs_nTimeOffset);
     // Ignore duplicates
     static std::set<CNetAddr> setKnown;
@@ -77,21 +77,21 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
     // a timing cleanup that strengthens it in a number of other ways.
     //
     if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1)
-    {
+    <%
         int64_t nMedian = vTimeOffsets.median();
         std::vector<int64_t> vSorted = vTimeOffsets.sorted();
         // Only let other nodes change our time by so much
         if (abs64(nMedian) <= std::max<int64_t>(0, gArgs.GetArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT)))
-        {
+        <%
             nTimeOffset = nMedian;
-        }
+        %>
         else
-        {
+        <%
             nTimeOffset = 0;
 
             static bool fDone;
             if (!fDone)
-            {
+            <%
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
                 for (const int64_t nOffset : vSorted)
@@ -99,22 +99,22 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                         fMatch = true;
 
                 if (!fMatch)
-                {
+                <%
                     fDone = true;
                     std::string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), _(PACKAGE_NAME));
                     SetMiscWarning(strMessage);
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
-                }
-            }
-        }
+                %>
+            %>
+        %>
 
-        if (LogAcceptCategory(BCLog::NET)) {
-            for (const int64_t n : vSorted) {
+        if (LogAcceptCategory(BCLog::NET)) <%
+            for (const int64_t n : vSorted) <%
                 LogPrint(BCLog::NET, "%+d  ", n); /* Continued */
-            }
+            %>
             LogPrint(BCLog::NET, "|  "); /* Continued */
 
             LogPrint(BCLog::NET, "nTimeOffset = %+d  (%+d minutes)\n", nTimeOffset, nTimeOffset/60);
-        }
-    }
-}
+        %>
+    %>
+%>

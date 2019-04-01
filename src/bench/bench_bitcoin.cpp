@@ -23,7 +23,7 @@ static const int64_t DEFAULT_PLOT_WIDTH = 1024;
 static const int64_t DEFAULT_PLOT_HEIGHT = 768;
 
 static void SetupBenchArgs()
-{
+<%
     SetupHelpOptions(gArgs);
 
     gArgs.AddArg("-list", "List benchmarks without executing them. Can be combined with -scaling and -filter", false, OptionsCategory::OPTIONS);
@@ -34,33 +34,33 @@ static void SetupBenchArgs()
     gArgs.AddArg("-plot-plotlyurl=<uri>", strprintf("URL to use for plotly.js (default: %s)", DEFAULT_PLOT_PLOTLYURL), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-plot-width=<x>", strprintf("Plot width in pixel (default: %u)", DEFAULT_PLOT_WIDTH), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-plot-height=<x>", strprintf("Plot height in pixel (default: %u)", DEFAULT_PLOT_HEIGHT), false, OptionsCategory::OPTIONS);
-}
+%>
 
 static fs::path SetDataDir()
-{
+<%
     fs::path ret = fs::temp_directory_path() / "bench_bitcoin" / fs::unique_path();
     fs::create_directories(ret);
     gArgs.ForceSetArg("-datadir", ret.string());
     return ret;
-}
+%>
 
 int main(int argc, char** argv)
-{
+<%
     SetupBenchArgs();
     std::string error;
-    if (!gArgs.ParseParameters(argc, argv, error)) {
+    if (!gArgs.ParseParameters(argc, argv, error)) <%
         fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
-    }
+    %>
 
-    if (HelpRequested(gArgs)) {
+    if (HelpRequested(gArgs)) <%
         std::cout << gArgs.GetHelpMessage();
 
         return EXIT_SUCCESS;
-    }
+    %>
 
     // Set the datadir after parsing the bench options
-    const fs::path bench_datadir{SetDataDir()};
+    const fs::path bench_datadir<%SetDataDir()%>;
 
     SHA256AutoDetect();
     ECC_Start();
@@ -72,19 +72,19 @@ int main(int argc, char** argv)
     bool is_list_only = gArgs.GetBoolArg("-list", false);
 
     double scaling_factor;
-    if (!ParseDouble(scaling_str, &scaling_factor)) {
+    if (!ParseDouble(scaling_str, &scaling_factor)) <%
         fprintf(stderr, "Error parsing scaling factor as double: %s\n", scaling_str.c_str());
         return EXIT_FAILURE;
-    }
+    %>
 
     std::unique_ptr<benchmark::Printer> printer = MakeUnique<benchmark::ConsolePrinter>();
     std::string printer_arg = gArgs.GetArg("-printer", DEFAULT_BENCH_PRINTER);
-    if ("plot" == printer_arg) {
+    if ("plot" == printer_arg) <%
         printer.reset(new benchmark::PlotlyPrinter(
             gArgs.GetArg("-plot-plotlyurl", DEFAULT_PLOT_PLOTLYURL),
             gArgs.GetArg("-plot-width", DEFAULT_PLOT_WIDTH),
             gArgs.GetArg("-plot-height", DEFAULT_PLOT_HEIGHT)));
-    }
+    %>
 
     benchmark::BenchRunner::RunAll(*printer, evaluations, scaling_factor, regex_filter, is_list_only);
 
@@ -93,4 +93,4 @@ int main(int argc, char** argv)
     ECC_Stop();
 
     return EXIT_SUCCESS;
-}
+%>

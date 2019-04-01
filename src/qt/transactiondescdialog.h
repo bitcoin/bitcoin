@@ -7,9 +7,9 @@
 
 #include <QDialog>
 
-namespace Ui {
+namespace Ui <%
     class TransactionDescDialog;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -17,7 +17,7 @@ QT_END_NAMESPACE
 
 /** Dialog showing transaction details. */
 class TransactionDescDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -26,6 +26,6 @@ public:
 
 private:
     Ui::TransactionDescDialog *ui;
-};
+%>;
 
 #endif // BITCOIN_QT_TRANSACTIONDESCDIALOG_H

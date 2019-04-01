@@ -10,7 +10,7 @@
 /** macOS-specific Dock icon handler.
  */
 class MacDockIconHandler : public QObject
-{
+<%
     Q_OBJECT
 
 public:
@@ -22,6 +22,6 @@ Q_SIGNALS:
 
 private:
     MacDockIconHandler();
-};
+%>;
 
 #endif // BITCOIN_QT_MACDOCKICONHANDLER_H

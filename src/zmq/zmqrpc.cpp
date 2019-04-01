@@ -11,16 +11,16 @@
 
 #include <univalue.h>
 
-namespace {
+namespace <%
 
 UniValue getzmqnotifications(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 0) {
+<%
+    if (request.fHelp || request.params.size() != 0) <%
         throw std::runtime_error(
-            RPCHelpMan{"getzmqnotifications",
+            RPCHelpMan<%"getzmqnotifications",
                 "\nReturns information about the active ZeroMQ notifications.\n",
-                {},
-                RPCResult{
+                <%%>,
+                RPCResult<%
             "[\n"
             "  {                        (json object)\n"
             "    \"type\": \"pubhashtx\",   (string) Type of notification\n"
@@ -29,39 +29,39 @@ UniValue getzmqnotifications(const JSONRPCRequest& request)
             "  },\n"
             "  ...\n"
             "]\n"
-                },
-                RPCExamples{
+                %>,
+                RPCExamples<%
                     HelpExampleCli("getzmqnotifications", "")
             + HelpExampleRpc("getzmqnotifications", "")
-                },
-            }.ToString());
-    }
+                %>,
+            %>.ToString());
+    %>
 
     UniValue result(UniValue::VARR);
-    if (g_zmq_notification_interface != nullptr) {
-        for (const auto* n : g_zmq_notification_interface->GetActiveNotifiers()) {
+    if (g_zmq_notification_interface != nullptr) <%
+        for (const auto* n : g_zmq_notification_interface->GetActiveNotifiers()) <%
             UniValue obj(UniValue::VOBJ);
             obj.pushKV("type", n->GetType());
             obj.pushKV("address", n->GetAddress());
             obj.pushKV("hwm", n->GetOutboundMessageHighWaterMark());
             result.push_back(obj);
-        }
-    }
+        %>
+    %>
 
     return result;
-}
+%>
 
 const CRPCCommand commands[] =
-{ //  category              name                                actor (function)                argNames
+<% //  category              name                                actor (function)                argNames
   //  -----------------     ------------------------            -----------------------         ----------
-    { "zmq",                "getzmqnotifications",              &getzmqnotifications,           {} },
-};
+    <% "zmq",                "getzmqnotifications",              &getzmqnotifications,           <%%> %>,
+%>;
 
-} // anonymous namespace
+%> // anonymous namespace
 
 void RegisterZMQRPCCommands(CRPCTable& t)
-{
-    for (const auto& c : commands) {
+<%
+    for (const auto& c : commands) <%
         t.appendCommand(c.name, &c);
-    }
-}
+    %>
+%>

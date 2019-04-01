@@ -14,27 +14,27 @@
 #include <string>
 #include <vector>
 
-struct TestDerivation {
+struct TestDerivation <%
     std::string pub;
     std::string prv;
     unsigned int nChild;
-};
+%>;
 
-struct TestVector {
+struct TestVector <%
     std::string strHexMaster;
     std::vector<TestDerivation> vDerive;
 
-    explicit TestVector(std::string strHexMasterIn) : strHexMaster(strHexMasterIn) {}
+    explicit TestVector(std::string strHexMasterIn) : strHexMaster(strHexMasterIn) <%%>
 
-    TestVector& operator()(std::string pub, std::string prv, unsigned int nChild) {
+    TestVector& operator()(std::string pub, std::string prv, unsigned int nChild) <%
         vDerive.push_back(TestDerivation());
         TestDerivation &der = vDerive.back();
         der.pub = pub;
         der.prv = prv;
         der.nChild = nChild;
         return *this;
-    }
-};
+    %>
+%>;
 
 TestVector test1 =
   TestVector("000102030405060708090a0b0c0d0e0f")
@@ -87,13 +87,13 @@ TestVector test3 =
      "xprv9uPDJpEQgRQfDcW7BkF7eTya6RPxXeJCqCJGHuCJ4GiRVLzkTXBAJMu2qaMWPrS7AANYqdq6vcBcBUdJCVVFceUvJFjaPdGZ2y9WACViL4L",
       0);
 
-static void RunTest(const TestVector &test) {
+static void RunTest(const TestVector &test) <%
     std::vector<unsigned char> seed = ParseHex(test.strHexMaster);
     CExtKey key;
     CExtPubKey pubkey;
     key.SetSeed(seed.data(), seed.size());
     pubkey = key.Neuter();
-    for (const TestDerivation &derive : test.vDerive) {
+    for (const TestDerivation &derive : test.vDerive) <%
         unsigned char data[74];
         key.Encode(data);
         pubkey.Encode(data);
@@ -110,12 +110,12 @@ static void RunTest(const TestVector &test) {
         CExtKey keyNew;
         BOOST_CHECK(key.Derive(keyNew, derive.nChild));
         CExtPubKey pubkeyNew = keyNew.Neuter();
-        if (!(derive.nChild & 0x80000000)) {
+        if (!(derive.nChild & 0x80000000)) <%
             // Compare with public derivation
             CExtPubKey pubkeyNew2;
             BOOST_CHECK(pubkey.Derive(pubkeyNew2, derive.nChild));
             BOOST_CHECK(pubkeyNew == pubkeyNew2);
-        }
+        %>
         key = keyNew;
         pubkey = pubkeyNew;
 
@@ -134,21 +134,21 @@ static void RunTest(const TestVector &test) {
 
         BOOST_CHECK(pubCheck == pubkeyNew);
         BOOST_CHECK(privCheck == keyNew);
-    }
-}
+    %>
+%>
 
 BOOST_FIXTURE_TEST_SUITE(bip32_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(bip32_test1) {
+BOOST_AUTO_TEST_CASE(bip32_test1) <%
     RunTest(test1);
-}
+%>
 
-BOOST_AUTO_TEST_CASE(bip32_test2) {
+BOOST_AUTO_TEST_CASE(bip32_test2) <%
     RunTest(test2);
-}
+%>
 
-BOOST_AUTO_TEST_CASE(bip32_test3) {
+BOOST_AUTO_TEST_CASE(bip32_test3) <%
     RunTest(test3);
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -9,11 +9,11 @@
 
 static const uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
 
-enum class RBFTransactionState {
+enum class RBFTransactionState <%
     UNKNOWN,
     REPLACEABLE_BIP125,
     FINAL
-};
+%>;
 
 // Check whether the sequence numbers on this transaction are signaling
 // opt-in to replace-by-fee, according to BIP 125

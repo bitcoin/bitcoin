@@ -28,15 +28,15 @@ class UniValue;
 class proxyType;
 struct CNodeStateStats;
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
 class Wallet;
 
 //! Top-level interface for a bitcoin node (bitcoind process).
 class Node
-{
+<%
 public:
-    virtual ~Node() {}
+    virtual ~Node() <%%>
 
     //! Set command line arguments.
     virtual bool parseParameters(int argc, const char* const argv[], std::string& error) = 0;
@@ -246,11 +246,11 @@ public:
     using NotifyHeaderTipFn =
         std::function<void(bool initial_download, int height, int64_t block_time, double verification_progress)>;
     virtual std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) = 0;
-};
+%>;
 
 //! Return implementation of Node interface.
 std::unique_ptr<Node> MakeNode();
 
-} // namespace interfaces
+%> // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_NODE_H

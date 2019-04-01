@@ -9,9 +9,9 @@
 
 class AddressTableModel;
 
-namespace Ui {
+namespace Ui <%
     class EditAddressDialog;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QDataWidgetMapper;
@@ -20,15 +20,15 @@ QT_END_NAMESPACE
 /** Dialog for editing an address and associated information.
  */
 class EditAddressDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
-    enum Mode {
+    enum Mode <%
         NewSendingAddress,
         EditReceivingAddress,
         EditSendingAddress
-    };
+    %>;
 
     explicit EditAddressDialog(Mode mode, QWidget *parent = nullptr);
     ~EditAddressDialog();
@@ -54,6 +54,6 @@ private:
     AddressTableModel *model;
 
     QString address;
-};
+%>;
 
 #endif // BITCOIN_QT_EDITADDRESSDIALOG_H

@@ -35,7 +35,7 @@ class CSubNet;
 // new code.
 
 class BanMan
-{
+<%
 public:
     ~BanMan();
     BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time);
@@ -64,7 +64,7 @@ private:
     CClientUIInterface* m_client_interface = nullptr;
     CBanDB m_ban_db;
     const int64_t m_default_ban_time;
-};
+%>;
 
 extern std::unique_ptr<BanMan> g_banman;
 #endif

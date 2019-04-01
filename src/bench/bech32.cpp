@@ -13,24 +13,24 @@
 
 
 static void Bech32Encode(benchmark::State& state)
-{
+<%
     std::vector<uint8_t> v = ParseHex("c97f5a67ec381b760aeaf67573bc164845ff39a3bb26a1cee401ac67243b48db");
-    std::vector<unsigned char> tmp = {0};
+    std::vector<unsigned char> tmp = <%0%>;
     tmp.reserve(1 + 32 * 8 / 5);
-    ConvertBits<8, 5, true>([&](unsigned char c) { tmp.push_back(c); }, v.begin(), v.end());
-    while (state.KeepRunning()) {
+    ConvertBits<8, 5, true>([&](unsigned char c) <% tmp.push_back(c); %>, v.begin(), v.end());
+    while (state.KeepRunning()) <%
         bech32::Encode("bc", tmp);
-    }
-}
+    %>
+%>
 
 
 static void Bech32Decode(benchmark::State& state)
-{
+<%
     std::string addr = "bc1qkallence7tjawwvy0dwt4twc62qjgaw8f4vlhyd006d99f09";
-    while (state.KeepRunning()) {
+    while (state.KeepRunning()) <%
         bech32::Decode(addr);
-    }
-}
+    %>
+%>
 
 
 BENCHMARK(Bech32Encode, 800 * 1000);

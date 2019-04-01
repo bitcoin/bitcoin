@@ -13,17 +13,17 @@ class uint256;
 class CCoinControl;
 enum class FeeEstimateMode;
 
-namespace feebumper {
+namespace feebumper <%
 
 enum class Result
-{
+<%
     OK,
     INVALID_ADDRESS_OR_KEY,
     INVALID_REQUEST,
     INVALID_PARAMETER,
     WALLET_ERROR,
     MISC_ERROR,
-};
+%>;
 
 //! Return whether transaction can be bumped.
 bool TransactionCanBeBumped(const CWallet* wallet, const uint256& txid);
@@ -53,6 +53,6 @@ Result CommitTransaction(CWallet* wallet,
                          std::vector<std::string>& errors,
                          uint256& bumped_txid);
 
-} // namespace feebumper
+%> // namespace feebumper
 
 #endif // BITCOIN_WALLET_FEEBUMPER_H

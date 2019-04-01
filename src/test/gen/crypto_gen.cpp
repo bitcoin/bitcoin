@@ -12,8 +12,8 @@
 
 /** Generates 1 to 20 keys for OP_CHECKMULTISIG */
 rc::Gen<std::vector<CKey>> MultisigKeys()
-{
-    return rc::gen::suchThat(rc::gen::arbitrary<std::vector<CKey>>(), [](const std::vector<CKey>& keys) {
+<%
+    return rc::gen::suchThat(rc::gen::arbitrary<std::vector<CKey>>(), [](const std::vector<CKey>& keys) <%
         return keys.size() >= 1 && keys.size() <= 15;
-    });
-};
+    %>);
+%>;

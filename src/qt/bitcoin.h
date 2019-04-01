@@ -22,16 +22,16 @@ class PlatformStyle;
 class WalletController;
 class WalletModel;
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
 class Node;
-} // namespace interfaces
+%> // namespace interfaces
 
 /** Class encapsulating Bitcoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
 class BitcoinCore: public QObject
-{
+<%
     Q_OBJECT
 public:
     explicit BitcoinCore(interfaces::Node& node);
@@ -50,11 +50,11 @@ private:
     void handleRunawayException(const std::exception *e);
 
     interfaces::Node& m_node;
-};
+%>;
 
 /** Main Bitcoin application object */
 class BitcoinApplication: public QApplication
-{
+<%
     Q_OBJECT
 public:
     explicit BitcoinApplication(interfaces::Node& node, int &argc, char **argv);
@@ -81,7 +81,7 @@ public:
     void requestShutdown();
 
     /// Get process return value
-    int getReturnValue() const { return returnValue; }
+    int getReturnValue() const <% return returnValue; %>
 
     /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
@@ -109,15 +109,15 @@ private:
     BitcoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
-    PaymentServer* paymentServer{nullptr};
-    WalletController* m_wallet_controller{nullptr};
+    PaymentServer* paymentServer<%nullptr%>;
+    WalletController* m_wallet_controller<%nullptr%>;
 #endif
     int returnValue;
     const PlatformStyle *platformStyle;
     std::unique_ptr<QWidget> shutdownWindow;
 
     void startThread();
-};
+%>;
 
 int GuiMain(int argc, char* argv[]);
 

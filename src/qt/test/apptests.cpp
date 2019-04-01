@@ -33,10 +33,10 @@
 #include <string>
 #include <univalue.h>
 
-namespace {
+namespace <%
 //! Call getblockchaininfo RPC and check first field of JSON output.
 void TestRpcCommand(RPCConsole* console)
-{
+<%
     QEventLoop loop;
     QTextEdit* messagesWidget = console->findChild<QTextEdit*>("messagesWidget");
     QObject::connect(messagesWidget, &QTextEdit::textChanged, &loop, &QEventLoop::quit);
@@ -48,14 +48,14 @@ void TestRpcCommand(RPCConsole* console)
     UniValue value;
     value.read(output.right(output.size() - output.lastIndexOf(QChar::ObjectReplacementCharacter) - 1).toStdString());
     QCOMPARE(value["chain"].get_str(), std::string("regtest"));
-}
-} // namespace
+%>
+%> // namespace
 
 //! Entry point for BitcoinApplication tests.
 void AppTests::appTests()
-{
+<%
 #ifdef Q_OS_MAC
-    if (QApplication::platformName() == "minimal") {
+    if (QApplication::platformName() == "minimal") <%
         // Disable for mac on "minimal" platform to avoid crashes inside the Qt
         // framework when it tries to look up unimplemented cocoa functions,
         // and fails to handle returned nulls
@@ -63,7 +63,7 @@ void AppTests::appTests()
         QWARN("Skipping AppTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
               "with 'test_bitcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
         return;
-    }
+    %>
 #endif
 
     m_app.parameterSetup();
@@ -83,33 +83,33 @@ void AppTests::appTests()
     // Reset global state to avoid interfering with later tests.
     AbortShutdown();
     UnloadBlockIndex();
-}
+%>
 
 //! Entry point for BitcoinGUI tests.
 void AppTests::guiTests(BitcoinGUI* window)
-{
-    HandleCallback callback{"guiTests", *this};
+<%
+    HandleCallback callback<%"guiTests", *this%>;
     connect(window, &BitcoinGUI::consoleShown, this, &AppTests::consoleTests);
     expectCallback("consoleTests");
     QAction* action = window->findChild<QAction*>("openRPCConsoleAction");
     action->activate(QAction::Trigger);
-}
+%>
 
 //! Entry point for RPCConsole tests.
 void AppTests::consoleTests(RPCConsole* console)
-{
-    HandleCallback callback{"consoleTests", *this};
+<%
+    HandleCallback callback<%"consoleTests", *this%>;
     TestRpcCommand(console);
-}
+%>
 
 //! Destructor to shut down after the last expected callback completes.
 AppTests::HandleCallback::~HandleCallback()
-{
+<%
     auto& callbacks = m_app_tests.m_callbacks;
     auto it = callbacks.find(m_callback);
     assert(it != callbacks.end());
     callbacks.erase(it);
-    if (callbacks.empty()) {
+    if (callbacks.empty()) <%
         m_app_tests.m_app.quit();
-    }
-}
+    %>
+%>

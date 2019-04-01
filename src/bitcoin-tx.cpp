@@ -34,7 +34,7 @@ static const int CONTINUE_EXECUTION=-1;
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 static void SetupBitcoinTxArgs()
-{
+<%
     SetupHelpOptions(gArgs);
 
     gArgs.AddArg("-create", "Create new, empty TX.", false, OptionsCategory::OPTIONS);
@@ -67,35 +67,35 @@ static void SetupBitcoinTxArgs()
 
     gArgs.AddArg("load=NAME:FILENAME", "Load JSON file FILENAME into register NAME", false, OptionsCategory::REGISTER_COMMANDS);
     gArgs.AddArg("set=NAME:JSON-STRING", "Set register NAME to given JSON-STRING", false, OptionsCategory::REGISTER_COMMANDS);
-}
+%>
 
 //
 // This function returns either one of EXIT_ codes when it's expected to stop the process or
 // CONTINUE_EXECUTION when it's expected to continue further.
 //
 static int AppInitRawTx(int argc, char* argv[])
-{
+<%
     //
     // Parameters
     //
     SetupBitcoinTxArgs();
     std::string error;
-    if (!gArgs.ParseParameters(argc, argv, error)) {
+    if (!gArgs.ParseParameters(argc, argv, error)) <%
         fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
         return EXIT_FAILURE;
-    }
+    %>
 
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
-    try {
+    try <%
         SelectParams(gArgs.GetChainName());
-    } catch (const std::exception& e) {
+    %> catch (const std::exception& e) <%
         fprintf(stderr, "Error: %s\n", e.what());
         return EXIT_FAILURE;
-    }
+    %>
 
     fCreateBlank = gArgs.GetBoolArg("-create", false);
 
-    if (argc < 2 || HelpRequested(gArgs)) {
+    if (argc < 2 || HelpRequested(gArgs)) <%
         // First part of help message is specific to this utility
         std::string strUsage = PACKAGE_NAME " bitcoin-tx utility version " + FormatFullVersion() + "\n\n" +
             "Usage:  bitcoin-tx [options] <hex-tx> [commands]  Update hex-encoded bitcoin transaction\n" +
@@ -105,28 +105,28 @@ static int AppInitRawTx(int argc, char* argv[])
 
         fprintf(stdout, "%s", strUsage.c_str());
 
-        if (argc < 2) {
+        if (argc < 2) <%
             fprintf(stderr, "Error: too few parameters\n");
             return EXIT_FAILURE;
-        }
+        %>
         return EXIT_SUCCESS;
-    }
+    %>
     return CONTINUE_EXECUTION;
-}
+%>
 
 static void RegisterSetJson(const std::string& key, const std::string& rawJson)
-{
+<%
     UniValue val;
-    if (!val.read(rawJson)) {
+    if (!val.read(rawJson)) <%
         std::string strErr = "Cannot parse JSON for key " + key;
         throw std::runtime_error(strErr);
-    }
+    %>
 
     registers[key] = val;
-}
+%>
 
 static void RegisterSet(const std::string& strInput)
-{
+<%
     // separate NAME:VALUE in string
     size_t pos = strInput.find(':');
     if ((pos == std::string::npos) ||
@@ -138,10 +138,10 @@ static void RegisterSet(const std::string& strInput)
     std::string valStr = strInput.substr(pos + 1, std::string::npos);
 
     RegisterSetJson(key, valStr);
-}
+%>
 
 static void RegisterLoad(const std::string& strInput)
-{
+<%
     // separate NAME:FILENAME in string
     size_t pos = strInput.find(':');
     if ((pos == std::string::npos) ||
@@ -153,82 +153,82 @@ static void RegisterLoad(const std::string& strInput)
     std::string filename = strInput.substr(pos + 1, std::string::npos);
 
     FILE *f = fopen(filename.c_str(), "r");
-    if (!f) {
+    if (!f) <%
         std::string strErr = "Cannot open file " + filename;
         throw std::runtime_error(strErr);
-    }
+    %>
 
     // load file chunks into one big buffer
     std::string valStr;
-    while ((!feof(f)) && (!ferror(f))) {
+    while ((!feof(f)) && (!ferror(f))) <%
         char buf[4096];
         int bread = fread(buf, 1, sizeof(buf), f);
         if (bread <= 0)
             break;
 
         valStr.insert(valStr.size(), buf, bread);
-    }
+    %>
 
     int error = ferror(f);
     fclose(f);
 
-    if (error) {
+    if (error) <%
         std::string strErr = "Error reading file " + filename;
         throw std::runtime_error(strErr);
-    }
+    %>
 
     // evaluate as JSON buffer register
     RegisterSetJson(key, valStr);
-}
+%>
 
 static CAmount ExtractAndValidateValue(const std::string& strValue)
-{
+<%
     CAmount value;
     if (!ParseMoney(strValue, value))
         throw std::runtime_error("invalid TX output value");
     return value;
-}
+%>
 
 static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
-{
+<%
     int64_t newVersion;
     if (!ParseInt64(cmdVal, &newVersion) || newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_VERSION)
         throw std::runtime_error("Invalid TX version requested: '" + cmdVal + "'");
 
     tx.nVersion = (int) newVersion;
-}
+%>
 
 static void MutateTxLocktime(CMutableTransaction& tx, const std::string& cmdVal)
-{
+<%
     int64_t newLocktime;
     if (!ParseInt64(cmdVal, &newLocktime) || newLocktime < 0LL || newLocktime > 0xffffffffLL)
         throw std::runtime_error("Invalid TX locktime requested: '" + cmdVal + "'");
 
     tx.nLockTime = (unsigned int) newLocktime;
-}
+%>
 
 static void MutateTxRBFOptIn(CMutableTransaction& tx, const std::string& strInIdx)
-{
+<%
     // parse requested index
     int64_t inIdx;
-    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) {
+    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) <%
         throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
-    }
+    %>
 
     // set the nSequence to MAX_INT - 2 (= RBF opt in flag)
     int cnt = 0;
-    for (CTxIn& txin : tx.vin) {
-        if (strInIdx == "" || cnt == inIdx) {
-            if (txin.nSequence > MAX_BIP125_RBF_SEQUENCE) {
+    for (CTxIn& txin : tx.vin) <%
+        if (strInIdx == "" || cnt == inIdx) <%
+            if (txin.nSequence > MAX_BIP125_RBF_SEQUENCE) <%
                 txin.nSequence = MAX_BIP125_RBF_SEQUENCE;
-            }
-        }
+            %>
+        %>
         ++cnt;
-    }
-}
+    %>
+%>
 
 static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInput)
-{
+<%
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
 
@@ -238,9 +238,9 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
 
     // extract and validate TXID
     uint256 txid;
-    if (!ParseHashStr(vStrInputParts[0], txid)) {
+    if (!ParseHashStr(vStrInputParts[0], txid)) <%
         throw std::runtime_error("invalid TX input txid");
-    }
+    %>
 
     static const unsigned int minTxOutSz = 9;
     static const unsigned int maxVout = MAX_BLOCK_WEIGHT / (WITNESS_SCALE_FACTOR * minTxOutSz);
@@ -259,10 +259,10 @@ static void MutateTxAddInput(CMutableTransaction& tx, const std::string& strInpu
     // append to transaction input list
     CTxIn txin(txid, vout, CScript(), nSequenceIn);
     tx.vin.push_back(txin);
-}
+%>
 
 static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strInput)
-{
+<%
     // Separate into VALUE:ADDRESS
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
@@ -276,18 +276,18 @@ static void MutateTxAddOutAddr(CMutableTransaction& tx, const std::string& strIn
     // extract and validate ADDRESS
     std::string strAddr = vStrInputParts[1];
     CTxDestination destination = DecodeDestination(strAddr);
-    if (!IsValidDestination(destination)) {
+    if (!IsValidDestination(destination)) <%
         throw std::runtime_error("invalid TX output address");
-    }
+    %>
     CScript scriptPubKey = GetScriptForDestination(destination);
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
-}
+%>
 
 static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& strInput)
-{
+<%
     // Separate into VALUE:PUBKEY[:FLAGS]
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
@@ -307,31 +307,31 @@ static void MutateTxAddOutPubKey(CMutableTransaction& tx, const std::string& str
     // Extract and validate FLAGS
     bool bSegWit = false;
     bool bScriptHash = false;
-    if (vStrInputParts.size() == 3) {
+    if (vStrInputParts.size() == 3) <%
         std::string flags = vStrInputParts[2];
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
-    }
+    %>
 
-    if (bSegWit) {
-        if (!pubkey.IsCompressed()) {
+    if (bSegWit) <%
+        if (!pubkey.IsCompressed()) <%
             throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
-        }
+        %>
         // Call GetScriptForWitness() to build a P2WSH scriptPubKey
         scriptPubKey = GetScriptForWitness(scriptPubKey);
-    }
-    if (bScriptHash) {
+    %>
+    if (bScriptHash) <%
         // Get the ID for the script, and then construct a P2SH destination for it.
         scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
-    }
+    %>
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
-}
+%>
 
 static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& strInput)
-{
+<%
     // Separate into VALUE:REQUIRED:NUMKEYS:PUBKEY1:PUBKEY2:....[:FLAGS]
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
@@ -359,53 +359,53 @@ static void MutateTxAddOutMultiSig(CMutableTransaction& tx, const std::string& s
 
     // extract and validate PUBKEYs
     std::vector<CPubKey> pubkeys;
-    for(int pos = 1; pos <= int(numkeys); pos++) {
+    for(int pos = 1; pos <= int(numkeys); pos++) <%
         CPubKey pubkey(ParseHex(vStrInputParts[pos + 2]));
         if (!pubkey.IsFullyValid())
             throw std::runtime_error("invalid TX output pubkey");
         pubkeys.push_back(pubkey);
-    }
+    %>
 
     // Extract FLAGS
     bool bSegWit = false;
     bool bScriptHash = false;
-    if (vStrInputParts.size() == numkeys + 4) {
+    if (vStrInputParts.size() == numkeys + 4) <%
         std::string flags = vStrInputParts.back();
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
-    }
-    else if (vStrInputParts.size() > numkeys + 4) {
+    %>
+    else if (vStrInputParts.size() > numkeys + 4) <%
         // Validate that there were no more parameters passed
         throw std::runtime_error("Too many parameters");
-    }
+    %>
 
     CScript scriptPubKey = GetScriptForMultisig(required, pubkeys);
 
-    if (bSegWit) {
-        for (const CPubKey& pubkey : pubkeys) {
-            if (!pubkey.IsCompressed()) {
+    if (bSegWit) <%
+        for (const CPubKey& pubkey : pubkeys) <%
+            if (!pubkey.IsCompressed()) <%
                 throw std::runtime_error("Uncompressed pubkeys are not useable for SegWit outputs");
-            }
-        }
+            %>
+        %>
         // Call GetScriptForWitness() to build a P2WSH scriptPubKey
         scriptPubKey = GetScriptForWitness(scriptPubKey);
-    }
-    if (bScriptHash) {
-        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+    %>
+    if (bScriptHash) <%
+        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) <%
             throw std::runtime_error(strprintf(
                         "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
-        }
+        %>
         // Get the ID for the script, and then construct a P2SH destination for it.
         scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
-    }
+    %>
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
-}
+%>
 
 static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strInput)
-{
+<%
     CAmount value = 0;
 
     // separate [VALUE:]DATA in string
@@ -414,10 +414,10 @@ static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strIn
     if (pos==0)
         throw std::runtime_error("TX output value not specified");
 
-    if (pos != std::string::npos) {
+    if (pos != std::string::npos) <%
         // Extract and validate VALUE
         value = ExtractAndValidateValue(strInput.substr(0, pos));
-    }
+    %>
 
     // extract and validate DATA
     std::string strData = strInput.substr(pos + 1, std::string::npos);
@@ -429,10 +429,10 @@ static void MutateTxAddOutData(CMutableTransaction& tx, const std::string& strIn
 
     CTxOut txout(value, CScript() << OP_RETURN << data);
     tx.vout.push_back(txout);
-}
+%>
 
 static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& strInput)
-{
+<%
     // separate VALUE:SCRIPT[:FLAGS]
     std::vector<std::string> vStrInputParts;
     boost::split(vStrInputParts, strInput, boost::is_any_of(":"));
@@ -449,86 +449,86 @@ static void MutateTxAddOutScript(CMutableTransaction& tx, const std::string& str
     // Extract FLAGS
     bool bSegWit = false;
     bool bScriptHash = false;
-    if (vStrInputParts.size() == 3) {
+    if (vStrInputParts.size() == 3) <%
         std::string flags = vStrInputParts.back();
         bSegWit = (flags.find('W') != std::string::npos);
         bScriptHash = (flags.find('S') != std::string::npos);
-    }
+    %>
 
-    if (scriptPubKey.size() > MAX_SCRIPT_SIZE) {
+    if (scriptPubKey.size() > MAX_SCRIPT_SIZE) <%
         throw std::runtime_error(strprintf(
                     "script exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_SIZE));
-    }
+    %>
 
-    if (bSegWit) {
+    if (bSegWit) <%
         scriptPubKey = GetScriptForWitness(scriptPubKey);
-    }
-    if (bScriptHash) {
-        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+    %>
+    if (bScriptHash) <%
+        if (scriptPubKey.size() > MAX_SCRIPT_ELEMENT_SIZE) <%
             throw std::runtime_error(strprintf(
                         "redeemScript exceeds size limit: %d > %d", scriptPubKey.size(), MAX_SCRIPT_ELEMENT_SIZE));
-        }
+        %>
         scriptPubKey = GetScriptForDestination(CScriptID(scriptPubKey));
-    }
+    %>
 
     // construct TxOut, append to transaction output list
     CTxOut txout(value, scriptPubKey);
     tx.vout.push_back(txout);
-}
+%>
 
 static void MutateTxDelInput(CMutableTransaction& tx, const std::string& strInIdx)
-{
+<%
     // parse requested deletion index
     int64_t inIdx;
-    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) {
+    if (!ParseInt64(strInIdx, &inIdx) || inIdx < 0 || inIdx >= static_cast<int64_t>(tx.vin.size())) <%
         throw std::runtime_error("Invalid TX input index '" + strInIdx + "'");
-    }
+    %>
 
     // delete input from transaction
     tx.vin.erase(tx.vin.begin() + inIdx);
-}
+%>
 
 static void MutateTxDelOutput(CMutableTransaction& tx, const std::string& strOutIdx)
-{
+<%
     // parse requested deletion index
     int64_t outIdx;
-    if (!ParseInt64(strOutIdx, &outIdx) || outIdx < 0 || outIdx >= static_cast<int64_t>(tx.vout.size())) {
+    if (!ParseInt64(strOutIdx, &outIdx) || outIdx < 0 || outIdx >= static_cast<int64_t>(tx.vout.size())) <%
         throw std::runtime_error("Invalid TX output index '" + strOutIdx + "'");
-    }
+    %>
 
     // delete output from transaction
     tx.vout.erase(tx.vout.begin() + outIdx);
-}
+%>
 
 static const unsigned int N_SIGHASH_OPTS = 6;
-static const struct {
+static const struct <%
     const char *flagStr;
     int flags;
-} sighashOptions[N_SIGHASH_OPTS] = {
-    {"ALL", SIGHASH_ALL},
-    {"NONE", SIGHASH_NONE},
-    {"SINGLE", SIGHASH_SINGLE},
-    {"ALL|ANYONECANPAY", SIGHASH_ALL|SIGHASH_ANYONECANPAY},
-    {"NONE|ANYONECANPAY", SIGHASH_NONE|SIGHASH_ANYONECANPAY},
-    {"SINGLE|ANYONECANPAY", SIGHASH_SINGLE|SIGHASH_ANYONECANPAY},
-};
+%> sighashOptions[N_SIGHASH_OPTS] = <%
+    <%"ALL", SIGHASH_ALL%>,
+    <%"NONE", SIGHASH_NONE%>,
+    <%"SINGLE", SIGHASH_SINGLE%>,
+    <%"ALL|ANYONECANPAY", SIGHASH_ALL|SIGHASH_ANYONECANPAY%>,
+    <%"NONE|ANYONECANPAY", SIGHASH_NONE|SIGHASH_ANYONECANPAY%>,
+    <%"SINGLE|ANYONECANPAY", SIGHASH_SINGLE|SIGHASH_ANYONECANPAY%>,
+%>;
 
 static bool findSighashFlags(int& flags, const std::string& flagStr)
-{
+<%
     flags = 0;
 
-    for (unsigned int i = 0; i < N_SIGHASH_OPTS; i++) {
-        if (flagStr == sighashOptions[i].flagStr) {
+    for (unsigned int i = 0; i < N_SIGHASH_OPTS; i++) <%
+        if (flagStr == sighashOptions[i].flagStr) <%
             flags = sighashOptions[i].flags;
             return true;
-        }
-    }
+        %>
+    %>
 
     return false;
-}
+%>
 
 static CAmount AmountFromValue(const UniValue& value)
-{
+<%
     if (!value.isNum() && !value.isStr())
         throw std::runtime_error("Amount is not a number or string");
     CAmount amount;
@@ -537,10 +537,10 @@ static CAmount AmountFromValue(const UniValue& value)
     if (!MoneyRange(amount))
         throw std::runtime_error("Amount out of range");
     return amount;
-}
+%>
 
 static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
-{
+<%
     int nHashType = SIGHASH_ALL;
 
     if (flagStr.size() > 0)
@@ -549,8 +549,8 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
     // mergedTx will end up with all the signatures; it
     // starts as a clone of the raw tx:
-    CMutableTransaction mergedTx{tx};
-    const CMutableTransaction txv{tx};
+    CMutableTransaction mergedTx<%tx%>;
+    const CMutableTransaction txv<%tx%>;
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
 
@@ -559,38 +559,38 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
     CBasicKeyStore tempKeystore;
     UniValue keysObj = registers["privatekeys"];
 
-    for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
+    for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) <%
         if (!keysObj[kidx].isStr())
             throw std::runtime_error("privatekey not a std::string");
         CKey key = DecodeSecret(keysObj[kidx].getValStr());
-        if (!key.IsValid()) {
+        if (!key.IsValid()) <%
             throw std::runtime_error("privatekey not valid");
-        }
+        %>
         tempKeystore.AddKey(key);
-    }
+    %>
 
     // Add previous txouts given in the RPC call:
     if (!registers.count("prevtxs"))
         throw std::runtime_error("prevtxs register variable must be set.");
     UniValue prevtxsObj = registers["prevtxs"];
-    {
-        for (unsigned int previdx = 0; previdx < prevtxsObj.size(); previdx++) {
+    <%
+        for (unsigned int previdx = 0; previdx < prevtxsObj.size(); previdx++) <%
             UniValue prevOut = prevtxsObj[previdx];
             if (!prevOut.isObject())
                 throw std::runtime_error("expected prevtxs internal object");
 
-            std::map<std::string, UniValue::VType> types = {
-                {"txid", UniValue::VSTR},
-                {"vout", UniValue::VNUM},
-                {"scriptPubKey", UniValue::VSTR},
-            };
+            std::map<std::string, UniValue::VType> types = <%
+                <%"txid", UniValue::VSTR%>,
+                <%"vout", UniValue::VNUM%>,
+                <%"scriptPubKey", UniValue::VSTR%>,
+            %>;
             if (!prevOut.checkObject(types))
                 throw std::runtime_error("prevtxs internal object typecheck fail");
 
             uint256 txid;
-            if (!ParseHashStr(prevOut["txid"].get_str(), txid)) {
+            if (!ParseHashStr(prevOut["txid"].get_str(), txid)) <%
                 throw std::runtime_error("txid must be hexadecimal string (not '" + prevOut["txid"].get_str() + "')");
-            }
+            %>
 
             const int nOut = prevOut["vout"].get_int();
             if (nOut < 0)
@@ -600,47 +600,47 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             std::vector<unsigned char> pkData(ParseHexUV(prevOut["scriptPubKey"], "scriptPubKey"));
             CScript scriptPubKey(pkData.begin(), pkData.end());
 
-            {
+            <%
                 const Coin& coin = view.AccessCoin(out);
-                if (!coin.IsSpent() && coin.out.scriptPubKey != scriptPubKey) {
+                if (!coin.IsSpent() && coin.out.scriptPubKey != scriptPubKey) <%
                     std::string err("Previous output scriptPubKey mismatch:\n");
                     err = err + ScriptToAsmStr(coin.out.scriptPubKey) + "\nvs:\n"+
                         ScriptToAsmStr(scriptPubKey);
                     throw std::runtime_error(err);
-                }
+                %>
                 Coin newcoin;
                 newcoin.out.scriptPubKey = scriptPubKey;
                 newcoin.out.nValue = 0;
-                if (prevOut.exists("amount")) {
+                if (prevOut.exists("amount")) <%
                     newcoin.out.nValue = AmountFromValue(prevOut["amount"]);
-                }
+                %>
                 newcoin.nHeight = 1;
                 view.AddCoin(out, std::move(newcoin), true);
-            }
+            %>
 
             // if redeemScript given and private keys given,
             // add redeemScript to the tempKeystore so it can be signed:
             if ((scriptPubKey.IsPayToScriptHash() || scriptPubKey.IsPayToWitnessScriptHash()) &&
-                prevOut.exists("redeemScript")) {
+                prevOut.exists("redeemScript")) <%
                 UniValue v = prevOut["redeemScript"];
                 std::vector<unsigned char> rsData(ParseHexUV(v, "redeemScript"));
                 CScript redeemScript(rsData.begin(), rsData.end());
                 tempKeystore.AddCScript(redeemScript);
-            }
-        }
-    }
+            %>
+        %>
+    %>
 
     const CKeyStore& keystore = tempKeystore;
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
     // Sign what we can:
-    for (unsigned int i = 0; i < mergedTx.vin.size(); i++) {
+    for (unsigned int i = 0; i < mergedTx.vin.size(); i++) <%
         CTxIn& txin = mergedTx.vin[i];
         const Coin& coin = view.AccessCoin(txin.prevout);
-        if (coin.IsSpent()) {
+        if (coin.IsSpent()) <%
             continue;
-        }
+        %>
         const CScript& prevPubKey = coin.out.scriptPubKey;
         const CAmount& amount = coin.out.nValue;
 
@@ -650,36 +650,36 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
             ProduceSignature(keystore, MutableTransactionSignatureCreator(&mergedTx, i, amount, nHashType), prevPubKey, sigdata);
 
         UpdateInput(txin, sigdata);
-    }
+    %>
 
     tx = mergedTx;
-}
+%>
 
 class Secp256k1Init
-{
+<%
     ECCVerifyHandle globalVerifyHandle;
 
 public:
-    Secp256k1Init() {
+    Secp256k1Init() <%
         ECC_Start();
-    }
-    ~Secp256k1Init() {
+    %>
+    ~Secp256k1Init() <%
         ECC_Stop();
-    }
-};
+    %>
+%>;
 
 static void MutateTx(CMutableTransaction& tx, const std::string& command,
                      const std::string& commandVal)
-{
+<%
     std::unique_ptr<Secp256k1Init> ecc;
 
     if (command == "nversion")
         MutateTxVersion(tx, commandVal);
     else if (command == "locktime")
         MutateTxLocktime(tx, commandVal);
-    else if (command == "replaceable") {
+    else if (command == "replaceable") <%
         MutateTxRBFOptIn(tx, commandVal);
-    }
+    %>
 
     else if (command == "delin")
         MutateTxDelInput(tx, commandVal);
@@ -690,21 +690,21 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
         MutateTxDelOutput(tx, commandVal);
     else if (command == "outaddr")
         MutateTxAddOutAddr(tx, commandVal);
-    else if (command == "outpubkey") {
+    else if (command == "outpubkey") <%
         ecc.reset(new Secp256k1Init());
         MutateTxAddOutPubKey(tx, commandVal);
-    } else if (command == "outmultisig") {
+    %> else if (command == "outmultisig") <%
         ecc.reset(new Secp256k1Init());
         MutateTxAddOutMultiSig(tx, commandVal);
-    } else if (command == "outscript")
+    %> else if (command == "outscript")
         MutateTxAddOutScript(tx, commandVal);
     else if (command == "outdata")
         MutateTxAddOutData(tx, commandVal);
 
-    else if (command == "sign") {
+    else if (command == "sign") <%
         ecc.reset(new Secp256k1Init());
         MutateTxSign(tx, commandVal);
-    }
+    %>
 
     else if (command == "load")
         RegisterLoad(commandVal);
@@ -714,52 +714,52 @@ static void MutateTx(CMutableTransaction& tx, const std::string& command,
 
     else
         throw std::runtime_error("unknown command");
-}
+%>
 
 static void OutputTxJSON(const CTransaction& tx)
-{
+<%
     UniValue entry(UniValue::VOBJ);
     TxToUniv(tx, uint256(), entry);
 
     std::string jsonOutput = entry.write(4);
     fprintf(stdout, "%s\n", jsonOutput.c_str());
-}
+%>
 
 static void OutputTxHash(const CTransaction& tx)
-{
+<%
     std::string strHexHash = tx.GetHash().GetHex(); // the hex-encoded transaction hash (aka the transaction id)
 
     fprintf(stdout, "%s\n", strHexHash.c_str());
-}
+%>
 
 static void OutputTxHex(const CTransaction& tx)
-{
+<%
     std::string strHex = EncodeHexTx(tx);
 
     fprintf(stdout, "%s\n", strHex.c_str());
-}
+%>
 
 static void OutputTx(const CTransaction& tx)
-{
+<%
     if (gArgs.GetBoolArg("-json", false))
         OutputTxJSON(tx);
     else if (gArgs.GetBoolArg("-txid", false))
         OutputTxHash(tx);
     else
         OutputTxHex(tx);
-}
+%>
 
 static std::string readStdin()
-{
+<%
     char buf[4096];
     std::string ret;
 
-    while (!feof(stdin)) {
+    while (!feof(stdin)) <%
         size_t bread = fread(buf, 1, sizeof(buf), stdin);
         ret.append(buf, bread);
         if (bread < sizeof(buf))
             break;
-    }
+    %>
 
     if (ferror(stdin))
         throw std::runtime_error("error reading stdin");
@@ -767,24 +767,24 @@ static std::string readStdin()
     boost::algorithm::trim_right(ret);
 
     return ret;
-}
+%>
 
 static int CommandLineRawTx(int argc, char* argv[])
-{
+<%
     std::string strPrint;
     int nRet = 0;
-    try {
+    try <%
         // Skip switches; Permit common stdin convention "-"
         while (argc > 1 && IsSwitchChar(argv[1][0]) &&
-               (argv[1][1] != 0)) {
+               (argv[1][1] != 0)) <%
             argc--;
             argv++;
-        }
+        %>
 
         CMutableTransaction tx;
         int startArg;
 
-        if (!fCreateBlank) {
+        if (!fCreateBlank) <%
             // require at least one param
             if (argc < 2)
                 throw std::runtime_error("too few parameters");
@@ -798,65 +798,65 @@ static int CommandLineRawTx(int argc, char* argv[])
                 throw std::runtime_error("invalid transaction encoding");
 
             startArg = 2;
-        } else
+        %> else
             startArg = 1;
 
-        for (int i = startArg; i < argc; i++) {
+        for (int i = startArg; i < argc; i++) <%
             std::string arg = argv[i];
             std::string key, value;
             size_t eqpos = arg.find('=');
             if (eqpos == std::string::npos)
                 key = arg;
-            else {
+            else <%
                 key = arg.substr(0, eqpos);
                 value = arg.substr(eqpos + 1);
-            }
+            %>
 
             MutateTx(tx, key, value);
-        }
+        %>
 
         OutputTx(CTransaction(tx));
-    }
-    catch (const std::exception& e) {
+    %>
+    catch (const std::exception& e) <%
         strPrint = std::string("error: ") + e.what();
         nRet = EXIT_FAILURE;
-    }
-    catch (...) {
+    %>
+    catch (...) <%
         PrintExceptionContinue(nullptr, "CommandLineRawTx()");
         throw;
-    }
+    %>
 
-    if (strPrint != "") {
+    if (strPrint != "") <%
         fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
-    }
+    %>
     return nRet;
-}
+%>
 
 int main(int argc, char* argv[])
-{
+<%
     SetupEnvironment();
 
-    try {
+    try <%
         int ret = AppInitRawTx(argc, argv);
         if (ret != CONTINUE_EXECUTION)
             return ret;
-    }
-    catch (const std::exception& e) {
+    %>
+    catch (const std::exception& e) <%
         PrintExceptionContinue(&e, "AppInitRawTx()");
         return EXIT_FAILURE;
-    } catch (...) {
+    %> catch (...) <%
         PrintExceptionContinue(nullptr, "AppInitRawTx()");
         return EXIT_FAILURE;
-    }
+    %>
 
     int ret = EXIT_FAILURE;
-    try {
+    try <%
         ret = CommandLineRawTx(argc, argv);
-    }
-    catch (const std::exception& e) {
+    %>
+    catch (const std::exception& e) <%
         PrintExceptionContinue(&e, "CommandLineRawTx()");
-    } catch (...) {
+    %> catch (...) <%
         PrintExceptionContinue(nullptr, "CommandLineRawTx()");
-    }
+    %>
     return ret;
-}
+%>

@@ -20,16 +20,16 @@ static const size_t DBWRAPPER_PREALLOC_KEY_SIZE = 64;
 static const size_t DBWRAPPER_PREALLOC_VALUE_SIZE = 1024;
 
 class dbwrapper_error : public std::runtime_error
-{
+<%
 public:
-    explicit dbwrapper_error(const std::string& msg) : std::runtime_error(msg) {}
-};
+    explicit dbwrapper_error(const std::string& msg) : std::runtime_error(msg) <%%>
+%>;
 
 class CDBWrapper;
 
 /** These should be considered an implementation detail of the specific database.
  */
-namespace dbwrapper_private {
+namespace dbwrapper_private <%
 
 /** Handle database error by throwing dbwrapper_error exception.
  */
@@ -41,11 +41,11 @@ void HandleError(const leveldb::Status& status);
  */
 const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
 
-};
+%>;
 
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch
-{
+<%
     friend class CDBWrapper;
 
 private:
@@ -61,17 +61,17 @@ public:
     /**
      * @param[in] _parent   CDBWrapper that this batch is to be submitted to
      */
-    explicit CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION), size_estimate(0) { };
+    explicit CDBBatch(const CDBWrapper &_parent) : parent(_parent), ssKey(SER_DISK, CLIENT_VERSION), ssValue(SER_DISK, CLIENT_VERSION), size_estimate(0) <% %>;
 
     void Clear()
-    {
+    <%
         batch.Clear();
         size_estimate = 0;
-    }
+    %>
 
     template <typename K, typename V>
     void Write(const K& key, const V& value)
-    {
+    <%
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
@@ -92,11 +92,11 @@ public:
         size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
         ssKey.clear();
         ssValue.clear();
-    }
+    %>
 
     template <typename K>
     void Erase(const K& key)
-    {
+    <%
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
@@ -109,13 +109,13 @@ public:
         // The formula below assumes the key is less than 16kB.
         size_estimate += 2 + (slKey.size() > 127) + slKey.size();
         ssKey.clear();
-    }
+    %>
 
-    size_t SizeEstimate() const { return size_estimate; }
-};
+    size_t SizeEstimate() const <% return size_estimate; %>
+%>;
 
 class CDBIterator
-{
+<%
 private:
     const CDBWrapper &parent;
     leveldb::Iterator *piter;
@@ -127,54 +127,54 @@ public:
      * @param[in] _piter           The original leveldb iterator.
      */
     CDBIterator(const CDBWrapper &_parent, leveldb::Iterator *_piter) :
-        parent(_parent), piter(_piter) { };
+        parent(_parent), piter(_piter) <% %>;
     ~CDBIterator();
 
     bool Valid() const;
 
     void SeekToFirst();
 
-    template<typename K> void Seek(const K& key) {
+    template<typename K> void Seek(const K& key) <%
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
         piter->Seek(slKey);
-    }
+    %>
 
     void Next();
 
-    template<typename K> bool GetKey(K& key) {
+    template<typename K> bool GetKey(K& key) <%
         leveldb::Slice slKey = piter->key();
-        try {
+        try <%
             CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
             ssKey >> key;
-        } catch (const std::exception&) {
+        %> catch (const std::exception&) <%
             return false;
-        }
+        %>
         return true;
-    }
+    %>
 
-    template<typename V> bool GetValue(V& value) {
+    template<typename V> bool GetValue(V& value) <%
         leveldb::Slice slValue = piter->value();
-        try {
+        try <%
             CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
-        } catch (const std::exception&) {
+        %> catch (const std::exception&) <%
             return false;
-        }
+        %>
         return true;
-    }
+    %>
 
-    unsigned int GetValueSize() {
+    unsigned int GetValueSize() <%
         return piter->value().size();
-    }
+    %>
 
-};
+%>;
 
 class CDBWrapper
-{
+<%
     friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
 private:
     //! custom environment this database is using (may be nullptr in case of default environment)
@@ -229,7 +229,7 @@ public:
 
     template <typename K, typename V>
     bool Read(const K& key, V& value) const
-    {
+    <%
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
@@ -237,33 +237,33 @@ public:
 
         std::string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
+        if (!status.ok()) <%
             if (status.IsNotFound())
                 return false;
             LogPrintf("LevelDB read failure: %s\n", status.ToString());
             dbwrapper_private::HandleError(status);
-        }
-        try {
+        %>
+        try <%
             CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue.Xor(obfuscate_key);
             ssValue >> value;
-        } catch (const std::exception&) {
+        %> catch (const std::exception&) <%
             return false;
-        }
+        %>
         return true;
-    }
+    %>
 
     template <typename K, typename V>
     bool Write(const K& key, const V& value, bool fSync = false)
-    {
+    <%
         CDBBatch batch(*this);
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
-    }
+    %>
 
     template <typename K>
     bool Exists(const K& key) const
-    {
+    <%
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
@@ -271,22 +271,22 @@ public:
 
         std::string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
+        if (!status.ok()) <%
             if (status.IsNotFound())
                 return false;
             LogPrintf("LevelDB read failure: %s\n", status.ToString());
             dbwrapper_private::HandleError(status);
-        }
+        %>
         return true;
-    }
+    %>
 
     template <typename K>
     bool Erase(const K& key, bool fSync = false)
-    {
+    <%
         CDBBatch batch(*this);
         batch.Erase(key);
         return WriteBatch(batch, fSync);
-    }
+    %>
 
     bool WriteBatch(CDBBatch& batch, bool fSync = false);
 
@@ -295,20 +295,20 @@ public:
 
     // not available for LevelDB; provide for compatibility with BDB
     bool Flush()
-    {
+    <%
         return true;
-    }
+    %>
 
     bool Sync()
-    {
+    <%
         CDBBatch batch(*this);
         return WriteBatch(batch, true);
-    }
+    %>
 
     CDBIterator *NewIterator()
-    {
+    <%
         return new CDBIterator(*this, pdb->NewIterator(iteroptions));
-    }
+    %>
 
     /**
      * Return true if the database managed by this class contains no entries.
@@ -317,7 +317,7 @@ public:
 
     template<typename K>
     size_t EstimateSize(const K& key_begin, const K& key_end) const
-    {
+    <%
         CDataStream ssKey1(SER_DISK, CLIENT_VERSION), ssKey2(SER_DISK, CLIENT_VERSION);
         ssKey1.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey2.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
@@ -329,14 +329,14 @@ public:
         leveldb::Range range(slKey1, slKey2);
         pdb->GetApproximateSizes(&range, 1, &size);
         return size;
-    }
+    %>
 
     /**
      * Compact a certain range of keys in the database.
      */
     template<typename K>
     void CompactRange(const K& key_begin, const K& key_end) const
-    {
+    <%
         CDataStream ssKey1(SER_DISK, CLIENT_VERSION), ssKey2(SER_DISK, CLIENT_VERSION);
         ssKey1.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey2.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
@@ -345,8 +345,8 @@ public:
         leveldb::Slice slKey1(ssKey1.data(), ssKey1.size());
         leveldb::Slice slKey2(ssKey2.data(), ssKey2.size());
         pdb->CompactRange(&slKey1, &slKey2);
-    }
+    %>
 
-};
+%>;
 
 #endif // BITCOIN_DBWRAPPER_H

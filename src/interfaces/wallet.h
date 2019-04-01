@@ -29,7 +29,7 @@ enum class FeeReason;
 enum class OutputType;
 struct CRecipient;
 
-namespace interfaces {
+namespace interfaces <%
 
 class Handler;
 class PendingWalletTx;
@@ -44,9 +44,9 @@ using WalletValueMap = std::map<std::string, std::string>;
 
 //! Interface for accessing a wallet.
 class Wallet
-{
+<%
 public:
-    virtual ~Wallet() {}
+    virtual ~Wallet() <%%>
 
     //! Encrypt wallet.
     virtual bool encryptWallet(const SecureString& wallet_passphrase) = 0;
@@ -281,13 +281,13 @@ public:
     //! Register handler for keypool changed messages.
     using CanGetAddressesChangedFn = std::function<void()>;
     virtual std::unique_ptr<Handler> handleCanGetAddressesChanged(CanGetAddressesChangedFn fn) = 0;
-};
+%>;
 
 //! Tracking object returned by CreateTransaction and passed to CommitTransaction.
 class PendingWalletTx
-{
+<%
 public:
-    virtual ~PendingWalletTx() {}
+    virtual ~PendingWalletTx() <%%>
 
     //! Get transaction data.
     virtual const CTransaction& get() = 0;
@@ -296,11 +296,11 @@ public:
     virtual bool commit(WalletValueMap value_map,
         WalletOrderForm order_form,
         std::string& reject_reason) = 0;
-};
+%>;
 
 //! Information about one wallet address.
 struct WalletAddress
-{
+<%
     CTxDestination dest;
     isminetype is_mine;
     std::string name;
@@ -308,13 +308,13 @@ struct WalletAddress
 
     WalletAddress(CTxDestination dest, isminetype is_mine, std::string name, std::string purpose)
         : dest(std::move(dest)), is_mine(is_mine), name(std::move(name)), purpose(std::move(purpose))
-    {
-    }
-};
+    <%
+    %>
+%>;
 
 //! Collection of wallet balances.
 struct WalletBalances
-{
+<%
     CAmount balance = 0;
     CAmount unconfirmed_balance = 0;
     CAmount immature_balance = 0;
@@ -324,17 +324,17 @@ struct WalletBalances
     CAmount immature_watch_only_balance = 0;
 
     bool balanceChanged(const WalletBalances& prev) const
-    {
+    <%
         return balance != prev.balance || unconfirmed_balance != prev.unconfirmed_balance ||
                immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
                immature_watch_only_balance != prev.immature_watch_only_balance;
-    }
-};
+    %>
+%>;
 
 // Wallet transaction information.
 struct WalletTx
-{
+<%
     CTransactionRef tx;
     std::vector<isminetype> txin_is_mine;
     std::vector<isminetype> txout_is_mine;
@@ -346,11 +346,11 @@ struct WalletTx
     int64_t time;
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
-};
+%>;
 
 //! Updated transaction status.
 struct WalletTxStatus
-{
+<%
     int block_height;
     int blocks_to_maturity;
     int depth_in_main_chain;
@@ -361,21 +361,21 @@ struct WalletTxStatus
     bool is_abandoned;
     bool is_coinbase;
     bool is_in_main_chain;
-};
+%>;
 
 //! Wallet transaction output.
 struct WalletTxOut
-{
+<%
     CTxOut txout;
     int64_t time;
     int depth_in_main_chain = -1;
     bool is_spent = false;
-};
+%>;
 
 //! Return implementation of Wallet interface. This function is defined in
 //! dummywallet.cpp and throws if the wallet component is not compiled.
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
 
-} // namespace interfaces
+%> // namespace interfaces
 
 #endif // BITCOIN_INTERFACES_WALLET_H

@@ -8,7 +8,7 @@
 #include <memory>
 
 class CAppNapInhibitor final
-{
+<%
 public:
     explicit CAppNapInhibitor();
     ~CAppNapInhibitor();
@@ -19,6 +19,6 @@ public:
 private:
     class CAppNapImpl;
     std::unique_ptr<CAppNapImpl> impl;
-};
+%>;
 
 #endif // BITCOIN_QT_MACOS_APPNAP_H

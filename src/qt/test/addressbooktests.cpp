@@ -22,7 +22,7 @@
 #include <QMessageBox>
 
 namespace
-{
+<%
 
 /**
  * Fill the edit address dialog box with data, submit it, and ensure that
@@ -31,7 +31,7 @@ namespace
 void EditAddressAndSubmit(
         EditAddressDialog* dialog,
         const QString& label, const QString& address, QString expected_msg)
-{
+<%
     QString warning_text;
 
     dialog->findChild<QLineEdit*>("labelEdit")->setText(label);
@@ -40,7 +40,7 @@ void EditAddressAndSubmit(
     ConfirmMessage(&warning_text, 5);
     dialog->accept();
     QCOMPARE(warning_text, expected_msg);
-}
+%>
 
 /**
  * Test adding various send addresses to the address book.
@@ -55,21 +55,21 @@ void EditAddressAndSubmit(
  * the warning message presented to the user.
  */
 void TestAddAddressesToSendBook()
-{
+<%
     TestChain100Setup test;
     auto chain = interfaces::MakeChain();
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
     bool firstRun;
     wallet->LoadWallet(firstRun);
 
-    auto build_address = [&wallet]() {
+    auto build_address = [&wallet]() <%
         CKey key;
         key.MakeNewKey(true);
         CTxDestination dest(GetDestinationForKey(
             key.GetPubKey(), wallet->m_default_address_type));
 
         return std::make_pair(dest, QString::fromStdString(EncodeDestination(dest)));
-    };
+    %>;
 
     CTxDestination r_key_dest, s_key_dest;
 
@@ -88,16 +88,16 @@ void TestAddAddressesToSendBook()
     std::tie(s_key_dest, preexisting_s_address) = build_address();
     std::tie(std::ignore, new_address) = build_address();
 
-    {
+    <%
         LOCK(wallet->cs_wallet);
         wallet->SetAddressBook(r_key_dest, r_label.toStdString(), "receive");
         wallet->SetAddressBook(s_key_dest, s_label.toStdString(), "send");
-    }
+    %>
 
-    auto check_addbook_size = [&wallet](int expected_size) {
+    auto check_addbook_size = [&wallet](int expected_size) <%
         LOCK(wallet->cs_wallet);
         QCOMPARE(static_cast<int>(wallet->mapAddressBook.size()), expected_size);
-    };
+    %>;
 
     // We should start with the two addresses we added earlier and nothing else.
     check_addbook_size(2);
@@ -136,14 +136,14 @@ void TestAddAddressesToSendBook()
         &editAddressDialog, QString("new"), new_address, QString(""));
 
     check_addbook_size(3);
-}
+%>
 
-} // namespace
+%> // namespace
 
 void AddressBookTests::addressBookTests()
-{
+<%
 #ifdef Q_OS_MAC
-    if (QApplication::platformName() == "minimal") {
+    if (QApplication::platformName() == "minimal") <%
         // Disable for mac on "minimal" platform to avoid crashes inside the Qt
         // framework when it tries to look up unimplemented cocoa functions,
         // and fails to handle returned nulls
@@ -151,7 +151,7 @@ void AddressBookTests::addressBookTests()
         QWARN("Skipping AddressBookTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
               "with 'test_bitcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
         return;
-    }
+    %>
 #endif
     TestAddAddressesToSendBook();
-}
+%>

@@ -11,24 +11,24 @@
 #include <QList>
 #include <QString>
 
-namespace interfaces {
+namespace interfaces <%
 class Node;
 class Wallet;
 struct WalletTx;
 struct WalletTxStatus;
-}
+%>
 
 /** UI model for transaction status. The transaction status is the part of a transaction that will change over time.
  */
 class TransactionStatus
-{
+<%
 public:
     TransactionStatus():
         countsForBalance(false), sortKey(""),
         matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1)
-    { }
+    <% %>
 
-    enum Status {
+    enum Status <%
         Confirmed,          /**< Have 6 or more confirmations (normal tx) or fully mature (mined tx) **/
         /// Normal (sent/received) transactions
         OpenUntilDate,      /**< Transaction not yet final, waiting for date */
@@ -40,7 +40,7 @@ public:
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
         NotAccepted         /**< Mined but not accepted */
-    };
+    %>;
 
     /// Transaction counts towards available balance
     bool countsForBalance;
@@ -65,16 +65,16 @@ public:
     int cur_num_blocks;
 
     bool needsUpdate;
-};
+%>;
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
     multiple outputs.
  */
 class TransactionRecord
-{
+<%
 public:
     enum Type
-    {
+    <%
         Other,
         Generated,
         SendToAddress,
@@ -82,29 +82,29 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf
-    };
+    %>;
 
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
     TransactionRecord():
             hash(), time(0), type(Other), address(""), debit(0), credit(0), idx(0)
-    {
-    }
+    <%
+    %>
 
     TransactionRecord(uint256 _hash, qint64 _time):
             hash(_hash), time(_time), type(Other), address(""), debit(0),
             credit(0), idx(0)
-    {
-    }
+    <%
+    %>
 
     TransactionRecord(uint256 _hash, qint64 _time,
                 Type _type, const std::string &_address,
                 const CAmount& _debit, const CAmount& _credit):
             hash(_hash), time(_time), type(_type), address(_address), debit(_debit), credit(_credit),
             idx(0)
-    {
-    }
+    <%
+    %>
 
     /** Decompose CWallet transaction to model transaction records.
      */
@@ -143,6 +143,6 @@ public:
     /** Return whether a status update is needed.
      */
     bool statusUpdateNeeded(int numBlocks) const;
-};
+%>;
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

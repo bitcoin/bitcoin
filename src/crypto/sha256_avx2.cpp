@@ -6,42 +6,42 @@
 #include <crypto/sha256.h>
 #include <crypto/common.h>
 
-namespace sha256d64_avx2 {
-namespace {
+namespace sha256d64_avx2 <%
+namespace <%
 
-__m256i inline K(uint32_t x) { return _mm256_set1_epi32(x); }
+__m256i inline K(uint32_t x) <% return _mm256_set1_epi32(x); %>
 
-__m256i inline Add(__m256i x, __m256i y) { return _mm256_add_epi32(x, y); }
-__m256i inline Add(__m256i x, __m256i y, __m256i z) { return Add(Add(x, y), z); }
-__m256i inline Add(__m256i x, __m256i y, __m256i z, __m256i w) { return Add(Add(x, y), Add(z, w)); }
-__m256i inline Add(__m256i x, __m256i y, __m256i z, __m256i w, __m256i v) { return Add(Add(x, y, z), Add(w, v)); }
-__m256i inline Inc(__m256i& x, __m256i y) { x = Add(x, y); return x; }
-__m256i inline Inc(__m256i& x, __m256i y, __m256i z) { x = Add(x, y, z); return x; }
-__m256i inline Inc(__m256i& x, __m256i y, __m256i z, __m256i w) { x = Add(x, y, z, w); return x; }
-__m256i inline Xor(__m256i x, __m256i y) { return _mm256_xor_si256(x, y); }
-__m256i inline Xor(__m256i x, __m256i y, __m256i z) { return Xor(Xor(x, y), z); }
-__m256i inline Or(__m256i x, __m256i y) { return _mm256_or_si256(x, y); }
-__m256i inline And(__m256i x, __m256i y) { return _mm256_and_si256(x, y); }
-__m256i inline ShR(__m256i x, int n) { return _mm256_srli_epi32(x, n); }
-__m256i inline ShL(__m256i x, int n) { return _mm256_slli_epi32(x, n); }
+__m256i inline Add(__m256i x, __m256i y) <% return _mm256_add_epi32(x, y); %>
+__m256i inline Add(__m256i x, __m256i y, __m256i z) <% return Add(Add(x, y), z); %>
+__m256i inline Add(__m256i x, __m256i y, __m256i z, __m256i w) <% return Add(Add(x, y), Add(z, w)); %>
+__m256i inline Add(__m256i x, __m256i y, __m256i z, __m256i w, __m256i v) <% return Add(Add(x, y, z), Add(w, v)); %>
+__m256i inline Inc(__m256i& x, __m256i y) <% x = Add(x, y); return x; %>
+__m256i inline Inc(__m256i& x, __m256i y, __m256i z) <% x = Add(x, y, z); return x; %>
+__m256i inline Inc(__m256i& x, __m256i y, __m256i z, __m256i w) <% x = Add(x, y, z, w); return x; %>
+__m256i inline Xor(__m256i x, __m256i y) <% return _mm256_xor_si256(x, y); %>
+__m256i inline Xor(__m256i x, __m256i y, __m256i z) <% return Xor(Xor(x, y), z); %>
+__m256i inline Or(__m256i x, __m256i y) <% return _mm256_or_si256(x, y); %>
+__m256i inline And(__m256i x, __m256i y) <% return _mm256_and_si256(x, y); %>
+__m256i inline ShR(__m256i x, int n) <% return _mm256_srli_epi32(x, n); %>
+__m256i inline ShL(__m256i x, int n) <% return _mm256_slli_epi32(x, n); %>
 
-__m256i inline Ch(__m256i x, __m256i y, __m256i z) { return Xor(z, And(x, Xor(y, z))); }
-__m256i inline Maj(__m256i x, __m256i y, __m256i z) { return Or(And(x, y), And(z, Or(x, y))); }
-__m256i inline Sigma0(__m256i x) { return Xor(Or(ShR(x, 2), ShL(x, 30)), Or(ShR(x, 13), ShL(x, 19)), Or(ShR(x, 22), ShL(x, 10))); }
-__m256i inline Sigma1(__m256i x) { return Xor(Or(ShR(x, 6), ShL(x, 26)), Or(ShR(x, 11), ShL(x, 21)), Or(ShR(x, 25), ShL(x, 7))); }
-__m256i inline sigma0(__m256i x) { return Xor(Or(ShR(x, 7), ShL(x, 25)), Or(ShR(x, 18), ShL(x, 14)), ShR(x, 3)); }
-__m256i inline sigma1(__m256i x) { return Xor(Or(ShR(x, 17), ShL(x, 15)), Or(ShR(x, 19), ShL(x, 13)), ShR(x, 10)); }
+__m256i inline Ch(__m256i x, __m256i y, __m256i z) <% return Xor(z, And(x, Xor(y, z))); %>
+__m256i inline Maj(__m256i x, __m256i y, __m256i z) <% return Or(And(x, y), And(z, Or(x, y))); %>
+__m256i inline Sigma0(__m256i x) <% return Xor(Or(ShR(x, 2), ShL(x, 30)), Or(ShR(x, 13), ShL(x, 19)), Or(ShR(x, 22), ShL(x, 10))); %>
+__m256i inline Sigma1(__m256i x) <% return Xor(Or(ShR(x, 6), ShL(x, 26)), Or(ShR(x, 11), ShL(x, 21)), Or(ShR(x, 25), ShL(x, 7))); %>
+__m256i inline sigma0(__m256i x) <% return Xor(Or(ShR(x, 7), ShL(x, 25)), Or(ShR(x, 18), ShL(x, 14)), ShR(x, 3)); %>
+__m256i inline sigma1(__m256i x) <% return Xor(Or(ShR(x, 17), ShL(x, 15)), Or(ShR(x, 19), ShL(x, 13)), ShR(x, 10)); %>
 
 /** One round of SHA-256. */
 void inline __attribute__((always_inline)) Round(__m256i a, __m256i b, __m256i c, __m256i& d, __m256i e, __m256i f, __m256i g, __m256i& h, __m256i k)
-{
+<%
     __m256i t1 = Add(h, Sigma1(e), Ch(e, f, g), k);
     __m256i t2 = Add(Sigma0(a), Maj(a, b, c));
     d = Add(d, t1);
     h = Add(t1, t2);
-}
+%>
 
-__m256i inline Read8(const unsigned char* chunk, int offset) {
+__m256i inline Read8(const unsigned char* chunk, int offset) <%
     __m256i ret = _mm256_set_epi32(
         ReadLE32(chunk + 0 + offset),
         ReadLE32(chunk + 64 + offset),
@@ -53,9 +53,9 @@ __m256i inline Read8(const unsigned char* chunk, int offset) {
         ReadLE32(chunk + 448 + offset)
     );
     return _mm256_shuffle_epi8(ret, _mm256_set_epi32(0x0C0D0E0FUL, 0x08090A0BUL, 0x04050607UL, 0x00010203UL, 0x0C0D0E0FUL, 0x08090A0BUL, 0x04050607UL, 0x00010203UL));
-}
+%>
 
-void inline Write8(unsigned char* out, int offset, __m256i v) {
+void inline Write8(unsigned char* out, int offset, __m256i v) <%
     v = _mm256_shuffle_epi8(v, _mm256_set_epi32(0x0C0D0E0FUL, 0x08090A0BUL, 0x04050607UL, 0x00010203UL, 0x0C0D0E0FUL, 0x08090A0BUL, 0x04050607UL, 0x00010203UL));
     WriteLE32(out + 0 + offset, _mm256_extract_epi32(v, 7));
     WriteLE32(out + 32 + offset, _mm256_extract_epi32(v, 6));
@@ -65,12 +65,12 @@ void inline Write8(unsigned char* out, int offset, __m256i v) {
     WriteLE32(out + 160 + offset, _mm256_extract_epi32(v, 2));
     WriteLE32(out + 192 + offset, _mm256_extract_epi32(v, 1));
     WriteLE32(out + 224 + offset, _mm256_extract_epi32(v, 0));
-}
+%>
 
-}
+%>
 
 void Transform_8way(unsigned char* out, const unsigned char* in)
-{
+<%
     // Transform 1
     __m256i a = K(0x6a09e667ul);
     __m256i b = K(0xbb67ae85ul);
@@ -318,8 +318,8 @@ void Transform_8way(unsigned char* out, const unsigned char* in)
     Write8(out, 20, Add(f, K(0x9b05688cul)));
     Write8(out, 24, Add(g, K(0x1f83d9abul)));
     Write8(out, 28, Add(h, K(0x5be0cd19ul)));
-}
+%>
 
-}
+%>
 
 #endif

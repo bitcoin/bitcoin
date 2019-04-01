@@ -32,7 +32,7 @@ QT_END_NAMESPACE
   current core state.
 */
 class WalletView : public QStackedWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -44,7 +44,7 @@ public:
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
     void setClientModel(ClientModel *clientModel);
-    WalletModel *getWalletModel() { return walletModel; }
+    WalletModel *getWalletModel() <% return walletModel; %>
     /** Set the wallet model.
         The wallet model represents a bitcoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
@@ -127,6 +127,6 @@ Q_SIGNALS:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName);
     /** Notify that the out of sync warning icon has been pressed */
     void outOfSyncWarningClicked();
-};
+%>;
 
 #endif // BITCOIN_QT_WALLETVIEW_H

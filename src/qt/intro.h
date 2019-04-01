@@ -13,20 +13,20 @@ static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 class FreespaceChecker;
 
-namespace interfaces {
+namespace interfaces <%
     class Node;
-}
+%>
 
-namespace Ui {
+namespace Ui <%
     class Intro;
-}
+%>
 
 /** Introduction screen (pre-GUI startup).
   Allows the user to choose a data directory,
   in which the wallet and block chain will be stored.
  */
 class Intro : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -79,6 +79,6 @@ private:
     QString getPathToCheck();
 
     friend class FreespaceChecker;
-};
+%>;
 
 #endif // BITCOIN_QT_INTRO_H

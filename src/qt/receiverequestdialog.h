@@ -12,9 +12,9 @@
 #include <QLabel>
 #include <QPainter>
 
-namespace Ui {
+namespace Ui <%
     class ReceiveRequestDialog;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QMenu;
@@ -24,7 +24,7 @@ QT_END_NAMESPACE
  * to disk.
  */
 class QRImageWidget : public QLabel
-{
+<%
     Q_OBJECT
 
 public:
@@ -41,10 +41,10 @@ protected:
 
 private:
     QMenu *contextMenu;
-};
+%>;
 
 class ReceiveRequestDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -64,6 +64,6 @@ private:
     Ui::ReceiveRequestDialog *ui;
     WalletModel *model;
     SendCoinsRecipient info;
-};
+%>;
 
 #endif // BITCOIN_QT_RECEIVEREQUESTDIALOG_H

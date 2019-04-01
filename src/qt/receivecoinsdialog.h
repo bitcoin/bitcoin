@@ -18,9 +18,9 @@
 class PlatformStyle;
 class WalletModel;
 
-namespace Ui {
+namespace Ui <%
     class ReceiveCoinsDialog;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -28,16 +28,16 @@ QT_END_NAMESPACE
 
 /** Dialog for requesting payment of bitcoins */
 class ReceiveCoinsDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
-    enum ColumnWidths {
+    enum ColumnWidths <%
         DATE_COLUMN_WIDTH = 130,
         LABEL_COLUMN_WIDTH = 120,
         AMOUNT_MINIMUM_COLUMN_WIDTH = 180,
         MINIMUM_COLUMN_WIDTH = 130
-    };
+    %>;
 
     explicit ReceiveCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
     ~ReceiveCoinsDialog();
@@ -75,6 +75,6 @@ private Q_SLOTS:
     void copyLabel();
     void copyMessage();
     void copyAmount();
-};
+%>;
 
 #endif // BITCOIN_QT_RECEIVECOINSDIALOG_H

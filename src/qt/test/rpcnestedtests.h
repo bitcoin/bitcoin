@@ -12,11 +12,11 @@
 #include <txmempool.h>
 
 class RPCNestedTests : public QObject
-{
+<%
     Q_OBJECT
 
     private Q_SLOTS:
     void rpcNestedTests();
-};
+%>;
 
 #endif // BITCOIN_QT_TEST_RPCNESTEDTESTS_H

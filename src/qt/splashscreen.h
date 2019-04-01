@@ -11,11 +11,11 @@
 
 class NetworkStyle;
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
 class Node;
 class Wallet;
-};
+%>;
 
 /** Class for the splashscreen with information of the running client.
  *
@@ -24,7 +24,7 @@ class Wallet;
  * moved around and minimized has turned out to be frustrating to the user.
  */
 class SplashScreen : public QWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -64,6 +64,6 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
     std::list<std::unique_ptr<interfaces::Wallet>> m_connected_wallets;
     std::list<std::unique_ptr<interfaces::Handler>> m_connected_wallet_handlers;
-};
+%>;
 
 #endif // BITCOIN_QT_SPLASHSCREEN_H

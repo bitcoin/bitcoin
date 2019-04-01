@@ -45,7 +45,7 @@
    and serves as list model for drop-down selection boxes.
 */
 class BitcoinUnits: public QAbstractListModel
-{
+<%
     Q_OBJECT
 
 public:
@@ -55,19 +55,19 @@ public:
       @note Source: https://en.bitcoin.it/wiki/Units . Please add only sensible ones
      */
     enum Unit
-    {
+    <%
         BTC,
         mBTC,
         uBTC,
         SAT
-    };
+    %>;
 
     enum SeparatorStyle
-    {
+    <%
         separatorNever,
         separatorStandard,
         separatorAlways
-    };
+    %>;
 
     //! @name Static API
     //! Unit conversion and formatting
@@ -102,30 +102,30 @@ public:
     //! @name AbstractListModel implementation
     //! List model for unit drop-down selection box.
     ///@{
-    enum RoleIndex {
+    enum RoleIndex <%
         /** Unit identifier */
         UnitRole = Qt::UserRole
-    };
+    %>;
     int rowCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     ///@}
 
     static QString removeSpaces(QString text)
-    {
+    <%
         text.remove(' ');
         text.remove(QChar(THIN_SP_CP));
 #if (THIN_SP_CP != REAL_THIN_SP_CP)
         text.remove(QChar(REAL_THIN_SP_CP));
 #endif
         return text;
-    }
+    %>
 
     //! Return maximum number of base units (Satoshis)
     static CAmount maxMoney();
 
 private:
     QList<BitcoinUnits::Unit> unitlist;
-};
+%>;
 typedef BitcoinUnits::Unit BitcoinUnit;
 
 #endif // BITCOIN_QT_BITCOINUNITS_H

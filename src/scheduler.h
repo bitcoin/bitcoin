@@ -35,7 +35,7 @@
 //
 
 class CScheduler
-{
+<%
 public:
     CScheduler();
     ~CScheduler();
@@ -81,8 +81,8 @@ private:
     int nThreadsServicingQueue;
     bool stopRequested;
     bool stopWhenEmpty;
-    bool shouldStop() const { return stopRequested || (stopWhenEmpty && taskQueue.empty()); }
-};
+    bool shouldStop() const <% return stopRequested || (stopWhenEmpty && taskQueue.empty()); %>
+%>;
 
 /**
  * Class used by CScheduler clients which may schedule multiple jobs
@@ -94,7 +94,7 @@ private:
  * B() will be able to observe all of the effects of callback A() which executed
  * before it.
  */
-class SingleThreadedSchedulerClient {
+class SingleThreadedSchedulerClient <%
 private:
     CScheduler *m_pscheduler;
 
@@ -106,7 +106,7 @@ private:
     void ProcessQueue();
 
 public:
-    explicit SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) {}
+    explicit SingleThreadedSchedulerClient(CScheduler *pschedulerIn) : m_pscheduler(pschedulerIn) <%%>
 
     /**
      * Add a callback to be executed. Callbacks are executed serially
@@ -121,6 +121,6 @@ public:
     void EmptyQueue();
 
     size_t CallbacksPending();
-};
+%>;
 
 #endif

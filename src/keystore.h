@@ -17,7 +17,7 @@
 
 /** A virtual base class for key stores */
 class CKeyStore : public SigningProvider
-{
+<%
 public:
     //! Add a key to the store.
     virtual bool AddKeyPubKey(const CKey &key, const CPubKey &pubkey) =0;
@@ -36,11 +36,11 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest) =0;
     virtual bool HaveWatchOnly(const CScript &dest) const =0;
     virtual bool HaveWatchOnly() const =0;
-};
+%>;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
-{
+<%
 protected:
     mutable CCriticalSection cs_KeyStore;
 
@@ -58,7 +58,7 @@ protected:
 
 public:
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey) override;
-    bool AddKey(const CKey &key) { return AddKeyPubKey(key, key.GetPubKey()); }
+    bool AddKey(const CKey &key) <% return AddKeyPubKey(key, key.GetPubKey()); %>
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
     bool HaveKey(const CKeyID &address) const override;
     std::set<CKeyID> GetKeys() const override;
@@ -72,7 +72,7 @@ public:
     bool RemoveWatchOnly(const CScript &dest) override;
     bool HaveWatchOnly(const CScript &dest) const override;
     bool HaveWatchOnly() const override;
-};
+%>;
 
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
 CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest);

@@ -16,13 +16,13 @@
 BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
-{
+<%
     CKey keys[3];
     CPubKey pubkeys[3];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) <%
         keys[i].MakeNewKey(true);
         pubkeys[i] = keys[i].GetPubKey();
-    }
+    %>
 
     CScript s;
     std::vector<std::vector<unsigned char> > solutions;
@@ -57,10 +57,10 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
         OP_2 << OP_CHECKMULTISIG;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_MULTISIG);
     BOOST_CHECK_EQUAL(solutions.size(), 4U);
-    BOOST_CHECK(solutions[0] == std::vector<unsigned char>({1}));
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>(<%1%>));
     BOOST_CHECK(solutions[1] == ToByteVector(pubkeys[0]));
     BOOST_CHECK(solutions[2] == ToByteVector(pubkeys[1]));
-    BOOST_CHECK(solutions[3] == std::vector<unsigned char>({2}));
+    BOOST_CHECK(solutions[3] == std::vector<unsigned char>(<%2%>));
 
     s.clear();
     s << OP_2 <<
@@ -70,18 +70,18 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
         OP_3 << OP_CHECKMULTISIG;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_MULTISIG);
     BOOST_CHECK_EQUAL(solutions.size(), 5U);
-    BOOST_CHECK(solutions[0] == std::vector<unsigned char>({2}));
+    BOOST_CHECK(solutions[0] == std::vector<unsigned char>(<%2%>));
     BOOST_CHECK(solutions[1] == ToByteVector(pubkeys[0]));
     BOOST_CHECK(solutions[2] == ToByteVector(pubkeys[1]));
     BOOST_CHECK(solutions[3] == ToByteVector(pubkeys[2]));
-    BOOST_CHECK(solutions[4] == std::vector<unsigned char>({3}));
+    BOOST_CHECK(solutions[4] == std::vector<unsigned char>(<%3%>));
 
     // TX_NULL_DATA
     s.clear();
     s << OP_RETURN <<
-        std::vector<unsigned char>({0}) <<
-        std::vector<unsigned char>({75}) <<
-        std::vector<unsigned char>({255});
+        std::vector<unsigned char>(<%0%>) <<
+        std::vector<unsigned char>(<%75%>) <<
+        std::vector<unsigned char>(<%255%>);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_NULL_DATA);
     BOOST_CHECK_EQUAL(solutions.size(), 0U);
 
@@ -107,10 +107,10 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
     s.clear();
     s << OP_9 << OP_ADD << OP_11 << OP_EQUAL;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_NONSTANDARD);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
-{
+<%
     CKey key;
     CPubKey pubkey;
     key.MakeNewKey(true);
@@ -156,17 +156,17 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_failure)
 
     // TX_NULL_DATA with other opcodes
     s.clear();
-    s << OP_RETURN << std::vector<unsigned char>({75}) << OP_ADD;
+    s << OP_RETURN << std::vector<unsigned char>(<%75%>) << OP_ADD;
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_NONSTANDARD);
 
     // TX_WITNESS with incorrect program size
     s.clear();
     s << OP_0 << std::vector<unsigned char>(19, 0x01);
     BOOST_CHECK_EQUAL(Solver(s, solutions), TX_NONSTANDARD);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
-{
+<%
     CKey key;
     CPubKey pubkey;
     key.MakeNewKey(true);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
 
     // TX_NULL_DATA
     s.clear();
-    s << OP_RETURN << std::vector<unsigned char>({75});
+    s << OP_RETURN << std::vector<unsigned char>(<%75%>);
     BOOST_CHECK(!ExtractDestination(s, address));
 
     // TX_WITNESS_V0_KEYHASH
@@ -232,16 +232,16 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestination)
     unk.version = 1;
     std::copy(pubkey.begin(), pubkey.end(), unk.program);
     BOOST_CHECK(boost::get<WitnessUnknown>(&address) && *boost::get<WitnessUnknown>(&address) == unk);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
-{
+<%
     CKey keys[3];
     CPubKey pubkeys[3];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) <%
         keys[i].MakeNewKey(true);
         pubkeys[i] = keys[i].GetPubKey();
-    }
+    %>
 
     CScript s;
     txnouttype whichType;
@@ -296,18 +296,18 @@ BOOST_AUTO_TEST_CASE(script_standard_ExtractDestinations)
 
     // TX_NULL_DATA
     s.clear();
-    s << OP_RETURN << std::vector<unsigned char>({75});
+    s << OP_RETURN << std::vector<unsigned char>(<%75%>);
     BOOST_CHECK(!ExtractDestinations(s, whichType, addresses, nRequired));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
-{
+<%
     CKey keys[3];
     CPubKey pubkeys[3];
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) <%
         keys[i].MakeNewKey(true);
         pubkeys[i] = keys[i].GetPubKey();
-    }
+    %>
 
     CScript expected, result;
 
@@ -370,16 +370,16 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
     expected << OP_0 << ToByteVector(scriptHash);
     result = GetScriptForWitness(witnessScript);
     BOOST_CHECK(result == expected);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(script_standard_IsMine)
-{
+<%
     CKey keys[2];
     CPubKey pubkeys[2];
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2; i++) <%
         keys[i].MakeNewKey(true);
         pubkeys[i] = keys[i].GetPubKey();
-    }
+    %>
 
     CKey uncompressedKey;
     uncompressedKey.MakeNewKey(false);
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
     isminetype result;
 
     // P2PK compressed
-    {
+    <%
         CBasicKeyStore keystore;
         scriptPubKey = GetScriptForRawPubKey(pubkeys[0]);
 
@@ -401,10 +401,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2PK uncompressed
-    {
+    <%
         CBasicKeyStore keystore;
         scriptPubKey = GetScriptForRawPubKey(uncompressedPubkey);
 
@@ -416,10 +416,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(uncompressedKey));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2PKH compressed
-    {
+    <%
         CBasicKeyStore keystore;
         scriptPubKey = GetScriptForDestination(pubkeys[0].GetID());
 
@@ -431,10 +431,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2PKH uncompressed
-    {
+    <%
         CBasicKeyStore keystore;
         scriptPubKey = GetScriptForDestination(uncompressedPubkey.GetID());
 
@@ -446,10 +446,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(uncompressedKey));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2SH
-    {
+    <%
         CBasicKeyStore keystore;
 
         CScript redeemScript = GetScriptForDestination(pubkeys[0].GetID());
@@ -468,10 +468,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // (P2PKH inside) P2SH inside P2SH (invalid)
-    {
+    <%
         CBasicKeyStore keystore;
 
         CScript redeemscript_inner = GetScriptForDestination(pubkeys[0].GetID());
@@ -484,10 +484,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // (P2PKH inside) P2SH inside P2WSH (invalid)
-    {
+    <%
         CBasicKeyStore keystore;
 
         CScript redeemscript = GetScriptForDestination(pubkeys[0].GetID());
@@ -500,10 +500,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // P2WPKH inside P2WSH (invalid)
-    {
+    <%
         CBasicKeyStore keystore;
 
         CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0].GetID()));
@@ -514,10 +514,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // (P2PKH inside) P2WSH inside P2WSH (invalid)
-    {
+    <%
         CBasicKeyStore keystore;
 
         CScript witnessscript_inner = GetScriptForDestination(pubkeys[0].GetID());
@@ -530,10 +530,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[0]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // P2WPKH compressed
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(keys[0]));
 
@@ -543,10 +543,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddCScript(scriptPubKey));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2WPKH uncompressed
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(uncompressedKey));
 
@@ -560,13 +560,13 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddCScript(scriptPubKey));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // scriptPubKey multisig
-    {
+    <%
         CBasicKeyStore keystore;
 
-        scriptPubKey = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
+        scriptPubKey = GetScriptForMultisig(2, <%uncompressedPubkey, pubkeys[1]%>);
 
         // Keystore does not have any keys
         result = IsMine(keystore, scriptPubKey);
@@ -589,15 +589,15 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // P2SH multisig
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(uncompressedKey));
         BOOST_CHECK(keystore.AddKey(keys[1]));
 
-        CScript redeemScript = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
+        CScript redeemScript = GetScriptForMultisig(2, <%uncompressedPubkey, pubkeys[1]%>);
         scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
 
         // Keystore has no redeemScript
@@ -608,15 +608,15 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddCScript(redeemScript));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2WSH multisig with compressed keys
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(keys[0]));
         BOOST_CHECK(keystore.AddKey(keys[1]));
 
-        CScript witnessScript = GetScriptForMultisig(2, {pubkeys[0], pubkeys[1]});
+        CScript witnessScript = GetScriptForMultisig(2, <%pubkeys[0], pubkeys[1]%>);
         scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
 
         // Keystore has keys, but no witnessScript or P2SH redeemScript
@@ -632,15 +632,15 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddCScript(scriptPubKey));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // P2WSH multisig with uncompressed key
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(uncompressedKey));
         BOOST_CHECK(keystore.AddKey(keys[1]));
 
-        CScript witnessScript = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
+        CScript witnessScript = GetScriptForMultisig(2, <%uncompressedPubkey, pubkeys[1]%>);
         scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
 
         // Keystore has keys, but no witnessScript or P2SH redeemScript
@@ -656,13 +656,13 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddCScript(scriptPubKey));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // P2WSH multisig wrapped in P2SH
-    {
+    <%
         CBasicKeyStore keystore;
 
-        CScript witnessScript = GetScriptForMultisig(2, {pubkeys[0], pubkeys[1]});
+        CScript witnessScript = GetScriptForMultisig(2, <%pubkeys[0], pubkeys[1]%>);
         CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
         scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
 
@@ -681,10 +681,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
         BOOST_CHECK(keystore.AddKey(keys[1]));
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_SPENDABLE);
-    }
+    %>
 
     // OP_RETURN
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(keys[0]));
 
@@ -693,10 +693,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // witness unspendable
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(keys[0]));
 
@@ -705,10 +705,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // witness unknown
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(keys[0]));
 
@@ -717,10 +717,10 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
+    %>
 
     // Nonstandard
-    {
+    <%
         CBasicKeyStore keystore;
         BOOST_CHECK(keystore.AddKey(keys[0]));
 
@@ -729,7 +729,7 @@ BOOST_AUTO_TEST_CASE(script_standard_IsMine)
 
         result = IsMine(keystore, scriptPubKey);
         BOOST_CHECK_EQUAL(result, ISMINE_NO);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

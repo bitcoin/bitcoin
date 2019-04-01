@@ -10,21 +10,21 @@
 BOOST_FIXTURE_TEST_SUITE(bech32_tests, BasicTestingSetup)
 
 static bool CaseInsensitiveEqual(const std::string &s1, const std::string &s2)
-{
+<%
     if (s1.size() != s2.size()) return false;
-    for (size_t i = 0; i < s1.size(); ++i) {
+    for (size_t i = 0; i < s1.size(); ++i) <%
         char c1 = s1[i];
         if (c1 >= 'A' && c1 <= 'Z') c1 -= ('A' - 'a');
         char c2 = s2[i];
         if (c2 >= 'A' && c2 <= 'Z') c2 -= ('A' - 'a');
         if (c1 != c2) return false;
-    }
+    %>
     return true;
-}
+%>
 
 BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
-{
-    static const std::string CASES[] = {
+<%
+    static const std::string CASES[] = <%
         "A12UEL5L",
         "a12uel5l",
         "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
@@ -32,19 +32,19 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
         "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
         "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
         "?1ezyfcl",
-    };
-    for (const std::string& str : CASES) {
+    %>;
+    for (const std::string& str : CASES) <%
         auto ret = bech32::Decode(str);
         BOOST_CHECK(!ret.first.empty());
         std::string recode = bech32::Encode(ret.first, ret.second);
         BOOST_CHECK(!recode.empty());
         BOOST_CHECK(CaseInsensitiveEqual(str, recode));
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
-{
-    static const std::string CASES[] = {
+<%
+    static const std::string CASES[] = <%
         " 1nwldj5",
         "\x7f""1axkwrx",
         "\x80""1eym55h",
@@ -59,11 +59,11 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
         "1qzzfhee",
         "a12UEL5L",
         "A12uEL5L",
-    };
-    for (const std::string& str : CASES) {
+    %>;
+    for (const std::string& str : CASES) <%
         auto ret = bech32::Decode(str);
         BOOST_CHECK(ret.first.empty());
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

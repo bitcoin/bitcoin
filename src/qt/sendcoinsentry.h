@@ -12,9 +12,9 @@
 class WalletModel;
 class PlatformStyle;
 
-namespace Ui {
+namespace Ui <%
     class SendCoinsEntry;
-}
+%>
 
 /**
  * A single entry in the dialog for sending bitcoins.
@@ -22,7 +22,7 @@ namespace Ui {
  * with a strong payee identity.
  */
 class SendCoinsEntry : public QStackedWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -72,6 +72,6 @@ private:
     const PlatformStyle *platformStyle;
 
     bool updateLabel(const QString &address);
-};
+%>;
 
 #endif // BITCOIN_QT_SENDCOINSENTRY_H

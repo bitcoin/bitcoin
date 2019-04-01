@@ -13,39 +13,39 @@ enum class OutputType;
 class AddressTablePriv;
 class WalletModel;
 
-namespace interfaces {
+namespace interfaces <%
 class Wallet;
-}
+%>
 
 /**
    Qt model of the address book in the core. This allows views to access and modify the address book.
  */
 class AddressTableModel : public QAbstractTableModel
-{
+<%
     Q_OBJECT
 
 public:
     explicit AddressTableModel(WalletModel *parent = nullptr);
     ~AddressTableModel();
 
-    enum ColumnIndex {
+    enum ColumnIndex <%
         Label = 0,   /**< User specified label */
         Address = 1  /**< Bitcoin address */
-    };
+    %>;
 
-    enum RoleIndex {
+    enum RoleIndex <%
         TypeRole = Qt::UserRole /**< Type of address (#Send or #Receive) */
-    };
+    %>;
 
     /** Return status of edit/insert operation */
-    enum EditStatus {
+    enum EditStatus <%
         OK,                     /**< Everything ok */
         NO_CHANGES,             /**< No changes were made during edit operation */
         INVALID_ADDRESS,        /**< Unparseable address */
         DUPLICATE_ADDRESS,      /**< Address already in address book */
         WALLET_UNLOCK_FAILURE,  /**< Wallet could not be unlocked to create new receiving address */
         KEY_GENERATION_FAILURE  /**< Generating a new public key for a receiving address failed */
-    };
+    %>;
 
     static const QString Send;      /**< Specifies send address */
     static const QString Receive;   /**< Specifies receive address */
@@ -78,7 +78,7 @@ public:
      */
     int lookupAddress(const QString &address) const;
 
-    EditStatus getEditStatus() const { return editStatus; }
+    EditStatus getEditStatus() const <% return editStatus; %>
 
     OutputType GetDefaultAddressType() const;
 
@@ -100,6 +100,6 @@ public Q_SLOTS:
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);
 
     friend class AddressTablePriv;
-};
+%>;
 
 #endif // BITCOIN_QT_ADDRESSTABLEMODEL_H

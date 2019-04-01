@@ -11,7 +11,7 @@
    it will get a red background until it is focused.
  */
 class QValidatedLineEdit : public QLineEdit
-{
+<%
     Q_OBJECT
 
 public:
@@ -38,6 +38,6 @@ Q_SIGNALS:
 private Q_SLOTS:
     void markValid();
     void checkValidity();
-};
+%>;
 
 #endif // BITCOIN_QT_QVALIDATEDLINEEDIT_H

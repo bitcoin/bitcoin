@@ -18,7 +18,7 @@
     until reset.
 */
 class CThreadInterrupt
-{
+<%
 public:
     CThreadInterrupt();
     explicit operator bool() const;
@@ -32,6 +32,6 @@ private:
     std::condition_variable cond;
     Mutex mut;
     std::atomic<bool> flag;
-};
+%>;
 
 #endif //BITCOIN_THREADINTERRUPT_H

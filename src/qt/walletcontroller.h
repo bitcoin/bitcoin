@@ -19,10 +19,10 @@
 class OptionsModel;
 class PlatformStyle;
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
 class Node;
-} // namespace interfaces
+%> // namespace interfaces
 
 class OpenWalletActivity;
 
@@ -30,7 +30,7 @@ class OpenWalletActivity;
  * Controller between interfaces::Node, WalletModel instances and the GUI.
  */
 class WalletController : public QObject
-{
+<%
     Q_OBJECT
 
     WalletModel* getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet);
@@ -65,10 +65,10 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;
 
     friend class OpenWalletActivity;
-};
+%>;
 
 class OpenWalletActivity : public QObject
-{
+<%
     Q_OBJECT
 
 public:
@@ -85,6 +85,6 @@ Q_SIGNALS:
 private:
     WalletController* const m_wallet_controller;
     std::string const m_name;
-};
+%>;
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H

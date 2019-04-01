@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(txvalidation_tests)
  * Ensure that the mempool won't accept coinbase transactions.
  */
 BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
-{
+<%
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
     CMutableTransaction coinbaseTx;
 
@@ -56,6 +56,6 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     int nDoS;
     BOOST_CHECK_EQUAL(state.IsInvalid(nDoS), true);
     BOOST_CHECK_EQUAL(nDoS, 100);
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

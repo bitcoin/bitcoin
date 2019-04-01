@@ -14,7 +14,7 @@
 BOOST_FIXTURE_TEST_SUITE(db_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(getwalletenv_file)
-{
+<%
     std::string test_name = "test_name.dat";
     fs::path datadir = SetDataDir("tempdir");
     fs::path file_path = datadir / test_name;
@@ -25,10 +25,10 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
     BOOST_CHECK(filename == test_name);
     BOOST_CHECK(env->Directory() == datadir);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(getwalletenv_directory)
-{
+<%
     std::string expected_name = "wallet.dat";
     fs::path datadir = SetDataDir("tempdir");
 
@@ -36,10 +36,10 @@ BOOST_AUTO_TEST_CASE(getwalletenv_directory)
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(datadir, filename);
     BOOST_CHECK(filename == expected_name);
     BOOST_CHECK(env->Directory() == datadir);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_multiple)
-{
+<%
     fs::path datadir = SetDataDir("tempdir");
     fs::path datadir_2 = SetDataDir("tempdir_2");
     std::string filename;
@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_multiple)
 
     BOOST_CHECK(env_1 == env_2);
     BOOST_CHECK(env_2 != env_3);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
-{
+<%
     fs::path datadir = SetDataDir("tempdir");
     fs::path datadir_2 = SetDataDir("tempdir_2");
     std::string filename;
@@ -67,6 +67,6 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
 
     BOOST_CHECK(env_1_a != env_1_b);
     BOOST_CHECK(env_2_a == env_2_b);
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

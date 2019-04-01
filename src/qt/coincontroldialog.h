@@ -21,25 +21,25 @@ class WalletModel;
 
 class CCoinControl;
 
-namespace Ui {
+namespace Ui <%
     class CoinControlDialog;
-}
+%>
 
 #define ASYMP_UTF8 "\xE2\x89\x88"
 
 class CCoinControlWidgetItem : public QTreeWidgetItem
-{
+<%
 public:
-    explicit CCoinControlWidgetItem(QTreeWidget *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
-    explicit CCoinControlWidgetItem(int type = Type) : QTreeWidgetItem(type) {}
-    explicit CCoinControlWidgetItem(QTreeWidgetItem *parent, int type = Type) : QTreeWidgetItem(parent, type) {}
+    explicit CCoinControlWidgetItem(QTreeWidget *parent, int type = Type) : QTreeWidgetItem(parent, type) <%%>
+    explicit CCoinControlWidgetItem(int type = Type) : QTreeWidgetItem(type) <%%>
+    explicit CCoinControlWidgetItem(QTreeWidgetItem *parent, int type = Type) : QTreeWidgetItem(parent, type) <%%>
 
     bool operator<(const QTreeWidgetItem &other) const;
-};
+%>;
 
 
 class CoinControlDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -73,20 +73,20 @@ private:
     void updateView();
 
     enum
-    {
+    <%
         COLUMN_CHECKBOX = 0,
         COLUMN_AMOUNT,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
         COLUMN_DATE,
         COLUMN_CONFIRMATIONS,
-    };
+    %>;
 
     enum
-    {
+    <%
         TxHashRole = Qt::UserRole,
         VOutRole
-    };
+    %>;
 
     friend class CCoinControlWidgetItem;
 
@@ -112,6 +112,6 @@ private Q_SLOTS:
     void buttonBoxClicked(QAbstractButton*);
     void buttonSelectAllClicked();
     void updateLabelLocked();
-};
+%>;
 
 #endif // BITCOIN_QT_COINCONTROLDIALOG_H

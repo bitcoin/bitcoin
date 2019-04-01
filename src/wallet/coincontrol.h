@@ -14,7 +14,7 @@
 
 /** Coin Control Features. */
 class CCoinControl
-{
+<%
 public:
     //! Custom change destination, if not set an address is generated
     CTxDestination destChange;
@@ -38,44 +38,44 @@ public:
     FeeEstimateMode m_fee_mode;
 
     CCoinControl()
-    {
+    <%
         SetNull();
-    }
+    %>
 
     void SetNull();
 
     bool HasSelected() const
-    {
+    <%
         return (setSelected.size() > 0);
-    }
+    %>
 
     bool IsSelected(const COutPoint& output) const
-    {
+    <%
         return (setSelected.count(output) > 0);
-    }
+    %>
 
     void Select(const COutPoint& output)
-    {
+    <%
         setSelected.insert(output);
-    }
+    %>
 
     void UnSelect(const COutPoint& output)
-    {
+    <%
         setSelected.erase(output);
-    }
+    %>
 
     void UnSelectAll()
-    {
+    <%
         setSelected.clear();
-    }
+    %>
 
     void ListSelected(std::vector<COutPoint>& vOutpoints) const
-    {
+    <%
         vOutpoints.assign(setSelected.begin(), setSelected.end());
-    }
+    %>
 
 private:
     std::set<COutPoint> setSelected;
-};
+%>;
 
 #endif // BITCOIN_WALLET_COINCONTROL_H

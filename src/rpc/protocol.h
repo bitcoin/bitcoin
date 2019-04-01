@@ -17,7 +17,7 @@
 
 //! HTTP status codes
 enum HTTPStatusCode
-{
+<%
     HTTP_OK                    = 200,
     HTTP_BAD_REQUEST           = 400,
     HTTP_UNAUTHORIZED          = 401,
@@ -26,11 +26,11 @@ enum HTTPStatusCode
     HTTP_BAD_METHOD            = 405,
     HTTP_INTERNAL_SERVER_ERROR = 500,
     HTTP_SERVICE_UNAVAILABLE   = 503,
-};
+%>;
 
 //! Bitcoin RPC error codes
 enum RPCErrorCode
-{
+<%
     //! Standard JSON-RPC 2.0 errors
     // RPC_INVALID_REQUEST is internally mapped to HTTP_BAD_REQUEST (400).
     // It should not be used for application-layer errors.
@@ -90,7 +90,7 @@ enum RPCErrorCode
 
     //! Unused reserved codes, kept around for backwards compatibility. Do not reuse.
     RPC_FORBIDDEN_BY_SAFE_MODE      = -2,  //!< Server is in safe mode, and command is not allowed in safe mode
-};
+%>;
 
 UniValue JSONRPCRequestObj(const std::string& strMethod, const UniValue& params, const UniValue& id);
 UniValue JSONRPCReplyObj(const UniValue& result, const UniValue& error, const UniValue& id);

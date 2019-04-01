@@ -11,10 +11,10 @@
 #if defined(__x86_64__) || defined(__amd64__)
 
 namespace sha256_sse4
-{
+<%
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
-{
-    static const uint32_t K256 alignas(16) [] = {
+<%
+    static const uint32_t K256 alignas(16) [] = <%
         0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
         0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
         0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -31,10 +31,10 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
         0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
         0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
         0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
-    };
-    static const uint32_t FLIP_MASK alignas(16) [] = {0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f};
-    static const uint32_t SHUF_00BA alignas(16) [] = {0x03020100, 0x0b0a0908, 0xffffffff, 0xffffffff};
-    static const uint32_t SHUF_DC00 alignas(16) [] = {0xffffffff, 0xffffffff, 0x03020100, 0x0b0a0908};
+    %>;
+    static const uint32_t FLIP_MASK alignas(16) [] = <%0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f%>;
+    static const uint32_t SHUF_00BA alignas(16) [] = <%0x03020100, 0x0b0a0908, 0xffffffff, 0xffffffff%>;
+    static const uint32_t SHUF_DC00 alignas(16) [] = <%0xffffffff, 0xffffffff, 0x03020100, 0x0b0a0908%>;
     uint32_t a, b, c, d, f, g, h, y0, y1, y2;
     uint64_t tbl;
     uint64_t inp_end, inp;
@@ -953,8 +953,8 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
         : "m"(K256), "m"(FLIP_MASK), "m"(SHUF_00BA), "m"(SHUF_DC00)
         : "cc", "memory", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12"
    );
-}
-}
+%>
+%>
 
 /*
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

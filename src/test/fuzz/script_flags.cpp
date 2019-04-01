@@ -13,17 +13,17 @@
 static bool IsValidFlagCombination(unsigned flags);
 
 void test_one_input(std::vector<uint8_t> buffer)
-{
+<%
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
-    try {
+    try <%
         int nVersion;
         ds >> nVersion;
         ds.SetVersion(nVersion);
-    } catch (const std::ios_base::failure&) {
+    %> catch (const std::ios_base::failure&) <%
         return;
-    }
+    %>
 
-    try {
+    try <%
         const CTransaction tx(deserialize, ds);
         const PrecomputedTransactionData txdata(tx);
 
@@ -35,22 +35,22 @@ void test_one_input(std::vector<uint8_t> buffer)
         unsigned int fuzzed_flags;
         ds >> fuzzed_flags;
 
-        for (unsigned i = 0; i < tx.vin.size(); ++i) {
+        for (unsigned i = 0; i < tx.vin.size(); ++i) <%
             CTxOut prevout;
             ds >> prevout;
 
-            const TransactionSignatureChecker checker{&tx, i, prevout.nValue, txdata};
+            const TransactionSignatureChecker checker<%&tx, i, prevout.nValue, txdata%>;
 
             ScriptError serror;
             const bool ret = VerifyScript(tx.vin.at(i).scriptSig, prevout.scriptPubKey, &tx.vin.at(i).scriptWitness, verify_flags, checker, &serror);
             assert(ret == (serror == SCRIPT_ERR_OK));
 
             // Verify that removing flags from a passing test or adding flags to a failing test does not change the result
-            if (ret) {
+            if (ret) <%
                 verify_flags &= ~fuzzed_flags;
-            } else {
+            %> else <%
                 verify_flags |= fuzzed_flags;
-            }
+            %>
             if (!IsValidFlagCombination(verify_flags)) return;
 
             ScriptError serror_fuzzed;
@@ -58,15 +58,15 @@ void test_one_input(std::vector<uint8_t> buffer)
             assert(ret_fuzzed == (serror_fuzzed == SCRIPT_ERR_OK));
 
             assert(ret_fuzzed == ret);
-        }
-    } catch (const std::ios_base::failure&) {
+        %>
+    %> catch (const std::ios_base::failure&) <%
         return;
-    }
-}
+    %>
+%>
 
 static bool IsValidFlagCombination(unsigned flags)
-{
+<%
     if (flags & SCRIPT_VERIFY_CLEANSTACK && ~flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) return false;
     if (flags & SCRIPT_VERIFY_WITNESS && ~flags & SCRIPT_VERIFY_P2SH) return false;
     return true;
-}
+%>

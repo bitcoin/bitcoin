@@ -5,7 +5,7 @@
 #include <bech32.h>
 
 namespace
-{
+<%
 
 typedef std::vector<uint8_t> data;
 
@@ -13,7 +13,7 @@ typedef std::vector<uint8_t> data;
 const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 /** The Bech32 character set for decoding. */
-const int8_t CHARSET_REV[128] = {
+const int8_t CHARSET_REV[128] = <%
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -22,20 +22,20 @@ const int8_t CHARSET_REV[128] = {
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1,
     -1, 29, -1, 24, 13, 25,  9,  8, 23, -1, 18, 22, 31, 27, 19, -1,
      1,  0,  3, 16, 11, 28, 12, 14,  6,  4,  2, -1, -1, -1, -1, -1
-};
+%>;
 
 /** Concatenate two byte arrays. */
 data Cat(data x, const data& y)
-{
+<%
     x.insert(x.end(), y.begin(), y.end());
     return x;
-}
+%>
 
 /** This function will compute what 6 5-bit values to XOR into the last 6 input values, in order to
  *  make the checksum 0. These 6 values are packed together in a single 30-bit integer. The higher
  *  bits correspond to earlier values. */
 uint32_t PolyMod(const data& v)
-{
+<%
     // The input is interpreted as a list of coefficients of a polynomial over F = GF(32), with an
     // implicit 1 in front. If the input is [v0,v1,v2,v3,v4], that polynomial is v(x) =
     // 1*x^5 + v0*x^4 + v1*x^3 + v2*x^2 + v3*x + v4. The implicit 1 guarantees that
@@ -62,7 +62,7 @@ uint32_t PolyMod(const data& v)
     // v, it corresponds to x^2 + v0*x + v1 mod g(x). As 1 mod g(x) = 1, that is the starting value
     // for `c`.
     uint32_t c = 1;
-    for (const auto v_i : v) {
+    for (const auto v_i : v) <%
         // We want to update `c` to correspond to a polynomial with one extra term. If the initial
         // value of `c` consists of the coefficients of c(x) = f(x) mod g(x), we modify it to
         // correspond to c'(x) = (f(x) * x + v_i) mod g(x), where v_i is the next input to
@@ -89,104 +89,104 @@ uint32_t PolyMod(const data& v)
         if (c0 & 4)  c ^= 0x1ea119fa; //  {4}k(x) = {15}x^5 + {10}x^4 +  {2}x^3 +  {6}x^2 + {15}x + {26}
         if (c0 & 8)  c ^= 0x3d4233dd; //  {8}k(x) = {30}x^5 + {20}x^4 +  {4}x^3 + {12}x^2 + {30}x + {29}
         if (c0 & 16) c ^= 0x2a1462b3; // {16}k(x) = {21}x^5 +     x^4 +  {8}x^3 + {24}x^2 + {21}x + {19}
-    }
+    %>
     return c;
-}
+%>
 
 /** Convert to lower case. */
 inline unsigned char LowerCase(unsigned char c)
-{
+<%
     return (c >= 'A' && c <= 'Z') ? (c - 'A') + 'a' : c;
-}
+%>
 
 /** Expand a HRP for use in checksum computation. */
 data ExpandHRP(const std::string& hrp)
-{
+<%
     data ret;
     ret.reserve(hrp.size() + 90);
     ret.resize(hrp.size() * 2 + 1);
-    for (size_t i = 0; i < hrp.size(); ++i) {
+    for (size_t i = 0; i < hrp.size(); ++i) <%
         unsigned char c = hrp[i];
         ret[i] = c >> 5;
         ret[i + hrp.size() + 1] = c & 0x1f;
-    }
+    %>
     ret[hrp.size()] = 0;
     return ret;
-}
+%>
 
 /** Verify a checksum. */
 bool VerifyChecksum(const std::string& hrp, const data& values)
-{
+<%
     // PolyMod computes what value to xor into the final values to make the checksum 0. However,
     // if we required that the checksum was 0, it would be the case that appending a 0 to a valid
     // list of values would result in a new valid list. For that reason, Bech32 requires the
     // resulting checksum to be 1 instead.
     return PolyMod(Cat(ExpandHRP(hrp), values)) == 1;
-}
+%>
 
 /** Create a checksum. */
 data CreateChecksum(const std::string& hrp, const data& values)
-{
+<%
     data enc = Cat(ExpandHRP(hrp), values);
     enc.resize(enc.size() + 6); // Append 6 zeroes
     uint32_t mod = PolyMod(enc) ^ 1; // Determine what to XOR into those 6 zeroes.
     data ret(6);
-    for (size_t i = 0; i < 6; ++i) {
+    for (size_t i = 0; i < 6; ++i) <%
         // Convert the 5-bit groups in mod to checksum values.
         ret[i] = (mod >> (5 * (5 - i))) & 31;
-    }
+    %>
     return ret;
-}
+%>
 
-} // namespace
+%> // namespace
 
 namespace bech32
-{
+<%
 
 /** Encode a Bech32 string. */
-std::string Encode(const std::string& hrp, const data& values) {
+std::string Encode(const std::string& hrp, const data& values) <%
     data checksum = CreateChecksum(hrp, values);
     data combined = Cat(values, checksum);
     std::string ret = hrp + '1';
     ret.reserve(ret.size() + combined.size());
-    for (const auto c : combined) {
+    for (const auto c : combined) <%
         ret += CHARSET[c];
-    }
+    %>
     return ret;
-}
+%>
 
 /** Decode a Bech32 string. */
-std::pair<std::string, data> Decode(const std::string& str) {
+std::pair<std::string, data> Decode(const std::string& str) <%
     bool lower = false, upper = false;
-    for (size_t i = 0; i < str.size(); ++i) {
+    for (size_t i = 0; i < str.size(); ++i) <%
         unsigned char c = str[i];
         if (c >= 'a' && c <= 'z') lower = true;
         else if (c >= 'A' && c <= 'Z') upper = true;
-        else if (c < 33 || c > 126) return {};
-    }
-    if (lower && upper) return {};
+        else if (c < 33 || c > 126) return <%%>;
+    %>
+    if (lower && upper) return <%%>;
     size_t pos = str.rfind('1');
-    if (str.size() > 90 || pos == str.npos || pos == 0 || pos + 7 > str.size()) {
-        return {};
-    }
+    if (str.size() > 90 || pos == str.npos || pos == 0 || pos + 7 > str.size()) <%
+        return <%%>;
+    %>
     data values(str.size() - 1 - pos);
-    for (size_t i = 0; i < str.size() - 1 - pos; ++i) {
+    for (size_t i = 0; i < str.size() - 1 - pos; ++i) <%
         unsigned char c = str[i + pos + 1];
         int8_t rev = CHARSET_REV[c];
 
-        if (rev == -1) {
-            return {};
-        }
+        if (rev == -1) <%
+            return <%%>;
+        %>
         values[i] = rev;
-    }
+    %>
     std::string hrp;
-    for (size_t i = 0; i < pos; ++i) {
+    for (size_t i = 0; i < pos; ++i) <%
         hrp += LowerCase(str[i]);
-    }
-    if (!VerifyChecksum(hrp, values)) {
-        return {};
-    }
-    return {hrp, data(values.begin(), values.end() - 6)};
-}
+    %>
+    if (!VerifyChecksum(hrp, values)) <%
+        return <%%>;
+    %>
+    return <%hrp, data(values.begin(), values.end() - 6)%>;
+%>
 
-} // namespace bech32
+%> // namespace bech32

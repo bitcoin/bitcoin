@@ -10,17 +10,17 @@
 
 class BitcoinGUI;
 
-namespace interfaces {
+namespace interfaces <%
     class Node;
-}
+%>
 
-namespace Ui {
+namespace Ui <%
     class HelpMessageDialog;
-}
+%>
 
 /** "Help message" dialog box */
 class HelpMessageDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -36,12 +36,12 @@ private:
 
 private Q_SLOTS:
     void on_okButton_accepted();
-};
+%>;
 
 
 /** "Shutdown" window */
 class ShutdownWindow : public QWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -50,6 +50,6 @@ public:
 
 protected:
     void closeEvent(QCloseEvent *event);
-};
+%>;
 
 #endif // BITCOIN_QT_UTILITYDIALOG_H

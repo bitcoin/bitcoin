@@ -12,9 +12,9 @@
 
 #include <memory>
 
-namespace interfaces {
+namespace interfaces <%
 class Handler;
-}
+%>
 
 class PlatformStyle;
 class TransactionRecord;
@@ -24,26 +24,26 @@ class WalletModel;
 /** UI model for the transaction table of a wallet.
  */
 class TransactionTableModel : public QAbstractTableModel
-{
+<%
     Q_OBJECT
 
 public:
     explicit TransactionTableModel(const PlatformStyle *platformStyle, WalletModel *parent = nullptr);
     ~TransactionTableModel();
 
-    enum ColumnIndex {
+    enum ColumnIndex <%
         Status = 0,
         Watchonly = 1,
         Date = 2,
         Type = 3,
         ToAddress = 4,
         Amount = 5
-    };
+    %>;
 
     /** Roles to get specific information from a transaction row.
         These are independent of column.
     */
-    enum RoleIndex {
+    enum RoleIndex <%
         /** Type of transaction */
         TypeRole = Qt::UserRole,
         /** Date and time this transaction was created */
@@ -74,14 +74,14 @@ public:
         StatusRole,
         /** Unprocessed icon */
         RawDecorationRole,
-    };
+    %>;
 
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     QModelIndex index(int row, int column, const QModelIndex & parent = QModelIndex()) const;
-    bool processingQueuedTransactions() const { return fProcessingQueuedTransactions; }
+    bool processingQueuedTransactions() const <% return fProcessingQueuedTransactions; %>
 
 private:
     WalletModel *walletModel;
@@ -115,9 +115,9 @@ public Q_SLOTS:
     /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
     void updateAmountColumnTitle();
     /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
-    void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
+    void setProcessingQueuedTransactions(bool value) <% fProcessingQueuedTransactions = value; %>
 
     friend class TransactionTablePriv;
-};
+%>;
 
 #endif // BITCOIN_QT_TRANSACTIONTABLEMODEL_H

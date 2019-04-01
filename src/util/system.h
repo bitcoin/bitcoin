@@ -49,19 +49,19 @@ const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
  * If no translation function is set, simply return the input.
  */
 inline std::string _(const char* psz)
-{
+<%
     return G_TRANSLATION_FUN ? (G_TRANSLATION_FUN)(psz) : psz;
-}
+%>
 
 void SetupEnvironment();
 bool SetupNetworking();
 
 template<typename... Args>
 bool error(const char* fmt, const Args&... args)
-{
+<%
     LogPrintf("ERROR: %s\n", tfm::format(fmt, args...));
     return false;
-}
+%>
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 bool FileCommit(FILE *file);
@@ -102,15 +102,15 @@ void runCommand(const std::string& strCommand);
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific = true);
 
 inline bool IsSwitchChar(char c)
-{
+<%
 #ifdef WIN32
     return c == '-' || c == '/';
 #else
     return c == '-';
 #endif
-}
+%>
 
-enum class OptionsCategory {
+enum class OptionsCategory <%
     OPTIONS,
     CONNECTION,
     WALLET,
@@ -126,28 +126,28 @@ enum class OptionsCategory {
     REGISTER_COMMANDS,
 
     HIDDEN // Always the last option to avoid printing these in the help
-};
+%>;
 
 struct SectionInfo
-{
+<%
     std::string m_name;
     std::string m_file;
     int m_line;
-};
+%>;
 
 class ArgsManager
-{
+<%
 protected:
     friend class ArgsManagerHelper;
 
     struct Arg
-    {
+    <%
         std::string m_help_param;
         std::string m_help_text;
         bool m_debug_only;
 
-        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
-    };
+        Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) <%%>;
+    %>;
 
     mutable CCriticalSection cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
@@ -276,10 +276,10 @@ public:
     /**
      * Clear available arguments
      */
-    void ClearArgs() {
+    void ClearArgs() <%
         LOCK(cs_args);
         m_available_args.clear();
-    }
+    %>
 
     /**
      * Get the help string
@@ -290,7 +290,7 @@ public:
      * Check whether we know of this arg
      */
     bool IsArgKnown(const std::string& key) const;
-};
+%>;
 
 extern ArgsManager gArgs;
 
@@ -331,29 +331,29 @@ void RenameThread(const char* name);
  * .. and a wrapper that just calls func once
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
-{
+<%
     std::string s = strprintf("bitcoin-%s", name);
     RenameThread(s.c_str());
     try
-    {
+    <%
         LogPrintf("%s thread start\n", name);
         func();
         LogPrintf("%s thread exit\n", name);
-    }
+    %>
     catch (const boost::thread_interrupted&)
-    {
+    <%
         LogPrintf("%s thread interrupt\n", name);
         throw;
-    }
-    catch (const std::exception& e) {
+    %>
+    catch (const std::exception& e) <%
         PrintExceptionContinue(&e, name);
         throw;
-    }
-    catch (...) {
+    %>
+    catch (...) <%
         PrintExceptionContinue(nullptr, name);
         throw;
-    }
-}
+    %>
+%>
 
 std::string CopyrightHolders(const std::string& strPrefix);
 
@@ -366,21 +366,21 @@ std::string CopyrightHolders(const std::string& strPrefix);
  */
 int ScheduleBatchPriority();
 
-namespace util {
+namespace util <%
 
 //! Simplification of std insertion
 template <typename Tdst, typename Tsrc>
-inline void insert(Tdst& dst, const Tsrc& src) {
+inline void insert(Tdst& dst, const Tsrc& src) <%
     dst.insert(dst.begin(), src.begin(), src.end());
-}
+%>
 template <typename TsetT, typename Tsrc>
-inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
+inline void insert(std::set<TsetT>& dst, const Tsrc& src) <%
     dst.insert(src.begin(), src.end());
-}
+%>
 
 #ifdef WIN32
 class WinCmdLineArgs
-{
+<%
 public:
     WinCmdLineArgs();
     ~WinCmdLineArgs();
@@ -390,9 +390,9 @@ private:
     int argc;
     char** argv;
     std::vector<std::string> args;
-};
+%>;
 #endif
 
-} // namespace util
+%> // namespace util
 
 #endif // BITCOIN_UTIL_SYSTEM_H

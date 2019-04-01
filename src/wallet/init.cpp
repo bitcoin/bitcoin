@@ -17,11 +17,11 @@
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 
-class WalletInit : public WalletInitInterface {
+class WalletInit : public WalletInitInterface <%
 public:
 
     //! Was the wallet component compiled in.
-    bool HasWalletSupport() const override {return true;}
+    bool HasWalletSupport() const override <%return true;%>
 
     //! Return the wallets help message.
     void AddWalletOptions() const override;
@@ -31,12 +31,12 @@ public:
 
     //! Add wallets that should be opened to list of init interfaces.
     void Construct(InitInterfaces& interfaces) const override;
-};
+%>;
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
 void WalletInit::AddWalletOptions() const
-{
+<%
     gArgs.AddArg("-addresstype", strprintf("What type of addresses to use (\"legacy\", \"p2sh-segwit\", or \"bech32\", default: \"%s\")", FormatOutputType(DEFAULT_ADDRESS_TYPE)), false, OptionsCategory::WALLET);
     gArgs.AddArg("-avoidpartialspends", strprintf("Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)", DEFAULT_AVOIDPARTIALSPENDS), false, OptionsCategory::WALLET);
     gArgs.AddArg("-changetype", "What type of change to use (\"legacy\", \"p2sh-segwit\", or \"bech32\"). Default is same as -addresstype, except when -addresstype=p2sh-segwit a native segwit output is used when sending to a native segwit address)", false, OptionsCategory::WALLET);
@@ -50,7 +50,7 @@ void WalletInit::AddWalletOptions() const
     gArgs.AddArg("-mintxfee=<amt>", strprintf("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)",
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)), false, OptionsCategory::WALLET);
     gArgs.AddArg("-paytxfee=<amt>", strprintf("Fee (in %s/kB) to add to transactions you send (default: %s)",
-                                                            CURRENCY_UNIT, FormatMoney(CFeeRate{DEFAULT_PAY_TX_FEE}.GetFeePerK())), false, OptionsCategory::WALLET);
+                                                            CURRENCY_UNIT, FormatMoney(CFeeRate<%DEFAULT_PAY_TX_FEE%>.GetFeePerK())), false, OptionsCategory::WALLET);
     gArgs.AddArg("-rescan", "Rescan the block chain for missing wallet transactions on startup", false, OptionsCategory::WALLET);
     gArgs.AddArg("-salvagewallet", "Attempt to recover private keys from a corrupt wallet on startup", false, OptionsCategory::WALLET);
     gArgs.AddArg("-spendzeroconfchange", strprintf("Spend unconfirmed change when sending transactions (default: %u)", DEFAULT_SPEND_ZEROCONF_CHANGE), false, OptionsCategory::WALLET);
@@ -68,55 +68,55 @@ void WalletInit::AddWalletOptions() const
     gArgs.AddArg("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET), true, OptionsCategory::WALLET_DEBUG_TEST);
     gArgs.AddArg("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB), true, OptionsCategory::WALLET_DEBUG_TEST);
     gArgs.AddArg("-walletrejectlongchains", strprintf("Wallet will not create transactions that violate mempool chain limits (default: %u)", DEFAULT_WALLET_REJECT_LONG_CHAINS), true, OptionsCategory::WALLET_DEBUG_TEST);
-}
+%>
 
 bool WalletInit::ParameterInteraction() const
-{
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
-        for (const std::string& wallet : gArgs.GetArgs("-wallet")) {
+<%
+    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) <%
+        for (const std::string& wallet : gArgs.GetArgs("-wallet")) <%
             LogPrintf("%s: parameter interaction: -disablewallet -> ignoring -wallet=%s\n", __func__, wallet);
-        }
+        %>
 
         return true;
-    }
+    %>
 
     const bool is_multiwallet = gArgs.GetArgs("-wallet").size() > 1;
 
-    if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) {
+    if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && gArgs.SoftSetBoolArg("-walletbroadcast", false)) <%
         LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
-    }
+    %>
 
-    if (gArgs.GetBoolArg("-salvagewallet", false)) {
-        if (is_multiwallet) {
+    if (gArgs.GetBoolArg("-salvagewallet", false)) <%
+        if (is_multiwallet) <%
             return InitError(strprintf("%s is only allowed with a single wallet file", "-salvagewallet"));
-        }
+        %>
         // Rewrite just private keys: rescan to find transactions
-        if (gArgs.SoftSetBoolArg("-rescan", true)) {
+        if (gArgs.SoftSetBoolArg("-rescan", true)) <%
             LogPrintf("%s: parameter interaction: -salvagewallet=1 -> setting -rescan=1\n", __func__);
-        }
-    }
+        %>
+    %>
 
     bool zapwallettxes = gArgs.GetBoolArg("-zapwallettxes", false);
     // -zapwallettxes implies dropping the mempool on startup
-    if (zapwallettxes && gArgs.SoftSetBoolArg("-persistmempool", false)) {
+    if (zapwallettxes && gArgs.SoftSetBoolArg("-persistmempool", false)) <%
         LogPrintf("%s: parameter interaction: -zapwallettxes enabled -> setting -persistmempool=0\n", __func__);
-    }
+    %>
 
     // -zapwallettxes implies a rescan
-    if (zapwallettxes) {
-        if (is_multiwallet) {
+    if (zapwallettxes) <%
+        if (is_multiwallet) <%
             return InitError(strprintf("%s is only allowed with a single wallet file", "-zapwallettxes"));
-        }
-        if (gArgs.SoftSetBoolArg("-rescan", true)) {
+        %>
+        if (gArgs.SoftSetBoolArg("-rescan", true)) <%
             LogPrintf("%s: parameter interaction: -zapwallettxes enabled -> setting -rescan=1\n", __func__);
-        }
-    }
+        %>
+    %>
 
-    if (is_multiwallet) {
-        if (gArgs.GetBoolArg("-upgradewallet", false)) {
+    if (is_multiwallet) <%
+        if (gArgs.GetBoolArg("-upgradewallet", false)) <%
             return InitError(strprintf("%s is only allowed with a single wallet file", "-upgradewallet"));
-        }
-    }
+        %>
+    %>
 
     if (gArgs.GetBoolArg("-sysperms", false))
         return InitError("-sysperms is not allowed in combination with enabled wallet functionality");
@@ -128,28 +128,28 @@ bool WalletInit::ParameterInteraction() const
                     _("The wallet will avoid paying less than the minimum relay fee."));
 
     return true;
-}
+%>
 
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
-{
-    if (gArgs.IsArgSet("-walletdir")) {
+<%
+    if (gArgs.IsArgSet("-walletdir")) <%
         fs::path wallet_dir = gArgs.GetArg("-walletdir", "");
         boost::system::error_code error;
         // The canonical path cleans the path, preventing >1 Berkeley environment instances for the same directory
         fs::path canonical_wallet_dir = fs::canonical(wallet_dir, error);
-        if (error || !fs::exists(wallet_dir)) {
+        if (error || !fs::exists(wallet_dir)) <%
             chain.initError(strprintf(_("Specified -walletdir \"%s\" does not exist"), wallet_dir.string()));
             return false;
-        } else if (!fs::is_directory(wallet_dir)) {
+        %> else if (!fs::is_directory(wallet_dir)) <%
             chain.initError(strprintf(_("Specified -walletdir \"%s\" is not a directory"), wallet_dir.string()));
             return false;
         // The canonical path transforms relative paths into absolute ones, so we check the non-canonical version
-        } else if (!wallet_dir.is_absolute()) {
+        %> else if (!wallet_dir.is_absolute()) <%
             chain.initError(strprintf(_("Specified -walletdir \"%s\" is a relative path"), wallet_dir.string()));
             return false;
-        }
+        %>
         gArgs.ForceSetArg("-walletdir", canonical_wallet_dir.string());
-    }
+    %>
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
 
@@ -163,13 +163,13 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
     // Keep track of each wallet absolute path to detect duplicates.
     std::set<fs::path> wallet_paths;
 
-    for (const auto& wallet_file : wallet_files) {
+    for (const auto& wallet_file : wallet_files) <%
         WalletLocation location(wallet_file);
 
-        if (!wallet_paths.insert(location.GetPath()).second) {
+        if (!wallet_paths.insert(location.GetPath()).second) <%
             chain.initError(strprintf(_("Error loading wallet %s. Duplicate -wallet filename specified."), wallet_file));
             return false;
-        }
+        %>
 
         std::string error_string;
         std::string warning_string;
@@ -177,65 +177,65 @@ bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wal
         if (!error_string.empty()) chain.initError(error_string);
         if (!warning_string.empty()) chain.initWarning(warning_string);
         if (!verify_success) return false;
-    }
+    %>
 
     return true;
-}
+%>
 
 void WalletInit::Construct(InitInterfaces& interfaces) const
-{
-    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) {
+<%
+    if (gArgs.GetBoolArg("-disablewallet", DEFAULT_DISABLE_WALLET)) <%
         LogPrintf("Wallet disabled!\n");
         return;
-    }
+    %>
     gArgs.SoftSetArg("-wallet", "");
     interfaces.chain_clients.emplace_back(interfaces::MakeWalletClient(*interfaces.chain, gArgs.GetArgs("-wallet")));
-}
+%>
 
 bool LoadWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
-{
-    for (const std::string& walletFile : wallet_files) {
+<%
+    for (const std::string& walletFile : wallet_files) <%
         std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(chain, WalletLocation(walletFile));
-        if (!pwallet) {
+        if (!pwallet) <%
             return false;
-        }
+        %>
         AddWallet(pwallet);
-    }
+    %>
 
     return true;
-}
+%>
 
 void StartWallets(CScheduler& scheduler)
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+<%
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) <%
         pwallet->postInitProcess();
-    }
+    %>
 
     // Run a thread to flush wallet periodically
     scheduler.scheduleEvery(MaybeCompactWalletDB, 500);
-}
+%>
 
 void FlushWallets()
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+<%
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) <%
         pwallet->Flush(false);
-    }
-}
+    %>
+%>
 
 void StopWallets()
-{
-    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
+<%
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) <%
         pwallet->Flush(true);
-    }
-}
+    %>
+%>
 
 void UnloadWallets()
-{
+<%
     auto wallets = GetWallets();
-    while (!wallets.empty()) {
+    while (!wallets.empty()) <%
         auto wallet = wallets.back();
         wallets.pop_back();
         RemoveWallet(wallet);
         UnloadWallet(std::move(wallet));
-    }
-}
+    %>
+%>

@@ -10,18 +10,18 @@
  */
 template<typename Lock>
 class reverse_lock
-{
+<%
 public:
 
-    explicit reverse_lock(Lock& _lock) : lock(_lock) {
+    explicit reverse_lock(Lock& _lock) : lock(_lock) <%
         _lock.unlock();
         _lock.swap(templock);
-    }
+    %>
 
-    ~reverse_lock() {
+    ~reverse_lock() <%
         templock.lock();
         templock.swap(lock);
-    }
+    %>
 
 private:
     reverse_lock(reverse_lock const&);
@@ -29,6 +29,6 @@ private:
 
     Lock& lock;
     Lock templock;
-};
+%>;
 
 #endif // BITCOIN_REVERSELOCK_H

@@ -37,26 +37,26 @@
 #include <QDialogButtonBox>
 
 namespace
-{
+<%
 //! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
 void ConfirmSend(QString* text = nullptr, bool cancel = false)
-{
-    QTimer::singleShot(0, [text, cancel]() {
-        for (QWidget* widget : QApplication::topLevelWidgets()) {
-            if (widget->inherits("SendConfirmationDialog")) {
+<%
+    QTimer::singleShot(0, [text, cancel]() <%
+        for (QWidget* widget : QApplication::topLevelWidgets()) <%
+            if (widget->inherits("SendConfirmationDialog")) <%
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
                 if (text) *text = dialog->text();
                 QAbstractButton* button = dialog->button(cancel ? QMessageBox::Cancel : QMessageBox::Yes);
                 button->setEnabled(true);
                 button->click();
-            }
-        }
-    });
-}
+            %>
+        %>
+    %>);
+%>
 
 //! Send coins to address and return txid.
 uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDestination& address, CAmount amount, bool rbf)
-{
+<%
     QVBoxLayout* entries = sendCoinsDialog.findChild<QVBoxLayout*>("entries");
     SendCoinsEntry* entry = qobject_cast<SendCoinsEntry*>(entries->itemAt(0)->widget());
     entry->findChild<QValidatedLineEdit*>("payTo")->setText(QString::fromStdString(EncodeDestination(address)));
@@ -66,31 +66,31 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         ->findChild<QCheckBox*>("optInRBF")
         ->setCheckState(rbf ? Qt::Checked : Qt::Unchecked);
     uint256 txid;
-    boost::signals2::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) {
+    boost::signals2::scoped_connection c(wallet.NotifyTransactionChanged.connect([&txid](CWallet*, const uint256& hash, ChangeType status) <%
         if (status == CT_NEW) txid = hash;
-    }));
+    %>));
     ConfirmSend();
     QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
     return txid;
-}
+%>
 
 //! Find index of txid in transaction list.
 QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
-{
+<%
     QString hash = QString::fromStdString(txid.ToString());
-    int rows = model.rowCount({});
-    for (int row = 0; row < rows; ++row) {
-        QModelIndex index = model.index(row, 0, {});
-        if (model.data(index, TransactionTableModel::TxHashRole) == hash) {
+    int rows = model.rowCount(<%%>);
+    for (int row = 0; row < rows; ++row) <%
+        QModelIndex index = model.index(row, 0, <%%>);
+        if (model.data(index, TransactionTableModel::TxHashRole) == hash) <%
             return index;
-        }
-    }
-    return {};
-}
+        %>
+    %>
+    return <%%>;
+%>
 
 //! Invoke bumpfee on txid and check results.
 void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, std::string expectError, bool cancel)
-{
+<%
     QTableView* table = view.findChild<QTableView*>("transactionView");
     QModelIndex index = FindTx(*table->selectionModel()->model(), txid);
     QVERIFY2(index.isValid(), "Could not find BumpFee txid");
@@ -100,19 +100,19 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
     QAction* action = view.findChild<QAction*>("bumpFeeAction");
     table->selectionModel()->select(index, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
     action->setEnabled(expectDisabled);
-    table->customContextMenuRequested({});
+    table->customContextMenuRequested(<%%>);
     QCOMPARE(action->isEnabled(), !expectDisabled);
 
     action->setEnabled(true);
     QString text;
-    if (expectError.empty()) {
+    if (expectError.empty()) <%
         ConfirmSend(&text, cancel);
-    } else {
+    %> else <%
         ConfirmMessage(&text);
-    }
+    %>
     action->trigger();
     QVERIFY(text.indexOf(QString::fromStdString(expectError)) != -1);
-}
+%>
 
 //! Simple qt wallet tests.
 //
@@ -128,30 +128,30 @@ void BumpFee(TransactionView& view, const uint256& txid, bool expectDisabled, st
 //     src/qt/test/test_bitcoin-qt -platform windows  # Windows
 //     src/qt/test/test_bitcoin-qt -platform cocoa    # macOS
 void TestGUI()
-{
+<%
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
-    for (int i = 0; i < 5; ++i) {
-        test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
-    }
+    for (int i = 0; i < 5; ++i) <%
+        test.CreateAndProcessBlock(<%%>, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
+    %>
     auto chain = interfaces::MakeChain();
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(*chain, WalletLocation(), WalletDatabase::CreateMock());
     bool firstRun;
     wallet->LoadWallet(firstRun);
-    {
+    <%
         LOCK(wallet->cs_wallet);
         wallet->SetAddressBook(GetDestinationForKey(test.coinbaseKey.GetPubKey(), wallet->m_default_address_type), "", "receive");
         wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
-    }
-    {
+    %>
+    <%
         auto locked_chain = wallet->chain().lock();
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), {} /* stop_block */, reserver, true /* fUpdate */);
+        CWallet::ScanResult result = wallet->ScanForWalletTransactions(locked_chain->getBlockHash(0), <%%> /* stop_block */, reserver, true /* fUpdate */);
         QCOMPARE(result.status, CWallet::ScanResult::SUCCESS);
         QCOMPARE(result.last_scanned_block, chainActive.Tip()->GetBlockHash());
         QVERIFY(result.last_failed_block.IsNull());
-    }
+    %>
     wallet->SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
@@ -168,17 +168,17 @@ void TestGUI()
 
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
-    QCOMPARE(transactionTableModel->rowCount({}), 105);
+    QCOMPARE(transactionTableModel->rowCount(<%%>), 105);
     uint256 txid1 = SendCoins(*wallet.get(), sendCoinsDialog, CKeyID(), 5 * COIN, false /* rbf */);
     uint256 txid2 = SendCoins(*wallet.get(), sendCoinsDialog, CKeyID(), 10 * COIN, true /* rbf */);
-    QCOMPARE(transactionTableModel->rowCount({}), 107);
+    QCOMPARE(transactionTableModel->rowCount(<%%>), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
 
     // Call bumpfee. Test disabled, canceled, enabled, then failing cases.
     BumpFee(transactionView, txid1, true /* expect disabled */, "not BIP 125 replaceable" /* expected error */, false /* cancel */);
-    BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, true /* cancel */);
-    BumpFee(transactionView, txid2, false /* expect disabled */, {} /* expected error */, false /* cancel */);
+    BumpFee(transactionView, txid2, false /* expect disabled */, <%%> /* expected error */, true /* cancel */);
+    BumpFee(transactionView, txid2, false /* expect disabled */, <%%> /* expected error */, false /* cancel */);
     BumpFee(transactionView, txid2, true /* expect disabled */, "already bumped" /* expected error */, false /* cancel */);
 
     // Check current balance on OverviewPage
@@ -207,11 +207,11 @@ void TestGUI()
     // Message input
     QLineEdit* messageInput = receiveCoinsDialog.findChild<QLineEdit*>("reqMessage");
     messageInput->setText("TEST_MESSAGE_1");
-    int initialRowCount = requestTableModel->rowCount({});
+    int initialRowCount = requestTableModel->rowCount(<%%>);
     QPushButton* requestPaymentButton = receiveCoinsDialog.findChild<QPushButton*>("receiveButton");
     requestPaymentButton->click();
-    for (QWidget* widget : QApplication::topLevelWidgets()) {
-        if (widget->inherits("ReceiveRequestDialog")) {
+    for (QWidget* widget : QApplication::topLevelWidgets()) <%
+        if (widget->inherits("ReceiveRequestDialog")) <%
             ReceiveRequestDialog* receiveRequestDialog = qobject_cast<ReceiveRequestDialog*>(widget);
             QTextEdit* rlist = receiveRequestDialog->QObject::findChild<QTextEdit*>("outUri");
             QString paymentText = rlist->toPlainText();
@@ -222,8 +222,8 @@ void TestGUI()
             QCOMPARE(paymentTextList.at(3), QString("Amount: 0.00000001 ") + QString::fromStdString(CURRENCY_UNIT));
             QCOMPARE(paymentTextList.at(4), QString("Label: TEST_LABEL_1"));
             QCOMPARE(paymentTextList.at(5), QString("Message: TEST_MESSAGE_1"));
-        }
-    }
+        %>
+    %>
 
     // Clear button
     QPushButton* clearButton = receiveCoinsDialog.findChild<QPushButton*>("clearButton");
@@ -233,7 +233,7 @@ void TestGUI()
     QCOMPARE(messageInput->text(), QString(""));
 
     // Check addition to history
-    int currentRowCount = requestTableModel->rowCount({});
+    int currentRowCount = requestTableModel->rowCount(<%%>);
     QCOMPARE(currentRowCount, initialRowCount+1);
 
     // Check Remove button
@@ -241,15 +241,15 @@ void TestGUI()
     table->selectRow(currentRowCount-1);
     QPushButton* removeRequestButton = receiveCoinsDialog.findChild<QPushButton*>("removeRequestButton");
     removeRequestButton->click();
-    QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
-}
+    QCOMPARE(requestTableModel->rowCount(<%%>), currentRowCount-1);
+%>
 
-} // namespace
+%> // namespace
 
 void WalletTests::walletTests()
-{
+<%
 #ifdef Q_OS_MAC
-    if (QApplication::platformName() == "minimal") {
+    if (QApplication::platformName() == "minimal") <%
         // Disable for mac on "minimal" platform to avoid crashes inside the Qt
         // framework when it tries to look up unimplemented cocoa functions,
         // and fails to handle returned nulls
@@ -257,7 +257,7 @@ void WalletTests::walletTests()
         QWARN("Skipping WalletTests on mac build with 'minimal' platform set due to Qt bugs. To run AppTests, invoke "
               "with 'test_bitcoin-qt -platform cocoa' on mac, or else use a linux or windows build.");
         return;
-    }
+    %>
 #endif
     TestGUI();
-}
+%>

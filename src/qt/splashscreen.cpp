@@ -27,7 +27,7 @@
 
 SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle) :
     QWidget(nullptr, f), curAlignment(0), m_node(node)
-{
+<%
     // set reference point, paddings
     int paddingRight            = 50;
     int paddingTop              = 50;
@@ -75,9 +75,9 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     pixPaint.setFont(QFont(font, 33*fontFactor));
     QFontMetrics fm = pixPaint.fontMetrics();
     int titleTextWidth = fm.width(titleText);
-    if (titleTextWidth > 176) {
+    if (titleTextWidth > 176) <%
         fontFactor = fontFactor * 176 / titleTextWidth;
-    }
+    %>
 
     pixPaint.setFont(QFont(font, 33*fontFactor));
     fm = pixPaint.fontMetrics();
@@ -89,30 +89,30 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
     // if the version string is too long, reduce size
     fm = pixPaint.fontMetrics();
     int versionTextWidth  = fm.width(versionText);
-    if(versionTextWidth > titleTextWidth+paddingRight-10) {
+    if(versionTextWidth > titleTextWidth+paddingRight-10) <%
         pixPaint.setFont(QFont(font, 10*fontFactor));
         titleVersionVSpace -= 5;
-    }
+    %>
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight+2,paddingTop+titleVersionVSpace,versionText);
 
     // draw copyright stuff
-    {
+    <%
         pixPaint.setFont(QFont(font, 10*fontFactor));
         const int x = pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight;
         const int y = paddingTop+titleCopyrightVSpace;
         QRect copyrightRect(x, y, pixmap.width() - x - paddingRight, pixmap.height() - y);
         pixPaint.drawText(copyrightRect, Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap, copyrightText);
-    }
+    %>
 
     // draw additional text if special network
-    if(!titleAddText.isEmpty()) {
+    if(!titleAddText.isEmpty()) <%
         QFont boldFont = QFont(font, 10*fontFactor);
         boldFont.setWeight(QFont::Bold);
         pixPaint.setFont(boldFont);
         fm = pixPaint.fontMetrics();
         int titleAddTextWidth  = fm.width(titleAddText);
         pixPaint.drawText(pixmap.width()/devicePixelRatio-titleAddTextWidth-10,15,titleAddText);
-    }
+    %>
 
     pixPaint.end();
 
@@ -127,98 +127,98 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     subscribeToCoreSignals();
     installEventFilter(this);
-}
+%>
 
 SplashScreen::~SplashScreen()
-{
+<%
     unsubscribeFromCoreSignals();
-}
+%>
 
-bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) {
-    if (ev->type() == QEvent::KeyPress) {
+bool SplashScreen::eventFilter(QObject * obj, QEvent * ev) <%
+    if (ev->type() == QEvent::KeyPress) <%
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(ev);
-        if(keyEvent->text()[0] == 'q') {
+        if(keyEvent->text()[0] == 'q') <%
             m_node.startShutdown();
-        }
-    }
+        %>
+    %>
     return QObject::eventFilter(obj, ev);
-}
+%>
 
 void SplashScreen::finish()
-{
+<%
     /* If the window is minimized, hide() will be ignored. */
     /* Make sure we de-minimize the splashscreen window before hiding */
     if (isMinimized())
         showNormal();
     hide();
     deleteLater(); // No more need for this
-}
+%>
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
-{
+<%
     QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
         Q_ARG(QColor, QColor(55,55,55)));
-}
+%>
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress, bool resume_possible)
-{
+<%
     InitMessage(splash, title + std::string("\n") +
             (resume_possible ? _("(press q to shutdown and continue later)")
                                 : _("press q to shutdown")) +
             strprintf("\n%d", nProgress) + "%");
-}
+%>
 #ifdef ENABLE_WALLET
 void SplashScreen::ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet)
-{
+<%
     m_connected_wallet_handlers.emplace_back(wallet->handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, false)));
     m_connected_wallets.emplace_back(std::move(wallet));
-}
+%>
 #endif
 
 void SplashScreen::subscribeToCoreSignals()
-{
+<%
     // Connect signals to client
     m_handler_init_message = m_node.handleInitMessage(std::bind(InitMessage, this, std::placeholders::_1));
     m_handler_show_progress = m_node.handleShowProgress(std::bind(ShowProgress, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 #ifdef ENABLE_WALLET
-    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) { ConnectWallet(std::move(wallet)); });
+    m_handler_load_wallet = m_node.handleLoadWallet([this](std::unique_ptr<interfaces::Wallet> wallet) <% ConnectWallet(std::move(wallet)); %>);
 #endif
-}
+%>
 
 void SplashScreen::unsubscribeFromCoreSignals()
-{
+<%
     // Disconnect signals from client
     m_handler_init_message->disconnect();
     m_handler_show_progress->disconnect();
-    for (const auto& handler : m_connected_wallet_handlers) {
+    for (const auto& handler : m_connected_wallet_handlers) <%
         handler->disconnect();
-    }
+    %>
     m_connected_wallet_handlers.clear();
     m_connected_wallets.clear();
-}
+%>
 
 void SplashScreen::showMessage(const QString &message, int alignment, const QColor &color)
-{
+<%
     curMessage = message;
     curAlignment = alignment;
     curColor = color;
     update();
-}
+%>
 
 void SplashScreen::paintEvent(QPaintEvent *event)
-{
+<%
     QPainter painter(this);
     painter.drawPixmap(0, 0, pixmap);
     QRect r = rect().adjusted(5, 5, -5, -5);
     painter.setPen(curColor);
     painter.drawText(r, curAlignment, curMessage);
-}
+%>
 
 void SplashScreen::closeEvent(QCloseEvent *event)
-{
+<%
     m_node.startShutdown(); // allows an "emergency" shutdown during startup
     event->ignore();
-}
+%>

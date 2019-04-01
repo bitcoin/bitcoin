@@ -9,7 +9,7 @@
 #include <QTreeWidget>
 
 class CoinControlTreeWidget : public QTreeWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -17,6 +17,6 @@ public:
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
-};
+%>;
 
 #endif // BITCOIN_QT_COINCONTROLTREEWIDGET_H

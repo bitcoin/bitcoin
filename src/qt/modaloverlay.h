@@ -11,13 +11,13 @@
 //! The required delta of headers to the estimated number of available headers until we show the IBD progress
 static constexpr int HEADER_HEIGHT_DELTA_SYNC = 24;
 
-namespace Ui {
+namespace Ui <%
     class ModalOverlay;
-}
+%>
 
 /** Modal overlay to display information about the chain-sync state */
 class ModalOverlay : public QWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -32,7 +32,7 @@ public Q_SLOTS:
     // will show or hide the modal layer
     void showHide(bool hide = false, bool userRequested = false);
     void closeClicked();
-    bool isLayerVisible() const { return layerIsVisible; }
+    bool isLayerVisible() const <% return layerIsVisible; %>
 
 protected:
     bool eventFilter(QObject * obj, QEvent * ev);
@@ -46,6 +46,6 @@ private:
     bool layerIsVisible;
     bool userClosed;
     void UpdateHeaderSyncLabel();
-};
+%>;
 
 #endif // BITCOIN_QT_MODALOVERLAY_H

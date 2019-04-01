@@ -14,14 +14,14 @@
 
 class SendCoinsRecipient;
 
-namespace interfaces {
+namespace interfaces <%
 class Node;
 class PendingWalletTx;
-}
+%>
 
 /** Data model for a walletmodel transaction. */
 class WalletModelTransaction
-{
+<%
 public:
     explicit WalletModelTransaction(const QList<SendCoinsRecipient> &recipients);
 
@@ -41,6 +41,6 @@ private:
     QList<SendCoinsRecipient> recipients;
     std::unique_ptr<interfaces::PendingWalletTx> wtx;
     CAmount fee;
-};
+%>;
 
 #endif // BITCOIN_QT_WALLETMODELTRANSACTION_H

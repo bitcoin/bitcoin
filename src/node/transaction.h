@@ -9,7 +9,7 @@
 #include <primitives/transaction.h>
 #include <uint256.h>
 
-enum class TransactionError {
+enum class TransactionError <%
     OK, //!< No error
     MISSING_INPUTS,
     ALREADY_IN_CHAIN,
@@ -19,7 +19,7 @@ enum class TransactionError {
     INVALID_PSBT,
     PSBT_MISMATCH,
     SIGHASH_MISMATCH,
-};
+%>;
 
 std::string TransactionErrorString(const TransactionError error);
 

@@ -60,7 +60,7 @@ QT_END_NAMESPACE
 static const qint64 BIP70_MAX_PAYMENTREQUEST_SIZE = 50000;
 
 class PaymentServer : public QObject
-{
+<%
     Q_OBJECT
 
 public:
@@ -155,6 +155,6 @@ private:
     void initNetManager();
     QNetworkAccessManager* netManager;  // Used to fetch payment requests
 #endif
-};
+%>;
 
 #endif // BITCOIN_QT_PAYMENTSERVER_H

@@ -47,7 +47,7 @@ extern void noui_connect();
 
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
-{
+<%
     SetupEnvironment();
     SetupNetworking();
     SelectParams(CBaseChainParams::REGTEST);
@@ -77,39 +77,39 @@ int main(int argc, char *argv[])
     SSL_library_init();
 
     AppTests app_tests(app);
-    if (QTest::qExec(&app_tests) != 0) {
+    if (QTest::qExec(&app_tests) != 0) <%
         fInvalid = true;
-    }
+    %>
     URITests test1;
-    if (QTest::qExec(&test1) != 0) {
+    if (QTest::qExec(&test1) != 0) <%
         fInvalid = true;
-    }
+    %>
 #if defined(ENABLE_WALLET) && defined(ENABLE_BIP70)
     PaymentServerTests test2;
-    if (QTest::qExec(&test2) != 0) {
+    if (QTest::qExec(&test2) != 0) <%
         fInvalid = true;
-    }
+    %>
 #endif
     RPCNestedTests test3;
-    if (QTest::qExec(&test3) != 0) {
+    if (QTest::qExec(&test3) != 0) <%
         fInvalid = true;
-    }
+    %>
     CompatTests test4;
-    if (QTest::qExec(&test4) != 0) {
+    if (QTest::qExec(&test4) != 0) <%
         fInvalid = true;
-    }
+    %>
 #ifdef ENABLE_WALLET
     WalletTests test5;
-    if (QTest::qExec(&test5) != 0) {
+    if (QTest::qExec(&test5) != 0) <%
         fInvalid = true;
-    }
+    %>
     AddressBookTests test6;
-    if (QTest::qExec(&test6) != 0) {
+    if (QTest::qExec(&test6) != 0) <%
         fInvalid = true;
-    }
+    %>
 #endif
 
     fs::remove_all(pathTemp);
 
     return fInvalid;
-}
+%>

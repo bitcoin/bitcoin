@@ -10,7 +10,7 @@
 #include <QUrl>
 
 void URITests::uriTests()
-{
+<%
     SendCoinsRecipient rv;
     QUrl uri;
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?req-dontexist="));
@@ -63,4 +63,4 @@ void URITests::uriTests()
 
     uri.setUrl(QString("bitcoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
-}
+%>

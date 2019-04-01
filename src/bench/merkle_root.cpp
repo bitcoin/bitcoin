@@ -9,18 +9,18 @@
 #include <consensus/merkle.h>
 
 static void MerkleRoot(benchmark::State& state)
-{
+<%
     FastRandomContext rng(true);
     std::vector<uint256> leaves;
     leaves.resize(9001);
-    for (auto& item : leaves) {
+    for (auto& item : leaves) <%
         item = rng.rand256();
-    }
-    while (state.KeepRunning()) {
+    %>
+    while (state.KeepRunning()) <%
         bool mutation = false;
         uint256 hash = ComputeMerkleRoot(std::vector<uint256>(leaves), &mutation);
         leaves[mutation] = hash;
-    }
-}
+    %>
+%>
 
 BENCHMARK(MerkleRoot, 800);

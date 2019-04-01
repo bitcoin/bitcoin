@@ -29,7 +29,7 @@
  * BoringSSL (LICENSE: ISC)
  */
 void memory_cleanse(void *ptr, size_t len)
-{
+<%
     std::memset(ptr, 0, len);
 
     /* As best as we can tell, this is sufficient to break any optimisations that
@@ -40,4 +40,4 @@ void memory_cleanse(void *ptr, size_t len)
 #else
     __asm__ __volatile__("" : : "r"(ptr) : "memory");
 #endif
-}
+%>

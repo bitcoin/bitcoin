@@ -14,16 +14,16 @@
 #include <memory>
 #include <vector>
 
-struct SeedSpec6 {
+struct SeedSpec6 <%
     uint8_t addr[16];
     uint16_t port;
-};
+%>;
 
 typedef std::map<int, uint256> MapCheckpoints;
 
-struct CCheckpointData {
+struct CCheckpointData <%
     MapCheckpoints mapCheckpoints;
-};
+%>;
 
 /**
  * Holds various statistics on transactions within a chain. Used to estimate
@@ -31,11 +31,11 @@ struct CCheckpointData {
  *
  * See also: CChainParams::TxData, GuessVerificationProgress.
  */
-struct ChainTxData {
+struct ChainTxData <%
     int64_t nTime;    //!< UNIX timestamp of last known number of transactions
     int64_t nTxCount; //!< total number of transactions between genesis and that timestamp
     double dTxRate;   //!< estimated number of transactions per second after that timestamp
-};
+%>;
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
@@ -45,9 +45,9 @@ struct ChainTxData {
  * minimal difficulty to ensure that blocks can be found instantly.
  */
 class CChainParams
-{
+<%
 public:
-    enum Base58Type {
+    enum Base58Type <%
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
         SECRET_KEY,
@@ -55,37 +55,37 @@ public:
         EXT_SECRET_KEY,
 
         MAX_BASE58_TYPES
-    };
+    %>;
 
-    const Consensus::Params& GetConsensus() const { return consensus; }
-    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
-    int GetDefaultPort() const { return nDefaultPort; }
+    const Consensus::Params& GetConsensus() const <% return consensus; %>
+    const CMessageHeader::MessageStartChars& MessageStart() const <% return pchMessageStart; %>
+    int GetDefaultPort() const <% return nDefaultPort; %>
 
-    const CBlock& GenesisBlock() const { return genesis; }
+    const CBlock& GenesisBlock() const <% return genesis; %>
     /** Default value for -checkmempool and -checkblockindex argument */
-    bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
+    bool DefaultConsistencyChecks() const <% return fDefaultConsistencyChecks; %>
     /** Policy: Filter transactions that do not match well-defined patterns */
-    bool RequireStandard() const { return fRequireStandard; }
-    uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
+    bool RequireStandard() const <% return fRequireStandard; %>
+    uint64_t PruneAfterHeight() const <% return nPruneAfterHeight; %>
     /** Minimum free space (in GB) needed for data directory */
-    uint64_t AssumedBlockchainSize() const { return m_assumed_blockchain_size; }
+    uint64_t AssumedBlockchainSize() const <% return m_assumed_blockchain_size; %>
     /** Minimum free space (in GB) needed for data directory when pruned; Does not include prune target*/
-    uint64_t AssumedChainStateSize() const { return m_assumed_chain_state_size; }
+    uint64_t AssumedChainStateSize() const <% return m_assumed_chain_state_size; %>
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
-    bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
+    bool MineBlocksOnDemand() const <% return fMineBlocksOnDemand; %>
     /** Return the BIP70 network string (main, test or regtest) */
-    std::string NetworkIDString() const { return strNetworkID; }
+    std::string NetworkIDString() const <% return strNetworkID; %>
     /** Return true if the fallback fee is by default enabled for this network */
-    bool IsFallbackFeeEnabled() const { return m_fallback_fee_enabled; }
+    bool IsFallbackFeeEnabled() const <% return m_fallback_fee_enabled; %>
     /** Return the list of hostnames to look up for DNS seeds */
-    const std::vector<std::string>& DNSSeeds() const { return vSeeds; }
-    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
-    const std::string& Bech32HRP() const { return bech32_hrp; }
-    const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
-    const CCheckpointData& Checkpoints() const { return checkpointData; }
-    const ChainTxData& TxData() const { return chainTxData; }
+    const std::vector<std::string>& DNSSeeds() const <% return vSeeds; %>
+    const std::vector<unsigned char>& Base58Prefix(Base58Type type) const <% return base58Prefixes[type]; %>
+    const std::string& Bech32HRP() const <% return bech32_hrp; %>
+    const std::vector<SeedSpec6>& FixedSeeds() const <% return vFixedSeeds; %>
+    const CCheckpointData& Checkpoints() const <% return checkpointData; %>
+    const ChainTxData& TxData() const <% return chainTxData; %>
 protected:
-    CChainParams() {}
+    CChainParams() <%%>
 
     Consensus::Params consensus;
     CMessageHeader::MessageStartChars pchMessageStart;
@@ -105,7 +105,7 @@ protected:
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
     bool m_fallback_fee_enabled;
-};
+%>;
 
 /**
  * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.

@@ -18,9 +18,9 @@ static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
 static const unsigned int DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN = 100;
 /** Default for BIP61 (sending reject messages) */
-static constexpr bool DEFAULT_ENABLE_BIP61{false};
+static constexpr bool DEFAULT_ENABLE_BIP61<%false%>;
 
-class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface {
+class PeerLogicValidation final : public CValidationInterface, public NetEventsInterface <%
 private:
     CConnman* const connman;
     BanMan* const m_banman;
@@ -77,14 +77,14 @@ private:
 
     /** Enable BIP61 (sending reject messages) */
     const bool m_enable_bip61;
-};
+%>;
 
-struct CNodeStateStats {
+struct CNodeStateStats <%
     int nMisbehavior = 0;
     int nSyncHeight = -1;
     int nCommonHeight = -1;
     std::vector<int> vHeightInFlight;
-};
+%>;
 
 /** Get statistics from node state */
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats);

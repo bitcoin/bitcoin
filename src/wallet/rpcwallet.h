@@ -16,10 +16,10 @@ class UniValue;
 struct PartiallySignedTransaction;
 class CTransaction;
 
-namespace interfaces {
+namespace interfaces <%
 class Chain;
 class Handler;
-}
+%>
 
 void RegisterWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers);
 

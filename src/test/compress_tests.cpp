@@ -24,21 +24,21 @@
 
 BOOST_FIXTURE_TEST_SUITE(compress_tests, BasicTestingSetup)
 
-bool static TestEncode(uint64_t in) {
+bool static TestEncode(uint64_t in) <%
     return in == DecompressAmount(CompressAmount(in));
-}
+%>
 
-bool static TestDecode(uint64_t in) {
+bool static TestDecode(uint64_t in) <%
     return in == CompressAmount(DecompressAmount(in));
-}
+%>
 
-bool static TestPair(uint64_t dec, uint64_t enc) {
+bool static TestPair(uint64_t dec, uint64_t enc) <%
     return CompressAmount(dec) == enc &&
            DecompressAmount(enc) == dec;
-}
+%>
 
 BOOST_AUTO_TEST_CASE(compress_amounts)
-{
+<%
     BOOST_CHECK(TestPair(            0,       0x0));
     BOOST_CHECK(TestPair(            1,       0x1));
     BOOST_CHECK(TestPair(         CENT,       0x7));
@@ -60,6 +60,6 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
 
     for (uint64_t i = 0; i < 100000; i++)
         BOOST_CHECK(TestDecode(i));
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

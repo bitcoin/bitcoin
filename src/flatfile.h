@@ -12,45 +12,45 @@
 #include <serialize.h>
 
 struct FlatFilePos
-{
+<%
     int nFile;
     unsigned int nPos;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
         READWRITE(VARINT(nFile, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(nPos));
-    }
+    %>
 
-    FlatFilePos() : nFile(-1), nPos(0) {}
+    FlatFilePos() : nFile(-1), nPos(0) <%%>
 
     FlatFilePos(int nFileIn, unsigned int nPosIn) :
         nFile(nFileIn),
         nPos(nPosIn)
-    {}
+    <%%>
 
-    friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) {
+    friend bool operator==(const FlatFilePos &a, const FlatFilePos &b) <%
         return (a.nFile == b.nFile && a.nPos == b.nPos);
-    }
+    %>
 
-    friend bool operator!=(const FlatFilePos &a, const FlatFilePos &b) {
+    friend bool operator!=(const FlatFilePos &a, const FlatFilePos &b) <%
         return !(a == b);
-    }
+    %>
 
-    void SetNull() { nFile = -1; nPos = 0; }
-    bool IsNull() const { return (nFile == -1); }
+    void SetNull() <% nFile = -1; nPos = 0; %>
+    bool IsNull() const <% return (nFile == -1); %>
 
     std::string ToString() const;
-};
+%>;
 
 /**
  * FlatFileSeq represents a sequence of numbered files storing raw data. This class facilitates
  * access to and efficient management of these files.
  */
 class FlatFileSeq
-{
+<%
 private:
     const fs::path m_dir;
     const char* const m_prefix;
@@ -91,6 +91,6 @@ public:
      * @return true on success, false on failure.
      */
     bool Flush(const FlatFilePos& pos, bool finalize = false);
-};
+%>;
 
 #endif // BITCOIN_FLATFILE_H

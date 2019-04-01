@@ -46,18 +46,18 @@ using WalletDatabase = BerkeleyDatabase;
 
 /** Error statuses for the wallet database */
 enum class DBErrors
-{
+<%
     LOAD_OK,
     CORRUPT,
     NONCRITICAL_ERROR,
     TOO_NEW,
     LOAD_FAIL,
     NEED_REWRITE
-};
+%>;
 
 /* simple HD chain data model */
 class CHDChain
-{
+<%
 public:
     uint32_t nExternalChainCounter;
     uint32_t nInternalChainCounter;
@@ -68,29 +68,29 @@ public:
     static const int CURRENT_VERSION        = VERSION_HD_CHAIN_SPLIT;
     int nVersion;
 
-    CHDChain() { SetNull(); }
+    CHDChain() <% SetNull(); %>
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    <%
         READWRITE(this->nVersion);
         READWRITE(nExternalChainCounter);
         READWRITE(seed_id);
         if (this->nVersion >= VERSION_HD_CHAIN_SPLIT)
             READWRITE(nInternalChainCounter);
-    }
+    %>
 
     void SetNull()
-    {
+    <%
         nVersion = CHDChain::CURRENT_VERSION;
         nExternalChainCounter = 0;
         nInternalChainCounter = 0;
         seed_id.SetNull();
-    }
-};
+    %>
+%>;
 
 class CKeyMetadata
-{
+<%
 public:
     static const int VERSION_BASIC=1;
     static const int VERSION_WITH_HDDATA=10;
@@ -104,43 +104,43 @@ public:
     bool has_key_origin = false; //< Whether the key_origin is useful
 
     CKeyMetadata()
-    {
+    <%
         SetNull();
-    }
+    %>
     explicit CKeyMetadata(int64_t nCreateTime_)
-    {
+    <%
         SetNull();
         nCreateTime = nCreateTime_;
-    }
+    %>
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    inline void SerializationOp(Stream& s, Operation ser_action) <%
         READWRITE(this->nVersion);
         READWRITE(nCreateTime);
         if (this->nVersion >= VERSION_WITH_HDDATA)
-        {
+        <%
             READWRITE(hdKeypath);
             READWRITE(hd_seed_id);
-        }
+        %>
         if (this->nVersion >= VERSION_WITH_KEY_ORIGIN)
-        {
+        <%
             READWRITE(key_origin);
             READWRITE(has_key_origin);
-        }
-    }
+        %>
+    %>
 
     void SetNull()
-    {
+    <%
         nVersion = CKeyMetadata::CURRENT_VERSION;
         nCreateTime = 0;
         hdKeypath.clear();
         hd_seed_id.SetNull();
         key_origin.clear();
         has_key_origin = false;
-    }
-};
+    %>
+%>;
 
 /** Access to the wallet database.
  * This represents a single transaction at the
@@ -148,34 +148,34 @@ public:
  * Optionally (on by default) it will flush to disk as well.
  */
 class WalletBatch
-{
+<%
 private:
     template <typename K, typename T>
     bool WriteIC(const K& key, const T& value, bool fOverwrite = true)
-    {
-        if (!m_batch.Write(key, value, fOverwrite)) {
+    <%
+        if (!m_batch.Write(key, value, fOverwrite)) <%
             return false;
-        }
+        %>
         m_database.IncrementUpdateCounter();
         return true;
-    }
+    %>
 
     template <typename K>
     bool EraseIC(const K& key)
-    {
-        if (!m_batch.Erase(key)) {
+    <%
+        if (!m_batch.Erase(key)) <%
             return false;
-        }
+        %>
         m_database.IncrementUpdateCounter();
         return true;
-    }
+    %>
 
 public:
     explicit WalletBatch(WalletDatabase& database, const char* pszMode = "r+", bool _fFlushOnClose = true) :
         m_batch(database, pszMode, _fFlushOnClose),
         m_database(database)
-    {
-    }
+    <%
+    %>
     WalletBatch(const WalletBatch&) = delete;
     WalletBatch& operator=(const WalletBatch&) = delete;
 
@@ -248,7 +248,7 @@ public:
 private:
     BerkeleyBatch m_batch;
     WalletDatabase& m_database;
-};
+%>;
 
 //! Compacts BDB state so that wallet.dat is self-contained (if there are changes)
 void MaybeCompactWalletDB();

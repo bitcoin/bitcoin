@@ -16,33 +16,33 @@
 #include <boost/test/unit_test.hpp>
 
 class CPartialMerkleTreeTester : public CPartialMerkleTree
-{
+<%
 public:
     // flip one bit in one of the hashes - this should break the authentication
-    void Damage() {
+    void Damage() <%
         unsigned int n = InsecureRandRange(vHash.size());
         int bit = InsecureRandBits(8);
         *(vHash[n].begin() + (bit>>3)) ^= 1<<(bit&7);
-    }
-};
+    %>
+%>;
 
 BOOST_FIXTURE_TEST_SUITE(pmt_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(pmt_test1)
-{
+<%
     SeedInsecureRand(false);
-    static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
+    static const unsigned int nTxCounts[] = <%1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095%>;
 
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 12; i++) <%
         unsigned int nTx = nTxCounts[i];
 
         // build a block with some dummy transactions
         CBlock block;
-        for (unsigned int j=0; j<nTx; j++) {
+        for (unsigned int j=0; j<nTx; j++) <%
             CMutableTransaction tx;
             tx.nLockTime = j; // actual transaction data doesn't matter; just make the nLockTime's unique
             block.vtx.push_back(MakeTransactionRef(std::move(tx)));
-        }
+        %>
 
         // calculate actual merkle root and height
         uint256 merkleRoot1 = BlockMerkleRoot(block);
@@ -50,22 +50,22 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
         for (unsigned int j=0; j<nTx; j++)
             vTxid[j] = block.vtx[j]->GetHash();
         int nHeight = 1, nTx_ = nTx;
-        while (nTx_ > 1) {
+        while (nTx_ > 1) <%
             nTx_ = (nTx_+1)/2;
             nHeight++;
-        }
+        %>
 
         // check with random subsets with inclusion chances 1, 1/2, 1/4, ..., 1/128
-        for (int att = 1; att < 15; att++) {
+        for (int att = 1; att < 15; att++) <%
             // build random subset of txid's
             std::vector<bool> vMatch(nTx, false);
             std::vector<uint256> vMatchTxid1;
-            for (unsigned int j=0; j<nTx; j++) {
+            for (unsigned int j=0; j<nTx; j++) <%
                 bool fInclude = InsecureRandBits(att / 2) == 0;
                 vMatch[j] = fInclude;
                 if (fInclude)
                     vMatchTxid1.push_back(vTxid[j]);
-            }
+            %>
 
             // build the partial merkle tree
             CPartialMerkleTree pmt1(vTxid, vMatch);
@@ -95,32 +95,32 @@ BOOST_AUTO_TEST_CASE(pmt_test1)
             BOOST_CHECK(vMatchTxid1 == vMatchTxid2);
 
             // check that random bit flips break the authentication
-            for (int j=0; j<4; j++) {
+            for (int j=0; j<4; j++) <%
                 CPartialMerkleTreeTester pmt3(pmt2);
                 pmt3.Damage();
                 std::vector<uint256> vMatchTxid3;
                 uint256 merkleRoot3 = pmt3.ExtractMatches(vMatchTxid3, vIndex);
                 BOOST_CHECK(merkleRoot3 != merkleRoot1);
-            }
-        }
-    }
-}
+            %>
+        %>
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(pmt_malleability)
-{
-    std::vector<uint256> vTxid = {
+<%
+    std::vector<uint256> vTxid = <%
         ArithToUint256(1), ArithToUint256(2),
         ArithToUint256(3), ArithToUint256(4),
         ArithToUint256(5), ArithToUint256(6),
         ArithToUint256(7), ArithToUint256(8),
         ArithToUint256(9), ArithToUint256(10),
         ArithToUint256(9), ArithToUint256(10),
-    };
-    std::vector<bool> vMatch = {false, false, false, false, false, false, false, false, false, true, true, false};
+    %>;
+    std::vector<bool> vMatch = <%false, false, false, false, false, false, false, false, false, true, true, false%>;
 
     CPartialMerkleTree tree(vTxid, vMatch);
     std::vector<unsigned int> vIndex;
     BOOST_CHECK(tree.ExtractMatches(vTxid, vIndex).IsNull());
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -16,7 +16,7 @@ class QTimer;
 QT_END_NAMESPACE
 
 class TrafficGraphWidget : public QWidget
-{
+<%
     Q_OBJECT
 
 public:
@@ -43,6 +43,6 @@ private:
     quint64 nLastBytesIn;
     quint64 nLastBytesOut;
     ClientModel *clientModel;
-};
+%>;
 
 #endif // BITCOIN_QT_TRAFFICGRAPHWIDGET_H

@@ -20,12 +20,12 @@ class uint256;
 
 /** Signature hash types/flags */
 enum
-{
+<%
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
     SIGHASH_ANYONECANPAY = 0x80,
-};
+%>;
 
 /** Script verification flags.
  *
@@ -33,7 +33,7 @@ enum
  *  flags (A | B) is a subset of the acceptable scripts under flag (A).
  */
 enum
-{
+<%
     SCRIPT_VERIFY_NONE      = 0,
 
     // Evaluate P2SH subscripts (BIP16).
@@ -115,24 +115,24 @@ enum
     // Making OP_CODESEPARATOR and FindAndDelete fail any non-segwit scripts
     //
     SCRIPT_VERIFY_CONST_SCRIPTCODE = (1U << 16),
-};
+%>;
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
 
 struct PrecomputedTransactionData
-{
+<%
     uint256 hashPrevouts, hashSequence, hashOutputs;
     bool ready = false;
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
-};
+%>;
 
 enum class SigVersion
-{
+<%
     BASE = 0,
     WITNESS_V0 = 1,
-};
+%>;
 
 /** Signature hash sizes */
 static constexpr size_t WITNESS_V0_SCRIPTHASH_SIZE = 32;
@@ -142,29 +142,29 @@ template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache = nullptr);
 
 class BaseSignatureChecker
-{
+<%
 public:
     virtual bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
-    {
+    <%
         return false;
-    }
+    %>
 
     virtual bool CheckLockTime(const CScriptNum& nLockTime) const
-    {
+    <%
          return false;
-    }
+    %>
 
     virtual bool CheckSequence(const CScriptNum& nSequence) const
-    {
+    <%
          return false;
-    }
+    %>
 
-    virtual ~BaseSignatureChecker() {}
-};
+    virtual ~BaseSignatureChecker() <%%>
+%>;
 
 template <class T>
 class GenericTransactionSignatureChecker : public BaseSignatureChecker
-{
+<%
 private:
     const T* txTo;
     unsigned int nIn;
@@ -175,12 +175,12 @@ protected:
     virtual bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const;
 
 public:
-    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) {}
-    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) {}
+    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(nullptr) <%%>
+    GenericTransactionSignatureChecker(const T* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData& txdataIn) : txTo(txToIn), nIn(nInIn), amount(amountIn), txdata(&txdataIn) <%%>
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
-};
+%>;
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
 using MutableTransactionSignatureChecker = GenericTransactionSignatureChecker<CMutableTransaction>;

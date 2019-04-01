@@ -11,7 +11,7 @@ class CScheduler;
 class CRPCTable;
 struct InitInterfaces;
 
-class WalletInitInterface {
+class WalletInitInterface <%
 public:
     /** Is the wallet component enabled */
     virtual bool HasWalletSupport() const = 0;
@@ -22,8 +22,8 @@ public:
     /** Add wallets that should be opened to list of init interfaces. */
     virtual void Construct(InitInterfaces& interfaces) const = 0;
 
-    virtual ~WalletInitInterface() {}
-};
+    virtual ~WalletInitInterface() <%%>
+%>;
 
 extern const WalletInitInterface& g_wallet_init_interface;
 

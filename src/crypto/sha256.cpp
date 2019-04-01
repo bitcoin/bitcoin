@@ -13,57 +13,57 @@
 #if defined(USE_ASM)
 #include <cpuid.h>
 namespace sha256_sse4
-{
+<%
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
-}
+%>
 #endif
 #endif
 
 namespace sha256d64_sse41
-{
+<%
 void Transform_4way(unsigned char* out, const unsigned char* in);
-}
+%>
 
 namespace sha256d64_avx2
-{
+<%
 void Transform_8way(unsigned char* out, const unsigned char* in);
-}
+%>
 
 namespace sha256d64_shani
-{
+<%
 void Transform_2way(unsigned char* out, const unsigned char* in);
-}
+%>
 
 namespace sha256_shani
-{
+<%
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks);
-}
+%>
 
 // Internal implementation code.
 namespace
-{
+<%
 /// Internal SHA-256 implementation.
 namespace sha256
-{
-uint32_t inline Ch(uint32_t x, uint32_t y, uint32_t z) { return z ^ (x & (y ^ z)); }
-uint32_t inline Maj(uint32_t x, uint32_t y, uint32_t z) { return (x & y) | (z & (x | y)); }
-uint32_t inline Sigma0(uint32_t x) { return (x >> 2 | x << 30) ^ (x >> 13 | x << 19) ^ (x >> 22 | x << 10); }
-uint32_t inline Sigma1(uint32_t x) { return (x >> 6 | x << 26) ^ (x >> 11 | x << 21) ^ (x >> 25 | x << 7); }
-uint32_t inline sigma0(uint32_t x) { return (x >> 7 | x << 25) ^ (x >> 18 | x << 14) ^ (x >> 3); }
-uint32_t inline sigma1(uint32_t x) { return (x >> 17 | x << 15) ^ (x >> 19 | x << 13) ^ (x >> 10); }
+<%
+uint32_t inline Ch(uint32_t x, uint32_t y, uint32_t z) <% return z ^ (x & (y ^ z)); %>
+uint32_t inline Maj(uint32_t x, uint32_t y, uint32_t z) <% return (x & y) | (z & (x | y)); %>
+uint32_t inline Sigma0(uint32_t x) <% return (x >> 2 | x << 30) ^ (x >> 13 | x << 19) ^ (x >> 22 | x << 10); %>
+uint32_t inline Sigma1(uint32_t x) <% return (x >> 6 | x << 26) ^ (x >> 11 | x << 21) ^ (x >> 25 | x << 7); %>
+uint32_t inline sigma0(uint32_t x) <% return (x >> 7 | x << 25) ^ (x >> 18 | x << 14) ^ (x >> 3); %>
+uint32_t inline sigma1(uint32_t x) <% return (x >> 17 | x << 15) ^ (x >> 19 | x << 13) ^ (x >> 10); %>
 
 /** One round of SHA-256. */
 void inline Round(uint32_t a, uint32_t b, uint32_t c, uint32_t& d, uint32_t e, uint32_t f, uint32_t g, uint32_t& h, uint32_t k)
-{
+<%
     uint32_t t1 = h + Sigma1(e) + Ch(e, f, g) + k;
     uint32_t t2 = Sigma0(a) + Maj(a, b, c);
     d += t1;
     h = t1 + t2;
-}
+%>
 
 /** Initialize SHA-256 state. */
 void inline Initialize(uint32_t* s)
-{
+<%
     s[0] = 0x6a09e667ul;
     s[1] = 0xbb67ae85ul;
     s[2] = 0x3c6ef372ul;
@@ -72,12 +72,12 @@ void inline Initialize(uint32_t* s)
     s[5] = 0x9b05688cul;
     s[6] = 0x1f83d9abul;
     s[7] = 0x5be0cd19ul;
-}
+%>
 
 /** Perform a number of SHA-256 transformations, processing 64-byte chunks. */
 void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
-{
-    while (blocks--) {
+<%
+    while (blocks--) <%
         uint32_t a = s[0], b = s[1], c = s[2], d = s[3], e = s[4], f = s[5], g = s[6], h = s[7];
         uint32_t w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
 
@@ -158,11 +158,11 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
         s[6] += g;
         s[7] += h;
         chunk += 64;
-    }
-}
+    %>
+%>
 
 void TransformD64(unsigned char* out, const unsigned char* in)
-{
+<%
     // Transform 1
     uint32_t a = 0x6a09e667ul;
     uint32_t b = 0xbb67ae85ul;
@@ -410,29 +410,29 @@ void TransformD64(unsigned char* out, const unsigned char* in)
     WriteBE32(out + 20, f + 0x9b05688cul);
     WriteBE32(out + 24, g + 0x1f83d9abul);
     WriteBE32(out + 28, h + 0x5be0cd19ul);
-}
+%>
 
-} // namespace sha256
+%> // namespace sha256
 
 typedef void (*TransformType)(uint32_t*, const unsigned char*, size_t);
 typedef void (*TransformD64Type)(unsigned char*, const unsigned char*);
 
 template<TransformType tr>
 void TransformD64Wrapper(unsigned char* out, const unsigned char* in)
-{
+<%
     uint32_t s[8];
-    static const unsigned char padding1[64] = {
+    static const unsigned char padding1[64] = <%
         0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0
-    };
-    unsigned char buffer2[64] = {
+    %>;
+    unsigned char buffer2[64] = <%
         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0,    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0
-    };
+    %>;
     sha256::Initialize(s);
     tr(s, in, 1);
     tr(s, padding1, 1);
@@ -454,7 +454,7 @@ void TransformD64Wrapper(unsigned char* out, const unsigned char* in)
     WriteBE32(out + 20, s[5]);
     WriteBE32(out + 24, s[6]);
     WriteBE32(out + 28, s[7]);
-}
+%>
 
 TransformType Transform = sha256::Transform;
 TransformD64Type TransformD64 = sha256::TransformD64;
@@ -462,11 +462,11 @@ TransformD64Type TransformD64_2way = nullptr;
 TransformD64Type TransformD64_4way = nullptr;
 TransformD64Type TransformD64_8way = nullptr;
 
-bool SelfTest() {
+bool SelfTest() <%
     // Input state (equal to the initial SHA256 state)
-    static const uint32_t init[8] = {
+    static const uint32_t init[8] = <%
         0x6a09e667ul, 0xbb67ae85ul, 0x3c6ef372ul, 0xa54ff53aul, 0x510e527ful, 0x9b05688cul, 0x1f83d9abul, 0x5be0cd19ul
-    };
+    %>;
     // Some random input data to test with
     static const unsigned char data[641] = "-" // Intentionally not aligned
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do "
@@ -478,19 +478,19 @@ bool SelfTest() {
         " id velit. Telus in metus vulputate eu scelerisque felis. Mi tem"
         "pus imperdiet nulla malesuada pellentesque. Tristique magna sit.";
     // Expected output state for hashing the i*64 first input bytes above (excluding SHA256 padding).
-    static const uint32_t result[9][8] = {
-        {0x6a09e667ul, 0xbb67ae85ul, 0x3c6ef372ul, 0xa54ff53aul, 0x510e527ful, 0x9b05688cul, 0x1f83d9abul, 0x5be0cd19ul},
-        {0x91f8ec6bul, 0x4da10fe3ul, 0x1c9c292cul, 0x45e18185ul, 0x435cc111ul, 0x3ca26f09ul, 0xeb954caeul, 0x402a7069ul},
-        {0xcabea5acul, 0x374fb97cul, 0x182ad996ul, 0x7bd69cbful, 0x450ff900ul, 0xc1d2be8aul, 0x6a41d505ul, 0xe6212dc3ul},
-        {0xbcff09d6ul, 0x3e76f36eul, 0x3ecb2501ul, 0x78866e97ul, 0xe1c1e2fdul, 0x32f4eafful, 0x8aa6c4e5ul, 0xdfc024bcul},
-        {0xa08c5d94ul, 0x0a862f93ul, 0x6b7f2f40ul, 0x8f9fae76ul, 0x6d40439ful, 0x79dcee0cul, 0x3e39ff3aul, 0xdc3bdbb1ul},
-        {0x216a0895ul, 0x9f1a3662ul, 0xe99946f9ul, 0x87ba4364ul, 0x0fb5db2cul, 0x12bed3d3ul, 0x6689c0c7ul, 0x292f1b04ul},
-        {0xca3067f8ul, 0xbc8c2656ul, 0x37cb7e0dul, 0x9b6b8b0ful, 0x46dc380bul, 0xf1287f57ul, 0xc42e4b23ul, 0x3fefe94dul},
-        {0x3e4c4039ul, 0xbb6fca8cul, 0x6f27d2f7ul, 0x301e44a4ul, 0x8352ba14ul, 0x5769ce37ul, 0x48a1155ful, 0xc0e1c4c6ul},
-        {0xfe2fa9ddul, 0x69d0862bul, 0x1ae0db23ul, 0x471f9244ul, 0xf55c0145ul, 0xc30f9c3bul, 0x40a84ea0ul, 0x5b8a266cul},
-    };
+    static const uint32_t result[9][8] = <%
+        <%0x6a09e667ul, 0xbb67ae85ul, 0x3c6ef372ul, 0xa54ff53aul, 0x510e527ful, 0x9b05688cul, 0x1f83d9abul, 0x5be0cd19ul%>,
+        <%0x91f8ec6bul, 0x4da10fe3ul, 0x1c9c292cul, 0x45e18185ul, 0x435cc111ul, 0x3ca26f09ul, 0xeb954caeul, 0x402a7069ul%>,
+        <%0xcabea5acul, 0x374fb97cul, 0x182ad996ul, 0x7bd69cbful, 0x450ff900ul, 0xc1d2be8aul, 0x6a41d505ul, 0xe6212dc3ul%>,
+        <%0xbcff09d6ul, 0x3e76f36eul, 0x3ecb2501ul, 0x78866e97ul, 0xe1c1e2fdul, 0x32f4eafful, 0x8aa6c4e5ul, 0xdfc024bcul%>,
+        <%0xa08c5d94ul, 0x0a862f93ul, 0x6b7f2f40ul, 0x8f9fae76ul, 0x6d40439ful, 0x79dcee0cul, 0x3e39ff3aul, 0xdc3bdbb1ul%>,
+        <%0x216a0895ul, 0x9f1a3662ul, 0xe99946f9ul, 0x87ba4364ul, 0x0fb5db2cul, 0x12bed3d3ul, 0x6689c0c7ul, 0x292f1b04ul%>,
+        <%0xca3067f8ul, 0xbc8c2656ul, 0x37cb7e0dul, 0x9b6b8b0ful, 0x46dc380bul, 0xf1287f57ul, 0xc42e4b23ul, 0x3fefe94dul%>,
+        <%0x3e4c4039ul, 0xbb6fca8cul, 0x6f27d2f7ul, 0x301e44a4ul, 0x8352ba14ul, 0x5769ce37ul, 0x48a1155ful, 0xc0e1c4c6ul%>,
+        <%0xfe2fa9ddul, 0x69d0862bul, 0x1ae0db23ul, 0x471f9244ul, 0xf55c0145ul, 0xc30f9c3bul, 0x40a84ea0ul, 0x5b8a266cul%>,
+    %>;
     // Expected output for each of the individual 8 64-byte messages under full double SHA256 (including padding).
-    static const unsigned char result_d64[256] = {
+    static const unsigned char result_d64[256] = <%
         0x09, 0x3a, 0xc4, 0xd0, 0x0f, 0xf7, 0x57, 0xe1, 0x72, 0x85, 0x79, 0x42, 0xfe, 0xe7, 0xe0, 0xa0,
         0xfc, 0x52, 0xd7, 0xdb, 0x07, 0x63, 0x45, 0xfb, 0x53, 0x14, 0x7d, 0x17, 0x22, 0x86, 0xf0, 0x52,
         0x48, 0xb6, 0x11, 0x9e, 0x6e, 0x48, 0x81, 0x6d, 0xcc, 0x57, 0x1f, 0xb2, 0x97, 0xa8, 0xd5, 0x25,
@@ -507,16 +507,16 @@ bool SelfTest() {
         0xb5, 0xac, 0x87, 0xa9, 0xf3, 0xff, 0x75, 0xf2, 0x34, 0xcd, 0x1a, 0x3b, 0x82, 0x2c, 0x2b, 0x4e,
         0x6a, 0x46, 0x30, 0xa6, 0x89, 0x86, 0x23, 0xac, 0xf8, 0xa5, 0x15, 0xe9, 0x0a, 0xaa, 0x1e, 0x9a,
         0xd7, 0x93, 0x6b, 0x28, 0xe4, 0x3b, 0xfd, 0x59, 0xc6, 0xed, 0x7c, 0x5f, 0xa5, 0x41, 0xcb, 0x51
-    };
+    %>;
 
 
     // Test Transform() for 0 through 8 transformations.
-    for (size_t i = 0; i <= 8; ++i) {
+    for (size_t i = 0; i <= 8; ++i) <%
         uint32_t state[8];
         std::copy(init, init + 8, state);
         Transform(state, data + 1, i);
         if (!std::equal(state, state + 8, result[i])) return false;
-    }
+    %>
 
     // Test TransformD64
     unsigned char out[32];
@@ -524,54 +524,54 @@ bool SelfTest() {
     if (!std::equal(out, out + 32, result_d64)) return false;
 
     // Test TransformD64_2way, if available.
-    if (TransformD64_2way) {
+    if (TransformD64_2way) <%
         unsigned char out[64];
         TransformD64_2way(out, data + 1);
         if (!std::equal(out, out + 64, result_d64)) return false;
-    }
+    %>
 
     // Test TransformD64_4way, if available.
-    if (TransformD64_4way) {
+    if (TransformD64_4way) <%
         unsigned char out[128];
         TransformD64_4way(out, data + 1);
         if (!std::equal(out, out + 128, result_d64)) return false;
-    }
+    %>
 
     // Test TransformD64_8way, if available.
-    if (TransformD64_8way) {
+    if (TransformD64_8way) <%
         unsigned char out[256];
         TransformD64_8way(out, data + 1);
         if (!std::equal(out, out + 256, result_d64)) return false;
-    }
+    %>
 
     return true;
-}
+%>
 
 
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
 // We can't use cpuid.h's __get_cpuid as it does not support subleafs.
 void inline cpuid(uint32_t leaf, uint32_t subleaf, uint32_t& a, uint32_t& b, uint32_t& c, uint32_t& d)
-{
+<%
 #ifdef __GNUC__
     __cpuid_count(leaf, subleaf, a, b, c, d);
 #else
   __asm__ ("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "0"(leaf), "2"(subleaf));
 #endif
-}
+%>
 
 /** Check whether the OS has enabled AVX registers. */
 bool AVXEnabled()
-{
+<%
     uint32_t a, d;
     __asm__("xgetbv" : "=a"(a), "=d"(d) : "c"(0));
     return (a & 6) == 6;
-}
+%>
 #endif
-} // namespace
+%> // namespace
 
 
 std::string SHA256AutoDetect()
-{
+<%
     std::string ret = "standard";
 #if defined(USE_ASM) && (defined(__x86_64__) || defined(__amd64__) || defined(__i386__))
     bool have_sse4 = false;
@@ -594,27 +594,27 @@ std::string SHA256AutoDetect()
     have_sse4 = (ecx >> 19) & 1;
     have_xsave = (ecx >> 27) & 1;
     have_avx = (ecx >> 28) & 1;
-    if (have_xsave && have_avx) {
+    if (have_xsave && have_avx) <%
         enabled_avx = AVXEnabled();
-    }
-    if (have_sse4) {
+    %>
+    if (have_sse4) <%
         cpuid(7, 0, eax, ebx, ecx, edx);
         have_avx2 = (ebx >> 5) & 1;
         have_shani = (ebx >> 29) & 1;
-    }
+    %>
 
 #if defined(ENABLE_SHANI) && !defined(BUILD_BITCOIN_INTERNAL)
-    if (have_shani) {
+    if (have_shani) <%
         Transform = sha256_shani::Transform;
         TransformD64 = TransformD64Wrapper<sha256_shani::Transform>;
         TransformD64_2way = sha256d64_shani::Transform_2way;
         ret = "shani(1way,2way)";
         have_sse4 = false; // Disable SSE4/AVX2;
         have_avx2 = false;
-    }
+    %>
 #endif
 
-    if (have_sse4) {
+    if (have_sse4) <%
 #if defined(__x86_64__) || defined(__amd64__)
         Transform = sha256_sse4::Transform;
         TransformD64 = TransformD64Wrapper<sha256_sse4::Transform>;
@@ -624,56 +624,56 @@ std::string SHA256AutoDetect()
         TransformD64_4way = sha256d64_sse41::Transform_4way;
         ret += ",sse41(4way)";
 #endif
-    }
+    %>
 
 #if defined(ENABLE_AVX2) && !defined(BUILD_BITCOIN_INTERNAL)
-    if (have_avx2 && have_avx && enabled_avx) {
+    if (have_avx2 && have_avx && enabled_avx) <%
         TransformD64_8way = sha256d64_avx2::Transform_8way;
         ret += ",avx2(8way)";
-    }
+    %>
 #endif
 #endif
 
     assert(SelfTest());
     return ret;
-}
+%>
 
 ////// SHA-256
 
 CSHA256::CSHA256() : bytes(0)
-{
+<%
     sha256::Initialize(s);
-}
+%>
 
 CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
-{
+<%
     const unsigned char* end = data + len;
     size_t bufsize = bytes % 64;
-    if (bufsize && bufsize + len >= 64) {
+    if (bufsize && bufsize + len >= 64) <%
         // Fill the buffer, and process it.
         memcpy(buf + bufsize, data, 64 - bufsize);
         bytes += 64 - bufsize;
         data += 64 - bufsize;
         Transform(s, buf, 1);
         bufsize = 0;
-    }
-    if (end - data >= 64) {
+    %>
+    if (end - data >= 64) <%
         size_t blocks = (end - data) / 64;
         Transform(s, data, blocks);
         data += 64 * blocks;
         bytes += 64 * blocks;
-    }
-    if (end > data) {
+    %>
+    if (end > data) <%
         // Fill the buffer with what remains.
         memcpy(buf + bufsize, data, end - data);
         bytes += end - data;
-    }
+    %>
     return *this;
-}
+%>
 
 void CSHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
-{
-    static const unsigned char pad[64] = {0x80};
+<%
+    static const unsigned char pad[64] = <%0x80%>;
     unsigned char sizedesc[8];
     WriteBE64(sizedesc, bytes << 3);
     Write(pad, 1 + ((119 - (bytes % 64)) % 64));
@@ -686,45 +686,45 @@ void CSHA256::Finalize(unsigned char hash[OUTPUT_SIZE])
     WriteBE32(hash + 20, s[5]);
     WriteBE32(hash + 24, s[6]);
     WriteBE32(hash + 28, s[7]);
-}
+%>
 
 CSHA256& CSHA256::Reset()
-{
+<%
     bytes = 0;
     sha256::Initialize(s);
     return *this;
-}
+%>
 
 void SHA256D64(unsigned char* out, const unsigned char* in, size_t blocks)
-{
-    if (TransformD64_8way) {
-        while (blocks >= 8) {
+<%
+    if (TransformD64_8way) <%
+        while (blocks >= 8) <%
             TransformD64_8way(out, in);
             out += 256;
             in += 512;
             blocks -= 8;
-        }
-    }
-    if (TransformD64_4way) {
-        while (blocks >= 4) {
+        %>
+    %>
+    if (TransformD64_4way) <%
+        while (blocks >= 4) <%
             TransformD64_4way(out, in);
             out += 128;
             in += 256;
             blocks -= 4;
-        }
-    }
-    if (TransformD64_2way) {
-        while (blocks >= 2) {
+        %>
+    %>
+    if (TransformD64_2way) <%
+        while (blocks >= 2) <%
             TransformD64_2way(out, in);
             out += 64;
             in += 128;
             blocks -= 2;
-        }
-    }
-    while (blocks) {
+        %>
+    %>
+    while (blocks) <%
         TransformD64(out, in);
         out += 32;
         in += 64;
         --blocks;
-    }
-}
+    %>
+%>

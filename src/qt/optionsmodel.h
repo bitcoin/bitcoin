@@ -9,9 +9,9 @@
 
 #include <QAbstractListModel>
 
-namespace interfaces {
+namespace interfaces <%
 class Node;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QNetworkProxy;
@@ -27,13 +27,13 @@ static constexpr unsigned short DEFAULT_GUI_PROXY_PORT = 9050;
    complex.
  */
 class OptionsModel : public QAbstractListModel
-{
+<%
     Q_OBJECT
 
 public:
     explicit OptionsModel(interfaces::Node& node, QObject *parent = nullptr, bool resetSettings = false);
 
-    enum OptionID {
+    enum OptionID <%
         StartAtStartup,         // bool
         HideTrayIcon,           // bool
         MinimizeToTray,         // bool
@@ -56,7 +56,7 @@ public:
         SpendZeroConfChange,    // bool
         Listen,                 // bool
         OptionIDRowCount,
-    };
+    %>;
 
     void Init(bool resetSettings = false);
     void Reset();
@@ -68,20 +68,20 @@ public:
     void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getHideTrayIcon() const { return fHideTrayIcon; }
-    bool getMinimizeToTray() const { return fMinimizeToTray; }
-    bool getMinimizeOnClose() const { return fMinimizeOnClose; }
-    int getDisplayUnit() const { return nDisplayUnit; }
-    QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
+    bool getHideTrayIcon() const <% return fHideTrayIcon; %>
+    bool getMinimizeToTray() const <% return fMinimizeToTray; %>
+    bool getMinimizeOnClose() const <% return fMinimizeOnClose; %>
+    int getDisplayUnit() const <% return nDisplayUnit; %>
+    QString getThirdPartyTxUrls() const <% return strThirdPartyTxUrls; %>
     bool getProxySettings(QNetworkProxy& proxy) const;
-    bool getCoinControlFeatures() const { return fCoinControlFeatures; }
-    const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
+    bool getCoinControlFeatures() const <% return fCoinControlFeatures; %>
+    const QString& getOverriddenByCommandLine() <% return strOverriddenByCommandLine; %>
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired() const;
 
-    interfaces::Node& node() const { return m_node; }
+    interfaces::Node& node() const <% return m_node; %>
 
 private:
     interfaces::Node& m_node;
@@ -105,6 +105,6 @@ Q_SIGNALS:
     void displayUnitChanged(int unit);
     void coinControlFeaturesChanged(bool);
     void hideTrayIconChanged(bool);
-};
+%>;
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H

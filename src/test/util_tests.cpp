@@ -24,34 +24,34 @@
 BOOST_FIXTURE_TEST_SUITE(util_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
-{
+<%
     CCriticalSection cs;
 
-    do {
+    do <%
         LOCK(cs);
         break;
 
         BOOST_ERROR("break was swallowed!");
-    } while(0);
+    %> while(0);
 
-    do {
+    do <%
         TRY_LOCK(cs, lockTest);
         if (lockTest)
             break;
 
         BOOST_ERROR("break was swallowed!");
-    } while(0);
-}
+    %> while(0);
+%>
 
-static const unsigned char ParseHex_expected[65] = {
+static const unsigned char ParseHex_expected[65] = <%
     0x04, 0x67, 0x8a, 0xfd, 0xb0, 0xfe, 0x55, 0x48, 0x27, 0x19, 0x67, 0xf1, 0xa6, 0x71, 0x30, 0xb7,
     0x10, 0x5c, 0xd6, 0xa8, 0x28, 0xe0, 0x39, 0x09, 0xa6, 0x79, 0x62, 0xe0, 0xea, 0x1f, 0x61, 0xde,
     0xb6, 0x49, 0xf6, 0xbc, 0x3f, 0x4c, 0xef, 0x38, 0xc4, 0xf3, 0x55, 0x04, 0xe5, 0x1e, 0xc1, 0x12,
     0xde, 0x5c, 0x38, 0x4d, 0xf7, 0xba, 0x0b, 0x8d, 0x57, 0x8a, 0x4c, 0x70, 0x2b, 0x6b, 0xf1, 0x1d,
     0x5f
-};
+%>;
 BOOST_AUTO_TEST_CASE(util_ParseHex)
-{
+<%
     std::vector<unsigned char> result;
     std::vector<unsigned char> expected(ParseHex_expected, ParseHex_expected + sizeof(ParseHex_expected));
     // Basic test vector
@@ -69,10 +69,10 @@ BOOST_AUTO_TEST_CASE(util_ParseHex)
     // Stop parsing at invalid value
     result = ParseHex("1234 invalid 1234");
     BOOST_CHECK(result.size() == 2 && result[0] == 0x12 && result[1] == 0x34);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_HexStr)
-{
+<%
     BOOST_CHECK_EQUAL(
         HexStr(ParseHex_expected, ParseHex_expected + sizeof(ParseHex_expected)),
         "04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f");
@@ -116,53 +116,53 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
                std::reverse_iterator<const uint8_t *>(ParseHex_expected)),
         "5f1df16b2b704c8a578d0bbaf74d385cde12c11ee50455f3c438ef4c3fbcf649b6de611feae06279a60939e028a8d65c10b73071a6f16719274855feb0fd8a6704"
     );
-}
+%>
 
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
-{
+<%
     BOOST_CHECK_EQUAL(FormatISO8601DateTime(1317425777), "2011-09-30T23:36:17Z");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601Date)
-{
+<%
     BOOST_CHECK_EQUAL(FormatISO8601Date(1317425777), "2011-09-30");
-}
+%>
 
 struct TestArgsManager : public ArgsManager
-{
-    TestArgsManager() { m_network_only_args.clear(); }
-    std::map<std::string, std::vector<std::string> >& GetOverrideArgs() { return m_override_args; }
-    std::map<std::string, std::vector<std::string> >& GetConfigArgs() { return m_config_args; }
+<%
+    TestArgsManager() <% m_network_only_args.clear(); %>
+    std::map<std::string, std::vector<std::string> >& GetOverrideArgs() <% return m_override_args; %>
+    std::map<std::string, std::vector<std::string> >& GetConfigArgs() <% return m_config_args; %>
     void ReadConfigString(const std::string str_config)
-    {
+    <%
         std::istringstream streamConfig(str_config);
-        {
+        <%
             LOCK(cs_args);
             m_config_args.clear();
             m_config_sections.clear();
-        }
+        %>
         std::string error;
         BOOST_REQUIRE(ReadConfigStream(streamConfig, "", error));
-    }
+    %>
     void SetNetworkOnlyArg(const std::string arg)
-    {
+    <%
         LOCK(cs_args);
         m_network_only_args.insert(arg);
-    }
+    %>
     void SetupArgs(int argv, const char* args[])
-    {
-        for (int i = 0; i < argv; ++i) {
+    <%
+        for (int i = 0; i < argv; ++i) <%
             AddArg(args[i], "", false, OptionsCategory::OPTIONS);
-        }
-    }
-};
+        %>
+    %>
+%>;
 
 BOOST_AUTO_TEST_CASE(util_ParseParameters)
-{
+<%
     TestArgsManager testArgs;
-    const char* avail_args[] = {"-a", "-b", "-ccc", "-d"};
-    const char *argv_test[] = {"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"};
+    const char* avail_args[] = <%"-a", "-b", "-ccc", "-d"%>;
+    const char *argv_test[] = <%"-ignored", "-a", "-b", "-ccc=argument", "-ccc=multiple", "f", "-d=e"%>;
 
     std::string error;
     testArgs.SetupArgs(4, avail_args);
@@ -188,21 +188,21 @@ BOOST_AUTO_TEST_CASE(util_ParseParameters)
     BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].front() == "argument");
     BOOST_CHECK(testArgs.GetOverrideArgs()["-ccc"].back() == "multiple");
     BOOST_CHECK(testArgs.GetArgs("-ccc").size() == 2);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_GetBoolArg)
-{
+<%
     TestArgsManager testArgs;
-    const char* avail_args[] = {"-a", "-b", "-c", "-d", "-e", "-f"};
-    const char *argv_test[] = {
-        "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"};
+    const char* avail_args[] = <%"-a", "-b", "-c", "-d", "-e", "-f"%>;
+    const char *argv_test[] = <%
+        "ignored", "-a", "-nob", "-c=0", "-d=1", "-e=false", "-f=true"%>;
     std::string error;
     testArgs.SetupArgs(6, avail_args);
     BOOST_CHECK(testArgs.ParseParameters(7, (char**)argv_test, error));
 
     // Each letter should be set.
     for (const char opt : "abcdef")
-        BOOST_CHECK(testArgs.IsArgSet({'-', opt}) || !opt);
+        BOOST_CHECK(testArgs.IsArgSet(<%'-', opt%>) || !opt);
 
     // Nothing else should be in the map
     BOOST_CHECK(testArgs.GetOverrideArgs().size() == 6 &&
@@ -222,16 +222,16 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArg)
     BOOST_CHECK(testArgs.GetBoolArg("-d", false) == true);
     BOOST_CHECK(testArgs.GetBoolArg("-e", true) == false);
     BOOST_CHECK(testArgs.GetBoolArg("-f", true) == false);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
-{
+<%
     // Test some awful edge cases that hopefully no user will ever exercise.
     TestArgsManager testArgs;
 
     // Params test
-    const char* avail_args[] = {"-foo", "-bar"};
-    const char *argv_test[] = {"ignored", "-nofoo", "-foo", "-nobar=0"};
+    const char* avail_args[] = <%"-foo", "-bar"%>;
+    const char *argv_test[] = <%"ignored", "-nofoo", "-foo", "-nobar=0"%>;
     testArgs.SetupArgs(2, avail_args);
     std::string error;
     BOOST_CHECK(testArgs.ParseParameters(4, (char**)argv_test, error));
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "1");
 
     // Combined test
-    const char *combo_test_args[] = {"ignored", "-nofoo", "-bar"};
+    const char *combo_test_args[] = <%"ignored", "-nofoo", "-bar"%>;
     const char *combo_test_conf = "foo=1\nnobar=1\n";
     BOOST_CHECK(testArgs.ParseParameters(3, (char**)combo_test_args, error));
     testArgs.ReadConfigString(combo_test_conf);
@@ -274,10 +274,10 @@ BOOST_AUTO_TEST_CASE(util_GetBoolArgEdgeCases)
     BOOST_CHECK(testArgs.GetArg("-bar", "xxx") == "");
     BOOST_CHECK(testArgs.GetArgs("-bar").size() == 1
                 && testArgs.GetArgs("-bar").front() == "");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
-{
+<%
     const char *str_config =
        "a=\n"
        "b=1\n"
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
        "iii=2\n";
 
     TestArgsManager test_args;
-    const char* avail_args[] = {"-a", "-b", "-ccc", "-d", "-e", "-fff", "-ggg", "-h", "-i", "-iii"};
+    const char* avail_args[] = <%"-a", "-b", "-ccc", "-d", "-e", "-fff", "-ggg", "-h", "-i", "-iii"%>;
     test_args.SetupArgs(10, avail_args);
 
     test_args.ReadConfigString(str_config);
@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                 && test_args.GetArg("-iii", "xxx") == "xxx"
                );
 
-    for (const bool def : {false, true}) {
+    for (const bool def : <%false, true%>) <%
         BOOST_CHECK(test_args.GetBoolArg("-a", def)
                      && test_args.GetBoolArg("-b", def)
                      && !test_args.GetBoolArg("-ccc", def)
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
                      && test_args.GetBoolArg("-zzz", def) == def
                      && test_args.GetBoolArg("-iii", def) == def
                    );
-    }
+    %>
 
     BOOST_CHECK(test_args.GetArgs("-a").size() == 1
                 && test_args.GetArgs("-a").front() == "");
@@ -411,7 +411,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // section takes priority for multiple values
     BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend1");
     // check multiple values works
-    const std::vector<std::string> sec1_ccc_expected = {"extend1","extend2","argument","multiple"};
+    const std::vector<std::string> sec1_ccc_expected = <%"extend1","extend2","argument","multiple"%>;
     const auto& sec1_ccc_res = test_args.GetArgs("-ccc");
     BOOST_CHECK_EQUAL_COLLECTIONS(sec1_ccc_res.begin(), sec1_ccc_res.end(), sec1_ccc_expected.begin(), sec1_ccc_expected.end());
 
@@ -431,7 +431,7 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     // section takes priority for multiple values
     BOOST_CHECK(test_args.GetArg("-ccc", "xxx") == "extend3");
     // check multiple values works
-    const std::vector<std::string> sec2_ccc_expected = {"extend3","argument","multiple"};
+    const std::vector<std::string> sec2_ccc_expected = <%"extend3","argument","multiple"%>;
     const auto& sec2_ccc_res = test_args.GetArgs("-ccc");
     BOOST_CHECK_EQUAL_COLLECTIONS(sec2_ccc_res.begin(), sec2_ccc_res.end(), sec2_ccc_expected.begin(), sec2_ccc_expected.end());
 
@@ -457,29 +457,29 @@ BOOST_AUTO_TEST_CASE(util_ReadConfigStream)
     BOOST_CHECK(test_args.GetArgs("-d").size() == 0);
     BOOST_CHECK(test_args.GetArgs("-ccc").size() == 1);
     BOOST_CHECK(test_args.GetArg("-h", "xxx") == "0");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_GetArg)
-{
+<%
     TestArgsManager testArgs;
     testArgs.GetOverrideArgs().clear();
-    testArgs.GetOverrideArgs()["strtest1"] = {"string..."};
+    testArgs.GetOverrideArgs()["strtest1"] = <%"string..."%>;
     // strtest2 undefined on purpose
-    testArgs.GetOverrideArgs()["inttest1"] = {"12345"};
-    testArgs.GetOverrideArgs()["inttest2"] = {"81985529216486895"};
+    testArgs.GetOverrideArgs()["inttest1"] = <%"12345"%>;
+    testArgs.GetOverrideArgs()["inttest2"] = <%"81985529216486895"%>;
     // inttest3 undefined on purpose
-    testArgs.GetOverrideArgs()["booltest1"] = {""};
+    testArgs.GetOverrideArgs()["booltest1"] = <%""%>;
     // booltest2 undefined on purpose
-    testArgs.GetOverrideArgs()["booltest3"] = {"0"};
-    testArgs.GetOverrideArgs()["booltest4"] = {"1"};
+    testArgs.GetOverrideArgs()["booltest3"] = <%"0"%>;
+    testArgs.GetOverrideArgs()["booltest4"] = <%"1"%>;
 
     // priorities
-    testArgs.GetOverrideArgs()["pritest1"] = {"a", "b"};
-    testArgs.GetConfigArgs()["pritest2"] = {"a", "b"};
-    testArgs.GetOverrideArgs()["pritest3"] = {"a"};
-    testArgs.GetConfigArgs()["pritest3"] = {"b"};
-    testArgs.GetOverrideArgs()["pritest4"] = {"a","b"};
-    testArgs.GetConfigArgs()["pritest4"] = {"c","d"};
+    testArgs.GetOverrideArgs()["pritest1"] = <%"a", "b"%>;
+    testArgs.GetConfigArgs()["pritest2"] = <%"a", "b"%>;
+    testArgs.GetOverrideArgs()["pritest3"] = <%"a"%>;
+    testArgs.GetConfigArgs()["pritest3"] = <%"b"%>;
+    testArgs.GetOverrideArgs()["pritest4"] = <%"a","b"%>;
+    testArgs.GetConfigArgs()["pritest4"] = <%"c","d"%>;
 
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest1", "default"), "string...");
     BOOST_CHECK_EQUAL(testArgs.GetArg("strtest2", "default"), "default");
@@ -495,18 +495,18 @@ BOOST_AUTO_TEST_CASE(util_GetArg)
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest2", "default"), "a");
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest3", "default"), "a");
     BOOST_CHECK_EQUAL(testArgs.GetArg("pritest4", "default"), "b");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_GetChainName)
-{
+<%
     TestArgsManager test_args;
-    const char* avail_args[] = {"-testnet", "-regtest"};
+    const char* avail_args[] = <%"-testnet", "-regtest"%>;
     test_args.SetupArgs(2, avail_args);
 
-    const char* argv_testnet[] = {"cmd", "-testnet"};
-    const char* argv_regtest[] = {"cmd", "-regtest"};
-    const char* argv_test_no_reg[] = {"cmd", "-testnet", "-noregtest"};
-    const char* argv_both[] = {"cmd", "-testnet", "-regtest"};
+    const char* argv_testnet[] = <%"cmd", "-testnet"%>;
+    const char* argv_regtest[] = <%"cmd", "-regtest"%>;
+    const char* argv_test_no_reg[] = <%"cmd", "-testnet", "-noregtest"%>;
+    const char* argv_both[] = <%"cmd", "-testnet", "-regtest"%>;
 
     // equivalent to "-testnet"
     // regtest in testnet section is ignored
@@ -571,10 +571,10 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
-{
+<%
     BOOST_CHECK_EQUAL(FormatMoney(0), "0.00");
     BOOST_CHECK_EQUAL(FormatMoney((COIN/10000)*123456789), "12345.6789");
     BOOST_CHECK_EQUAL(FormatMoney(-COIN), "-1.00");
@@ -596,10 +596,10 @@ BOOST_AUTO_TEST_CASE(util_FormatMoney)
     BOOST_CHECK_EQUAL(FormatMoney(COIN/1000000), "0.000001");
     BOOST_CHECK_EQUAL(FormatMoney(COIN/10000000), "0.0000001");
     BOOST_CHECK_EQUAL(FormatMoney(COIN/100000000), "0.00000001");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_ParseMoney)
-{
+<%
     CAmount ret = 0;
     BOOST_CHECK(ParseMoney("0.0", ret));
     BOOST_CHECK_EQUAL(ret, 0);
@@ -649,10 +649,10 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney)
 
     // Parsing negative amounts must fail
     BOOST_CHECK(!ParseMoney("-1", ret));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_IsHex)
-{
+<%
     BOOST_CHECK(IsHex("00"));
     BOOST_CHECK(IsHex("00112233445566778899aabbccddeeffAABBCCDDEEFF"));
     BOOST_CHECK(IsHex("ff"));
@@ -664,10 +664,10 @@ BOOST_AUTO_TEST_CASE(util_IsHex)
     BOOST_CHECK(!IsHex("eleven"));
     BOOST_CHECK(!IsHex("00xx00"));
     BOOST_CHECK(!IsHex("0x0000"));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_IsHexNumber)
-{
+<%
     BOOST_CHECK(IsHexNumber("0x0"));
     BOOST_CHECK(IsHexNumber("0"));
     BOOST_CHECK(IsHexNumber("0x10"));
@@ -689,13 +689,13 @@ BOOST_AUTO_TEST_CASE(util_IsHexNumber)
     BOOST_CHECK(!IsHexNumber("x0"));    // broken prefix
     BOOST_CHECK(!IsHexNumber("0x0x00")); // two prefixes not allowed
 
-}
+%>
 
 BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
-{
+<%
     SeedInsecureRand(true);
     for (int mod=2;mod<11;mod++)
-    {
+    <%
         int mask = 1;
         // Really rough binomial confidence approximation.
         int err = 30*10000./mod*sqrt((1./mod*(1-1./mod))/10000.);
@@ -704,20 +704,20 @@ BOOST_AUTO_TEST_CASE(util_seed_insecure_rand)
 
         int count = 0;
         //How often does it get a zero from the uniform range [0,mod)?
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 10000; i++) <%
             uint32_t rval;
-            do{
+            do<%
                 rval=InsecureRand32()&mask;
-            }while(rval>=(uint32_t)mod);
+            %>while(rval>=(uint32_t)mod);
             count += rval==0;
-        }
+        %>
         BOOST_CHECK(count<=10000/mod+err);
         BOOST_CHECK(count>=10000/mod-err);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(util_TimingResistantEqual)
-{
+<%
     BOOST_CHECK(TimingResistantEqual(std::string(""), std::string("")));
     BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("")));
     BOOST_CHECK(!TimingResistantEqual(std::string(""), std::string("abc")));
@@ -725,14 +725,14 @@ BOOST_AUTO_TEST_CASE(util_TimingResistantEqual)
     BOOST_CHECK(!TimingResistantEqual(std::string("aa"), std::string("a")));
     BOOST_CHECK(TimingResistantEqual(std::string("abc"), std::string("abc")));
     BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("aba")));
-}
+%>
 
 /* Test strprintf formatting directives.
  * Put a string before and after to ensure sanity of element sizes on stack. */
 #define B "check_prefix"
 #define E "check_postfix"
 BOOST_AUTO_TEST_CASE(strprintf_numbers)
-{
+<%
     int64_t s64t = -9223372036854775807LL; /* signed 64 bit test value */
     uint64_t u64t = 18446744073709551615ULL; /* unsigned 64 bit test value */
     BOOST_CHECK(strprintf("%s %d %s", B, s64t, E) == B" -9223372036854775807 " E);
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
     BOOST_CHECK(strprintf("%s %d %s", B, spt, E) == B" -87654321 " E);
     BOOST_CHECK(strprintf("%s %u %s", B, pt, E) == B" 87654321 " E);
     BOOST_CHECK(strprintf("%s %x %s", B, pt, E) == B" 5397fb1 " E);
-}
+%>
 #undef B
 #undef E
 
@@ -758,12 +758,12 @@ BOOST_AUTO_TEST_CASE(strprintf_numbers)
  * Remove this test before time.ctime(0xffffffff) == 'Sun Feb  7 07:28:15 2106'
  */
 BOOST_AUTO_TEST_CASE(gettime)
-{
+<%
     BOOST_CHECK((GetTime() & ~0xFFFFFFFFLL) == 0);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_IsDigit)
-{
+<%
     BOOST_CHECK_EQUAL(IsDigit('0'), true);
     BOOST_CHECK_EQUAL(IsDigit('1'), true);
     BOOST_CHECK_EQUAL(IsDigit('8'), true);
@@ -775,10 +775,10 @@ BOOST_AUTO_TEST_CASE(test_IsDigit)
     BOOST_CHECK_EQUAL(IsDigit(1), false);
     BOOST_CHECK_EQUAL(IsDigit(8), false);
     BOOST_CHECK_EQUAL(IsDigit(9), false);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ParseInt32)
-{
+<%
     int32_t n;
     // Valid values
     BOOST_CHECK(ParseInt32("1234", nullptr));
@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(!ParseInt32("aap", &n));
     BOOST_CHECK(!ParseInt32("0x1", &n)); // no hex
     BOOST_CHECK(!ParseInt32("0x1", &n)); // no hex
-    const char test_bytes[] = {'1', 0, '1'};
+    const char test_bytes[] = <%'1', 0, '1'%>;
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseInt32(teststr, &n)); // no embedded NULs
     // Overflow and underflow
@@ -804,10 +804,10 @@ BOOST_AUTO_TEST_CASE(test_ParseInt32)
     BOOST_CHECK(!ParseInt32("2147483648", nullptr));
     BOOST_CHECK(!ParseInt32("-32482348723847471234", nullptr));
     BOOST_CHECK(!ParseInt32("32482348723847471234", nullptr));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ParseInt64)
-{
+<%
     int64_t n;
     // Valid values
     BOOST_CHECK(ParseInt64("1234", nullptr));
@@ -826,7 +826,7 @@ BOOST_AUTO_TEST_CASE(test_ParseInt64)
     BOOST_CHECK(!ParseInt64("1a", &n));
     BOOST_CHECK(!ParseInt64("aap", &n));
     BOOST_CHECK(!ParseInt64("0x1", &n)); // no hex
-    const char test_bytes[] = {'1', 0, '1'};
+    const char test_bytes[] = <%'1', 0, '1'%>;
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseInt64(teststr, &n)); // no embedded NULs
     // Overflow and underflow
@@ -834,10 +834,10 @@ BOOST_AUTO_TEST_CASE(test_ParseInt64)
     BOOST_CHECK(!ParseInt64("9223372036854775808", nullptr));
     BOOST_CHECK(!ParseInt64("-32482348723847471234", nullptr));
     BOOST_CHECK(!ParseInt64("32482348723847471234", nullptr));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ParseUInt32)
-{
+<%
     uint32_t n;
     // Valid values
     BOOST_CHECK(ParseUInt32("1234", nullptr));
@@ -856,7 +856,7 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt32)
     BOOST_CHECK(!ParseUInt32("aap", &n));
     BOOST_CHECK(!ParseUInt32("0x1", &n)); // no hex
     BOOST_CHECK(!ParseUInt32("0x1", &n)); // no hex
-    const char test_bytes[] = {'1', 0, '1'};
+    const char test_bytes[] = <%'1', 0, '1'%>;
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseUInt32(teststr, &n)); // no embedded NULs
     // Overflow and underflow
@@ -865,10 +865,10 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt32)
     BOOST_CHECK(!ParseUInt32("-1234", &n));
     BOOST_CHECK(!ParseUInt32("-32482348723847471234", nullptr));
     BOOST_CHECK(!ParseUInt32("32482348723847471234", nullptr));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ParseUInt64)
-{
+<%
     uint64_t n;
     // Valid values
     BOOST_CHECK(ParseUInt64("1234", nullptr));
@@ -887,7 +887,7 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     BOOST_CHECK(!ParseUInt64("1a", &n));
     BOOST_CHECK(!ParseUInt64("aap", &n));
     BOOST_CHECK(!ParseUInt64("0x1", &n)); // no hex
-    const char test_bytes[] = {'1', 0, '1'};
+    const char test_bytes[] = <%'1', 0, '1'%>;
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseUInt64(teststr, &n)); // no embedded NULs
     // Overflow and underflow
@@ -897,10 +897,10 @@ BOOST_AUTO_TEST_CASE(test_ParseUInt64)
     BOOST_CHECK(!ParseUInt64("-2147483648", &n));
     BOOST_CHECK(!ParseUInt64("-9223372036854775808", &n));
     BOOST_CHECK(!ParseUInt64("-1234", &n));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ParseDouble)
-{
+<%
     double n;
     // Valid values
     BOOST_CHECK(ParseDouble("1234", nullptr));
@@ -919,16 +919,16 @@ BOOST_AUTO_TEST_CASE(test_ParseDouble)
     BOOST_CHECK(!ParseDouble("1a", &n));
     BOOST_CHECK(!ParseDouble("aap", &n));
     BOOST_CHECK(!ParseDouble("0x1", &n)); // no hex
-    const char test_bytes[] = {'1', 0, '1'};
+    const char test_bytes[] = <%'1', 0, '1'%>;
     std::string teststr(test_bytes, sizeof(test_bytes));
     BOOST_CHECK(!ParseDouble(teststr, &n)); // no embedded NULs
     // Overflow and underflow
     BOOST_CHECK(!ParseDouble("-1e10000", nullptr));
     BOOST_CHECK(!ParseDouble("1e10000", nullptr));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_FormatParagraph)
-{
+<%
     BOOST_CHECK_EQUAL(FormatParagraph("", 79, 0), "");
     BOOST_CHECK_EQUAL(FormatParagraph("test", 79, 0), "test");
     BOOST_CHECK_EQUAL(FormatParagraph(" test", 79, 0), " test");
@@ -952,10 +952,10 @@ BOOST_AUTO_TEST_CASE(test_FormatParagraph)
     BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string.\nThis is a second sentence in the very long test string. This is a third sentence in the very long test string.", 79), "This is a very long test string.\nThis is a second sentence in the very long test string. This is a third\nsentence in the very long test string.");
     BOOST_CHECK_EQUAL(FormatParagraph("This is a very long test string.\n\nThis is a second sentence in the very long test string. This is a third sentence in the very long test string.", 79), "This is a very long test string.\n\nThis is a second sentence in the very long test string. This is a third\nsentence in the very long test string.");
     BOOST_CHECK_EQUAL(FormatParagraph("Testing that normal newlines do not get indented.\nLike here.", 79), "Testing that normal newlines do not get indented.\nLike here.");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
-{
+<%
     std::vector<std::string> comments;
     comments.push_back(std::string("comment1"));
     std::vector<std::string> comments2;
@@ -964,10 +964,10 @@ BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, std::vector<std::string>()),std::string("/Test:0.9.99/"));
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments),std::string("/Test:0.9.99(comment1)/"));
     BOOST_CHECK_EQUAL(FormatSubVersion("Test", 99900, comments2),std::string("/Test:0.9.99(comment1; Comment2; .,_?@-; )/"));
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
-{
+<%
     int64_t amount = 0;
     BOOST_CHECK(ParseFixedPoint("0", 8, &amount));
     BOOST_CHECK_EQUAL(amount, 0LL);
@@ -1029,12 +1029,12 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.1e", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.1e-", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
-}
+%>
 
 static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
-{
+<%
     *result = LockDirectory(dirname, lockname);
-}
+%>
 
 #ifndef WIN32 // Cannot do this test on WIN32 due to lack of fork()
 static constexpr char LockCommand = 'L';
@@ -1042,12 +1042,12 @@ static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 
 static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
-{
+<%
     char ch;
-    while (true) {
+    while (true) <%
         int rv = read(fd, &ch, 1); // Wait for command
         assert(rv == 1);
-        switch(ch) {
+        switch(ch) <%
         case LockCommand:
             ch = LockDirectory(dirname, lockname);
             rv = write(fd, &ch, 1);
@@ -1064,13 +1064,13 @@ static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
             exit(0);
         default:
             assert(0);
-        }
-    }
-}
+        %>
+    %>
+%>
 #endif
 
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
-{
+<%
     fs::path dirname = SetDataDir("test_LockDirectory") / fs::unique_path();
     const std::string lockname = ".lock";
 #ifndef WIN32
@@ -1085,10 +1085,10 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     int fd[2];
     BOOST_CHECK_EQUAL(socketpair(AF_UNIX, SOCK_STREAM, 0, fd), 0);
     pid_t pid = fork();
-    if (!pid) {
+    if (!pid) <%
         BOOST_CHECK_EQUAL(close(fd[1]), 0); // Child: close parent end
         TestOtherProcess(dirname, lockname, fd[0]);
-    }
+    %>
     BOOST_CHECK_EQUAL(close(fd[0]), 0); // Parent: close child end
 #endif
     // Lock on non-existent directory should fail
@@ -1155,10 +1155,10 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
     // Clean up
     ReleaseDirectoryLocks();
     fs::remove_all(dirname);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_DirIsWritable)
-{
+<%
     // Should be able to write to the data dir.
     fs::path tmpdirname = SetDataDir("test_DirIsWritable");
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
@@ -1171,10 +1171,10 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     // Should be able to write to it now.
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
     fs::remove(tmpdirname);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ToLower)
-{
+<%
     BOOST_CHECK_EQUAL(ToLower('@'), '@');
     BOOST_CHECK_EQUAL(ToLower('A'), 'a');
     BOOST_CHECK_EQUAL(ToLower('Z'), 'z');
@@ -1193,23 +1193,23 @@ BOOST_AUTO_TEST_CASE(test_ToLower)
     testVector = "\x00\xfe\xff";
     Downcase(testVector);
     BOOST_CHECK_EQUAL(testVector, "\x00\xfe\xff");
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_ToUpper)
-{
+<%
     BOOST_CHECK_EQUAL(ToUpper('`'), '`');
     BOOST_CHECK_EQUAL(ToUpper('a'), 'A');
     BOOST_CHECK_EQUAL(ToUpper('z'), 'Z');
     BOOST_CHECK_EQUAL(ToUpper('{'), '{');
     BOOST_CHECK_EQUAL(ToUpper(0), 0);
     BOOST_CHECK_EQUAL(ToUpper('\xff'), '\xff');
-}
+%>
 
 BOOST_AUTO_TEST_CASE(test_Capitalize)
-{
+<%
     BOOST_CHECK_EQUAL(Capitalize(""), "");
     BOOST_CHECK_EQUAL(Capitalize("bitcoin"), "Bitcoin");
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

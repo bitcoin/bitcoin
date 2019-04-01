@@ -10,7 +10,7 @@
 /** Macintosh-specific notification handler (supports UserNotificationCenter).
  */
 class MacNotificationHandler : public QObject
-{
+<%
     Q_OBJECT
 
 public:
@@ -21,7 +21,7 @@ public:
     /** check if OS can handle UserNotifications */
     bool hasUserNotificationCenterSupport();
     static MacNotificationHandler *instance();
-};
+%>;
 
 
 #endif // BITCOIN_QT_MACNOTIFICATIONHANDLER_H

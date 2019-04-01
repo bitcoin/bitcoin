@@ -24,13 +24,13 @@ extern const char * const DEFAULT_DEBUGLOGFILE;
 extern bool fLogIPs;
 
 struct CLogCategoryActive
-{
+<%
     std::string category;
     bool active;
-};
+%>;
 
-namespace BCLog {
-    enum LogFlags : uint32_t {
+namespace BCLog <%
+    enum LogFlags : uint32_t <%
         NONE        = 0,
         NET         = (1 <<  0),
         TOR         = (1 <<  1),
@@ -54,10 +54,10 @@ namespace BCLog {
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
         ALL         = ~(uint32_t)0,
-    };
+    %>;
 
     class Logger
-    {
+    <%
     private:
         FILE* m_fileout = nullptr;
         std::mutex m_file_mutex;
@@ -68,10 +68,10 @@ namespace BCLog {
          * the timestamp when multiple calls are made that don't end in a
          * newline.
          */
-        std::atomic_bool m_started_new_line{true};
+        std::atomic_bool m_started_new_line<%true%>;
 
         /** Log categories bitfield. */
-        std::atomic<uint32_t> m_categories{0};
+        std::atomic<uint32_t> m_categories<%0%>;
 
         std::string LogTimestampStr(const std::string& str);
 
@@ -83,18 +83,18 @@ namespace BCLog {
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
 
         fs::path m_file_path;
-        std::atomic<bool> m_reopen_file{false};
+        std::atomic<bool> m_reopen_file<%false%>;
 
         /** Send a string to the log output */
         void LogPrintStr(const std::string &str);
 
         /** Returns whether logs will be written to any output */
-        bool Enabled() const { return m_print_to_console || m_print_to_file; }
+        bool Enabled() const <% return m_print_to_console || m_print_to_file; %>
 
         bool OpenDebugLog();
         void ShrinkDebugFile();
 
-        uint32_t GetCategoryMask() const { return m_categories.load(); }
+        uint32_t GetCategoryMask() const <% return m_categories.load(); %>
 
         void EnableCategory(LogFlags flag);
         bool EnableCategory(const std::string& str);
@@ -104,17 +104,17 @@ namespace BCLog {
         bool WillLogCategory(LogFlags category) const;
 
         bool DefaultShrinkDebugFile() const;
-    };
+    %>;
 
-} // namespace BCLog
+%> // namespace BCLog
 
 BCLog::Logger& LogInstance();
 
 /** Return true if log accepts specified category */
 static inline bool LogAcceptCategory(BCLog::LogFlags category)
-{
+<%
     return LogInstance().WillLogCategory(category);
-}
+%>
 
 /** Returns a string with the log categories. */
 std::string ListLogCategories();
@@ -131,25 +131,25 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 
 template <typename... Args>
 static inline void LogPrintf(const char* fmt, const Args&... args)
-{
-    if (LogInstance().Enabled()) {
+<%
+    if (LogInstance().Enabled()) <%
         std::string log_msg;
-        try {
+        try <%
             log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
+        %> catch (tinyformat::format_error& fmterr) <%
             /* Original format string will have newline so don't add one here */
             log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
-        }
+        %>
         LogInstance().LogPrintStr(log_msg);
-    }
-}
+    %>
+%>
 
 template <typename... Args>
 static inline void LogPrint(const BCLog::LogFlags& category, const Args&... args)
-{
-    if (LogAcceptCategory((category))) {
+<%
+    if (LogAcceptCategory((category))) <%
         LogPrintf(args...);
-    }
-}
+    %>
+%>
 
 #endif // BITCOIN_LOGGING_H

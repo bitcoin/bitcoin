@@ -26,7 +26,7 @@
  * (4) checksum.
  */
 class CMessageHeader
-{
+<%
 public:
     static constexpr size_t MESSAGE_START_SIZE = 4;
     static constexpr size_t COMMAND_SIZE = 12;
@@ -47,24 +47,24 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    <%
         READWRITE(pchMessageStart);
         READWRITE(pchCommand);
         READWRITE(nMessageSize);
         READWRITE(pchChecksum);
-    }
+    %>
 
     char pchMessageStart[MESSAGE_START_SIZE];
     char pchCommand[COMMAND_SIZE];
     uint32_t nMessageSize;
     uint8_t pchChecksum[CHECKSUM_SIZE];
-};
+%>;
 
 /**
  * Bitcoin protocol message types. When adding new message types, don't forget
  * to update allNetMessageTypes in protocol.cpp.
  */
-namespace NetMsgType {
+namespace NetMsgType <%
 
 /**
  * The version message provides information about the transmitting node to the
@@ -238,13 +238,13 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
-};
+%>;
 
 /* Get a vector of all valid message types (see above) */
 const std::vector<std::string> &getAllNetMessageTypes();
 
 /** nServices flags */
-enum ServiceFlags : uint64_t {
+enum ServiceFlags : uint64_t <%
     // Nothing
     NODE_NONE = 0,
     // NODE_NETWORK means that the node is capable of serving the complete block chain. It is currently
@@ -276,7 +276,7 @@ enum ServiceFlags : uint64_t {
     // collisions and other cases where nodes may be advertising a service they
     // do not actually support. Other service bits should be allocated via the
     // BIP process.
-};
+%>;
 
 /**
  * Gets the set of service flags which are "desirable" for a given peer.
@@ -312,21 +312,21 @@ void SetServiceFlagsIBDCache(bool status);
  * == GetDesirableServiceFlags(services), ie determines whether the given
  * set of service flags are sufficient for a peer to be "relevant".
  */
-static inline bool HasAllDesirableServiceFlags(ServiceFlags services) {
+static inline bool HasAllDesirableServiceFlags(ServiceFlags services) <%
     return !(GetDesirableServiceFlags(services) & (~services));
-}
+%>
 
 /**
  * Checks if a peer with the given service flags may be capable of having a
  * robust address-storage DB.
  */
-static inline bool MayHaveUsefulAddressDB(ServiceFlags services) {
+static inline bool MayHaveUsefulAddressDB(ServiceFlags services) <%
     return (services & NODE_NETWORK) || (services & NODE_NETWORK_LIMITED);
-}
+%>
 
 /** A CService with information about it as peer */
 class CAddress : public CService
-{
+<%
 public:
     CAddress();
     explicit CAddress(CService ipIn, ServiceFlags nServicesIn);
@@ -337,7 +337,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    <%
         if (ser_action.ForRead())
             Init();
         int nVersion = s.GetVersion();
@@ -350,7 +350,7 @@ public:
         READWRITE(nServicesInt);
         nServices = static_cast<ServiceFlags>(nServicesInt);
         READWRITEAS(CService, *this);
-    }
+    %>
 
     // TODO: make private (improves encapsulation)
 public:
@@ -358,7 +358,7 @@ public:
 
     // disk and network only
     unsigned int nTime;
-};
+%>;
 
 /** getdata message type flags */
 const uint32_t MSG_WITNESS_FLAG = 1 << 30;
@@ -369,7 +369,7 @@ const uint32_t MSG_TYPE_MASK    = 0xffffffff >> 2;
  * to mention it in the respective BIP.
  */
 enum GetDataMsg
-{
+<%
     UNDEFINED = 0,
     MSG_TX = 1,
     MSG_BLOCK = 2,
@@ -379,11 +379,11 @@ enum GetDataMsg
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
-};
+%>;
 
 /** inv message data */
 class CInv
-{
+<%
 public:
     CInv();
     CInv(int typeIn, const uint256& hashIn);
@@ -392,10 +392,10 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
-    {
+    <%
         READWRITE(type);
         READWRITE(hash);
-    }
+    %>
 
     friend bool operator<(const CInv& a, const CInv& b);
 
@@ -405,6 +405,6 @@ public:
 public:
     int type;
     uint256 hash;
-};
+%>;
 
 #endif // BITCOIN_PROTOCOL_H

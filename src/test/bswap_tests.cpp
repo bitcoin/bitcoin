@@ -10,7 +10,7 @@
 BOOST_FIXTURE_TEST_SUITE(bswap_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(bswap_tests)
-{
+<%
 	// Sibling in bitcoin/src/qt/test/compattests.cpp
 	uint16_t u1 = 0x1234;
 	uint32_t u2 = 0x56789abc;
@@ -21,6 +21,6 @@ BOOST_AUTO_TEST_CASE(bswap_tests)
 	BOOST_CHECK(bswap_16(u1) == e1);
 	BOOST_CHECK(bswap_32(u2) == e2);
 	BOOST_CHECK(bswap_64(u3) == e3);
-}
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,18 +11,18 @@
 
 /* Coin network-specific GUI style information */
 class PlatformStyle
-{
+<%
 public:
     /** Get style associated with provided platform name, or 0 if not known */
     static const PlatformStyle *instantiate(const QString &platformId);
 
-    const QString &getName() const { return name; }
+    const QString &getName() const <% return name; %>
 
-    bool getImagesOnButtons() const { return imagesOnButtons; }
-    bool getUseExtraSpacing() const { return useExtraSpacing; }
+    bool getImagesOnButtons() const <% return imagesOnButtons; %>
+    bool getUseExtraSpacing() const <% return useExtraSpacing; %>
 
-    QColor TextColor() const { return textColor; }
-    QColor SingleColor() const { return singleColor; }
+    QColor TextColor() const <% return textColor; %>
+    QColor SingleColor() const <% return singleColor; %>
 
     /** Colorize an image (given filename) with the icon color */
     QImage SingleColorImage(const QString& filename) const;
@@ -49,7 +49,7 @@ private:
     QColor singleColor;
     QColor textColor;
     /* ... more to come later */
-};
+%>;
 
 #endif // BITCOIN_QT_PLATFORMSTYLE_H
 

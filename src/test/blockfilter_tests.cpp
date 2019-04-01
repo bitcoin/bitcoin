@@ -17,9 +17,9 @@
 BOOST_AUTO_TEST_SUITE(blockfilter_tests)
 
 BOOST_AUTO_TEST_CASE(gcsfilter_test)
-{
+<%
     GCSFilter::ElementSet included_elements, excluded_elements;
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 100; ++i) <%
         GCSFilter::Element element1(32);
         element1[0] = i;
         included_elements.insert(std::move(element1));
@@ -27,20 +27,20 @@ BOOST_AUTO_TEST_CASE(gcsfilter_test)
         GCSFilter::Element element2(32);
         element2[1] = i;
         excluded_elements.insert(std::move(element2));
-    }
+    %>
 
-    GCSFilter filter({0, 0, 10, 1 << 10}, included_elements);
-    for (const auto& element : included_elements) {
+    GCSFilter filter(<%0, 0, 10, 1 << 10%>, included_elements);
+    for (const auto& element : included_elements) <%
         BOOST_CHECK(filter.Match(element));
 
         auto insertion = excluded_elements.insert(element);
         BOOST_CHECK(filter.MatchAny(excluded_elements));
         excluded_elements.erase(insertion.first);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
-{
+<%
     GCSFilter filter;
     BOOST_CHECK_EQUAL(filter.GetN(), 0);
     BOOST_CHECK_EQUAL(filter.GetEncoded().size(), 1);
@@ -50,10 +50,10 @@ BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
     BOOST_CHECK_EQUAL(params.m_siphash_k1, 0);
     BOOST_CHECK_EQUAL(params.m_P, 0);
     BOOST_CHECK_EQUAL(params.m_M, 1);
-}
+%>
 
 BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
-{
+<%
     CScript included_scripts[5], excluded_scripts[3];
 
     // First two are outputs on a single transaction.
@@ -95,12 +95,12 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     BlockFilter block_filter(BlockFilterType::BASIC, block, block_undo);
     const GCSFilter& filter = block_filter.GetFilter();
 
-    for (const CScript& script : included_scripts) {
+    for (const CScript& script : included_scripts) <%
         BOOST_CHECK(filter.Match(GCSFilter::Element(script.begin(), script.end())));
-    }
-    for (const CScript& script : excluded_scripts) {
+    %>
+    for (const CScript& script : excluded_scripts) <%
         BOOST_CHECK(!filter.Match(GCSFilter::Element(script.begin(), script.end())));
-    }
+    %>
 
     // Test serialization/unserialization.
     BlockFilter block_filter2;
@@ -118,29 +118,29 @@ BOOST_AUTO_TEST_CASE(blockfilter_basic_test)
     BOOST_CHECK_EQUAL(default_ctor_block_filter_1.GetFilterType(), default_ctor_block_filter_2.GetFilterType());
     BOOST_CHECK_EQUAL(default_ctor_block_filter_1.GetBlockHash(), default_ctor_block_filter_2.GetBlockHash());
     BOOST_CHECK(default_ctor_block_filter_1.GetEncodedFilter() == default_ctor_block_filter_2.GetEncodedFilter());
-}
+%>
 
 BOOST_AUTO_TEST_CASE(blockfilters_json_test)
-{
+<%
     UniValue json;
     std::string json_data(json_tests::blockfilters,
                           json_tests::blockfilters + sizeof(json_tests::blockfilters));
-    if (!json.read(json_data) || !json.isArray()) {
+    if (!json.read(json_data) || !json.isArray()) <%
         BOOST_ERROR("Parse error.");
         return;
-    }
+    %>
 
     const UniValue& tests = json.get_array();
-    for (unsigned int i = 0; i < tests.size(); i++) {
+    for (unsigned int i = 0; i < tests.size(); i++) <%
         UniValue test = tests[i];
         std::string strTest = test.write();
 
-        if (test.size() == 1) {
+        if (test.size() == 1) <%
             continue;
-        } else if (test.size() < 7) {
+        %> else if (test.size() < 7) <%
             BOOST_ERROR("Bad test: " << strTest);
             continue;
-        }
+        %>
 
         unsigned int pos = 0;
         /*int block_height =*/ test[pos++].get_int();
@@ -154,11 +154,11 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         block_undo.vtxundo.emplace_back();
         CTxUndo& tx_undo = block_undo.vtxundo.back();
         const UniValue& prev_scripts = test[pos++].get_array();
-        for (unsigned int ii = 0; ii < prev_scripts.size(); ii++) {
+        for (unsigned int ii = 0; ii < prev_scripts.size(); ii++) <%
             std::vector<unsigned char> raw_script = ParseHex(prev_scripts[ii].get_str());
             CTxOut txout(0, CScript(raw_script.begin(), raw_script.end()));
             tx_undo.vprevout.emplace_back(txout, 0, false);
-        }
+        %>
 
         uint256 prev_filter_header_basic;
         BOOST_CHECK(ParseHashStr(test[pos++].get_str(), prev_filter_header_basic));
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
 
         uint256 computed_header_basic = computed_filter_basic.ComputeHeader(prev_filter_header_basic);
         BOOST_CHECK(computed_header_basic == filter_header_basic);
-    }
-}
+    %>
+%>
 
 BOOST_AUTO_TEST_SUITE_END()

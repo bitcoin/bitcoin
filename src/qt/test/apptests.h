@@ -15,10 +15,10 @@ class BitcoinGUI;
 class RPCConsole;
 
 class AppTests : public QObject
-{
+<%
     Q_OBJECT
 public:
-    explicit AppTests(BitcoinApplication& app) : m_app(app) {}
+    explicit AppTests(BitcoinApplication& app) : m_app(app) <%%>
 
 private Q_SLOTS:
     void appTests();
@@ -27,15 +27,15 @@ private Q_SLOTS:
 
 private:
     //! Add expected callback name to list of pending callbacks.
-    void expectCallback(std::string callback) { m_callbacks.emplace(std::move(callback)); }
+    void expectCallback(std::string callback) <% m_callbacks.emplace(std::move(callback)); %>
 
     //! RAII helper to remove no-longer-pending callback.
     struct HandleCallback
-    {
+    <%
         std::string m_callback;
         AppTests& m_app_tests;
         ~HandleCallback();
-    };
+    %>;
 
     //! Bitcoin application.
     BitcoinApplication& m_app;
@@ -45,6 +45,6 @@ private:
     //! either run or thrown exceptions. This could be a simple int counter
     //! instead of a set of names, but the names might be useful for debugging.
     std::multiset<std::string> m_callbacks;
-};
+%>;
 
 #endif // BITCOIN_QT_TEST_APPTESTS_H

@@ -10,7 +10,7 @@
 
 /* QComboBox that can be used with QDataWidgetMapper to select ordinal values from a model. */
 class QValueComboBox : public QComboBox
-{
+<%
     Q_OBJECT
 
     Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged USER true)
@@ -32,6 +32,6 @@ private:
 
 private Q_SLOTS:
     void handleSelectionChanged(int idx);
-};
+%>;
 
 #endif // BITCOIN_QT_QVALUECOMBOBOX_H

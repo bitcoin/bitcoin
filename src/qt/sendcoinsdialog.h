@@ -17,9 +17,9 @@ class PlatformStyle;
 class SendCoinsEntry;
 class SendCoinsRecipient;
 
-namespace Ui {
+namespace Ui <%
     class SendCoinsDialog;
-}
+%>
 
 QT_BEGIN_NAMESPACE
 class QUrl;
@@ -27,7 +27,7 @@ QT_END_NAMESPACE
 
 /** Dialog for sending bitcoins */
 class SendCoinsDialog : public QDialog
-{
+<%
     Q_OBJECT
 
 public:
@@ -98,13 +98,13 @@ private Q_SLOTS:
 Q_SIGNALS:
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
-};
+%>;
 
 
 #define SEND_CONFIRM_DELAY   3
 
 class SendConfirmationDialog : public QMessageBox
-{
+<%
     Q_OBJECT
 
 public:
@@ -119,6 +119,6 @@ private:
     QAbstractButton *yesButton;
     QTimer countDownTimer;
     int secDelay;
-};
+%>;
 
 #endif // BITCOIN_QT_SENDCOINSDIALOG_H
