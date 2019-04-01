@@ -20,18 +20,19 @@
 namespace llmq
 {
 
-static CBLSWorker blsWorker;
+CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
 void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
 {
     llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests);
+    blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager(scheduler);
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
-    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, blsWorker);
-    quorumManager = new CQuorumManager(evoDb, blsWorker, *quorumDKGSessionManager);
+    quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker);
+    quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
     quorumSigSharesManager = new CSigSharesManager();
     quorumSigningManager = new CSigningManager(*llmqDb, unitTests);
     chainLocksHandler = new CChainLocksHandler(scheduler);
@@ -56,12 +57,17 @@ void DestroyLLMQSystem()
     quorumBlockProcessor = nullptr;
     delete quorumDKGDebugManager;
     quorumDKGDebugManager = nullptr;
+    delete blsWorker;
+    blsWorker = nullptr;
     delete llmqDb;
     llmqDb = nullptr;
 }
 
 void StartLLMQSystem()
 {
+    if (blsWorker) {
+        blsWorker->Start();
+    }
     if (quorumDKGDebugManager) {
         quorumDKGDebugManager->StartScheduler();
     }
@@ -94,6 +100,9 @@ void StopLLMQSystem()
     }
     if (quorumDKGSessionManager) {
         quorumDKGSessionManager->StopMessageHandlerPool();
+    }
+    if (blsWorker) {
+        blsWorker->Stop();
     }
 }
 
