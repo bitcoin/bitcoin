@@ -4925,6 +4925,8 @@ extern UniValue listassetallocations(const JSONRPCRequest& request);
 extern UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request);
 extern UniValue listassetindex(const JSONRPCRequest& request);
 extern UniValue listassetindexassets(const JSONRPCRequest& request);
+extern UniValue getblockhashbytxid(const JSONRPCRequest& request);
+extern UniValue syscoingetspvproof(const JSONRPCRequest& request);
 
 extern UniValue tpstestinfo(const JSONRPCRequest& request);
 extern UniValue tpstestadd(const JSONRPCRequest& request);
@@ -5057,6 +5059,8 @@ static const CRPCCommand commands[] =
     { "syscoin",            "masternodelist",                   &masternodelist,                {"mode","filter"} },
     { "syscoin",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },
     { "syscoin",            "sentinelping",                     &sentinelping,                  {"version"} }, 
+    { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
+    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
     { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
     { "mining",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
 };
