@@ -11,12 +11,12 @@
 #include <key_io.h>
 #include <keystore.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
 #include <tinyformat.h>
 #include <univalue.h>
+#include <util/rbf.h>
 #include <util/strencodings.h>
 
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf)

@@ -29,7 +29,11 @@
 #include <timedata.h>
 #include <txmempool.h>
 #include <util/bip32.h>
+#include <util/error.h>
+#include <util/fees.h>
 #include <util/moneystr.h>
+#include <util/rbf.h>
+#include <util/validation.h>
 #include <wallet/fees.h>
 
 #include <algorithm>

@@ -9,6 +9,7 @@
 #include <net.h>
 #include <scheduler.h>
 #include <outputtype.h>
+#include <util/error.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <validation.h>
