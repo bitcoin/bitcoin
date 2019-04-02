@@ -29,6 +29,7 @@
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/rpcwallet.h>
+#include <wallet/load.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
 

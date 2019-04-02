@@ -222,6 +222,7 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/feebumper.h \
   wallet/fees.h \
+  wallet/load.h \
   wallet/psbtwallet.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
@@ -293,6 +294,9 @@ libbitcoin_server_a_SOURCES = \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
+if ENABLE_WALLET
+libbitcoin_server_a_SOURCES += wallet/init.cpp
+endif
 if !ENABLE_WALLET
 libbitcoin_server_a_SOURCES += dummywallet.cpp
 endif
@@ -319,7 +323,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/db.cpp \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
-  wallet/init.cpp \
+  wallet/load.cpp \
   wallet/psbtwallet.cpp \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
