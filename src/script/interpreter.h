@@ -124,6 +124,11 @@ struct PrecomputedTransactionData
     uint256 hashPrevouts, hashSequence, hashOutputs;
     bool ready = false;
 
+    PrecomputedTransactionData() = default;
+
+    template <class T>
+    void Init(const T& tx);
+
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
 };
