@@ -50,11 +50,11 @@
         <translation>받을 주소</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Peercoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>이것은 비트코인 전송을 위한 주소입니다. 코인을 보내기 전에 항상 받는 주소와 수량을 확인하세요</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Peercoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>이것은 비트코인 수신을 위한 주소입니다. 코인을 받을 때 마다 항상 다른 주소를 사용 하시는 것을 권장합니다.</translation>
     </message>
     <message>
@@ -144,7 +144,7 @@
         <translation>지갑 암호화</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
         <translation>%1 이(가) 암호화 작업을 위해 종료됩니다. 이 암호화 작업이 바이러스로부터 비트코인을 완전히 지키지 못한다는 점을 기억하십시요.</translation>
     </message>
     <message>
@@ -192,7 +192,7 @@
     </message>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>네트워크와 동기화중...</translation>
@@ -286,7 +286,7 @@
         <translation>디스크에서 블럭 불러오는 중</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
+        <source>Send coins to a Peercoin address</source>
         <translation>비트코인 주소로 코인 보내기</translation>
     </message>
     <message>
@@ -406,7 +406,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>peercoin-core</name>
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation>송금액은 마이너스가 될 수 없습니다</translation>
