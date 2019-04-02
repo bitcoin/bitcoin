@@ -478,7 +478,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				return error(errorMessage.c_str());
 			}
 			break; 
-        case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:    
+        case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:       
             break;     
 		default:
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Asset transaction has unknown op");
@@ -536,12 +536,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
            
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
 	{		
-        std::vector<unsigned char> vchBurnContract;
         std::vector<unsigned char> vchEthAddress;
         uint32_t nAssetFromScript;
         uint64_t nAmountFromScript;
         CWitnessAddress burnWitnessAddress;
-        if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchBurnContract, vchEthAddress)){
+        if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress)){
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocationburn");
             return error(errorMessage.c_str());
         }   
@@ -560,13 +559,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
             return error(errorMessage.c_str());
         }
-
-		if(dbAsset.vchContract.empty() || dbAsset.vchContract != vchBurnContract)
-		{
-			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid contract entered in the script output or Syscoin Asset does not have the ethereum contract configured");
-			return error(errorMessage.c_str());
-		}      
-
+        if(dbAsset.vchContract.empty())
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot burn, no contract provided in asset by owner");
+            return error(errorMessage.c_str());
+        } 
         mapBalanceSenderCopy -= nAmountFromScript;
 		if (mapBalanceSenderCopy < 0) {
             if(fJustCheck)
@@ -928,7 +925,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 
 
 	CScript scriptData;
-	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << theAsset.vchContract << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
+	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);

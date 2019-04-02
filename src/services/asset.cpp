@@ -24,6 +24,7 @@
 #include <wallet/fees.h>
 #include <outputtype.h>
 #include <boost/thread.hpp>
+#include <merkleblock.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 unsigned int MAX_UPDATES_PER_BLOCK = 2;
@@ -53,7 +54,8 @@ UniValue assetinfo(const JSONRPCRequest& request);
 UniValue listassets(const JSONRPCRequest& request);
 UniValue syscoinsetethstatus(const JSONRPCRequest& request);
 UniValue syscoinsetethheaders(const JSONRPCRequest& request);
-
+UniValue getblockhashbytxid(const JSONRPCRequest& request);
+UniValue syscoingetspvproof(const JSONRPCRequest& request);
 using namespace std::chrono;
 using namespace std;
 
@@ -67,7 +69,6 @@ int GetSyscoinDataOutput(const CTransaction& tx) {
 CAmount getaddressbalance(const string& strAddress)
 {
     UniValue paramsUTXO(UniValue::VARR);
-    UniValue param(UniValue::VOBJ);
     UniValue utxoParams(UniValue::VARR);
     utxoParams.push_back("addr(" + strAddress + ")");
     paramsUTXO.push_back("start");
@@ -125,12 +126,11 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
 {   
     if(!theAssetAllocation) 
         return false;  
-    std::vector<unsigned char> vchBurnContract;
     std::vector<unsigned char> vchEthAddress;
     uint32_t nAssetFromScript;
     uint64_t nAmountFromScript;
     CWitnessAddress burnWitnessAddress;
-    if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchBurnContract, vchEthAddress)){
+    if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress)){
         return false;
     }
     theAssetAllocation->SetNull();
@@ -140,7 +140,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
     return true;
 
 } 
-bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchContract, std::vector<unsigned char> &vchEthAddress)
+bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchEthAddress)
 {
     if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
@@ -159,7 +159,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
         return false;
     }
         
-    if(vvchArgs.size() != 6){
+    if(vvchArgs.size() != 5){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Wrong argument size %d\n", vvchArgs.size());
         return false;
     }
@@ -186,29 +186,25 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][2]) << 40;  
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][1]) << 48;  
     nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][0]) << 56;   
+
     if(vvchArgs[2].empty()){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Contract empty\n");
-        return false;
-    }
-    vchContract = vvchArgs[2];
-    if(vvchArgs[3].empty()){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum address empty\n");
         return false; 
     }
-    vchEthAddress = vvchArgs[3]; 
-    if(vvchArgs[4].size() != 1){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address version - Wrong argument size %d\n", vvchArgs[5].size());
+    vchEthAddress = vvchArgs[2]; 
+    if(vvchArgs[3].size() != 1){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address version - Wrong argument size %d\n", vvchArgs[3].size());
         return false;
     }
-    const unsigned char &nWitnessVersion = static_cast<unsigned char>(vvchArgs[4][0]);
+    const unsigned char &nWitnessVersion = static_cast<unsigned char>(vvchArgs[3][0]);
     
-    if(vvchArgs[5].empty()){
+    if(vvchArgs[4].empty()){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
         return false;
     }     
     
 
-    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[5]);   
+    burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[4]);   
     return true; 
 }
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
@@ -453,7 +449,6 @@ UniValue SyscoinListReceived(bool includeempty = true, bool includechange = fals
 			continue;
 
 		UniValue paramsBalance(UniValue::VARR);
-		UniValue param(UniValue::VOBJ);
 		UniValue balanceParams(UniValue::VARR);
 		balanceParams.push_back("addr(" + strAddress + ")");
 		paramsBalance.push_back("start");
@@ -952,7 +947,6 @@ int GenerateSyscoinGuid()
 unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 {
 	UniValue paramsUTXO(UniValue::VARR);
-	UniValue param(UniValue::VOBJ);
 	UniValue utxoParams(UniValue::VARR);
 	utxoParams.push_back("addr(" + strAddressFrom + ")");
 	paramsUTXO.push_back("start");
@@ -2202,6 +2196,135 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
     }
     
     return true;
+}
+UniValue getblockhashbytxid(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "getblockhash txid\n"
+            "\nReturns hash of block in best-block-chain at txid provided. Requires -blockindex configuration flag.\n"
+            "\nArguments:\n"
+            "1. txid         (string, required) A transaction that is in the block\n"
+            "\nResult:\n"
+            "\"hash\"         (string) The block hash\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+            + HelpExampleRpc("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+        );
+    if(!fBlockIndex)
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -blockindex enabled"));
+    LOCK(cs_main);
+
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+
+    uint256 blockhash;
+    if(!passetindexdb->ReadBlockHash(hash, blockhash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
+
+    const CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+
+    return pblockindex->GetBlockHash().GetHex();
+}
+UniValue syscoingetspvproof(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+        throw std::runtime_error(
+            "syscoingetspvproof txid (blockhash) \n"
+            "\nReturns SPV proof for use with inter-chain transfers. Requires -blockindex configuration flag if you omit the blockhash parameter.\n"
+            "\nArguments:\n"
+            "1. txid         (string, required) A transaction that is in the block\n"
+            "1. blockhash    (string, not-required) Block containing txid\n"
+            "\nResult:\n"
+        "\"proof\"         (string) JSON representation of merkl/ nj   nk ne proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)\n"
+            "\nExamples:\n"
+            + HelpExampleCli("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+            + HelpExampleRpc("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+        );
+    LOCK(cs_main);
+
+    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    uint256 blockhash;
+    if(request.params.size() > 1)
+        blockhash = ParseHashV(request.params[1], "parameter 2");
+    if(fBlockIndex){
+        if(!passetindexdb->ReadBlockHash(hash, blockhash))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
+    }
+    CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
+    if (!pblockindex) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+    CTransactionRef tx;
+    uint256 hash_block;
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, pblockindex))   
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not found"); 
+    UniValue paramsTXID(UniValue::VARR);
+    paramsTXID.push_back(hash.GetHex());
+    UniValue params(UniValue::VARR);
+    params.push_back(paramsTXID);   
+    JSONRPCRequest requestRPC;
+    requestRPC.params = params;
+    UniValue resProof = gettxoutproof(requestRPC);
+    std::string hexStr = resProof.get_str();
+    // deserialize proof
+    CDataStream ssMB(ParseHexV(hexStr, "proof"), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    CMerkleBlock merkleBlock;
+    ssMB >> merkleBlock;
+
+    UniValue res(UniValue::VOBJ);
+
+    std::vector<uint256> vMatch;
+    std::vector<unsigned int> vIndex;
+    if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Merkle root hash is wrong"));
+        
+    const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
+    if (!pindex || !chainActive.Contains(pindex) || pindex->nTx == 0) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+    }
+    
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
+    const std::string &rawTx = EncodeHexTx(*tx, RPCSerializationFlags());
+    res.pushKV("transaction",rawTx);
+    // get first 80 bytes of header (non auxpow part)
+    res.pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));
+    UniValue siblings(UniValue::VARR);
+    // Check if proof is valid, only add results if so
+    if (pindex->nTx == merkleBlock.txn.GetNumTransactions()) {
+        for (const uint256& hash : vMatch) {
+            siblings.push_back(hash.GetHex());
+        }
+    }
+    res.pushKV("siblings", siblings);
+    res.pushKV("index", (int)vIndex[0]);
+    UniValue assetVal;
+    try{
+        UniValue paramsDecode(UniValue::VARR);
+        paramsDecode.push_back(rawTx);   
+        JSONRPCRequest requestDecodeRPC;
+        requestDecodeRPC.params = paramsDecode;
+        UniValue resDecode = syscoindecoderawtransaction(requestDecodeRPC);
+        assetVal = find_value(resDecode.get_obj(), "asset"); 
+    }
+    catch(const runtime_error& e){
+    }
+    if(!assetVal.isNull()) {
+        CAsset asset;
+        if(!GetAsset(assetVal.get_int(), asset))
+             throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
+        if(asset.vchContract.empty())
+            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
+         res.pushKV("contract", HexStr(asset.vchContract));    
+                   
+    }
+    else{
+        res.pushKV("contract", HexStr(Params().GetConsensus().vchSYSXContract));
+    }
+    return res;
 }
 UniValue listassetindex(const JSONRPCRequest& request) {
     const UniValue &params = request.params;

@@ -184,8 +184,9 @@ public:
 bool IsDeprecatedRPCEnabled(const std::string& method);
 
 extern CRPCTable tableRPC;
-    
+// SYSCOIN    
 extern UniValue scantxoutset(const JSONRPCRequest& request);
+extern UniValue gettxoutproof(const JSONRPCRequest& request);
 /**
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).

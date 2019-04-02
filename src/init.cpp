@@ -1594,7 +1594,7 @@ bool AppInitMain()
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
                 fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
                 fBlockIndex = gArgs.GetBoolArg("-blockindex", false);
-                if(fAssetIndex)
+                if(fAssetIndex || fBlockIndex)
                     passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
                     
                 // new CBlockTreeDB tries to delete the existing file, which

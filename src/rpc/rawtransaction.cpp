@@ -168,7 +168,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
         in_active_chain = chainActive.Contains(blockindex);
-    }else if(fAssetIndex){      
+    }else if(fBlockIndex){      
         LOCK(cs_main);
         uint256 blockhash;
         if(!passetindexdb->ReadBlockHash(hash, blockhash))
@@ -195,7 +195,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             }
             errmsg = "No such transaction found in the provided block";
         } else if (!g_txindex) {
-            errmsg = "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+            errmsg = "No such mempool transaction. Use -txindex or to enable blockchain transaction queries";
         } else if (!f_txindex_ready) {
             errmsg = "No such mempool transaction. Blockchain transactions are still in the process of being indexed";
         } else {
@@ -213,8 +213,8 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     TxToJSON(*tx, hash_block, result);
     return result;
 }
-
-static UniValue gettxoutproof(const JSONRPCRequest& request)
+// SYSCOIN
+UniValue gettxoutproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
         throw std::runtime_error(
@@ -259,7 +259,7 @@ static UniValue gettxoutproof(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
         // SYSCOIN
-    } else if(fAssetIndex && setTxids.size() == 1){      
+    } else if(fBlockIndex && setTxids.size() == 1){      
         LOCK(cs_main);
         uint256 blockhash;
         if(!passetindexdb->ReadBlockHash(oneTxid, blockhash))
