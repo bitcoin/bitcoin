@@ -20,7 +20,7 @@ RPC interface will be abused.
   includes being able to record any passphrases you enter for unlocking
   your encrypted wallets or changing settings so that your Bitcoin Core
   program tells you that certain transactions have multiple
-  confirmations even when they aren't part of the best block chain.  For
+  confirmations even when they aren't part of the best blockchain.  For
   this reason, you should not use Bitcoin Core for security sensitive
   operations on systems you do not exclusively control, such as shared
   computers or virtual private servers.

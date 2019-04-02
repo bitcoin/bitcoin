@@ -24,12 +24,12 @@ guisettings.ini.bak | backup of former GUI settings after `-resetguisettings` is
 
 Only used in pre-0.8.0
 ---------------------
-* blktree/*; block chain index (LevelDB); since pre-0.8, replaced by blocks/index/* in 0.8.0
+* blktree/*; blockchain index (LevelDB); since pre-0.8, replaced by blocks/index/* in 0.8.0
 * coins/*; unspent transaction output database (LevelDB); since pre-0.8, replaced by chainstate/* in 0.8.0
 
 Only used before 0.8.0
 ---------------------
-* blkindex.dat: block chain index database (BDB); replaced by {chainstate/*,blocks/index/*,blocks/rev000??.dat} in 0.8.0
+* blkindex.dat: blockchain index database (BDB); replaced by {chainstate/*,blocks/index/*,blocks/rev000??.dat} in 0.8.0
 * blk000?.dat: block data (custom, 2 GiB per file); replaced by blocks/blk000??.dat in 0.8.0
 
 Only used before 0.7.0
