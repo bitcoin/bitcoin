@@ -201,6 +201,34 @@ def ser_int_vector(l):
         r += struct.pack("<i", i)
     return r
 
+
+def deser_dyn_bitset(f, bytes_based):
+    if bytes_based:
+        nb = deser_compact_size(f)
+        n = nb * 8
+    else:
+        n = deser_compact_size(f)
+        nb = int((n + 7) / 8)
+    b = f.read(nb)
+    r = []
+    for i in range(n):
+        r.append((b[int(i / 8)] & (1 << (i % 8))) != 0)
+    return r
+
+
+def ser_dyn_bitset(l, bytes_based):
+    n = len(l)
+    nb = int((n + 7) / 8)
+    r = [0] * nb
+    for i in range(n):
+        r[int(i / 8)] |= (1 if l[i] else 0) << (i % 8)
+    if bytes_based:
+        r = ser_compact_size(nb) + bytes(r)
+    else:
+        r = ser_compact_size(n) + bytes(r)
+    return r
+
+
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
     obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
