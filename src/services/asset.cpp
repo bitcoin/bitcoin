@@ -2244,13 +2244,13 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
             + HelpExampleRpc("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
         );
     LOCK(cs_main);
-
-    uint256 hash = ParseHashV(request.params[0], "parameter 1");
+    UniValue res(UniValue::VOBJ);
+    uint256 txhash = ParseHashV(request.params[0], "parameter 1");
     uint256 blockhash;
     if(request.params.size() > 1)
         blockhash = ParseHashV(request.params[1], "parameter 2");
     if(fBlockIndex){
-        if(!passetindexdb->ReadBlockHash(hash, blockhash))
+        if(!passetindexdb->ReadBlockHash(txhash, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
     }
     CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
@@ -2259,33 +2259,22 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hash_block, true, pblockindex))   
+    if (!GetTransaction(txhash, tx, Params().GetConsensus(), hash_block, true, pblockindex))   
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not found"); 
-    UniValue paramsTXID(UniValue::VARR);
-    paramsTXID.push_back(hash.GetHex());
-    UniValue params(UniValue::VARR);
-    params.push_back(paramsTXID);   
-    JSONRPCRequest requestRPC;
-    requestRPC.params = params;
-    UniValue resProof = gettxoutproof(requestRPC);
-    std::string hexStr = resProof.get_str();
-    // deserialize proof
-    CDataStream ssMB(ParseHexV(hexStr, "proof"), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
-    CMerkleBlock merkleBlock;
-    ssMB >> merkleBlock;
 
-    UniValue res(UniValue::VOBJ);
-
-    std::vector<uint256> vMatch;
-    std::vector<unsigned int> vIndex;
-    if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Merkle root hash is wrong"));
-        
-    const CBlockIndex* pindex = LookupBlockIndex(merkleBlock.header.GetHash());
-    if (!pindex || !chainActive.Contains(pindex) || pindex->nTx == 0) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
+    CBlock block;
+    if (IsBlockPruned(pblockindex)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
     }
-    
+
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+        // Block not found on disk. This could be because we have the block
+        // header in our index but don't have the block (for example if a
+        // non-whitelisted node sends us an unrequested long chain of valid
+        // blocks, we add the headers to our index, but don't accept the
+        // block).
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+    }   
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
     const std::string &rawTx = EncodeHexTx(*tx, RPCSerializationFlags());
@@ -2293,14 +2282,16 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     // get first 80 bytes of header (non auxpow part)
     res.pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));
     UniValue siblings(UniValue::VARR);
-    // Check if proof is valid, only add results if so
-    if (pindex->nTx == merkleBlock.txn.GetNumTransactions()) {
-        for (const uint256& hash : vMatch) {
-            siblings.push_back(hash.GetHex());
-        }
+    // store the index of the transaction we are looking for within the block
+    int nIndex = 0;
+    for (unsigned int i = 0;i < block.vtx.size();i++) {
+        const uint256 &txHashFromBlock = block.vtx[i]->GetHash();
+        if(txhash == txHashFromBlock)
+            nIndex = i;
+        siblings.push_back(txHashFromBlock.GetHex());
     }
     res.pushKV("siblings", siblings);
-    res.pushKV("index", (int)vIndex[0]);
+    res.pushKV("index", nIndex);
     UniValue assetVal;
     try{
         UniValue paramsDecode(UniValue::VARR);
