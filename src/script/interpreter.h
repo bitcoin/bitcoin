@@ -122,6 +122,11 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
 
 struct PrecomputedTransactionData
 {
+    //! Single-SHA256 versions
+    uint256 m_prevouts_hash, m_sequences_hash, m_outputs_hash, m_amounts_spent_hash;
+    bool m_amounts_spent_ready = false;
+
+    //! Double-SHA256 versions
     uint256 hashPrevouts, hashSequence, hashOutputs;
     bool ready = false;
     std::vector<CTxOut> m_spent_outputs;

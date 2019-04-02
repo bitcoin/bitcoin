@@ -117,7 +117,7 @@ inline uint160 Hash160(const prevector<N, unsigned char>& vch)
 class CHashWriter
 {
 private:
-    CHash256 ctx;
+    CSHA256 ctx;
 
     const int nType;
     const int nVersion;
@@ -135,7 +135,16 @@ public:
     // invalidates the object
     uint256 GetHash() {
         uint256 result;
-        ctx.Finalize((unsigned char*)&result);
+        unsigned char buf[CSHA256::OUTPUT_SIZE];
+        ctx.Finalize(buf);
+        ctx.Reset().Write(buf, CSHA256::OUTPUT_SIZE).Finalize(result.begin());
+        return result;
+    }
+
+    // invalidates the object
+    uint256 GetSHA256() {
+        uint256 result;
+        ctx.Finalize(result.begin());
         return result;
     }
 
@@ -143,9 +152,8 @@ public:
      * Returns the first 64 bits from the resulting hash.
      */
     inline uint64_t GetCheapHash() {
-        unsigned char result[CHash256::OUTPUT_SIZE];
-        ctx.Finalize(result);
-        return ReadLE64(result);
+        uint256 result = GetHash();
+        return ReadLE64(result.begin());
     }
 
     template<typename T>
