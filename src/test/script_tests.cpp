@@ -13,7 +13,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <test/test_bitcoin.h>
-#include <rpc/server.h>
+#include <rpc/util.h>
 
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>
