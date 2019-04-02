@@ -24,6 +24,9 @@ CQuorumBlockProcessor* quorumBlockProcessor;
 
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_FIRST_MINED_COMMITMENT = "q_fmc";
+static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
+
+static const std::string DB_UPGRADED = "q_dbupgraded";
 
 void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
@@ -158,6 +161,13 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
     return true;
 }
 
+// We store a mapping from minedHeight->quorumHeight in the DB
+// minedHeight is inversed so that entries are traversable in reversed order
+static std::tuple<std::string, uint8_t, int> BuildInversedHeightKey(Consensus::LLMQType llmqType, int nMinedHeight)
+{
+    return std::make_tuple(DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT, (uint8_t)llmqType, std::numeric_limits<int>::max() - nMinedHeight);
+}
+
 bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindex, const CFinalCommitment& qc, CValidationState& state)
 {
     auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qc.llmqType);
@@ -194,10 +204,9 @@ bool CQuorumBlockProcessor::ProcessCommitment(const CBlockIndex* pindex, const C
     }
 
     // Store commitment in DB
+    auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
     evoDb.Write(std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)params.type, quorumHash)), qc);
-    if (!evoDb.Exists(std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)params.type))) {
-        evoDb.Write(std::make_pair(DB_FIRST_MINED_COMMITMENT, (uint8_t)params.type), quorumHash);
-    }
+    evoDb.Write(BuildInversedHeightKey(params.type, pindex->nHeight), quorumIndex->nHeight);
 
     {
         LOCK(minableCommitmentsCs);
@@ -227,6 +236,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         }
 
         evoDb.Erase(std::make_pair(DB_MINED_COMMITMENT, std::make_pair(qc.llmqType, qc.quorumHash)));
+        evoDb.Erase(BuildInversedHeightKey((Consensus::LLMQType)qc.llmqType, pindex->nHeight));
         {
             LOCK(minableCommitmentsCs);
             hasMinedCommitmentCache.erase(std::make_pair((Consensus::LLMQType)qc.llmqType, qc.quorumHash));
@@ -242,6 +252,47 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
     }
 
     return true;
+}
+
+// TODO remove this with 0.15.0
+void CQuorumBlockProcessor::UpgradeDB()
+{
+    bool v = false;
+    if (evoDb.GetRawDB().Read(DB_UPGRADED, v) && v) {
+        return;
+    }
+
+    LogPrintf("CQuorumBlockProcessor::%s -- Upgrading DB...\n", __func__);
+
+    {
+        LOCK(cs_main);
+        if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
+            auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
+            while (pindex) {
+                CBlock block;
+                bool r = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
+                assert(r);
+
+                std::map<Consensus::LLMQType, CFinalCommitment> qcs;
+                CValidationState dummyState;
+                GetCommitmentsFromBlock(block, pindex->pprev, qcs, dummyState);
+
+                for (const auto& p : qcs) {
+                    const auto& qc = p.second;
+                    if (qc.IsNull()) {
+                        continue;
+                    }
+                    auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
+                    evoDb.GetRawDB().Write(BuildInversedHeightKey((Consensus::LLMQType)qc.llmqType, pindex->nHeight), quorumIndex->nHeight);
+                }
+
+                pindex = chainActive.Next(pindex);
+            }
+        }
+    }
+
+    evoDb.GetRawDB().Write(DB_UPGRADED, true);
+    LogPrintf("CQuorumBlockProcessor::%s -- Upgrade done...\n", __func__);
 }
 
 bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state)
