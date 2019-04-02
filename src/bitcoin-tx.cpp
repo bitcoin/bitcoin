@@ -18,6 +18,7 @@
 #include <script/script.h>
 #include <script/sign.h>
 #include <univalue.h>
+#include <util/rbf.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>

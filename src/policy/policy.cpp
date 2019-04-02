@@ -8,7 +8,6 @@
 #include <policy/policy.h>
 
 #include <consensus/validation.h>
-#include <validation.h>
 #include <coins.h>
 #include <policy/settings.h>
 #include <tinyformat.h>

@@ -7,17 +7,11 @@
 
 #include <txmempool.h>
 
-static const uint32_t MAX_BIP125_RBF_SEQUENCE = 0xfffffffd;
-
 enum class RBFTransactionState {
     UNKNOWN,
     REPLACEABLE_BIP125,
     FINAL
 };
-
-// Check whether the sequence numbers on this transaction are signaling
-// opt-in to replace-by-fee, according to BIP 125
-bool SignalsOptInRBF(const CTransaction &tx);
 
 // Determine whether an in-mempool transaction is signaling opt-in to RBF
 // according to BIP 125

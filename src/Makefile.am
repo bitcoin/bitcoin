@@ -203,10 +203,15 @@ BITCOIN_CORE_H = \
   undo.h \
   util/bip32.h \
   util/bytevectorhash.h \
+  util/error.h \
+  util/fees.h \
   util/system.h \
   util/memory.h \
   util/moneystr.h \
+  util/rbf.h \
   util/time.h \
+  util/url.h \
+  util/validation.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -471,10 +476,15 @@ libbitcoin_util_a_SOURCES = \
   threadinterrupt.cpp \
   util/bip32.cpp \
   util/bytevectorhash.cpp \
+  util/error.cpp \
+  util/fees.cpp \
   util/system.cpp \
   util/moneystr.cpp \
+  util/rbf.cpp \
   util/strencodings.cpp \
   util/time.cpp \
+  util/url.cpp \
+  util/validation.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
