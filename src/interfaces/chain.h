@@ -16,6 +16,9 @@ class CBlock;
 class CScheduler;
 class uint256;
 struct CBlockLocator;
+class CTransaction;
+
+using CTransactionRef = std::shared_ptr<const CTransaction>;
 
 namespace interfaces {
 
@@ -127,6 +130,16 @@ public:
     //! Estimate fraction of total transactions verified if blocks up to
     //! the specified block hash are verified.
     virtual double guessVerificationProgress(const uint256& block_hash) = 0;
+
+    //! Synchronously send TransactionAddedToMempool notifications about all
+    //! current mempool transactions to the specified handler and return after
+    //! the last one is sent. These notifications aren't coordinated with async
+    //! notifications sent by handleNotifications, so out of date async
+    //! notifications from handleNotifications can arrive during and after
+    //! synchronous notifications from requestMempoolTransactions. Clients need
+    //! to be prepared to handle this by ignoring notifications about unknown
+    //! removed transactions and already added new transactions.
+    virtual void requestMempoolTransactions(std::function<void(const CTransactionRef&)> fn) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for
