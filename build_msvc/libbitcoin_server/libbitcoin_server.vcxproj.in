@@ -151,6 +151,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
 @SOURCE_FILES@
+    <ClCompile Include="..\..\src\wallet\init.cpp">
+      <ObjectFileName>$(IntDir)wallet_init.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
