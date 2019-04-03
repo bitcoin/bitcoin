@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 ће се сада затворити како би се завршио процес шифрирања.  Запамтите да шифрирањем свог новчаника не можете у потпуности заштити своје биткоине од крађе од стране злоћудних програма и компјутерских инфекција.</translation>
+        <translation>%1 ће се сада затворити како би се завршио процес шифрирања.  Запамтите да шифрирањем свог новчаника не можете у потпуности заштити своје пиркойне од крађе од стране злоћудних програма и компјутерских инфекција.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -419,7 +419,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and peercoin: URIs)</source>
-        <translation>Затражи плаћање (генерише QR кодове и биткоин: URI-е)</translation>
+        <translation>Затражи плаћање (генерише QR кодове и пиркойн: URI-е)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -431,7 +431,7 @@
     </message>
     <message>
         <source>Open a peercoin: URI or payment request</source>
-        <translation>Отворите биткоин: URI или захтев за плаћање</translation>
+        <translation>Отворите пиркойн: URI или захтев за плаћање</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
