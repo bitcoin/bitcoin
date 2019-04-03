@@ -235,6 +235,14 @@ configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held, and adds warnings to the
 debug.log file if inconsistencies are detected.
 
+The `-DDEBUG_SERIALIZE_SCHEDULER` flag can also be used to ensure that
+asynchronous tasks handled by `CScheduler` (e.g. `CValidationInterface`
+callbacks) do not introduce deadlocks. For example, if `ActivateBestChain()`
+were to be called in a validation interface callback, that call may attempt to
+call `SyncWithValidationInterfaceQueue()` and result in a deadlock. The flag
+works by making the scheduler execute tasks synchronously as soon as they are
+scheduled.
+
 ### Valgrind suppressions file
 
 Valgrind is a programming tool for memory debugging, memory leak detection, and

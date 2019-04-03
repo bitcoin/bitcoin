@@ -104,6 +104,13 @@ void CScheduler::stop(bool drain)
 
 void CScheduler::schedule(CScheduler::Function f, boost::chrono::system_clock::time_point t)
 {
+#ifdef DEBUG_SERIALIZE_SCHEDULER
+    // Execute the function synchronously in the calling thread in order
+    // to detect deadlocks. Should only be enabled in testing environments.
+    f();
+    return;
+#endif
+
     {
         boost::unique_lock<boost::mutex> lock(newTaskMutex);
         taskQueue.insert(std::make_pair(t, f));
