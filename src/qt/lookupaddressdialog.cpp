@@ -245,7 +245,7 @@ void LookupAddressDialog::searchAddress()
                 balances[pItem-1]->setVisible(true);
                 labels[pItem-1]->setText(pName[pItem].c_str());
                 string tokenLabel = " SPT";
-                if (pName[pItem]=="Test Omni (#2)") { tokenLabel = " TOMNI"; }
+                if (pName[pItem]=="Test Omni (#2)") { tokenLabel = " TOMN"; }
                 if (pDivisible[pItem])
                 {
                     balances[pItem-1]->setText(QString::fromStdString(FormatDivisibleMP(pBal[pItem]) + tokenLabel));

@@ -1349,7 +1349,7 @@ UniValue omni_getcrowdsale(const UniValue& params, bool fHelp)
     response.push_back(Pair("amountraised", FormatMP(sp.property_desired, amountRaised)));
     response.push_back(Pair("tokensissued", FormatMP(propertyId, tokensIssued)));
     response.push_back(Pair("issuerbonustokens", FormatMP(propertyId, amountIssuerTokens)));
-    response.push_back(Pair("addedissuertokens", FormatMP(propertyId, sp.missedTokens)));    
+    response.push_back(Pair("addedissuertokens", FormatMP(propertyId, sp.missedTokens)));
 
     // TODO: return fields every time?
     if (!active) response.push_back(Pair("closedearly", sp.close_early));
@@ -1891,7 +1891,7 @@ UniValue omni_listblocktransactions(const UniValue& params, bool fHelp)
     }
 
     return response;
-}    
+}
 
 UniValue omni_listblockstransactions(const UniValue& params, bool fHelp)
 {
@@ -2267,7 +2267,7 @@ UniValue omni_getsto(const UniValue& params, bool fHelp)
             "  \"propertyid\" : n,               (number) the identifier of sent tokens\n"
             "  \"divisible\" : true|false,       (boolean) whether the sent tokens are divisible\n"
             "  \"amount\" : \"n.nnnnnnnn\",        (string) the number of tokens sent to owners\n"
-            "  \"totalstofee\" : \"n.nnnnnnnn\",   (string) the fee paid by the sender, nominated in OMNI or TOMNI\n"
+            "  \"totalstofee\" : \"n.nnnnnnnn\",   (string) the fee paid by the sender, nominated in OMN or TOMN\n"
             "  \"recipients\": [                 (array of JSON objects) a list of recipients\n"
             "    {\n"
             "      \"address\" : \"address\",          (string) the Bitcoin address of the recipient\n"

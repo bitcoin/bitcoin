@@ -54,7 +54,7 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
-    // special cases for constant SPs OMNI and TOMNI
+    // special cases for constant SPs OMN and TOMN
     implied_omni.issuer = ExodusAddress().ToString();
     implied_omni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_omni.num_tokens = 700000;

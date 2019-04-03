@@ -177,7 +177,7 @@ void MetaDExCancelDialog::UpdateCancelCombo()
                     string dataStr = sellId + "/" + desiredId;
                     if (ui->radioCancelPrice->isChecked()) { // append price if needed
                         comboStr += " priced at " + StripTrailingZeros(obj.displayUnitPrice());
-                        if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getDesProperty() == OMNI_PROPERTY_MSC)) { comboStr += " OMNI/SPT"; } else { comboStr += " TOMNI/SPT"; }
+                        if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getDesProperty() == OMNI_PROPERTY_MSC)) { comboStr += " OMN/SPT"; } else { comboStr += " TOMN/SPT"; }
                         dataStr += ":" + obj.displayUnitPrice();
                     }
                     int index = ui->cancelCombo->findText(QString::fromStdString(comboStr));
@@ -413,5 +413,3 @@ void MetaDExCancelDialog::SendCancelTransaction()
     }
 **/
 }
-
-

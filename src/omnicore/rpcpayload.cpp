@@ -81,7 +81,7 @@ UniValue omni_createpayload_dexsell(const UniValue& params, bool fHelp)
 
             "\nArguments:\n"
 
-            "1. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be 1 for OMNI or 2 for TOMNI)\n"
+            "1. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)\n"
             "2. amountforsale        (string, required) the amount of tokens to list for sale\n"
             "3. amountdesired        (string, required) the amount of bitcoins desired\n"
             "4. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accepting order\n"
