@@ -732,7 +732,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
                 "thus affected by options which limit spendability such as -spendzeroconfchange.\n",
                 {
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
-                    {"minconf", RPCArg::Type::NUM, /* default */ "0", "Only include transactions confirmed at least this many times."},
+                    {"minconf", RPCArg::Type::NUM, /* default */ "0", "Must be zero"},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also include balance in watch-only addresses (see 'importaddress')"},
                     {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
                 },
@@ -742,10 +742,8 @@ static UniValue getbalance(const JSONRPCRequest& request)
                 RPCExamples{
             "\nThe total amount in the wallet with 1 or more confirmations\n"
             + HelpExampleCli("getbalance", "") +
-            "\nThe total amount in the wallet at least 6 blocks confirmed\n"
-            + HelpExampleCli("getbalance", "\"*\" 6") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("getbalance", "\"*\", 6")
+            + HelpExampleRpc("getbalance", "")
                 },
             }.Check(request);
 
@@ -761,16 +759,15 @@ static UniValue getbalance(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
     }
 
-    int min_depth = 0;
-    if (!request.params[1].isNull()) {
-        min_depth = request.params[1].get_int();
+    if (!request.params[1].isNull() && request.params[1].get_int() != 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "minconf must be zero");
     }
 
     bool include_watchonly = ParseIncludeWatchonly(request.params[2], *pwallet);
 
     bool avoid_reuse = GetAvoidReuseFlag(pwallet, request.params[3]);
 
-    const auto bal = pwallet->GetBalance(min_depth, avoid_reuse);
+    const auto bal = pwallet->GetBalance(0, avoid_reuse);
 
     return ValueFromAmount(bal.m_mine_trusted + (include_watchonly ? bal.m_watchonly_trusted : 0));
 }

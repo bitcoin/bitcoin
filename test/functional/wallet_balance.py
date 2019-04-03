@@ -86,6 +86,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getbalance(), 50)
 
         self.log.info("Test getbalance with different arguments")
+        assert_raises_rpc_error(-8, "minconf must be zero", self.nodes[1].getbalance, minconf=1)
         assert_equal(self.nodes[0].getbalance("*"), 50)
         assert_equal(self.nodes[0].getbalance("*", 0), 50)
         assert_equal(self.nodes[0].getbalance("*", 0, True), 100)
