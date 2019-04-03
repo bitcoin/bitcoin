@@ -167,6 +167,10 @@ void OptionsDialog::setModel(OptionsModel *_model)
     /* Display */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
+
+#ifndef ENABLE_CHECKPOINTS
+    ui->checkpointEnforce->setVisible(false);
+#endif
 }
 
 void OptionsDialog::setMapper()
@@ -175,7 +179,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->bitcoinAtStartup, OptionsModel::StartAtStartup);
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
-//    mapper->addMapping(ui->checkpointEnforce, OptionsModel::CheckpointEnforce);  //ppcTODO - fix this once form is updated
+    mapper->addMapping(ui->checkpointEnforce, OptionsModel::CheckpointEnforce);
 
     /* Wallet */
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
