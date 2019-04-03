@@ -302,7 +302,7 @@
     </message>
 </context>
 <context>
-    <name>PeercoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+358"/>
         <source>Sign &amp;message...</source>
@@ -4022,7 +4022,7 @@
     </message>
 </context>
 <context>
-    <name>peercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <location filename="../bitcoinstrings.cpp" line="+349"/>
         <source>Options:</source>

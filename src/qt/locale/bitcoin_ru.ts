@@ -188,7 +188,7 @@
     </message>
 </context>
 <context>
-    <name>PeercoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Подписать &amp;сообщение...</translation>
@@ -394,7 +394,7 @@
     </message>
     </context>
 <context>
-    <name>peercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>Кошелёк постарается не платить меньше, чем минимальная комиссия передачи.</translation>
