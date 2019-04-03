@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Peercoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Това са Вашите Биткойн адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване на всяка транзакция.</translation>
+        <translation>Това са Вашите Пиркойн адреси,благодарение на които ще получавате плащания.Препоръчително е да използвате нови адреси за получаване на всяка транзакция.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -383,11 +383,11 @@
     </message>
     <message>
         <source>Sign messages with your Peercoin addresses to prove you own them</source>
-        <translation>Пишете съобщения със своя Биткойн адрес за да докажете,че е ваш.</translation>
+        <translation>Пишете съобщения със своя Пиркойн адрес за да докажете,че е ваш.</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Peercoin addresses</source>
-        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Биткойн адреси.</translation>
+        <translation>Потвърждаване на съобщения  за да се знае,че са написани с дадените Пиркойн адреси.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -407,7 +407,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and peercoin: URIs)</source>
-        <translation>Изискване на плащания(генерира QR кодове и биткойн: URIs)</translation>
+        <translation>Изискване на плащания(генерира QR кодове и пиркойн: URIs)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -419,7 +419,7 @@
     </message>
     <message>
         <source>Open a peercoin: URI or payment request</source>
-        <translation>Отворете биткойн: URI  или заявка за плащане</translation>
+        <translation>Отворете пиркойн: URI  или заявка за плащане</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -463,7 +463,7 @@
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Peercoin command-line options</source>
-        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
+        <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Пиркойн команди</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -525,7 +525,7 @@
     </message>
     <message>
         <source>A fatal error occurred. Peercoin can no longer continue safely and will quit.</source>
-        <translation>Възникна фатална грешка. Биткойн не може да продължи безопасно и ще се изключи.</translation>
+        <translation>Възникна фатална грешка. Пиркойн не може да продължи безопасно и ще се изключи.</translation>
     </message>
 </context>
 <context>
@@ -941,7 +941,7 @@
     </message>
     <message>
         <source>Connect to the Peercoin network through a SOCKS5 proxy.</source>
-        <translation>Свързване с Биткойн мрежата чрез SOCKS5  прокси.</translation>
+        <translation>Свързване с Пиркойн мрежата чрез SOCKS5  прокси.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1095,7 +1095,7 @@
     </message>
     <message>
         <source>Cannot start peercoin: click-to-pay handler</source>
-        <translation>Биткойн не можe да се стартира: click-to-pay handler</translation>
+        <translation>Пиркойн не можe да се стартира: click-to-pay handler</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1177,7 +1177,7 @@
     </message>
     <message>
         <source>Enter a Peercoin address (e.g. %1)</source>
-        <translation>Въведете Биткойн адрес (например: %1)</translation>
+        <translation>Въведете Пиркойн адрес (например: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1714,7 +1714,7 @@
     </message>
     <message>
         <source>Warning: Invalid Peercoin address</source>
-        <translation>Внимание: Невалиден Биткойн адрес</translation>
+        <translation>Внимание: Невалиден Пиркойн адрес</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2367,7 +2367,7 @@
     </message>
     <message>
         <source>Peercoin Core</source>
-        <translation>Биткойн ядро</translation>
+        <translation>Пиркойн ядро</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>

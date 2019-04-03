@@ -139,7 +139,7 @@
     </message>
     <message>
         <source>Send coins to a Peercoin address</source>
-        <translation>Испрати биткоини на Пиркойн адреса</translation>
+        <translation>Испрати пиркойни на Пиркойн адреса</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
