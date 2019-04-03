@@ -48,7 +48,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>PeercoinGUI</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -158,6 +158,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>peercoin-core</name>
     </context>
 </TS>

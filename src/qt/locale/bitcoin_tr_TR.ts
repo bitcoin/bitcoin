@@ -62,12 +62,12 @@
         <translation>Alınan Adresler</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Bunlar ödeme göndermek için gereken Bitcoin adreslerinizdir. Para göndermeden önce her zaman miktarı ve alıcı adresi kontrol edin.</translation>
+        <source>These are your Peercoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Bunlar ödeme göndermek için gereken Peercoin adreslerinizdir. Para göndermeden önce her zaman miktarı ve alıcı adresi kontrol edin.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Bunlar ödeme almak için kullanılacak Bitcoin adreslerinizdir. Her işlem için yeni bir ödeme alma adresi kullanılması tavsiye edilir.</translation>
+        <source>These are your Peercoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Bunlar ödeme almak için kullanılacak Peercoin adreslerinizdir. Her işlem için yeni bir ödeme alma adresi kullanılması tavsiye edilir.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -180,8 +180,8 @@
         <translation>Cüzdan Şifrelendi</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 Şifreleme işlemini bitirmek için kapatılacak. Şunu unutmayın ki şampiyon galatasaray ve şifrelemek, bitcoinlerinizin bilgisayarınıza bulaşan malware yazılımları tarafından çalınmasını tamamen engelleyemez.</translation>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
+        <translation>%1 Şifreleme işlemini bitirmek için kapatılacak. Şunu unutmayın ki şampiyon galatasaray ve şifrelemek, peercoinlerinizin bilgisayarınıza bulaşan malware yazılımları tarafından çalınmasını tamamen engelleyemez.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -208,7 +208,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>İmza &amp;mesaj</translation>
@@ -286,8 +286,8 @@
         <translation>Bloklar disk üzerinde yeniden indeksleniyor...</translation>
     </message>
     <message>
-        <source>Send coins to a Bitcoin address</source>
-        <translation>Bitcoin adresine madeni para gönderin</translation>
+        <source>Send coins to a Peercoin address</source>
+        <translation>Peercoin adresine madeni para gönderin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -302,8 +302,8 @@
         <translation>Onay mesajı...</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin
+        <source>Peercoin</source>
+        <translation>Peercoin
 </translation>
     </message>
     <message>
@@ -462,8 +462,8 @@
         <translation>Gönderim adresini düzenleyin</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid Bitcoin address.</source>
-        <translation>Girilen adres "%1" Bitcoin adresiyle eşleşmiyor.</translation>
+        <source>The entered address "%1" is not a valid Peercoin address.</source>
+        <translation>Girilen adres "%1" Peercoin adresiyle eşleşmiyor.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -519,8 +519,8 @@
         <translation>Hoş geldiniz</translation>
     </message>
     <message>
-        <source>Bitcoin</source>
-        <translation>Bitcoin
+        <source>Peercoin</source>
+        <translation>Peercoin
 </translation>
     </message>
     <message>
@@ -652,7 +652,7 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Peercoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Gösterilen bilgi geçerli olmayabilir. Bağlantı tekrar sağlandıktan sonra cüzdanınız otomatik olarak senkronize olacaktır. Henüz senkronize olma işlemi tamamlanmadı.</translation>
     </message>
     <message>
@@ -733,8 +733,8 @@
 <context>
     <name>QObject</name>
     <message>
-        <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Bitcoin adresinizi girin (örneğin %1)</translation>
+        <source>Enter a Peercoin address (e.g. %1)</source>
+        <translation>Peercoin adresinizi girin (örneğin %1)</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -1110,8 +1110,8 @@
         <translation>Coin gönderimini onaylayın</translation>
     </message>
     <message>
-        <source>Warning: Invalid Bitcoin address</source>
-        <translation>Uyarı: Hatalı Bitcoin adresi</translation>
+        <source>Warning: Invalid Peercoin address</source>
+        <translation>Uyarı: Hatalı Peercoin adresi</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1401,7 +1401,7 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>peercoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Ayarlar:</translation>
@@ -1411,8 +1411,8 @@
         <translation>JSON-RPC komutları ile komut satırını onaylayın</translation>
     </message>
     <message>
-        <source>Bitcoin Core</source>
-        <translation>Bitcoin Çekirdeği</translation>
+        <source>Peercoin Core</source>
+        <translation>Peercoin Çekirdeği</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>

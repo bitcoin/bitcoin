@@ -62,11 +62,11 @@
         <translation>የመቀበያ አድራሻዎች</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your Peercoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>እነኚ የቢትኮይን ክፍያ የመላኪያ አድራሻዎችዎ ናቸው:: ገንዘብ/ኮይኖች ከመላክዎ በፊት መጠኑን እና የመቀበያ አድራሻውን ሁልጊዜ ያረጋግጡ::</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <source>These are your Peercoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
         <translation>እነኚ የቢትኮይን ክፍያ የመቀበያ አድራሻዎችዎ ናቸው:: ለእያንዳንዱ ግብይት አዲስ የመቀበያ አድራሻ እንዲጠቀሙ ይመከራል:: </translation>
     </message>
     <message>
@@ -180,7 +180,7 @@
         <translation>ቦርሳዎ ምስጢር ተደርጓል</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your peercoins from being stolen by malware infecting your computer.</source>
         <translation>%1 የማመስጠር ሂደቱን ለመጨረስ አሁን ይዘጋል:: ያስታውሱ፣ ኮምፒተርዎ በተንኮል አዘል ሶፍትዌር ከተበከለ ቦርሳዎን ማመስጠር ቢትኮይኖቾን ሙሉበሙሉ እንዳይሰረቁ ሊከላከል አይችልም::</translation>
     </message>
     <message>
@@ -232,7 +232,7 @@
     </message>
 </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>PeercoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>ምልክትና መልእክት...</translation>
@@ -446,6 +446,6 @@
     </message>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>peercoin-core</name>
     </context>
 </TS>

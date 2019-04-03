@@ -36,7 +36,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>BitcoinGUI</name>
+    <name>PeercoinGUI</name>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -178,6 +178,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>bitcoin-core</name>
+    <name>peercoin-core</name>
     </context>
 </TS>
