@@ -1336,9 +1336,13 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
+bool GenericTransactionSignatureChecker<T>::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash, SignatureType sigtype) const
 {
-    return pubkey.Verify(sighash, vchSig);
+    switch (sigtype) {
+    case SignatureType::ECDSA: return pubkey.Verify(sighash, vchSig);
+    case SignatureType::SCHNORR: return pubkey.VerifySchnorr(sighash, vchSig);
+    }
+    assert(false);
 }
 
 template <class T>
@@ -1357,7 +1361,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned 
 
     uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
 
-    if (!VerifySignature(vchSig, pubkey, sighash))
+    if (!VerifySignature(vchSig, pubkey, sighash, SignatureType::ECDSA))
         return false;
 
     return true;

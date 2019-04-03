@@ -7,6 +7,7 @@
 
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
+#include <secp256k1_schnorrsig.h>
 
 namespace
 {
@@ -164,6 +165,17 @@ static int ecdsa_signature_parse_der_lax(const secp256k1_context* ctx, secp256k1
         secp256k1_ecdsa_signature_parse_compact(ctx, sig, tmpsig);
     }
     return 1;
+}
+
+bool CPubKey::VerifySchnorr(const uint256 &hash, const std::vector<unsigned char>& sigbytes) const {
+    if (!IsValid()) return false;
+    if (vch[0] != 2 && vch[0] != 3) return false; // Only compressed pubkeys
+    if (sigbytes.size() != 64) return false;
+    secp256k1_pubkey pubkey;
+    secp256k1_schnorrsig sig;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &pubkey, vch, size())) return false;
+    if (!secp256k1_schnorrsig_parse(secp256k1_context_verify, &sig, sigbytes.data())) return false;
+    return secp256k1_schnorrsig_verify(secp256k1_context_verify, &sig, hash.begin(), &pubkey);
 }
 
 bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const {

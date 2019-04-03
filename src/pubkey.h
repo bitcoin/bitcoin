@@ -189,6 +189,11 @@ public:
     bool Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const;
 
     /**
+     * Verify a Schnorr (DLS) signature (64 bytes)
+     */
+    bool VerifySchnorr(const uint256& hash, const std::vector<unsigned char>& sig) const;
+
+    /**
      * Check whether a signature is normalized (lower-S).
      */
     static bool CheckLowS(const std::vector<unsigned char>& vchSig);

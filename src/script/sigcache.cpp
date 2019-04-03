@@ -35,9 +35,14 @@ public:
     }
 
     void
-    ComputeEntry(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey)
+    ComputeEntry(uint256& entry, const uint256 &hash, const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, SignatureType sigtype)
     {
-        CSHA256().Write(nonce.begin(), 32).Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(&vchSig[0], vchSig.size()).Finalize(entry.begin());
+        unsigned char st;
+        switch (sigtype) {
+        case SignatureType::ECDSA: st = 'E'; break;
+        case SignatureType::SCHNORR: st = 'S'; break;
+        }
+        CSHA256().Write(nonce.begin(), 32).Write(hash.begin(), 32).Write(&pubkey[0], pubkey.size()).Write(&st, 1).Write(&vchSig[0], vchSig.size()).Finalize(entry.begin());
     }
 
     bool
@@ -79,13 +84,13 @@ void InitSignatureCache()
             (nElems*sizeof(uint256)) >>20, (nMaxCacheSize*2)>>20, nElems);
 }
 
-bool CachingTransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
+bool CachingTransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash, SignatureType sigtype) const
 {
     uint256 entry;
-    signatureCache.ComputeEntry(entry, sighash, vchSig, pubkey);
+    signatureCache.ComputeEntry(entry, sighash, vchSig, pubkey, sigtype);
     if (signatureCache.Get(entry, !store))
         return true;
-    if (!TransactionSignatureChecker::VerifySignature(vchSig, pubkey, sighash))
+    if (!TransactionSignatureChecker::VerifySignature(vchSig, pubkey, sighash, sigtype))
         return false;
     if (store)
         signatureCache.Set(entry);
