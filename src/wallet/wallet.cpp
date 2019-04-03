@@ -3291,45 +3291,40 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
  */
 bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state)
 {
-    {
-        auto locked_chain = chain().lock();
-        LOCK(cs_wallet);
+    auto locked_chain = chain().lock();
+    LOCK(cs_wallet);
 
-        CWalletTx wtxNew(this, std::move(tx));
-        wtxNew.mapValue = std::move(mapValue);
-        wtxNew.vOrderForm = std::move(orderForm);
-        wtxNew.fTimeReceivedIsTxTime = true;
-        wtxNew.fFromMe = true;
+    CWalletTx wtxNew(this, std::move(tx));
+    wtxNew.mapValue = std::move(mapValue);
+    wtxNew.vOrderForm = std::move(orderForm);
+    wtxNew.fTimeReceivedIsTxTime = true;
+    wtxNew.fFromMe = true;
 
-        WalletLogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
-        {
+    WalletLogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
 
-            // Add tx to wallet, because if it has change it's also ours,
-            // otherwise just for transaction history.
-            AddToWallet(wtxNew);
+    // Add tx to wallet, because if it has change it's also ours,
+    // otherwise just for transaction history.
+    AddToWallet(wtxNew);
 
-            // Notify that old coins are spent
-            for (const CTxIn& txin : wtxNew.tx->vin)
-            {
-                CWalletTx &coin = mapWallet.at(txin.prevout.hash);
-                coin.BindWallet(this);
-                NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
-            }
-        }
+    // Notify that old coins are spent
+    for (const CTxIn& txin : wtxNew.tx->vin) {
+        CWalletTx &coin = mapWallet.at(txin.prevout.hash);
+        coin.BindWallet(this);
+        NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
+    }
 
-        // Get the inserted-CWalletTx from mapWallet so that the
-        // fInMempool flag is cached properly
-        CWalletTx& wtx = mapWallet.at(wtxNew.GetHash());
+    // Get the inserted-CWalletTx from mapWallet so that the
+    // fInMempool flag is cached properly
+    CWalletTx& wtx = mapWallet.at(wtxNew.GetHash());
 
-        if (fBroadcastTransactions)
-        {
-            std::string err_string;
-            if (!wtx.SubmitMemoryPoolAndRelay(err_string, true, *locked_chain)) {
-                WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
-                // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
-            }
+    if (fBroadcastTransactions) {
+        std::string err_string;
+        if (!wtx.SubmitMemoryPoolAndRelay(err_string, true, *locked_chain)) {
+            WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+            // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
         }
     }
+
     return true;
 }
 
