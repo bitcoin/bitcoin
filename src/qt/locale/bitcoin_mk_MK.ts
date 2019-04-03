@@ -139,7 +139,7 @@
     </message>
     <message>
         <source>Send coins to a Peercoin address</source>
-        <translation>Испрати биткоини на Биткоин адреса</translation>
+        <translation>Испрати биткоини на Пиркойн адреса</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -147,7 +147,7 @@
     </message>
     <message>
         <source>Peercoin</source>
-        <translation>Биткоин</translation>
+        <translation>Пиркойн</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -300,7 +300,7 @@
     <name>Intro</name>
     <message>
         <source>Peercoin</source>
-        <translation>Биткоин</translation>
+        <translation>Пиркойн</translation>
     </message>
     <message>
         <source>Error</source>
@@ -591,7 +591,7 @@
     </message>
     <message>
         <source>Peercoin Core</source>
-        <translation>Биткоин Core</translation>
+        <translation>Пиркойн Core</translation>
     </message>
     <message>
         <source>Warning</source>
