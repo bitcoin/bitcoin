@@ -901,7 +901,7 @@ public:
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};
     };
-    Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
+    Balance GetBalance(bool avoid_reuse = true) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
     OutputType TransactionChangeType(OutputType change_type, const std::vector<CRecipient>& vecSend);

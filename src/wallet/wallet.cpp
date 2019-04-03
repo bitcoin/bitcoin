@@ -1981,7 +1981,7 @@ void MaybeResendWalletTxs()
  */
 
 
-CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) const
+CWallet::Balance CWallet::GetBalance(bool avoid_reuse) const
 {
     Balance ret;
     isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
@@ -1996,7 +1996,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             const int tx_depth{wtx.GetDepthInMainChain()};
             const CAmount tx_credit_mine{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE | reuse_filter)};
             const CAmount tx_credit_watchonly{wtx.GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY | reuse_filter)};
-            if (is_trusted && tx_depth >= min_depth) {
+            if (is_trusted && tx_depth >= 0) {
                 ret.m_mine_trusted += tx_credit_mine;
                 ret.m_watchonly_trusted += tx_credit_watchonly;
             }
