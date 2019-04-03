@@ -170,9 +170,9 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
         switch (propertyId) {
             case OMNI_PROPERTY_BTC: str = "BTC";
                 break;
-            case OMNI_PROPERTY_MSC: str = "OMNI";
+            case OMNI_PROPERTY_MSC: str = "OMN";
                 break;
-            case OMNI_PROPERTY_TMSC: str = "TOMNI";
+            case OMNI_PROPERTY_TMSC: str = "TOMN";
                 break;
             default:
                 str = strprintf("SP token: %d", propertyId);
