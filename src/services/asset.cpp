@@ -2273,7 +2273,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }   
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
-    const std::string &rawTx = EncodeHexTx(*tx, RPCSerializationFlags());
+    const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     res.pushKV("transaction",rawTx);
     // get first 80 bytes of header (non auxpow part)
     res.pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));

@@ -179,7 +179,8 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if(pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
+        // also skip syncing with nodes that are on an old unsupported verion or something like bitcoinj which doesn't support these messages
+        if(pnode->nVersion < PROTOCOL_VERSION || pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
