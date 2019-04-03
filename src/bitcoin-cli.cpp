@@ -24,6 +24,7 @@
 #include <support/events.h>
 
 #include <univalue.h>
+#include <univalue_write_yaml.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -56,6 +57,7 @@ static void SetupCliArgs()
     gArgs.AddArg("-rpcwallet=<walletname>", "Send RPC for non-default wallet on RPC server (needs to exactly match corresponding -wallet option passed to bitcoind). This changes the RPC endpoint used, e.g. http://127.0.0.1:8332/wallet/<walletname>", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-stdin", "Read extra arguments from standard input, one per line until EOF/Ctrl-D (recommended for sensitive information such as passphrases). When combined with -stdinrpcpass, the first line from standard input is used for the RPC password.", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-stdinrpcpass", "Read RPC password from standard input as a single line. When combined with -stdin, the first line from standard input is used for the RPC password.", false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-yaml", "Format output as YAML instead of JSON", false, OptionsCategory::OPTIONS);
 }
 
 /** libevent event log callback */
@@ -467,12 +469,17 @@ static int CommandLineRPC(int argc, char *argv[])
                     }
                 } else {
                     // Result
-                    if (result.isNull())
+                    if (result.isNull()) {
                         strPrint = "";
-                    else if (result.isStr())
+                    } else if (result.isStr()) {
                         strPrint = result.get_str();
-                    else
-                        strPrint = result.write(2);
+                    } else {
+                        if (gArgs.GetBoolArg("-yaml", false)) {
+                            strPrint = univalue_yaml(result, 2);
+                        } else {
+                            strPrint = result.write(2);
+                        }
+                    }
                 }
                 // Connection succeeded, no need to retry.
                 break;
