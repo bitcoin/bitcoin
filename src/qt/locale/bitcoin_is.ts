@@ -232,7 +232,7 @@
     </message>
 </context>
 <context>
-    <name>PeercoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Undirrita &amp;skilaboð</translation>
@@ -972,7 +972,7 @@
     </message>
     </context>
 <context>
-    <name>peercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Villa við lestur %s! Allir lyklar fóru inn á réttan hátt, en færslugögn eða færslugildi gætu verið röng eða horfin.</translation>

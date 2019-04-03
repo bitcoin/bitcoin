@@ -232,7 +232,7 @@
     </message>
 </context>
 <context>
-    <name>PeercoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>サイン &amp;メッセージ...</translation>
@@ -2628,7 +2628,7 @@
     </message>
     </context>
 <context>
-    <name>peercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <source>Information</source>
         <translation>情報</translation>

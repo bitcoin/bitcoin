@@ -192,7 +192,7 @@
     </message>
     </context>
 <context>
-    <name>PeercoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>네트워크와 동기화중...</translation>
@@ -406,7 +406,7 @@
     </message>
     </context>
 <context>
-    <name>peercoin-core</name>
+    <name>bitcoin-core</name>
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation>송금액은 마이너스가 될 수 없습니다</translation>

@@ -88,7 +88,7 @@
     </message>
 </context>
 <context>
-    <name>PeercoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Send coins to a Peercoin address</source>
         <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន Peercoin មួយ</translation>
@@ -210,6 +210,6 @@
     </message>
     </context>
 <context>
-    <name>peercoin-core</name>
+    <name>bitcoin-core</name>
     </context>
 </TS>
