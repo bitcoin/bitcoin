@@ -88,7 +88,6 @@ BITCOIN_CORE_H = \
   chainparamsbase.h \
   chainparamsseeds.h \
   checkpoints.h \
-  checkpointsync.h \
   checkqueue.h \
   clientversion.h \
   coins.h \
@@ -176,6 +175,10 @@ BITCOIN_CORE_H = \
   kernel.h \
   kernelrecord.h
 
+if ENABLE_CHECKPOINTS
+  BITCOIN_CORE_H += checkpointsync.h
+endif
+
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -194,7 +197,6 @@ libbitcoin_server_a_SOURCES = \
   blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
-  checkpointsync.cpp \
   consensus/tx_verify.cpp \
   httprpc.cpp \
   httpserver.cpp \
@@ -226,6 +228,10 @@ libbitcoin_server_a_SOURCES = \
   validationinterface.cpp \
   kernel.cpp \
   $(BITCOIN_CORE_H)
+
+if ENABLE_CHECKPOINTS
+  libbitcoin_server_a_SOURCES += checkpointsync.cpp
+endif
 
 if ENABLE_ZMQ
 libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)

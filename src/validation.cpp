@@ -2024,6 +2024,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
         }
     }
 
+#ifdef ENABLE_CHECKPOINTS
     if (!IsSyncCheckpointEnforced()) // checkpoint advisory mode
     {
         if (pindexNew->pprev && !CheckSyncCheckpoint(pindexNew->GetBlockHash(), pindexNew->pprev))
@@ -2031,6 +2032,7 @@ void static UpdateTip(const CBlockIndex *pindexNew, const CChainParams& chainPar
         else
             strCheckpointWarning = "";
     }
+#endif
 
     LogPrintf("%s: new best=%s height=%d version=0x%08x log2_trust=%.8g moneysupply=%s tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)", __func__,
       pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
@@ -3025,10 +3027,12 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, bool fProofOfS
             return state.DoS(100, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight), REJECT_CHECKPOINT, "bad-fork-prior-to-checkpoint");
     }
 
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: check that the block satisfies synchronized checkpoint
     if (IsSyncCheckpointEnforced() // checkpoint enforce mode
         && !IsInitialBlockDownload() && !CheckSyncCheckpoint(block.GetHash(), pindexPrev))
         return state.Invalid(error("AcceptBlock() : rejected by synchronized checkpoint"));
+#endif
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast() || block.GetBlockTime() + MAX_FUTURE_BLOCK_TIME < pindexPrev->GetBlockTime())
@@ -3348,8 +3352,10 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 
     CheckBlockIndex(chainparams.GetConsensus());
 
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: check pending sync-checkpoint
     AcceptPendingSyncCheckpoint();
+#endif
 
     return true;
 }
@@ -3394,10 +3400,11 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!g_chainstate.ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: if responsible for sync-checkpoint send it
     if (!CSyncCheckpoint::strMasterPrivKey.empty() && (int)gArgs.GetArg("-checkpointdepth", -1) >= 0)
         SendSyncCheckpoint(AutoSelectSyncCheckpoint());
-
+#endif
     return true;
 }
 
@@ -3740,7 +3747,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
             return false;
         }
     }
-
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: load hashSyncCheckpoint
     if (!pblocktree->ReadSyncCheckpoint(hashSyncCheckpoint))
     {
@@ -3748,7 +3755,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
         hashSyncCheckpoint = chainparams.GetConsensus().hashGenesisBlock;
     }
     LogPrintf("LoadBlockIndexDB(): synchronized checkpoint %s\n", hashSyncCheckpoint.ToString());
-
+#endif
     // Check whether we have ever pruned block & undo files
     pblocktree->ReadFlag("prunedblockfiles", fHavePruned);
     if (fHavePruned)

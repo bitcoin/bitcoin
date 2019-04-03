@@ -100,6 +100,13 @@ AC_PATH_TOOL(OBJCOPY, objcopy)
 
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
+# Enable sync checkpoints
+AC_ARG_ENABLE([checkpoints],
+  [AS_HELP_STRING([--disable-checkpoints],
+  [disable sync checkpoints (enabled by default)])],
+  [enable_checkpoints=$enableval],
+  [enable_checkpoints=yes])
+
 # Enable wallet
 AC_ARG_ENABLE([wallet],
   [AS_HELP_STRING([--disable-wallet],
@@ -1101,6 +1108,15 @@ if test "x$use_ccache" = "xyes"; then
     AX_CHECK_PREPROC_FLAG([-Qunused-arguments],[CPPFLAGS="-Qunused-arguments $CPPFLAGS"])
 fi
 
+dnl enable sync checkpoints
+AC_MSG_CHECKING([if sync checkpoints should be enabled])
+if test x$enable_checkpoints != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_CHECKPOINTS],[1],[Define to 1 to enable sync checkpoints])
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl enable wallet
 AC_MSG_CHECKING([if wallet should be enabled])
 if test x$enable_wallet != xno; then
@@ -1203,6 +1219,7 @@ fi
 AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
+AM_CONDITIONAL([ENABLE_CHECKPOINTS],[test x$enable_checkpoints = xyes])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$BUILD_TEST = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$bitcoin_enable_qt = xyes])
@@ -1330,6 +1347,7 @@ esac
 
 echo
 echo "Options used to compile and link:"
+echo "  checkpoints   = $enable_checkpoints"
 echo "  with wallet   = $enable_wallet"
 echo "  with gui / qt = $bitcoin_enable_qt"
 if test x$bitcoin_enable_qt != xno; then

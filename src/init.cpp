@@ -1089,12 +1089,14 @@ bool AppInitSanityChecks()
     // peercoin: init hash seed
     peercoinRandseed = GetRand(1 << 30);
 
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: moved here because ECC need to be initialized to execute this
     if (gArgs.IsArgSet("-checkpointkey")) // peercoin: checkpoint master priv key
     {
         if (!SetCheckpointPrivKey(gArgs.GetArg("-checkpointkey", "")))
             return InitError(_("Unable to sign checkpoint, wrong checkpointkey?"));
     }
+#endif
 
     // Sanity check
     if (!InitSanityCheck())
@@ -1396,6 +1398,7 @@ bool AppInitMain()
                     break;
                 }
 
+#ifdef ENABLE_CHECKPOINTS
                 // peercoin: initialize synchronized checkpoint
                 if (!fReindex && !WriteSyncCheckpoint(chainparams.GenesisBlock().GetHash()))
                     return error("LoadBlockIndex() : failed to init sync checkpoint");
@@ -1403,6 +1406,7 @@ bool AppInitMain()
                 // peercoin: if checkpoint master key changed must reset sync-checkpoint
                 if (!CheckCheckpointPubKey())
                     return error("failed to reset checkpoint master pubkey");
+#endif
 
                 // At this point we're either in reindex or we've loaded a useful
                 // block tree into mapBlockIndex!

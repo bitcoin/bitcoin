@@ -298,8 +298,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+#ifdef ENABLE_CHECKPOINTS
         case CheckpointEnforce:
             return IsSyncCheckpointEnforced();
+#endif
         default:
             return QVariant();
         }
@@ -436,11 +438,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+#ifdef ENABLE_CHECKPOINTS
         case CheckpointEnforce:
             fCheckpointEnforce = value.toBool();
             settings.setValue("fCheckpointEnforce", value);
             SetCheckpointEnforce(fCheckpointEnforce);
             break;
+#endif
         default:
             break;
         }

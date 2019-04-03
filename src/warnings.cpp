@@ -66,6 +66,7 @@ std::string GetWarnings(const std::string& strFor)
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(strMintWarning.c_str());
     }
 
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: checkpoint warning
     // should not enter safe mode for longer invalid chain
     if (strCheckpointWarning != "")
@@ -74,6 +75,7 @@ std::string GetWarnings(const std::string& strFor)
         strStatusBar = strRPC = strGUI = strCheckpointWarning;
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(strMintWarning.c_str());
     }
+#endif
 
     // Misc warnings like out of disk space and clock is wrong
     if (strMiscWarning != "")
@@ -95,6 +97,7 @@ std::string GetWarnings(const std::string& strFor)
         strStatusBar = strRPC = "Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.";
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.");
     }
+#ifdef ENABLE_CHECKPOINTS
     // peercoin: detect invalid checkpoint
     if (hashInvalidCheckpoint != uint256())
     {
@@ -102,7 +105,7 @@ std::string GetWarnings(const std::string& strFor)
         strStatusBar = strRPC = "WARNING: Inconsistent checkpoint found! Stop enforcing checkpoints and notify developers to resolve the issue.";
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _("WARNING: Invalid checkpoint found! Displayed transactions may not be correct! You may need to upgrade, or notify developers of the issue.");
     }
-
+#endif
     // Alerts
     {
         LOCK(cs_mapAlerts);

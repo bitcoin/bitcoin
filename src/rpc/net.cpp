@@ -689,6 +689,7 @@ UniValue sendalert(const JSONRPCRequest& request)
     return result;
 }
 
+#ifdef ENABLE_CHECKPOINTS
 // RPC commands related to sync checkpoints
 // get information of sync-checkpoint (first introduced in ppcoin)
 UniValue getcheckpoint(const JSONRPCRequest& request)
@@ -762,7 +763,7 @@ UniValue enforcecheckpoint(const JSONRPCRequest& request)
     SetCheckpointEnforce(fEnforceCheckpoint);
     return NullUniValue;
 }
-
+#endif
 
 
 
@@ -783,9 +784,11 @@ static const CRPCCommand commands[] =
     { "network",            "setnetworkactive",       &setnetworkactive,       {"state"} },
 
     // peercoin:
+#ifdef ENABLE_CHECKPOINTS
     { "network",            "getcheckpoint",          &getcheckpoint,          {} },
     { "network",            "sendcheckpoint",         &sendcheckpoint,         {} },
     { "network",            "enforcecheckpoint",      &enforcecheckpoint,      {} },
+#endif
     { "hidden",             "sendalert",              &sendalert,              {"message", "privatekey", "minver", "maxver", "priority", "id", "cancelupto" } },
 };
 
