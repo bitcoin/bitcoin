@@ -331,7 +331,7 @@
     </message>
     <message>
         <source>Send coins to a Peercoin address</source>
-        <translation>Изпращане към Биткоин адрес</translation>
+        <translation>Изпращане към Пиркойн адрес</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -355,7 +355,7 @@
     </message>
     <message>
         <source>Peercoin</source>
-        <translation>Биткоин</translation>
+        <translation>Пиркойн</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -711,7 +711,7 @@
     </message>
     <message>
         <source>The entered address "%1" is not a valid Peercoin address.</source>
-        <translation>"%1" не е валиден Биткоин адрес.</translation>
+        <translation>"%1" не е валиден Пиркойн адрес.</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
@@ -828,7 +828,7 @@
     </message>
     <message>
         <source>Peercoin</source>
-        <translation>Биткоин</translation>
+        <translation>Пиркойн</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1040,7 +1040,7 @@
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Peercoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Биткоин, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
+        <translation>Текущата информация на екрана може да не е актуална. Вашият портфейл ще се синхронизира автоматично с мрежата на Пиркойн, щом поне една връзката с нея се установи; този процес все още не е приключил.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1850,7 +1850,7 @@
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Peercoin address</source>
-        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен Биткоин адрес</translation>
+        <translation>Проверете съобщение, за да сте сигурни че е подписано с определен Пиркойн адрес</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
