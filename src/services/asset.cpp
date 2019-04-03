@@ -235,10 +235,6 @@ bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<uns
     if (!scriptPubKey.GetOp(pc, opcode, vchArg))
         return false;
     vchData.push_back(vchArg);
-    vchArg.clear(); 
-    if (!scriptPubKey.GetOp(pc, opcode, vchArg))
-        return false;
-    vchData.push_back(vchArg);
     vchArg.clear();              
     return true;
 }
