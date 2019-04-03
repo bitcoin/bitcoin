@@ -455,7 +455,7 @@ public:
             BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, fee, changePos, error, dummy));
         }
         CValidationState state;
-        BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, state));
+        wallet->CommitTransaction(tx, {}, {}, state);
         CMutableTransaction blocktx;
         {
             LOCK(wallet->cs_wallet);
