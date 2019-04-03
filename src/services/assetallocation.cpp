@@ -173,7 +173,14 @@ void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const
     
 }
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName){
-   
+    const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, CWitnessAddress(0, vchFromString("burn")));
+    if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), senderAllocationTuple.nAsset) == fAssetIndexGuids.end()){
+        LogPrint(BCLog::SYS, "Mint Asset allocation cannot be indexed because asset is not set in -assetindexguids list\n");
+        return;
+    }
+     // sender
+    WriteAssetAllocationIndexTXID(senderAllocationTuple, txid);
+      
     // receiver
     WriteAssetAllocationIndexTXID(mintSyscoin.assetAllocationTuple, txid);
     
@@ -332,7 +339,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         mapAsset->second = std::move(dbAsset);                   
     }
     CAsset& storedSenderRef = mapAsset->second;    
- 
+    // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr), std::move(emptyAllocation));
     auto mapAssetAllocation = result1.first;
@@ -347,10 +354,27 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         mapAssetAllocation->second = std::move(receiverAllocation);                 
     }
     CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
-       
+    // sender
+    const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, CWitnessAddress(0, vchFromString("burn")));
+    const std::string &senderTupleStr = senderAllocationTuple.ToString();
+    auto result2 = mapAssetAllocations.try_emplace(std::move(senderTupleStr), std::move(emptyAllocation));
+    auto mapSenderAssetAllocation = result2.first;
+    const bool& mapSenderAssetAllocationNotFound = result2.second;
+    if(mapSenderAssetAllocationNotFound){
+        CAssetAllocation senderAllocation;
+        GetAssetAllocation(senderAllocationTuple, senderAllocation);
+        if (senderAllocation.assetAllocationTuple.IsNull()) {
+            senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);
+            senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress);
+        } 
+        mapAssetAllocation->second = std::move(senderAllocation);                 
+    }
+    CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
+    
+    storedSenderAllocationRef.nBalance += mintSyscoin.nValueAsset;
     storedReceiverAllocationRef.nBalance -= mintSyscoin.nValueAsset;
     storedSenderRef.nTotalSupply -= mintSyscoin.nValueAsset;
-    if(dbAsset.nTotalSupply < 0){
+    if(storedSenderRef.nTotalSupply < 0){
         LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Max supply cannot be negative\n");
         return false;
     }  
@@ -368,6 +392,12 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         }
         if(!passetindexdb->EraseIndexTXID(mintSyscoin.assetAllocationTuple.nAsset, txid)){
              LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase mint asset allocation from asset index\n");
+        } 
+        if(!passetindexdb->EraseIndexTXID(senderAllocationTuple, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase mint sender asset allocation from asset allocation index\n");
+        }
+        if(!passetindexdb->EraseIndexTXID(senderAllocationTuple.nAsset, txid)){
+             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not erase mint sender asset allocation from asset index\n");
         }       
     }    
     return true; 

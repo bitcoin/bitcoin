@@ -720,13 +720,37 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
             mapAssetAllocation->second = std::move(receiverAllocation);              
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
+        // sender as burn
+        const CAssetAllocationTuple senderAllocationTuple(mintSyscoin.assetAllocationTuple.nAsset, CWitnessAddress(0, vchFromString("burn")));
+        const std::string &senderTupleStr = senderAllocationTuple.ToString();
+        auto result2 = mapAssetAllocations.try_emplace(senderTupleStr, std::move(emptyAllocation));
+        auto mapSenderAssetAllocation = result2.first;
+        const bool &mapSenderAssetAllocationNotFound = result2.second;
+        if(mapSenderAssetAllocationNotFound){
+            CAssetAllocation senderAllocation;
+            GetAssetAllocation(senderAllocationTuple, senderAllocation);
+            if (senderAllocation.assetAllocationTuple.IsNull()) {           
+                senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);
+                senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress); 
+            }
+            mapSenderAssetAllocation->second = std::move(senderAllocation);              
+        }
+        CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
         
+        // update balances  
         storedReceiverAllocationRef.nBalance += mintSyscoin.nValueAsset;
+        storedSenderAllocationRef.nBalance -= mintSyscoin.nValueAsset;
         storedSenderRef.nTotalSupply += mintSyscoin.nValueAsset;
         if(storedSenderRef.nTotalSupply > storedSenderRef.nMaxSupply){
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mint amount would increase supply above max supply");
             return state.DoS(10, false, REJECT_INVALID, errorMessage);
-        }   
+        }
+        if(storedSenderAllocationRef.nBalance < 0){
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn balance cannot go below 0");
+            return state.DoS(10, false, REJECT_INVALID, errorMessage);
+        }    
+        if(storedSenderAllocationRef.nBalance == 0)
+            storedSenderAllocationRef.SetNull();  
         if(!fJustCheck)     
             passetallocationdb->WriteMintIndex(tx, mintSyscoin, nHeight);         
                                        
