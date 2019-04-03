@@ -3286,7 +3286,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
     return true;
 }
 
-bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state)
+void CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CValidationState& state)
 {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
@@ -3314,15 +3314,16 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
     // fInMempool flag is cached properly
     CWalletTx& wtx = mapWallet.at(wtxNew.GetHash());
 
-    if (fBroadcastTransactions) {
-        std::string err_string;
-        if (!wtx.SubmitMemoryPoolAndRelay(err_string, true, *locked_chain)) {
-            WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
-            // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
-        }
+    if (!fBroadcastTransactions) {
+        // Don't submit tx to the mempool
+        return;
     }
 
-    return true;
+    std::string err_string;
+    if (!wtx.SubmitMemoryPoolAndRelay(err_string, true, *locked_chain)) {
+        WalletLogPrintf("CommitTransaction(): Transaction cannot be broadcast immediately, %s\n", err_string);
+        // TODO: if we expect the failure to be long term or permanent, instead delete wtx from the wallet and return failure.
+    }
 }
 
 DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
