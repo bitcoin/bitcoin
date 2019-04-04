@@ -27,7 +27,7 @@ std::map<int, int64_t> mapSporkDefaults = {
     {SPORK_10_MASTERNODE_PAY_UPDATED_NODES,  4070908800ULL}, // OFF
     {SPORK_12_RECONSIDER_BLOCKS,             0},             // 0 BLOCKS
     {SPORK_14_REQUIRE_SENTINEL_FLAG,         4070908800ULL}, // OFF
-    {SPORK_15_DETERMINISTIC_MNS_ENABLED,     4070908800ULL}, // OFF
+    {SPORK_15_DETERMINISTIC_MNS_ENABLED,     1047200},       // Hardened to mainnet activation height (we only did this for 0.13.x)
     {SPORK_16_INSTANTSEND_AUTOLOCKS,         4070908800ULL}, // OFF
     {SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL}, // OFF
 };
