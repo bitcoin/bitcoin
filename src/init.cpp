@@ -1932,7 +1932,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
                 LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
             } else {
-                return InitError(_("Invalid masternodeblsprivkey. Please see documenation."));
+                return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
             }
         } else {
             return InitError(_("You must specify a masternodeblsprivkey in the configuration. Please see documentation for help."));

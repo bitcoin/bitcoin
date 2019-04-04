@@ -282,10 +282,10 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << tx;
 
-    JSONRPCRequest signReqeust;
-    signReqeust.params.setArray();
-    signReqeust.params.push_back(HexStr(ds.begin(), ds.end()));
-    UniValue signResult = signrawtransaction(signReqeust);
+    JSONRPCRequest signRequest;
+    signRequest.params.setArray();
+    signRequest.params.push_back(HexStr(ds.begin(), ds.end()));
+    UniValue signResult = signrawtransaction(signRequest);
 
     JSONRPCRequest sendRequest;
     sendRequest.params.setArray();
