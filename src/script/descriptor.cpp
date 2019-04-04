@@ -436,7 +436,7 @@ public:
         pubkeys.reserve(entries.size());
         for (auto& entry : entries) {
             pubkeys.push_back(entry.first);
-            out.origins.emplace(entry.first.GetID(), std::move(entry.second));
+            out.origins.emplace(entry.first.GetID(), std::make_pair<CPubKey, KeyOriginInfo>(CPubKey(entry.first), std::move(entry.second)));
         }
         if (m_script_arg) {
             for (const auto& subscript : subscripts) {
