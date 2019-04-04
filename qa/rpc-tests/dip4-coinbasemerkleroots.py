@@ -109,8 +109,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
     def test_getmnlistdiff_base(self, baseBlockHash, blockHash):
         hexstr = self.nodes[0].getblockheader(blockHash, False)
-        header = CBlockHeader()
-        header.deserialize(BytesIO(hex_str_to_bytes(hexstr)))
+        header = FromHex(CBlockHeader(), hexstr)
 
         d = self.test_node.getmnlistdiff(int(baseBlockHash, 16), int(blockHash, 16))
         assert_equal(d.baseBlockHash, int(baseBlockHash, 16))
