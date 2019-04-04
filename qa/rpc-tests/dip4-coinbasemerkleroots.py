@@ -84,11 +84,13 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         #############################
         # Now start testing quorum commitment merkle roots
 
-        height = self.nodes[0].getblockcount()
+        self.nodes[0].generate(1)
+        oldhash = self.nodes[0].getbestblockhash()
         # Test DIP8 activation once with a pre-existing quorum and once without (we don't know in which order it will activate on mainnet)
         self.test_dip8_quorum_merkle_root_activation(True)
         for n in self.nodes:
-            n.invalidateblock(n.getblockhash(height + 1))
+            n.invalidateblock(oldhash)
+        self.sync_all()
         first_quorum = self.test_dip8_quorum_merkle_root_activation(False)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
@@ -252,6 +254,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
         while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
             self.nodes[0].generate(4)
+            self.sync_all()
         self.nodes[0].generate(1)
         sync_blocks(self.nodes)
 
