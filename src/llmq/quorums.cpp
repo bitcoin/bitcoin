@@ -32,7 +32,7 @@ static uint256 MakeQuorumKey(const CQuorum& q)
 {
     CHashWriter hw(SER_NETWORK, 0);
     hw << (uint8_t)q.params.type;
-    hw << q.quorumHash;
+    hw << q.qc.quorumHash;
     for (const auto& dmn : q.members) {
         hw << dmn->proTxHash;
     }
@@ -48,13 +48,11 @@ CQuorum::~CQuorum()
     }
 }
 
-void CQuorum::Init(const uint256& _quorumHash, int _height, const std::vector<CDeterministicMNCPtr>& _members, const std::vector<bool>& _validMembers, const CBLSPublicKey& _quorumPublicKey)
+void CQuorum::Init(const CFinalCommitment& _qc, int _height, const std::vector<CDeterministicMNCPtr>& _members)
 {
-    quorumHash = _quorumHash;
+    qc = _qc;
     height = _height;
     members = _members;
-    validMembers = _validMembers;
-    quorumPublicKey = _quorumPublicKey;
 }
 
 bool CQuorum::IsMember(const uint256& proTxHash) const
@@ -71,7 +69,7 @@ bool CQuorum::IsValidMember(const uint256& proTxHash) const
 {
     for (size_t i = 0; i < members.size(); i++) {
         if (members[i]->proTxHash == proTxHash) {
-            return validMembers[i];
+            return qc.validMembers[i];
         }
     }
     return false;
@@ -79,7 +77,7 @@ bool CQuorum::IsValidMember(const uint256& proTxHash) const
 
 CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
 {
-    if (quorumVvec == nullptr || memberIdx >= members.size() || !validMembers[memberIdx]) {
+    if (quorumVvec == nullptr || memberIdx >= members.size() || !qc.validMembers[memberIdx]) {
         return CBLSPublicKey();
     }
     auto& m = members[memberIdx];
@@ -145,7 +143,7 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     _this->cachePopulatorThread = std::thread([_this, t]() {
         RenameThread("quorum-cachepop");
         for (size_t i = 0; i < _this->members.size() && !_this->stopCachePopulatorThread && !ShutdownRequested(); i++) {
-            if (_this->validMembers[i]) {
+            if (_this->qc.validMembers[i]) {
                 _this->GetPubKeyShare(i);
             }
         }
@@ -190,26 +188,26 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
             continue;
         }
 
-        if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->quorumHash)) {
+        if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
             std::map<CService, uint256> connections;
             if (quorum->IsMember(myProTxHash)) {
-                connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->quorumHash, myProTxHash);
+                connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->qc.quorumHash, myProTxHash);
             } else {
-                auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->quorumHash, quorum->members.size(), 1);
+                auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->qc.quorumHash, quorum->members.size(), 1);
                 for (auto idx : cindexes) {
                     connections.emplace(quorum->members[idx]->pdmnState->addr, quorum->members[idx]->proTxHash);
                 }
             }
             if (!connections.empty()) {
-                std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->quorumHash.ToString());
+                std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
                 for (auto& c : connections) {
                     debugMsg += strprintf("  %s\n", c.first.ToString(false));
                 }
                 LogPrint("llmq", debugMsg);
-                g_connman->AddMasternodeQuorumNodes(llmqType, quorum->quorumHash, connections);
+                g_connman->AddMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash, connections);
             }
         }
-        connmanQuorumsToDelete.erase(quorum->quorumHash);
+        connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
     }
 
     for (auto& qh : connmanQuorumsToDelete) {
@@ -225,7 +223,7 @@ bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, const
 
     auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, qc.quorumHash);
 
-    quorum->Init(qc.quorumHash, pindexQuorum->nHeight, members, qc.validMembers, qc.quorumPublicKey);
+    quorum->Init(qc, pindexQuorum->nHeight, members);
 
     bool hasValidVvec = false;
     if (quorum->ReadContributions(evoDb)) {

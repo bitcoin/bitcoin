@@ -7,6 +7,7 @@
 
 #include "evo/evodb.h"
 #include "evo/deterministicmns.h"
+#include "llmq/quorums_commitment.h"
 
 #include "validationinterface.h"
 #include "consensus/params.h"
@@ -33,11 +34,9 @@ class CQuorum
     friend class CQuorumManager;
 public:
     const Consensus::LLMQParams& params;
-    uint256 quorumHash;
+    CFinalCommitment qc;
     int height;
     std::vector<CDeterministicMNCPtr> members;
-    std::vector<bool> validMembers;
-    CBLSPublicKey quorumPublicKey;
 
     // These are only valid when we either participated in the DKG or fully watched it
     BLSVerificationVectorPtr quorumVvec;
@@ -53,7 +52,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) : params(_params), blsCache(_blsWorker), stopCachePopulatorThread(false) {}
     ~CQuorum();
-    void Init(const uint256& quorumHash, int height, const std::vector<CDeterministicMNCPtr>& members, const std::vector<bool>& validMembers, const CBLSPublicKey& quorumPublicKey);
+    void Init(const CFinalCommitment& _qc, int _height, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;

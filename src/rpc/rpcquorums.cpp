@@ -40,7 +40,7 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
         auto quorums = llmq::quorumManager->ScanQuorums(p.first, chainActive.Tip(), count);
         for (auto& q : quorums) {
-            v.push_back(q->quorumHash.ToString());
+            v.push_back(q->qc.quorumHash.ToString());
         }
 
         ret.push_back(Pair(p.second.name, v));
@@ -87,15 +87,15 @@ UniValue quorum_info(const JSONRPCRequest& request)
     UniValue ret(UniValue::VOBJ);
 
     ret.push_back(Pair("height", quorum->height));
-    ret.push_back(Pair("quorumHash", quorum->quorumHash.ToString()));
+    ret.push_back(Pair("quorumHash", quorum->qc.quorumHash.ToString()));
 
     UniValue membersArr(UniValue::VARR);
     for (size_t i = 0; i < quorum->members.size(); i++) {
         auto& dmn = quorum->members[i];
         UniValue mo(UniValue::VOBJ);
         mo.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
-        mo.push_back(Pair("valid", quorum->validMembers[i]));
-        if (quorum->validMembers[i]) {
+        mo.push_back(Pair("valid", quorum->qc.validMembers[i]));
+        if (quorum->qc.validMembers[i]) {
             CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
             if (pubKey.IsValid()) {
                 mo.push_back(Pair("pubKeyShare", pubKey.ToString()));
@@ -105,7 +105,7 @@ UniValue quorum_info(const JSONRPCRequest& request)
     }
 
     ret.push_back(Pair("members", membersArr));
-    ret.push_back(Pair("quorumPublicKey", quorum->quorumPublicKey.ToString()));
+    ret.push_back(Pair("quorumPublicKey", quorum->qc.quorumPublicKey.ToString()));
     CBLSSecretKey skShare = quorum->GetSkShare();
     if (includeSkShare && skShare.IsValid()) {
         ret.push_back(Pair("secretKeyShare", skShare.ToString()));
