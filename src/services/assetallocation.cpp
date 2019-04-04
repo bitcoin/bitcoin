@@ -1037,7 +1037,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     UniValue outputObj(UniValue::VOBJ);
     outputObj.pushKV("address", params[2]);
     outputObj.pushKV("amount", params[3]);
-    output.push_back(output);
+    output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0]);
     paramsFund.push_back(params[1]);
@@ -1121,7 +1121,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
         	
 		UniValue amountObj = find_value(receiverObj, "amount");
-		if (amountObj.isNum()) {
+		if (amountObj.isNum() || amountObj.isStr()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
