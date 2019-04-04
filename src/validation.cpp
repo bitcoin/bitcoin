@@ -4504,6 +4504,11 @@ static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
 bool LoadMempool(void)
 {
+    if (GetBoolArg("-zapwallettxes", false)) {
+        LogPrintf("Skipping mempool.dat because of zapwallettxes\n");
+        return true;
+    }
+
     int64_t nExpiryTimeout = GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
     FILE* filestr = fopen((GetDataDir() / "mempool.dat").string().c_str(), "rb");
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);

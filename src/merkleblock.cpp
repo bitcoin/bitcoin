@@ -31,12 +31,10 @@ CMerkleBlock::CMerkleBlock(const CBlock& block, CBloomFilter& filter)
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const auto& tx = *block.vtx[i];
-        if (tx.nVersion == 3 && !allowedTxTypes.count(tx.nType)) {
-            continue;
-        }
-
         const uint256& hash = tx.GetHash();
-        if (filter.IsRelevantAndUpdate(tx))
+        bool isAllowedType = tx.nVersion != 3 || allowedTxTypes.count(tx.nType) != 0;
+
+        if (isAllowedType && filter.IsRelevantAndUpdate(tx))
         {
             vMatch.push_back(true);
             vMatchedTxn.push_back(std::make_pair(i, hash));
