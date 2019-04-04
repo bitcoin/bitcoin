@@ -165,6 +165,10 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
     }
 }
 
+/**
+ * A pair of strings that can be aligned (through padding) with other Sections
+ * later on
+ */
 struct Section {
     Section(const std::string& left, const std::string& right)
         : m_left{left}, m_right{right} {}
@@ -172,6 +176,10 @@ struct Section {
     const std::string m_right;
 };
 
+/**
+ * Keeps track of RPCArgs by transforming them into sections for the purpose
+ * of serializing everything to a single string
+ */
 struct Sections {
     std::vector<Section> m_sections;
     size_t m_max_pad{0};
@@ -182,12 +190,20 @@ struct Sections {
         m_sections.push_back(s);
     }
 
+    /**
+     * Serializing RPCArgs depends on the outer type. Only arrays and
+     * dictionaries can be nested in json. The top-level outer type is "named
+     * arguments", a mix between a dictionary and arrays.
+     */
     enum class OuterType {
         ARR,
         OBJ,
         NAMED_ARG, // Only set on first recursion
     };
 
+    /**
+     * Recursive helper to translate an RPCArg into sections
+     */
     void Push(const RPCArg& arg, const size_t current_indent = 5, const OuterType outer_type = OuterType::NAMED_ARG)
     {
         const auto indent = std::string(current_indent, ' ');
@@ -241,6 +257,9 @@ struct Sections {
         }
     }
 
+    /**
+     * Concatenate all sections with proper padding
+     */
     std::string ToString() const
     {
         std::string ret;
