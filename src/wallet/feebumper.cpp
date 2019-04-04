@@ -130,15 +130,15 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     }
 
     if (total_fee > 0) {
-        CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + nodeIncrementalRelayFee.GetFee(maxNewTxSize);
-        if (total_fee < minTotalFee) {
-            errors.push_back(strprintf("Insufficient totalFee, must be at least %s (oldFee %s + incrementalFee %s)",
-                                                                FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(nodeIncrementalRelayFee.GetFee(maxNewTxSize))));
+        CAmount min_total_fee = nOldFeeRate.GetFee(maxNewTxSize) + nodeIncrementalRelayFee.GetFee(maxNewTxSize);
+        if (total_fee < min_total_fee) {
+            errors.push_back(strprintf("Insufficient total_fee, must be at least %s (oldFee %s + incrementalFee %s)",
+                                                                FormatMoney(min_total_fee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(nodeIncrementalRelayFee.GetFee(maxNewTxSize))));
             return Result::INVALID_PARAMETER;
         }
         CAmount requiredFee = GetRequiredFee(*wallet, maxNewTxSize);
         if (total_fee < requiredFee) {
-            errors.push_back(strprintf("Insufficient totalFee (cannot be less than required fee %s)",
+            errors.push_back(strprintf("Insufficient total_fee (cannot be less than required fee %s)",
                                                                 FormatMoney(requiredFee)));
             return Result::INVALID_PARAMETER;
         }
@@ -169,14 +169,14 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
 
     // check that fee rate is higher than mempool's minimum fee
     // (no point in bumping fee if we know that the new tx won't be accepted to the mempool)
-    // This may occur if the user set TotalFee or paytxfee too low, if fallbackfee is too low, or, perhaps,
+    // This may occur if the user set total_fee or paytxfee too low, if fallbackfee is too low, or, perhaps,
     // in a rare situation where the mempool minimum fee increased significantly since the fee estimation just a
     // moment earlier. In this case, we report an error to the user, who may use total_fee to make an adjustment.
     CFeeRate minMempoolFeeRate = mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
         errors.push_back(strprintf(
             "New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- "
-            "the totalFee value should be at least %s or the settxfee value should be at least %s to add transaction",
+            "the total_fee value should be at least %s or the settxfee value should be at least %s to add transaction",
             FormatMoney(nNewFeeRate.GetFeePerK()),
             FormatMoney(minMempoolFeeRate.GetFeePerK()),
             FormatMoney(minMempoolFeeRate.GetFee(maxNewTxSize)),

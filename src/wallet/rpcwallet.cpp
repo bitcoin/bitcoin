@@ -3205,11 +3205,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
 
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
+    std::string totalFeeName = (IsDeprecatedRPCEnabled("bumpfee")) ? "totalFee" : "total_fee";
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             RPCHelpMan{"bumpfee",
                 "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
@@ -3220,7 +3221,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
                 "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
                 "The user can specify a confirmation target for estimatesmartfee.\n"
-                "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
+                "Alternatively, the user can specify " + totalFeeName + ", or use RPC settxfee to set a higher fee rate.\n"
                 "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
                 "returned by getnetworkinfo) to enter the node's mempool.\n",
                 {
@@ -3228,9 +3229,11 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
                             {"confTarget", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
-                            {"totalFee", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in satoshis.\n"
+                            {totalFeeName, (IsDeprecatedRPCEnabled("bumpfee") ? RPCArg::Type::NUM : RPCArg::Type::AMOUNT),
+                            /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in " +
+                            std::string((IsDeprecatedRPCEnabled("bumpfee")) ? "satoshis." : "bitcoins.") + "\n"
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
-            "                         totalFee if the tx change output has to be removed because it is too close to\n"
+            "                         " + totalFeeName + " if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold."},
                             {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
             "                         marked bip-125 replaceable. If true, the sequence numbers in the transaction will\n"
@@ -3259,34 +3262,42 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                     HelpExampleCli("bumpfee", "<txid>")
                 },
             }.ToString());
-    }
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
     // optional parameters
-    CAmount totalFee = 0;
+    CAmount total_fee = 0;
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = true;
+
     if (!request.params[1].isNull()) {
         UniValue options = request.params[1];
         RPCTypeCheckObj(options,
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
-                {"totalFee", UniValueType(UniValue::VNUM)},
+                {totalFeeName, UniValueType(UniValue::VNUM)},
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },
             true, true);
 
-        if (options.exists("confTarget") && options.exists("totalFee")) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and totalFee options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
+        if (options.exists("confTarget") && (options.exists(totalFeeName))) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and " + totalFeeName +" options should not both be set. Please provide either a confirmation target for fee estimation or an explicit total fee for the transaction.");
         } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
             coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
-        } else if (options.exists("totalFee")) {
-            totalFee = options["totalFee"].get_int64();
-            if (totalFee <= 0) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
+        } else if (options.exists("total_fee") && !IsDeprecatedRPCEnabled("bumpfee")) {
+            total_fee = AmountFromValue(options["total_fee"]); // Convert to satoshis
+            if (total_fee >= 100000000) { // User entered in satoshis
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid total_fee %s (must be less than 1)", FormatMoney(total_fee)));
+            }
+            if (total_fee <= 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid total_fee %s (must be greater than 0)", FormatMoney(total_fee)));
+            }
+        } else if (options.exists("totalFee") && IsDeprecatedRPCEnabled("bumpfee")) {
+            total_fee = options["totalFee"].get_int64();
+            if (total_fee <= 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(total_fee)));
             }
         }
 
@@ -3313,7 +3324,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
     CAmount old_fee;
     CAmount new_fee;
     CMutableTransaction mtx;
-    feebumper::Result res = feebumper::CreateTransaction(pwallet, hash, coin_control, totalFee, errors, old_fee, new_fee, mtx);
+    feebumper::Result res = feebumper::CreateTransaction(pwallet, hash, coin_control, total_fee, errors, old_fee, new_fee, mtx);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:

@@ -71,6 +71,8 @@ class BumpFeeTest(BitcoinTestFramework):
         test_rebumping(rbf_node, dest_address)
         test_rebumping_not_replaceable(rbf_node, dest_address)
         test_unconfirmed_not_spendable(rbf_node, rbf_node_address)
+        test_too_large_total_fee(rbf_node, dest_address)
+        test_0_total_fee(rbf_node, dest_address)
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
         self.log.info("Success")
@@ -168,10 +170,10 @@ def test_bumpfee_with_descendant_fails(rbf_node, rbf_node_address, dest_address)
 def test_small_output_fails(rbf_node, dest_address):
     # cannot bump fee with a too-small output
     rbfid = spend_one_input(rbf_node, dest_address)
-    rbf_node.bumpfee(rbfid, {"totalFee": 50000})
+    rbf_node.bumpfee(rbfid, {"total_fee": 0.00050000})
 
     rbfid = spend_one_input(rbf_node, dest_address)
-    assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"totalFee": 50001})
+    assert_raises_rpc_error(-4, "Change output is too small", rbf_node.bumpfee, rbfid, {"total_fee": 0.00050001})
 
 
 def test_dust_to_fee(rbf_node, dest_address):
@@ -182,11 +184,20 @@ def test_dust_to_fee(rbf_node, dest_address):
     # (32-byte p2sh-pwpkh output size + 148 p2pkh spend estimate) * 10k(discard_rate) / 1000 = 1800
     # P2SH outputs are slightly "over-discarding" due to the IsDust calculation assuming it will
     # be spent as a P2PKH.
-    bumped_tx = rbf_node.bumpfee(rbfid, {"totalFee": 50000 - 1800})
+    bumped_tx = rbf_node.bumpfee(rbfid, {"total_fee": 0.00050000 - 0.00001800})
     full_bumped_tx = rbf_node.getrawtransaction(bumped_tx["txid"], 1)
     assert_equal(bumped_tx["fee"], Decimal("0.00050000"))
     assert_equal(len(fulltx["vout"]), 2)
     assert_equal(len(full_bumped_tx["vout"]), 1)  # change output is eliminated
+
+def test_too_large_total_fee(rbf_node, dest_address):
+    rbfid = spend_one_input(rbf_node, dest_address)
+    assert_raises_rpc_error(-8, "Invalid total_fee 1.00 (must be less than 1)", rbf_node.bumpfee, rbfid, {"total_fee": 1.0})
+
+
+def test_0_total_fee(rbf_node, dest_address):
+    rbfid = spend_one_input(rbf_node, dest_address)
+    assert_raises_rpc_error(-8, "Invalid total_fee 0.00 (must be greater than 0)", rbf_node.bumpfee, rbfid, {"total_fee": 0.0})
 
 
 def test_settxfee(rbf_node, dest_address):
@@ -207,17 +218,17 @@ def test_settxfee(rbf_node, dest_address):
 def test_rebumping(rbf_node, dest_address):
     # check that re-bumping the original tx fails, but bumping the bumper succeeds
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 2000})
-    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"totalFee": 3000})
-    rbf_node.bumpfee(bumped["txid"], {"totalFee": 3000})
+    bumped = rbf_node.bumpfee(rbfid, {"total_fee": 0.00002}) # 2000 sats
+    assert_raises_rpc_error(-4, "already bumped", rbf_node.bumpfee, rbfid, {"total_fee": 0.00003}) # 3000 sats
+    rbf_node.bumpfee(bumped["txid"], {"total_fee": 0.00003}) # 3000 sats
 
 
 def test_rebumping_not_replaceable(rbf_node, dest_address):
     # check that re-bumping a non-replaceable bump tx fails
     rbfid = spend_one_input(rbf_node, dest_address)
-    bumped = rbf_node.bumpfee(rbfid, {"totalFee": 10000, "replaceable": False})
+    bumped = rbf_node.bumpfee(rbfid, {"total_fee": 0.0001 , "replaceable": False}) # 10000 sats
     assert_raises_rpc_error(-4, "Transaction is not BIP 125 replaceable", rbf_node.bumpfee, bumped["txid"],
-                            {"totalFee": 20000})
+                            {"total_fee": 0.0002}) # 20000 sats
 
 
 def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
