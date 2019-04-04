@@ -23,6 +23,8 @@ ser_*, deser_*: functions that handle serialization/deserialization
 import struct
 import socket
 import asyncore
+from collections import namedtuple
+
 import time
 import sys
 import random
@@ -39,7 +41,7 @@ from test_framework.siphash import siphash256
 import dash_hash
 
 BIP0031_VERSION = 60000
-MY_VERSION = 70213  # MIN_PEER_PROTO_VERSION
+MY_VERSION = 70214  # MIN_PEER_PROTO_VERSION
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -883,7 +885,7 @@ class CMerkleBlock(object):
 
 
 class CCbTx(object):
-    def __init__(self, version=None, height=None, merkleRootMNList=None):
+    def __init__(self, version=None, height=None, merkleRootMNList=None, merkleRootQuorums=None):
         self.set_null()
         if version is not None:
             self.version = version
@@ -891,6 +893,8 @@ class CCbTx(object):
             self.height = height
         if merkleRootMNList is not None:
             self.merkleRootMNList = merkleRootMNList
+        if merkleRootQuorums is not None:
+            self.merkleRootQuorums = merkleRootQuorums
 
     def set_null(self):
         self.version = 0
@@ -901,12 +905,16 @@ class CCbTx(object):
         self.version = struct.unpack("<H", f.read(2))[0]
         self.height = struct.unpack("<i", f.read(4))[0]
         self.merkleRootMNList = deser_uint256(f)
+        if self.version >= 2:
+            self.merkleRootQuorums = deser_uint256(f)
 
     def serialize(self):
         r = b""
         r += struct.pack("<H", self.version)
         r += struct.pack("<i", self.height)
         r += ser_uint256(self.merkleRootMNList)
+        if self.version >= 2:
+            r += ser_uint256(self.merkleRootQuorums)
         return r
 
 
@@ -938,6 +946,46 @@ class CSimplifiedMNListEntry(object):
         r += self.pubKeyOperator
         r += self.keyIDVoting
         r += struct.pack("<?", self.isValid)
+        return r
+
+
+class CFinalCommitment:
+    def __init__(self):
+        self.set_null()
+
+    def set_null(self):
+        self.nVersion = 0
+        self.llmqType = 0
+        self.quorumHash = 0
+        self.signers = []
+        self.validMembers = []
+        self.quorumPublicKey = b'\\x0' * 48
+        self.quorumVvecHash = 0
+        self.quorumSig = b'\\x0' * 96
+        self.membersSig = b'\\x0' * 96
+
+    def deserialize(self, f):
+        self.nVersion = struct.unpack("<H", f.read(2))[0]
+        self.llmqType = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.signers = deser_dyn_bitset(f, False)
+        self.validMembers = deser_dyn_bitset(f, False)
+        self.quorumPublicKey = f.read(48)
+        self.quorumVvecHash = deser_uint256(f)
+        self.quorumSig = f.read(96)
+        self.membersSig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<H", self.nVersion)
+        r += struct.pack("<B", self.llmqType)
+        r += ser_uint256(self.quorumHash)
+        r += ser_dyn_bitset(self.signers, False)
+        r += ser_dyn_bitset(self.validMembers, False)
+        r += self.quorumPublicKey
+        r += ser_uint256(self.quorumVvecHash)
+        r += self.quorumSig
+        r += self.membersSig
         return r
 
 
@@ -1455,6 +1503,8 @@ class msg_getmnlistd(object):
     def __repr__(self):
         return "msg_getmnlistd(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
+QuorumId = namedtuple('QuorumId', ['llmqType', 'quorumHash'])
+
 class msg_mnlistdiff(object):
     command = b"mnlistdiff"
 
@@ -1465,6 +1515,8 @@ class msg_mnlistdiff(object):
         self.cbTx = None
         self.deletedMNs = []
         self.mnList = []
+        self.deletedQuorums = []
+        self.newQuorums = []
 
     def deserialize(self, f):
         self.baseBlockHash = deser_uint256(f)
@@ -1479,6 +1531,17 @@ class msg_mnlistdiff(object):
             e = CSimplifiedMNListEntry()
             e.deserialize(f)
             self.mnList.append(e)
+
+        self.deletedQuorums = []
+        for i in range(deser_compact_size(f)):
+            llmqType = struct.unpack("<B", f.read(1))[0]
+            quorumHash = deser_uint256(f)
+            self.deletedQuorums.append(QuorumId(llmqType, quorumHash))
+        self.newQuorums = []
+        for i in range(deser_compact_size(f)):
+            qc = CFinalCommitment()
+            qc.deserialize(f)
+            self.newQuorums.append(qc)
 
     def __repr__(self):
         return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
