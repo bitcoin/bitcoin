@@ -683,11 +683,14 @@ class DashTestFramework(BitcoinTestFramework):
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
             sync_blocks(self.nodes)
+        new_quorum = self.nodes[0].quorum("list", 1)["llmq_5_60"][0]
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
         self.nodes[0].generate(8)
 
         sync_blocks(self.nodes)
+
+        return new_quorum
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
