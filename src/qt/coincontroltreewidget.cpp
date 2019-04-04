@@ -8,12 +8,13 @@
 CoinControlTreeWidget::CoinControlTreeWidget(QWidget *parent) :
     QTreeWidget(parent)
 {
+
     setSelectionMode(QAbstractItemView::ExtendedSelection);
 }
 
 void CoinControlTreeWidget::keyPressEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Space) // press spacebar -> toggle checkbox
+    if (event->key() == Qt::Key_Space) // press spacebar -> select checkbox
     {
         event->ignore();
         for (QTreeWidgetItem* item : selectedItems()) {

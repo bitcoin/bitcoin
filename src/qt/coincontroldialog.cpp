@@ -74,7 +74,6 @@ CoinControlDialog::CoinControlDialog(const PlatformStyle *_platformStyle, QWidge
 
     // context menu signals
     connect(ui->treeWidget, &QWidget::customContextMenuRequested, this, &CoinControlDialog::showMenu);
-    connect(ui->treeWidget, &QTreeWidget::itemSelectionChanged, this, &CoinControlDialog::updateLabelSelected);
     connect(copyAddressAction, &QAction::triggered, this, &CoinControlDialog::copyAddress);
     connect(copyLabelAction, &QAction::triggered, this, &CoinControlDialog::copyLabel);
     connect(copyAmountAction, &QAction::triggered, this, &CoinControlDialog::copyAmount);
@@ -160,7 +159,6 @@ void CoinControlDialog::setModel(WalletModel *_model)
     {
         updateView();
         updateLabelLocked();
-        updateLabelSelected();
         CoinControlDialog::updateLabels(_model, this);
     }
 }
@@ -407,15 +405,6 @@ void CoinControlDialog::updateLabelLocked()
        ui->labelLocked->setVisible(true);
     }
     else ui->labelLocked->setVisible(false);
-}
-
-// shows count of selected outputs
-void CoinControlDialog::updateLabelSelected()
-{
-    QList<QTreeWidgetItem *> selected = ui->treeWidget->selectedItems();
-    int count = selected.size();
-    ui->labelSelected->setVisible(count > 0);
-    ui->labelSelected->setText(tr("(%1 selected)").arg(count));
 }
 
 void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
