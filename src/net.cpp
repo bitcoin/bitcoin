@@ -3899,7 +3899,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nVersion = 0;
     nNumWarningsSkipped = 0;
     nLastWarningTime = 0;
-    strSubVer = "";
     fWhitelisted = false;
     fOneShot = false;
     m_manual_connection = false;
