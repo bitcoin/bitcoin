@@ -240,6 +240,25 @@ def ToHex(obj):
 
 # Objects that map to dashd objects, which can be serialized/deserialized
 
+class CService(object):
+    def __init__(self):
+        self.ip = ""
+        self.port = 0
+
+    def deserialize(self, f):
+        self.ip = socket.inet_ntop(socket.AF_INET6, f.read(16))
+        self.port = struct.unpack(">H", f.read(2))[0]
+
+    def serialize(self):
+        r = b""
+        r += socket.inet_pton(socket.AF_INET6, self.ip)
+        r += struct.pack(">H", self.port)
+        return r
+
+    def __repr__(self):
+        return "CService(ip=%s port=%i)" % (self.ip, self.port)
+
+
 class CAddress(object):
     def __init__(self):
         self.nServices = 1
