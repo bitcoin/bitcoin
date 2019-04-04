@@ -25,7 +25,7 @@ CQuorumBlockProcessor* quorumBlockProcessor;
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
-static const std::string DB_UPGRADED = "q_dbupgraded";
+static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu";
 
 void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
@@ -121,6 +121,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 
     bool fDIP0003Active = VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
     if (!fDIP0003Active) {
+        evoDb.Write(DB_BEST_BLOCK_UPGRADE, block.GetHash());
         return true;
     }
 
@@ -151,12 +152,17 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         }
     }
 
+    auto blockHash = block.GetHash();
+
     for (auto& p : qcs) {
         auto& qc = p.second;
-        if (!ProcessCommitment(pindex->nHeight, block.GetHash(), qc, state)) {
+        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state)) {
             return false;
         }
     }
+
+    evoDb.Write(DB_BEST_BLOCK_UPGRADE, blockHash);
+
     return true;
 }
 
@@ -245,48 +251,49 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         AddMinableCommitment(qc);
     }
 
+    evoDb.Write(DB_BEST_BLOCK_UPGRADE, pindex->pprev->GetBlockHash());
+
     return true;
 }
 
 // TODO remove this with 0.15.0
 void CQuorumBlockProcessor::UpgradeDB()
 {
-    bool v = false;
-    if (evoDb.GetRawDB().Read(DB_UPGRADED, v) && v) {
+    LOCK(cs_main);
+    uint256 bestBlock;
+    if (evoDb.GetRawDB().Read(DB_BEST_BLOCK_UPGRADE, bestBlock) && bestBlock == chainActive.Tip()->GetBlockHash()) {
         return;
     }
 
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrading DB...\n", __func__);
 
-    {
-        LOCK(cs_main);
-        if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
-            auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
-            while (pindex) {
-                CBlock block;
-                bool r = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
-                assert(r);
+    if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
+        auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
+        while (pindex) {
+            CBlock block;
+            bool r = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
+            assert(r);
 
-                std::map<Consensus::LLMQType, CFinalCommitment> qcs;
-                CValidationState dummyState;
-                GetCommitmentsFromBlock(block, pindex->pprev, qcs, dummyState);
+            std::map<Consensus::LLMQType, CFinalCommitment> qcs;
+            CValidationState dummyState;
+            GetCommitmentsFromBlock(block, pindex->pprev, qcs, dummyState);
 
-                for (const auto& p : qcs) {
-                    const auto& qc = p.second;
-                    if (qc.IsNull()) {
-                        continue;
-                    }
-                    auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
-                    evoDb.GetRawDB().Write(std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)qc.llmqType, qc.quorumHash)), std::make_pair(qc, pindex->GetBlockHash()));
-                    evoDb.GetRawDB().Write(BuildInversedHeightKey((Consensus::LLMQType)qc.llmqType, pindex->nHeight), quorumIndex->nHeight);
+            for (const auto& p : qcs) {
+                const auto& qc = p.second;
+                if (qc.IsNull()) {
+                    continue;
                 }
-
-                pindex = chainActive.Next(pindex);
+                auto quorumIndex = mapBlockIndex.at(qc.quorumHash);
+                evoDb.GetRawDB().Write(std::make_pair(DB_MINED_COMMITMENT, std::make_pair((uint8_t)qc.llmqType, qc.quorumHash)), std::make_pair(qc, pindex->GetBlockHash()));
+                evoDb.GetRawDB().Write(BuildInversedHeightKey((Consensus::LLMQType)qc.llmqType, pindex->nHeight), quorumIndex->nHeight);
             }
+
+            evoDb.GetRawDB().Write(DB_BEST_BLOCK_UPGRADE, pindex->GetBlockHash());
+
+            pindex = chainActive.Next(pindex);
         }
     }
 
-    evoDb.GetRawDB().Write(DB_UPGRADED, true);
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrade done...\n", __func__);
 }
 
