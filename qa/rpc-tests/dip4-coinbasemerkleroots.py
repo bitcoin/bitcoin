@@ -81,6 +81,79 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # When comparing genesis and best block, we shouldn't see the previously added and then deleted MN
         mnList = self.test_getmnlistdiff(null_hash, self.nodes[0].getbestblockhash(), {}, [], expectedUpdated2)
 
+        #############################
+        # Now start testing quorum commitment merkle roots
+
+        height = self.nodes[0].getblockcount()
+        # Test DIP8 activation once with a pre-existing quorum and once without (we don't know in which order it will activate on mainnet)
+        self.test_dip8_quorum_merkle_root_activation(True)
+        for n in self.nodes:
+            n.invalidateblock(n.getblockhash(height + 1))
+        first_quorum = self.test_dip8_quorum_merkle_root_activation(False)
+
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.wait_for_sporks_same()
+
+        # Verify that the first quorum appears in MNLISTDIFF
+        expectedDeleted = []
+        expectedNew = [QuorumId(100, int(first_quorum, 16))]
+        quorumList = self.test_getmnlistdiff_quorums(null_hash, self.nodes[0].getbestblockhash(), {}, expectedDeleted, expectedNew)
+        baseBlockHash = self.nodes[0].getbestblockhash()
+
+        second_quorum = self.mine_quorum()
+
+        # Verify that the second quorum appears in MNLISTDIFF
+        expectedDeleted = []
+        expectedNew = [QuorumId(100, int(second_quorum, 16))]
+        quorums_before_third = self.test_getmnlistdiff_quorums(baseBlockHash, self.nodes[0].getbestblockhash(), quorumList, expectedDeleted, expectedNew)
+        block_before_third = self.nodes[0].getbestblockhash()
+
+        third_quorum = self.mine_quorum()
+
+        # Verify that the first quorum is deleted and the third quorum is added in MNLISTDIFF (the first got inactive)
+        expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
+        expectedNew = [QuorumId(100, int(third_quorum, 16))]
+        self.test_getmnlistdiff_quorums(block_before_third, self.nodes[0].getbestblockhash(), quorums_before_third, expectedDeleted, expectedNew)
+
+        # Verify that the diff between genesis and best block is the current active set (second and third quorum)
+        expectedDeleted = []
+        expectedNew = [QuorumId(100, int(second_quorum, 16)), QuorumId(100, int(third_quorum, 16))]
+        self.test_getmnlistdiff_quorums(null_hash, self.nodes[0].getbestblockhash(), {}, expectedDeleted, expectedNew)
+
+        # Now verify that diffs are correct around the block that mined the third quorum.
+        # This tests the logic in CalcCbTxMerkleRootQuorums, which has to manually add the commitment from the current
+        # block
+        mined_in_block = self.nodes[0].quorum("info", 100, third_quorum)["minedBlock"]
+        prev_block = self.nodes[0].getblock(mined_in_block)["previousblockhash"]
+        prev_block2 = self.nodes[0].getblock(prev_block)["previousblockhash"]
+        next_block = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
+        next_block2 = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
+        # The 2 block before the quorum was mined should both give an empty diff
+        expectedDeleted = []
+        expectedNew = []
+        self.test_getmnlistdiff_quorums(block_before_third, prev_block2, quorums_before_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_third, prev_block, quorums_before_third, expectedDeleted, expectedNew)
+        # The block in which the quorum was mined and the 2 after that should all give the same diff
+        expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
+        expectedNew = [QuorumId(100, int(third_quorum, 16))]
+        quorums_with_third = self.test_getmnlistdiff_quorums(block_before_third, mined_in_block, quorums_before_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_third, next_block, quorums_before_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_third, next_block2, quorums_before_third, expectedDeleted, expectedNew)
+        # A diff between the two block that happened after the quorum was mined should give an empty diff
+        expectedDeleted = []
+        expectedNew = []
+        self.test_getmnlistdiff_quorums(mined_in_block, next_block, quorums_with_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(mined_in_block, next_block2, quorums_with_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(next_block, next_block2, quorums_with_third, expectedDeleted, expectedNew)
+
+        # Using the same block for baseBlockHash and blockHash should give empty diffs
+        self.test_getmnlistdiff_quorums(prev_block, prev_block, quorums_before_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(prev_block2, prev_block2, quorums_before_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(mined_in_block, mined_in_block, quorums_with_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(next_block, next_block, quorums_with_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(next_block2, next_block2, quorums_with_third, expectedDeleted, expectedNew)
+
+
     def test_getmnlistdiff(self, baseBlockHash, blockHash, baseMNList, expectedDeleted, expectedUpdated):
         d = self.test_getmnlistdiff_base(baseBlockHash, blockHash)
 
@@ -107,6 +180,34 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
         return newMNList
 
+    def test_getmnlistdiff_quorums(self, baseBlockHash, blockHash, baseQuorumList, expectedDeleted, expectedNew):
+        d = self.test_getmnlistdiff_base(baseBlockHash, blockHash)
+
+        assert_equal(set(d.deletedQuorums), set(expectedDeleted))
+        assert_equal(set([QuorumId(e.llmqType, e.quorumHash) for e in d.newQuorums]), set(expectedNew))
+
+        newQuorumList = baseQuorumList.copy()
+
+        for e in d.deletedQuorums:
+            newQuorumList.pop(e)
+
+        for e in d.newQuorums:
+            newQuorumList[QuorumId(e.llmqType, e.quorumHash)] = e
+
+        cbtx = CCbTx()
+        cbtx.deserialize(BytesIO(d.cbTx.vExtraPayload))
+
+        if cbtx.version >= 2:
+            hashes = []
+            for qc in newQuorumList.values():
+                hashes.append(hash256(qc.serialize()))
+            hashes.sort()
+            merkleRoot = CBlock.get_merkle_root(hashes)
+            assert_equal(merkleRoot, cbtx.merkleRootQuorums)
+
+        return newQuorumList
+
+
     def test_getmnlistdiff_base(self, baseBlockHash, blockHash):
         hexstr = self.nodes[0].getblockheader(blockHash, False)
         header = FromHex(CBlockHeader(), hexstr)
@@ -128,8 +229,54 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         assert_equal(d2["cbTx"], d.cbTx.serialize().hex())
         assert_equal(set([int(e, 16) for e in d2["deletedMNs"]]), set(d.deletedMNs))
         assert_equal(set([int(e["proRegTxHash"], 16) for e in d2["mnList"]]), set([e.proRegTxHash for e in d.mnList]))
+        assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["deletedQuorums"]]), set(d.deletedQuorums))
+        assert_equal(set([QuorumId(e["llmqType"], int(e["quorumHash"], 16)) for e in d2["newQuorums"]]), set([QuorumId(e.llmqType, e.quorumHash) for e in d.newQuorums]))
 
         return d
+
+    def test_dip8_quorum_merkle_root_activation(self, with_initial_quorum):
+        if with_initial_quorum:
+            self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+            self.wait_for_sporks_same()
+
+            # Mine one quorum before dip8 is activated
+            self.mine_quorum()
+
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
+
+        cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
+        assert(cbtx["cbTx"]["version"] == 1)
+
+        assert(self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active")
+
+        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
+            self.nodes[0].generate(4)
+        self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+
+        # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
+        cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
+        assert_equal(cbtx["cbTx"]["version"], 2)
+        assert("merkleRootQuorums" in cbtx["cbTx"])
+        merkleRootQuorums = int(cbtx["cbTx"]["merkleRootQuorums"], 16)
+
+        if with_initial_quorum:
+            assert(merkleRootQuorums != 0)
+        else:
+            assert_equal(merkleRootQuorums, 0)
+
+        set_mocktime(get_mocktime() + 1)
+        set_node_times(self.nodes, get_mocktime())
+        self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.wait_for_sporks_same()
+
+        # Mine quorum and verify that merkleRootQuorums has changed
+        quorum = self.mine_quorum()
+        cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
+        assert(int(cbtx["cbTx"]["merkleRootQuorums"], 16) != merkleRootQuorums)
+
+        return quorum
 
     def confirm_mns(self):
         while True:
