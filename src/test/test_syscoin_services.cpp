@@ -966,8 +966,8 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	UniValue balance = find_value(r.get_obj(), "balance");
 	CAmount newfromamount = AssetAmountFromValue(balance, nprecision) - inputamount;
 
-	// "assetsend [asset] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsend " + guid + " " + inputs + " " + witness));
+	// "assetsendmany [asset] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsendmany " + guid + " " + inputs + " " + witness));
     UniValue arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + fromAddress));
     arr = r.get_array();
