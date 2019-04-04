@@ -300,34 +300,18 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
 
 std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqType, const CBlockIndex* pindexStart, size_t maxCount)
 {
-    std::vector<CQuorumCPtr> result;
-    result.reserve(maxCount);
-
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    auto firstQuorumHash = quorumBlockProcessor->GetFirstMinedQuorumHash(llmqType);
-    if (firstQuorumHash.IsNull()) {
-        // no quorum mined yet, avoid scanning the whole chain down to genesis
-        return result;
-    }
+    auto quorumIndexes = quorumBlockProcessor->GetMinedCommitmentsUntilBlock(params.type, pindexStart, maxCount);
 
-    auto pindex = pindexStart->GetAncestor(pindexStart->nHeight - (pindexStart->nHeight % params.dkgInterval));
+    std::vector<CQuorumCPtr> result;
+    result.reserve(quorumIndexes.size());
 
-    while (pindex != nullptr
-            && pindex->nHeight >= params.dkgInterval
-            && result.size() < maxCount
-            && deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
-        auto quorum = GetQuorum(llmqType, pindex);
-        if (quorum) {
-            result.emplace_back(quorum);
-        }
-
-        if (pindex->GetBlockHash() == firstQuorumHash) {
-            // no need to scan further if we know that there are no quorums below this block
-            break;
-        }
-
-        pindex = pindex->GetAncestor(pindex->nHeight - params.dkgInterval);
+    for (auto& quorumIndex : quorumIndexes) {
+        assert(quorumIndex);
+        auto quorum = GetQuorum(params.type, quorumIndex);
+        assert(quorum != nullptr);
+        result.emplace_back(quorum);
     }
 
     return result;
