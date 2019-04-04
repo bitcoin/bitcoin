@@ -840,6 +840,47 @@ class BlockTransactions(object):
         return "BlockTransactions(hash=%064x transactions=%s)" % (self.blockhash, repr(self.transactions))
 
 
+class CPartialMerkleTree(object):
+    def __init__(self):
+        self.nTransactions = 0
+        self.vBits = []
+        self.vHash = []
+
+    def deserialize(self, f):
+        self.nTransactions = struct.unpack("<I", f.read(4))[0]
+        self.vHash = deser_uint256_vector(f)
+        self.vBits = deser_dyn_bitset(f, True)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<I", self.nTransactions)
+        r += ser_uint256_vector(self.vHash)
+        r += ser_dyn_bitset(self.vBits, True)
+        return r
+
+    def __repr__(self):
+        return "CPartialMerkleTree(nTransactions=%d vBits.size=%d vHash.size=%d)" % (self.nTransactions, len(self.vBits), len(self.vHash))
+
+
+class CMerkleBlock(object):
+    def __init__(self, header=CBlockHeader(), txn=CPartialMerkleTree()):
+        self.header = header
+        self.txn = txn
+
+    def deserialize(self, f):
+        self.header.deserialize(f)
+        self.txn.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += self.header.serialize()
+        r += self.txn.serialize()
+        return r
+
+    def __repr__(self):
+        return "CMerkleBlock(header=%s txn=%s)" % (repr(self.header), repr(self.txn))
+
+
 class CCbTx(object):
     def __init__(self, version=None, height=None, merkleRootMNList=None):
         self.set_null()
