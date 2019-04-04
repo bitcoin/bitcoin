@@ -77,7 +77,14 @@ public:
     {
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        Write(ssKey, value);
+        ssKey.clear();
+    }
+
+    template <typename V>
+    void Write(const CDataStream& _ssKey, const V& value)
+    {
+        leveldb::Slice slKey(_ssKey.data(), _ssKey.size());
 
         ssValue.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
         ssValue << value;
@@ -91,7 +98,6 @@ public:
         // - byte[]: value
         // The formula below assumes the key and value are both less than 16k.
         size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
-        ssKey.clear();
         ssValue.clear();
     }
 
@@ -100,7 +106,12 @@ public:
     {
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        Erase(ssKey);
+        ssKey.clear();
+    }
+
+    void Erase(const CDataStream& _ssKey) {
+        leveldb::Slice slKey(_ssKey.data(), _ssKey.size());
 
         batch.Delete(slKey);
         // - byte: header
@@ -108,7 +119,6 @@ public:
         // - byte[]: key
         // The formula below assumes the key is less than 16kB.
         size_estimate += 2 + (slKey.size() > 127) + slKey.size();
-        ssKey.clear();
     }
 
     size_t SizeEstimate() const { return size_estimate; }
@@ -138,6 +148,10 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
+        Seek(ssKey);
+    }
+
+    void Seek(const CDataStream& ssKey) {
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
         piter->Seek(slKey);
     }
@@ -231,6 +245,11 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
+        return ReadDataStream(ssKey, ssValue);
+    }
+
+    bool ReadDataStream(const CDataStream& ssKey, CDataStream& ssValue) const
+    {
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
 
         std::string strValue;
@@ -250,8 +269,17 @@ public:
     template <typename K, typename V>
     bool Read(const K& key, V& value) const
     {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey << key;
+        return Read(ssKey, value);
+    }
+
+    template <typename V>
+    bool Read(const CDataStream& ssKey, V& value) const
+    {
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        if (!ReadDataStream(key, ssValue)) {
+        if (!ReadDataStream(ssKey, ssValue)) {
             return false;
         }
 
@@ -277,7 +305,12 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        return Exists(ssKey);
+    }
+
+    bool Exists(const CDataStream& key) const
+    {
+        leveldb::Slice slKey(key.data(), key.size());
 
         std::string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
