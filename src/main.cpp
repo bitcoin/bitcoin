@@ -248,6 +248,8 @@ int mastercore_handler_disc_end(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockIndex);
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex, unsigned int);
 int mastercore_handler_tx(const CTransaction &tx, int nBlock, unsigned int idx, CBlockIndex const * pBlockIndex);
+void TryToAddToMarkerCache(const CTransaction& tx);
+void RemoveFromMarkerCache(const CTransaction& tx);
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -1587,6 +1589,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     }
 
     SyncWithWallets(tx, NULL, NULL);
+    TryToAddToMarkerCache(tx);
 
     return true;
 }
@@ -2829,6 +2832,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
         SyncWithWallets(tx, pindexDelete->pprev, NULL);
+        TryToAddToMarkerCache(tx);
     }
 
     //! Omni Core: end of block disconnect notification
@@ -2903,6 +2907,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     // to conflicted:
     BOOST_FOREACH(const CTransaction &tx, txConflicted) {
         SyncWithWallets(tx, pindexNew, NULL);
+        RemoveFromMarkerCache(tx);
     }
 
     // ... and about transactions that got confirmed:
@@ -2912,6 +2917,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         //! Omni Core: new confirmed transaction notification
         LogPrint("handler", "Omni Core handler: new confirmed transaction [height: %d, idx: %u]\n", GetHeight(), nTxIdx);
         if (mastercore_handler_tx(tx, GetHeight(), nTxIdx++, pindexNew)) ++nNumMetaTxs;
+        RemoveFromMarkerCache(tx);
     }
 
     //! Omni Core: end of block connect notification
