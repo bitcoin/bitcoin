@@ -107,7 +107,8 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
         v.reserve(p.second.size());
         for (const auto& p2 : p.second) {
             llmq::CFinalCommitment qc;
-            bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc);
+            uint256 minedBlockHash;
+            bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
             assert(found);
             v.emplace_back(::SerializeHash(qc));
             hashCount++;

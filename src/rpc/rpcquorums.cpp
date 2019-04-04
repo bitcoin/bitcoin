@@ -73,13 +73,15 @@ UniValue quorum_info(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
     }
 
-    uint256 blockHash = ParseHashV(request.params[2], "quorumHash");
+    const auto& llmqParams = Params().GetConsensus().llmqs.at(llmqType);
+
+    uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
     bool includeSkShare = false;
     if (request.params.size() > 3) {
         includeSkShare = ParseBoolV(request.params[3], "includeSkShare");
     }
 
-    auto quorum = llmq::quorumManager->GetQuorum(llmqType, blockHash);
+    auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
     if (!quorum) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
@@ -88,6 +90,7 @@ UniValue quorum_info(const JSONRPCRequest& request)
 
     ret.push_back(Pair("height", quorum->height));
     ret.push_back(Pair("quorumHash", quorum->qc.quorumHash.ToString()));
+    ret.push_back(Pair("minedBlock", quorum->minedBlockHash.ToString()));
 
     UniValue membersArr(UniValue::VARR);
     for (size_t i = 0; i < quorum->members.size(); i++) {

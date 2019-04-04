@@ -48,11 +48,12 @@ CQuorum::~CQuorum()
     }
 }
 
-void CQuorum::Init(const CFinalCommitment& _qc, int _height, const std::vector<CDeterministicMNCPtr>& _members)
+void CQuorum::Init(const CFinalCommitment& _qc, int _height, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
 {
     qc = _qc;
     height = _height;
     members = _members;
+    minedBlockHash = _minedBlockHash;
 }
 
 bool CQuorum::IsMember(const uint256& proTxHash) const
@@ -216,14 +217,14 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     }
 }
 
-bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const
+bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const
 {
     assert(pindexQuorum);
     assert(qc.quorumHash == pindexQuorum->GetBlockHash());
 
     auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, qc.quorumHash);
 
-    quorum->Init(qc, pindexQuorum->nHeight, members);
+    quorum->Init(qc, pindexQuorum->nHeight, minedBlockHash, members);
 
     bool hasValidVvec = false;
     if (quorum->ReadContributions(evoDb)) {
@@ -353,7 +354,8 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const CBlock
     }
 
     CFinalCommitment qc;
-    if (!quorumBlockProcessor->GetMinedCommitment(llmqType, quorumHash, qc)) {
+    uint256 minedBlockHash;
+    if (!quorumBlockProcessor->GetMinedCommitment(llmqType, quorumHash, qc, minedBlockHash)) {
         return nullptr;
     }
 
@@ -361,7 +363,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const CBlock
 
     auto quorum = std::make_shared<CQuorum>(params, blsWorker);
 
-    if (!BuildQuorumFromCommitment(qc, pindexQuorum, quorum)) {
+    if (!BuildQuorumFromCommitment(qc, pindexQuorum, minedBlockHash, quorum)) {
         return nullptr;
     }
 

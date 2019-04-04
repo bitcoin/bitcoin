@@ -36,6 +36,7 @@ public:
     const Consensus::LLMQParams& params;
     CFinalCommitment qc;
     int height;
+    uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 
     // These are only valid when we either participated in the DKG or fully watched it
@@ -52,7 +53,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) : params(_params), blsCache(_blsWorker), stopCachePopulatorThread(false) {}
     ~CQuorum();
-    void Init(const CFinalCommitment& _qc, int _height, const std::vector<CDeterministicMNCPtr>& _members);
+    void Init(const CFinalCommitment& _qc, int _height, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
@@ -104,7 +105,7 @@ private:
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew);
 
-    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const;
+    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const;
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
