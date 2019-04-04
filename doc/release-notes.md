@@ -39,7 +39,7 @@ on mainnet and testnet.
 
 ### Downgrade to a version < 0.13.3.0
 
-Downgrading to 0.13.3.0 is fully supported but is not recommended unless you have some serious issues with 0.13.3.0.
+Downgrading to previous 0.13 releases is fully supported but is not recommended unless you have some serious issues with 0.13.3.0.
 
 Notable changes
 ===============
