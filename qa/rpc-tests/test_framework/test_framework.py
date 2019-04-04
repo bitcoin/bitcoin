@@ -684,6 +684,9 @@ class DashTestFramework(BitcoinTestFramework):
             self.nodes[0].generate(1)
             sync_blocks(self.nodes)
 
+        # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
+        self.nodes[0].generate(8)
+
         sync_blocks(self.nodes)
 
 # Test framework for doing p2p comparison testing, which sets up some bitcoind
