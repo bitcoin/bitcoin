@@ -106,7 +106,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, CV
         return false;
     }
 
-    if (!CheckCbTxMerkleRootMNList(block, pindex, state)) {
+    if (!CheckCbTxMerkleRoots(block, pindex, state)) {
         return false;
     }
 
