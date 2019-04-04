@@ -1270,7 +1270,10 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
                  throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
              }
              pwallet->UpdateTimeFirstKey(timestamp);
-         }
+        }
+        for (const auto& entry : import_data.key_origins) {
+            pwallet->AddKeyOrigin(entry.second.first, entry.second.second);
+        }
         for (const CKeyID& id : ordered_pubkeys) {
             auto entry = pubkey_map.find(id);
             if (entry == pubkey_map.end()) {
@@ -1280,10 +1283,6 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
              CPubKey temp;
              if (!pwallet->GetPubKey(id, temp) && !pwallet->AddWatchOnly(GetScriptForRawPubKey(pubkey), timestamp)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
-            }
-            const auto& key_orig_it = import_data.key_origins.find(id);
-            if (key_orig_it != import_data.key_origins.end()) {
-                pwallet->AddKeyOrigin(pubkey, key_orig_it->second.second);
             }
             pwallet->mapKeyMetadata[id].nCreateTime = timestamp;
 
