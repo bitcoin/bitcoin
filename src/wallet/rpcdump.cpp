@@ -900,7 +900,7 @@ struct ImportData
     // Output data
     std::set<CScript> import_scripts;
     std::map<CKeyID, bool> used_keys; //!< Import these private keys if available (the value indicates whether if the key is required for solvability)
-    std::map<CKeyID, KeyOriginInfo> key_origins;
+    std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>> key_origins;
 };
 
 enum class ScriptContext
@@ -1287,7 +1287,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
             }
             const auto& key_orig_it = import_data.key_origins.find(id);
             if (key_orig_it != import_data.key_origins.end()) {
-                pwallet->AddKeyOrigin(pubkey, key_orig_it->second);
+                pwallet->AddKeyOrigin(pubkey, key_orig_it->second.second);
             }
             pwallet->mapKeyMetadata[id].nCreateTime = timestamp;
 
