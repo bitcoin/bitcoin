@@ -50,6 +50,7 @@ UniValue assetupdate(const JSONRPCRequest& request);
 UniValue addressbalance(const JSONRPCRequest& request);
 UniValue assettransfer(const JSONRPCRequest& request);
 UniValue assetsend(const JSONRPCRequest& request);
+UniValue assetsendmany(const JSONRPCRequest& request);
 UniValue assetinfo(const JSONRPCRequest& request);
 UniValue listassets(const JSONRPCRequest& request);
 UniValue syscoinsetethstatus(const JSONRPCRequest& request);
@@ -1620,7 +1621,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 				"Perform an update on an asset you control.\n"
 				"<asset> Asset guid.\n"
                 "<public value> Public data, 256 characters max.\n"
-                "<contract> Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge.\n" 
+                "<contract> Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n" 
                 "<burn_method_signature> Ethereum token contract method signature for the burn function.  Use an ABI tool in Ethereum to find this, it mst be set so that the validation code knows the burn function was called to mint assets in Syscoin from Ethereum. Must be in hex and is 4 bytes (8 characters). ie: 'fefefefe'. Leave empty for no smart contract bridge.\n"             
 				"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
                 "<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
@@ -1742,6 +1743,32 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 UniValue assetsend(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
+    const UniValue &params = request.params;
+    if (request.fHelp || params.size() != 3)
+        throw runtime_error(
+            "assetsend [asset] [addressTo] [amount]\n"
+            "Send an asset you own to another address.\n"
+            "<asset> Asset guid.\n"
+            "<addressTo> Address to transfer to.\n"
+            "<amount> Quantity of asset to send.\n"
+            + HelpRequiringPassphrase(pwallet));
+            
+    UniValue output(UniValue::VARR);
+    UniValue outputObj(UniValue::VOBJ);
+    outputObj.pushKV("address", params[1]);
+    outputObj.pushKV("amount", params[2]);
+    output.push_back(outputObj);
+    UniValue paramsFund(UniValue::VARR);
+    paramsFund.push_back(params[0]);
+    paramsFund.push_back(output);
+    paramsFund.push_back("");
+    JSONRPCRequest requestMany;
+    requestMany.params = paramsFund;
+    return assetsendmany(requestMany);          
+}
+UniValue assetsendmany(const JSONRPCRequest& request) {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
@@ -1787,7 +1814,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
         unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
                 		
 		UniValue amountObj = find_value(receiverObj, "amount");
-		if (amountObj.isNum()) {
+		if (amountObj.isNum() || amountObj.isStr()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");

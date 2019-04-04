@@ -4912,6 +4912,7 @@ extern UniValue assetupdate(const JSONRPCRequest& request);
 extern UniValue addressbalance(const JSONRPCRequest& request);
 extern UniValue assettransfer(const JSONRPCRequest& request);
 extern UniValue assetsend(const JSONRPCRequest& request);
+extern UniValue assetsendmany(const JSONRPCRequest& request);
 extern UniValue assetinfo(const JSONRPCRequest& request);
 extern UniValue listassets(const JSONRPCRequest& request);
 extern UniValue assetallocationsend(const JSONRPCRequest& request);
@@ -5030,7 +5031,8 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetupdate",                      &assetupdate,                   {"asset","public value","contract","burn_method_signature","supply","update_flags","witness"}},
     { "syscoin",            "addressbalance",                   &addressbalance,                {}},
     { "syscoin",            "assettransfer",                    &assettransfer,                 {"asset"}},
-    { "syscoin",            "assetsend",                        &assetsend,                     {"asset","inputs"}},
+    { "syscoin",            "assetsend",                        &assetsend,                     {"asset"}},
+    { "syscoin",            "assetsendmany",                    &assetsendmany,                 {"asset","inputs"}},
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset"}},
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
     { "syscoin",            "assetallocationsend",              &assetallocationsend,           {"asset","addressFrom","addressTo","amount"}},
