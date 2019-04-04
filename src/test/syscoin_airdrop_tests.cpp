@@ -21,7 +21,7 @@ struct PaymentAmount
 void SendSnapShotPayment(const std::string &strSend, const std::string &asset, const std::string &alias, const std::string &memo)
 {
 	currentTx++;
-	std::string strSendMany = "assetsend " + asset + " " + strSend + "}]\" " + memo + " ''";
+	std::string strSendMany = "assetsendmany " + asset + " " + strSend + "}]\" " + memo + " ''";
 	UniValue r;
 	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
 }

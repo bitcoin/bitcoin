@@ -1611,6 +1611,7 @@ UniValue addressbalance(const JSONRPCRequest& request) {
     res.push_back(ValueFromAmount(getaddressbalance(address)));
     return res;
 }
+
 UniValue assetupdate(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
@@ -1635,7 +1636,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     string strContract = params[2].get_str();
     string strMethodSig = params[3].get_str();
     if(!strContract.empty())
-        boost::remove_erase_if(strContract, boost::is_any_of("0x")); // strip 0x in hex str if exists
+        boost::erase_all(strContract, "0x");  // strip 0x if exist
     vector<unsigned char> vchContract = ParseHex(strContract);
     vector<unsigned char> vchBurnMethodSignature = ParseHex(strMethodSig);
 
@@ -1648,13 +1649,15 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     if (!GetAsset( nAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Could not find a asset with this key"));
         
-
+    const CWitnessAddress &copyWitness = theAsset.witnessAddress;
+    theAsset.ClearAsset();
+    theAsset.witnessAddress = copyWitness;
+    
 	UniValue param4 = params[4];
 	CAmount nBalance = 0;
 	if(param4.get_str() != "0")
 		nBalance = AssetAmountFromValue(param4, theAsset.nPrecision);
 	
-
 	if(strPubData != stringFromVch(theAsset.vchPubData))
 		theAsset.vchPubData = vchFromString(strPubData);
     else
@@ -1876,7 +1879,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 {
 	CAsset asset(tx);
-	if(!asset.IsNull())
+	if(asset.IsNull())
 		return false;
 
 	CAsset dbAsset;
