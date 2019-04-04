@@ -309,7 +309,7 @@ class CInv(object):
 
     def __repr__(self):
         return "CInv(type=%s hash=%064x)" \
-            % (self.typemap[self.type], self.hash)
+            % (self.typemap.get(self.type, "%d" % self.type), self.hash)
 
 
 class CBlockLocator(object):
