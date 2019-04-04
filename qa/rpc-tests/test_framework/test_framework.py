@@ -277,36 +277,48 @@ class DashTestFramework(BitcoinTestFramework):
 
     def prepare_masternodes(self):
         for idx in range(0, self.mn_count):
-            bls = self.nodes[0].bls('generate')
-            address = self.nodes[0].getnewaddress()
-            txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
+            self.prepare_masternode(idx)
 
-            txraw = self.nodes[0].getrawtransaction(txid, True)
-            collateral_vout = 0
-            for vout_idx in range(0, len(txraw["vout"])):
-                vout = txraw["vout"][vout_idx]
-                if vout["value"] == MASTERNODE_COLLATERAL:
-                    collateral_vout = vout_idx
-            self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
+    def prepare_masternode(self, idx):
+        bls = self.nodes[0].bls('generate')
+        address = self.nodes[0].getnewaddress()
+        txid = self.nodes[0].sendtoaddress(address, MASTERNODE_COLLATERAL)
 
-            # send to same address to reserve some funds for fees
-            self.nodes[0].sendtoaddress(address, 0.001)
+        txraw = self.nodes[0].getrawtransaction(txid, True)
+        collateral_vout = 0
+        for vout_idx in range(0, len(txraw["vout"])):
+            vout = txraw["vout"][vout_idx]
+            if vout["value"] == MASTERNODE_COLLATERAL:
+                collateral_vout = vout_idx
+        self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
-            ownerAddr = self.nodes[0].getnewaddress()
-            votingAddr = self.nodes[0].getnewaddress()
-            rewardsAddr = self.nodes[0].getnewaddress()
+        # send to same address to reserve some funds for fees
+        self.nodes[0].sendtoaddress(address, 0.001)
 
-            port = p2p_port(len(self.nodes) + idx)
-            if (idx % 2) == 0:
-                self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-                proTxHash = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
-            else:
-                self.nodes[0].generate(1)
-                proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+        ownerAddr = self.nodes[0].getnewaddress()
+        votingAddr = self.nodes[0].getnewaddress()
+        rewardsAddr = self.nodes[0].getnewaddress()
+
+        port = p2p_port(len(self.nodes) + idx)
+        if (idx % 2) == 0:
+            self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
+            proTxHash = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+        else:
             self.nodes[0].generate(1)
+            proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+        self.nodes[0].generate(1)
 
-            self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
+        self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
+
+    def remove_mastermode(self, idx):
+        mn = self.mninfo[idx]
+        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
+        rawtx = self.nodes[0].signrawtransaction(rawtx)
+        self.nodes[0].sendrawtransaction(rawtx["hex"])
+        self.nodes[0].generate(1)
+        self.sync_all()
+        self.mninfo.remove(mn)
 
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
