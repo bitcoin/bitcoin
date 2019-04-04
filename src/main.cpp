@@ -4721,6 +4721,7 @@ void static ProcessGetData(CNode* pfrom)
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
+    static std::pair<unsigned int, uint256> pairHighBlock;
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
     if (mapArgs.count("-dropmessagestest") && GetRand(atoi(mapArgs["-dropmessagestest"])) == 0)
@@ -4972,31 +4973,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
 
-            if (!fAlreadyHave && !fImporting && !fReindex)
-                pfrom->AskFor(inv);
+            if (!fAlreadyHave && !fImporting && !fReindex) {
+                bool isMnSnInventory = inv.type > MSG_SPORK;
+                bool askFor = true;
+                if (isMnSnInventory && IsInitialBlockDownload())
+                    askFor = false;
 
-
-            if (inv.type == MSG_BLOCK) {
-                UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
-                    // First request the headers preceeding the announced block. In the normal fully-synced
-                    // case where a new block is announced that succeeds the current tip (no reorganization),
-                    // there are no such headers.
-                    // Secondly, and only when we are close to being synced, we request the announced block directly,
-                    // to avoid an extra round-trip. Note that we must *first* ask for the headers, so by the
-                    // time the block arrives, the header chain leading up to it is already validated. Not
-                    // doing this will result in the received block being rejected as an orphan in case it is
-                    // not a direct successor.
-                    pfrom->PushMessage("getblocks", chainActive.GetLocator(), inv.hash);
-                    CNodeState *nodestate = State(pfrom->GetId());
-                    if (chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - Params().TargetSpacing() * 20 &&
-                        nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
-                        vToFetch.push_back(inv);
-                        // Mark block as in flight already, even though the actual "getdata" message only goes out
-                        // later (within the same cs_main lock, though).
-                        MarkBlockAsInFlight(pfrom->GetId(), inv.hash);
+                if (askFor) {
+                    if (inv.type == MSG_BLOCK) {
+                        if (IsInitialBlockDownload() && pfrom->fSyncingWith && inv.hash == pairHighBlock.second) {
+                            //This situation only happens when a getblocks round ends and a new block has not been added to
+                            //the mainchain (that is being synced from the fully synced peer), and so they send the same inv
+                            //twice
+                            pfrom->PushMessage("getblocks", chainActive.GetLocator(), inv.hash);
+                            break;
+                        } else {
+                            pfrom->AskForBlock(inv);
+                        }
+                    } else {
+                        pfrom->AskFor(inv);
                     }
-                    LogPrint("net", "getblocks (%d) %s to peer=%d\n", pindexBestHeader->nHeight, inv.hash.ToString(), pfrom->id);
                 }
             }
 
@@ -5305,33 +5301,42 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CInv inv(MSG_BLOCK, hashBlock);
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
+        bool inChain = mapBlockIndex.count(hashBlock) && chainActive.Contains(mapBlockIndex.at(hashBlock));
+
+        //When syncing with a peer, it will send this node its current chain tip after its round of 500 blocks of inventory
+        //This is to signal that it is ready to send the next round of inventory, but needs to be prompted to do so
+        bool fSentGetBlocks = false;
+        if (pfrom->fSyncingWith && !mapBlockIndex.count(block.hashPrevBlock) && hashBlock == pairHighBlock.second) {
+            //Signal sent from peer that they are ready for the next getblocks
+            pfrom->PushMessage("getblocks", chainActive.GetLocator(), inv.hash);
+            fSentGetBlocks = true;
+        } else if (block.nTime > pairHighBlock.first) {
+            pairHighBlock = std::make_pair(block.nTime, block.GetHash());
+        }
+
         //sometimes we will be sent their most recent block and its not the one we want, in that case tell where we are
-        if (mapBlockIndex.count(block.hashPrevBlock) && mapBlockIndex.at(block.hashPrevBlock)->nChainTx) {
-            pfrom->AddInventoryKnown(inv);
-            CValidationState state;
-            ProcessNewBlock(state, pfrom, &block);
-            int nDoS;
-            if (state.IsInvalid(nDoS)) {
-                pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                                   state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-                if (nDoS > 0) {
-                    TRY_LOCK(cs_main, lockMain);
-                    if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
+        if (!inChain && mapBlockIndex.count(block.hashPrevBlock) && mapBlockIndex.at(block.hashPrevBlock)->nChainTx) {
+            if (chainActive.Contains(mapBlockIndex.at(block.hashPrevBlock))) {
+                pfrom->AddInventoryKnown(inv);
+                CValidationState state;
+                ProcessNewBlock(state, pfrom, &block);
+                int nDoS;
+                if (state.IsInvalid(nDoS)) {
+                    pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+                                       state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                    if (nDoS > 0) {
+                        TRY_LOCK(cs_main, lockMain);
+                        if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
+                    }
                 }
-            }
-            if (state.IsSuspicious()) {
-                //Tell the peer we consider this block suspicious
-                pfrom->PushMessage("reject", strCommand, 0, std::string("block-suspicious"), inv.hash);
-            }
-        } else {
-            if (pfrom->setBlockAskedFor.count(hashBlock)) {
-                //we already asked for this block, so lets work backwards and ask for the previous block
-                pfrom->PushMessage("getblocks", chainActive.GetLocator(), block.hashPrevBlock);
-                pfrom->setBlockAskedFor.emplace(block.hashPrevBlock);
+                if (state.IsSuspicious()) {
+                    //Tell the peer we consider this block suspicious
+                    pfrom->PushMessage("reject", strCommand, 0, std::string("block-suspicious"), inv.hash);
+                }
             } else {
-                //ask to sync to this block
-                pfrom->PushMessage("getblocks", chainActive.GetLocator(), hashBlock);
-                pfrom->setBlockAskedFor.emplace(hashBlock);
+                //ask to sync up to this block
+                if (!fSentGetBlocks)
+                    pfrom->PushMessage("getblocks", chainActive.GetLocator(), inv.hash);
             }
         }
     }
@@ -5854,12 +5859,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
         if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to end of initial download.
-            if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 6 * 60 * 60) {
+            if ((nSyncStarted < 1 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 6 * 60 * 60) {
                 state.fSyncStarted = true;
                 nSyncStarted++;
                 CBlockIndex *pindexStart = pindexBestHeader->pprev ? pindexBestHeader->pprev : pindexBestHeader;
-                LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
+                LogPrint("net", "initial getblocks (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
                 pto->PushMessage("getblocks", chainActive.GetLocator(pindexStart), uint256());
+                pto->fSyncingWith = true;
             }
         }
 
@@ -5958,12 +5964,16 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             vector<CBlockIndex*> vToDownload;
             NodeId staller = -1;
-            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
-            BOOST_FOREACH(CBlockIndex *pindex, vToDownload) {
-                vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
-                MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), pindex);
-                LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                    pindex->nHeight, pto->id);
+            //FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
+            while (!pto->listAskForBlocks.empty()) {
+                const CInv& inv = pto->listAskForBlocks.front();
+                //Only request if this block is not already in the chain
+                if (!(mapBlockIndex.count(inv.hash) && chainActive.Contains(mapBlockIndex.at(inv.hash)))) {
+                    vGetData.push_back(inv);
+                    MarkBlockAsInFlight(pto->GetId(), inv.hash);
+                    LogPrint("net", "Requesting block %s peer=%d\n", inv.hash.GetHex(), pto->id);
+                }
+                pto->listAskForBlocks.pop_front();
             }
             if (state.nBlocksInFlight == 0 && staller != -1) {
                 if (State(staller)->nStallingSince == 0) {
