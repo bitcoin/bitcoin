@@ -71,7 +71,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         mnList = self.test_getmnlistdiff(baseBlockHash, self.nodes[0].getbestblockhash(), mnList, expectedDeleted, expectedUpdated)
         assert(mnList[new_mn.proTxHash].confirmedHash != 0)
 
-        # Spend the coinbase of the previously added MN and test if it appears in "deletedMNs"
+        # Spend the collateral of the previously added MN and test if it appears in "deletedMNs"
         expectedDeleted = [new_mn.proTxHash]
         expectedUpdated = []
         baseBlockHash2 = self.nodes[0].getbestblockhash()
