@@ -591,6 +591,24 @@ static UniValue echo(const JSONRPCRequest& request)
     return request.params;
 }
 
+static UniValue logprint(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"logprint message",
+                "\nPrint a message to the log output.\n",
+                {},
+                RPCResults{},
+                RPCExamples{""},
+            }.ToString()
+        );
+    }
+
+    LogPrintf("[RPC] %s\n", request.params[0].get_str());
+
+    return NullUniValue;
+}
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -608,6 +626,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "logprint",               &logprint,               {"message"}},
 };
 // clang-format on
 
