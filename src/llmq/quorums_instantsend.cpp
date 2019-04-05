@@ -90,21 +90,26 @@ void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash,
     }
 }
 
+static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockMinedKey(int nHeight, const uint256& islockHash)
+{
+    return std::make_tuple(std::string("is_m"), htobe32(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
+}
+
 void CInstantSendDb::WriteInstantSendLockMined(const uint256& hash, int nHeight)
 {
-    db.Write(std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nHeight, hash), true);
+    db.Write(BuildInversedISLockMinedKey(nHeight, hash), true);
 }
 
 void CInstantSendDb::RemoveInstantSendLockMined(const uint256& hash, int nHeight)
 {
-    db.Erase(std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nHeight, hash));
+    db.Erase(BuildInversedISLockMinedKey(nHeight, hash));
 }
 
 std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
 {
     auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
 
-    auto firstKey = std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nUntilHeight, uint256());
+    auto firstKey = BuildInversedISLockMinedKey(nUntilHeight, uint256());
 
     it->Seek(firstKey);
 
@@ -115,7 +120,7 @@ std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmed
         if (!it->GetKey(curKey) || std::get<0>(curKey) != "is_m") {
             break;
         }
-        int nHeight = std::numeric_limits<int>::max() - std::get<1>(curKey);
+        uint32_t nHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<1>(curKey));
         if (nHeight > nUntilHeight) {
             break;
         }
