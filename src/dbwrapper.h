@@ -553,7 +553,9 @@ protected:
 
     struct DataStreamCmp {
         static bool less(const CDataStream& a, const CDataStream& b) {
-            return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
+            return std::lexicographical_compare(
+                    (const uint8_t*)a.data(), (const uint8_t*)a.data() + a.size(),
+                    (const uint8_t*)b.data(), (const uint8_t*)b.data() + b.size());
         }
         bool operator()(const CDataStream& a, const CDataStream& b) const {
             return less(a, b);
