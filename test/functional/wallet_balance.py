@@ -4,12 +4,15 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
 from decimal import Decimal
+import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
+    connect_nodes_bi,
+    sync_blocks,
 )
 
 
@@ -17,7 +20,7 @@ def create_transactions(node, address, amt, fees):
     # Create and sign raw transactions from node to address for amt.
     # Creates a transaction for each fee and returns an array
     # of the raw transactions.
-    utxos = node.listunspent(0)
+    utxos = [u for u in node.listunspent(0) if u['spendable']]
 
     # Create transactions
     inputs = []
@@ -25,7 +28,7 @@ def create_transactions(node, address, amt, fees):
     for utxo in utxos:
         inputs.append({"txid": utxo["txid"], "vout": utxo["vout"]})
         ins_total += utxo['amount']
-        if ins_total > amt:
+        if ins_total + max(fees) > amt:
             break
 
     txs = []
@@ -33,6 +36,7 @@ def create_transactions(node, address, amt, fees):
         outputs = {address: amt, node.getrawchangeaddress(): ins_total - amt - fee}
         raw_tx = node.createrawtransaction(inputs, outputs, 0, True)
         raw_tx = node.signrawtransactionwithwallet(raw_tx)
+        assert_equal(raw_tx['complete'], True)
         txs.append(raw_tx)
 
     return txs
@@ -152,9 +156,47 @@ class WalletTest(BitcoinTestFramework):
         # Create 3 more wallet txs, where the last is not accepted to the
         # mempool because it is the third descendant of the tx above
         for _ in range(3):
+            # Set amount high enough such that all coins are spent by each tx
             txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 99)
+
+        self.log.info('Check that wallet txs not in the mempool are untrusted')
         assert txid not in self.nodes[0].getrawmempool()
+        assert_equal(self.nodes[0].gettransaction(txid)['trusted'], False)
+        assert_equal(self.nodes[0].getbalance(minconf=0), 0)
+
+        self.log.info("Test replacement and reorg of non-mempool tx")
+        tx_orig = self.nodes[0].gettransaction(txid)['hex']
+        # Increase fee by 1 coin
+        tx_replace = tx_orig.replace(
+            struct.pack("<q", 99 * 10**8).hex(),
+            struct.pack("<q", 98 * 10**8).hex(),
+        )
+        tx_replace = self.nodes[0].signrawtransactionwithwallet(tx_replace)['hex']
+        # Total balance is given by the sum of outputs of the tx
+        total_amount = sum([o['value'] for o in self.nodes[0].decoderawtransaction(tx_replace)['vout']])
+        self.sync_all()
+        self.nodes[1].sendrawtransaction(hexstring=tx_replace, maxfeerate=0)
+
+        # Now confirm tx_replace
+        block_reorg = self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)[0]
+        self.sync_all()
+        assert_equal(self.nodes[0].getbalance(minconf=0), total_amount)
+
+        self.log.info('Put txs back into mempool of node 1 (not node 0)')
+        self.nodes[0].invalidateblock(block_reorg)
+        self.nodes[1].invalidateblock(block_reorg)
         assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
+        self.nodes[0].generatetoaddress(1, ADDRESS_WATCHONLY)
+        assert_equal(self.nodes[0].getbalance(minconf=0), 0)  # wallet txs not in the mempool are untrusted
+
+        # Now confirm tx_orig
+        self.restart_node(1, ['-persistmempool=0'])
+        connect_nodes_bi(self.nodes, 0, 1)
+        sync_blocks(self.nodes)
+        self.nodes[1].sendrawtransaction(tx_orig)
+        self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
+        self.sync_all()
+        assert_equal(self.nodes[0].getbalance(minconf=0), total_amount + 1)  # The reorg recovered our fee of 1 coin
 
 
 if __name__ == '__main__':
