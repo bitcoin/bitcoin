@@ -145,7 +145,7 @@ public:
 
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
-        consensus.vchSYSXContract = ParseHex("af8db39f4d10699229257149ea971c98102047bc");
+        consensus.vchSYSXContract = ParseHex("6ac0ed9ff284d641863b9b4787d6f4bb7ca3ba6f");
         consensus.vchSYSXBurnMethodSignature = ParseHex("fefefefe");
         /**
          * The message start string is designed to be unlikely to occur in normal data.
