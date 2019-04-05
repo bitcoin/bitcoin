@@ -828,11 +828,12 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
 void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 {
+    std::unordered_map<uint256, CInstantSendLockPtr> removeISLocks;
     {
         LOCK(cs);
 
-        auto islocks = db.RemoveConfirmedInstantSendLocks(pindex->nHeight);
-        for (auto& p : islocks) {
+        removeISLocks = db.RemoveConfirmedInstantSendLocks(pindex->nHeight);
+        for (auto& p : removeISLocks) {
             auto& islockHash = p.first;
             auto& islock = p.second;
             LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s, islock=%s: removed islock as it got fully confirmed\n", __func__,
@@ -843,6 +844,10 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
                 inputRequestIds.erase(inputRequestId);
             }
         }
+    }
+
+    for (auto& p : removeISLocks) {
+        UpdateWalletTransaction(p.second->txid, nullptr);
     }
 
     // Retry all not yet locked mempool TXs and TX which where mined after the fully confirmed block
