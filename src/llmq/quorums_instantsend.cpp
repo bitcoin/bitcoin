@@ -880,6 +880,10 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
 
 void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
 {
+    if (!IsNewInstantSendEnabled()) {
+        return;
+    }
+
     // Let's retry all unlocked TXs from mempool and and recently connected blocks
 
     std::unordered_map<uint256, CTransactionRef> txs;
