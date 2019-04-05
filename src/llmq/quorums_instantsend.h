@@ -56,14 +56,16 @@ public:
 
     void WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock);
     void RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock);
+    void RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock);
+
+    void WriteInstantSendLockMined(const uint256& hash, int nHeight);
+    void RemoveInstantSendLockMined(const uint256& hash, int nHeight);
+    std::unordered_map<uint256, CInstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight);
 
     CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash);
     uint256 GetInstantSendLockHashByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint);
-
-    void WriteLastChainLockBlock(const uint256& hashBlock);
-    uint256 GetLastChainLockBlock();
 };
 
 class CInstantSendManager : public CRecoveredSigsListener
@@ -123,7 +125,8 @@ public:
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
-    void RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock);
+
+    void HandleFullyConfirmedBlock(const CBlockIndex* pindex);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void RetryLockTxs(const uint256& lockedParentTx);
