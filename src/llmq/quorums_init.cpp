@@ -24,9 +24,9 @@ CBLSWorker* blsWorker;
 
 CDBWrapper* llmqDb;
 
-void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests)
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests, bool fWipe)
 {
-    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests);
+    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager(scheduler);

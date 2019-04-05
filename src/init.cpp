@@ -1772,7 +1772,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex || fReindexChainState);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
-                llmq::InitLLMQSystem(*evoDb, &scheduler, false);
+                llmq::InitLLMQSystem(*evoDb, &scheduler, false, fReindex || fReindexChainState);
 
                 if (fReindex) {
                     pblocktree->WriteReindexing(true);

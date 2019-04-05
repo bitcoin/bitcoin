@@ -18,7 +18,7 @@ static const bool DEFAULT_WATCH_QUORUMS = false;
 extern CDBWrapper* llmqDb;
 
 // Init/destroy LLMQ globals
-void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests);
+void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests, bool fWipe = false);
 void DestroyLLMQSystem();
 
 // Manage scheduled tasks, threads, listeners etc.
