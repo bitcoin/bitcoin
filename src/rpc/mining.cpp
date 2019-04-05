@@ -730,7 +730,8 @@ UniValue submitblock(const JSONRPCRequest& request)
         throw JSONRPCError(-100, "Block failed CheckBlock() function.");
 
     // peercoin: sign block
-    if (!SignBlock(block, *pwallet))
+    // rfc6: sign proof of stake blocks only after 0.8 fork
+    if ((block.IsProofOfStake() || IsBTC16BIPsEnabled(block.GetBlockTime())) && !SignBlock(block, *pwallet))
         throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
 
     {
