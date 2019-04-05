@@ -66,9 +66,6 @@ public:
     uint256 GetInstantSendLockHashByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint);
-
-    void WriteLastChainLockBlock(const uint256& hashBlock);
-    uint256 GetLastChainLockBlock();
 };
 
 class CInstantSendManager : public CRecoveredSigsListener

@@ -201,18 +201,6 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& o
     return GetInstantSendLockByHash(islockHash);
 }
 
-void CInstantSendDb::WriteLastChainLockBlock(const uint256& hash)
-{
-    db.Write(std::make_tuple(std::string("is_lcb")), hash);
-}
-
-uint256 CInstantSendDb::GetLastChainLockBlock()
-{
-    uint256 hashBlock;
-    db.Read(std::make_tuple(std::string("is_lcb")), hashBlock);
-    return hashBlock;
-}
-
 ////////////////
 
 CInstantSendManager::CInstantSendManager(CScheduler* _scheduler, CDBWrapper& _llmqDb) :
@@ -820,11 +808,6 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
 
 void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 {
-    {
-        LOCK(cs);
-        db.WriteLastChainLockBlock(pindexChainLock->GetBlockHash());
-    }
-
     HandleFullyConfirmedBlock(pindexChainLock);
 }
 
@@ -913,26 +896,21 @@ void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
         }
     }
 
-    uint256 lastChainLockBlock;
-    const CBlockIndex* pindexLastChainLockBlock = nullptr;
     const CBlockIndex* pindexWalk = nullptr;
     {
-        LOCK(cs);
-        lastChainLockBlock = db.GetLastChainLockBlock();
-    }
-    {
         LOCK(cs_main);
-        if (!lastChainLockBlock.IsNull()) {
-            pindexLastChainLockBlock = mapBlockIndex.at(lastChainLockBlock);
-            pindexWalk = chainActive.Tip();
-        }
+        pindexWalk = chainActive.Tip();
     }
 
     // scan blocks until we hit the last chainlocked block we know of. Also stop scanning after a depth of 6 to avoid
     // signing thousands of TXs at once. Also, after a depth of 6, blocks get eligible for ChainLocking even if unsafe
     // TXs are included, so there is no need to retroactively sign these.
     int depth = 0;
-    while (pindexWalk && pindexWalk != pindexLastChainLockBlock && depth < 6) {
+    while (pindexWalk && depth < 6) {
+        if (chainLocksHandler->HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
+            break;
+        }
+
         CBlock block;
         {
             LOCK(cs_main);
