@@ -1276,6 +1276,16 @@ QString RPCConsole::tabTitle(TabTypes tab_type) const
     return ui->tabWidget->tabText(tab_type);
 }
 
+QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
+{
+    switch (tab_type) {
+    case TAB_INFO: return QKeySequence(Qt::CTRL + Qt::Key_I);
+    case TAB_CONSOLE: return QKeySequence(Qt::CTRL + Qt::Key_T);
+    case TAB_GRAPH: return QKeySequence(Qt::CTRL + Qt::Key_N);
+    case TAB_PEERS: return QKeySequence(Qt::CTRL + Qt::Key_P);
+    }
+}
+
 void RPCConsole::updateAlerts(const QString& warnings)
 {
     this->ui->label_alerts->setVisible(!warnings.isEmpty());
