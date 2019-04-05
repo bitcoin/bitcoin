@@ -1549,7 +1549,6 @@ UniValue combinepsbt(const JSONRPCRequest& request)
         throw JSONRPCTransactionError(error);
     }
 
-    UniValue result(UniValue::VOBJ);
     CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << merged_psbt;
     return EncodeBase64((unsigned char*)ssTx.data(), ssTx.size());
