@@ -464,7 +464,14 @@ public:
         }
 
         if (curIsParent) {
-            return parentIt->GetKey(key);
+            try {
+                // TODO try to avoid this copy (we need a stream that allows reading from external buffers)
+                CDataStream ssKey = parentKey;
+                ssKey >> key;
+            } catch (const std::exception&) {
+                return false;
+            }
+            return true;
         } else {
             try {
                 // TODO try to avoid this copy (we need a stream that allows reading from external buffers)
@@ -482,7 +489,7 @@ public:
             return CDataStream(SER_DISK, CLIENT_VERSION);
         }
         if (curIsParent) {
-            return parentIt->GetKey();
+            return parentKey;
         } else {
             return transactionIt->first;
         }
