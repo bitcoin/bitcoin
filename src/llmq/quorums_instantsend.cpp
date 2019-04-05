@@ -798,6 +798,23 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
     RetryLockTxs(uint256());
 }
 
+void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
+{
+    if (sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+        // Nothing to do here. We should keep all islocks and let chainlocks handle them.
+        return;
+    }
+
+    int nChainLockMinHeight = pindexNew->nHeight - Params().GetConsensus().nInstantSendKeepLock;
+    const CBlockIndex* pindex = pindexNew->GetAncestor(nChainLockMinHeight);
+
+    if (pindex) {
+        // Pretend it was chainlocked at nChainLockMinHeight.
+        // This effectively drops all islocks below nChainLockMinHeight.
+        NotifyChainLock(pindex);
+    }
+}
+
 void CInstantSendManager::RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock)
 {
     AssertLockHeld(cs);
