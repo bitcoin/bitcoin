@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Syscoin Core developers
+# Copyright (c) 2018-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
 from decimal import Decimal
 
+
+from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.test_framework import SyscoinTestFramework
+
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
-RANDOM_COINBASE_ADDRESS = 'mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ'
 
 def create_transactions(node, address, amt, fees):
     # Create and sign raw transactions from node to address for amt.
@@ -46,16 +48,17 @@ class WalletTest(SyscoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        self.nodes[0].importaddress(ADDRESS_WATCHONLY)
         # Check that nodes don't own any UTXOs
         assert_equal(len(self.nodes[0].listunspent()), 0)
         assert_equal(len(self.nodes[1].listunspent()), 0)
 
-        self.log.info("Mining one block for each node")
+        self.log.info("Mining blocks ...")
 
         self.nodes[0].generate(1)
         self.sync_all()
         self.nodes[1].generate(1)
-        self.nodes[1].generatetoaddress(100, RANDOM_COINBASE_ADDRESS)
+        self.nodes[1].generatetoaddress(101, ADDRESS_WATCHONLY)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -64,8 +67,10 @@ class WalletTest(SyscoinTestFramework):
         self.log.info("Test getbalance with different arguments")
         assert_equal(self.nodes[0].getbalance("*"), 50)
         assert_equal(self.nodes[0].getbalance("*", 1), 50)
-        assert_equal(self.nodes[0].getbalance("*", 1, True), 50)
+        assert_equal(self.nodes[0].getbalance("*", 1, True), 100)
         assert_equal(self.nodes[0].getbalance(minconf=1), 50)
+        assert_equal(self.nodes[0].getbalance(minconf=0, include_watchonly=True), 100)
+        assert_equal(self.nodes[1].getbalance(minconf=0, include_watchonly=True), 50)
 
         # Send 40 SYS from 0 to 1 and 60 SYS from 1 to 0.
         txs = create_transactions(self.nodes[0], self.nodes[1].getnewaddress(), 40, [Decimal('0.01')])
@@ -108,7 +113,7 @@ class WalletTest(SyscoinTestFramework):
         assert_equal(self.nodes[1].getwalletinfo()["unconfirmed_balance"], Decimal('0'))  # Doesn't include output of node 0's send since it was spent
         assert_equal(self.nodes[1].getunconfirmedbalance(), Decimal('0'))
 
-        self.nodes[1].generatetoaddress(1, RANDOM_COINBASE_ADDRESS)
+        self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
         self.sync_all()
 
         # balances are correct after the transactions are confirmed
@@ -118,7 +123,7 @@ class WalletTest(SyscoinTestFramework):
         # Send total balance away from node 1
         txs = create_transactions(self.nodes[1], self.nodes[0].getnewaddress(), Decimal('29.97'), [Decimal('0.01')])
         self.nodes[1].sendrawtransaction(txs[0]['hex'])
-        self.nodes[1].generatetoaddress(2, RANDOM_COINBASE_ADDRESS)
+        self.nodes[1].generatetoaddress(2, ADDRESS_WATCHONLY)
         self.sync_all()
 
         # getbalance with a minconf incorrectly excludes coins that have been spent more recently than the minconf blocks ago
