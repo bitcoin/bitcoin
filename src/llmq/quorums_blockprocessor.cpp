@@ -25,7 +25,7 @@ CQuorumBlockProcessor* quorumBlockProcessor;
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
-static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu";
+static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
 
 void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
@@ -168,9 +168,10 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 
 // We store a mapping from minedHeight->quorumHeight in the DB
 // minedHeight is inversed so that entries are traversable in reversed order
-static std::tuple<std::string, uint8_t, int> BuildInversedHeightKey(Consensus::LLMQType llmqType, int nMinedHeight)
+static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(Consensus::LLMQType llmqType, int nMinedHeight)
 {
-    return std::make_tuple(DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT, (uint8_t)llmqType, std::numeric_limits<int>::max() - nMinedHeight);
+    // nMinedHeight must be converted to big endian to make it comparable when serialized
+    return std::make_tuple(DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT, (uint8_t)llmqType, htobe32(std::numeric_limits<uint32_t>::max() - nMinedHeight));
 }
 
 bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state)
@@ -422,7 +423,7 @@ std::vector<const CBlockIndex*> CQuorumBlockProcessor::GetMinedCommitmentsUntilB
             break;
         }
 
-        int nMinedHeight = std::numeric_limits<int>::max() - std::get<2>(curKey);
+        uint32_t nMinedHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<2>(curKey));
         if (nMinedHeight > pindex->nHeight) {
             break;
         }
