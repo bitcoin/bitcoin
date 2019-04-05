@@ -712,6 +712,9 @@ public:
     int64_t nNextAddrSend GUARDED_BY(cs_sendProcessing){0};
     int64_t nNextLocalAddrSend GUARDED_BY(cs_sendProcessing){0};
 
+    const bool m_addr_relay_peer;
+    bool IsAddrRelayPeer() const { return m_addr_relay_peer; }
+
     // List of block ids we still have announce.
     // There is no final sorting before sending, as they are always sent immediately
     // and in the order requested.
@@ -748,6 +751,7 @@ public:
 
     // m_tx_relay == nullptr if we're not relaying transactions with this peer
     std::unique_ptr<TxRelay> m_tx_relay;
+
     // Used for headers announcements - unfiltered blocks to relay
     std::vector<uint256> vBlockHashesToAnnounce GUARDED_BY(cs_inventory);
 
