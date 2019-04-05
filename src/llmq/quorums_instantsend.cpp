@@ -820,48 +820,12 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
 
 void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 {
-    uint256 lastChainLockBlock;
-    {
-        LOCK(cs);
-        lastChainLockBlock = db.GetLastChainLockBlock();
-    }
-
-    // Let's find all islocks that correspond to TXs which are part of the freshly ChainLocked chain and then delete
-    // the islocks. We do this because the ChainLocks imply locking and thus it's not needed to further track
-    // or propagate the islocks
-    std::unordered_set<uint256> toDelete;
-    auto pindex = pindexChainLock;
-    while (pindex && pindex->GetBlockHash() != lastChainLockBlock) {
-        CBlock block;
-        {
-            LOCK(cs_main);
-            if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
-                pindex = pindex->pprev;
-                continue;
-            }
-        }
-
-        LOCK(cs);
-        for (const auto& tx : block.vtx) {
-            auto islock = db.GetInstantSendLockByTxid(tx->GetHash());
-            if (!islock) {
-                continue;
-            }
-            auto hash = ::SerializeHash(*islock);
-            LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s, islock=%s: removing islock as it got ChainLocked in block %s\n", __func__,
-                     islock->txid.ToString(), hash.ToString(), pindex->GetBlockHash().ToString());
-            RemoveFinalISLock(hash, islock);
-        }
-
-        pindex = pindex->pprev;
-    }
-
     {
         LOCK(cs);
         db.WriteLastChainLockBlock(pindexChainLock->GetBlockHash());
     }
 
-    RetryLockTxs(uint256());
+    HandleFullyConfirmedBlock(pindexChainLock);
 }
 
 void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
@@ -871,26 +835,35 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
         return;
     }
 
-    int nChainLockMinHeight = pindexNew->nHeight - Params().GetConsensus().nInstantSendKeepLock;
-    const CBlockIndex* pindex = pindexNew->GetAncestor(nChainLockMinHeight);
+    int nConfirmedHeight = pindexNew->nHeight - Params().GetConsensus().nInstantSendKeepLock;
+    const CBlockIndex* pindex = pindexNew->GetAncestor(nConfirmedHeight);
 
     if (pindex) {
-        // Pretend it was chainlocked at nChainLockMinHeight.
-        // This effectively drops all islocks below nChainLockMinHeight.
-        NotifyChainLock(pindex);
+        HandleFullyConfirmedBlock(pindex);
     }
 }
 
-void CInstantSendManager::RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock)
+void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 {
-    AssertLockHeld(cs);
+    {
+        LOCK(cs);
 
-    db.RemoveInstantSendLock(hash, islock);
-    
-    for (auto& in : islock->inputs) {
-        auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
-        inputRequestIds.erase(inputRequestId);
+        auto islocks = db.RemoveConfirmedInstantSendLocks(pindex->nHeight);
+        for (auto& p : islocks) {
+            auto& islockHash = p.first;
+            auto& islock = p.second;
+            LogPrint("instantsend", "CInstantSendManager::%s -- txid=%s, islock=%s: removed islock as it got fully confirmed\n", __func__,
+                     islock->txid.ToString(), islockHash.ToString());
+
+            for (auto& in : islock->inputs) {
+                auto inputRequestId = ::SerializeHash(std::make_pair(INPUTLOCK_REQUESTID_PREFIX, in));
+                inputRequestIds.erase(inputRequestId);
+            }
+        }
     }
+
+    // Retry all not yet locked mempool TXs and TX which where mined after the fully confirmed block
+    RetryLockTxs(uint256());
 }
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock)

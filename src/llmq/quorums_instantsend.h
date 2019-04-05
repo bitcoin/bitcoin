@@ -128,7 +128,8 @@ public:
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
-    void RemoveFinalISLock(const uint256& hash, const CInstantSendLockPtr& islock);
+
+    void HandleFullyConfirmedBlock(const CBlockIndex* pindex);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
     void RetryLockTxs(const uint256& lockedParentTx);
