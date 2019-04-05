@@ -85,6 +85,16 @@ void CInstantSendDb::RemoveInstantSendLock(const uint256& hash, CInstantSendLock
     }
 }
 
+void CInstantSendDb::WriteInstantSendLockMined(const uint256& hash, int nHeight)
+{
+    db.Write(std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nHeight, hash), true);
+}
+
+void CInstantSendDb::RemoveInstantSendLockMined(const uint256& hash, int nHeight)
+{
+    db.Erase(std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nHeight, hash));
+}
+
 CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash)
 {
     CInstantSendLockPtr ret;
@@ -743,9 +753,23 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
         return;
     }
 
-    bool locked = IsLocked(tx.GetHash());
+    uint256 islockHash;
+    {
+        LOCK(cs);
+        islockHash = db.GetInstantSendLockHashByTxid(tx.GetHash());
+
+        // update DB about when an IS lock was mined
+        if (!islockHash.IsNull() && pindex) {
+            if (posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK) {
+                db.RemoveInstantSendLockMined(islockHash, pindex->nHeight);
+            } else {
+                db.WriteInstantSendLockMined(islockHash, pindex->nHeight);
+            }
+        }
+    }
+
     bool chainlocked = pindex && chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
-    if (locked || chainlocked) {
+    if (!islockHash.IsNull() || chainlocked) {
         RetryLockTxs(tx.GetHash());
     } else {
         ProcessTx(tx, Params().GetConsensus());
