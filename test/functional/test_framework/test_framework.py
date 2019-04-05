@@ -416,6 +416,18 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
     def _start_logging(self):
+        class RpcRelog(logging.Handler):
+            def __init__(self, tf_in, level_in):
+                self.tf = tf_in
+                self.level = level_in
+
+            def handle(self, record):
+                try:
+                    msg = record.msg % record.args
+                    for n in self.tf.nodes:
+                        n.logprint(msg)
+                except:
+                    pass
         # Add logger and logging handlers
         self.log = logging.getLogger('TestFramework')
         self.log.setLevel(logging.DEBUG)
@@ -427,6 +439,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # User can provide log level as a number or string (eg DEBUG). loglevel was caught as a string, so try to convert it to an int
         ll = int(self.options.loglevel) if self.options.loglevel.isdigit() else self.options.loglevel.upper()
         ch.setLevel(ll)
+        # Create node logprint RPC routing handler
+        relog = RpcRelog(self, ch.level)
+        self.log.addHandler(relog)
         # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
         formatter = logging.Formatter(fmt='%(asctime)s.%(msecs)03d000Z %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
         formatter.converter = time.gmtime
