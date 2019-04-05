@@ -578,8 +578,8 @@ void CInstantSendManager::ProcessPendingInstantSendLocks()
             // should not happen, but if one fails to select, all others will also fail to select
             return;
         }
-        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->quorumHash, id, islock.txid);
-        batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig, quorum->quorumPublicKey);
+        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
+        batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig, quorum->qc.quorumPublicKey);
 
         // We can reconstruct the CRecoveredSig objects from the islock and pass it to the signing manager, which
         // avoids unnecessary double-verification of the signature. We however only do this when verification here
@@ -587,7 +587,7 @@ void CInstantSendManager::ProcessPendingInstantSendLocks()
         if (!quorumSigningManager->HasRecoveredSigForId(llmqType, id)) {
             CRecoveredSig recSig;
             recSig.llmqType = llmqType;
-            recSig.quorumHash = quorum->quorumHash;
+            recSig.quorumHash = quorum->qc.quorumHash;
             recSig.id = id;
             recSig.msgHash = islock.txid;
             recSig.sig = islock.sig;

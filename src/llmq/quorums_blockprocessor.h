@@ -37,6 +37,8 @@ private:
 public:
     CQuorumBlockProcessor(CEvoDB& _evoDb) : evoDb(_evoDb) {}
 
+    void UpgradeDB();
+
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
@@ -49,13 +51,14 @@ public:
     bool GetMinableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret);
 
     bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    bool GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, CFinalCommitment& ret);
+    bool GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, CFinalCommitment& ret, uint256& retMinedBlockHash);
 
-    uint256 GetFirstMinedQuorumHash(Consensus::LLMQType llmqType);
+    std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, size_t maxCount);
+    std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex);
 
 private:
     bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
-    bool ProcessCommitment(const CBlockIndex* pindex, const CFinalCommitment& qc, CValidationState& state);
+    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state);
     bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
     bool IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight);
     uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight);

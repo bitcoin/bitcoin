@@ -324,7 +324,7 @@ bool CSigningManager::PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& 
                   recoveredSig.quorumHash.ToString(), nodeId);
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc.quorumHash)) {
         return false;
     }
 
@@ -387,7 +387,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
                     it = v.erase(it);
                     continue;
                 }
-                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->quorumHash)) {
+                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc.quorumHash)) {
                     LogPrint("llmq", "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
                               recSig.quorumHash.ToString(), nodeId);
                     it = v.erase(it);
@@ -437,7 +437,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 
         for (auto& recSig : v) {
             const auto& quorum = quorums.at(std::make_pair((Consensus::LLMQType)recSig.llmqType, recSig.quorumHash));
-            batchVerifier.PushMessage(nodeId, recSig.GetHash(), CLLMQUtils::BuildSignHash(recSig), recSig.sig, quorum->quorumPublicKey);
+            batchVerifier.PushMessage(nodeId, recSig.GetHash(), CLLMQUtils::BuildSignHash(recSig), recSig.sig, quorum->qc.quorumPublicKey);
             verifyCount++;
         }
     }
@@ -687,7 +687,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
     for (size_t i = 0; i < quorums.size(); i++) {
         CHashWriter h(SER_NETWORK, 0);
         h << (uint8_t)llmqType;
-        h << quorums[i]->quorumHash;
+        h << quorums[i]->qc.quorumHash;
         h << selectionHash;
         scores.emplace_back(h.GetHash(), i);
     }
@@ -704,8 +704,8 @@ bool CSigningManager::VerifyRecoveredSig(Consensus::LLMQType llmqType, int signe
         return false;
     }
 
-    uint256 signHash = CLLMQUtils::BuildSignHash(llmqParams.type, quorum->quorumHash, id, msgHash);
-    return sig.VerifyInsecure(quorum->quorumPublicKey, signHash);
+    uint256 signHash = CLLMQUtils::BuildSignHash(llmqParams.type, quorum->qc.quorumHash, id, msgHash);
+    return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
 }
 
 }

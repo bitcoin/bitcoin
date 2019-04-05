@@ -463,7 +463,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(NodeId nodeId, const CSigShare
 {
     retBan = false;
 
-    if (!CLLMQUtils::IsQuorumActive(session.llmqType, session.quorum->quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(session.llmqType, session.quorum->qc.quorumHash)) {
         // quorum is too old
         return false;
     }
@@ -492,7 +492,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(NodeId nodeId, const CSigShare
             retBan = true;
             return false;
         }
-        if (!session.quorum->validMembers[quorumMember]) {
+        if (!session.quorum->qc.validMembers[quorumMember]) {
             LogPrintf("CSigSharesManager::%s -- quorumMember not valid\n", __func__);
             retBan = true;
             return false;
@@ -725,7 +725,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
 
         auto k = std::make_pair(quorum->params.type, id);
 
-        auto signHash = CLLMQUtils::BuildSignHash(quorum->params.type, quorum->quorumHash, id, msgHash);
+        auto signHash = CLLMQUtils::BuildSignHash(quorum->params.type, quorum->qc.quorumHash, id, msgHash);
         auto sigShares = this->sigShares.GetAllForSignHash(signHash);
         if (!sigShares) {
             return;
@@ -759,14 +759,14 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
 
     CRecoveredSig rs;
     rs.llmqType = quorum->params.type;
-    rs.quorumHash = quorum->quorumHash;
+    rs.quorumHash = quorum->qc.quorumHash;
     rs.id = id;
     rs.msgHash = msgHash;
     rs.sig = recoveredSig;
     rs.UpdateHash();
 
     auto signHash = CLLMQUtils::BuildSignHash(rs);
-    bool valid = rs.sig.VerifyInsecure(quorum->quorumPublicKey, signHash);
+    bool valid = rs.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
     if (!valid) {
         // this should really not happen as we have verified all signature shares before
         LogPrintf("CSigSharesManager::%s -- own recovered signature is invalid. id=%s, msgHash=%s\n", __func__,
@@ -1408,7 +1408,7 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
 
     CBLSSecretKey skShare = quorum->GetSkShare();
     if (!skShare.IsValid()) {
-        LogPrint("llmq-sigs", "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->quorumHash.ToString());
+        LogPrint("llmq-sigs", "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->qc.quorumHash.ToString());
         return;
     }
 
@@ -1420,7 +1420,7 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
 
     CSigShare sigShare;
     sigShare.llmqType = quorum->params.type;
-    sigShare.quorumHash = quorum->quorumHash;
+    sigShare.quorumHash = quorum->qc.quorumHash;
     sigShare.id = id;
     sigShare.msgHash = msgHash;
     sigShare.quorumMember = (uint16_t)memberIdx;

@@ -35,6 +35,11 @@ public:
         return t;
     }
 
+    CurTransaction& GetCurTransaction()
+    {
+        return curDBTransaction;
+    }
+
     template <typename K, typename V>
     bool Read(const K& key, V& value)
     {

@@ -104,7 +104,7 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
     // fail while we are on the brink of a new quorum
     auto quorums = quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1);
     for (auto& q : quorums) {
-        if (q->quorumHash == quorumHash) {
+        if (q->qc.quorumHash == quorumHash) {
             return true;
         }
     }

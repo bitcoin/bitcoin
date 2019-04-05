@@ -77,7 +77,14 @@ public:
     {
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        Write(ssKey, value);
+        ssKey.clear();
+    }
+
+    template <typename V>
+    void Write(const CDataStream& _ssKey, const V& value)
+    {
+        leveldb::Slice slKey(_ssKey.data(), _ssKey.size());
 
         ssValue.reserve(DBWRAPPER_PREALLOC_VALUE_SIZE);
         ssValue << value;
@@ -91,7 +98,6 @@ public:
         // - byte[]: value
         // The formula below assumes the key and value are both less than 16k.
         size_estimate += 3 + (slKey.size() > 127) + slKey.size() + (slValue.size() > 127) + slValue.size();
-        ssKey.clear();
         ssValue.clear();
     }
 
@@ -100,7 +106,12 @@ public:
     {
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        Erase(ssKey);
+        ssKey.clear();
+    }
+
+    void Erase(const CDataStream& _ssKey) {
+        leveldb::Slice slKey(_ssKey.data(), _ssKey.size());
 
         batch.Delete(slKey);
         // - byte: header
@@ -108,7 +119,6 @@ public:
         // - byte[]: key
         // The formula below assumes the key is less than 16kB.
         size_estimate += 2 + (slKey.size() > 127) + slKey.size();
-        ssKey.clear();
     }
 
     size_t SizeEstimate() const { return size_estimate; }
@@ -138,6 +148,10 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
+        Seek(ssKey);
+    }
+
+    void Seek(const CDataStream& ssKey) {
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
         piter->Seek(slKey);
     }
@@ -145,14 +159,18 @@ public:
     void Next();
 
     template<typename K> bool GetKey(K& key) {
-        leveldb::Slice slKey = piter->key();
         try {
-            CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssKey = GetKey();
             ssKey >> key;
         } catch (const std::exception&) {
             return false;
         }
         return true;
+    }
+
+    CDataStream GetKey() {
+        leveldb::Slice slKey = piter->key();
+        return CDataStream(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
     }
 
     unsigned int GetKeySize() {
@@ -231,6 +249,11 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
+        return ReadDataStream(ssKey, ssValue);
+    }
+
+    bool ReadDataStream(const CDataStream& ssKey, CDataStream& ssValue) const
+    {
         leveldb::Slice slKey(ssKey.data(), ssKey.size());
 
         std::string strValue;
@@ -250,8 +273,17 @@ public:
     template <typename K, typename V>
     bool Read(const K& key, V& value) const
     {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey << key;
+        return Read(ssKey, value);
+    }
+
+    template <typename V>
+    bool Read(const CDataStream& ssKey, V& value) const
+    {
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        if (!ReadDataStream(key, ssValue)) {
+        if (!ReadDataStream(ssKey, ssValue)) {
             return false;
         }
 
@@ -277,7 +309,12 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
         ssKey << key;
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        return Exists(ssKey);
+    }
+
+    bool Exists(const CDataStream& key) const
+    {
+        leveldb::Slice slKey(key.data(), key.size());
 
         std::string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
@@ -356,168 +393,262 @@ public:
 
 };
 
+template<typename CDBTransaction>
+class CDBTransactionIterator
+{
+private:
+    CDBTransaction& transaction;
+
+    typedef typename std::remove_pointer<decltype(transaction.parent.NewIterator())>::type ParentIterator;
+
+    // We maintain 2 iterators, one for the transaction and one for the parent
+    // At all times, only one of both provides the current value. The decision is made by comparing the current keys
+    // of both iterators, so that always the smaller key is the current one. On Next(), the previously chosen iterator
+    // is advanced.
+    typename CDBTransaction::WritesMap::iterator transactionIt;
+    std::unique_ptr<ParentIterator> parentIt;
+    CDataStream parentKey;
+    bool curIsParent{false};
+
+public:
+    CDBTransactionIterator(CDBTransaction& _transaction) :
+            transaction(_transaction),
+            parentKey(SER_DISK, CLIENT_VERSION)
+    {
+        transactionIt = transaction.writes.end();
+        parentIt = std::unique_ptr<ParentIterator>(transaction.parent.NewIterator());
+    }
+
+    void SeekToFirst() {
+        transactionIt = transaction.writes.begin();
+        parentIt->SeekToFirst();
+        SkipDeletedAndOverwritten();
+        DecideCur();
+    }
+
+    template<typename K>
+    void Seek(const K& key) {
+        Seek(CDBTransaction::KeyToDataStream(key));
+    }
+
+    void Seek(const CDataStream& ssKey) {
+        transactionIt = transaction.writes.lower_bound(ssKey);
+        parentIt->Seek(ssKey);
+        SkipDeletedAndOverwritten();
+        DecideCur();
+    }
+
+    bool Valid() {
+        return transactionIt != transaction.writes.end() || parentIt->Valid();
+    }
+
+    void Next() {
+        if (transactionIt == transaction.writes.end() && !parentIt->Valid()) {
+            return;
+        }
+        if (curIsParent) {
+            assert(parentIt->Valid());
+            parentIt->Next();
+            SkipDeletedAndOverwritten();
+        } else {
+            assert(transactionIt != transaction.writes.end());
+            ++transactionIt;
+        }
+        DecideCur();
+    }
+
+    template<typename K>
+    bool GetKey(K& key) {
+        if (!Valid()) {
+            return false;
+        }
+
+        if (curIsParent) {
+            return parentIt->GetKey(key);
+        } else {
+            try {
+                // TODO try to avoid this copy (we need a stream that allows reading from external buffers)
+                CDataStream ssKey = transactionIt->first;
+                ssKey >> key;
+            } catch (const std::exception&) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    CDataStream GetKey() {
+        if (!Valid()) {
+            return CDataStream(SER_DISK, CLIENT_VERSION);
+        }
+        if (curIsParent) {
+            return parentIt->GetKey();
+        } else {
+            return transactionIt->first;
+        }
+    }
+
+    unsigned int GetKeySize() {
+        if (!Valid()) {
+            return 0;
+        }
+        if (curIsParent) {
+            return parentIt->GetKeySize();
+        } else {
+            return transactionIt->first.vKey.size();
+        }
+    }
+
+    template<typename V>
+    bool GetValue(V& value) {
+        if (!Valid()) {
+            return false;
+        }
+        if (curIsParent) {
+            return transaction.Read(parentKey, value);
+        } else {
+            return transaction.Read(transactionIt->first, value);
+        }
+    };
+
+private:
+    void SkipDeletedAndOverwritten() {
+        while (parentIt->Valid()) {
+            parentKey = parentIt->GetKey();
+            if (!transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {
+                break;
+            }
+        }
+    }
+
+    void DecideCur() {
+        if (transactionIt != transaction.writes.end() && !parentIt->Valid()) {
+            curIsParent = false;
+        } else if (transactionIt == transaction.writes.end() && parentIt->Valid()) {
+            curIsParent = true;
+        } else if (transactionIt != transaction.writes.end() && parentIt->Valid()) {
+            if (CDBTransaction::DataStreamCmp::less(transactionIt->first, parentKey)) {
+                curIsParent = false;
+            } else {
+                curIsParent = true;
+            }
+        }
+    }
+};
+
 template<typename Parent, typename CommitTarget>
 class CDBTransaction {
+    friend class CDBTransactionIterator<CDBTransaction>;
+
 protected:
     Parent &parent;
     CommitTarget &commitTarget;
 
-    struct KeyHolder {
-        virtual ~KeyHolder() = default;
-        virtual bool Less(const KeyHolder &b) const = 0;
-        virtual void Erase(CommitTarget &commitTarget) = 0;
-    };
-    typedef std::unique_ptr<KeyHolder> KeyHolderPtr;
-
-    template <typename K>
-    struct KeyHolderImpl : KeyHolder {
-        KeyHolderImpl(const K &_key)
-                : key(_key) {
+    struct DataStreamCmp {
+        static bool less(const CDataStream& a, const CDataStream& b) {
+            return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end());
         }
-        virtual bool Less(const KeyHolder &b) const {
-            auto *b2 = dynamic_cast<const KeyHolderImpl<K>*>(&b);
-            return key < b2->key;
+        bool operator()(const CDataStream& a, const CDataStream& b) const {
+            return less(a, b);
         }
-        virtual void Erase(CommitTarget &commitTarget) {
-            commitTarget.Erase(key);
-        }
-        K key;
     };
 
-    struct KeyValueHolder {
-        virtual ~KeyValueHolder() = default;
-        virtual void Write(CommitTarget &parent) = 0;
+    struct ValueHolder {
+        virtual ~ValueHolder() = default;
+        virtual void Write(const CDataStream& ssKey, CommitTarget &parent) = 0;
     };
-    typedef std::unique_ptr<KeyValueHolder> KeyValueHolderPtr;
+    typedef std::unique_ptr<ValueHolder> ValueHolderPtr;
 
-    template <typename K, typename V>
-    struct KeyValueHolderImpl : KeyValueHolder {
-        KeyValueHolderImpl(const KeyHolderImpl<K> &_key, const V &_value)
-                : key(_key),
-                  value(_value) { }
-        KeyValueHolderImpl(const KeyHolderImpl<K> &_key, V &&_value)
-                : key(_key),
-                  value(std::forward<V>(_value)) { }
-        virtual void Write(CommitTarget &commitTarget) {
+    template <typename V>
+    struct ValueHolderImpl : ValueHolder {
+        ValueHolderImpl(const V &_value) : value(_value) { }
+
+        virtual void Write(const CDataStream& ssKey, CommitTarget &commitTarget) {
             // we're moving the value instead of copying it. This means that Write() can only be called once per
-            // KeyValueHolderImpl instance. Commit() clears the write maps, so this ok.
-            commitTarget.Write(key.key, std::move(value));
+            // ValueHolderImpl instance. Commit() clears the write maps, so this ok.
+            commitTarget.Write(ssKey, std::move(value));
         }
-        const KeyHolderImpl<K> &key;
         V value;
     };
 
-    struct keyCmp {
-        bool operator()(const KeyHolderPtr &a, const KeyHolderPtr &b) const {
-            return a->Less(*b);
-        }
-    };
-
-    typedef std::map<KeyHolderPtr, KeyValueHolderPtr, keyCmp> KeyValueMap;
-    typedef std::map<std::type_index, KeyValueMap> TypeKeyValueMap;
-
-    TypeKeyValueMap writes;
-    TypeKeyValueMap deletes;
-
-    template <typename K>
-    KeyValueMap *getMapForType(TypeKeyValueMap &m, bool create) {
-        auto it = m.find(typeid(K));
-        if (it != m.end()) {
-            return &it->second;
-        }
-        if (!create)
-            return nullptr;
-        auto it2 = m.emplace(typeid(K), KeyValueMap());
-        return &it2.first->second;
+    template<typename K>
+    static CDataStream KeyToDataStream(const K& key) {
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
+        ssKey << key;
+        return ssKey;
     }
 
-    template <typename K>
-    KeyValueMap *getWritesMap(bool create) {
-        return getMapForType<K>(writes, create);
-    }
+    typedef std::map<CDataStream, ValueHolderPtr, DataStreamCmp> WritesMap;
+    typedef std::set<CDataStream, DataStreamCmp> DeletesSet;
 
-    template <typename K>
-    KeyValueMap *getDeletesMap(bool create) {
-        return getMapForType<K>(deletes, create);
-    }
-
-    template <typename K, typename KV>
-    void writeImpl(KeyHolderImpl<K>* k, KV&& kv) {
-        auto k2 = KeyHolderPtr(k);
-
-        KeyValueMap *ds = getDeletesMap<K>(false);
-        if (ds)
-            ds->erase(k2);
-
-        KeyValueMap *ws = getWritesMap<K>(true);
-        ws->erase(k2);
-        ws->emplace(std::make_pair(std::move(k2), std::forward<KV>(kv)));
-    }
+    WritesMap writes;
+    DeletesSet deletes;
 
 public:
     CDBTransaction(Parent &_parent, CommitTarget &_commitTarget) : parent(_parent), commitTarget(_commitTarget) {}
 
     template <typename K, typename V>
     void Write(const K& key, const V& v) {
-        auto k = new KeyHolderImpl<K>(key);
-        auto kv = std::make_unique<KeyValueHolderImpl<K, V>>(*k, v);
-        writeImpl(k, std::move(kv));
+        Write(KeyToDataStream(key), v);
     }
 
-    template <typename K, typename V>
-    void Write(const K& key, V&& v) {
-        auto k = new KeyHolderImpl<K>(key);
-        auto kv = std::make_unique<KeyValueHolderImpl<K, typename std::remove_reference<V>::type>>(*k, std::forward<V>(v));
-        writeImpl(k, std::move(kv));
+    template <typename V>
+    void Write(const CDataStream& ssKey, const V& v) {
+        deletes.erase(ssKey);
+        auto it = writes.emplace(ssKey, nullptr).first;
+        it->second = std::make_unique<ValueHolderImpl<V>>(v);
     }
 
     template <typename K, typename V>
     bool Read(const K& key, V& value) {
-        KeyHolderPtr k(new KeyHolderImpl<K>(key));
+        return Read(KeyToDataStream(key), value);
+    }
 
-        KeyValueMap *ds = getDeletesMap<K>(false);
-        if (ds && ds->count(k))
+    template <typename V>
+    bool Read(const CDataStream& ssKey, V& value) {
+        if (deletes.count(ssKey)) {
             return false;
-
-        KeyValueMap *ws = getWritesMap<K>(false);
-        if (ws) {
-            auto it = ws->find(k);
-            if (it != ws->end()) {
-                auto *impl = dynamic_cast<KeyValueHolderImpl<K, V> *>(it->second.get());
-                if (!impl)
-                    return false;
-                value = impl->value;
-                return true;
-            }
         }
 
-        return parent.Read(key, value);
+        auto it = writes.find(ssKey);
+        if (it != writes.end()) {
+            auto *impl = dynamic_cast<ValueHolderImpl<V> *>(it->second.get());
+            if (!impl) {
+                throw std::runtime_error("Read called with V != previously written type");
+            }
+            value = impl->value;
+            return true;
+        }
+
+        return parent.Read(ssKey, value);
     }
 
     template <typename K>
     bool Exists(const K& key) {
-        KeyHolderPtr k(new KeyHolderImpl<K>(key));
+        return Exists(KeyToDataStream(key));
+    }
 
-        KeyValueMap *ds = getDeletesMap<K>(false);
-        if (ds && ds->count(k))
+    bool Exists(const CDataStream& ssKey) {
+        if (deletes.count(ssKey)) {
             return false;
+        }
 
-        KeyValueMap *ws = getWritesMap<K>(false);
-        if (ws && ws->count(k))
+        if (writes.count(ssKey)) {
             return true;
+        }
 
-        return parent.Exists(key);
+        return parent.Exists(ssKey);
     }
 
     template <typename K>
     void Erase(const K& key) {
-        KeyHolderPtr k(new KeyHolderImpl<K>(key));
+        return Erase(KeyToDataStream(key));
+    }
 
-        KeyValueMap *ws = getWritesMap<K>(false);
-        if (ws)
-            ws->erase(k);
-        KeyValueMap *ds = getDeletesMap<K>(true);
-        ds->emplace(std::move(k), nullptr);
+    void Erase(const CDataStream& ssKey) {
+        writes.erase(ssKey);
+        deletes.emplace(ssKey);
     }
 
     void Clear() {
@@ -526,21 +657,24 @@ public:
     }
 
     void Commit() {
-        for (auto &p : deletes) {
-            for (auto &p2 : p.second) {
-                p2.first->Erase(commitTarget);
-            }
+        for (const auto &k : deletes) {
+            commitTarget.Erase(k);
         }
         for (auto &p : writes) {
-            for (auto &p2 : p.second) {
-                p2.second->Write(commitTarget);
-            }
+            p.second->Write(p.first, commitTarget);
         }
         Clear();
     }
 
     bool IsClean() {
         return writes.empty() && deletes.empty();
+    }
+
+    CDBTransactionIterator<CDBTransaction>* NewIterator() {
+        return new CDBTransactionIterator<CDBTransaction>(*this);
+    }
+    std::unique_ptr<CDBTransactionIterator<CDBTransaction>> NewIteratorUniquePtr() {
+        return std::make_unique<CDBTransactionIterator<CDBTransaction>>(*this);
     }
 };
 
