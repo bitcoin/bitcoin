@@ -490,57 +490,6 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
            }
       }
 
-      // test randomness
-      {
-          empty_wallet();
-          for (int i2 = 0; i2 < 100; i2++)
-              add_coin(COIN);
-
-          // Again, we only create the wallet once to save time, but we still run the coin selection RUN_TESTS times.
-          for (int i = 0; i < RUN_TESTS; i++) {
-            // picking 50 from 100 coins doesn't depend on the shuffle,
-            // but does depend on randomness in the stochastic approximation code
-            BOOST_CHECK(testWallet.SelectCoinsMinConf(50 * COIN, filter_standard, GroupCoins(vCoins), setCoinsRet , nValueRet, coin_selection_params, bnb_used));
-            BOOST_CHECK(testWallet.SelectCoinsMinConf(50 * COIN, filter_standard, GroupCoins(vCoins), setCoinsRet2, nValueRet, coin_selection_params, bnb_used));
-            BOOST_CHECK(!equal_sets(setCoinsRet, setCoinsRet2));
-
-            int fails = 0;
-            for (int j = 0; j < RANDOM_REPEATS; j++)
-            {
-                // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
-                // run the test RANDOM_REPEATS times and only complain if all of them fail
-                BOOST_CHECK(testWallet.SelectCoinsMinConf(COIN, filter_standard, GroupCoins(vCoins), setCoinsRet , nValueRet, coin_selection_params, bnb_used));
-                BOOST_CHECK(testWallet.SelectCoinsMinConf(COIN, filter_standard, GroupCoins(vCoins), setCoinsRet2, nValueRet, coin_selection_params, bnb_used));
-                if (equal_sets(setCoinsRet, setCoinsRet2))
-                    fails++;
-            }
-            BOOST_CHECK_NE(fails, RANDOM_REPEATS);
-          }
-
-          // add 75 cents in small change.  not enough to make 90 cents,
-          // then try making 90 cents.  there are multiple competing "smallest bigger" coins,
-          // one of which should be picked at random
-          add_coin(5 * CENT);
-          add_coin(10 * CENT);
-          add_coin(15 * CENT);
-          add_coin(20 * CENT);
-          add_coin(25 * CENT);
-
-          for (int i = 0; i < RUN_TESTS; i++) {
-            int fails = 0;
-            for (int j = 0; j < RANDOM_REPEATS; j++)
-            {
-                // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
-                // run the test RANDOM_REPEATS times and only complain if all of them fail
-                BOOST_CHECK(testWallet.SelectCoinsMinConf(90*CENT, filter_standard, GroupCoins(vCoins), setCoinsRet , nValueRet, coin_selection_params, bnb_used));
-                BOOST_CHECK(testWallet.SelectCoinsMinConf(90*CENT, filter_standard, GroupCoins(vCoins), setCoinsRet2, nValueRet, coin_selection_params, bnb_used));
-                if (equal_sets(setCoinsRet, setCoinsRet2))
-                    fails++;
-            }
-            BOOST_CHECK_NE(fails, RANDOM_REPEATS);
-          }
-      }
-
     empty_wallet();
 }
 

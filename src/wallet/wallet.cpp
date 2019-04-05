@@ -2524,12 +2524,10 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
 
     // form groups from remaining coins; note that preset coins will not
     // automatically have their associated (same address) coins included
-    if (coin_control.m_avoid_partial_spends && vCoins.size() > OUTPUT_GROUP_MAX_ENTRIES) {
-        // Cases where we have 11+ outputs all pointing to the same destination may result in
-        // privacy leaks as they will potentially be deterministically sorted. We solve that by
-        // explicitly shuffling the outputs before processing
-        Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
-    }
+    // Cases where groups have the amount amount may result in
+    // privacy leaks as they will potentially be deterministically sorted. We solve that by
+    // explicitly shuffling the outputs before processing
+    Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
     std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends);
 
     size_t max_ancestors = (size_t)std::max<int64_t>(1, gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT));
