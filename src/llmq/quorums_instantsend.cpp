@@ -63,6 +63,13 @@ void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstant
 
 void CInstantSendDb::RemoveInstantSendLock(const uint256& hash, CInstantSendLockPtr islock)
 {
+    CDBBatch batch(db);
+    RemoveInstantSendLock(batch, hash, islock);
+    db.WriteBatch(batch);
+}
+
+void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash, CInstantSendLockPtr islock)
+{
     if (!islock) {
         islock = GetInstantSendLockByHash(hash);
         if (!islock) {
@@ -70,13 +77,11 @@ void CInstantSendDb::RemoveInstantSendLock(const uint256& hash, CInstantSendLock
         }
     }
 
-    CDBBatch batch(db);
     batch.Erase(std::make_tuple(std::string("is_i"), hash));
     batch.Erase(std::make_tuple(std::string("is_tx"), islock->txid));
     for (auto& in : islock->inputs) {
         batch.Erase(std::make_tuple(std::string("is_in"), in));
     }
-    db.WriteBatch(batch);
 
     islockCache.erase(hash);
     txidCache.erase(islock->txid);
@@ -93,6 +98,43 @@ void CInstantSendDb::WriteInstantSendLockMined(const uint256& hash, int nHeight)
 void CInstantSendDb::RemoveInstantSendLockMined(const uint256& hash, int nHeight)
 {
     db.Erase(std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nHeight, hash));
+}
+
+std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
+{
+    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+
+    auto firstKey = std::make_tuple(std::string("is_m"), std::numeric_limits<int>::max() - nUntilHeight, uint256());
+
+    it->Seek(firstKey);
+
+    CDBBatch deleteBatch(db);
+    std::unordered_map<uint256, CInstantSendLockPtr> ret;
+    while (it->Valid()) {
+        decltype(firstKey) curKey;
+        if (!it->GetKey(curKey) || std::get<0>(curKey) != "is_m") {
+            break;
+        }
+        int nHeight = std::numeric_limits<int>::max() - std::get<1>(curKey);
+        if (nHeight > nUntilHeight) {
+            break;
+        }
+
+        auto& islockHash = std::get<2>(curKey);
+        auto islock = GetInstantSendLockByHash(islockHash);
+        if (islock) {
+            RemoveInstantSendLock(deleteBatch, islockHash, islock);
+            ret.emplace(islockHash, islock);
+        }
+
+        deleteBatch.Erase(curKey);
+
+        it->Next();
+    }
+
+    db.WriteBatch(deleteBatch);
+
+    return ret;
 }
 
 CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash)
