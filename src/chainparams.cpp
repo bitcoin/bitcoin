@@ -146,7 +146,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
         consensus.vchSYSXContract = ParseHex("6ac0ed9ff284d641863b9b4787d6f4bb7ca3ba6f");
-        consensus.vchSYSXBurnMethodSignature = ParseHex("fefefefe");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -270,7 +270,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.vchSYSXContract = ParseHex("af8db39f4d10699229257149ea971c98102047bc");
-        consensus.vchSYSXBurnMethodSignature = ParseHex("fefefefe");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
 
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
@@ -369,7 +369,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
         consensus.vchSYSXContract = ParseHex("af8db39f4d10699229257149ea971c98102047bc");
-        consensus.vchSYSXBurnMethodSignature = ParseHex("fefefefe");
+        consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;

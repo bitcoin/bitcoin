@@ -1470,10 +1470,8 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
 			return error(errorMessage.c_str());
 		}
-                 
-		if (!theAsset.vchBurnMethodSignature.empty() && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_TRANSFER)
-			storedSenderAssetRef.vchBurnMethodSignature = theAsset.vchBurnMethodSignature;				
-		else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
+                 			
+		if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
 		{
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract burn method signature");
 			return error(errorMessage.c_str());
@@ -1526,13 +1524,12 @@ UniValue assetnew(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
-    if (request.fHelp || params.size() != 9)
+    if (request.fHelp || params.size() != 8)
         throw runtime_error(
-			"assetnew [address] [public value] [contract] [burn_method_signature] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
+			"assetnew [address] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
 						"<address> An address that you own.\n"
                         "<public value> public data, 256 characters max.\n"
                         "<contract> Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge.\n" 
-                        "<burn_method_signature> Ethereum token contract method signature for the burn function.  Use an ABI tool in Ethereum to find this, it mst be set so that the validation code knows the burn function was called to mint assets in Syscoin from Ethereum. Must be in hex and is 4 bytes (8 characters). ie: 'fefefefe'. Leave empty for no smart contract bridge.\n"  
 						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
 						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
 						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
@@ -1542,20 +1539,17 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	string vchAddress = params[0].get_str();
 	vector<unsigned char> vchPubData = vchFromString(params[1].get_str());
     string strContract = params[2].get_str();
-    string strMethodSig = params[3].get_str();
     if(!strContract.empty())
          boost::erase_all(strContract, "0x");  // strip 0x in hex str if exist
-    if(!strMethodSig.empty())
-         boost::erase_all(strMethodSig, "0x");  // strip 0x in hex str if exist
    
-	int precision = params[4].get_int();
+	int precision = params[3].get_int();
 	string vchWitness;
-	UniValue param4 = params[5];
-	UniValue param5 = params[6];
+	UniValue param4 = params[4];
+	UniValue param5 = params[5];
 	CAmount nBalance = AssetAmountFromValue(param4, precision);
 	CAmount nMaxSupply = AssetAmountFromValue(param5, precision);
-	int nUpdateFlags = params[7].get_int();
-	vchWitness = params[8].get_str();
+	int nUpdateFlags = params[6].get_int();
+	vchWitness = params[7].get_str();
 
 	string strAddressFrom;
 	string strAddress = vchAddress;
@@ -1574,7 +1568,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	newAsset.nAsset = GenerateSyscoinGuid();
 	newAsset.vchPubData = vchPubData;
     newAsset.vchContract = ParseHex(strContract);
-    newAsset.vchBurnMethodSignature = ParseHex(strMethodSig);
 	newAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
 	newAsset.nBalance = nBalance;
 	newAsset.nMaxSupply = nMaxSupply;
@@ -1616,14 +1609,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
-    if (request.fHelp || params.size() != 7)
+    if (request.fHelp || params.size() != 6)
         throw runtime_error(
-			"assetupdate [asset] [public value] [contract] [burn_method_signature] [supply] [update_flags] [witness]\n"
+			"assetupdate [asset] [public value] [contract] [supply] [update_flags] [witness]\n"
 				"Perform an update on an asset you control.\n"
 				"<asset> Asset guid.\n"
                 "<public value> Public data, 256 characters max.\n"
-                "<contract> Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n" 
-                "<burn_method_signature> Ethereum token contract method signature for the burn function.  Use an ABI tool in Ethereum to find this, it mst be set so that the validation code knows the burn function was called to mint assets in Syscoin from Ethereum. Must be in hex and is 4 bytes (8 characters). ie: 'fefefefe'. Leave empty for no smart contract bridge.\n"             
+                "<contract> Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n"             
 				"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
                 "<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
                 "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
@@ -1634,15 +1626,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	string strCategory = "";
 	strPubData = params[1].get_str();
     string strContract = params[2].get_str();
-    string strMethodSig = params[3].get_str();
     if(!strContract.empty())
         boost::erase_all(strContract, "0x");  // strip 0x if exist
     vector<unsigned char> vchContract = ParseHex(strContract);
-    vector<unsigned char> vchBurnMethodSignature = ParseHex(strMethodSig);
 
-	int nUpdateFlags = params[5].get_int();
+	int nUpdateFlags = params[4].get_int();
 	string vchWitness;
-	vchWitness = params[6].get_str();
+	vchWitness = params[5].get_str();
     
 	CAsset theAsset;
 
@@ -1653,10 +1643,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     theAsset.ClearAsset();
     theAsset.witnessAddress = copyWitness;
     
-	UniValue param4 = params[4];
+	UniValue param3 = params[3];
 	CAmount nBalance = 0;
-	if(param4.get_str() != "0")
-		nBalance = AssetAmountFromValue(param4, theAsset.nPrecision);
+	if(param3.get_str() != "0")
+		nBalance = AssetAmountFromValue(param3, theAsset.nPrecision);
 	
 	if(strPubData != stringFromVch(theAsset.vchPubData))
 		theAsset.vchPubData = vchFromString(strPubData);
@@ -1666,10 +1656,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract = vchContract;
     else
         theAsset.vchContract.clear();
-    if(vchBurnMethodSignature != theAsset.vchBurnMethodSignature)
-        theAsset.vchBurnMethodSignature = vchBurnMethodSignature;
-    else
-        theAsset.vchBurnMethodSignature.clear();
 
 	theAsset.nBalance = nBalance;
 	theAsset.nUpdateFlags = nUpdateFlags;
@@ -1868,7 +1854,6 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 	oAsset.pushKV("publicvalue", stringFromVch(asset.vchPubData));
 	oAsset.pushKV("address", asset.witnessAddress.ToString());
     oAsset.pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
-    oAsset.pushKV("burnsig", asset.vchBurnMethodSignature.empty()? "" : HexStr(asset.vchBurnMethodSignature));
 	oAsset.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
 	oAsset.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
 	oAsset.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
@@ -1904,9 +1889,6 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
         
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchBurnMethodSignature.empty() && dbAsset.vchBurnMethodSignature != asset.vchBurnMethodSignature))
-        entry.pushKV("burnsig", HexStr(asset.vchBurnMethodSignature));                  
-        
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
 		entry.pushKV("address", asset.witnessAddress.ToString());
 
@@ -1937,9 +1919,6 @@ bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHe
         
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE|| (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
-        
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchBurnMethodSignature.empty() && dbAsset.vchBurnMethodSignature != asset.vchBurnMethodSignature))
-        entry.pushKV("burnsig", HexStr(asset.vchBurnMethodSignature));                  
         
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
         entry.pushKV("address", asset.witnessAddress.ToString());

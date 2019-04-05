@@ -124,16 +124,13 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     result |= static_cast<uint64_t>(vchInputData[29]) << 48;
     result |= static_cast<uint64_t>(vchInputData[28]) << 56;
     outputAmount = (CAmount)result;
-
-    // get the second parameter and convert to uint32_t and assign to output var
-    // commented out for now since it's unused but I wanted it  here for clarity
-    // and potential afuture enhancements
+    
     // convert the vch into a uin32_t (nAsset)
-    // should be in position 40 walking backwards
-    nAsset = static_cast<uint32_t>(vchInputData[39]);
-    nAsset |= static_cast<uint32_t>(vchInputData[38]) << 8;
-    nAsset |= static_cast<uint32_t>(vchInputData[37]) << 16;
-    nAsset |= static_cast<uint32_t>(vchInputData[36]) << 24;
+    // should be in position 68 walking backwards
+    nAsset = static_cast<uint32_t>(vchInputData[67]);
+    nAsset |= static_cast<uint32_t>(vchInputData[66]) << 8;
+    nAsset |= static_cast<uint32_t>(vchInputData[65]) << 16;
+    nAsset |= static_cast<uint32_t>(vchInputData[64]) << 24;
     
     // skip data position field (68 + 32) + 31 (offset to the varint _byte)
     int dataPos = 131;

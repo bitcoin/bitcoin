@@ -97,7 +97,6 @@ public:
 	uint32_t nAsset;
 	CWitnessAddress witnessAddress;
 	std::vector<unsigned char> vchContract;
-    std::vector<unsigned char> vchBurnMethodSignature;
     uint256 txHash;
     unsigned int nHeight;
 	std::vector<unsigned char> vchPubData;
@@ -123,8 +122,6 @@ public:
 	{
 		vchPubData.clear();
 		vchContract.clear();
-        vchBurnMethodSignature.clear();
-        witnessAddress.SetNull();
         txHash.SetNull();
 
 	}
@@ -141,8 +138,7 @@ public:
         READWRITE(nHeight);
 		READWRITE(nUpdateFlags);
 		READWRITE(nPrecision);
-		READWRITE(vchContract); 
-        READWRITE(vchBurnMethodSignature);     
+		READWRITE(vchContract);    
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (

@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 	string newaddress = GetNewFundedAddress("node1");
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
     string newaddressreceiver = r.get_str();
-	string guid = AssetNew("node1", newaddress, "data", "''", "''", "8", "10000", "1000000");
+	string guid = AssetNew("node1", newaddress, "data", "''", "8", "10000", "1000000");
 
 	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddressreceiver + "\\\",\\\"amount\\\":5000}]\"");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddressreceiver ));
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
     string newaddress2 = r.get_str();
         
-	string guid = AssetNew("node1", newaddress1, "data","''", "''", "8", "1", "100000");
+	string guid = AssetNew("node1", newaddress1, "data","''", "8", "1", "100000");
 
 	AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":1}]\"");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));

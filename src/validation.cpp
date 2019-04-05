@@ -638,11 +638,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
     uint32_t nAsset = 0;
     const std::vector<unsigned char> &rlpBytes = rlpValue[5].data().toBytes();
     CWitnessAddress witnessAddress;
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT && !parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, outputAmount, nAsset, witnessAddress)){
-        errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not parse and validate transaction data");
-        return state.DoS(100, false, REJECT_INVALID, errorMessage);
-    }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !parseEthMethodInputData(dbAsset.vchBurnMethodSignature, rlpBytes, outputAmount, nAsset, witnessAddress)){
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, outputAmount, nAsset, witnessAddress)){
         errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not parse and validate transaction data");
         return state.DoS(100, false, REJECT_INVALID, errorMessage);
     }
