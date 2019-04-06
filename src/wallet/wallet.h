@@ -1175,6 +1175,9 @@ public:
         LogPrintf(("%s " + fmt).c_str(), GetDisplayName(), parameters...);
     };
 
+    /** Upgrade the wallet */
+    static bool UpgradeWallet(std::shared_ptr<CWallet> wallet, bool first_run, std::string& error, std::vector<std::string>& warnings);
+
     //! Returns all unique ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
     std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
 
