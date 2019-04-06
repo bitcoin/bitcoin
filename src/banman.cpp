@@ -107,7 +107,7 @@ bool BanMan::IsBanned(CSubNet sub_net)
 {
     auto current_time = GetTime();
     LOCK(m_cs_banned);
-    banmap_t::iterator i = m_banned.find(sub_net);
+    auto i = m_banned.find(sub_net);
     if (i != m_banned.end()) {
         CBanEntry ban_entry = (*i).second;
         if (current_time < ban_entry.nBanUntil) {
@@ -188,7 +188,7 @@ void BanMan::SweepBanned()
     bool notify_ui = false;
     {
         LOCK(m_cs_banned);
-        banmap_t::iterator it = m_banned.begin();
+        auto it = m_banned.begin();
         while (it != m_banned.end()) {
             CSubNet sub_net = (*it).first;
             CBanEntry ban_entry = (*it).second;

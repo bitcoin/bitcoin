@@ -110,7 +110,7 @@ template<typename name>
 static void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     BOOST_CHECK_EQUAL(pool.size(), sortedOrder.size());
-    typename CTxMemPool::indexed_transaction_set::index<name>::type::iterator it = pool.mapTx.get<name>().begin();
+    auto it = pool.mapTx.get<name>().begin();
     int count=0;
     for (; it != pool.mapTx.get<name>().end(); ++it, ++count) {
         BOOST_CHECK_EQUAL(it->GetTx().GetHash().ToString(), sortedOrder[count]);

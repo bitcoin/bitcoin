@@ -794,7 +794,7 @@ void Unserialize(Stream& is, std::map<K, T, Pred, A>& m)
 {
     m.clear();
     unsigned int nSize = ReadCompactSize(is);
-    typename std::map<K, T, Pred, A>::iterator mi = m.begin();
+    auto mi = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
     {
         std::pair<K, T> item;
@@ -821,7 +821,7 @@ void Unserialize(Stream& is, std::set<K, Pred, A>& m)
 {
     m.clear();
     unsigned int nSize = ReadCompactSize(is);
-    typename std::set<K, Pred, A>::iterator it = m.begin();
+    auto it = m.begin();
     for (unsigned int i = 0; i < nSize; i++)
     {
         K key;

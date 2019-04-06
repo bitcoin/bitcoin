@@ -105,7 +105,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
     batch.Erase(DB_BEST_BLOCK);
     batch.Write(DB_HEAD_BLOCKS, std::vector<uint256>{hashBlock, old_tip});
 
-    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
+    for (auto it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
             CoinEntry entry(&it->first);
             if (it->second.coin.IsSpent())
@@ -115,7 +115,7 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
             changed++;
         }
         count++;
-        CCoinsMap::iterator itOld = it++;
+        auto itOld = it++;
         mapCoins.erase(itOld);
         if (batch.SizeEstimate() > batch_size) {
             LogPrint(BCLog::COINDB, "Writing partial batch of %.2f MiB\n", batch.SizeEstimate() * (1.0 / 1048576.0));

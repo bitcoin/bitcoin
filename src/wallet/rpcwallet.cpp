@@ -1494,9 +1494,9 @@ UniValue listtransactions(const JSONRPCRequest& request)
 
     std::vector<UniValue> arrTmp = ret.getValues();
 
-    std::vector<UniValue>::iterator first = arrTmp.begin();
+    auto first = arrTmp.begin();
     std::advance(first, nFrom);
-    std::vector<UniValue>::iterator last = arrTmp.begin();
+    auto last = arrTmp.begin();
     std::advance(last, nFrom+nCount);
 
     if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
@@ -3636,7 +3636,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     // so the API remains stable if we allow multiple labels to be associated with
     // an address.
     UniValue labels(UniValue::VARR);
-    std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
+    auto mi = pwallet->mapAddressBook.find(dest);
     if (mi != pwallet->mapAddressBook.end()) {
         labels.push_back(AddressBookDataToJSON(mi->second, true));
     }

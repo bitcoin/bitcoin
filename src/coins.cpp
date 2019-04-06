@@ -39,13 +39,13 @@ size_t CCoinsViewCache::DynamicMemoryUsage() const {
 }
 
 CCoinsMap::iterator CCoinsViewCache::FetchCoin(const COutPoint &outpoint) const {
-    CCoinsMap::iterator it = cacheCoins.find(outpoint);
+    auto it = cacheCoins.find(outpoint);
     if (it != cacheCoins.end())
         return it;
     Coin tmp;
     if (!base->GetCoin(outpoint, tmp))
         return cacheCoins.end();
-    CCoinsMap::iterator ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
+    auto ret = cacheCoins.emplace(std::piecewise_construct, std::forward_as_tuple(outpoint), std::forward_as_tuple(std::move(tmp))).first;
     if (ret->second.coin.IsSpent()) {
         // The parent only has an empty entry for this outpoint; we can consider our
         // version as fresh.
@@ -97,7 +97,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
 }
 
 bool CCoinsViewCache::SpendCoin(const COutPoint &outpoint, Coin* moveout) {
-    CCoinsMap::iterator it = FetchCoin(outpoint);
+    auto it = FetchCoin(outpoint);
     if (it == cacheCoins.end()) return false;
     cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
     if (moveout) {
@@ -144,12 +144,12 @@ void CCoinsViewCache::SetBestBlock(const uint256 &hashBlockIn) {
 }
 
 bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) {
-    for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); it = mapCoins.erase(it)) {
+    for (auto it = mapCoins.begin(); it != mapCoins.end(); it = mapCoins.erase(it)) {
         // Ignore non-dirty entries (optimization).
         if (!(it->second.flags & CCoinsCacheEntry::DIRTY)) {
             continue;
         }
-        CCoinsMap::iterator itUs = cacheCoins.find(it->first);
+        auto itUs = cacheCoins.find(it->first);
         if (itUs == cacheCoins.end()) {
             // The parent cache does not have an entry, while the child does
             // We can ignore it if it's both FRESH and pruned in the child
@@ -210,7 +210,7 @@ bool CCoinsViewCache::Flush() {
 
 void CCoinsViewCache::Uncache(const COutPoint& hash)
 {
-    CCoinsMap::iterator it = cacheCoins.find(hash);
+    auto it = cacheCoins.find(hash);
     if (it != cacheCoins.end() && it->second.flags == 0) {
         cachedCoinsUsage -= it->second.coin.DynamicMemoryUsage();
         cacheCoins.erase(it);

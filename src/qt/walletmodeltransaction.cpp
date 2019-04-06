@@ -46,7 +46,7 @@ void WalletModelTransaction::reassignAmounts(int nChangePosRet)
 {
     const CTransaction* walletTransaction = &wtx->get();
     int i = 0;
-    for (QList<SendCoinsRecipient>::iterator it = recipients.begin(); it != recipients.end(); ++it)
+    for (auto it = recipients.begin(); it != recipients.end(); ++it)
     {
         SendCoinsRecipient& rcp = (*it);
 

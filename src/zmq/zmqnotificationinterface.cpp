@@ -23,7 +23,7 @@ CZMQNotificationInterface::~CZMQNotificationInterface()
 {
     Shutdown();
 
-    for (std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin(); i!=notifiers.end(); ++i)
+    for (auto i = notifiers.begin(); i != notifiers.end(); ++i)
     {
         delete *i;
     }
@@ -97,7 +97,7 @@ bool CZMQNotificationInterface::Initialize()
         return false;
     }
 
-    std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin();
+    auto i = notifiers.begin();
     for (; i!=notifiers.end(); ++i)
     {
         CZMQAbstractNotifier *notifier = *i;
@@ -126,7 +126,7 @@ void CZMQNotificationInterface::Shutdown()
     LogPrint(BCLog::ZMQ, "zmq: Shutdown notification interface\n");
     if (pcontext)
     {
-        for (std::list<CZMQAbstractNotifier*>::iterator i=notifiers.begin(); i!=notifiers.end(); ++i)
+        for (auto i = notifiers.begin(); i != notifiers.end(); ++i)
         {
             CZMQAbstractNotifier *notifier = *i;
             LogPrint(BCLog::ZMQ, "zmq: Shutdown notifier %s at %s\n", notifier->GetType(), notifier->GetAddress());
@@ -143,7 +143,7 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
     if (fInitialDownload || pindexNew == pindexFork) // In IBD or blocks were disconnected without any new ones
         return;
 
-    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
+    for (auto i = notifiers.begin(); i != notifiers.end(); )
     {
         CZMQAbstractNotifier *notifier = *i;
         if (notifier->NotifyBlock(pindexNew))
@@ -164,7 +164,7 @@ void CZMQNotificationInterface::TransactionAddedToMempool(const CTransactionRef&
     // all the same external callback.
     const CTransaction& tx = *ptx;
 
-    for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
+    for (auto i = notifiers.begin(); i != notifiers.end(); )
     {
         CZMQAbstractNotifier *notifier = *i;
         if (notifier->NotifyTransaction(tx))

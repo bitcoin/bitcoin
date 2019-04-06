@@ -304,7 +304,7 @@ void CRollingBloomFilter::reset()
     nTweak = GetRand(std::numeric_limits<unsigned int>::max());
     nEntriesThisGeneration = 0;
     nGeneration = 1;
-    for (std::vector<uint64_t>::iterator it = data.begin(); it != data.end(); it++) {
+    for (auto it = data.begin(); it != data.end(); it++) {
         *it = 0;
     }
 }

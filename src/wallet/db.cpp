@@ -780,7 +780,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
         return;
     {
         LOCK(cs_db);
-        std::map<std::string, int>::iterator mi = mapFileUseCount.begin();
+        auto mi = mapFileUseCount.begin();
         while (mi != mapFileUseCount.end()) {
             std::string strFile = (*mi).first;
             int nRefCount = (*mi).second;
@@ -825,7 +825,7 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
     {
         // Don't do this if any databases are in use
         int nRefCount = 0;
-        std::map<std::string, int>::iterator mit = env->mapFileUseCount.begin();
+        auto mit = env->mapFileUseCount.begin();
         while (mit != env->mapFileUseCount.end())
         {
             nRefCount += (*mit).second;
@@ -835,7 +835,7 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
         if (nRefCount == 0)
         {
             boost::this_thread::interruption_point();
-            std::map<std::string, int>::iterator mi = env->mapFileUseCount.find(strFile);
+            auto mi = env->mapFileUseCount.find(strFile);
             if (mi != env->mapFileUseCount.end())
             {
                 LogPrint(BCLog::DB, "Flushing %s\n", strFile);

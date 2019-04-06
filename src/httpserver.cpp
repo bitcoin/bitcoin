@@ -318,7 +318,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
     }
 
     // Bind addresses
-    for (std::vector<std::pair<std::string, uint16_t> >::iterator i = endpoints.begin(); i != endpoints.end(); ++i) {
+    for (auto i = endpoints.begin(); i != endpoints.end(); ++i) {
         LogPrint(BCLog::HTTP, "Binding RPC on address %s port %i\n", i->first, i->second);
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
@@ -644,8 +644,8 @@ void RegisterHTTPHandler(const std::string &prefix, bool exactMatch, const HTTPR
 
 void UnregisterHTTPHandler(const std::string &prefix, bool exactMatch)
 {
-    std::vector<HTTPPathHandler>::iterator i = pathHandlers.begin();
-    std::vector<HTTPPathHandler>::iterator iend = pathHandlers.end();
+    auto i = pathHandlers.begin();
+    auto iend = pathHandlers.end();
     for (; i != iend; ++i)
         if (i->prefix == prefix && i->exactMatch == exactMatch)
             break;

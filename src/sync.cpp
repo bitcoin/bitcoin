@@ -185,13 +185,13 @@ void DeleteLock(void* cs)
     }
     std::lock_guard<std::mutex> lock(lockdata.dd_mutex);
     std::pair<void*, void*> item = std::make_pair(cs, nullptr);
-    LockOrders::iterator it = lockdata.lockorders.lower_bound(item);
+    auto it = lockdata.lockorders.lower_bound(item);
     while (it != lockdata.lockorders.end() && it->first.first == cs) {
         std::pair<void*, void*> invitem = std::make_pair(it->first.second, it->first.first);
         lockdata.invlockorders.erase(invitem);
         lockdata.lockorders.erase(it++);
     }
-    InvLockOrders::iterator invit = lockdata.invlockorders.lower_bound(item);
+    auto invit = lockdata.invlockorders.lower_bound(item);
     while (invit != lockdata.invlockorders.end() && invit->first == cs) {
         std::pair<void*, void*> invinvitem = std::make_pair(invit->second, invit->first);
         lockdata.lockorders.erase(invinvitem);

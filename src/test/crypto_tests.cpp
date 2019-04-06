@@ -110,7 +110,7 @@ static void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, b
     BOOST_CHECK_MESSAGE(decrypted == in, HexStr(decrypted) + std::string(" != ") + hexin);
 
     // Encrypt and re-decrypt substrings of the plaintext and verify that they equal each-other
-    for(std::vector<unsigned char>::iterator i(in.begin()); i != in.end(); ++i)
+    for (auto i = in.begin(); i != in.end(); ++i)
     {
         std::vector<unsigned char> sub(i, in.end());
         std::vector<unsigned char> subout(sub.size() + AES_BLOCKSIZE);

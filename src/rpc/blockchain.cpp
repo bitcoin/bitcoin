@@ -1435,7 +1435,7 @@ static UniValue getchaintips(const JSONRPCRequest& request)
         }
     }
 
-    for (std::set<const CBlockIndex*>::iterator it = setOrphans.begin(); it != setOrphans.end(); ++it)
+    for (auto it = setOrphans.begin(); it != setOrphans.end(); ++it)
     {
         if (setPrevs.erase(*it) == 0) {
             setTips.insert(*it);

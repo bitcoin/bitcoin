@@ -55,7 +55,7 @@ public:
 
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock) override
     {
-        for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
+        for (auto it = mapCoins.begin(); it != mapCoins.end(); ) {
             if (it->second.flags & CCoinsCacheEntry::DIRTY) {
                 // Same optimization used in CCoinsViewDB is to only write dirty entries.
                 map_[it->first] = it->second.coin;

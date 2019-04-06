@@ -512,7 +512,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
 {
     LOCK(m_cs_fee_estimator);
-    std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
+    auto pos = mapMemPoolTxs.find(hash);
     if (pos != mapMemPoolTxs.end()) {
         feeStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
         shortStats->removeTx(pos->second.blockHeight, nBestSeenHeight, pos->second.bucketIndex, inBlock);
@@ -1006,7 +1006,7 @@ FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
 
 CAmount FeeFilterRounder::round(CAmount currentMinFee)
 {
-    std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
+    auto it = feeset.lower_bound(currentMinFee);
     if ((it != feeset.begin() && insecure_rand.rand32() % 3 != 0) || it == feeset.end()) {
         it--;
     }

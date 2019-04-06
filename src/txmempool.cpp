@@ -67,7 +67,7 @@ void CTxMemPool::UpdateForDescendants(txiter updateIt, cacheMap &cachedDescendan
         stageEntries.erase(cit);
         const setEntries &setChildren = GetMemPoolChildren(cit);
         for (txiter childEntry : setChildren) {
-            cacheMap::iterator cacheIt = cachedDescendants.find(childEntry);
+            auto cacheIt = cachedDescendants.find(childEntry);
             if (cacheIt != cachedDescendants.end()) {
                 // We've already calculated this one, just add the entries for this set
                 // but don't traverse again.
@@ -358,7 +358,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
-    indexed_transaction_set::iterator newit = mapTx.insert(entry).first;
+    auto newit = mapTx.insert(entry).first;
     mapLinks.insert(make_pair(newit, TxLinks()));
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
@@ -554,7 +554,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransactionRef>& vtx, unsigne
     {
         uint256 hash = tx->GetHash();
 
-        indexed_transaction_set::iterator i = mapTx.find(hash);
+        auto i = mapTx.find(hash);
         if (i != mapTx.end())
             entries.push_back(&*i);
     }
@@ -757,7 +757,7 @@ std::vector<CTxMemPool::indexed_transaction_set::const_iterator> CTxMemPool::Get
 
     iters.reserve(mapTx.size());
 
-    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
+    for (auto mi = mapTx.begin(); mi != mapTx.end(); ++mi) {
         iters.push_back(mi);
     }
     std::sort(iters.begin(), iters.end(), DepthAndScoreComparator());
@@ -924,7 +924,7 @@ void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPool
 
 int CTxMemPool::Expire(int64_t time) {
     LOCK(cs);
-    indexed_transaction_set::index<entry_time>::type::iterator it = mapTx.get<entry_time>().begin();
+    auto it = mapTx.get<entry_time>().begin();
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         toremove.insert(mapTx.project<0>(it));
@@ -1021,7 +1021,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpends
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
     while (!mapTx.empty() && DynamicMemoryUsage() > sizelimit) {
-        indexed_transaction_set::index<descendant_score>::type::iterator it = mapTx.get<descendant_score>().begin();
+        auto it = mapTx.get<descendant_score>().begin();
 
         // We set the new mempool min fee to the feerate of the removed set, plus the
         // "minimum reasonable fee rate" (ie some value under which we consider txn

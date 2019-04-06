@@ -626,7 +626,7 @@ DBErrors WalletBatch::ZapSelectTx(std::vector<uint256>& vTxHashIn, std::vector<u
 
     // erase each matching wallet TX
     bool delerror = false;
-    std::vector<uint256>::iterator it = vTxHashIn.begin();
+    auto it = vTxHashIn.begin();
     for (const uint256& hash : vTxHash) {
         while (it < vTxHashIn.end() && (*it) < hash) {
             it++;

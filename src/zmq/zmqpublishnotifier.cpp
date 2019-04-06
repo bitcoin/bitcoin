@@ -65,7 +65,7 @@ bool CZMQAbstractPublishNotifier::Initialize(void *pcontext)
     assert(!psocket);
 
     // check if address is being used by other publish notifier
-    std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator i = mapPublishNotifiers.find(address);
+    auto i = mapPublishNotifiers.find(address);
 
     if (i==mapPublishNotifiers.end())
     {
@@ -120,7 +120,7 @@ void CZMQAbstractPublishNotifier::Shutdown()
     typedef std::multimap<std::string, CZMQAbstractPublishNotifier*>::iterator iterator;
     std::pair<iterator, iterator> iterpair = mapPublishNotifiers.equal_range(address);
 
-    for (iterator it = iterpair.first; it != iterpair.second; ++it)
+    for (auto it = iterpair.first; it != iterpair.second; ++it)
     {
         if (it->second==this)
         {

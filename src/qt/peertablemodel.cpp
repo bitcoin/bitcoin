@@ -227,7 +227,7 @@ void PeerTableModel::refresh()
 
 int PeerTableModel::getRowByNodeId(NodeId nodeid)
 {
-    std::map<NodeId, int>::iterator it = priv->mapNodeRows.find(nodeid);
+    auto it = priv->mapNodeRows.find(nodeid);
     if (it == priv->mapNodeRows.end())
         return -1;
 
