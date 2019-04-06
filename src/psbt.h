@@ -7,6 +7,8 @@
 
 #include <attributes.h>
 #include <node/transaction.h>
+#include <optional.h>
+#include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <pubkey.h>
 #include <script/sign.h>
@@ -548,8 +550,42 @@ struct PartiallySignedTransaction
     }
 };
 
+enum class PSBTRole {
+    UPDATER,
+    SIGNER,
+    FINALIZER,
+    EXTRACTOR
+};
+
+/**
+ * Holds an analysis of one input from a PSBT
+ */
+struct PSBTInputAnalysis {
+    bool has_utxo; //!< Whether we have UTXO information for this input
+    bool is_final; //!< Whether the input has all required information including signatures
+    PSBTRole next; //!< Which of the BIP 174 roles needs to handle this input next
+
+    std::vector<CKeyID> missing_pubkeys; //!< Pubkeys whose BIP32 derivation path is missing
+    std::vector<CKeyID> missing_sigs;    //!< Pubkeys whose signatures are missing
+    uint160 missing_redeem_script;       //!< Hash160 of redeem script, if missing
+    uint256 missing_witness_script;      //!< SHA256 of witness script, if missing
+};
+
+/**
+ * Holds the results of AnalyzePSBT (miscellaneous information about a PSBT)
+ */
+struct PSBTAnalysis {
+    Optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
+    Optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
+    Optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
+    std::vector<PSBTInputAnalysis> inputs; //!< More information about the individual inputs of the transaction
+    PSBTRole next;                         //!< Which of the BIP 174 roles needs to handle the transaction next
+};
+
+std::string PSBTRoleName(PSBTRole role);
+
 /** Checks whether a PSBTInput is already signed. */
-bool PSBTInputSigned(PSBTInput& input);
+bool PSBTInputSigned(const PSBTInput& input);
 
 /** Signs a PSBTInput, verifying that all provided data matches what is being signed. */
 bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index, int sighash = SIGHASH_ALL, SignatureData* out_sigdata = nullptr, bool use_dummy = false);
@@ -579,5 +615,18 @@ bool FinalizeAndExtractPSBT(PartiallySignedTransaction& psbtx, CMutableTransacti
  * @return error (OK if we successfully combined the transactions, other error if they were not compatible)
  */
 NODISCARD TransactionError CombinePSBTs(PartiallySignedTransaction& out, const std::vector<PartiallySignedTransaction>& psbtxs);
+
+/**
+ * Provides helpful miscellaneous information about where a PSBT is in the signing workflow.
+ *
+ * @param[in] psbtx the PSBT to analyze
+ * @return A PSBTAnalysis with information about the provided PSBT.
+ */
+PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx);
+
+//! Decode a base64ed PSBT into a PartiallySignedTransaction
+NODISCARD bool DecodeBase64PSBT(PartiallySignedTransaction& decoded_psbt, const std::string& base64_psbt, std::string& error);
+//! Decode a raw (binary blob) PSBT into a PartiallySignedTransaction
+NODISCARD bool DecodeRawPSBT(PartiallySignedTransaction& decoded_psbt, const std::string& raw_psbt, std::string& error);
 
 #endif // BITCOIN_PSBT_H
