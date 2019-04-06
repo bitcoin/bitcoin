@@ -3830,12 +3830,6 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
     }
 
-    if (gArgs.GetBoolArg("-upgradewallet", false)) {
-        if (!UpgradeWallet(gArgs.GetBoolArg("-upgradewallet", 0), error, warnings)) {
-            return nullptr;
-        }
-    }
-
     if (fFirstRun)
     {
         // ensure this wallet.dat can only be opened by clients supporting HD with chain split and expects no default key
@@ -4121,7 +4115,7 @@ bool CWallet::UpgradeWallet(int version, std::string& error, std::vector<std::st
     // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
     int max_version = GetVersion();
     if (!CanSupportFeature(FEATURE_HD_SPLIT) && max_version >= FEATURE_HD_SPLIT && max_version < FEATURE_PRE_SPLIT_KEYPOOL) {
-        error = _("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.").translated;
+        error = _("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.").translated;
         return false;
     }
 
