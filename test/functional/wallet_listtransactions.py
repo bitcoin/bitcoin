@@ -12,7 +12,6 @@ from test_framework.util import (
     assert_array_result,
     assert_equal,
     hex_str_to_bytes,
-    sync_mempools,
 )
 
 def tx_from_hex(hexstring):
