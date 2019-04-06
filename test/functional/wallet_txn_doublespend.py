@@ -11,7 +11,6 @@ from test_framework.util import (
     connect_nodes,
     disconnect_nodes,
     find_output,
-    sync_blocks,
 )
 
 class TxnMallTest(BitcoinTestFramework):

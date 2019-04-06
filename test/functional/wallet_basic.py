@@ -13,7 +13,6 @@ from test_framework.util import (
     assert_fee_amount,
     assert_raises_rpc_error,
     connect_nodes_bi,
-    sync_blocks,
     wait_until,
 )
 

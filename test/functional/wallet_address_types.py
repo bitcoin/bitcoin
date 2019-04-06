@@ -63,8 +63,6 @@ from test_framework.util import (
     assert_greater_than,
     assert_raises_rpc_error,
     connect_nodes_bi,
-    sync_blocks,
-    sync_mempools,
 )
 
 
