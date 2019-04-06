@@ -127,7 +127,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         txid_1 = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         assert not is_opt_in(self.nodes[0], txid_1)
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "no"})
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_1}, {"bip125-replaceable": "no"})
 
         # Tx2 will build off txid_1, still not opting in to RBF.
@@ -147,7 +147,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         # ...and check the result
         assert not is_opt_in(self.nodes[1], txid_2)
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "no"})
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_2}, {"bip125-replaceable": "no"})
 
         # Tx3 will opt-in to RBF
@@ -163,7 +163,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         assert is_opt_in(self.nodes[0], txid_3)
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_3}, {"bip125-replaceable": "yes"})
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_3}, {"bip125-replaceable": "yes"})
 
         # Tx4 will chain off tx3.  Doesn't signal itself, but depends on one
@@ -177,7 +177,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         assert not is_opt_in(self.nodes[1], txid_4)
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "yes"})
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "yes"})
 
         # Replace tx3, and check that tx4 becomes unknown
@@ -189,7 +189,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         assert is_opt_in(self.nodes[0], txid_3b)
 
         assert_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "unknown"})
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         assert_array_result(self.nodes[1].listtransactions(), {"txid": txid_4}, {"bip125-replaceable": "unknown"})
 
         # Check gettransaction as well:

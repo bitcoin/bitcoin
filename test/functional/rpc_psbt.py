@@ -41,7 +41,7 @@ class PSBTTest(BitcoinTestFramework):
         online_node.importaddress(offline_addr, "", False)
         mining_node.sendtoaddress(address=offline_addr, amount=1.0)
         mining_node.generate(nblocks=1)
-        sync_blocks([mining_node, online_node])
+        self.sync_blocks([mining_node, online_node])
 
         # Construct an unsigned PSBT on the online node (who doesn't know the output is Segwit, so will include a non-witness UTXO)
         utxos = online_node.listunspent(addresses=[offline_addr])
@@ -56,7 +56,7 @@ class PSBTTest(BitcoinTestFramework):
         # Make sure we can mine the resulting transaction
         txid = mining_node.sendrawtransaction(mining_node.finalizepsbt(signed_psbt)["hex"])
         mining_node.generate(1)
-        sync_blocks([mining_node, online_node])
+        self.sync_blocks([mining_node, online_node])
         assert_equal(online_node.gettxout(txid,0)["confirmations"], 1)
 
         # Reconnect

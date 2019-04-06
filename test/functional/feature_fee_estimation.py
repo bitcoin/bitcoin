@@ -162,9 +162,9 @@ class EstimateFeeTest(BitcoinTestFramework):
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
                 tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee) / tx_kbytes)
-            sync_mempools(self.nodes[0:3], wait=.1)
+            self.sync_mempools(self.nodes[0:3], wait=.1)
             mined = mining_node.getblock(mining_node.generate(1)[0], True)["tx"]
-            sync_blocks(self.nodes[0:3], wait=.1)
+            self.sync_blocks(self.nodes[0:3], wait=.1)
             # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
@@ -237,7 +237,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         while len(self.nodes[1].getrawmempool()) > 0:
             self.nodes[1].generate(1)
 
-        sync_blocks(self.nodes[0:3], wait=.1)
+        self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
 
