@@ -1197,6 +1197,9 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
     bool spendable = std::all_of(pubkey_map.begin(), pubkey_map.end(),
         [&](const std::pair<CKeyID, CPubKey>& used_key) {
             return privkey_map.count(used_key.first) > 0;
+        }) && std::all_of(import_data.key_origins.begin(), import_data.key_origins.end(),
+        [&](const std::pair<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& entry) {
+            return privkey_map.count(entry.first) > 0;
         });
     if (!watch_only && !spendable) {
         warnings.push_back("Some private keys are missing, outputs will be considered watchonly. If this is intentional, specify the watchonly flag.");
