@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test HD Wallet keypool restore function.
@@ -55,11 +55,11 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             # Make sure we're creating the outputs we expect
             address_details = self.nodes[idx].validateaddress(addr_extpool)
             if i == 0:
-                assert(not address_details["isscript"] and not address_details["iswitness"])
+                assert not address_details["isscript"] and not address_details["iswitness"]
             elif i == 1:
-                assert(address_details["isscript"] and not address_details["iswitness"])
+                assert address_details["isscript"] and not address_details["iswitness"]
             else:
-                assert(not address_details["isscript"] and address_details["iswitness"])
+                assert not address_details["isscript"] and address_details["iswitness"]
 
 
             self.log.info("Send funds to wallet")

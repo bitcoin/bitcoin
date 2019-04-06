@@ -24,7 +24,7 @@
  *   perform 'fast' seeding, consisting of mixing in:
  *   - A stack pointer (indirectly committing to calling thread and call stack)
  *   - A high-precision timestamp (rdtsc when available, c++ high_resolution_clock otherwise)
- *   - Hardware RNG (rdrand) when available.
+ *   - 64 bits from the hardware RNG (rdrand) when available.
  *   These entropy sources are very fast, and only designed to protect against situations
  *   where a VM state restore/copy results in multiple systems with the same randomness.
  *   FastRandomContext on the other hand does not protect against this once created, but
@@ -48,6 +48,7 @@
  *
  * On first use of the RNG (regardless of what function is called first), all entropy
  * sources used in the 'slow' seeder are included, but also:
+ * - 256 bits from the hardware RNG (rdseed or rdrand) when available.
  * - (On Windows) Performance monitoring data from the OS.
  * - (On Windows) Through OpenSSL, the screen contents.
  *

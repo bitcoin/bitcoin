@@ -27,9 +27,7 @@ static feebumper::Result PreconditionChecks(interfaces::Chain::Lock& locked_chai
     }
 
     {
-        LOCK(mempool.cs);
-        auto it_mp = mempool.mapTx.find(wtx.GetHash());
-        if (it_mp != mempool.mapTx.end() && it_mp->GetCountWithDescendants() > 1) {
+        if (wallet->chain().hasDescendantsInMempool(wtx.GetHash())) {
             errors.push_back("Transaction has descendants in the mempool");
             return feebumper::Result::INVALID_PARAMETER;
         }
@@ -125,16 +123,17 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     // The wallet uses a conservative WALLET_INCREMENTAL_RELAY_FEE value to
     // future proof against changes to network wide policy for incremental relay
     // fee that our node may not be aware of.
+    CFeeRate nodeIncrementalRelayFee = wallet->chain().relayIncrementalFee();
     CFeeRate walletIncrementalRelayFee = CFeeRate(WALLET_INCREMENTAL_RELAY_FEE);
-    if (::incrementalRelayFee > walletIncrementalRelayFee) {
-        walletIncrementalRelayFee = ::incrementalRelayFee;
+    if (nodeIncrementalRelayFee > walletIncrementalRelayFee) {
+        walletIncrementalRelayFee = nodeIncrementalRelayFee;
     }
 
     if (total_fee > 0) {
-        CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + ::incrementalRelayFee.GetFee(maxNewTxSize);
+        CAmount minTotalFee = nOldFeeRate.GetFee(maxNewTxSize) + nodeIncrementalRelayFee.GetFee(maxNewTxSize);
         if (total_fee < minTotalFee) {
             errors.push_back(strprintf("Insufficient totalFee, must be at least %s (oldFee %s + incrementalFee %s)",
-                                                                FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(::incrementalRelayFee.GetFee(maxNewTxSize))));
+                                                                FormatMoney(minTotalFee), FormatMoney(nOldFeeRate.GetFee(maxNewTxSize)), FormatMoney(nodeIncrementalRelayFee.GetFee(maxNewTxSize))));
             return Result::INVALID_PARAMETER;
         }
         CAmount requiredFee = GetRequiredFee(*wallet, maxNewTxSize);
@@ -146,7 +145,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
         new_fee = total_fee;
         nNewFeeRate = CFeeRate(total_fee, maxNewTxSize);
     } else {
-        new_fee = GetMinimumFee(*wallet, maxNewTxSize, coin_control, mempool, ::feeEstimator, nullptr /* FeeCalculation */);
+        new_fee = GetMinimumFee(*wallet, maxNewTxSize, coin_control, nullptr /* FeeCalculation */);
         nNewFeeRate = CFeeRate(new_fee, maxNewTxSize);
 
         // New fee rate must be at least old rate + minimum incremental relay rate
@@ -161,9 +160,10 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     }
 
     // Check that in all cases the new fee doesn't violate maxTxFee
-     if (new_fee > maxTxFee) {
+     const CAmount max_tx_fee = wallet->chain().maxTxFee();
+     if (new_fee > max_tx_fee) {
          errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
-                               FormatMoney(new_fee), FormatMoney(maxTxFee)));
+                               FormatMoney(new_fee), FormatMoney(max_tx_fee)));
          return Result::WALLET_ERROR;
      }
 
@@ -197,7 +197,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
 
     // If the output would become dust, discard it (converting the dust to fee)
     poutput->nValue -= nDelta;
-    if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(*wallet, ::feeEstimator))) {
+    if (poutput->nValue <= GetDustThreshold(*poutput, GetDiscardRate(*wallet))) {
         wallet->WalletLogPrintf("Bumping fee and discarding dust output\n");
         new_fee += poutput->nValue;
         mtx.vout.erase(mtx.vout.begin() + nOutput);
@@ -247,7 +247,7 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
 
     CReserveKey reservekey(wallet);
     CValidationState state;
-    if (!wallet->CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, reservekey, g_connman.get(), state)) {
+    if (!wallet->CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, reservekey, state)) {
         // NOTE: CommitTransaction never returns false, so this should never happen.
         errors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
         return Result::WALLET_ERROR;

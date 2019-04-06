@@ -35,6 +35,11 @@ std::ostream& operator<<(typename std::enable_if<std::is_enum<T>::value, std::os
  */
 extern FastRandomContext g_insecure_rand_ctx;
 
+/**
+ * Flag to make GetRand in random.h return the same number
+ */
+extern bool g_mock_deterministic_tests;
+
 static inline void SeedInsecureRand(bool deterministic = false)
 {
     g_insecure_rand_ctx = FastRandomContext(deterministic);
@@ -66,10 +71,6 @@ private:
 /** Testing setup that configures a complete environment.
  * Included are data directory, coins database, script check threads setup.
  */
-class CConnman;
-class CNode;
-
-class PeerLogicValidation;
 struct TestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
     CScheduler scheduler;

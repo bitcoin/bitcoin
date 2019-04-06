@@ -4,7 +4,6 @@ bool:wallet/wallet.cpp
 float-divide-by-zero:policy/fees.cpp
 float-divide-by-zero:validation.cpp
 float-divide-by-zero:wallet/wallet.cpp
-nonnull-attribute:support/cleanse.cpp
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
@@ -16,6 +15,7 @@ unsigned-integer-overflow:coded_stream.h
 unsigned-integer-overflow:core_write.cpp
 unsigned-integer-overflow:crypto/chacha20.cpp
 unsigned-integer-overflow:crypto/ctaes/ctaes.c
+unsigned-integer-overflow:crypto/poly1305.cpp
 unsigned-integer-overflow:crypto/ripemd160.cpp
 unsigned-integer-overflow:crypto/sha1.cpp
 unsigned-integer-overflow:crypto/sha256.cpp

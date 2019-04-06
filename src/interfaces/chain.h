@@ -5,21 +5,58 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
-#include <optional.h>
+#include <optional.h>               // For Optional and nullopt
+#include <primitives/transaction.h> // For CTransactionRef
 
 #include <memory>
+#include <stddef.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
 class CBlock;
+class CFeeRate;
+class CRPCCommand;
 class CScheduler;
+class CValidationState;
+class Coin;
 class uint256;
+enum class RBFTransactionState;
 struct CBlockLocator;
+struct FeeCalculation;
 
 namespace interfaces {
 
-//! Interface for giving wallet processes access to blockchain state.
+class Handler;
+class Wallet;
+
+//! Interface giving clients (wallet processes, maybe other analysis tools in
+//! the future) ability to access to the chain state, receive notifications,
+//! estimate fees, and submit transactions.
+//!
+//! TODO: Current chain methods are too low level, exposing too much of the
+//! internal workings of the bitcoin node, and not being very convenient to use.
+//! Chain methods should be cleaned up and simplified over time. Examples:
+//!
+//! * The Chain::lock() method, which lets clients delay chain tip updates
+//!   should be removed when clients are able to respond to updates
+//!   asynchronously
+//!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
+//!
+//! * The isPotentialTip() and waitForNotifications() methods are too low-level
+//!   and should be replaced with a higher level
+//!   waitForNotificationsUpTo(block_hash) method that the wallet can call
+//!   instead
+//!   (https://github.com/bitcoin/bitcoin/pull/10973#discussion_r266995234).
+//!
+//! * The relayTransactions() and submitToMemoryPool() methods could be replaced
+//!   with a higher-level broadcastTransaction method
+//!   (https://github.com/bitcoin/bitcoin/pull/14978#issuecomment-459373984).
+//!
+//! * The initMessages() and loadWallet() methods which the wallet uses to send
+//!   notifications to the GUI should go away when GUI and wallet can directly
+//!   communicate with each other without going through the node
+//!   (https://github.com/bitcoin/bitcoin/pull/15288#discussion_r253321096).
 class Chain
 {
 public:
@@ -96,12 +133,20 @@ public:
         virtual bool isPotentialTip(const uint256& hash) = 0;
 
         //! Get locator for the current chain tip.
-        virtual CBlockLocator getLocator() = 0;
+        virtual CBlockLocator getTipLocator() = 0;
 
         //! Return height of the latest block common to locator and chain, which
         //! is guaranteed to be an ancestor of the block used to create the
         //! locator.
         virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
+
+        //! Check if transaction will be final given chain height current time.
+        virtual bool checkFinalTx(const CTransaction& tx) = 0;
+
+        //! Add transaction to memory pool if the transaction fee is below the
+        //! amount specified by absurd_fee. Returns false if the transaction
+        //! could not be added due to the fee or for another reason.
+        virtual bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) = 0;
     };
 
     //! Return Lock interface. Chain is locked when this is called, and
@@ -124,9 +169,116 @@ public:
         int64_t* time = nullptr,
         int64_t* max_time = nullptr) = 0;
 
+    //! Look up unspent output information. Returns coins in the mempool and in
+    //! the current chain UTXO set. Iterates through all the keys in the map and
+    //! populates the values.
+    virtual void findCoins(std::map<COutPoint, Coin>& coins) = 0;
+
     //! Estimate fraction of total transactions verified if blocks up to
     //! the specified block hash are verified.
     virtual double guessVerificationProgress(const uint256& block_hash) = 0;
+
+    //! Check if transaction is RBF opt in.
+    virtual RBFTransactionState isRBFOptIn(const CTransaction& tx) = 0;
+
+    //! Check if transaction has descendants in mempool.
+    virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
+
+    //! Relay transaction.
+    virtual void relayTransaction(const uint256& txid) = 0;
+
+    //! Calculate mempool ancestor and descendant counts for the given transaction.
+    virtual void getTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) = 0;
+
+    //! Check if transaction will pass the mempool's chain limits.
+    virtual bool checkChainLimits(const CTransactionRef& tx) = 0;
+
+    //! Estimate smart fee.
+    virtual CFeeRate estimateSmartFee(int num_blocks, bool conservative, FeeCalculation* calc = nullptr) = 0;
+
+    //! Fee estimator max target.
+    virtual unsigned int estimateMaxBlocks() = 0;
+
+    //! Mempool minimum fee.
+    virtual CFeeRate mempoolMinFee() = 0;
+
+    //! Relay current minimum fee (from -minrelaytxfee and -incrementalrelayfee settings).
+    virtual CFeeRate relayMinFee() = 0;
+
+    //! Relay incremental fee setting (-incrementalrelayfee), reflecting cost of relay.
+    virtual CFeeRate relayIncrementalFee() = 0;
+
+    //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
+    virtual CFeeRate relayDustFee() = 0;
+
+    //! Node max tx fee setting (-maxtxfee).
+    //! This could be replaced by a per-wallet max fee, as proposed at
+    //! https://github.com/bitcoin/bitcoin/issues/15355
+    //! But for the time being, wallets call this to access the node setting.
+    virtual CAmount maxTxFee() = 0;
+
+    //! Check if pruning is enabled.
+    virtual bool getPruneMode() = 0;
+
+    //! Check if p2p enabled.
+    virtual bool p2pEnabled() = 0;
+
+    //! Check if in IBD.
+    virtual bool isInitialBlockDownload() = 0;
+
+    //! Check if shutdown requested.
+    virtual bool shutdownRequested() = 0;
+
+    //! Get adjusted time.
+    virtual int64_t getAdjustedTime() = 0;
+
+    //! Send init message.
+    virtual void initMessage(const std::string& message) = 0;
+
+    //! Send init warning.
+    virtual void initWarning(const std::string& message) = 0;
+
+    //! Send init error.
+    virtual void initError(const std::string& message) = 0;
+
+    //! Send wallet load notification to the GUI.
+    virtual void loadWallet(std::unique_ptr<Wallet> wallet) = 0;
+
+    //! Send progress indicator.
+    virtual void showProgress(const std::string& title, int progress, bool resume_possible) = 0;
+
+    //! Chain notifications.
+    class Notifications
+    {
+    public:
+        virtual ~Notifications() {}
+        virtual void TransactionAddedToMempool(const CTransactionRef& tx) {}
+        virtual void TransactionRemovedFromMempool(const CTransactionRef& ptx) {}
+        virtual void BlockConnected(const CBlock& block, const std::vector<CTransactionRef>& tx_conflicted) {}
+        virtual void BlockDisconnected(const CBlock& block) {}
+        virtual void ChainStateFlushed(const CBlockLocator& locator) {}
+        virtual void ResendWalletTransactions(Lock& locked_chain, int64_t best_block_time) {}
+    };
+
+    //! Register handler for notifications.
+    virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
+
+    //! Wait for pending notifications to be handled.
+    virtual void waitForNotifications() = 0;
+
+    //! Register handler for RPC. Command is not copied, so reference
+    //! needs to remain valid until Handler is disconnected.
+    virtual std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) = 0;
+
+    //! Synchronously send TransactionAddedToMempool notifications about all
+    //! current mempool transactions to the specified handler and return after
+    //! the last one is sent. These notifications aren't coordinated with async
+    //! notifications sent by handleNotifications, so out of date async
+    //! notifications from handleNotifications can arrive during and after
+    //! synchronous notifications from requestMempoolTransactions. Clients need
+    //! to be prepared to handle this by ignoring notifications about unknown
+    //! removed transactions and already added new transactions.
+    virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 };
 
 //! Interface to let node manage chain clients (wallets, or maybe tools for

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Functionality to build scripts, as well as SignatureHash().
@@ -9,7 +9,6 @@ This file is modified from python-bitcoinlib.
 
 from .messages import CTransaction, CTxOut, sha256, hash256, uint256_from_str, ser_uint256, ser_string
 
-from binascii import hexlify
 import hashlib
 import struct
 
@@ -450,10 +449,6 @@ class CScript(bytes):
         # join makes no sense for a CScript()
         raise NotImplementedError
 
-    # Python 3.4 compatibility
-    def hex(self):
-        return hexlify(self).decode('ascii')
-
     def __new__(cls, value=b''):
         if isinstance(value, bytes) or isinstance(value, bytearray):
             return super(CScript, cls).__new__(cls, value)
@@ -545,7 +540,7 @@ class CScript(bytes):
     def __repr__(self):
         def _repr(o):
             if isinstance(o, bytes):
-                return "x('%s')" % hexlify(o).decode('ascii')
+                return "x('%s')" % o.hex()
             else:
                 return repr(o)
 

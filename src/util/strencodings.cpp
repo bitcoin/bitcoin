@@ -141,7 +141,7 @@ std::string EncodeBase64(const std::string& str)
     return EncodeBase64((const unsigned char*)str.c_str(), str.size());
 }
 
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 {
     static const int decode64_table[256] =
     {
@@ -183,14 +183,14 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
         ++p;
     }
     valid = valid && (p - e) % 4 == 0 && p - q < 4;
-    if (pfInvalid) *pfInvalid = !valid;
+    if (pf_invalid) *pf_invalid = !valid;
 
     return ret;
 }
 
-std::string DecodeBase64(const std::string& str)
+std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
-    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str());
+    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
@@ -210,7 +210,7 @@ std::string EncodeBase32(const std::string& str)
     return EncodeBase32((const unsigned char*)str.c_str(), str.size());
 }
 
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 {
     static const int decode32_table[256] =
     {
@@ -252,14 +252,14 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
         ++p;
     }
     valid = valid && (p - e) % 8 == 0 && p - q < 8;
-    if (pfInvalid) *pfInvalid = !valid;
+    if (pf_invalid) *pf_invalid = !valid;
 
     return ret;
 }
 
-std::string DecodeBase32(const std::string& str)
+std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
-    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str());
+    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
@@ -543,47 +543,6 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
     if (amount_out)
         *amount_out = mantissa;
 
-    return true;
-}
-
-bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypath)
-{
-    std::stringstream ss(keypath_str);
-    std::string item;
-    bool first = true;
-    while (std::getline(ss, item, '/')) {
-        if (item.compare("m") == 0) {
-            if (first) {
-                first = false;
-                continue;
-            }
-            return false;
-        }
-        // Finds whether it is hardened
-        uint32_t path = 0;
-        size_t pos = item.find("'");
-        if (pos != std::string::npos) {
-            // The hardened tick can only be in the last index of the string
-            if (pos != item.size() - 1) {
-                return false;
-            }
-            path |= 0x80000000;
-            item = item.substr(0, item.size() - 1); // Drop the last character which is the hardened tick
-        }
-
-        // Ensure this is only numbers
-        if (item.find_first_not_of( "0123456789" ) != std::string::npos) {
-            return false;
-        }
-        uint32_t number;
-        if (!ParseUInt32(item, &number)) {
-            return false;
-        }
-        path |= number;
-
-        keypath.push_back(path);
-        first = false;
-    }
     return true;
 }
 

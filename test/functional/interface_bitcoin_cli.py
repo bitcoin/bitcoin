@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test bitcoin-cli"""
@@ -16,7 +16,7 @@ class TestBitcoinCli(BitcoinTestFramework):
         """Main test logic"""
 
         cli_response = self.nodes[0].cli("-version").send_cli()
-        assert("Bitcoin Core RPC client version" in cli_response)
+        assert "Bitcoin Core RPC client version" in cli_response
 
         self.log.info("Compare responses from getwalletinfo RPC and `bitcoin-cli getwalletinfo`")
         if self.is_wallet_compiled():
@@ -57,16 +57,14 @@ class TestBitcoinCli(BitcoinTestFramework):
 
         assert_equal(cli_get_info['version'], network_info['version'])
         assert_equal(cli_get_info['protocolversion'], network_info['protocolversion'])
-        if self.is_wallet_compiled():
-            assert_equal(cli_get_info['walletversion'], wallet_info['walletversion'])
-            assert_equal(cli_get_info['balance'], wallet_info['balance'])
         assert_equal(cli_get_info['blocks'], blockchain_info['blocks'])
         assert_equal(cli_get_info['timeoffset'], network_info['timeoffset'])
         assert_equal(cli_get_info['connections'], network_info['connections'])
         assert_equal(cli_get_info['proxy'], network_info['networks'][0]['proxy'])
         assert_equal(cli_get_info['difficulty'], blockchain_info['difficulty'])
-        assert_equal(cli_get_info['testnet'], blockchain_info['chain'] == "test")
+        assert_equal(cli_get_info['chain'], blockchain_info['chain'])
         if self.is_wallet_compiled():
+            assert_equal(cli_get_info['walletversion'], wallet_info['walletversion'])
             assert_equal(cli_get_info['balance'], wallet_info['balance'])
             assert_equal(cli_get_info['keypoololdest'], wallet_info['keypoololdest'])
             assert_equal(cli_get_info['keypoolsize'], wallet_info['keypoolsize'])

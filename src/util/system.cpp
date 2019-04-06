@@ -44,11 +44,6 @@
 #pragma warning(disable:4717)
 #endif
 
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0501
-
 #ifdef _WIN32_IE
 #undef _WIN32_IE
 #endif
@@ -79,7 +74,6 @@
 const int64_t nStartupTime = GetTime();
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
-const char * const BITCOIN_PID_FILENAME = "bitcoind.pid";
 
 ArgsManager gArgs;
 
@@ -116,6 +110,12 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
     return true;
 }
 
+void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name)
+{
+    std::lock_guard<std::mutex> lock(cs_dir_locks);
+    dir_locks.erase((directory / lockfile_name).string());
+}
+
 void ReleaseDirectoryLocks()
 {
     std::lock_guard<std::mutex> ulock(cs_dir_locks);
@@ -133,6 +133,14 @@ bool DirIsWritable(const fs::path& directory)
     remove(tmpFile);
 
     return true;
+}
+
+bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
+{
+    constexpr uint64_t min_disk_space = 52428800; // 50 MiB
+
+    uint64_t free_bytes_available = fs::space(dir).available;
+    return free_bytes_available >= min_disk_space + additional_bytes;
 }
 
 /**
@@ -353,8 +361,7 @@ const std::set<std::string> ArgsManager::GetUnsuitableSectionOnlyArgs() const
     return unsuitables;
 }
 
-
-const std::set<std::string> ArgsManager::GetUnrecognizedSections() const
+const std::list<SectionInfo> ArgsManager::GetUnrecognizedSections() const
 {
     // Section names to be recognized in the config file.
     static const std::set<std::string> available_sections{
@@ -362,14 +369,11 @@ const std::set<std::string> ArgsManager::GetUnrecognizedSections() const
         CBaseChainParams::TESTNET,
         CBaseChainParams::MAIN
     };
-    std::set<std::string> diff;
 
     LOCK(cs_args);
-    std::set_difference(
-        m_config_sections.begin(), m_config_sections.end(),
-        available_sections.begin(), available_sections.end(),
-        std::inserter(diff, diff.end()));
-    return diff;
+    std::list<SectionInfo> unrecognized = m_config_sections;
+    unrecognized.remove_if([](const SectionInfo& appeared){ return available_sections.find(appeared.m_name) != available_sections.end(); });
+    return unrecognized;
 }
 
 void ArgsManager::SelectConfigNetwork(const std::string& network)
@@ -634,6 +638,12 @@ bool HelpRequested(const ArgsManager& args)
     return args.IsArgSet("-?") || args.IsArgSet("-h") || args.IsArgSet("-help") || args.IsArgSet("-help-debug");
 }
 
+void SetupHelpOptions(ArgsManager& args)
+{
+    args.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
+    args.AddHiddenArgs({"-h", "-help"});
+}
+
 static const int screenWidth = 79;
 static const int optIndent = 2;
 static const int msgIndent = 7;
@@ -787,7 +797,7 @@ static std::string TrimString(const std::string& str, const std::string& pattern
     return str.substr(front, end - front + 1);
 }
 
-static bool GetConfigOptions(std::istream& stream, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::set<std::string>& sections)
+static bool GetConfigOptions(std::istream& stream, const std::string& filepath, std::string& error, std::vector<std::pair<std::string, std::string>>& options, std::list<SectionInfo>& sections)
 {
     std::string str, prefix;
     std::string::size_type pos;
@@ -803,7 +813,7 @@ static bool GetConfigOptions(std::istream& stream, std::string& error, std::vect
         if (!str.empty()) {
             if (*str.begin() == '[' && *str.rbegin() == ']') {
                 const std::string section = str.substr(1, str.size() - 2);
-                sections.insert(section);
+                sections.emplace_back(SectionInfo{section, filepath, linenr});
                 prefix = section + '.';
             } else if (*str.begin() == '-') {
                 error = strprintf("parse error on line %i: %s, options in configuration file must be specified without leading -", linenr, str);
@@ -816,8 +826,8 @@ static bool GetConfigOptions(std::istream& stream, std::string& error, std::vect
                     return false;
                 }
                 options.emplace_back(name, value);
-                if ((pos = name.rfind('.')) != std::string::npos) {
-                    sections.insert(name.substr(0, pos));
+                if ((pos = name.rfind('.')) != std::string::npos && prefix.length() <= pos) {
+                    sections.emplace_back(SectionInfo{name.substr(0, pos), filepath, linenr});
                 }
             } else {
                 error = strprintf("parse error on line %i: %s", linenr, str);
@@ -832,12 +842,11 @@ static bool GetConfigOptions(std::istream& stream, std::string& error, std::vect
     return true;
 }
 
-bool ArgsManager::ReadConfigStream(std::istream& stream, std::string& error, bool ignore_invalid_keys)
+bool ArgsManager::ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys)
 {
     LOCK(cs_args);
     std::vector<std::pair<std::string, std::string>> options;
-    m_config_sections.clear();
-    if (!GetConfigOptions(stream, error, options, m_config_sections)) {
+    if (!GetConfigOptions(stream, filepath, error, options, m_config_sections)) {
         return false;
     }
     for (const std::pair<std::string, std::string>& option : options) {
@@ -868,6 +877,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     {
         LOCK(cs_args);
         m_config_args.clear();
+        m_config_sections.clear();
     }
 
     const std::string confPath = GetArg("-conf", BITCOIN_CONF_FILENAME);
@@ -875,7 +885,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
 
     // ok to not have a config file
     if (stream.good()) {
-        if (!ReadConfigStream(stream, error, ignore_invalid_keys)) {
+        if (!ReadConfigStream(stream, confPath, error, ignore_invalid_keys)) {
             return false;
         }
         // if there is an -includeconf in the override args, but it is empty, that means the user
@@ -906,7 +916,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
             for (const std::string& to_include : includeconf) {
                 fsbridge::ifstream include_config(GetConfigFile(to_include));
                 if (include_config.good()) {
-                    if (!ReadConfigStream(include_config, error, ignore_invalid_keys)) {
+                    if (!ReadConfigStream(include_config, to_include, error, ignore_invalid_keys)) {
                         return false;
                     }
                     LogPrintf("Included configuration file %s\n", to_include.c_str());
@@ -957,23 +967,6 @@ std::string ArgsManager::GetChainName() const
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
 }
-
-#ifndef WIN32
-fs::path GetPidFile()
-{
-    return AbsPathForConfigVal(fs::path(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME)));
-}
-
-void CreatePidFile(const fs::path &path, pid_t pid)
-{
-    FILE* file = fsbridge::fopen(path, "w");
-    if (file)
-    {
-        fprintf(file, "%d\n", pid);
-        fclose(file);
-    }
-}
-#endif
 
 bool RenameOver(fs::path src, fs::path dest)
 {
