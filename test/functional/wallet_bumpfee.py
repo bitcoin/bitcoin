@@ -60,7 +60,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
-        test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address)
+        test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address)
         test_segwit_bumpfee_succeeds(rbf_node, dest_address)
         test_nonrbf_bumpfee_fails(peer_node, dest_address)
         test_notmine_bumpfee_fails(rbf_node, peer_node, dest_address)
@@ -76,7 +76,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Success")
 
 
-def test_simple_bumpfee_succeeds(rbf_node, peer_node, dest_address):
+def test_simple_bumpfee_succeeds(self, rbf_node, peer_node, dest_address):
     rbfid = spend_one_input(rbf_node, dest_address)
     rbftx = rbf_node.gettransaction(rbfid)
     sync_mempools((rbf_node, peer_node))
