@@ -127,6 +127,8 @@ SplashScreen::SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const Netw
 
     subscribeToCoreSignals();
     installEventFilter(this);
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 SplashScreen::~SplashScreen()

@@ -15,6 +15,8 @@ OpenURIDialog::OpenURIDialog(QWidget *parent) :
     ui(new Ui::OpenURIDialog)
 {
     ui->setupUi(this);
+
+    GUIUtil::handleCloseWindowShortcut(this);
 }
 
 OpenURIDialog::~OpenURIDialog()
