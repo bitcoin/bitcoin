@@ -518,7 +518,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     if(fAssetIndex)
         vecTXIDs.push_back(tx.GetHash());    
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-        if(!DisconnectMintAsset(tx, mapAssets, mapAssetAllocations))
+        if(!DisconnectMintAsset(tx, mapAssetAllocations))
             return false;       
     }
     else{
@@ -685,14 +685,6 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must be positive");
             return state.DoS(100, false, REJECT_INVALID, errorMessage);
         }  
-        auto result = mapAssets.try_emplace(mintSyscoin.assetAllocationTuple.nAsset, std::move(emptyAsset));
-        auto mapAsset = result.first;
-        const bool &mapAssetNotFound = result.second;
-        if(mapAssetNotFound){
-            GetAsset(mintSyscoin.assetAllocationTuple.nAsset, dbAsset);    
-            mapAsset->second = std::move(dbAsset);                
-        }
-        CAsset& storedSenderRef = mapAsset->second;
     
         const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
         auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr, std::move(emptyAllocation));
@@ -732,15 +724,15 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
             mapSenderAssetAllocation->second = std::move(senderAllocation);              
         }
         CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
-        
+        if (!AssetRange(mintSyscoin.nValueAsset))
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
+            return state.DoS(10, false, REJECT_INVALID, errorMessage);
+        }
+
         // update balances  
         storedReceiverAllocationRef.nBalance += mintSyscoin.nValueAsset;
         storedSenderAllocationRef.nBalance -= mintSyscoin.nValueAsset;
-        storedSenderRef.nTotalSupply += mintSyscoin.nValueAsset;
-        if(storedSenderRef.nTotalSupply > storedSenderRef.nMaxSupply){
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mint amount would increase supply above max supply");
-            return state.DoS(10, false, REJECT_INVALID, errorMessage);
-        }
         if(storedSenderAllocationRef.nBalance < 0){
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn balance cannot go below 0");
             return state.DoS(10, false, REJECT_INVALID, errorMessage);

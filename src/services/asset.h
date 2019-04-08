@@ -365,7 +365,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
-bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
+bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
 bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
