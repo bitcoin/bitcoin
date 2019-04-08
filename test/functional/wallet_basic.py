@@ -20,6 +20,7 @@ from test_framework.util import (
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
+        self.use_rpc_sync = True
         self.setup_clean_chain = True
 
     def skip_test_if_missing_module(self):

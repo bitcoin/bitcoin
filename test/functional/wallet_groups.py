@@ -19,6 +19,7 @@ def assert_approx(v, vexp, vspan=0.00001):
 class WalletGroupTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
+        self.use_rpc_sync = True
         self.num_nodes = 3
         self.extra_args = [[], [], ['-avoidpartialspends']]
         self.rpc_timeout = 120

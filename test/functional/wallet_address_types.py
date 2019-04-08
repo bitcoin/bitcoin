@@ -69,6 +69,7 @@ from test_framework.util import (
 class AddressTypeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 6
+        self.use_rpc_sync = True
         self.extra_args = [
             ["-addresstype=legacy"],
             ["-addresstype=p2sh-segwit"],

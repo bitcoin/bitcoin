@@ -95,6 +95,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         self.nodes = []
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
+        self.use_rpc_sync = False
         self.supports_cli = False
         self.bind_to_localhost_only = True
         self.set_test_params()
@@ -410,7 +411,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         sync_blocks(nodes or self.nodes, **kwargs)
 
     def sync_mempools(self, nodes=None, **kwargs):
-        sync_mempools(nodes or self.nodes, **kwargs)
+        sync_mempools(nodes or self.nodes, use_rpc_sync=self.use_rpc_sync, **kwargs)
 
     def sync_all(self, nodes=None, **kwargs):
         self.sync_blocks(nodes, **kwargs)

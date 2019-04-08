@@ -33,6 +33,7 @@ WALLET_PASSPHRASE_TIMEOUT = 3600
 class BumpFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.use_rpc_sync = True
         self.setup_clean_chain = True
         self.extra_args = [[
             "-walletrbf={}".format(i),

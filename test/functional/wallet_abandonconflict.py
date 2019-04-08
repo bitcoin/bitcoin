@@ -24,6 +24,7 @@ from test_framework.util import (
 class AbandonConflictTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
+        self.use_rpc_sync = True
         self.extra_args = [["-minrelaytxfee=0.00001"], []]
 
     def skip_test_if_missing_module(self):

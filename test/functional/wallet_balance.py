@@ -39,6 +39,7 @@ def create_transactions(node, address, amt, fees):
 
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.use_rpc_sync = True
         self.num_nodes = 2
         self.setup_clean_chain = True
 

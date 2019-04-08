@@ -390,15 +390,63 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
         time.sleep(wait)
     raise AssertionError("Block sync timed out:{}".format("".join("\n  {!r}".format(b) for b in best_hash)))
 
-def sync_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=True):
+def sync_mempools(rpc_connections, *, wait=1, timeout=60, use_rpc_sync=False, flush_scheduler=True):
     """
     Wait until everybody has the same transactions in their memory
     pools
     """
+
+    class TxInfo:
+        def __init__(self, *, raw, ancestors):
+            self.raw = raw
+            self.ancestors = ancestors
+
+    def topo_send(txs, rpc, pool_add):
+        for i in txs:
+            topo_send(txs[i].ancestors, rpc, pool_add)
+            if i not in pool_add:
+                try:
+                    assert_equal(i, rpc.sendrawtransaction(txs[i].raw))
+                    pool_add.add(i)
+                    # Note that conflicted txs (due to RBF) are not removed
+                    # from the pool
+                except JSONRPCException:
+                    # This transaction violates policy (e.g. RBF policy). The
+                    # mempools should still converge when the high-fee
+                    # replacement is synced in a later call
+                    pass
+
     stop_time = time.time() + timeout
     while time.time() <= stop_time:
         pool = [set(r.getrawmempool()) for r in rpc_connections]
-        if pool.count(pool[0]) == len(rpc_connections):
+        sync_done = pool.count(pool[0]) == len(rpc_connections)
+        if use_rpc_sync and not sync_done:
+            for i_remote, rpc_remote in enumerate(rpc_connections):
+                pool_remote = {
+                    txid: TxInfo(raw=rpc_remote.getrawtransaction(txid), ancestors=info['depends'])
+                    for txid, info in rpc_remote.getrawmempool(verbose=True).items()
+                }
+                # Create "recursive pools" for ancestors
+                for tx in pool_remote:
+                    pool_remote[tx].ancestors = {a: pool_remote[a] for a in pool_remote[tx].ancestors}
+
+                # Push this pool to all targets
+                for i_target, rpc_target in enumerate(rpc_connections):
+                    missing_txids = pool[i_remote].difference(pool[i_target])
+                    if not missing_txids:
+                        continue
+                    # Send missing txs
+                    topo_send(
+                        txs={txid: pool_remote[txid]
+                             for txid in pool_remote if txid in missing_txids},
+                        rpc=rpc_target,
+                        pool_add=pool[i_target],
+                    )
+            # Refresh pools to update any removed (replaced) txs
+            pool = [set(r.getrawmempool()) for r in rpc_connections]
+            sync_done = pool.count(pool[0]) == len(rpc_connections)
+            assert sync_done  # If the sync fails there is a logic error in the sync or test code
+        if sync_done:
             if flush_scheduler:
                 for r in rpc_connections:
                     r.syncwithvalidationinterfacequeue()
