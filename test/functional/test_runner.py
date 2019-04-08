@@ -369,6 +369,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
 
     max_len_name = len(max(test_list, key=len))
     test_count = len(test_list)
+    all_tests_passed = True
     for i in range(test_count):
         test_result, testdir, stdout, stderr = job_queue.get_next()
         test_results.append(test_result)
@@ -378,6 +379,7 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
         elif test_result.status == "Skipped":
             logging.debug("%s skipped" % (done_str))
         else:
+            all_tests_passed = False
             print("%s failed, Duration: %s s\n" % (done_str, test_result.time))
             print(BOLD[1] + 'stdout:\n' + BOLD[0] + stdout + '\n')
             print(BOLD[1] + 'stderr:\n' + BOLD[0] + stderr + '\n')
@@ -400,10 +402,12 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     print_results(test_results, max_len_name, (int(time.time() - start_time)))
 
     if coverage:
-        coverage.report_rpc_coverage()
-
-        logging.debug("Cleaning up coverage data")
-        coverage.cleanup()
+        if all_tests_passed:
+            coverage.report_rpc_coverage()
+            logging.debug("Cleaning up coverage data")
+            coverage.cleanup()
+        else:
+            print("No coverage report generated because there are tests failures")
 
     # Clear up the temp directory if all subdirectories are gone
     if not os.listdir(tmpdir):
