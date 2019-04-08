@@ -283,6 +283,18 @@ bool CExtPubKey::Derive(CExtPubKey &out, unsigned int _nChild) const {
     return pubkey.Derive(out.pubkey, out.chaincode, _nChild, chaincode);
 }
 
+bool CPubKey::CheckPayToContract(const CPubKey& base, const uint256& hash) const
+{
+    if (!IsCompressed() || !base.IsCompressed()) return false;
+    secp256k1_pubkey base_point;
+    if (!secp256k1_ec_pubkey_parse(secp256k1_context_verify, &base_point, base.vch, base.size())) return false;
+    if (!secp256k1_ec_pubkey_tweak_add(secp256k1_context_verify, &base_point, hash.begin())) return false;
+    unsigned char out[COMPRESSED_PUBLIC_KEY_SIZE];
+    size_t len = COMPRESSED_PUBLIC_KEY_SIZE;
+    secp256k1_ec_pubkey_serialize(secp256k1_context_verify, out, &len, &base_point, SECP256K1_EC_COMPRESSED);
+    return memcmp(out, vch, COMPRESSED_PUBLIC_KEY_SIZE) == 0;
+}
+
 /* static */ bool CPubKey::CheckLowS(const std::vector<unsigned char>& vchSig) {
     secp256k1_ecdsa_signature sig;
     if (!ecdsa_signature_parse_der_lax(secp256k1_context_verify, &sig, vchSig.data(), vchSig.size())) {

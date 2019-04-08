@@ -206,6 +206,9 @@ public:
 
     //! Derive BIP32 child pubkey.
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
+
+    //! Verify a P2C derivation. Hash must be a cryptographic hash that commits to base.
+    bool CheckPayToContract(const CPubKey& base, const uint256& hash) const;
 };
 
 struct CExtPubKey {

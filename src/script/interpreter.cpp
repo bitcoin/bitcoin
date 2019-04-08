@@ -1275,6 +1275,9 @@ CHashWriter TaggedHash(const std::string& tag)
 }
 
 static const CHashWriter HasherTapSighash = TaggedHash("TapSighash");
+static const CHashWriter HasherTapLeaf = TaggedHash("TapLeaf");
+static const CHashWriter HasherTapBranch = TaggedHash("TapBranch");
+static const CHashWriter HasherTapTweak = TaggedHash("TapTweak");
 
 template<typename T>
 bool SignatureHashTap(uint256& hash_out, const T& tx_to, const unsigned int in_pos, const uint8_t hash_type, const SigVersion sigversion, const PrecomputedTransactionData& cache)
@@ -1577,6 +1580,52 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         } else {
             return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WRONG_LENGTH);
         }
+    } else if ((flags & SCRIPT_VERIFY_TAPROOT) && witversion == 1 && program.size() == 33 && (program[0] & 0xfe) == 0) {
+        std::vector<unsigned char> pubkey = program;
+        pubkey[0] = 2 + (pubkey[0] & 1);
+        stack = witness.stack;
+        if (stack.size() == 0) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_WITNESS_EMPTY);
+        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            // Drop annex
+            if (flags & SCRIPT_VERIFY_DISCOURAGE_UNKNOWN_ANNEX) return set_error(serror, SCRIPT_ERR_DISCOURAGE_UNKNOWN_ANNEX);
+            stack.pop_back();
+        }
+        if (stack.size() == 1) {
+            // Key path spending
+            if (!checker.CheckSig(stack[0], pubkey, /* scriptCode is ignored */ {}, SigVersion::TAPROOT)) {
+                return set_error(serror, SCRIPT_ERR_TAPROOT_INVALID_SIG);
+            }
+            return set_success(serror);
+        }
+        // Script path spending
+        auto control = std::move(stack.back());
+        stack.pop_back();
+        scriptPubKey = CScript(stack.back().begin(), stack.back().end());
+        stack.pop_back();
+        if (control.size() < 33 || control.size() > 33 + 32*32 || (control.size() % 32) != 1) {
+            return set_error(serror, SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE);
+        }
+        int path_len = (control.size() - 33) / 32;
+        std::vector<unsigned char> basekey(control.begin(), control.begin() + 33);
+        basekey[0] = 2 + (basekey[0] & 1);
+        uint256 k = (CHashWriter(HasherTapLeaf) << uint8_t(control[0] & 0xfe) << scriptPubKey).GetSHA256();
+        for (int i = 0; i < path_len; ++i) {
+            CHashWriter ss_branch = HasherTapBranch;
+            if (std::lexicographical_compare(k.begin(), k.end(), control.begin() + 33 + 32*i, control.begin() + 65 + 32*i)) {
+               ss_branch << k << Span<const unsigned char>(control.data() + 33 + 32*i, 32);
+            } else {
+               ss_branch << Span<const unsigned char>(control.data() + 33 + 32*i, 32) << k;
+            }
+            k = ss_branch.GetSHA256();
+        }
+        k = (CHashWriter(HasherTapTweak) << MakeSpan(basekey) << k).GetSHA256();
+        CPubKey p(basekey.begin(), basekey.end());
+        CPubKey q(pubkey.begin(), pubkey.end());
+        if (!q.CheckPayToContract(p, k)) return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
+        if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION) {
+            return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION);
+        }
+        return set_success(serror);
     } else if (flags & SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM) {
         return set_error(serror, SCRIPT_ERR_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
     } else {
