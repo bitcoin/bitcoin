@@ -189,35 +189,44 @@ bool CNetAddr::IsValid() const
 
 bool CNetAddr::IsRoutable() const
 {
-    static constexpr unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
+    if (!IsValid()) return false;
 
-    return IsValid() && !(
-        (IsIPv4() && (
-          // RFC1918: IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
-          (GetByte(3) == 10)
-          || (GetByte(3) == 192 && GetByte(2) == 168)
-          || (GetByte(3) == 172 && (GetByte(2) >= 16 && GetByte(2) <= 31))
-          // RFC2544: IPv4 inter-network communications (192.18.0.0/15)
-          || (GetByte(3) == 198 && (GetByte(2) == 18 || GetByte(2) == 19))
-          // RFC3927: IPv4 autoconfig (169.254.0.0/16)
-          || (GetByte(3) == 169 && GetByte(2) == 254)
-          // RFC6598: IPv4 ISP-level NAT (100.64.0.0/10)
-          || (GetByte(3) == 100 && GetByte(2) >= 64 && GetByte(2) <= 127)
-          // RFC5737: IPv4 documentation addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
-          || ((GetByte(3) == 192 && GetByte(2) == 0 && GetByte(1) == 2) ||
-              (GetByte(3) == 198 && GetByte(2) == 51 && GetByte(1) == 100) ||
-              (GetByte(3) == 203 && GetByte(2) == 0 && GetByte(1) == 113))))
-        // RFC4862: IPv6 autoconfig (FE80::/64)
-        || (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0)
-        || (
-            // RFC4193: IPv6 unique local (FC00::/7)
-            ((GetByte(15) & 0xFE) == 0xFC)
-            && !IsTor())
-        // RFC4843: IPv6 ORCHID (2001:10::/28)
-        || (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10)
-        || IsLocal()
-        || IsInternal()
-    );
+    if (IsIPv4()) {
+        unsigned int byte3 = GetByte(3),
+            byte2 = GetByte(2),
+            byte1 = GetByte(1);
+        return !(
+            // RFC1918: IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
+            (byte3 == 10)
+            || (byte3 == 192 && byte2 == 168)
+            || (byte3 == 172 && (byte2 >= 16 && byte2 <= 31))
+            // RFC2544: IPv4 inter-network communications (192.18.0.0/15)
+            || (byte3 == 198 && (byte2 == 18 || byte2 == 19))
+            // RFC3927: IPv4 autoconfig (169.254.0.0/16)
+            || (byte3 == 169 && byte2 == 254)
+            // RFC6598: IPv4 ISP-level NAT (100.64.0.0/10)
+            || (byte3 == 100 && byte2 >= 64 && byte2 <= 127)
+            // RFC5737: IPv4 documentation addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
+            || ((byte3 == 192 && byte2 == 0 && byte1 == 2) ||
+                (byte3 == 198 && byte2 == 51 && byte1 == 100) ||
+                (byte3 == 203 && byte2 == 0 && byte1 == 113))
+        );
+    } else {
+        static constexpr unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
+
+        return !(
+            // RFC4862: IPv6 autoconfig (FE80::/64)
+            (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0)
+            || (
+                // RFC4193: IPv6 unique local (FC00::/7)
+                ((GetByte(15) & 0xFE) == 0xFC)
+                && !IsTor())
+            // RFC4843: IPv6 ORCHID (2001:10::/28)
+            || (GetByte(15) == 0x20 && GetByte(14) == 0x01 && GetByte(13) == 0x00 && (GetByte(12) & 0xF0) == 0x10)
+            || IsLocal()
+            || IsInternal()
+        );
+    }
 }
 
 bool CNetAddr::IsInternal() const
