@@ -15,6 +15,7 @@
 #include <key_io.h>
 #include <keystore.h>
 #include <merkleblock.h>
+#include <node/psbt.h>
 #include <node/transaction.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>

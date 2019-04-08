@@ -156,6 +156,7 @@ BITCOIN_CORE_H = \
   netbase.h \
   netmessagemaker.h \
   node/coin.h \
+  node/psbt.h \
   node/transaction.h \
   noui.h \
   optional.h \
@@ -272,6 +273,7 @@ libbitcoin_server_a_SOURCES = \
   net.cpp \
   net_processing.cpp \
   node/coin.cpp \
+  node/psbt.cpp \
   node/transaction.cpp \
   noui.cpp \
   policy/fees.cpp \
