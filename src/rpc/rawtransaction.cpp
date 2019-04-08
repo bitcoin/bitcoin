@@ -1054,7 +1054,9 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
                 "\nAlso see createrawtransaction and signrawtransactionwithkey calls.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
-                    {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
+                    {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE),
+                        "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
+                            "/kB.\nSet to 0 to accept any fee rate.\n"},
                 },
                 RPCResult{
             "\"hex\"             (string) The transaction hash in hex\n"
