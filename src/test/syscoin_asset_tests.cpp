@@ -880,7 +880,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		string guid = AssetNew("node1", addressName, "data","''", istr, "1", "-1");
 		UniValue negonevalue(UniValue::VSTR);
 		negonevalue.setStr("-1");
-		CAmount precisionCoin = powf(10, i);
+		CAmount precisionCoin = pow(10, i);
 		// get max value - 1 (1 is already the supply, and this value is cumulative)
 		CAmount negonesupply = AssetAmountFromValue(negonevalue, i) - precisionCoin;
 		string maxstr = ValueFromAssetAmount(negonesupply, i).get_str();
