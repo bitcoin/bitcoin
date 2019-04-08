@@ -320,25 +320,13 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
 	return removeAllConflicts;
 	
 }
-bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations){
+bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations){
     CMintSyscoin mintSyscoin(tx);
-    CAsset dbAsset;
     if(mintSyscoin.IsNull())
     {
         LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Cannot unserialize data inside of this transaction relating to an syscoinmint\n");
         return false;
-    }
-    auto result = mapAssets.try_emplace(mintSyscoin.assetAllocationTuple.nAsset,std::move(emptyAsset));
-    auto mapAsset = result.first;
-    const bool& mapAssetNotFound = result.second;
-    if(mapAssetNotFound){
-        if (!GetAsset(mintSyscoin.assetAllocationTuple.nAsset, dbAsset)) {
-            LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",mintSyscoin.assetAllocationTuple.nAsset);
-            return false;               
-        } 
-        mapAsset->second = std::move(dbAsset);                   
-    }
-    CAsset& storedSenderRef = mapAsset->second;    
+    }   
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
     auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr), std::move(emptyAllocation));
@@ -373,11 +361,6 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
     
     storedSenderAllocationRef.nBalance += mintSyscoin.nValueAsset;
     storedReceiverAllocationRef.nBalance -= mintSyscoin.nValueAsset;
-    storedSenderRef.nTotalSupply -= mintSyscoin.nValueAsset;
-    if(storedSenderRef.nTotalSupply < 0){
-        LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Max supply cannot be negative\n");
-        return false;
-    }  
     if(storedReceiverAllocationRef.nBalance < 0) {
         LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Receiver balance of %s is negative: %lld\n",mintSyscoin.assetAllocationTuple.ToString(), storedReceiverAllocationRef.nBalance);
         return false;
@@ -594,6 +577,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot burn, no contract provided in asset by owner");
             return error(errorMessage.c_str());
         } 
+        if (nAmountFromScript <= 0 || nAmountFromScript > dbAsset.nTotalSupply)
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
+            return error(errorMessage.c_str());
+        }        
         mapBalanceSenderCopy -= nAmountFromScript;
 		if (mapBalanceSenderCopy < 0) {
             if(fJustCheck)
@@ -652,7 +640,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1020 - " + _("Receiving amount must be positive");
 				return error(errorMessage.c_str());
-			}
+			}           
 		}
         mapBalanceSenderCopy -= nTotal;
 		if (mapBalanceSenderCopy < 0) {
