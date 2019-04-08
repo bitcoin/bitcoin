@@ -4,8 +4,18 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
 
+from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
+
+def expect_http_status(expected_http_status, expected_rpc_code,
+                       fcn, *args):
+    try:
+        fcn(*args)
+        raise AssertionError("Expected RPC error %d, got none" % expected_rpc_code)
+    except JSONRPCException as exc:
+        assert_equal(exc.error["code"], expected_rpc_code)
+        assert_equal(exc.http_status, expected_http_status)
 
 class RPCInterfaceTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -48,9 +58,16 @@ class RPCInterfaceTest(BitcoinTestFramework):
         assert_equal(result_by_id[3]['error'], None)
         assert result_by_id[3]['result'] is not None
 
+    def test_http_status_codes(self):
+        self.log.info("Testing HTTP status codes for JSON-RPC requests...")
+
+        expect_http_status(404, -32601, self.nodes[0].invalidmethod)
+        expect_http_status(500, -8, self.nodes[0].getblockhash, 42)
+
     def run_test(self):
         self.test_getrpcinfo()
         self.test_batch_request()
+        self.test_http_status_codes()
 
 
 if __name__ == '__main__':
