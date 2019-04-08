@@ -557,10 +557,6 @@ void CGovernanceManager::DoMaintenance(CConnman& connman)
 {
     if (fLiteMode || !masternodeSync.IsSynced() || ShutdownRequested()) return;
 
-    if (deterministicMNManager->IsDIP3Enforced()) {
-        RemoveInvalidVotes();
-    }
-
     // CHECK OBJECTS WE'VE ASKED FOR, REMOVE OLD ENTRIES
 
     CleanOrphanObjects();
@@ -1330,10 +1326,14 @@ void CGovernanceManager::CleanOrphanObjects()
 
 void CGovernanceManager::RemoveInvalidVotes()
 {
-    auto curMNList = deterministicMNManager->GetListAtChainTip();
-    auto diff = lastMNListForVotingKeys.BuildDiff(curMNList);
+    if (!masternodeSync.IsSynced()) {
+        return;
+    }
 
     LOCK(cs);
+
+    auto curMNList = deterministicMNManager->GetListAtChainTip();
+    auto diff = lastMNListForVotingKeys.BuildDiff(curMNList);
 
     std::vector<COutPoint> changedKeyMNs;
     for (const auto& p : diff.updatedMNs) {
