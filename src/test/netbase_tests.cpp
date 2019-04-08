@@ -46,20 +46,12 @@ BOOST_AUTO_TEST_CASE(netbase_networks)
 
 BOOST_AUTO_TEST_CASE(netbase_properties)
 {
-
     BOOST_CHECK(ResolveIP("127.0.0.1").IsIPv4());
     BOOST_CHECK(ResolveIP("::FFFF:192.168.1.1").IsIPv4());
     BOOST_CHECK(ResolveIP("::1").IsIPv6());
-    BOOST_CHECK(ResolveIP("10.0.0.1").IsRFC1918());
-    BOOST_CHECK(ResolveIP("192.168.1.1").IsRFC1918());
-    BOOST_CHECK(ResolveIP("172.31.255.255").IsRFC1918());
     BOOST_CHECK(ResolveIP("2001:0DB8::").IsRFC3849());
-    BOOST_CHECK(ResolveIP("169.254.1.1").IsRFC3927());
     BOOST_CHECK(ResolveIP("2002::1").IsRFC3964());
-    BOOST_CHECK(ResolveIP("FC00::").IsRFC4193());
     BOOST_CHECK(ResolveIP("2001::2").IsRFC4380());
-    BOOST_CHECK(ResolveIP("2001:10::").IsRFC4843());
-    BOOST_CHECK(ResolveIP("FE80::").IsRFC4862());
     BOOST_CHECK(ResolveIP("64:FF9B::").IsRFC6052());
     BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor());
     BOOST_CHECK(ResolveIP("127.0.0.1").IsLocal());
@@ -67,9 +59,16 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(ResolveIP("8.8.8.8").IsRoutable());
     BOOST_CHECK(ResolveIP("2001::1").IsRoutable());
     BOOST_CHECK(ResolveIP("127.0.0.1").IsValid());
+    BOOST_CHECK(!ResolveIP("127.0.0.1").IsRoutable());
+    BOOST_CHECK(!ResolveIP("10.0.0.1").IsRoutable()); // RFC1918
+    BOOST_CHECK(!ResolveIP("192.168.1.1").IsRoutable()); // RFC1918
+    BOOST_CHECK(!ResolveIP("172.31.255.255").IsRoutable()); // RFC1918
+    BOOST_CHECK(!ResolveIP("169.254.1.1").IsRoutable()); // RFC3927
+    BOOST_CHECK(!ResolveIP("FC00::").IsRoutable()); // RFC4193
+    BOOST_CHECK(!ResolveIP("FE80::").IsRoutable()); // RFC4862
+    BOOST_CHECK(!ResolveIP("2001:10::").IsRoutable()); // RFC4843
     BOOST_CHECK(CreateInternal("FD6B:88C0:8724:edb1:8e4:3588:e546:35ca").IsInternal());
     BOOST_CHECK(CreateInternal("bar.com").IsInternal());
-
 }
 
 bool static TestSplitHost(std::string test, std::string host, int port)
