@@ -1945,7 +1945,7 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
 	int64_t remainder = 0;
 	string strPrecision = "0";
 	if (precision > 0) {
-		divByAmount = powf(10, precision);
+		divByAmount = pow(10, precision);
 		quotient = n_abs / divByAmount;
 		remainder = n_abs % divByAmount;
 		strPrecision = boost::lexical_cast<string>(precision);
@@ -1961,7 +1961,7 @@ CAmount AssetAmountFromValue(UniValue& value, int precision)
 	if (!value.isNum() && !value.isStr())
 		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
 	if (value.isStr() && value.get_str() == "-1") {
-		value.setInt((int64_t)(MAX_ASSET / ((int)powf(10, precision))));
+		value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
 	}
 	CAmount amount;
 	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
@@ -1992,7 +1992,7 @@ bool AssetRange(const CAmount& amount, int precision)
 	int64_t n_abs = (sign ? -amount : amount);
 	int64_t quotient = n_abs;
 	if (precision > 0) {
-		int64_t divByAmount = powf(10, precision);
+		int64_t divByAmount = pow(10, precision);
 		quotient = n_abs / divByAmount;
 	}
 	if (!AssetRange(quotient))
