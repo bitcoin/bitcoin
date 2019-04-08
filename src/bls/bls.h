@@ -155,8 +155,13 @@ public:
 
     bool SetHexStr(const std::string& str)
     {
+        if (!IsHex(str)) {
+            Reset();
+            return false;
+        }
         auto b = ParseHex(str);
         if (b.size() != SerSize) {
+            Reset();
             return false;
         }
         SetBuf(b);
