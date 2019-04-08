@@ -192,23 +192,23 @@ bool CNetAddr::IsRoutable() const
     static constexpr unsigned char pchRFC4862[] = {0xFE,0x80,0,0,0,0,0,0};
 
     return IsValid() && !(
-        // RFC1918: IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
         (IsIPv4() && (
-            GetByte(3) == 10 ||
-            (GetByte(3) == 192 && GetByte(2) == 168) ||
-            (GetByte(3) == 172 && (GetByte(2) >= 16 && GetByte(2) <= 31))))
-        // RFC2544: IPv4 inter-network communications (192.18.0.0/15)
-        || (IsIPv4() && GetByte(3) == 198 && (GetByte(2) == 18 || GetByte(2) == 19))
-        // RFC3927: IPv4 autoconfig (169.254.0.0/16)
-        || (IsIPv4() && (GetByte(3) == 169 && GetByte(2) == 254))
+          // RFC1918: IPv4 private networks (10.0.0.0/8, 192.168.0.0/16, 172.16.0.0/12)
+          (GetByte(3) == 10)
+          || (GetByte(3) == 192 && GetByte(2) == 168)
+          || (GetByte(3) == 172 && (GetByte(2) >= 16 && GetByte(2) <= 31))
+          // RFC2544: IPv4 inter-network communications (192.18.0.0/15)
+          || (GetByte(3) == 198 && (GetByte(2) == 18 || GetByte(2) == 19))
+          // RFC3927: IPv4 autoconfig (169.254.0.0/16)
+          || (GetByte(3) == 169 && GetByte(2) == 254)
+          // RFC6598: IPv4 ISP-level NAT (100.64.0.0/10)
+          || (GetByte(3) == 100 && GetByte(2) >= 64 && GetByte(2) <= 127)
+          // RFC5737: IPv4 documentation addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
+          || ((GetByte(3) == 192 && GetByte(2) == 0 && GetByte(1) == 2) ||
+              (GetByte(3) == 198 && GetByte(2) == 51 && GetByte(1) == 100) ||
+              (GetByte(3) == 203 && GetByte(2) == 0 && GetByte(1) == 113))))
         // RFC4862: IPv6 autoconfig (FE80::/64)
         || (memcmp(ip, pchRFC4862, sizeof(pchRFC4862)) == 0)
-        // RFC6598: IPv4 ISP-level NAT (100.64.0.0/10)
-        || (IsIPv4() && GetByte(3) == 100 && GetByte(2) >= 64 && GetByte(2) <= 127)
-        // RFC5737: IPv4 documentation addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24)
-        || (IsIPv4() && ((GetByte(3) == 192 && GetByte(2) == 0 && GetByte(1) == 2) ||
-            (GetByte(3) == 198 && GetByte(2) == 51 && GetByte(1) == 100) ||
-            (GetByte(3) == 203 && GetByte(2) == 0 && GetByte(1) == 113)))
         || (
             // RFC4193: IPv6 unique local (FC00::/7)
             ((GetByte(15) & 0xFE) == 0xFC)
