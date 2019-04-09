@@ -2649,19 +2649,29 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
     return ret;
 }
 
-CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth, const bool fAddLocked) const
+CWallet::Balance CWallet::GetBalance(const int min_depth, const bool fAddLocked) const
 {
-    CAmount nTotal = 0;
+    Balance ret;
     {
         LOCK2(cs_main, cs_wallet);
         for (auto pcoin : GetSpendableTXs()) {
-            if (pcoin->IsTrusted() && ((pcoin->GetDepthInMainChain() >= min_depth) || (fAddLocked && pcoin->IsLockedByInstantSend()))) {
-                nTotal += pcoin->GetAvailableCredit(true, filter);
+            const bool is_trusted{pcoin->IsTrusted()};
+            const int tx_depth{pcoin->GetDepthInMainChain()};
+            const CAmount tx_credit_mine{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_SPENDABLE)};
+            const CAmount tx_credit_watchonly{pcoin->GetAvailableCredit(/* fUseCache */ true, ISMINE_WATCH_ONLY)};
+            if (is_trusted && ((tx_depth >= min_depth) || (fAddLocked && pcoin->IsLockedByInstantSend()))) {
+                ret.m_mine_trusted += tx_credit_mine;
+                ret.m_watchonly_trusted += tx_credit_watchonly;
             }
+            if (!is_trusted && tx_depth == 0 && pcoin->InMempool()) {
+                ret.m_mine_untrusted_pending += tx_credit_mine;
+                ret.m_watchonly_untrusted_pending += tx_credit_watchonly;
+            }
+            ret.m_mine_immature += pcoin->GetImmatureCredit();
+            ret.m_watchonly_immature += pcoin->GetImmatureWatchOnlyCredit();
         }
     }
-
-    return nTotal;
+    return ret;
 }
 
 CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const
@@ -2759,56 +2769,6 @@ CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
         nTotal += pcoin->GetDenominatedCredit(unconfirmed);
     }
 
-    return nTotal;
-}
-
-CAmount CWallet::GetUnconfirmedBalance() const
-{
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (auto pcoin : GetSpendableTXs()) {
-            if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && !pcoin->IsLockedByInstantSend() && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableCredit();
-        }
-    }
-    return nTotal;
-}
-
-CAmount CWallet::GetImmatureBalance() const
-{
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (auto pcoin : GetSpendableTXs()) {
-            nTotal += pcoin->GetImmatureCredit();
-        }
-    }
-    return nTotal;
-}
-
-CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
-{
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (auto pcoin : GetSpendableTXs()) {
-            if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && !pcoin->IsLockedByInstantSend() && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableCredit(true, ISMINE_WATCH_ONLY);
-        }
-    }
-    return nTotal;
-}
-
-CAmount CWallet::GetImmatureWatchOnlyBalance() const
-{
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (auto pcoin : GetSpendableTXs()) {
-            nTotal += pcoin->GetImmatureWatchOnlyCredit();
-        }
-    }
     return nTotal;
 }
 

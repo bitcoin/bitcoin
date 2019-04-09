@@ -987,12 +987,16 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-    CAmount GetBalance(const isminefilter& filter=ISMINE_SPENDABLE, const int min_depth=0, bool fAddLocked = false) const;
-    CAmount GetUnconfirmedBalance() const;
-    CAmount GetImmatureBalance() const;
-    CAmount GetUnconfirmedWatchOnlyBalance() const;
-    CAmount GetImmatureWatchOnlyBalance() const;
+    struct Balance {
+        CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
+        CAmount m_mine_untrusted_pending{0}; //!< Untrusted, but in mempool (pending)
+        CAmount m_mine_immature{0};          //!< Immature coinbases in the main chain
+        CAmount m_watchonly_trusted{0};
+        CAmount m_watchonly_untrusted_pending{0};
+        CAmount m_watchonly_immature{0};
+    };
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const bool fAddLocked) const;
+    Balance GetBalance(int min_depth = 0, const bool fAddLocked = false) const;
 
     CAmount GetAnonymizableBalance(bool fSkipDenominated = false, bool fSkipUnconfirmed = true) const;
     CAmount GetAnonymizedBalance(const CCoinControl* coinControl = nullptr) const;

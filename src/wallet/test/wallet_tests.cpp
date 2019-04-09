@@ -57,7 +57,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::SUCCESS);
         BOOST_CHECK_EQUAL(failed_block, null_block);
         BOOST_CHECK_EQUAL(stop_block, newTip);
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 1000 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 1000 * COIN);
     }
 
     // Prune the older block file.
@@ -75,7 +75,7 @@ BOOST_FIXTURE_TEST_CASE(rescan, TestChain100Setup)
         BOOST_CHECK_EQUAL(wallet.ScanForWalletTransactions(oldTip, nullptr, reserver, failed_block, stop_block), CWallet::ScanResult::FAILURE);
         BOOST_CHECK_EQUAL(failed_block, oldTip);
         BOOST_CHECK_EQUAL(stop_block, newTip);
-        BOOST_CHECK_EQUAL(wallet.GetImmatureBalance(), 500 * COIN);
+        BOOST_CHECK_EQUAL(wallet.GetBalance().m_mine_immature, 500 * COIN);
     }
 
     // Verify importmulti RPC returns failure for a key whose creation time is
