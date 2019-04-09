@@ -972,8 +972,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string strAddress = params[1].get_str();
     CAmount nAmount = AmountFromValue(params[2]);
     uint32_t nBlockNumber = (uint32_t)params[3].get_int();
-    string vchTxRoot = params[4].get_str();
-    string vchValue = params[5].get_str();
+    
+    string vchValue = params[4].get_str();
+    string vchTxRoot = params[5].get_str();
     string vchParentNodes = params[6].get_str();
     string vchPath = params[7].get_str();
     string strWitness = params[8].get_str();
