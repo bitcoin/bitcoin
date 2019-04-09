@@ -2069,19 +2069,19 @@ void CConnman::ThreadOpenMasternodeConnections()
             std::vector<CService> pending;
             for (const auto& group : masternodeQuorumNodes) {
                 for (const auto& p : group.second) {
-                    auto& addr = p.first;
+                    auto& addr2 = p.first;
                     auto& proRegTxHash = p.second;
-                    if (!connectedNodes.count(addr) && !IsMasternodeOrDisconnectRequested(addr) && !connectedProRegTxHashes.count(proRegTxHash)) {
-                        pending.emplace_back(addr);
+                    if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
+                        pending.emplace_back(addr2);
                     }
                 }
             }
 
             if (!vPendingMasternodes.empty()) {
-                auto addr = vPendingMasternodes.front();
+                auto addr2 = vPendingMasternodes.front();
                 vPendingMasternodes.erase(vPendingMasternodes.begin());
-                if (!connectedNodes.count(addr) && !IsMasternodeOrDisconnectRequested(addr)) {
-                    pending.emplace_back(addr);
+                if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2)) {
+                    pending.emplace_back(addr2);
                 }
             }
 
