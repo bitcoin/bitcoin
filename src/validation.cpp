@@ -2933,7 +2933,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // peercoin: check block signature
     // Only check block signature if check merkle root, c.f. commit 3cd01fdf
     // rfc6: validate signatures of proof of stake blocks only after 0.8 fork
-    if (fCheckMerkleRoot && (block.IsProofOfStake() || IsBTC16BIPsEnabled(block.GetBlockTime())) && !CheckBlockSignature(block))
+    if (fCheckMerkleRoot && (block.IsProofOfStake() || !IsBTC16BIPsEnabled(block.GetBlockTime())) && !CheckBlockSignature(block))
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sign", false, strprintf("%s : bad block signature", __func__));
 
     return true;
