@@ -181,6 +181,34 @@ public:
     }
 };
 
+/** A key allocated from the key pool. */
+class CReserveKey
+{
+protected:
+    CWallet* pwallet;
+    int64_t nIndex{-1};
+    CPubKey vchPubKey;
+    bool fInternal{false};
+
+public:
+    explicit CReserveKey(CWallet* pwalletIn)
+    {
+        pwallet = pwalletIn;
+    }
+
+    CReserveKey(const CReserveKey&) = delete;
+    CReserveKey& operator=(const CReserveKey&) = delete;
+
+    ~CReserveKey()
+    {
+        ReturnKey();
+    }
+
+    void ReturnKey();
+    bool GetReservedKey(CPubKey &pubkey, bool internal = false);
+    void KeepKey();
+};
+
 /** Address book data */
 class CAddressBookData
 {
@@ -1217,34 +1245,6 @@ public:
  * their transactions. Actual rebroadcast schedule is managed by the wallets themselves.
  */
 void MaybeResendWalletTxs();
-
-/** A key allocated from the key pool. */
-class CReserveKey
-{
-protected:
-    CWallet* pwallet;
-    int64_t nIndex{-1};
-    CPubKey vchPubKey;
-    bool fInternal{false};
-
-public:
-    explicit CReserveKey(CWallet* pwalletIn)
-    {
-        pwallet = pwalletIn;
-    }
-
-    CReserveKey(const CReserveKey&) = delete;
-    CReserveKey& operator=(const CReserveKey&) = delete;
-
-    ~CReserveKey()
-    {
-        ReturnKey();
-    }
-
-    void ReturnKey();
-    bool GetReservedKey(CPubKey &pubkey, bool internal = false);
-    void KeepKey();
-};
 
 /** RAII object to check and reserve a wallet rescan */
 class WalletRescanReserver
