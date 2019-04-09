@@ -75,6 +75,10 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Taproot version reserved for soft-fork upgrades";
         case SCRIPT_ERR_DISCOURAGE_UNKNOWN_ANNEX:
             return "Unknown input annex reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_OP_SUCCESS:
+            return "SUCCESSx reserved for soft-fork upgrades";
+        case SCRIPT_ERR_DISCOURAGE_UPGRADABLE_PUBKEYTYPE:
+            return "Public key version reserved for soft-fork upgrades";
         case SCRIPT_ERR_PUBKEYTYPE:
             return "Public key is neither compressed or uncompressed";
         case SCRIPT_ERR_CLEANSTACK:
@@ -97,6 +101,8 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Invalid signature for taproot key path spending";
         case SCRIPT_ERR_TAPROOT_WRONG_CONTROL_SIZE:
             return "Invalid taproot control block size";
+        case SCRIPT_ERR_TAPSCRIPT_VALIDATION_WEIGHT:
+            return "Too much signature validation relative to witness weight";
         case SCRIPT_ERR_OP_CODESEPARATOR:
             return "Using OP_CODESEPARATOR in non-witness script";
         case SCRIPT_ERR_SIG_FINDANDDELETE:

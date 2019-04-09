@@ -49,6 +49,10 @@ static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
 // has meanings independent of the script
 static const unsigned int ANNEX_TAG = 0x50;
 
+// Validation weight per passing signature (tapscript only)
+// The first passing signature is not counted
+static const size_t VALIDATION_WEIGHT_PER_SIGOP_PASSED = 50;
+
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
 {
@@ -191,6 +195,9 @@ enum opcodetype
     OP_NOP8 = 0xb7,
     OP_NOP9 = 0xb8,
     OP_NOP10 = 0xb9,
+
+    // taproot
+    OP_CHECKSIGADD = 0xba,
 
     OP_INVALIDOPCODE = 0xff,
 };
@@ -587,5 +594,16 @@ struct CScriptWitness
 
     std::string ToString() const;
 };
+
+class CReserveScript
+{
+public:
+    CScript reserveScript;
+    virtual void KeepScript() {}
+    CReserveScript() {}
+    virtual ~CReserveScript() {}
+};
+
+bool IsOpSuccess(const opcodetype& opcode);
 
 #endif // BITCOIN_SCRIPT_SCRIPT_H
