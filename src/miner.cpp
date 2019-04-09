@@ -109,6 +109,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
+    LOCK(cs_main);
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    assert(pindexPrev != nullptr);
+    nHeight = pindexPrev->nHeight + 1;
+
     // Create coinbase transaction.
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
@@ -116,15 +121,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
+    if (pblock->IsProofOfWork()) {
+        pblock->nBits = GetNextTargetRequired(pindexPrev, false, chainparams.GetConsensus());
+        coinbaseTx.vout[0].nValue = GetProofOfWorkReward(pblock->nBits);
+        }
+
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
-
-    LOCK(cs_main);
-    CBlockIndex* pindexPrev = chainActive.Tip();    
-    assert(pindexPrev != nullptr);
-    nHeight = pindexPrev->nHeight + 1;
 
     // peercoin: if coinstake available add coinstake tx
     static int64_t nLastCoinStakeSearchTime = GetAdjustedTime();  // only initialized at startup
@@ -154,8 +159,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (*pfPoSCancel)
             return nullptr; // peercoin: there is no point to continue if we failed to create coinstake
     }
-    else
-        pblock->nBits = GetNextTargetRequired(pindexPrev, false, chainparams.GetConsensus());
 
     LOCK(mempool.cs);
 
