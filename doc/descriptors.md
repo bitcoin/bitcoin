@@ -1,11 +1,18 @@
 # Support for Output Descriptors in Bitcoin Core
 
-Since Bitcoin Core v0.17, there is support for Output Descriptors in the
-`scantxoutset` RPC call. This is a simple language which can be used to
-describe collections of output scripts.
+Since Bitcoin Core v0.17, there is support for Output Descriptors. This is a
+simple language which can be used to describe collections of output scripts.
+Supporting RPCs are:
+- `scantxoutset` takes as input descriptors to scan for, and also reports
+  specialized descriptors for the matching UTXOs.
+- `getdescriptorinfo` analyzes a descriptor, and reports a canonicalized version
+  with checksum added.
+- `deriveaddresses` takes as input a descriptor and computes the corresponding
+  addresses.
+- `listunspent` outputs a specialized descriptor for the reported unspent outputs.
 
-This document describes the language. For the specifics on usage for scanning
-the UTXO set, see the `scantxoutset` RPC help.
+This document describes the language. For the specifics on usage, see the RPC
+documentation for the functions mentioned above.
 
 ## Features
 
