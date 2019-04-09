@@ -114,23 +114,33 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
     }
 }
 
-void CMNAuth::NotifyMasternodeListChanged(const CDeterministicMNList& newList)
+void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
-    std::unordered_set<uint256> pubKeys;
-    g_connman->ForEachNode([&](const CNode* pnode) {
-        LOCK(pnode->cs_mnauth);
-        if (!pnode->verifiedProRegTxHash.IsNull()) {
-            pubKeys.emplace(pnode->verifiedPubKeyHash);
-        }
-    });
-    newList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
-        pubKeys.erase(dmn->pdmnState->pubKeyOperator.GetHash());
-    });
+    // we're only interested in updated/removed MNs. Added MNs are of no interest for us
+    if (diff.updatedMNs.empty() && diff.removedMns.empty()) {
+        return;
+    }
+
     g_connman->ForEachNode([&](CNode* pnode) {
         LOCK(pnode->cs_mnauth);
-        if (!pnode->verifiedProRegTxHash.IsNull() && pubKeys.count(pnode->verifiedPubKeyHash)) {
+        if (pnode->verifiedProRegTxHash.IsNull()) {
+            return;
+        }
+        bool doRemove = false;
+        if (diff.removedMns.count(pnode->verifiedProRegTxHash)) {
+            doRemove = true;
+        } else {
+            auto it = diff.updatedMNs.find(pnode->verifiedProRegTxHash);
+            if (it != diff.updatedMNs.end()) {
+                if (it->second->pubKeyOperator.GetHash() != pnode->verifiedPubKeyHash) {
+                    doRemove = true;
+                }
+            }
+        }
+
+        if (doRemove) {
             LogPrint("net", "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
-                    pnode->verifiedProRegTxHash.ToString(), pnode->id);
+                     pnode->verifiedProRegTxHash.ToString(), pnode->id);
             pnode->fDisconnect = true;
         }
     });
