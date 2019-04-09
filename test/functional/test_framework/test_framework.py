@@ -396,7 +396,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         disconnect_nodes(self.nodes[1], 2)
         disconnect_nodes(self.nodes[2], 1)
-        self.sync_all([self.nodes[:2], self.nodes[2:]])
+        self.sync_all(self.nodes[:2])
+        self.sync_all(self.nodes[2:])
 
     def join_network(self):
         """
@@ -405,13 +406,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         connect_nodes_bi(self.nodes, 1, 2)
         self.sync_all()
 
-    def sync_all(self, node_groups=None):
-        if not node_groups:
-            node_groups = [self.nodes]
-
-        for group in node_groups:
-            sync_blocks(group)
-            sync_mempools(group)
+    def sync_all(self, nodes=None, **kwargs):
+            sync_blocks(nodes or self.nodes, **kwargs)
+            sync_mempools(nodes or self.nodes, **kwargs)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
