@@ -30,7 +30,7 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.NotifyGovernanceObject.connect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.NotifyGovernanceVote.connect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
     g_signals.NotifyInstantSendDoubleSpendAttempt.connect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
-    g_signals.NotifyMasternodeListChanged.connect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1));
+    g_signals.NotifyMasternodeListChanged.connect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
@@ -51,7 +51,7 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.NotifyGovernanceObject.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.NotifyGovernanceVote.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
     g_signals.NotifyInstantSendDoubleSpendAttempt.disconnect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
-    g_signals.NotifyMasternodeListChanged.disconnect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1));
+    g_signals.NotifyMasternodeListChanged.disconnect(boost::bind(&CValidationInterface::NotifyMasternodeListChanged, pwalletIn, _1, _2, _3));
 }
 
 void UnregisterAllValidationInterfaces() {

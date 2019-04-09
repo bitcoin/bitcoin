@@ -81,9 +81,9 @@ void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBl
     CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
 }
 
-void CDSNotificationInterface::NotifyMasternodeListChanged(const CDeterministicMNList& newList)
+void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
-    CMNAuth::NotifyMasternodeListChanged(newList);
+    CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff);
     governance.CheckMasternodeOrphanObjects(connman);
     governance.CheckMasternodeOrphanVotes(connman);
     governance.UpdateCachesAndClean();
