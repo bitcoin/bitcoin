@@ -37,7 +37,7 @@ const unsigned int nProtocolV07TestSwitchTime = 1541505600; // Tue 06 Nov 12:00:
 
 // Switch time for new BIPs from bitcoin 0.16.x
 const uint32_t nBTC16BIPsSwitchTime = 32548219200; // Fri 31 May 12:00:00 UTC 3001
-const uint32_t nBTC16BIPsTestSwitchTime = 1559260800; // Fri 31 May 00:00:00 UTC 2019
+const uint32_t nBTC16BIPsTestSwitchTime = 1554811200; // Tue 09 Apr 12:00:00 UTC 2019
 
 // Hard checkpoints of stake modifiers to ensure they are deterministic
 static std::map<int, unsigned int> mapStakeModifierCheckpoints =
