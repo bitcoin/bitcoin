@@ -190,21 +190,29 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
         }
 
         if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
-            std::map<CService, uint256> connections;
+            std::set<uint256> connections;
             if (quorum->IsMember(myProTxHash)) {
                 connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->qc.quorumHash, myProTxHash);
             } else {
                 auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->qc.quorumHash, quorum->members.size(), 1);
                 for (auto idx : cindexes) {
-                    connections.emplace(quorum->members[idx]->pdmnState->addr, quorum->members[idx]->proTxHash);
+                    connections.emplace(quorum->members[idx]->proTxHash);
                 }
             }
             if (!connections.empty()) {
-                std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
-                for (auto& c : connections) {
-                    debugMsg += strprintf("  %s\n", c.first.ToString(false));
+                if (LogAcceptCategory("llmq")) {
+                    auto mnList = deterministicMNManager->GetListAtChainTip();
+                    std::string debugMsg = strprintf("CQuorumManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
+                    for (auto& c : connections) {
+                        auto dmn = mnList.GetValidMN(c);
+                        if (!dmn) {
+                            debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
+                        } else {
+                            debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
+                        }
+                    }
+                    LogPrint("llmq", debugMsg);
                 }
-                LogPrint("llmq", debugMsg);
                 g_connman->AddMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash, connections);
             }
         }

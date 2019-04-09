@@ -168,6 +168,11 @@ CDeterministicMNCPtr CDeterministicMNList::GetValidMNByCollateral(const COutPoin
     return dmn;
 }
 
+CDeterministicMNCPtr CDeterministicMNList::GetValidMNByService(const CService& service) const
+{
+    return GetUniquePropertyMN(service);
+}
+
 static int CompareByLastPaid_GetHeight(const CDeterministicMN& dmn)
 {
     int height = dmn.pdmnState->nLastPaidHeight;

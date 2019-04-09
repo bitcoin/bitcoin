@@ -306,8 +306,6 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
-    void ForEachQuorumMember(Consensus::LLMQType llmqType, const uint256& quorumHash, std::function<bool(CNode* pnode)> func) const;
-
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     std::vector<CNode*> CopyNodeVector();
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
@@ -358,7 +356,7 @@ public:
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
 
     bool AddPendingMasternode(const CService& addr);
-    bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::map<CService, uint256>& addresses);
+    bool AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
     // also returns QWATCH nodes
@@ -494,7 +492,7 @@ private:
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
     std::vector<CService> vPendingMasternodes;
-    std::map<std::pair<Consensus::LLMQType, uint256>, std::map<CService, uint256>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
     mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
     std::list<CNode*> vNodesDisconnected;

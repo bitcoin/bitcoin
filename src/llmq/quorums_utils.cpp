@@ -41,12 +41,12 @@ uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& q
     return h.GetHash();
 }
 
-std::map<CService, uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember)
+std::set<uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType llmqType, const uint256& blockHash, const uint256& forMember)
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     auto mns = GetAllQuorumMembers(llmqType, blockHash);
-    std::map<CService, uint256> result;
+    std::set<uint256> result;
     for (size_t i = 0; i < mns.size(); i++) {
         auto& dmn = mns[i];
         if (dmn->proTxHash == forMember) {
@@ -62,7 +62,7 @@ std::map<CService, uint256> CLLMQUtils::GetQuorumConnections(Consensus::LLMQType
                 if (otherDmn == dmn) {
                     continue;
                 }
-                result.emplace(otherDmn->pdmnState->addr, otherDmn->proTxHash);
+                result.emplace(otherDmn->proTxHash);
                 gap <<= 1;
                 k++;
             }
