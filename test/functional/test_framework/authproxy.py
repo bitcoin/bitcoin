@@ -122,8 +122,11 @@ class AuthServiceProxy():
     def get_request(self, *args, **argsn):
         AuthServiceProxy.__id_count += 1
 
-        log.debug("-%s-> %s %s" % (AuthServiceProxy.__id_count, self._service_name,
-                                   json.dumps(args, default=EncodeDecimal, ensure_ascii=self.ensure_ascii)))
+        log.debug("-{}-> {} {}".format(
+            AuthServiceProxy.__id_count,
+            self._service_name,
+            json.dumps(args or argsn, default=EncodeDecimal, ensure_ascii=self.ensure_ascii),
+        ))
         if args and argsn:
             raise ValueError('Cannot handle both named and positional arguments')
         return {'version': '1.1',
