@@ -306,8 +306,6 @@ public:
         ForEachNodeThen(FullyConnectedOnly, pre, post);
     }
 
-    void ForEachQuorumMember(Consensus::LLMQType llmqType, const uint256& quorumHash, std::function<bool(CNode* pnode)> func) const;
-
     std::vector<CNode*> CopyNodeVector(std::function<bool(const CNode* pnode)> cond);
     std::vector<CNode*> CopyNodeVector();
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);

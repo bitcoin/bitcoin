@@ -3247,20 +3247,6 @@ bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, 
     return found != nullptr && cond(found) && func(found);
 }
 
-void CConnman::ForEachQuorumMember(Consensus::LLMQType llmqType, const uint256& quorumHash, std::function<bool(CNode* pnode)> func) const
-{
-    LOCK2(cs_vNodes, cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
-    if (it == masternodeQuorumNodes.end()) {
-        return;
-    }
-    for (auto&& pnode : vNodes) {
-        if(it->second.count(pnode->addr)) {
-            func(pnode);
-        }
-    }
-}
-
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
     return ForNode(addr, AllNodes, [](CNode* pnode){
         return pnode->fMasternode || pnode->fDisconnect;
