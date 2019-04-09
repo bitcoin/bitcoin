@@ -2056,6 +2056,8 @@ void CConnman::ThreadOpenMasternodeConnections()
             }
         });
 
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+
         CSemaphoreGrant grant(*semMasternodeOutbound);
         if (interruptNet)
             return;
@@ -2069,8 +2071,12 @@ void CConnman::ThreadOpenMasternodeConnections()
             std::vector<CService> pending;
             for (const auto& group : masternodeQuorumNodes) {
                 for (const auto& p : group.second) {
-                    auto& addr2 = p.first;
-                    auto& proRegTxHash = p.second;
+                    const auto& proRegTxHash = p.second;
+                    auto dmn = mnList.GetValidMN(proRegTxHash);
+                    if (!dmn) {
+                        continue;
+                    }
+                    const auto& addr2 = dmn->pdmnState->addr;
                     if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
                         pending.emplace_back(addr2);
                     }
