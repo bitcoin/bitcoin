@@ -2070,8 +2070,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 
             std::vector<CService> pending;
             for (const auto& group : masternodeQuorumNodes) {
-                for (const auto& p : group.second) {
-                    const auto& proRegTxHash = p.second;
+                for (const auto& proRegTxHash : group.second) {
                     auto dmn = mnList.GetValidMN(proRegTxHash);
                     if (!dmn) {
                         continue;
@@ -2725,14 +2724,14 @@ bool CConnman::AddPendingMasternode(const CService& service)
     return true;
 }
 
-bool CConnman::AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::map<CService, uint256>& addresses)
+bool CConnman::AddMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
     auto it = masternodeQuorumNodes.find(std::make_pair(llmqType, quorumHash));
     if (it != masternodeQuorumNodes.end()) {
         return false;
     }
-    masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), addresses);
+    masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
     return true;
 }
 
@@ -2762,18 +2761,14 @@ std::set<NodeId> CConnman::GetMasternodeQuorumNodes(Consensus::LLMQType llmqType
     if (it == masternodeQuorumNodes.end()) {
         return {};
     }
-    std::set<uint256> proRegTxHashes;
-    for (auto& p : it->second) {
-        proRegTxHashes.emplace(p.second);
-    }
+    const auto& proRegTxHashes = it->second;
 
     std::set<NodeId> nodes;
     for (const auto pnode : vNodes) {
         if (pnode->fDisconnect) {
             continue;
         }
-        if (!pnode->qwatch && !it->second.count(pnode->addr) &&
-            (pnode->verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(pnode->verifiedProRegTxHash))) {
+        if (!pnode->qwatch && (pnode->verifiedProRegTxHash.IsNull() || !proRegTxHashes.count(pnode->verifiedProRegTxHash))) {
             continue;
         }
         nodes.emplace(pnode->id);
@@ -2789,13 +2784,27 @@ void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const u
 
 bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
 {
+    // Let's see if this is an outgoing connection to an address that is known to be a masternode
+    // We however only need to know this if the node did not authenticate itself as a MN yet
+    uint256 assumedProTxHash;
+    if (pnode->verifiedProRegTxHash.IsNull() && !pnode->fInbound) {
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+        auto dmn = mnList.GetValidMNByService(pnode->addr);
+        if (dmn == nullptr) {
+            // This is definitely not a masternode
+            return false;
+        }
+        assumedProTxHash = dmn->proTxHash;
+    }
+
     LOCK(cs_vPendingMasternodes);
     for (const auto& p : masternodeQuorumNodes) {
-        for (const auto& p2 : p.second) {
-            if (p2.first == (CService)pnode->addr) {
+        if (!pnode->verifiedProRegTxHash.IsNull()) {
+            if (p.second.count(pnode->verifiedProRegTxHash)) {
                 return true;
             }
-            if (!pnode->verifiedProRegTxHash.IsNull() && p2.second == pnode->verifiedProRegTxHash) {
+        } else if (!assumedProTxHash.IsNull()) {
+            if (p.second.count(assumedProTxHash)) {
                 return true;
             }
         }

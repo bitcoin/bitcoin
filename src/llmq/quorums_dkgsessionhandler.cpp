@@ -468,21 +468,29 @@ void CDKGSessionHandler::HandleDKGRound()
     });
 
     if (curSession->AreWeMember() || GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
-        std::map<CService, uint256> connections;
+        std::set<uint256> connections;
         if (curSession->AreWeMember()) {
             connections = CLLMQUtils::GetQuorumConnections(params.type, curQuorumHash, curSession->myProTxHash);
         } else {
             auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(params.type, curQuorumHash, curSession->members.size(), 1);
             for (auto idx : cindexes) {
-                connections.emplace(curSession->members[idx]->dmn->pdmnState->addr, curSession->members[idx]->dmn->proTxHash);
+                connections.emplace(curSession->members[idx]->dmn->proTxHash);
             }
         }
         if (!connections.empty()) {
-            std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->quorumHash.ToString());
-            for (const auto& c : connections) {
-                debugMsg += strprintf("  %s\n", c.first.ToString(false));
+            if (LogAcceptCategory("llmq-dkg")) {
+                std::string debugMsg = strprintf("CDKGSessionManager::%s -- adding masternodes quorum connections for quorum %s:\n", __func__, curSession->quorumHash.ToString());
+                auto mnList = deterministicMNManager->GetListAtChainTip();
+                for (const auto& c : connections) {
+                    auto dmn = mnList.GetValidMN(c);
+                    if (!dmn) {
+                        debugMsg += strprintf("  %s (not in valid MN set anymore)\n", c.ToString());
+                    } else {
+                        debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
+                    }
+                }
+                LogPrint("llmq-dkg", debugMsg);
             }
-            LogPrint("llmq-dkg", debugMsg);
             g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
         }
     }
