@@ -33,12 +33,14 @@ remotes:
   "dir": "bitcoin"
 files:
 - "MacOSX10.11.sdk.tar.gz"
+- "rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz"
 script: |
   set -e -o pipefail
 
+  echo -n "81b0d6a71f22c21238e8ae4385bb8a3018df29bc667d4131cab3aabb33095443  rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz" | sha256sum -c
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-apple-darwin14"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests GENISOIMAGE=$WRAP_DIR/genisoimage"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --enable-experimental-rust GENISOIMAGE=$WRAP_DIR/genisoimage"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="ar ranlib date dmg genisoimage"
 
@@ -80,6 +82,9 @@ script: |
     done
   done
   }
+
+  tar -C ~ -xf ${BUILD_DIR}/rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz
+  . ~/.cargo/env
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}

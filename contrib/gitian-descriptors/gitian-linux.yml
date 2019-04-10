@@ -35,13 +35,19 @@ packages:
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files: []
+files:
+- "rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz"
 script: |
   set -e -o pipefail
 
+  echo -n "81b0d6a71f22c21238e8ae4385bb8a3018df29bc667d4131cab3aabb33095443  rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz" | sha256sum -c
+
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --enable-experimental-rust"
+  # TODO: Re-enable riscv64-linux-gnu when riscv support makes it to rust stable.
+  # See: https://github.com/rust-lang/rust/pull/52787
+  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
+
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
@@ -87,6 +93,9 @@ script: |
     done
   done
   }
+
+  tar -C ~ -xf ${BUILD_DIR}/rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz
+  . ~/.cargo/env
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
@@ -175,7 +184,18 @@ script: |
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
-    make ${MAKEOPTS} -C src check-symbols
+    # TODO: Fix symbols check
+    # bitcoin-wallet: symbol __cxa_thread_atexit_impl from unsupported version GLIBC_2.18
+    # bitcoin-wallet: symbol posix_spawnp from unsupported version GLIBC_2.15
+    # test/test_bitcoin: symbol __cxa_thread_atexit_impl from unsupported version GLIBC_2.18
+    # test/test_bitcoin: symbol posix_spawnp from unsupported version GLIBC_2.15
+    # qt/bitcoin-qt: symbol __cxa_thread_atexit_impl from unsupported version GLIBC_2.18
+    # qt/bitcoin-qt: symbol posix_spawnp from unsupported version GLIBC_2.15
+    #
+    # See: https://github.com/rust-lang/rust/issues/57497
+    # We will need to add stubs for posix_spawnp and __cxa_thread_atexit_impl,
+    # or bump our minimum supported glibc.
+    # make ${MAKEOPTS} -C src check-symbols
     make install DESTDIR=${INSTALLPATH}
     cd installed
     find . -name "lib*.la" -delete

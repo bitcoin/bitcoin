@@ -26,13 +26,25 @@ packages:
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
-files: []
+files:
+- "rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz"
 script: |
   set -e -o pipefail
 
+  echo -n "81b0d6a71f22c21238e8ae4385bb8a3018df29bc667d4131cab3aabb33095443  rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz" | sha256sum -c
+
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-w64-mingw32 x86_64-w64-mingw32"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests"
+  # TODO: Figure out what to do with i686.
+  # See: https://github.com/rust-lang/rust/issues/12859#issuecomment-62255275
+  # CXXLD    bitcoind.exe
+  # rusty/out/release/librusty.a(panic_unwind-391e531731ebdcff.panic_unwind.4lxunjl3-cgu.0.rcgu.o): In function `ZN12panic_unwind3imp5panic17h909ccf74c1ea010eE':
+  # /rustc/2aa4c46cfdd726e97360c2734835aa3515e8c858\/src\libpanic_unwind/gcc.rs:73: undefined reference to `_Unwind_RaiseException'
+  # rusty/out/release/librusty.a(panic_unwind-391e531731ebdcff.panic_unwind.4lxunjl3-cgu.0.rcgu.o): In function `rust_eh_unwind_resume':
+  # /rustc/2aa4c46cfdd726e97360c2734835aa3515e8c858\/src\libpanic_unwind/gcc.rs:281: undefined reference to `_Unwind_Resume'
+  # collect2: error: ld returned 1 exit status
+  HOSTS="x86_64-w64-mingw32"
+
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --enable-experimental-rust"
   FAKETIME_HOST_PROGS="ar ranlib nm windres strip objcopy"
   FAKETIME_PROGS="date makensis zip"
   HOST_CFLAGS="-O2 -g"
@@ -98,6 +110,9 @@ script: |
     done
   done
   }
+
+  tar -C ~ -xf ${BUILD_DIR}/rust-stable-x86_64-unknown-linux-gnu-1.33.0.tar.xz
+  . ~/.cargo/env
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
@@ -179,6 +194,4 @@ script: |
   cp $OUTDIR/bitcoin-*setup-unsigned.exe unsigned/
   find . | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
   mv ${OUTDIR}/${DISTNAME}-x86_64-*-debug.zip ${OUTDIR}/${DISTNAME}-win64-debug.zip
-  mv ${OUTDIR}/${DISTNAME}-i686-*-debug.zip ${OUTDIR}/${DISTNAME}-win32-debug.zip
   mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip
-  mv ${OUTDIR}/${DISTNAME}-i686-*.zip ${OUTDIR}/${DISTNAME}-win32.zip
