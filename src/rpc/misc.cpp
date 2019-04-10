@@ -20,6 +20,7 @@
 #include <timedata.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <util/validation.h>
 #include <warnings.h>
 
 #include <stdint.h>

@@ -12,6 +12,7 @@
 #include <net_processing.h>
 #include <netbase.h>
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
 #include <sync.h>

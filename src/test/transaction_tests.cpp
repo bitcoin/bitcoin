@@ -8,13 +8,14 @@
 
 #include <clientversion.h>
 #include <checkqueue.h>
-#include <consensus/tx_verify.h>
+#include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <key.h>
 #include <keystore.h>
 #include <validation.h>
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/script_error.h>
