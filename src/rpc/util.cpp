@@ -165,6 +165,10 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
     }
 }
 
+/**
+ * A pair of strings that can be aligned (through padding) with other Sections
+ * later on
+ */
 struct Section {
     Section(const std::string& left, const std::string& right)
         : m_left{left}, m_right{right} {}
@@ -172,6 +176,10 @@ struct Section {
     const std::string m_right;
 };
 
+/**
+ * Keeps track of RPCArgs by transforming them into sections for the purpose
+ * of serializing everything to a single string
+ */
 struct Sections {
     std::vector<Section> m_sections;
     size_t m_max_pad{0};
@@ -182,16 +190,26 @@ struct Sections {
         m_sections.push_back(s);
     }
 
+    /**
+     * Serializing RPCArgs depends on the outer type. Only arrays and
+     * dictionaries can be nested in json. The top-level outer type is "named
+     * arguments", a mix between a dictionary and arrays.
+     */
     enum class OuterType {
         ARR,
         OBJ,
         NAMED_ARG, // Only set on first recursion
     };
 
+    /**
+     * Recursive helper to translate an RPCArg into sections
+     */
     void Push(const RPCArg& arg, const size_t current_indent = 5, const OuterType outer_type = OuterType::NAMED_ARG)
     {
         const auto indent = std::string(current_indent, ' ');
         const auto indent_next = std::string(current_indent + 2, ' ');
+        const bool push_name{outer_type == OuterType::OBJ}; // Dictionary keys must have a name
+
         switch (arg.m_type) {
         case RPCArg::Type::STR_HEX:
         case RPCArg::Type::STR:
@@ -201,10 +219,10 @@ struct Sections {
         case RPCArg::Type::BOOL: {
             if (outer_type == OuterType::NAMED_ARG) return; // Nothing more to do for non-recursive types on first recursion
             auto left = indent;
-            if (arg.m_type_str.size() != 0 && outer_type == OuterType::OBJ) {
+            if (arg.m_type_str.size() != 0 && push_name) {
                 left += "\"" + arg.m_name + "\": " + arg.m_type_str.at(0);
             } else {
-                left += outer_type == OuterType::OBJ ? arg.ToStringObj(/* oneline */ false) : arg.ToString(/* oneline */ false);
+                left += push_name ? arg.ToStringObj(/* oneline */ false) : arg.ToString(/* oneline */ false);
             }
             left += ",";
             PushSection({left, arg.ToDescriptionString()});
@@ -213,7 +231,7 @@ struct Sections {
         case RPCArg::Type::OBJ:
         case RPCArg::Type::OBJ_USER_KEYS: {
             const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString();
-            PushSection({indent + "{", right});
+            PushSection({indent + (push_name ? "\"" + arg.m_name + "\": " : "") + "{", right});
             for (const auto& arg_inner : arg.m_inner) {
                 Push(arg_inner, current_indent + 2, OuterType::OBJ);
             }
@@ -225,7 +243,7 @@ struct Sections {
         }
         case RPCArg::Type::ARR: {
             auto left = indent;
-            left += outer_type == OuterType::OBJ ? "\"" + arg.m_name + "\": " : "";
+            left += push_name ? "\"" + arg.m_name + "\": " : "";
             left += "[";
             const auto right = outer_type == OuterType::NAMED_ARG ? "" : arg.ToDescriptionString();
             PushSection({left, right});
@@ -241,6 +259,9 @@ struct Sections {
         }
     }
 
+    /**
+     * Concatenate all sections with proper padding
+     */
     std::string ToString() const
     {
         std::string ret;
