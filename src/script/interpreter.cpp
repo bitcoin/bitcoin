@@ -938,24 +938,26 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     {
                     case SigVersion::BASE:
                     case SigVersion::WITNESS_V0:
-                    // Subset of script starting at the most recent codeseparator
-                    execdata.m_scriptcode = CScript(pbegincodehash, pend);
+                    {
+                        // Subset of script starting at the most recent codeseparator
+                        execdata.m_scriptcode = CScript(pbegincodehash, pend);
 
-                    // Drop the signature in pre-segwit scripts but not segwit scripts
-                    if (sigversion == SigVersion::BASE) {
-                        int found = FindAndDelete(execdata.m_scriptcode, CScript() << vchSig);
-                        if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
-                            return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
+                        // Drop the signature in pre-segwit scripts but not segwit scripts
+                        if (sigversion == SigVersion::BASE) {
+                            int found = FindAndDelete(execdata.m_scriptcode,  CScript() << vchSig);
+                            if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
+                                return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
+                        }
+
+                        if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror)) {
+                            //serror is set
+                            return false;
+                        }
+                        fSuccess = checker.CheckSig(vchSig, vchPubKey, execdata, sigversion);
+
+                        if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
+                            return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
                     }
-
-                    if (!CheckSignatureEncoding(vchSig, flags, serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror)) {
-                        //serror is set
-                        return false;
-                    }
-                    fSuccess = checker.CheckSig(vchSig, vchPubKey, execdata, sigversion);
-
-                    if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
-                        return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
                     break;
 
                     case SigVersion::TAPSCRIPT:
