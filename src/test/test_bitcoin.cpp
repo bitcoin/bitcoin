@@ -19,6 +19,7 @@
 #include <script/sigcache.h>
 #include <streams.h>
 #include <ui_interface.h>
+#include <util/validation.h>
 #include <validation.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;

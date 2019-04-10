@@ -148,6 +148,4 @@ private:
     struct event* ev;
 };
 
-std::string urlDecode(const std::string &urlEncoded);
-
 #endif // BITCOIN_HTTPSERVER_H

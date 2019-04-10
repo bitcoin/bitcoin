@@ -12,6 +12,7 @@
 #include <checkqueue.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <cuckoocache.h>
@@ -21,6 +22,7 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
+#include <policy/settings.h>
 #include <pow.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
@@ -37,8 +39,10 @@
 #include <ui_interface.h>
 #include <undo.h>
 #include <util/moneystr.h>
+#include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
 
@@ -236,7 +240,6 @@ std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
 bool fHavePruned = false;
 bool fPruneMode = false;
-bool fIsBareMultisigStd = DEFAULT_PERMIT_BAREMULTISIG;
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
@@ -257,8 +260,6 @@ std::atomic_bool g_is_mempool_loaded{false};
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
-
-const std::string strMessageMagic = "Bitcoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -459,15 +460,6 @@ static void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) 
     pool.TrimToSize(limit, &vNoSpendsRemaining);
     for (const COutPoint& removed : vNoSpendsRemaining)
         pcoinsTip->Uncache(removed);
-}
-
-/** Convert CValidationState to a human-readable message for logging */
-std::string FormatStateMessage(const CValidationState &state)
-{
-    return strprintf("%s%s (code %i)",
-        state.GetRejectReason(),
-        state.GetDebugMessage().empty() ? "" : ", "+state.GetDebugMessage(),
-        state.GetRejectCode());
 }
 
 static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
