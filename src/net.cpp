@@ -1875,11 +1875,15 @@ void CConnman::ThreadOpenConnections()
             }
         }
 
+        auto mnList = deterministicMNManager->GetListAtChainTip();
+
         int64_t nANow = GetAdjustedTime();
         int nTries = 0;
         while (!interruptNet)
         {
             CAddrInfo addr = addrman.Select(fFeeler);
+
+            bool isMasternode = mnList.GetValidMNByService(addr) != nullptr;
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()))
@@ -1901,7 +1905,7 @@ void CConnman::ThreadOpenConnections()
                 continue;
 
             // only connect to full nodes
-            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
+            if (!isMasternode && (addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
                 continue;
 
             // only consider very recently tried nodes after 30 failed attempts
@@ -1914,12 +1918,12 @@ void CConnman::ThreadOpenConnections()
                 nRequiredServices = REQUIRED_SERVICES;
             }
 
-            if ((addr.nServices & nRequiredServices) != nRequiredServices) {
+            if (!isMasternode && (addr.nServices & nRequiredServices) != nRequiredServices) {
                 continue;
             }
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
-            if (addr.GetPort() != Params().GetDefaultPort() && addr.GetPort() != GetListenPort() && nTries < 50)
+            if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort() && addr.GetPort() != GetListenPort() && nTries < 50)
                 continue;
 
             addrConnect = addr;
