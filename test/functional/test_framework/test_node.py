@@ -369,7 +369,7 @@ class TestNode():
                 stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL) == 0
 
         if not sys.platform.startswith('linux'):
-            self.log.warning("Can't profile with perf; only availabe on Linux platforms")
+            self.log.warning("Can't profile with perf; only available on Linux platforms")
             return None
 
         if not test_success('which perf'):
