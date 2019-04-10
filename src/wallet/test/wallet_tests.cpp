@@ -272,7 +272,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     if (blockTime > 0) {
         auto locked_chain = wallet.chain().lock();
         LockAssertion lock(::cs_main);
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
+        auto inserted = ::BlockIndex().emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
         block = inserted.first->second;
