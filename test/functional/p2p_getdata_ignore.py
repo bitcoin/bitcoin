@@ -107,13 +107,12 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         assert_equal(len(node.p2p.getdata_requests), 0)
         assert_equal(node.getpeerinfo()[0]["tx_process"], 60)
 
-        self.log.info("Have 80 unasked-for transactions queued at 32min...")
+        self.log.info("After 30 minutes, have disconnected")
         node.setmocktime(mt+32*60)
-        self.p2p_withheld_tx(20)
+        time.sleep(1)
         assert_equal(len(node.p2p.getdata_requests), 0)
-        assert_equal(node.getpeerinfo()[0]["tx_process"], 80)
         assert_equal(0, node.getmempoolinfo()['size'])  # Mempool should be empty
-        assert_equal(1, len(node.getpeerinfo()))  # still connected
+        assert_equal(0, len(node.getpeerinfo()))  # disconnected
 
 if __name__ == '__main__':
     InvalidTxRequestTest().main()

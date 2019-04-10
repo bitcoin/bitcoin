@@ -72,6 +72,8 @@ static constexpr int32_t MAX_PEER_TX_ANNOUNCEMENTS = 2 * MAX_INV_SZ;
 static constexpr int64_t INBOUND_PEER_TX_DELAY = 2 * 1000000;
 /** How long to wait (in microseconds) before downloading a transaction from an additional peer */
 static constexpr int64_t GETDATA_TX_INTERVAL = 60 * 1000000;
+/** How long (in microseconds) to allow a tx getdata to lag due to a full in_flight queue before considering peer non-viable */
+static constexpr int64_t GETDATA_TX_TIMEOUT = 30 * 60 * 1000000;
 /** Maximum delay (in microseconds) for transaction requests to avoid biasing some peers over others. */
 static constexpr int64_t MAX_GETDATA_RANDOM_DELAY = 2 * 1000000;
 static_assert(INBOUND_PEER_TX_DELAY >= MAX_GETDATA_RANDOM_DELAY,
@@ -3365,6 +3367,14 @@ void PeerLogicValidation::ConsiderEviction(CNode *pto, int64_t time_in_seconds)
                 // has not sufficiently progressed)
                 state.m_chain_sync.m_timeout = time_in_seconds + HEADERS_RESPONSE_TIME;
             }
+        }
+    }
+
+    const auto& tx_download = state.m_tx_download;
+    if (tx_download.m_tx_in_flight.size() >= MAX_PEER_TX_IN_FLIGHT) {
+        if (!tx_download.m_tx_process_time.empty() && (tx_download.m_tx_process_time.begin()->first + GETDATA_TX_TIMEOUT) <= time_in_seconds * 1000000) {
+            LogPrintf("Disconnecting outbound peer %d due to tx request backlog (%d inflight, %d queued)\n", pto->GetId(), tx_download.m_tx_in_flight.size(), tx_download.m_tx_process_time.size());
+            pto->fDisconnect = true;
         }
     }
 }
