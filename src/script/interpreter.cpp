@@ -288,6 +288,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     // static const valtype vchZero(0);
     static const valtype vchTrue(1, 1);
 
+    ScriptExecutionData execdata;
     CScript::const_iterator pc = script.begin();
     CScript::const_iterator pend = script.end();
     CScript::const_iterator pbegincodehash = script.begin();
@@ -922,11 +923,11 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                     valtype& vchPubKey = stacktop(-1);
 
                     // Subset of script starting at the most recent codeseparator
-                    CScript scriptCode(pbegincodehash, pend);
+                    execdata.m_scriptcode = CScript(pbegincodehash, pend);
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
                     if (sigversion == SigVersion::BASE) {
-                        int found = FindAndDelete(scriptCode, CScript() << vchSig);
+                        int found = FindAndDelete(execdata.m_scriptcode, CScript() << vchSig);
                         if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
                             return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
                     }
@@ -935,7 +936,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         //serror is set
                         return false;
                     }
-                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
+                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, execdata, sigversion);
 
                     if (!fSuccess && (flags & SCRIPT_VERIFY_NULLFAIL) && vchSig.size())
                         return set_error(serror, SCRIPT_ERR_SIG_NULLFAIL);
@@ -985,14 +986,14 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
 
                     // Subset of script starting at the most recent codeseparator
-                    CScript scriptCode(pbegincodehash, pend);
+                    execdata.m_scriptcode = CScript(pbegincodehash, pend);
 
                     // Drop the signature in pre-segwit scripts but not segwit scripts
                     for (int k = 0; k < nSigsCount; k++)
                     {
                         valtype& vchSig = stacktop(-isig-k);
                         if (sigversion == SigVersion::BASE) {
-                            int found = FindAndDelete(scriptCode, CScript() << vchSig);
+                            int found = FindAndDelete(execdata.m_scriptcode, CScript() << vchSig);
                             if (found > 0 && (flags & SCRIPT_VERIFY_CONST_SCRIPTCODE))
                                 return set_error(serror, SCRIPT_ERR_SIG_FINDANDDELETE);
                         }
@@ -1013,7 +1014,7 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                         }
 
                         // Check signature
-                        bool fOk = checker.CheckSig(vchSig, vchPubKey, scriptCode, sigversion);
+                        bool fOk = checker.CheckSig(vchSig, vchPubKey, execdata, sigversion);
 
                         if (fOk) {
                             isig++;
@@ -1426,7 +1427,7 @@ bool GenericTransactionSignatureChecker<T>::VerifySignature(const std::vector<un
 }
 
 template <class T>
-bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const
+bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned char>& vchSigIn, const std::vector<unsigned char>& vchPubKey, const ScriptExecutionData& execdata, SigVersion sigversion) const
 {
     CPubKey pubkey(vchPubKey);
     if (!pubkey.IsValid())
@@ -1442,7 +1443,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSig(const std::vector<unsigned 
         {
             int nHashType = vchSig.back();
             vchSig.pop_back();
-            uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
+            uint256 sighash = SignatureHash(execdata.m_scriptcode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
             return VerifySignature(vchSig, pubkey, sighash, SignatureType::ECDSA);
         }
     case SigVersion::TAPROOT:
@@ -1592,7 +1593,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         }
         if (stack.size() == 1) {
             // Key path spending
-            if (!checker.CheckSig(stack[0], pubkey, /* scriptCode is ignored */ {}, SigVersion::TAPROOT)) {
+            if (!checker.CheckSig(stack[0], pubkey, ScriptExecutionData(), SigVersion::TAPROOT)) {
                 return set_error(serror, SCRIPT_ERR_TAPROOT_INVALID_SIG);
             }
             return set_success(serror);
