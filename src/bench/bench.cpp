@@ -4,12 +4,16 @@
 
 #include <bench/bench.h>
 
-#include <assert.h>
-#include <iostream>
-#include <iomanip>
+#include <chainparams.h>
+#include <test/test_bitcoin.h>
+#include <validation.h>
+
 #include <algorithm>
-#include <regex>
+#include <assert.h>
+#include <iomanip>
+#include <iostream>
 #include <numeric>
+#include <regex>
 
 void benchmark::ConsolePrinter::header()
 {
@@ -108,6 +112,13 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     printer.header();
 
     for (const auto& p : benchmarks()) {
+        TestingSetup test{CBaseChainParams::REGTEST};
+        {
+            assert(::chainActive.Height() == 0);
+            const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), Params().GetConsensus())};
+            assert(witness_enabled);
+        }
+
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
             continue;
         }
