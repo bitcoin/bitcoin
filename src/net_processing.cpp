@@ -3121,6 +3121,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     if (strCommand == NetMsgType::NOTFOUND) {
         // We do not care about the NOTFOUND message, but logging an Unknown Command
         // message would be undesirable as we transmit it ourselves.
+        std::vector<CInv> vInv;
+        vRecv >> vInv;
+        // note: we don't enforce a limit on number of inv's in a notfound
+
+        LogPrint(BCLog::NET, "received notfound (%u invsz) peer=%d\n", vInv.size(), pfrom->GetId());
+
+        if (vInv.size() > 0) {
+            LogPrint(BCLog::NET, "received notfound for: %s peer=%d\n", vInv[0].ToString(), pfrom->GetId());
+        }
         return true;
     }
 
