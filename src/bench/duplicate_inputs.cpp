@@ -10,14 +10,10 @@
 #include <miner.h>
 #include <policy/policy.h>
 #include <pow.h>
-#include <scheduler.h>
-#include <txdb.h>
+#include <test/util.h>
 #include <txmempool.h>
-#include <util/time.h>
 #include <validation.h>
 #include <validationinterface.h>
-
-#include <boost/thread.hpp>
 
 #include <list>
 #include <vector>
@@ -27,31 +23,7 @@ static void DuplicateInputs(benchmark::State& state)
 {
     const CScript SCRIPT_PUB{CScript(OP_TRUE)};
 
-    // Switch to regtest so we can mine faster
-    // Also segwit is active, so we can include witness transactions
-    SelectParams(CBaseChainParams::REGTEST);
-
-    InitScriptExecutionCache();
-
-    boost::thread_group thread_group;
-    CScheduler scheduler;
     const CChainParams& chainparams = Params();
-    {
-        LOCK(cs_main);
-        ::pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-        ::pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
-        ::pcoinsTip.reset(new CCoinsViewCache(pcoinsdbview.get()));
-    }
-    {
-        thread_group.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
-        GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
-        LoadGenesisBlock(chainparams);
-        CValidationState cvstate;
-        ActivateBestChain(cvstate, chainparams);
-        assert(::chainActive.Tip() != nullptr);
-        const bool witness_enabled{IsWitnessEnabled(::chainActive.Tip(), chainparams.GetConsensus())};
-        assert(witness_enabled);
-    }
 
     CBlock block{};
     CMutableTransaction coinbaseTx{};
@@ -92,11 +64,6 @@ static void DuplicateInputs(benchmark::State& state)
         assert(!CheckBlock(block, cvstate, chainparams.GetConsensus(), false, false));
         assert(cvstate.GetRejectReason() == "bad-txns-inputs-duplicate");
     }
-
-    thread_group.interrupt_all();
-    thread_group.join_all();
-    GetMainSignals().FlushBackgroundCallbacks();
-    GetMainSignals().UnregisterBackgroundSignalScheduler();
 }
 
 BENCHMARK(DuplicateInputs, 10);
