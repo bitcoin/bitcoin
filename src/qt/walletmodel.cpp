@@ -199,34 +199,32 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         return AmountExceedsBalance;
     }
 
+    CAmount nFeeRequired = 0;
+    int nChangePosRet = -1;
+    std::string strFailReason;
+
+    auto& newTx = transaction.getWtx();
+    newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason);
+    transaction.setTransactionFee(nFeeRequired);
+    if (fSubtractFeeFromAmount && newTx)
+        transaction.reassignAmounts(nChangePosRet);
+
+    if(!newTx)
     {
-        CAmount nFeeRequired = 0;
-        int nChangePosRet = -1;
-        std::string strFailReason;
-
-        auto& newTx = transaction.getWtx();
-        newTx = m_wallet->createTransaction(vecSend, coinControl, true /* sign */, nChangePosRet, nFeeRequired, strFailReason);
-        transaction.setTransactionFee(nFeeRequired);
-        if (fSubtractFeeFromAmount && newTx)
-            transaction.reassignAmounts(nChangePosRet);
-
-        if(!newTx)
+        if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
         {
-            if(!fSubtractFeeFromAmount && (total + nFeeRequired) > nBalance)
-            {
-                return SendCoinsReturn(AmountWithFeeExceedsBalance);
-            }
-            Q_EMIT message(tr("Send Coins"), QString::fromStdString(strFailReason),
-                         CClientUIInterface::MSG_ERROR);
-            return TransactionCreationFailed;
+            return SendCoinsReturn(AmountWithFeeExceedsBalance);
         }
-
-        // reject absurdly high fee. (This can never happen because the
-        // wallet caps the fee at maxTxFee. This merely serves as a
-        // belt-and-suspenders check)
-        if (nFeeRequired > m_node.getMaxTxFee())
-            return AbsurdFee;
+        Q_EMIT message(tr("Send Coins"), QString::fromStdString(strFailReason),
+                     CClientUIInterface::MSG_ERROR);
+        return TransactionCreationFailed;
     }
+
+    // reject absurdly high fee. (This can never happen because the
+    // wallet caps the fee at maxTxFee. This merely serves as a
+    // belt-and-suspenders check)
+    if (nFeeRequired > m_node.getMaxTxFee())
+        return AbsurdFee;
 
     return SendCoinsReturn(OK);
 }
@@ -235,38 +233,36 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 {
     QByteArray transaction_array; /* store serialized transaction */
 
+    std::vector<std::pair<std::string, std::string>> vOrderForm;
+    for (const SendCoinsRecipient &rcp : transaction.getRecipients())
     {
-        std::vector<std::pair<std::string, std::string>> vOrderForm;
-        for (const SendCoinsRecipient &rcp : transaction.getRecipients())
-        {
 #ifdef ENABLE_BIP70
-            if (rcp.paymentRequest.IsInitialized())
-            {
-                // Make sure any payment requests involved are still valid.
-                if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
-                    return PaymentRequestExpired;
-                }
-
-                // Store PaymentRequests in wtx.vOrderForm in wallet.
-                std::string value;
-                rcp.paymentRequest.SerializeToString(&value);
-                vOrderForm.emplace_back("PaymentRequest", std::move(value));
+        if (rcp.paymentRequest.IsInitialized())
+        {
+            // Make sure any payment requests involved are still valid.
+            if (PaymentServer::verifyExpired(rcp.paymentRequest.getDetails())) {
+                return PaymentRequestExpired;
             }
-            else
-#endif
-            if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
-                vOrderForm.emplace_back("Message", rcp.message.toStdString());
+
+            // Store PaymentRequests in wtx.vOrderForm in wallet.
+            std::string value;
+            rcp.paymentRequest.SerializeToString(&value);
+            vOrderForm.emplace_back("PaymentRequest", std::move(value));
         }
-
-        auto& newTx = transaction.getWtx();
-        std::string rejectReason;
-        if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
-            return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
-
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << newTx->get();
-        transaction_array.append(&(ssTx[0]), ssTx.size());
+        else
+#endif
+        if (!rcp.message.isEmpty()) // Message from normal bitcoin:URI (bitcoin:123...?message=example)
+            vOrderForm.emplace_back("Message", rcp.message.toStdString());
     }
+
+    auto& newTx = transaction.getWtx();
+    std::string rejectReason;
+    if (!newTx->commit({} /* mapValue */, std::move(vOrderForm), rejectReason))
+        return SendCoinsReturn(TransactionCommitFailed, QString::fromStdString(rejectReason));
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    ssTx << newTx->get();
+    transaction_array.append(&(ssTx[0]), ssTx.size());
 
     // Add addresses / update labels that we've sent to the address book,
     // and emit coinsSent signal for each recipient

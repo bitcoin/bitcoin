@@ -77,15 +77,13 @@ public:
     void refreshAddressTable(interfaces::Wallet& wallet)
     {
         cachedAddressTable.clear();
+        for (const auto& address : wallet.getAddresses())
         {
-            for (const auto& address : wallet.getAddresses())
-            {
-                AddressTableEntry::Type addressType = translateTransactionType(
-                        QString::fromStdString(address.purpose), address.is_mine);
-                cachedAddressTable.append(AddressTableEntry(addressType,
-                                  QString::fromStdString(address.name),
-                                  QString::fromStdString(EncodeDestination(address.dest))));
-            }
+            AddressTableEntry::Type addressType = translateTransactionType(
+                    QString::fromStdString(address.purpose), address.is_mine);
+            cachedAddressTable.append(AddressTableEntry(addressType,
+                              QString::fromStdString(address.name),
+                              QString::fromStdString(EncodeDestination(address.dest))));
         }
         // qLowerBound() and qUpperBound() require our cachedAddressTable list to be sorted in asc order
         // Even though the map is already sorted this re-sorting step is needed because the originating map
@@ -351,13 +349,11 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
             return QString();
         }
         // Check for duplicate addresses
+        if (walletModel->wallet().getAddress(
+                DecodeDestination(strAddress), /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
         {
-            if (walletModel->wallet().getAddress(
-                    DecodeDestination(strAddress), /* name= */ nullptr, /* is_mine= */ nullptr, /* purpose= */ nullptr))
-            {
-                editStatus = DUPLICATE_ADDRESS;
-                return QString();
-            }
+            editStatus = DUPLICATE_ADDRESS;
+            return QString();
         }
     }
     else if(type == Receive)
