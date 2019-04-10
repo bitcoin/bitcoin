@@ -84,20 +84,20 @@ class GetDataFailureTest(BitcoinTestFramework):
         # time to sync
         time.sleep(25)
 
-        self.log.info("Check node_miss didn't see any transactions")
-        assert_equal(self.peerinfo_interesting(node_miss), (0, 100, 0))
+        self.log.info("Check node_miss didn't see any transactions, but isn't confused either")
+        assert_equal(self.peerinfo_interesting(node_miss), (0, 0, 0))
         assert_equal(self.peerinfo_interesting(node_work), (200, 0, 0))
 
         txid = node_miss.sendtoaddress(addr[0], 0.5)
         self.log.info("Check node_miss transactions still work (%s)" % (txid))
         time.sleep(25)
-        assert_equal(self.peerinfo_interesting(node_miss), (1, 100, 0))
+        assert_equal(self.peerinfo_interesting(node_miss), (1, 0, 0))
         assert_equal(self.peerinfo_interesting(node_work), (201, 0, 0))
 
         txid = node_work.sendtoaddress(addr[0], 30)
-        self.log.info("Check legit node_work transactions don't work at all (%s)" % (txid))
+        self.log.info("Check legit node_work transactions still work too (%s)" % (txid))
         time.sleep(25)
-        assert_equal(self.peerinfo_interesting(node_miss), (1, 100, 1))
+        assert_equal(self.peerinfo_interesting(node_miss), (2, 0, 0))
         assert_equal(self.peerinfo_interesting(node_work), (202, 0, 0))
 
 if __name__ == '__main__':

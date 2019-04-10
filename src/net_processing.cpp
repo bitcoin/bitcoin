@@ -3119,8 +3119,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     if (strCommand == NetMsgType::NOTFOUND) {
-        // We do not care about the NOTFOUND message, but logging an Unknown Command
-        // message would be undesirable as we transmit it ourselves.
+        // NOTFOUND means we can clear the entry from the tx_in_flight/announced set
         std::vector<CInv> vInv;
         vRecv >> vInv;
         // note: we don't enforce a limit on number of inv's in a notfound
@@ -3130,6 +3129,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (vInv.size() > 0) {
             LogPrint(BCLog::NET, "received notfound for: %s peer=%d\n", vInv[0].ToString(), pfrom->GetId());
         }
+
+        {
+            LOCK(cs_main);
+            CNodeState* nodestate = State(pfrom->GetId());
+            for (const CInv& inv : vInv) {
+                if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) {
+                    if (nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash)) {
+                        nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+                    }
+                }
+            }
+        }
+
         return true;
     }
 
