@@ -297,8 +297,20 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
             RPCHelpMan{"getrpcinfo",
                 "\nReturns details of the RPC server.\n",
                 {},
-                RPCResults{},
-                RPCExamples{""},
+                RPCResult{
+            "{\n"
+            " \"active_commands\" (array) All active commands\n"
+            "  [\n"
+            "   {               (object) Information about an active command\n"
+            "    \"method\"       (string)  The name of the RPC command \n"
+            "    \"duration\"     (numeric)  The running time in microseconds\n"
+            "   },...\n"
+            "  ]\n"
+            "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getrpcinfo", "")
+                + HelpExampleRpc("getrpcinfo", "")},
             }.ToString()
         );
     }
