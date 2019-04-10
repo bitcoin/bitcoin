@@ -586,6 +586,7 @@ void PoSMiner(CWallet *pwallet)
             // peercoin: if proof-of-stake block found then process block
             if (pblock->IsProofOfStake())
             {
+                pblock->nFlags = CBlockIndex::BLOCK_PROOF_OF_STAKE;
                 if (!SignBlock(*pblock, *pwallet))
                 {
                     LogPrintf("PoSMiner(): failed to sign PoS block");
