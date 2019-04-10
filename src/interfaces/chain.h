@@ -120,8 +120,9 @@ public:
         //! nullopt if no block in the range is pruned. Range is inclusive.
         virtual Optional<int> findPruned(int start_height = 0, Optional<int> stop_height = nullopt) = 0;
 
-        //! Return height of the highest block on the chain that is an ancestor
-        //! of the specified block, or nullopt if no common ancestor is found.
+        //! Return height of the specified block if it is on the chain, otherwise
+        //! return the height of the highest block on chain that's an ancestor
+        //! of the specified block, or nullopt if there is no common ancestor.
         //! Also return the height of the specified block as an optional output
         //! parameter (to avoid the cost of a second hash lookup in case this
         //! information is desired).
@@ -135,9 +136,9 @@ public:
         //! Get locator for the current chain tip.
         virtual CBlockLocator getTipLocator() = 0;
 
-        //! Return height of the latest block common to locator and chain, which
-        //! is guaranteed to be an ancestor of the block used to create the
-        //! locator.
+        //! Return height of the highest block on chain in common with the locator,
+        //! which will either be the original block used to create the locator,
+        //! or one of its ancestors.
         virtual Optional<int> findLocatorFork(const CBlockLocator& locator) = 0;
 
         //! Check if transaction will be final given chain height current time.
