@@ -214,12 +214,13 @@ void CChainLocksHandler::CheckActiveState()
     LOCK(cs);
     bool oldIsEnforced = isEnforced;
     isSporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
-    isEnforced = fDIP0008Active && isSporkActive;
-
+    // TODO remove this after DIP8 is active
+    bool fEnforcedBySpork = (Params().NetworkIDString() == CBaseChainParams::TESTNET) && (sporkManager.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 1);
+    isEnforced = (fDIP0008Active && isSporkActive) || fEnforcedBySpork;
 
     if (!oldIsEnforced && isEnforced) {
         // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
-        // us with some stale values which we should not try to enforce anymore (there probably was a good reason to
+        // us with some stale values which we should not try to enforce anymore (there probably was a good reason
         // to disable spork19)
         bestChainLockHash = uint256();
         bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
