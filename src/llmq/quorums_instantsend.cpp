@@ -718,10 +718,10 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     CTransactionRef tx;
     uint256 hashBlock;
+    const CBlockIndex* pindexMined = nullptr;
     // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
     if (GetTransaction(islock.txid, tx, Params().GetConsensus(), hashBlock)) {
         if (!hashBlock.IsNull()) {
-            const CBlockIndex* pindexMined;
             {
                 LOCK(cs_main);
                 pindexMined = mapBlockIndex.at(hashBlock);
@@ -764,6 +764,9 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         }
 
         db.WriteNewInstantSendLock(hash, islock);
+        if (pindexMined) {
+            db.WriteInstantSendLockMined(hash, pindexMined->nHeight);
+        }
     }
 
     CInv inv(MSG_ISLOCK, hash);
