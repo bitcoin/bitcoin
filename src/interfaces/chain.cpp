@@ -151,12 +151,6 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
         LockAssertion lock(::cs_main);
         return CheckFinalTx(tx);
     }
-    bool submitToMemoryPool(const CTransactionRef& tx, CAmount absurd_fee, CValidationState& state) override
-    {
-        LockAssertion lock(::cs_main);
-        return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
-            false /* bypass limits */, absurd_fee);
-    }
 
     using UniqueLock::UniqueLock;
 };
@@ -291,10 +285,6 @@ public:
         LOCK(::mempool.cs);
         auto it = ::mempool.GetIter(txid);
         return it && (*it)->GetCountWithDescendants() > 1;
-    }
-    void relayTransaction(const uint256& txid) override
-    {
-        RelayTransaction(txid, *g_connman);
     }
     bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) override
     {
