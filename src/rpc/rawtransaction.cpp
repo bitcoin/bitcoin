@@ -835,9 +835,9 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 	if (!CheckSyscoinLockedOutpoints(tx, state))
 		throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, state.GetRejectReason());
 
-	uint256 txid;
     std::string err_string;
-    const TransactionError err = BroadcastTransaction(tx, txid, err_string, max_raw_tx_fee);
+    AssertLockNotHeld(cs_main);
+    const TransactionError err = BroadcastTransaction(tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
@@ -850,7 +850,8 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         mapAssetPrevTxSender[sender] = COutPoint(txid, tx.get()->vout.size()-1);
     }
     #endif
-    return txid.GetHex();
+
+    return tx->GetHash().GetHex();
 }
 
 static UniValue testmempoolaccept(const JSONRPCRequest& request)
