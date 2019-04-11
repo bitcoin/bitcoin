@@ -22,8 +22,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\test\util.h" />
     <ClCompile Include="..\..\src\test\util.cpp" />
-    <ClCompile Include="..\..\src\test\test_bitcoin.h" />
-    <ClCompile Include="..\..\src\test\test_bitcoin.cpp" />
+    <ClCompile Include="..\..\src\test\setup_common.h" />
+    <ClCompile Include="..\..\src\test\setup_common.cpp" />
     <ClCompile Include="..\..\src\bench\base58.cpp" />
     <ClCompile Include="..\..\src\bench\bech32.cpp" />
     <ClCompile Include="..\..\src\bench\bench.cpp" />

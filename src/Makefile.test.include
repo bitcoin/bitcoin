@@ -52,12 +52,12 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 BITCOIN_TEST_SUITE = \
   test/main.cpp \
-  test/test_bitcoin.h \
-  test/test_bitcoin.cpp
+  test/setup_common.h \
+  test/setup_common.cpp
 
 FUZZ_SUITE = \
-  test/test_bitcoin.h \
-  test/test_bitcoin.cpp \
+  test/setup_common.h \
+  test/setup_common.cpp \
   test/fuzz/fuzz.cpp \
   test/fuzz/fuzz.h
 

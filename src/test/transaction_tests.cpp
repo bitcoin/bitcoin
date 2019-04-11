@@ -4,7 +4,7 @@
 
 #include <test/data/tx_invalid.json.h>
 #include <test/data/tx_valid.json.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <clientversion.h>
 #include <checkqueue.h>

@@ -5,7 +5,7 @@
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <script/standard.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
