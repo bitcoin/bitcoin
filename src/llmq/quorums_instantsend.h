@@ -22,7 +22,7 @@ class CInstantSendLock
 public:
     std::vector<COutPoint> inputs;
     uint256 txid;
-    CBLSSignature sig;
+    CBLSLazySignature sig;
 
 public:
     ADD_SERIALIZE_METHODS

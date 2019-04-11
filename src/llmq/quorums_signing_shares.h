@@ -361,6 +361,7 @@ private:
     FastRandomContext rnd;
 
     int64_t lastCleanupTime{0};
+    std::atomic<uint32_t> recoveredSigsCounter{0};
 
 public:
     CSigSharesManager();

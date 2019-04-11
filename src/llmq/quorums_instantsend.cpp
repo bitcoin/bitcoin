@@ -579,7 +579,7 @@ bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CI
 {
     retBan = false;
 
-    if (islock.txid.IsNull() || !islock.sig.IsValid() || islock.inputs.empty()) {
+    if (islock.txid.IsNull() || islock.inputs.empty()) {
         retBan = true;
         return false;
     }
@@ -628,6 +628,15 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
         auto nodeId = p.second.first;
         auto& islock = p.second.second;
 
+        if (batchVerifier.badSources.count(nodeId)) {
+            continue;
+        }
+
+        if (!islock.sig.GetSig().IsValid()) {
+            batchVerifier.badSources.emplace(nodeId);
+            continue;
+        }
+
         auto id = islock.GetRequestId();
 
         // no need to verify an ISLOCK if we already have verified the recovered sig that belongs to it
@@ -641,7 +650,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
             return false;
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
-        batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig, quorum->qc.quorumPublicKey);
+        batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig.GetSig(), quorum->qc.quorumPublicKey);
 
         // We can reconstruct the CRecoveredSig objects from the islock and pass it to the signing manager, which
         // avoids unnecessary double-verification of the signature. We however only do this when verification here
