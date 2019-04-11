@@ -13,7 +13,7 @@
 #include <policy/settings.h>
 #include <script/sign.h>
 #include <script/ismine.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <vector>
 

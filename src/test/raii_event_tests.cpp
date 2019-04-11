@@ -12,7 +12,7 @@
 
 #include <support/events.h>
 
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <vector>
 
