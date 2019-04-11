@@ -41,7 +41,7 @@ class Wallet;
 //! * The Chain::lock() method, which lets clients delay chain tip updates
 //!   should be removed when clients are able to respond to updates
 //!   asynchronously
-//!   (https://github.com/syscoin/syscoin/pull/10973#issuecomment-380101269).
+//!   (https://github.com/bitcoin/bitcoin/pull/10973#issuecomment-380101269).
 //!
 //! * The initMessages() and loadWallet() methods which the wallet uses to send
 //!   notifications to the GUI should go away when GUI and wallet can directly
@@ -154,11 +154,6 @@ public:
 
     //! Check if transaction has descendants in mempool.
     virtual bool hasDescendantsInMempool(const uint256& txid) = 0;
-
-    //! Transaction is added to memory pool, if the transaction fee is below the
-    //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
-    //! Return false if the transaction could not be added due to the fee or for another reason.
-    virtual bool broadcastTransaction(const CTransactionRef& tx, std::string& err_string, const CAmount& max_tx_fee, bool relay) = 0;
 
     //! Transaction is added to memory pool, if the transaction fee is below the
     //! amount specified by max_tx_fee, and broadcast to all peers if relay is set to true.
