@@ -10,6 +10,9 @@
 #include "utilstrencodings.h"
 #include "key.h"
 
+#include <unordered_map>
+#include <unordered_set>
+
 class CSporkMessage;
 class CSporkManager;
 
@@ -136,8 +139,8 @@ private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
     mutable CCriticalSection cs;
-    std::map<uint256, CSporkMessage> mapSporksByHash;
-    std::map<int, std::map<CKeyID, CSporkMessage> > mapSporksActive;
+    std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
+    std::unordered_map<int, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 
     std::set<CKeyID> setSporkPubKeyIDs;
     int nMinSporkKeys;

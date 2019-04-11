@@ -25,6 +25,7 @@
 #include <map>
 #include <stdint.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/filesystem/path.hpp>
@@ -61,7 +62,7 @@ public:
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
 
-extern const std::map<std::string, std::vector<std::string> >& mapMultiArgs;
+extern const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs;
 extern bool fDebug;
 extern bool fPrintToConsole;
 extern bool fPrintToDebugLog;

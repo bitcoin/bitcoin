@@ -15,6 +15,7 @@
 #include "netaddress.h"
 #include "protocol.h"
 #include "random.h"
+#include "saltedhasher.h"
 #include "streams.h"
 #include "sync.h"
 #include "uint256.h"
@@ -28,6 +29,7 @@
 #include <thread>
 #include <memory>
 #include <condition_variable>
+#include <unordered_set>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -604,7 +606,7 @@ extern bool fDiscover;
 extern bool fListen;
 extern bool fRelayTxes;
 
-extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
+extern unordered_limitedmap<uint256, int64_t, StaticSaltedHasher> mapAlreadyAskedFor;
 
 /** Subversion as sent to the P2P network in `version` messages */
 extern std::string strSubVersion;
@@ -792,8 +794,8 @@ public:
     // List of non-tx/non-block inventory items
     std::vector<CInv> vInventoryOtherToSend;
     CCriticalSection cs_inventory;
-    std::set<uint256> setAskFor;
-    std::multimap<int64_t, CInv> mapAskFor;
+    std::unordered_set<uint256, StaticSaltedHasher> setAskFor;
+    std::vector<std::pair<int64_t, CInv>> vecAskFor;
     int64_t nNextInvSend;
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory

@@ -39,7 +39,7 @@ bool CSporkManager::SporkValueIsActive(int nSporkID, int64_t &nActiveValueRet) c
     if (!mapSporksActive.count(nSporkID)) return false;
 
     // calc how many values we have and how many signers vote for every value
-    std::map<int64_t, int> mapValueCounts;
+    std::unordered_map<int64_t, int> mapValueCounts;
     for (const auto& pair: mapSporksActive.at(nSporkID)) {
         mapValueCounts[pair.second.nValue]++;
         if (mapValueCounts.at(pair.second.nValue) >= nMinSporkKeys) {

@@ -126,9 +126,9 @@ const char * const BITCOIN_CONF_FILENAME = "dash.conf";
 const char * const BITCOIN_PID_FILENAME = "dashd.pid";
 
 CCriticalSection cs_args;
-std::map<std::string, std::string> mapArgs;
-static std::map<std::string, std::vector<std::string> > _mapMultiArgs;
-const std::map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
+std::unordered_map<std::string, std::string> mapArgs;
+static std::unordered_map<std::string, std::vector<std::string> > _mapMultiArgs;
+const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
 bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
