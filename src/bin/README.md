@@ -5,15 +5,15 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Xircus (v1.8.23)
+The current version is Light Ball (v1.8.26)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`a3b2dd950bc986036be4ff66efec36f9`
+`f9b27c2b636ef68d0eb53013b69a213b`
 
 MacOS
-`4f0e09fa708f629228cb6c10a315ab5f`
+`f654bd2cb92a2f44a6e41aefa215f399`
 
 Windows (64-bit)
-`ec8fbd9ec338aa78fbf0eba51edbff17`
+`9e0e5bd789123ff8bdef0e89a067505e`

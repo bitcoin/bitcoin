@@ -2467,10 +2467,11 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         string txRoot = tupleArray[1].get_str();
         boost::erase_all(txRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
-        txRootMap.try_emplace(std::move(nHeight), std::move(vchTxRoot));
+        txRootMap.try_emplace(nHeight, vchTxRoot);
     } 
+    bool res = pethereumtxrootsdb->FlushWrite(txRootMap) && pethereumtxrootsdb->PruneTxRoots();
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("status", "success");
+    ret.pushKV("status", res? "success": "fail");
     return ret;
 }
 bool CEthereumTxRootsDB::PruneTxRoots() {
@@ -2483,7 +2484,7 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
     int32_t cutoffHeight;
     {
         LOCK(cs_ethsyncheight);
-        // cutoff is ~1.5 months of blocks is about 250k blocks
+        // cutoff is ~1 week of blocks is about 40k blocks
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
         if(cutoffHeight < 0){
             LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fGethSyncHeight);
