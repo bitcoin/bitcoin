@@ -152,6 +152,13 @@ def main():
     # Skip entries with valid address.
     ips = [ip for ip in ips if ip is not None]
     print('Skip entries with valid address: %s' % (ip_stats(ips)), file=sys.stderr)
+    # Remove duplicates (use ordered dict for determinism)
+    ips_dict = collections.OrderedDict()
+    for ip in ips:
+        ips_dict[ip['ip']] = ip
+    ip = ips_dict.values()
+    ips_dict = None
+    print('Remove duplicates: %s' % (ip_stats(ips)), file=sys.stderr)
     # Skip entries from suspicious hosts.
     ips = [ip for ip in ips if ip['ip'] not in SUSPICIOUS_HOSTS]
     print('Skip entries from suspicious hosts: %s' % (ip_stats(ips)), file=sys.stderr)
