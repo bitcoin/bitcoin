@@ -174,7 +174,7 @@ Result CreateTransaction(const CWallet* wallet, const uint256& txid, const CCoin
     // This may occur if the user set TotalFee or paytxfee too low, if fallbackfee is too low, or, perhaps,
     // in a rare situation where the mempool minimum fee increased significantly since the fee estimation just a
     // moment earlier. In this case, we report an error to the user, who may use total_fee to make an adjustment.
-    CFeeRate minMempoolFeeRate = mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    CFeeRate minMempoolFeeRate = wallet->chain().mempoolMinFee();
     if (nNewFeeRate.GetFeePerK() < minMempoolFeeRate.GetFeePerK()) {
         errors.push_back(strprintf(
             "New fee rate (%s) is lower than the minimum fee rate (%s) to get into the mempool -- "

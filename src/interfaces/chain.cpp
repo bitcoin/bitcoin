@@ -363,6 +363,12 @@ public:
     {
         return MakeUnique<RpcHandlerImpl>(command);
     }
+    bool rpcEnableDeprecated(const std::string& method) override { return IsDeprecatedRPCEnabled(method); }
+    void rpcRunLater(const std::string& name, std::function<void()> fn, int64_t seconds) override
+    {
+        RPCRunLater(name, std::move(fn), seconds);
+    }
+    int rpcSerializationFlags() override { return RPCSerializationFlags(); }
     void requestMempoolTransactions(Notifications& notifications) override
     {
         LOCK2(::cs_main, ::mempool.cs);
