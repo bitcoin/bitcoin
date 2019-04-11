@@ -43,4 +43,4 @@ Some dependencies are not needed in all configurations. The following are some f
 * ZeroMQ is needed only with the `--with-zmq` option.
 
 #### Other
-* librsvg is only needed if you need to run `make deploy` on (cross-compliation to) macOS.
+* librsvg is only needed if you need to run `make deploy` on (cross-compilation to) macOS.
