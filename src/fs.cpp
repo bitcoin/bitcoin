@@ -6,7 +6,9 @@
 #include <sys/file.h>
 #include <sys/utsname.h>
 #else
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <codecvt>
 #include <windows.h>
 #endif
