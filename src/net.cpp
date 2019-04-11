@@ -1321,8 +1321,10 @@ void CConnman::ThreadSocketHandler()
             }
         }
 
+        isInSelect = true;
         int nSelect = select(have_fds ? hSocketMax + 1 : 0,
                              &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
+        isInSelect = false;
         if (interruptNet)
             return;
 
@@ -3217,6 +3219,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
     size_t nBytesSent = 0;
     {
         LOCK(pnode->cs_vSend);
+        bool hasPendingData = !pnode->vSendMsg.empty();
         bool optimisticSend(allowOptimisticSend && pnode->vSendMsg.empty());
 
         //log total amount of bytes per command
@@ -3232,6 +3235,9 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
         // If write queue empty, attempt "optimistic write"
         if (optimisticSend == true)
             nBytesSent = SocketSendData(pnode);
+        // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
+        else if (!hasPendingData && isInSelect)
+            WakeSelect();
     }
     if (nBytesSent)
         RecordBytesSent(nBytesSent);

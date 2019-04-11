@@ -39,6 +39,19 @@
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
+// "Optimistic send" was introduced in the beginning of the Bitcoin project. I assume this was done because it was
+// thought that "send" would be very cheap when the send buffer is empty. This is not true, as shown by profiling.
+// When a lot of load is seen on the network, the "send" call done in the message handler thread can easily use up 20%
+// of time, effectively blocking things that could be done in parallel. We have introduced a way to wake up the select()
+// call in the network thread, which allows us to disable optimistic send without introducing an artificial latency/delay
+// when sending data. This however only works on non-WIN32 platforms for now. When we add support for WIN32 platforms,
+// we can completely remove optimistic send.
+#ifdef WIN32
+#define DEFAULT_ALLOW_OPTIMISTIC_SEND true
+#else
+#define DEFAULT_ALLOW_OPTIMISTIC_SEND false
+#endif
+
 class CAddrMan;
 class CScheduler;
 class CNode;
@@ -206,7 +219,7 @@ public:
 
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
 
-    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOptimisticSend = true);
+    void PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOptimisticSend = DEFAULT_ALLOW_OPTIMISTIC_SEND);
 
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
@@ -533,6 +546,7 @@ private:
     /** a pipe which is added to select() calls to wakeup before the timeout */
     int wakeupPipe[2]{-1,-1};
 #endif
+    std::atomic<bool> isInSelect{false};
 
     std::thread threadDNSAddressSeed;
     std::thread threadSocketHandler;

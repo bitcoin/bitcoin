@@ -1126,10 +1126,6 @@ bool CSigSharesManager::SendMessages()
     // looped through all nodes, release them
     g_connman->ReleaseNodeVector(vNodesCopy);
 
-    if (didSend) {
-        g_connman->WakeSelect();
-    }
-
     return didSend;
 }
 
