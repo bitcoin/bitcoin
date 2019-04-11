@@ -14,10 +14,12 @@
 
 #include <future>
 
-TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx, std::string& err_string, const CAmount& highfee)
+TransactionError BroadcastTransaction(const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
 {
+    assert(g_connman);
     std::promise<void> promise;
-    hashTx = tx->GetHash();
+    uint256 hashTx = tx->GetHash();
+    bool callback_set = false;
 
     { // cs_main scope
     LOCK(cs_main);
@@ -33,7 +35,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
         CValidationState state;
         bool fMissingInputs;
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, highfee)) {
+                nullptr /* plTxnReplaced */, false /* bypass_limits */, max_tx_fee)) {
             if (state.IsInvalid()) {
                 err_string = FormatStateMessage(state);
                 return TransactionError::MEMPOOL_REJECTED;
@@ -44,7 +46,7 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
                 err_string = FormatStateMessage(state);
                 return TransactionError::MEMPOOL_ERROR;
             }
-        } else {
+        } else if (wait_callback) {
             // If wallet is enabled, ensure that the wallet has been made aware
             // of the new transaction prior to returning. This prevents a race
             // where a user might call sendrawtransaction with a transaction
@@ -53,24 +55,21 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
             CallFunctionInValidationInterfaceQueue([&promise] {
                 promise.set_value();
             });
+            callback_set = true;
         }
     } else if (fHaveChain) {
         return TransactionError::ALREADY_IN_CHAIN;
-    } else {
-        // Make sure we don't block forever if re-sending
-        // a transaction already in mempool.
-        promise.set_value();
     }
 
     } // cs_main
 
-    promise.get_future().wait();
-
-    if (!g_connman) {
-        return TransactionError::P2P_DISABLED;
+    if (callback_set) {
+        promise.get_future().wait();
     }
 
-    RelayTransaction(hashTx, *g_connman);
+    if (relay) {
+        RelayTransaction(hashTx, *g_connman);
+    }
 
     return TransactionError::OK;
 }

@@ -14,11 +14,13 @@
  * Broadcast a transaction
  *
  * @param[in]  tx the transaction to broadcast
- * @param[out] &txid the txid of the transaction, if successfully broadcast
  * @param[out] &err_string reference to std::string to fill with error string if available
- * @param[in]  highfee Reject txs with fees higher than this (if 0, accept any fee)
+ * @param[in]  max_tx_fee reject txs with fees higher than this (if 0, accept any fee)
+ * @param[in]  relay flag if both mempool insertion and p2p relay are requested
+ * @param[in]  wait_callback, wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
+ * It MUST NOT be set while cs_main, cs_mempool or cs_wallet are held to avoid deadlock
  * return error
  */
-NODISCARD TransactionError BroadcastTransaction(CTransactionRef tx, uint256& txid, std::string& err_string, const CAmount& highfee);
+NODISCARD TransactionError BroadcastTransaction(CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback);
 
 #endif // BITCOIN_NODE_TRANSACTION_H
