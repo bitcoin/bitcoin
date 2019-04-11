@@ -11,6 +11,8 @@
 
 #include "validationinterface.h"
 #include "consensus/params.h"
+#include "saltedhasher.h"
+#include "unordered_lru_cache.h"
 
 #include "bls/bls.h"
 #include "bls/bls_worker.h"
@@ -85,6 +87,7 @@ private:
 
     CCriticalSection quorumsCacheCs;
     std::map<std::pair<Consensus::LLMQType, uint256>, CQuorumPtr> quorumsCache;
+    unordered_lru_cache<std::pair<Consensus::LLMQType, uint256>, std::vector<CQuorumCPtr>, StaticSaltedHasher, 32> scanQuorumsCache;
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);

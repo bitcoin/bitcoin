@@ -311,9 +311,29 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    auto quorumIndexes = quorumBlockProcessor->GetMinedCommitmentsUntilBlock(params.type, pindexStart, maxCount);
+    auto cacheKey = std::make_pair(llmqType, pindexStart->GetBlockHash());
+    const size_t cacheMaxSize = 25; // largest active set + 1
 
     std::vector<CQuorumCPtr> result;
+
+    if (maxCount <= cacheMaxSize) {
+        LOCK(quorumsCacheCs);
+        if (scanQuorumsCache.get(cacheKey, result)) {
+            if (result.size() > maxCount) {
+                result.resize(maxCount);
+            }
+            return result;
+        }
+    }
+
+    bool storeCache = false;
+    size_t maxCount2 = maxCount;
+    if (maxCount2 <= cacheMaxSize) {
+        maxCount2 = cacheMaxSize;
+        storeCache = true;
+    }
+
+    auto quorumIndexes = quorumBlockProcessor->GetMinedCommitmentsUntilBlock(params.type, pindexStart, maxCount2);
     result.reserve(quorumIndexes.size());
 
     for (auto& quorumIndex : quorumIndexes) {
@@ -321,6 +341,15 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
         auto quorum = GetQuorum(params.type, quorumIndex);
         assert(quorum != nullptr);
         result.emplace_back(quorum);
+    }
+
+    if (storeCache) {
+        LOCK(quorumsCacheCs);
+        scanQuorumsCache.insert(cacheKey, result);
+    }
+
+    if (result.size() > maxCount) {
+        result.resize(maxCount);
     }
 
     return result;
