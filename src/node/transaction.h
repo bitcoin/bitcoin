@@ -24,6 +24,7 @@
  * @param[in]  max_tx_fee reject txs with fees higher than this (if 0, accept any fee)
  * @param[in]  relay flag if both mempool insertion and p2p relay are requested
  * @param[in]  wait_callback, wait until callbacks have been processed to avoid stale result due to a sequentially RPC.
+ * It MUST NOT be set while cs_main, cs_mempool or cs_wallet are held to avoid deadlock
  * return error
  */
 NODISCARD TransactionError BroadcastTransaction(CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback);
