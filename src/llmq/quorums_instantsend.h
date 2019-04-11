@@ -14,8 +14,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-class CScheduler;
-
 namespace llmq
 {
 
@@ -72,8 +70,10 @@ class CInstantSendManager : public CRecoveredSigsListener
 {
 private:
     CCriticalSection cs;
-    CScheduler* scheduler;
     CInstantSendDb db;
+
+    std::thread workThread;
+    CThreadInterrupt workInterrupt;
 
     /**
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
@@ -92,14 +92,14 @@ private:
 
     // Incoming and not verified yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>> pendingInstantSendLocks;
-    bool hasScheduledProcessPending{false};
 
 public:
-    CInstantSendManager(CScheduler* _scheduler, CDBWrapper& _llmqDb);
+    CInstantSendManager(CDBWrapper& _llmqDb);
     ~CInstantSendManager();
 
-    void RegisterAsRecoveredSigsListener();
-    void UnregisterAsRecoveredSigsListener();
+    void Start();
+    void Stop();
+    void InterruptWorkerThread();
 
 public:
     bool ProcessTx(const CTransaction& tx, const Consensus::Params& params);
@@ -118,7 +118,7 @@ public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLock& islock, CConnman& connman);
     bool PreVerifyInstantSendLock(NodeId nodeId, const CInstantSendLock& islock, bool& retBan);
-    void ProcessPendingInstantSendLocks();
+    bool ProcessPendingInstantSendLocks();
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
     void UpdateWalletTransaction(const uint256& txid, const CTransactionRef& tx);
 
@@ -133,6 +133,8 @@ public:
 
     bool AlreadyHave(const CInv& inv);
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
+
+    void WorkThreadMain();
 };
 
 extern CInstantSendManager* quorumInstantSendManager;

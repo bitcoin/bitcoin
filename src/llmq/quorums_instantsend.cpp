@@ -12,7 +12,6 @@
 #include "txmempool.h"
 #include "masternode-sync.h"
 #include "net_processing.h"
-#include "scheduler.h"
 #include "spork.h"
 #include "validation.h"
 
@@ -24,6 +23,7 @@
 #include "instantx.h"
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/thread.hpp>
 
 namespace llmq
 {
@@ -208,24 +208,45 @@ CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByInput(const COutPoint& o
 
 ////////////////
 
-CInstantSendManager::CInstantSendManager(CScheduler* _scheduler, CDBWrapper& _llmqDb) :
-    scheduler(_scheduler),
+CInstantSendManager::CInstantSendManager(CDBWrapper& _llmqDb) :
     db(_llmqDb)
 {
+    workInterrupt.reset();
 }
 
 CInstantSendManager::~CInstantSendManager()
 {
 }
 
-void CInstantSendManager::RegisterAsRecoveredSigsListener()
+void CInstantSendManager::Start()
 {
+    // can't start new thread if we have one running already
+    if (workThread.joinable()) {
+        assert(false);
+    }
+
+    workThread = std::thread(&TraceThread<std::function<void()> >, "instantsend", std::function<void()>(std::bind(&CInstantSendManager::WorkThreadMain, this)));
+
     quorumSigningManager->RegisterRecoveredSigsListener(this);
 }
 
-void CInstantSendManager::UnregisterAsRecoveredSigsListener()
+void CInstantSendManager::Stop()
 {
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
+
+    // make sure to call InterruptWorkerThread() first
+    if (!workInterrupt) {
+        assert(false);
+    }
+
+    if (workThread.joinable()) {
+        workThread.join();
+    }
+}
+
+void CInstantSendManager::InterruptWorkerThread()
+{
+    workInterrupt();
 }
 
 bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Params& params)
@@ -552,13 +573,6 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
             islock.txid.ToString(), hash.ToString(), pfrom->id);
 
     pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->id, std::move(islock)));
-
-    if (!hasScheduledProcessPending) {
-        hasScheduledProcessPending = true;
-        scheduler->scheduleFromNow([&] {
-            ProcessPendingInstantSendLocks();
-        }, 100);
-    }
 }
 
 bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CInstantSendLock& islock, bool& retBan)
@@ -581,7 +595,7 @@ bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CI
     return true;
 }
 
-void CInstantSendManager::ProcessPendingInstantSendLocks()
+bool CInstantSendManager::ProcessPendingInstantSendLocks()
 {
     auto llmqType = Params().GetConsensus().llmqForInstantSend;
 
@@ -589,12 +603,15 @@ void CInstantSendManager::ProcessPendingInstantSendLocks()
 
     {
         LOCK(cs);
-        hasScheduledProcessPending = false;
         pend = std::move(pendingInstantSendLocks);
     }
 
+    if (pend.empty()) {
+        return false;
+    }
+
     if (!IsNewInstantSendEnabled()) {
-        return;
+        return false;
     }
 
     int tipHeight;
@@ -621,7 +638,7 @@ void CInstantSendManager::ProcessPendingInstantSendLocks()
         auto quorum = quorumSigningManager->SelectQuorumForSigning(llmqType, tipHeight, id);
         if (!quorum) {
             // should not happen, but if one fails to select, all others will also fail to select
-            return;
+            return false;
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
         batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig, quorum->qc.quorumPublicKey);
@@ -679,6 +696,8 @@ void CInstantSendManager::ProcessPendingInstantSendLocks()
             }
         }
     }
+
+    return true;
 }
 
 void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock)
@@ -1050,6 +1069,21 @@ bool CInstantSendManager::GetConflictingTx(const CTransaction& tx, uint256& retC
         }
     }
     return false;
+}
+
+void CInstantSendManager::WorkThreadMain()
+{
+    while (!workInterrupt) {
+        bool didWork = false;
+
+        didWork |= ProcessPendingInstantSendLocks();
+
+        if (!didWork) {
+            if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+                return;
+            }
+        }
+    }
 }
 
 bool IsOldInstantSendEnabled()
