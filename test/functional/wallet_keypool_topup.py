@@ -17,7 +17,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
-    sync_blocks,
 )
 
 
@@ -67,7 +66,7 @@ class KeypoolRestoreTest(BitcoinTestFramework):
             self.nodes[0].generate(1)
             self.nodes[0].sendtoaddress(addr_extpool, 5)
             self.nodes[0].generate(1)
-            sync_blocks(self.nodes)
+            self.sync_blocks()
 
             self.log.info("Restart node with wallet backup")
             self.stop_node(idx)
