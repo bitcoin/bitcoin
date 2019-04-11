@@ -396,7 +396,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         """
         disconnect_nodes(self.nodes[1], 2)
         disconnect_nodes(self.nodes[2], 1)
-        self.sync_all([self.nodes[:2], self.nodes[2:]])
+        self.sync_all(self.nodes[:2])
+        self.sync_all(self.nodes[2:])
 
     def join_network(self):
         """
@@ -405,13 +406,15 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         connect_nodes_bi(self.nodes, 1, 2)
         self.sync_all()
 
-    def sync_all(self, node_groups=None):
-        if not node_groups:
-            node_groups = [self.nodes]
+    def sync_blocks(self, nodes=None, **kwargs):
+        sync_blocks(nodes or self.nodes, **kwargs)
 
-        for group in node_groups:
-            sync_blocks(group)
-            sync_mempools(group)
+    def sync_mempools(self, nodes=None, **kwargs):
+        sync_mempools(nodes or self.nodes, **kwargs)
+
+    def sync_all(self, nodes=None, **kwargs):
+        self.sync_blocks(nodes, **kwargs)
+        self.sync_mempools(nodes, **kwargs)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 
@@ -497,7 +500,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # see the tip age check in IsInitialBlockDownload().
             for i in range(8):
                 self.nodes[0].generatetoaddress(25 if i != 7 else 24, self.nodes[i % 4].get_deterministic_priv_key().address)
-            sync_blocks(self.nodes)
+            self.sync_blocks()
 
             for n in self.nodes:
                 assert_equal(n.getblockchaininfo()["blocks"], 199)
