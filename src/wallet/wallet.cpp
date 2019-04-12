@@ -1108,6 +1108,25 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const uint256
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
                 // extract addresses and check if they match with an unused keypool key
+                if (IsDescriptor()) {
+                    if (HaveScriptPubKey(txout.scriptPubKey)) {
+                        const auto& it = m_map_scriptPubKeys.find(CScriptID(txout.scriptPubKey));
+                        if (it != m_map_scriptPubKeys.end()) {
+                            assert(m_map_descriptors.count(it->second.first) > 0);
+                            auto& desc = m_map_descriptors[it->second.first];
+                            if (it->second.second >= desc.next_index) {
+                                WalletLogPrintf("%s: Detected a used keypool item, mark all keypool items up to this item as used\n", __func__);
+                                desc.next_index = it->second.second + 1;
+                            }
+
+                            if (!TopUpKeyPool()) {
+                                WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+                            }
+                        }
+                    }
+                    continue;
+                }
+
                 for (const auto& keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
                     std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
                     if (mi != m_pool_key_to_index.end()) {
