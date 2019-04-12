@@ -1505,6 +1505,74 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
     return nChange;
 }
 
+void CWallet::GenerateNewDescriptor(CKeyID seed, OutputType type)
+{
+    AssertLockHeld(cs_wallet);
+    assert(IsDescriptor());
+
+    int64_t creation_time = GetTime();
+
+    // Make a seed, but don't store it
+    CKey seed_key;
+    assert(GetKey(seed, seed_key));
+
+    // Get the extended key
+    CExtKey master_key;
+    master_key.SetSeed(seed_key.begin(), seed_key.size());
+    std::string xpub = EncodeExtPubKey(master_key.Neuter());
+
+    // Construct descriptor strings
+    std::string primary_desc_str;
+    std::string change_desc_str;
+    switch (type) {
+    case OutputType::LEGACY: {
+        primary_desc_str = "pkh(" + xpub + "/44'/0'/*')";
+        change_desc_str = "pkh(" + xpub + "/44'/1'/*')";
+        break;
+    }
+    case OutputType::P2SH_SEGWIT: {
+        primary_desc_str = "sh(wpkh(" + xpub + "/49'/0'/*'))";
+        change_desc_str = "sh(wpkh(" + xpub + "/49'/1'/*'))";
+        break;
+    }
+    case OutputType::BECH32: {
+        primary_desc_str = "wpkh(" + xpub + "/84'/0'/*')";
+        change_desc_str = "wpkh(" + xpub + "/84'/1'/*')";
+        break;
+    }
+    default: assert(false);
+    }
+
+    FlatSigningProvider keys;
+    std::unique_ptr<Descriptor> primary_descriptor = Parse(primary_desc_str, keys, false);
+    std::unique_ptr<Descriptor> change_descriptor = Parse(change_desc_str, keys, false);
+    WalletDescriptor primary(std::move(primary_descriptor), creation_time, 0, 0, 0);
+    WalletDescriptor change(std::move(change_descriptor), creation_time, 0, 0, 0);
+
+    // Calculate the private key for the extended key
+    CKeyMetadata metadata(creation_time);
+    CPubKey master_pubkey = master_key.key.GetPubKey();
+    assert(master_key.key.VerifyPubKey(master_pubkey));
+    metadata.hdKeypath     = "m";
+    metadata.has_key_origin = true;
+    std::copy(master_key.vchFingerprint, master_key.vchFingerprint + 4, metadata.key_origin.fingerprint);
+    metadata.key_origin.path = std::vector<uint32_t>();
+
+    // mem store the metadata
+    mapKeyMetadata[master_pubkey.GetID()] = metadata;
+
+    // write the key&metadata to the database
+    if (!HaveKey(master_pubkey.GetID()) && !AddKeyPubKey(master_key.key, master_pubkey))
+        throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+
+    SetPrimaryDescriptor(DescriptorID(*primary.descriptor), false, type);
+    SetChangeDescriptor(DescriptorID(*change.descriptor), false, type);
+
+    // Add to the wallet
+    AddWalletDescriptor(primary);
+    AddWalletDescriptor(change);
+}
+
 CPubKey CWallet::GenerateNewSeed()
 {
     assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
@@ -1612,6 +1680,23 @@ bool CWallet::AddScriptPubKey(const CScript& script, const DescriptorID& id, int
 
 bool CWallet::IsHDEnabled() const
 {
+    {
+        LOCK(cs_wallet);
+        if (IsDescriptor()) {
+            // A wallet is HD if all primary and change descriptors are ranged descriptors
+            for (auto& desc : m_primary_descriptors) {
+                if (!m_map_descriptors.at(desc.second).descriptor->IsRange()) {
+                    return false;
+                }
+            }
+            for (auto& desc : m_change_descriptors) {
+                if (!m_map_descriptors.at(desc.second).descriptor->IsRange()) {
+                    return false;
+                }
+            }
+            return m_primary_descriptors.size() > 0 && m_change_descriptors.size() > 0;
+        }
+    }
     return !hdChain.seed_id.IsNull();
 }
 

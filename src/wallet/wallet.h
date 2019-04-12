@@ -1315,6 +1315,9 @@ public:
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
     bool CanGetAddresses(bool internal = false);
 
+    /* Generate a new HD seed and a corresponding descriptor of the specified output type */
+    void GenerateNewDescriptor(CKeyID seed, OutputType type) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+
     /* Generates a new HD seed (will not be activated) */
     CPubKey GenerateNewSeed();
 
