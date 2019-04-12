@@ -3685,6 +3685,76 @@ void CWallet::ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey)
     WalletLogPrintf("keypool return %d\n", nIndex);
 }
 
+bool CWallet::GetDestinationFromDescriptor(CTxDestination& dest, OutputType type, bool internal)
+{
+    if (!CanGetAddresses(internal)) {
+        return false;
+    }
+    {
+        LOCK(cs_wallet);
+        if (!IsDescriptor()) {
+            return false;
+        }
+
+        // Get the descriptor for the address type we are using
+        DescriptorID desc_id;
+        if (internal) {
+            desc_id = m_change_descriptors.at(type);
+        } else {
+            desc_id = m_primary_descriptors.at(type);
+        }
+        WalletDescriptor& desc = m_map_descriptors[desc_id];
+
+        // Get the scriptPubKey from the descriptor
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        if (desc.cache.size() <= (unsigned int)desc.next_index ||
+            (desc.cache.size() > (unsigned int)desc.next_index && !desc.descriptor->ExpandFromCache(desc.next_index, desc.cache[desc.next_index - desc.range_start], scripts_temp, out_keys))) {
+            assert(desc.next_index == desc.range_end);
+            if (IsLocked()) return false;
+            std::vector<unsigned char> cache;
+            if (!desc.descriptor->Expand(desc.next_index, *this, scripts_temp, out_keys, &cache)) return false;
+            desc.cache.push_back(std::move(cache));
+            // Add all of the scriptPubKeys to the scriptPubKey set
+            for (const auto& script : scripts_temp) {
+                AddScriptPubKey(script, desc_id, desc.next_index);
+            }
+            // Load all of the scripts
+            for (const auto& script : out_keys.scripts) {
+                CBasicKeyStore::AddCScript(script.second);
+            }
+            // Generate the private keys and store them
+            desc.descriptor->ExpandPrivate(desc.next_index, *this, out_keys);
+            // Add privkeys
+            WalletBatch batch(*database);
+            for (const auto& key : out_keys.keys) {
+                if (!AddKeyPubKeyWithDB(batch, key.second, key.second.GetPubKey())) {
+                    throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+                }
+            }
+            // Add the key origins
+            for (const auto& origin : out_keys.origins) {
+                CPubKey pubkey;
+                if (out_keys.GetPubKey(origin.first, pubkey)) {
+                    AddKeyOriginWithDB(batch, pubkey, origin.second.second);
+                }
+            }
+            desc.range_end++;
+        }
+
+        if (!ExtractDestination(scripts_temp[0], dest)) {
+            return false;
+        }
+        desc.next_index++;
+
+        // Save the dsecriptor
+        if (!WalletBatch(*database).WriteDescriptor(desc))
+            throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+
+        return true;
+    }
+}
+
 bool CWallet::GetKeyFromPool(CPubKey& result, bool internal)
 {
     if (!CanGetAddresses(internal)) {

@@ -1167,6 +1167,10 @@ public:
     void ReturnKey(int64_t nIndex, bool fInternal, const CPubKey& pubkey);
     bool GetKeyFromPool(CPubKey &key, bool internal = false);
     int64_t GetOldestKeyPoolTime();
+
+    /** Fetch an address from the specified descriptor and address type */
+    bool GetDestinationFromDescriptor(CTxDestination& dest, OutputType type, bool internal);
+
     /**
      * Marks all keys in the keypool up to and including reserve_key as used.
      */
