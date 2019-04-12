@@ -1575,6 +1575,11 @@ bool CWallet::IsHDEnabled() const
     return !hdChain.seed_id.IsNull();
 }
 
+bool CWallet::IsDescriptor() const
+{
+    return IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS);
+}
+
 bool CWallet::CanGenerateKeys()
 {
     // A wallet can generate keys if it has an HD seed (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
@@ -1621,7 +1626,7 @@ void CWallet::UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag)
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
 }
 
-bool CWallet::IsWalletFlagSet(uint64_t flag)
+bool CWallet::IsWalletFlagSet(uint64_t flag) const
 {
     return (m_wallet_flags & flag);
 }

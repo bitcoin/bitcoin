@@ -138,6 +138,9 @@ enum WalletFlags : uint64_t {
     //! bitcoin from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
+
+    //! Flag set when the wallet uses descriptors natively
+    WALLET_FLAG_DESCRIPTORS = (1ULL << 34),
 };
 
 static constexpr uint64_t g_known_wallet_flags = WALLET_FLAG_DISABLE_PRIVATE_KEYS | WALLET_FLAG_BLANK_WALLET | WALLET_FLAG_KEY_ORIGIN_METADATA;
@@ -1294,6 +1297,9 @@ public:
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;
 
+    /* Returns true if this is a descriptor wallet */
+    bool IsDescriptor() const;
+
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys();
 
@@ -1341,7 +1347,7 @@ public:
     void UnsetWalletFlag(uint64_t flag);
 
     /** check if a certain wallet flag is set */
-    bool IsWalletFlagSet(uint64_t flag);
+    bool IsWalletFlagSet(uint64_t flag) const;
 
     /** overwrite all flags by the given uint64_t
        returns false if unknown, non-tolerable flags are present */
