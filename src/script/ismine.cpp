@@ -174,17 +174,22 @@ IsMineResult IsMineInner(const CKeyStore& keystore, const CScript& scriptPubKey,
 
 isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey)
 {
-    if (keystore.HaveScriptPubKey(scriptPubKey)) {
-        return ISMINE_SPENDABLE;
-    }
-    switch (IsMineInner(keystore, scriptPubKey, IsMineSigVersion::TOP)) {
-    case IsMineResult::INVALID:
-    case IsMineResult::NO:
-        return ISMINE_NO;
-    case IsMineResult::WATCH_ONLY:
-        return ISMINE_WATCH_ONLY;
-    case IsMineResult::SPENDABLE:
-        return ISMINE_SPENDABLE;
+    if (keystore.HaveScriptPubKeys()) {
+        if (keystore.HaveScriptPubKey(scriptPubKey)) {
+            return ISMINE_SPENDABLE;
+        } else {
+            return ISMINE_NO;
+        }
+    } else {
+        switch (IsMineInner(keystore, scriptPubKey, IsMineSigVersion::TOP)) {
+        case IsMineResult::INVALID:
+        case IsMineResult::NO:
+            return ISMINE_NO;
+        case IsMineResult::WATCH_ONLY:
+            return ISMINE_WATCH_ONLY;
+        case IsMineResult::SPENDABLE:
+            return ISMINE_SPENDABLE;
+        }
     }
     assert(false);
 }
