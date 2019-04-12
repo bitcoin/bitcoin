@@ -901,7 +901,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     
     UniValue detail = DescribeAddress(addressFrom);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();            	
 	CAssetAllocation theAssetAllocation;
@@ -982,7 +982,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     const CTxDestination &dest = DecodeDestination(strAddress);
     UniValue detail = DescribeAddress(dest);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
     vector<CRecipient> vecSend;
@@ -1072,7 +1072,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
     	
             UniValue detail = DescribeAddress(addressFrom);
             if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+                throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
             witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str(); 
             witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
         }  
@@ -1105,7 +1105,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
       
         UniValue detail = DescribeAddress(dest);
         if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
         string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
         unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
         	
@@ -1166,7 +1166,7 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
         const CTxDestination &dest = DecodeDestination(strAddressFrom);
         UniValue detail = DescribeAddress(dest);
         if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
         witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
         witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
     }
@@ -1198,7 +1198,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
         const CTxDestination &dest = DecodeDestination(strAddressFrom);
         UniValue detail = DescribeAddress(dest);
         if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
         witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
         witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
     }
@@ -1311,7 +1311,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     const CTxDestination &dest = DecodeDestination(strAddressSender);
     UniValue detail = DescribeAddress(dest);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
 	uint256 txid;
@@ -1564,7 +1564,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
                     const CTxDestination &dest = DecodeDestination(ownerStr.get_str());
                     UniValue detail = DescribeAddress(dest);
                     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+                        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
                     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
                     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
 					vecWitnessAddresses.push_back(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));

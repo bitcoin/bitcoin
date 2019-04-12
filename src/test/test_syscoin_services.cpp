@@ -579,36 +579,36 @@ void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
 	}
 
 }
-string SyscoinMint(const string& node, const string& address, const string& amount, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleroofpath_hex, const string& witness)
+string SyscoinMint(const string& node, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleroofpath_hex, const string& witness)
 {
     string otherNode1, otherNode2;
     GetOtherNodes(node, otherNode1, otherNode2);
     UniValue r;
+    string fundingaddress = GetNewFundedAddress("node1");
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
     UniValue arr = r.get_array();
     CAmount nAmountBefore = AmountFromValue(arr[0]);
-    int randomBlockNumber = 23232;
     // ensure that block number you claim the burn is atleast 1 hour old
-    int randomBlockNumberPlus240 = randomBlockNumber+ETHEREUM_CONFIRMS_REQUIRED;
-    string headerStr = "\"[[" + boost::lexical_cast<string>(randomBlockNumber) + ",\\\"" + txroot_hex + "\\\"]]\"";
+    int heightPlus240 = height+ETHEREUM_CONFIRMS_REQUIRED;
+    string headerStr = "\"[[" + boost::lexical_cast<string>(height) + ",\\\"" + txroot_hex + "\\\"]]\"";
  
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethstatus synced " + boost::lexical_cast<string>(randomBlockNumberPlus240)));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethheaders " + headerStr));
     if (!otherNode1.empty())
     {
-        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethstatus synced " + boost::lexical_cast<string>(randomBlockNumberPlus240)));
+        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethheaders " + headerStr));
     }
     if (!otherNode2.empty())
     {
-        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + boost::lexical_cast<string>(randomBlockNumberPlus240)));
+        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethheaders " + headerStr));
     }   
     // "syscoinmint [addressto] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + boost::lexical_cast<string>(randomBlockNumber) + " " + tx_hex + " " + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleroofpath_hex + " " + witness));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + boost::lexical_cast<string>(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleroofpath_hex + " " + witness));
     
     arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + address));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + fundingaddress));
     arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -619,7 +619,7 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
     arr = r.get_array();
     CAmount nAmountAfter = AmountFromValue(arr[0]);
-    BOOST_CHECK_EQUAL(nAmountBefore, nAmountAfter);
+    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount), nAmountAfter);
     return hex_str;
 }
 string AssetNew(const string& node, const string& address, const string& pubdata, const string& contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness)
