@@ -66,6 +66,7 @@ src/qt/bitcoin-qt.includes
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
