@@ -423,6 +423,28 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
                 return false;
             }
+        } else if (strType == "descriptor") {
+            WalletDescriptor desc;
+            ssValue >> desc;
+            pwallet->LoadDescriptor(desc);
+        } else if (strType == "primarydescriptor") {
+            std::string type_str;
+            ssKey >> type_str;
+            OutputType type;
+            assert(ParseOutputType(type_str, type));
+
+            DescriptorID id;
+            ssValue >> id;
+            pwallet->SetPrimaryDescriptor(id, true, type);
+        } else if (strType == "changedescriptor") {
+            std::string type_str;
+            ssKey >> type_str;
+            OutputType type;
+            assert(ParseOutputType(type_str, type));
+
+            DescriptorID id;
+            ssValue >> id;
+            pwallet->SetChangeDescriptor(id, true, type);
         } else if (strType != "bestblock" && strType != "bestblock_nomerkle" &&
                 strType != "minversion" && strType != "acentry") {
             wss.m_unknown_records++;
@@ -763,6 +785,16 @@ bool WalletBatch::EraseDestData(const std::string &address, const std::string &k
 bool WalletBatch::WriteHDChain(const CHDChain& chain)
 {
     return WriteIC(std::string("hdchain"), chain);
+}
+
+bool WalletBatch::WritePrimaryDescriptor(const uint256& id, OutputType type)
+{
+    return WriteIC(std::make_pair(std::string("primarydescriptor"), FormatOutputType(type)), id);
+}
+
+bool WalletBatch::WriteChangeDescriptor(const uint256& id, OutputType type)
+{
+    return WriteIC(std::make_pair(std::string("changedescriptor"), FormatOutputType(type)), id);
 }
 
 bool WalletBatch::WriteWalletFlags(const uint64_t flags)

@@ -788,6 +788,10 @@ private:
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
+    /* Descriptors to use for address generation */
+    std::map<OutputType, DescriptorID> m_primary_descriptors;
+    std::map<OutputType, DescriptorID> m_change_descriptors;
+
     /* HD derive new child key (on internal or external chain) */
     void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secret, bool internal = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
@@ -797,6 +801,7 @@ private:
     int64_t m_max_keypool_index GUARDED_BY(cs_wallet) = 0;
     std::map<CKeyID, int64_t> m_pool_key_to_index;
     std::atomic<uint64_t> m_wallet_flags{0};
+    std::map<DescriptorID, WalletDescriptor> m_map_descriptors GUARDED_BY(cs_wallet);
 
     int64_t nTimeFirstKey GUARDED_BY(cs_wallet) = 0;
 
@@ -1017,6 +1022,9 @@ public:
     bool RemoveWatchOnly(const CScript &dest) override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     //! Adds a watch-only address to the store, without saving it to disk (used by LoadWallet)
     bool LoadWatchOnly(const CScript &dest);
+
+    //! Load a descriptor
+    bool LoadDescriptor(const WalletDescriptor& desc);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime = 0;
@@ -1272,6 +1280,16 @@ public:
     /* Set the HD chain model (chain child index counters) */
     void SetHDChain(const CHDChain& chain, bool memonly);
     const CHDChain& GetHDChain() const { return hdChain; }
+
+    /* Set the descriptors being used */
+    void SetPrimaryDescriptor(const DescriptorID& id, bool memonly, OutputType type);
+    void SetChangeDescriptor(const DescriptorID& id, bool memonly, OutputType type);
+
+    /* Add a descriptor to the wallet */
+    bool AddWalletDescriptor(const WalletDescriptor& wallet_desc);
+
+    /* Whether the descriptor is part of the wallet */
+    bool HaveWalletDescriptor(const DescriptorID& id) const;
 
     /* Returns true if HD is enabled */
     bool IsHDEnabled() const;

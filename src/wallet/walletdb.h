@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include <amount.h>
+#include <outputtype.h>
 #include <primitives/transaction.h>
 #include <script/sign.h>
 #include <wallet/db.h>
@@ -244,6 +245,10 @@ public:
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
+
+    //! Write the descriptors in use
+    bool WritePrimaryDescriptor(const uint256& id, OutputType type);
+    bool WriteChangeDescriptor(const uint256& id, OutputType type);
 
     bool WriteWalletFlags(const uint64_t flags);
     //! Begin a new transaction

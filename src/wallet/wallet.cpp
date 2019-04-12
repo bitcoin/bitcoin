@@ -502,6 +502,30 @@ bool CWallet::LoadWatchOnly(const CScript &dest)
     return CCryptoKeyStore::AddWatchOnly(dest);
 }
 
+bool CWallet::LoadDescriptor(const WalletDescriptor& desc)
+{
+    LOCK(cs_wallet);
+    DescriptorID id(*desc.descriptor);
+    for (int32_t i = desc.range_start; i < desc.range_end; ++i) {
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        desc.descriptor->ExpandFromCache(i, desc.cache[i - desc.range_start], scripts_temp, out_keys);
+        // Add all of the scriptPubKeys to the scriptPubKey set
+        for (const auto& script : scripts_temp) {
+            AddScriptPubKey(script);
+        }
+        // Add the scripts to in memory
+        for (const auto& script : out_keys.scripts) {
+            CBasicKeyStore::AddCScript(script.second);
+        }
+    }
+
+    // Add to the descriptor map
+    m_map_descriptors[id] = desc;
+
+    return true;
+}
+
 bool CWallet::Unlock(const SecureString& strWalletPassphrase, bool accept_no_keys)
 {
     CCrypter crypter;
@@ -1509,6 +1533,41 @@ void CWallet::SetHDChain(const CHDChain& chain, bool memonly)
         throw std::runtime_error(std::string(__func__) + ": writing chain failed");
 
     hdChain = chain;
+}
+
+void CWallet::SetPrimaryDescriptor(const DescriptorID& id, bool memonly, OutputType type)
+{
+    LOCK(cs_wallet);
+    if (!memonly && !WalletBatch(*database).WritePrimaryDescriptor(id, type))
+        throw std::runtime_error(std::string(__func__) + ": writing primary descriptor failed");
+
+    m_primary_descriptors[type] = id;
+}
+
+void CWallet::SetChangeDescriptor(const DescriptorID& id, bool memonly, OutputType type)
+{
+    LOCK(cs_wallet);
+    if (!memonly && !WalletBatch(*database).WriteChangeDescriptor(id,  type))
+        throw std::runtime_error(std::string(__func__) + ": writing change descriptor failed");
+
+    m_change_descriptors[type] = id;
+}
+
+bool CWallet::HaveWalletDescriptor(const DescriptorID& id) const
+{
+    LOCK(cs_wallet);
+    return m_map_descriptors.count(id) > 0;
+}
+
+bool CWallet::AddWalletDescriptor(const WalletDescriptor& wallet_desc)
+{
+    // Save the dsecriptor
+    if (!WalletBatch(*database).WriteDescriptor(wallet_desc))
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+
+    // Add the descriptor to wallet in memory
+    LoadDescriptor(wallet_desc);
+    return true;
 }
 
 bool CWallet::IsHDEnabled() const
