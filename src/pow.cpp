@@ -92,7 +92,9 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast) {
     arith_uint256 PastDifficultyAverage;
     arith_uint256 PastDifficultyAveragePrev;
 
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
+    bool isAdjustmentPeriod = BlockLastSolved->nHeight > Params().PoSStartHeight() - 1 && BlockLastSolved->nHeight < Params().PoSStartHeight() + PastBlocksMax;
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin || isAdjustmentPeriod)
+    {
         return Params().ProofOfWorkLimit().GetCompact();
     }
 
