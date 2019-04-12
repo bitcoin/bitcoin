@@ -9,6 +9,9 @@
 
 #include <net.h>
 
+#include <atomic>
+#include <condition_variable>
+#include <chrono>
 #include <banman.h>
 #include <chainparams.h>
 #include <clientversion.h>
@@ -20,6 +23,8 @@
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
+#include <thread>
+#include <logging.h>
 
 #ifdef WIN32
 #include <string.h>
@@ -39,7 +44,7 @@
 #endif
 
 #include <unordered_map>
-
+#include <natmap_wrapper.h>
 #include <math.h>
 
 // Dump addresses to peers.dat every 15 minutes (900s)
@@ -60,11 +65,22 @@ static constexpr int DUMP_PEERS_INTERVAL = 15 * 60;
 
 /** Used to pass flags to the Bind() function */
 enum BindFlags {
-    BF_NONE         = 0,
-    BF_EXPLICIT     = (1U << 0),
+    BF_NONE = 0,
+    BF_EXPLICIT = (1U << 0),
     BF_REPORT_ERROR = (1U << 1),
-    BF_WHITELIST    = (1U << 2),
+    BF_WHITELIST = (1U << 2),
 };
+
+// NAT-PMP State
+enum class NatPmpState {
+    NONE,
+    INITIALIZED,
+    RECEIVED_PUBLIC_IP,
+    MAPPED_PORT
+};
+NatPmpState g_NatPmpStatus = NatPmpState::NONE;
+std::condition_variable g_StateCondVar;
+std::mutex g_StateMutex;
 
 // The set of sockets cannot be modified while waiting
 // The sleep time needs to be small to avoid new sockets stalling
@@ -1387,11 +1403,6 @@ void CConnman::WakeMessageHandler()
     condMsgProc.notify_one();
 }
 
-
-
-
-
-
 #ifdef USE_UPNP
 static CThreadInterrupt g_upnp_interrupt;
 static std::thread g_upnp_thread;
@@ -1500,24 +1511,96 @@ void StopMapPort()
 }
 
 #else
+
+void RenewPortMapping(NatMap& mapper, const unsigned short& localPort, unsigned short& publicPort, uint32_t lifeTime)
+{
+    while (true) {
+        int state = mapper.SendMapReq(Protocol::TCP, localPort,
+            publicPort, lifeTime);
+        if (state != 0) {
+            LogPrintf("Failed to renew mapping of public port %d to local port %d : %s\n",
+                publicPort, localPort, mapper.GetErrMsg(state).c_str());
+            return;
+        }
+        uint32_t sleepPeriod = ((int)lifeTime - 30) < 0 ? 0 : (lifeTime - 30);
+        std::unique_lock<std::mutex> stateLock(g_StateMutex);
+        g_StateCondVar.wait_for(stateLock,
+            std::chrono::seconds(sleepPeriod),
+            [] { return g_NatPmpStatus == NatPmpState::MAPPED_PORT; });
+        if (g_NatPmpStatus == NatPmpState::MAPPED_PORT) break;
+    }
+}
+
 void StartMapPort()
 {
-    // Intentionally left blank.
+    NatMap mapper;
+    int state = mapper.IsGood();
+    std::string defaultGateway;
+    mapper.GetDefaultGateway(defaultGateway);
+    if (state != 0) {
+        LogPrintf("Failed to initialize NAT-PMP through default gateway %s: %s\n",
+            defaultGateway.c_str(), mapper.GetErrMsg(state).c_str());
+        return;
+    }
+    g_NatPmpStatus = NatPmpState::INITIALIZED;
+    std::string publicAddr;
+    LogPrintf("Trying to get public address of gateway for NAT-PMP, might take a while.\n");
+    state = mapper.GetPublicAddress(publicAddr);
+    if (state != 0) {
+        LogPrintf("Failed to get public address of gateway [%s] with error [%s]\n",
+            defaultGateway.c_str(), mapper.GetErrMsg(state).c_str());
+        return;
+    }
+    g_NatPmpStatus = NatPmpState::RECEIVED_PUBLIC_IP;
+    LogPrintf("Public address of gateway is [%s]\n", publicAddr.c_str());
+
+    uint32_t life = 10000;
+    unsigned short localPort = GetListenPort();
+    unsigned short publicPort = localPort;
+    state = mapper.SendMapReq(Protocol::TCP, localPort,
+        publicPort, life);
+    if (state != 0) {
+        LogPrintf("Failed to map public port %d to local port %d with error [%s]\n",
+            publicPort, localPort, mapper.GetErrMsg(state).c_str());
+        return;
+    }
+    std::thread natMapperReNewer(RenewPortMapping, std::ref(mapper), std::ref(localPort), std::ref(publicPort), std::ref(life));
+    natMapperReNewer.detach();
+    g_NatPmpStatus = NatPmpState::MAPPED_PORT;
+    LogPrintf("Successfully mapped local port %d to %s:%d\n",
+        localPort, publicAddr.c_str(), publicPort);
 }
+
 void InterruptMapPort()
 {
-    // Intentionally left blank.
+    StopMapPort();
 }
 void StopMapPort()
 {
-    // Intentionally left blank.
+    if (g_NatPmpStatus != NatPmpState::MAPPED_PORT) {
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> statusLock(g_StateMutex);
+        g_NatPmpStatus = NatPmpState::NONE;
+    }
+    g_StateCondVar.notify_one();
+    uint32_t life = 0;
+    unsigned short localPort = GetListenPort();
+    unsigned short publicPort = localPort;
+    NatMap mapper;
+    int state = mapper.SendMapReq(Protocol::TCP, localPort,
+        publicPort, life);
+    if (state != 0) {
+        LogPrintf("Failed to remove map between public port %d and local port %d with error [%s]\n",
+            publicPort, localPort, mapper.GetErrMsg(state).c_str());
+        return;
+    }
+
+    LogPrintf("Successfully removed map between public port %d and local port %d \n", publicPort, localPort);
+    g_NatPmpStatus = NatPmpState::NONE;
 }
 #endif
-
-
-
-
-
 
 void CConnman::ThreadDNSAddressSeed()
 {

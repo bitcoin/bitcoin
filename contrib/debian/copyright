@@ -156,7 +156,7 @@ Comment:
 License: public-domain
  This work is in the public domain.
 
-Files: src/natpmp/gateway.cpp 
+Files: src/natpmp/gateway.cpp
        src/natpmp/include/gateway.h
        src/natpmp/natpmp.cpp
        src/natpmp/include/natpmp.h

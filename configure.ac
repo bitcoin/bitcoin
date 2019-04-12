@@ -113,7 +113,7 @@ AC_ARG_WITH([miniupnpc],
   [AS_HELP_STRING([--with-miniupnpc],
   [enable UPNP (default is yes if libminiupnpc is found)])],
   [use_upnp=$withval],
-  [use_upnp=auto])
+  [use_upnp=no])
 
 AC_ARG_ENABLE([upnp-default],
   [AS_HELP_STRING([--enable-upnp-default],

@@ -20,20 +20,21 @@
 #endif
 #include <cstdint>
 
-typedef struct {
-    int s;    /* socket */
-    in_addr_t gateway;    /* default gateway (IPv4) */
+struct natpmp {
+    int s;             /* socket */
+    in_addr_t gateway; /* default gateway (IPv4) */
     int has_pending_request;
     unsigned char pending_request[12];
     int pending_request_len;
     int try_number;
     struct timeval retry_time;
-} natpmp_t;
+};
+using natpmp_t = struct natpmp;
 
-typedef struct {
-    int16_t type;    /* NATPMP_RESPTYPE_* */
-    int16_t resultcode;    /* NAT-PMP response code */
-    int64_t epoch;    /* Seconds since start of epoch */
+struct natpmpresp {
+    int16_t type;       /* NATPMP_RESPTYPE_* */
+    int16_t resultcode; /* NAT-PMP response code */
+    int64_t epoch;      /* Seconds since start of epoch */
     union {
         struct {
             struct in_addr addr;
@@ -44,7 +45,8 @@ typedef struct {
             int64_t lifetime;
         } newportmapping;
     } pnu;
-} natpmpresp_t;
+};
+using natpmpresp_t = struct natpmpresp;
 
 /* possible values for type field of natpmpresp_t */
 #define NATPMP_RESPTYPE_PUBLICADDRESS (0)
@@ -113,7 +115,7 @@ extern "C" {
  * NATPMP_ERR_CONNECTERR
  *
  */
-int InitNatPmp(natpmp_t * p, int forcegw, in_addr_t forcedgw);
+int InitNatPmp(natpmp_t* p, int forcegw, in_addr_t forcedgw);
 
 /*
  * CloseNatPmp()
@@ -124,7 +126,7 @@ int InitNatPmp(natpmp_t * p, int forcegw, in_addr_t forcedgw);
  * NATPMP_ERR_CLOSEERR
  *
  */
-int CloseNatPmp(natpmp_t * p);
+int CloseNatPmp(natpmp_t* p);
 
 /*
  * SendPublicAddressRequest()
@@ -135,7 +137,7 @@ int CloseNatPmp(natpmp_t * p);
  * NATPMP_ERR_SENDERR
  *
  */
-int SendPublicAddressRequest(natpmp_t * p);
+int SendPublicAddressRequest(natpmp_t* p);
 
 /*
  * SendNewPortMappingRequest()
@@ -152,8 +154,7 @@ int SendPublicAddressRequest(natpmp_t * p);
  * NATPMP_ERR_SENDERR
  *
  */
-int SendNewPortMappingRequest(natpmp_t * p, int protocol, int16_t privateport,
-                              int16_t publicport, int64_t lifetime);
+int SendNewPortMappingRequest(natpmp_t* p, int protocol, int16_t privateport, int16_t publicport, int64_t lifetime);
 
 /*
  * GetNatPmpRequestTimeout()
@@ -166,7 +167,7 @@ int SendNewPortMappingRequest(natpmp_t * p, int protocol, int16_t privateport,
  * NATPMP_ERR_NOPENDINGREQ
  *
  */
-int GetNatPmpRequestTimeout(natpmp_t * p, struct timeval * timeout);
+int GetNatPmpRequestTimeout(natpmp_t* p, struct timeval* timeout);
 
 /*
  * ReadNatPmpResponseOrRetry()
@@ -188,9 +189,9 @@ int GetNatPmpRequestTimeout(natpmp_t * p, struct timeval * timeout);
  * NATPMP_ERR_UNDEFINEDERROR
  *
  */
-int ReadNatPmpResponseOrRetry(natpmp_t * p, natpmpresp_t * response);
+int ReadNatPmpResponseOrRetry(natpmp_t* p, natpmpresp_t* response);
 
-const char * StrNatPmpErr(int t);
+const char* StrNatPmpErr(int err);
 
 #ifdef __cplusplus
 }

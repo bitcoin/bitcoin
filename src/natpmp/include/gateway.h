@@ -14,5 +14,5 @@
 /// @param addr Address
 ///
 /// @return 0 Success, -1 Error
-int GetDefaultGateway(in_addr_t * addr);
+int GetDefaultGateway(in_addr_t* addr);
 #endif // BITCOIN_NATPMP_INCLUDE_GATEWAY_H
