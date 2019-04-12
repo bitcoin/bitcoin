@@ -297,6 +297,11 @@ class SendHeadersTest(BitcoinTestFramework):
         tip = self.nodes[0].getblockheader(self.nodes[0].generate(1)[0])
         tip_hash = int(tip["hash"], 16)
 
+        # TODO this partly fixes the same thing that is fixed by https://github.com/bitcoin/bitcoin/pull/13192
+        # This will later conflict when backporting the actual fix. Just take everything from the Bitcoin fix as a
+        # resolution
+        assert_equal(test_node.check_last_announcement(headers=[], inv=[tip_hash]), True)
+
         self.log.info("Verify getheaders with null locator and valid hashstop returns headers.")
         test_node.clear_last_announcement()
         test_node.get_headers(locator=[], hashstop=tip_hash)
