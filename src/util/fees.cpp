@@ -3,7 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <amount.h>
+#include <coins.h>
 #include <policy/fees.h>
+#include <primitives/transaction.h>
 
 #include <string>
 
@@ -37,5 +40,20 @@ bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_esti
     if (mode == fee_modes.end()) return false;
 
     fee_estimate_mode = mode->second;
+    return true;
+}
+
+bool GetTransactionFee(const CTransactionRef& tx, const std::vector<Coin>& coins, CAmount& fee) {
+    // Add all in values
+    fee = 0;
+    for (const auto coin : coins) {
+        fee += coin.out.nValue;
+    }
+
+     // Subtract all out values
+    for (const auto& tx_out : tx->vout) {
+        fee -= tx_out.nValue;
+    }
+    
     return true;
 }

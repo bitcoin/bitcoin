@@ -28,6 +28,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <uint256.h>
+#include <util/fees.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
 #include <validation.h>
@@ -817,6 +818,28 @@ static UniValue sendrawtransaction(const JSONRPCRequest& request)
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
+    if (max_raw_tx_fee > 0) {
+        // Check that we're not trying to send a transaction with a too-high fee
+        // Fetch previous transactions (inputs):
+        std::map<COutPoint, Coin> coins_map;
+        for (const CTxIn& txin : tx->vin) {
+            coins_map[txin.prevout]; // Create empty map entry keyed by prevout.
+        }
+        FindCoins(coins_map);
+
+        std::vector<Coin> coins;
+        for (auto coinmap: coins_map) {
+            coins.push_back(coinmap.second);
+        }
+
+        CAmount fee{0};
+        GetTransactionFee(tx, coins, fee);
+
+        if (fee > max_raw_tx_fee) {
+            throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("fee-above-max-tx-fee: fee=%s , max_tx_fee=%s", FormatMoney(fee), FormatMoney(max_raw_tx_fee)));
+        }
+    }
+
     std::string err_string;
     AssertLockNotHeld(cs_main);
     const TransactionError err = BroadcastTransaction(tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
@@ -894,6 +917,31 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     UniValue result(UniValue::VARR);
     UniValue result_0(UniValue::VOBJ);
     result_0.pushKV("txid", tx_hash.GetHex());
+
+    if (max_raw_tx_fee > 0) {
+        // Check that we're not trying to send a transaction with a too-high fee
+        // Fetch previous transactions (inputs):
+        std::map<COutPoint, Coin> coins_map;
+        for (const CTxIn& txin : tx->vin) {
+            coins_map[txin.prevout]; // Create empty map entry keyed by prevout.
+        }
+        FindCoins(coins_map);
+
+        std::vector<Coin> coins;
+        for (auto coinmap: coins_map) {
+            coins.push_back(coinmap.second);
+        }
+
+        CAmount fee{0};
+        GetTransactionFee(tx, coins, fee);
+
+        if (fee > max_raw_tx_fee) {
+            result_0.pushKV("allowed", false);
+            result_0.pushKV("reject-reason", "fee-above-max-tx-fee");
+            result.push_back(std::move(result_0));
+            return result;
+        }
+    }
 
     CValidationState state;
     bool missing_inputs;

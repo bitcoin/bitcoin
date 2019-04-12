@@ -2159,6 +2159,24 @@ bool CWalletTx::SubmitMemoryPoolAndRelay(std::string& err_string, bool relay, in
     // Don't try to submit conflicted or confirmed transactions.
     if (GetDepthInMainChain(locked_chain) != 0) return false;
 
+    // Check that we're not trying to send a transaction with a too-high fee
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins_map;
+    for (const CTxIn& txin : tx->vin) {
+        coins_map[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    pwallet->chain().findCoins(coins_map);
+
+    std::vector<Coin> coins;
+    for (auto coinmap: coins_map) {
+        coins.push_back(coinmap.second);
+    }
+
+    CAmount fee{0};
+    GetTransactionFee(tx, coins, fee);
+
+    if (fee > pwallet->m_default_max_tx_fee) return false;
+
     // Submit transaction to mempool for relay
     pwallet->WalletLogPrintf("Submitting wtx %s to mempool for relay\n", GetHash().ToString());
     // We must set fInMempool here - while it will be re-set to true by the

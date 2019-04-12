@@ -192,7 +192,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         # Skip re-signing the transaction for context independent checks from now on
         # tx.deserialize(BytesIO(hex_str_to_bytes(node.signrawtransactionwithwallet(tx.serialize().hex())['hex'])))
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '16: bad-txns-vout-empty'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -208,7 +208,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         tx.vout[0].nValue *= -1
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '16: bad-txns-vout-negative'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -234,7 +234,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         tx.vin = [tx.vin[0]] * 2
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '16: bad-txns-inputs-duplicate'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
 
@@ -251,19 +251,19 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         tx.nVersion = 3  # A version currently non-standard
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: version'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         tx.vout[0].scriptPubKey = CScript([OP_0])  # Some non-standard script
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: scriptpubkey'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
         tx.vin[0].scriptSig = CScript([OP_HASH160])  # Some not-pushonly scriptSig
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: scriptsig-not-pushonly'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
@@ -278,7 +278,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vout[0] = output_p2sh_burn
         tx.vout[0].nValue -= 1  # Make output smaller, such that it is dust for our policy
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: dust'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
         tx.deserialize(BytesIO(hex_str_to_bytes(raw_tx_reference)))
@@ -294,7 +294,7 @@ class MempoolAcceptanceTest(BitcoinTestFramework):
         tx.vin[0].nSequence -= 1  # Should be non-max, so locktime is not ignored
         tx.nLockTime = node.getblockcount() + 1
         self.check_mempool_result(
-            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': '64: non-final'}],
+            result_expected=[{'txid': tx.rehash(), 'allowed': False, 'reject-reason': 'fee-above-max-tx-fee'}],
             rawtxs=[tx.serialize().hex()],
         )
 
