@@ -138,6 +138,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsDescriptor()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importprivkey is not available for descriptor wallets");
+    }
+
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
     }
@@ -312,6 +316,9 @@ UniValue importaddress(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsDescriptor()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importaddress is not available for descriptor wallets");
+    }
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -510,6 +517,9 @@ UniValue importpubkey(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+    if (pwallet->IsDescriptor()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importpubkey is not available for descriptor wallets");
+    }
 
     std::string strLabel;
     if (!request.params[1].isNull())
@@ -798,6 +808,10 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
             + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
                 },
             }.ToString());
+
+    if (pwallet->IsDescriptor()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "dumpprivkey is not available for descriptor wallets");
+    }
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
@@ -1436,6 +1450,9 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             }.ToString()
         );
 
+    if (pwallet->IsDescriptor()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "importmulti is not available for descriptor wallets");
+    }
 
     RPCTypeCheck(mainRequest.params, {UniValue::VARR, UniValue::VOBJ});
 
