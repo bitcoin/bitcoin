@@ -767,6 +767,8 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         if (pindexMined) {
             db.WriteInstantSendLockMined(hash, pindexMined->nHeight);
         }
+
+        pendingRetryTxs.emplace(islock.txid);
     }
 
     CInv inv(MSG_ISLOCK, hash);
@@ -779,8 +781,6 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     }
 
     RemoveMempoolConflictsForLock(hash, islock);
-    RetryLockTxs(islock.txid);
-
     UpdateWalletTransaction(islock.txid, tx);
 }
 
@@ -836,7 +836,8 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
 
     bool chainlocked = pindex && chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
     if (!islockHash.IsNull() || chainlocked) {
-        RetryLockTxs(tx.GetHash());
+        LOCK(cs);
+        pendingRetryTxs.emplace(tx.GetHash());
     } else {
         ProcessTx(tx, Params().GetConsensus());
     }
@@ -883,14 +884,14 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
                 inputRequestIds.erase(inputRequestId);
             }
         }
+
+        // Retry all not yet locked mempool TXs and TX which where mined after the fully confirmed block
+        pendingRetryAllTxs = true;
     }
 
     for (auto& p : removeISLocks) {
         UpdateWalletTransaction(p.second->txid, nullptr);
     }
-
-    // Retry all not yet locked mempool TXs and TX which where mined after the fully confirmed block
-    RetryLockTxs(uint256());
 }
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock)
@@ -917,10 +918,23 @@ void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, con
     }
 }
 
-void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
+bool CInstantSendManager::ProcessPendingRetryLockTxs()
 {
+    bool retryAllTxs;
+    decltype(pendingRetryTxs) parentTxs;
+    {
+        LOCK(cs);
+        retryAllTxs = pendingRetryAllTxs;
+        parentTxs = std::move(pendingRetryTxs);
+        pendingRetryAllTxs = false;
+    }
+
+    if (!retryAllTxs && parentTxs.empty()) {
+        return false;
+    }
+
     if (!IsNewInstantSendEnabled()) {
-        return;
+        return false;
     }
 
     // Let's retry all unlocked TXs from mempool and and recently connected blocks
@@ -930,16 +944,18 @@ void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
     {
         LOCK(mempool.cs);
 
-        if (lockedParentTx.IsNull()) {
+        if (retryAllTxs) {
             txs.reserve(mempool.mapTx.size());
             for (auto it = mempool.mapTx.begin(); it != mempool.mapTx.end(); ++it) {
                 txs.emplace(it->GetTx().GetHash(), it->GetSharedTx());
             }
         } else {
-            auto it = mempool.mapNextTx.lower_bound(COutPoint(lockedParentTx, 0));
-            while (it != mempool.mapNextTx.end() && it->first->hash == lockedParentTx) {
-                txs.emplace(it->second->GetHash(), mempool.get(it->second->GetHash()));
-                ++it;
+            for (const auto& parentTx : parentTxs) {
+                auto it = mempool.mapNextTx.lower_bound(COutPoint(parentTx, 0));
+                while (it != mempool.mapNextTx.end() && it->first->hash == parentTx) {
+                    txs.emplace(it->second->GetHash(), mempool.get(it->second->GetHash()));
+                    ++it;
+                }
             }
         }
     }
@@ -969,12 +985,12 @@ void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
         }
 
         for (const auto& tx : block.vtx) {
-            if (lockedParentTx.IsNull()) {
+            if (retryAllTxs) {
                 txs.emplace(tx->GetHash(), tx);
             } else {
                 bool isChild  = false;
                 for (auto& in : tx->vin) {
-                    if (in.prevout.hash == lockedParentTx) {
+                    if (parentTxs.count(in.prevout.hash)) {
                         isChild = true;
                         break;
                     }
@@ -989,6 +1005,7 @@ void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
         depth++;
     }
 
+    bool didWork = false;
     for (auto& p : txs) {
         auto& tx = p.second;
         {
@@ -1017,7 +1034,10 @@ void CInstantSendManager::RetryLockTxs(const uint256& lockedParentTx)
         }
 
         ProcessTx(*tx, Params().GetConsensus());
+        didWork = true;
     }
+
+    return didWork;
 }
 
 bool CInstantSendManager::AlreadyHave(const CInv& inv)
@@ -1089,6 +1109,7 @@ void CInstantSendManager::WorkThreadMain()
         bool didWork = false;
 
         didWork |= ProcessPendingInstantSendLocks();
+        didWork |= ProcessPendingRetryLockTxs();
 
         if (!didWork) {
             if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {

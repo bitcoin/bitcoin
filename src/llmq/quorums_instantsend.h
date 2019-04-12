@@ -93,6 +93,10 @@ private:
     // Incoming and not verified yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>> pendingInstantSendLocks;
 
+    // a set of recently IS locked TXs for which we can retry locking of children
+    std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
+    bool pendingRetryAllTxs{false};
+
 public:
     CInstantSendManager(CDBWrapper& _llmqDb);
     ~CInstantSendManager();
@@ -129,7 +133,7 @@ public:
     void HandleFullyConfirmedBlock(const CBlockIndex* pindex);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
-    void RetryLockTxs(const uint256& lockedParentTx);
+    bool ProcessPendingRetryLockTxs();
 
     bool AlreadyHave(const CInv& inv);
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
