@@ -1321,10 +1321,10 @@ void CConnman::ThreadSocketHandler()
             }
         }
 
-        isInSelect = true;
+        wakeupSelectNeeded = true;
         int nSelect = select(have_fds ? hSocketMax + 1 : 0,
                              &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-        isInSelect = false;
+        wakeupSelectNeeded = false;
         if (interruptNet)
             return;
 
@@ -1521,6 +1521,8 @@ void CConnman::WakeSelect()
         LogPrint("net", "write to wakeupPipe failed\n");
     }
 #endif
+
+    wakeupSelectNeeded = false;
 }
 
 
@@ -3236,7 +3238,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg, bool allowOpti
         if (optimisticSend == true)
             nBytesSent = SocketSendData(pnode);
         // wake up select() call in case there was no pending data before (so it was not selecting this socket for sending)
-        else if (!hasPendingData && isInSelect)
+        else if (!hasPendingData && wakeupSelectNeeded)
             WakeSelect();
     }
     if (nBytesSent)
