@@ -1726,7 +1726,7 @@ bool CWallet::CanGetAddresses(bool internal)
     // Check if the keypool has keys
     bool keypool_has_keys;
     if (internal && CanSupportFeature(FEATURE_HD_SPLIT)) {
-        keypool_has_keys = setInternalKeyPool.size() > 0;
+        keypool_has_keys = GetKeyPoolSize() - KeypoolCountExternalKeys() > 0;
     } else {
         keypool_has_keys = KeypoolCountExternalKeys() > 0;
     }
@@ -3543,7 +3543,33 @@ bool CWallet::NewKeyPool()
 size_t CWallet::KeypoolCountExternalKeys()
 {
     AssertLockHeld(cs_wallet);
+    if (IsDescriptor()) {
+        size_t count = 0;
+        for (const auto& desc_id : m_primary_descriptors) {
+            WalletDescriptor& desc = m_map_descriptors[desc_id.second];
+            count += desc.range_end - desc.next_index;
+        }
+        return count;
+    }
     return setExternalKeyPool.size() + set_pre_split_keypool.size();
+}
+
+unsigned int CWallet::GetKeyPoolSize()
+{
+    AssertLockHeld(cs_wallet);
+    if (IsDescriptor()) {
+        size_t count = 0;
+        for (const auto& desc_id : m_primary_descriptors) {
+            WalletDescriptor& desc = m_map_descriptors[desc_id.second];
+            count += desc.range_end - desc.next_index;
+        }
+        for (const auto& desc_id : m_change_descriptors) {
+            WalletDescriptor& desc = m_map_descriptors[desc_id.second];
+            count += desc.range_end - desc.next_index;
+        }
+        return count;
+    }
+    return setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size();;
 }
 
 void CWallet::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
