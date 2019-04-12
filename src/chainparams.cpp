@@ -269,7 +269,7 @@ public:
         
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
-        consensus.vchSYSXContract = ParseHex("af8db39f4d10699229257149ea971c98102047bc");
+        consensus.vchSYSXContract = ParseHex("5f6e74ba20bf26161612eac8f7e8b3b6c9baaadd");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
 
         pchMessageStart[0] = 0xce;
@@ -368,7 +368,7 @@ public:
         
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
-        consensus.vchSYSXContract = ParseHex("af8db39f4d10699229257149ea971c98102047bc");
+        consensus.vchSYSXContract = ParseHex("5f6e74ba20bf26161612eac8f7e8b3b6c9baaadd");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
 
         pchMessageStart[0] = 0xfa;

@@ -803,9 +803,13 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
 	CAmount nAmount = AmountFromValue(params[1]);
     uint32_t nBlockNumber = (uint32_t)params[2].get_int();
     string vchValue = params[3].get_str();
+    boost::erase_all(vchValue, "'");
     string vchTxRoot = params[4].get_str();
+    boost::erase_all(vchTxRoot, "'");
     string vchParentNodes = params[5].get_str();
+    boost::erase_all(vchParentNodes, "'");
     string vchPath = params[6].get_str();
+    boost::erase_all(vchPath, "'");
     string strWitnessAddress = params[7].get_str();
     
 	vector<CRecipient> vecSend;
@@ -2217,7 +2221,7 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
             + HelpExampleRpc("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
         );
     if(!fBlockIndex)
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -blockindex enabled"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -blockindex enabled"));
     LOCK(cs_main);
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
@@ -2311,9 +2315,9 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     if(!assetVal.isNull()) {
         CAsset asset;
         if(!GetAsset(assetVal.get_int(), asset))
-             throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
+             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
         if(asset.vchContract.empty())
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
          res.pushKV("contract", HexStr(asset.vchContract));    
                    
     }
@@ -2337,20 +2341,20 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
         );
     if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
     }
     UniValue options;
     int64_t page = params[0].get_int64();
    
     if (page < 0) {
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'page' must be 0 or greater"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("'page' must be 0 or greater"));
     }
 
     options = params[1];
     
     UniValue oRes(UniValue::VARR);
     if (!passetindexdb->ScanAssetIndex(page, options, oRes))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
     return oRes;
 }
 UniValue listassetindexassets(const JSONRPCRequest& request) {
@@ -2362,7 +2366,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
             + HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
         );
     if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
     }       
     const CTxDestination &dest = DecodeDestination(params[0].get_str());
     UniValue detail = DescribeAddress(dest);
@@ -2374,7 +2378,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
     UniValue oRes(UniValue::VARR);
     std::vector<uint32_t> assetGuids;
     if (!passetindexdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Lookup failed"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Lookup failed"));
         
     for(const uint32_t& guid: assetGuids){
         UniValue oObj(UniValue::VOBJ);
