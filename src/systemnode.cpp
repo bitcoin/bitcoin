@@ -701,12 +701,12 @@ bool CSystemnodeBroadcast::Create(std::string strService, std::string strKeySyst
     CPubKey pubKeySystemnodeNew;
     CKey keySystemnodeNew;
 
-    //need correct blocks to send ping
-    if(!fOffline && !systemnodeSync.IsBlockchainSynced()) {
-        strErrorMessage = "Sync in progress. Must wait until sync is complete to start Systemnode";
-        LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
-        return false;
-    }
+    ////need correct blocks to send ping
+    //if(!fOffline && !systemnodeSync.IsBlockchainSynced()) {
+    //    strErrorMessage = "Sync in progress. Must wait until sync is complete to start Systemnode";
+    //    LogPrintf("CSystemnodeBroadcast::Create -- %s\n", strErrorMessage);
+    //    return false;
+    //}
 
     if(!legacySigner.SetKey(strKeySystemnode, strErrorMessage, keySystemnodeNew, pubKeySystemnodeNew))
     {
