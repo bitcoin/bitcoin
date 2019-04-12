@@ -2879,7 +2879,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletT
                     return false;
                 }
 
-                nBytes = GetVirtualTransactionSize(txNew);
+                nBytes = CTransaction(txNew).GetTotalSize();
 
                 // Remove scriptSigs to eliminate the fee calculation dummy signatures
                 for (auto& vin : txNew.vin) {
