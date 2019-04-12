@@ -805,6 +805,7 @@ private:
     std::map<CKeyID, int64_t> m_pool_key_to_index;
     std::atomic<uint64_t> m_wallet_flags{0};
     std::map<DescriptorID, WalletDescriptor> m_map_descriptors GUARDED_BY(cs_wallet);
+    std::map<CScriptID, std::pair<DescriptorID, int>> m_map_scriptPubKeys GUARDED_BY(cs_wallet);
 
     int64_t nTimeFirstKey GUARDED_BY(cs_wallet) = 0;
 
@@ -838,6 +839,8 @@ private:
 
     //! Unsets a wallet flag and saves it to disk
     void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
+
+    bool AddScriptPubKey(const CScript& script) override EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
@@ -1031,6 +1034,9 @@ public:
 
     //! Get all of the descriptors from the set
     std::set<std::tuple<std::shared_ptr<Descriptor>, int32_t, int32_t, uint64_t>> GetDescriptors() const;
+
+    //! Add a script pubkey to the wallet and the descriptor and position it came from
+    bool AddScriptPubKey(const CScript& script, const DescriptorID& id, int pos) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     //! Holds a timestamp at which point the wallet is scheduled (externally) to be relocked. Caller must arrange for actual relocking to occur via Lock().
     int64_t nRelockTime = 0;

@@ -512,7 +512,7 @@ bool CWallet::LoadDescriptor(const WalletDescriptor& desc)
         desc.descriptor->ExpandFromCache(i, desc.cache[i - desc.range_start], scripts_temp, out_keys);
         // Add all of the scriptPubKeys to the scriptPubKey set
         for (const auto& script : scripts_temp) {
-            AddScriptPubKey(script);
+            AddScriptPubKey(script, id, i);
         }
         // Add the scripts to in memory
         for (const auto& script : out_keys.scripts) {
@@ -1578,6 +1578,17 @@ bool CWallet::AddWalletDescriptor(const WalletDescriptor& wallet_desc)
     // Add the descriptor to wallet in memory
     LoadDescriptor(wallet_desc);
     return true;
+}
+
+bool CWallet::AddScriptPubKey(const CScript& script)
+{
+    return CBasicKeyStore::AddScriptPubKey(script);
+}
+
+bool CWallet::AddScriptPubKey(const CScript& script, const DescriptorID& id, int pos)
+{
+    m_map_scriptPubKeys[CScriptID(script)] = std::make_pair(id, pos);
+    return AddScriptPubKey(script);
 }
 
 bool CWallet::IsHDEnabled() const
