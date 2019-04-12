@@ -843,7 +843,15 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // if we are using HD, replace the HD seed with a new one
         if (IsHDEnabled()) {
-            SetHDSeed(GenerateNewSeed());
+            CPubKey seed = GenerateNewSeed();
+            SetHDSeed(seed);
+            if (IsDescriptor()) {
+                // Generate the descriptors for each type
+                CKeyID seed_id = seed.GetID();
+                GenerateNewDescriptor(seed_id, OutputType::LEGACY);
+                GenerateNewDescriptor(seed_id, OutputType::P2SH_SEGWIT);
+                GenerateNewDescriptor(seed_id, OutputType::BECH32);
+            }
         }
 
         NewKeyPool();
@@ -4504,6 +4512,15 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             // generate a new seed
             CPubKey seed = walletInstance->GenerateNewSeed();
             walletInstance->SetHDSeed(seed);
+            if ((wallet_creation_flags & WALLET_FLAG_DESCRIPTORS)) {
+                walletInstance->SetWalletFlag(WALLET_FLAG_DESCRIPTORS);
+                // Generate the descriptors for each type
+                LOCK(walletInstance->cs_wallet);
+                CKeyID seed_id = seed.GetID();
+                walletInstance->GenerateNewDescriptor(seed_id, OutputType::LEGACY);
+                walletInstance->GenerateNewDescriptor(seed_id, OutputType::P2SH_SEGWIT);
+                walletInstance->GenerateNewDescriptor(seed_id, OutputType::BECH32);
+            }
         } // Otherwise, do not generate a new seed
 
         // Top up the keypool
