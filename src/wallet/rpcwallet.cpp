@@ -195,13 +195,21 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
         pwallet->TopUpKeyPool();
     }
 
-    // Generate a new key that is added to wallet
-    CPubKey newKey;
-    if (!pwallet->GetKeyFromPool(newKey)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CTxDestination dest;
+    if (pwallet->IsDescriptor()) {
+        // Get scriptPubKey from wallet
+        if (!pwallet->GetDestinationFromDescriptor(dest, output_type, false)) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        }
+    } else {
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwallet->GetKeyFromPool(newKey)) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        }
+        pwallet->LearnRelatedScripts(newKey, output_type);
+        dest = GetDestinationForKey(newKey, output_type);
     }
-    pwallet->LearnRelatedScripts(newKey, output_type);
-    CTxDestination dest = GetDestinationForKey(newKey, output_type);
 
     pwallet->SetAddressBook(dest, label, "receive");
 
@@ -251,15 +259,23 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
         }
     }
 
-    CReserveKey reservekey(pwallet);
-    CPubKey vchPubKey;
-    if (!reservekey.GetReservedKey(vchPubKey, true))
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+    CTxDestination dest;
+    if (pwallet->IsDescriptor()) {
+        // Get scriptPubKey from wallet
+        if (!pwallet->GetDestinationFromDescriptor(dest, output_type, true)) {
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        }
+    } else {
+        CReserveKey reservekey(pwallet);
+        CPubKey vchPubKey;
+        if (!reservekey.GetReservedKey(vchPubKey, true))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
-    reservekey.KeepKey();
+        reservekey.KeepKey();
 
-    pwallet->LearnRelatedScripts(vchPubKey, output_type);
-    CTxDestination dest = GetDestinationForKey(vchPubKey, output_type);
+        pwallet->LearnRelatedScripts(vchPubKey, output_type);
+        dest = GetDestinationForKey(vchPubKey, output_type);
+    }
 
     return EncodeDestination(dest);
 }

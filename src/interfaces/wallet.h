@@ -79,6 +79,9 @@ public:
     // Get key from pool.
     virtual bool getKeyFromPool(bool internal, CPubKey& pub_key) = 0;
 
+    // Get address from descriptor and type
+    virtual bool getDestinationFromDescriptor(CTxDestination& dest, OutputType type, bool internal) = 0;
+
     //! Get public key.
     virtual bool getPubKey(const CKeyID& address, CPubKey& pub_key) = 0;
 
@@ -252,6 +255,9 @@ public:
 
     // Remove wallet.
     virtual void remove() = 0;
+
+    // Wallet is a descriptor wallet
+    virtual bool isDescriptor() = 0;
 
     //! Register handler for unload message.
     using UnloadFn = std::function<void()>;

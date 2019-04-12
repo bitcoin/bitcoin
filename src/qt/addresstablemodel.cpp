@@ -363,24 +363,44 @@ QString AddressTableModel::addRow(const QString &type, const QString &label, con
     else if(type == Receive)
     {
         // Generate a new address to associate with given label
-        CPubKey newKey;
-        if(!walletModel->wallet().getKeyFromPool(false /* internal */, newKey))
-        {
-            WalletModel::UnlockContext ctx(walletModel->requestUnlock());
-            if(!ctx.isValid())
+        CTxDestination dest;
+        if (walletModel->wallet().isDescriptor()) {
+            if(!walletModel->wallet().getDestinationFromDescriptor(dest, address_type, false))
             {
-                // Unlock wallet failed or was cancelled
-                editStatus = WALLET_UNLOCK_FAILURE;
-                return QString();
+                WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+                if(!ctx.isValid())
+                {
+                    // Unlock wallet failed or was cancelled
+                    editStatus = WALLET_UNLOCK_FAILURE;
+                    return QString();
+                }
+                if(!walletModel->wallet().getDestinationFromDescriptor(dest, address_type, false))
+                {
+                    editStatus = KEY_GENERATION_FAILURE;
+                    return QString();
+                }
             }
+        } else {
+            CPubKey newKey;
             if(!walletModel->wallet().getKeyFromPool(false /* internal */, newKey))
             {
-                editStatus = KEY_GENERATION_FAILURE;
-                return QString();
+                WalletModel::UnlockContext ctx(walletModel->requestUnlock());
+                if(!ctx.isValid())
+                {
+                    // Unlock wallet failed or was cancelled
+                    editStatus = WALLET_UNLOCK_FAILURE;
+                    return QString();
+                }
+                if(!walletModel->wallet().getKeyFromPool(false /* internal */, newKey))
+                {
+                    editStatus = KEY_GENERATION_FAILURE;
+                    return QString();
+                }
             }
+            walletModel->wallet().learnRelatedScripts(newKey, address_type);
+            dest = GetDestinationForKey(newKey, address_type);
         }
-        walletModel->wallet().learnRelatedScripts(newKey, address_type);
-        strAddress = EncodeDestination(GetDestinationForKey(newKey, address_type));
+        strAddress = EncodeDestination(dest);
     }
     else
     {

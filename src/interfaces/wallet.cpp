@@ -152,6 +152,10 @@ public:
     {
         return m_wallet->GetKeyFromPool(pub_key, internal);
     }
+    bool getDestinationFromDescriptor(CTxDestination& dest, OutputType type, bool internal) override
+    {
+        return m_wallet->GetDestinationFromDescriptor(dest, type, internal);
+    }
     bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetPubKey(address, pub_key); }
     bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetKey(address, key); }
     bool isSpendable(const CTxDestination& dest) override { return IsMine(*m_wallet, dest) & ISMINE_SPENDABLE; }
@@ -469,6 +473,7 @@ public:
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet->m_default_change_type; }
+    bool isDescriptor() override { return m_wallet->IsDescriptor(); }
     CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {

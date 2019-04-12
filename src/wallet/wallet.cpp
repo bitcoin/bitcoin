@@ -2985,19 +2985,29 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     strFailReason = _("Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.");
                     return false;
                 }
-                CPubKey vchPubKey;
-                bool ret;
-                ret = reservekey.GetReservedKey(vchPubKey, true);
-                if (!ret)
-                {
-                    strFailReason = _("Keypool ran out, please call keypoolrefill first");
-                    return false;
-                }
 
                 const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
 
-                LearnRelatedScripts(vchPubKey, change_type);
-                scriptChange = GetScriptForDestination(GetDestinationForKey(vchPubKey, change_type));
+                CTxDestination change_dest;
+                if (IsDescriptor()) {
+                    if (!GetDestinationFromDescriptor(change_dest, change_type, true))
+                    {
+                        strFailReason = _("Keypool ran out, please call keypoolrefill first");
+                        return false;
+                    }
+                } else {
+                    CPubKey vchPubKey;
+                    bool ret;
+                    ret = reservekey.GetReservedKey(vchPubKey, true);
+                    if (!ret)
+                    {
+                        strFailReason = _("Keypool ran out, please call keypoolrefill first");
+                        return false;
+                    }
+                    LearnRelatedScripts(vchPubKey, change_type);
+                    change_dest = GetDestinationForKey(vchPubKey, change_type);
+                }
+                scriptChange = GetScriptForDestination(change_dest);
             }
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
@@ -3567,29 +3577,113 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         else
             nTargetSize = std::max(gArgs.GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t) 0);
 
-        // count amount of available keys (internal, external)
-        // make sure the keypool of external and internal keys fits the user selected target (-keypool)
-        int64_t missingExternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - (int64_t)setExternalKeyPool.size(), (int64_t) 0);
-        int64_t missingInternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - (int64_t)setInternalKeyPool.size(), (int64_t) 0);
+        if (IsDescriptor()) {
+            WalletBatch batch(*database);
+            for (const auto& desc_id : m_primary_descriptors) {
+                WalletDescriptor& desc = m_map_descriptors[desc_id.second];
+                int32_t missing = std::max(std::max((int)nTargetSize, 1) - (desc.range_end - desc.next_index), 0);
 
-        if (!IsHDEnabled() || !CanSupportFeature(FEATURE_HD_SPLIT))
-        {
-            // don't create extra internal keys
-            missingInternal = 0;
-        }
-        bool internal = false;
-        WalletBatch batch(*database);
-        for (int64_t i = missingInternal + missingExternal; i--;)
-        {
-            if (i < missingInternal) {
-                internal = true;
+                for (int32_t i = desc.range_end; i < desc.range_end + missing; ++i) {
+                    FlatSigningProvider out_keys;
+                    std::vector<CScript> scripts_temp;
+                    std::vector<unsigned char> cache;
+                    if (!desc.descriptor->Expand(i, *this, scripts_temp, out_keys, &cache)) return false;
+                    desc.cache.push_back(std::move(cache));
+                    // Add all of the scriptPubKeys to the scriptPubKey set
+                    for (const auto& script : scripts_temp) {
+                        AddScriptPubKey(script, desc_id.second, i);
+                    }
+                    // Load all of the scripts
+                    for (const auto& script : out_keys.scripts) {
+                        CBasicKeyStore::AddCScript(script.second);
+                    }
+                    // Generate the private keys
+                    desc.descriptor->ExpandPrivate(i, *this, out_keys);
+                    // Add privkeys
+                    for (const auto& key : out_keys.keys) {
+                        if (!AddKeyPubKeyWithDB(batch, key.second, key.second.GetPubKey())) {
+                            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+                        }
+                    }
+                    // Add the key origins
+                    for (const auto& origin : out_keys.origins) {
+                        CPubKey pubkey;
+                        if (out_keys.GetPubKey(origin.first, pubkey)) {
+                            AddKeyOriginWithDB(batch, pubkey, origin.second.second);
+                        }
+                    }
+                }
+                desc.range_end += missing;
+
+                // Save the dsecriptor
+                if (missing > 0 && !WalletBatch(*database).WriteDescriptor(desc))
+                    throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
             }
+            for (const auto& desc_id : m_change_descriptors) {
+                WalletDescriptor& desc = m_map_descriptors[desc_id.second];
+                int32_t missing = std::max(std::max((int)nTargetSize, 1) - (desc.range_end - desc.next_index), 0);
 
-            CPubKey pubkey(GenerateNewKey(batch, internal));
-            AddKeypoolPubkeyWithDB(pubkey, internal, batch);
-        }
-        if (missingInternal + missingExternal > 0) {
-            WalletLogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size(), setInternalKeyPool.size());
+                for (int32_t i = desc.range_end; i < desc.range_end + missing; ++i) {
+                    FlatSigningProvider out_keys;
+                    std::vector<CScript> scripts_temp;
+                    std::vector<unsigned char> cache;
+                    if (!desc.descriptor->Expand(i, *this, scripts_temp, out_keys, &cache)) return false;
+                    desc.cache.push_back(std::move(cache));
+                    // Add all of the scriptPubKeys to the scriptPubKey set
+                    for (const auto& script : scripts_temp) {
+                        AddScriptPubKey(script, desc_id.second, i);
+                    }
+                    // Load all of the scripts
+                    for (const auto& script : out_keys.scripts) {
+                        CBasicKeyStore::AddCScript(script.second);
+                    }
+                    // Generate the private keys
+                    desc.descriptor->ExpandPrivate(i, *this, out_keys);
+                    // Add privkeys
+                    for (const auto& key : out_keys.keys) {
+                        if (!AddKeyPubKeyWithDB(batch, key.second, key.second.GetPubKey())) {
+                            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+                        }
+                    }
+                    // Add the key origins
+                    for (const auto& origin : out_keys.origins) {
+                        CPubKey pubkey;
+                        if (out_keys.GetPubKey(origin.first, pubkey)) {
+                            AddKeyOriginWithDB(batch, pubkey, origin.second.second);
+                        }
+                    }
+                }
+                desc.range_end += missing;
+
+                // Save the dsecriptor
+                if (missing > 0 && !WalletBatch(*database).WriteDescriptor(desc))
+                    throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+            }
+        } else {
+            // count amount of available keys (internal, external)
+            // make sure the keypool of external and internal keys fits the user selected target (-keypool)
+            int64_t missingExternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - (int64_t)setExternalKeyPool.size(), (int64_t) 0);
+            int64_t missingInternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - (int64_t)setInternalKeyPool.size(), (int64_t) 0);
+
+            if (!IsHDEnabled() || !CanSupportFeature(FEATURE_HD_SPLIT))
+            {
+                // don't create extra internal keys
+                missingInternal = 0;
+            }
+            bool internal = false;
+            WalletBatch batch(*database);
+            for (int64_t i = missingInternal + missingExternal; i--;)
+            {
+                if (i < missingInternal) {
+                    internal = true;
+                }
+
+                CPubKey pubkey(GenerateNewKey(batch, internal));
+                AddKeypoolPubkeyWithDB(pubkey, internal, batch);
+            }
+            if (missingInternal + missingExternal > 0) {
+                WalletLogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size(), setInternalKeyPool.size());
+            }
         }
     }
     NotifyCanGetAddressesChanged();
