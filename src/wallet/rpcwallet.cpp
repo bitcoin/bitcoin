@@ -2669,6 +2669,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
             {"disable_private_keys", RPCArg::Type::BOOL, /* default */ "false", "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
             {"blank", RPCArg::Type::BOOL, /* default */ "false", "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
             {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
+            {"descriptor", RPCArg::Type::BOOL, /* default */ "false", "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation"},
         },
         RPCResult{
             "{\n"
@@ -2708,6 +2709,9 @@ static UniValue createwallet(const JSONRPCRequest& request)
         }
         // Born encrypted wallets need to be blank first so that wallet creation doesn't make any unencrypted keys
         flags |= WALLET_FLAG_BLANK_WALLET;
+    }
+    if (!request.params[4].isNull() && request.params[3].get_bool()) {
+        flags |= WALLET_FLAG_DESCRIPTORS;
     }
 
     WalletLocation location(request.params[0].get_str());
