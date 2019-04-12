@@ -3967,6 +3967,9 @@ UniValue sethdseed(const JSONRPCRequest& request)
     if (!request.params[0].isNull()) {
         flush_key_pool = request.params[0].get_bool();
     }
+    if (!flush_key_pool && pwallet->IsDescriptor()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Must generate a new keypool when changing the HD seed on a descriptor wallet");
+    }
 
     CPubKey master_pub_key;
     if (request.params[1].isNull()) {
@@ -3985,6 +3988,13 @@ UniValue sethdseed(const JSONRPCRequest& request)
     }
 
     pwallet->SetHDSeed(master_pub_key);
+    if (pwallet->IsDescriptor()) {
+        // Generate the descriptors for each type
+        CKeyID seed_id = master_pub_key.GetID();
+        pwallet->GenerateNewDescriptor(seed_id, OutputType::LEGACY);
+        pwallet->GenerateNewDescriptor(seed_id, OutputType::P2SH_SEGWIT);
+        pwallet->GenerateNewDescriptor(seed_id, OutputType::BECH32);
+    }
     if (flush_key_pool) pwallet->NewKeyPool();
 
     return NullUniValue;
