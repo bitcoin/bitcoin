@@ -92,7 +92,7 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast) {
     arith_uint256 PastDifficultyAverage;
     arith_uint256 PastDifficultyAveragePrev;
 
-    bool isAdjustmentPeriod = BlockLastSolved->nHeight > Params().PoSStartHeight() - 1 && BlockLastSolved->nHeight < Params().PoSStartHeight() + PastBlocksMax;
+    bool isAdjustmentPeriod = BlockLastSolved->nHeight >= Params().PoSStartHeight() - 1 && BlockLastSolved->nHeight < Params().PoSStartHeight() + PastBlocksMax;
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin || isAdjustmentPeriod)
     {
         return Params().ProofOfWorkLimit().GetCompact();
@@ -155,6 +155,12 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     {
         // Increase testnet difficulty
         Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
+    }
+
+    if (Params().NetworkID() == CBaseChainParams::MAIN && pindexLast->nHeight >= Params().PoSStartHeight())
+    {
+        // Increase mainnet difficulty for POS
+        Params(CBaseChainParams::MAIN).SetProofOfWorkLimit(~arith_uint256(0) >> 22);
     }
 
     // Default Bitcoin style retargeting
@@ -250,6 +256,12 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
     {
         // Increase testnet difficulty
         Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
+    }
+
+    if (Params().NetworkID() == CBaseChainParams::MAIN && chainActive.Height() >= Params().PoSStartHeight())
+    {
+        // Increase mainnet difficulty for POS
+        Params(CBaseChainParams::MAIN).SetProofOfWorkLimit(~arith_uint256(0) >> 22);
     }
 
     // Check range
