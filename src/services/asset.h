@@ -52,7 +52,7 @@ bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData,
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData);
 bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation);
-bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchEthAddress);
+bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress);
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
