@@ -157,7 +157,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
     }
 
-    if (Params().NetworkID() == CBaseChainParams::MAIN && pindexLast->nHeight >= Params().PoSStartHeight())
+    if (Params().NetworkID() == CBaseChainParams::MAIN && pindexLast->nHeight >= Params().PoSStartHeight() - 1)
     {
         // Increase mainnet difficulty for POS
         Params(CBaseChainParams::MAIN).SetProofOfWorkLimit(~arith_uint256(0) >> 22);
@@ -258,7 +258,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits)
         Params(CBaseChainParams::TESTNET).SetProofOfWorkLimit(~arith_uint256(0) >> 14);
     }
 
-    if (Params().NetworkID() == CBaseChainParams::MAIN && chainActive.Height() >= Params().PoSStartHeight())
+    if (Params().NetworkID() == CBaseChainParams::MAIN && chainActive.Height() >= Params().PoSStartHeight() - 1)
     {
         // Increase mainnet difficulty for POS
         Params(CBaseChainParams::MAIN).SetProofOfWorkLimit(~arith_uint256(0) >> 22);
