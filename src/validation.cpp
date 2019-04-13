@@ -2886,8 +2886,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         if (block.vtx[i]->IsCoinStake())
             return state.DoS(100, false, REJECT_INVALID, "bad-cs-missing", false, "coinstake in wrong position");
 
-    // peercoin: coinbase output should be empty if proof-of-stake block
-    if (block.IsProofOfStake() && (block.vtx[0]->vout.size() != 1 || !block.vtx[0]->vout[0].IsEmpty()))
+    // peercoin: first coinbase output should be empty if proof-of-stake block
+    if (block.IsProofOfStake() && !block.vtx[0]->vout[0].IsEmpty())
         return state.DoS(100, false, REJECT_INVALID, "bad-cb-notempty", false, "coinbase output not empty in PoS block");
 
     // Check coinbase timestamp
@@ -2977,7 +2977,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
     std::vector<unsigned char> commitment;
     int commitpos = GetWitnessCommitmentIndex(block);
     std::vector<unsigned char> ret(32, 0x00);
-    if (block.IsProofOfWork() && commitpos == -1) {
+    if (commitpos == -1) {
         uint256 witnessroot = BlockWitnessMerkleRoot(block, nullptr);
         CHash256().Write(witnessroot.begin(), 32).Write(ret.data(), 32).Finalize(witnessroot.begin());
         CTxOut out;
