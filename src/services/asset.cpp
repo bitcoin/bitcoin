@@ -129,7 +129,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
         return false;  
     std::vector<unsigned char> vchEthAddress;
     uint32_t nAssetFromScript;
-    uint64_t nAmountFromScript;
+    CAmount nAmountFromScript;
     CWitnessAddress burnWitnessAddress;
     if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress)){
         return false;
@@ -141,7 +141,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
     return true;
 
 } 
-bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, uint64_t &nAmountFromScript, std::vector<unsigned char> &vchEthAddress)
+bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress)
 {
     if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
@@ -179,15 +179,16 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: nAmountFromScript - Wrong argument size %d\n", vvchArgs[1].size());
         return false; 
     }
-    nAmountFromScript  = static_cast<uint64_t>(vvchArgs[1][7]);
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][6]) << 8;
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][5]) << 16;
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][4]) << 24; 
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][3]) << 32;  
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][2]) << 40;  
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][1]) << 48;  
-    nAmountFromScript |= static_cast<uint64_t>(vvchArgs[1][0]) << 56;   
-
+    uint64_t result = static_cast<uint64_t>(vvchArgs[1][7]);
+    result |= static_cast<uint64_t>(vvchArgs[1][6]) << 8;
+    result |= static_cast<uint64_t>(vvchArgs[1][5]) << 16;
+    result |= static_cast<uint64_t>(vvchArgs[1][4]) << 24; 
+    result |= static_cast<uint64_t>(vvchArgs[1][3]) << 32;  
+    result |= static_cast<uint64_t>(vvchArgs[1][2]) << 40;  
+    result |= static_cast<uint64_t>(vvchArgs[1][1]) << 48;  
+    result |= static_cast<uint64_t>(vvchArgs[1][0]) << 56;   
+    nAmountFromScript = (CAmount)result;
+    
     if(vvchArgs[2].empty()){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Ethereum address empty\n");
         return false; 
@@ -747,16 +748,12 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	return res;
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
-	std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-	CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 != params.size())
 		throw runtime_error(
 			"syscoinburn [amount] [burn_to_sysx] [ethereum_destination_address]\n"
 			"<amount> Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees.\n"
-			"<burn_to_sysx> Boolean. Set to true if you are provably burning SYS to go to SYSX. False if you are provably burning SYS forever.\n"
-            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n"
-			+ HelpRequiringPassphrase(pwallet));
+			"<burn_to_sysx> Boolean. Set to true if you are provably burning SYS to go to SYSX. False if you are provably burning SYS forever.\n");
             
 	CAmount nAmount = AmountFromValue(params[0]);
 	bool bBurnToSYSX = params[1].get_bool();
@@ -783,8 +780,6 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
 	return paramsFund;
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
-	std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-	CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || 8 != params.size())
 		throw runtime_error(
@@ -796,8 +791,7 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
             "<txroot_hex> The transaction merkle root that commits this transaction to the block header.\n"
             "<txmerkleproof_hex> The list of parent nodes of the Merkle Patricia Tree for SPV proof.\n"
             "<txmerkleroofpath_hex> The merkle path to walk through the tree to recreate the merkle root.\n"
-            "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
-			+ HelpRequiringPassphrase(pwallet));
+            "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 
 	string vchAddress = params[0].get_str();
 	CAmount nAmount = AmountFromValue(params[1]);
@@ -1525,8 +1519,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 }
 
 UniValue assetnew(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 8)
         throw runtime_error(
@@ -1538,8 +1530,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
 						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
 						"<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
-						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
-						+ HelpRequiringPassphrase(pwallet));
+						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 	string vchAddress = params[0].get_str();
 	vector<unsigned char> vchPubData = vchFromString(params[1].get_str());
     string strContract = params[2].get_str();
@@ -1596,13 +1587,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	return res;
 }
 UniValue addressbalance(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 1)
         throw runtime_error(
-            "addressbalance [address]\n"
-                        + HelpRequiringPassphrase(pwallet));
+            "addressbalance [address]\n");
     string address = params[0].get_str();
     UniValue res(UniValue::VARR);
     res.push_back(ValueFromAmount(getaddressbalance(address)));
@@ -1610,8 +1598,6 @@ UniValue addressbalance(const JSONRPCRequest& request) {
 }
 
 UniValue assetupdate(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 6)
         throw runtime_error(
@@ -1622,8 +1608,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                 "<contract> Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n"             
 				"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
                 "<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
-                "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
-				+ HelpRequiringPassphrase(pwallet));
+                "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 	const int &nAsset = params[0].get_int();
 	string strData = "";
 	string strPubData = "";
@@ -1680,8 +1665,6 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
@@ -1689,8 +1672,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 						"Transfer an asset you own to another address.\n"
 						"<asset> Asset guid.\n"
 						"<address> Address to transfer to.\n"
-						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"	
-						+ HelpRequiringPassphrase(pwallet));
+						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"	);
 
     // gather & validate inputs
 	const int &nAsset = params[0].get_int();
@@ -1734,8 +1716,6 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
@@ -1743,8 +1723,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
             "Send an asset you own to another address.\n"
             "<asset> Asset guid.\n"
             "<addressTo> Address to transfer to.\n"
-            "<amount> Quantity of asset to send.\n"
-            + HelpRequiringPassphrase(pwallet));
+            "<amount> Quantity of asset to send.\n");
             
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
@@ -1760,8 +1739,6 @@ UniValue assetsend(const JSONRPCRequest& request) {
     return assetsendmany(requestMany);          
 }
 UniValue assetsendmany(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
@@ -1770,8 +1747,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 			"<asset> Asset guid.\n"
 			"<address> Address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
-			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
-			+ HelpRequiringPassphrase(pwallet));
+			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
 	UniValue valueTo = params[1];

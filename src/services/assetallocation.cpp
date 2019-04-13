@@ -551,7 +551,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	{		
         std::vector<unsigned char> vchEthAddress;
         uint32_t nAssetFromScript;
-        uint64_t nAmountFromScript;
+        CAmount nAmountFromScript;
         CWitnessAddress burnWitnessAddress;
         if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress)){
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocationburn");
@@ -881,8 +881,6 @@ inline std::string int_to_hex(T val, size_t width=sizeof(T)*2)
     return ss.str();
 }
 UniValue assetallocationburn(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || 4 != params.size())
 		throw runtime_error(
@@ -890,8 +888,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 			"<asset> Asset guid.\n"
 			"<address> Address that owns this asset allocation.\n"
 			"<amount> Amount of asset to burn to SYSX.\n"
-            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n"
-			+ HelpRequiringPassphrase(pwallet));
+            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n");
 
 	const int &nAsset = params[0].get_int();
 	string strAddress = params[1].get_str();
@@ -951,8 +948,6 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN, "", vecSend);
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     if (request.fHelp || 9 != params.size())
         throw runtime_error(
@@ -965,8 +960,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             "<txroot_hex> The transaction merkle root that commits this transaction to the block header.\n"
             "<txmerkleproof_hex> The list of parent nodes of the Merkle Patricia Tree for SPV proof.\n"
             "<txmerkleroofpath_hex> The merkle path to walk through the tree to recreate the merkle root.\n"
-            "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
-            + HelpRequiringPassphrase(pwallet));
+            "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 
     const int &nAsset = params[0].get_int();
     string strAddress = params[1].get_str();
@@ -1009,8 +1003,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationsend(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 4)
         throw runtime_error(
@@ -1019,8 +1011,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
             "<asset> Asset guid.\n"
             "<addressfrom> Address that owns this asset allocation.\n"
             "<addressTo> Address to transfer to.\n"
-            "<amount> Quantity of asset to send.\n"
-            + HelpRequiringPassphrase(pwallet));
+            "<amount> Quantity of asset to send.\n");
             
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
@@ -1038,8 +1029,6 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
 }
 
 UniValue assetallocationsendmany(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
@@ -1049,8 +1038,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			"<addressfrom> Address that owns this asset allocation.\n"
 			"<address> Address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
-			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
-			+ HelpRequiringPassphrase(pwallet));
+			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
