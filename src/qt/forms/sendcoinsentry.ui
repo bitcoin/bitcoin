@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>729</width>
-    <height>150</height>
+    <height>156</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -163,7 +163,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1,0">
+     <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,0,0">
       <item>
        <widget class="BitcoinAmountField" name="payAmount"/>
       </item>
