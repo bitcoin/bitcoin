@@ -115,3 +115,18 @@ However, the wallet may not be up-to-date with the current state of the mempool
 or the state of the mempool by an RPC that returned before this RPC. For
 example, a wallet transaction that was BIP-125-replaced in the mempool prior to
 this RPC may not yet be reflected as such in this RPC response.
+
+## Basic usage
+
+Launch the daemon in the background:
+```sh
+$ bitcoind -regtest &
+```
+The server should be ready to execute commands after the startup sequence:
+```sh
+bitcoin-cli -regtest help
+```
+The daemon can be stopped with:
+```sh
+bitcoin-cli -regtest stop
+```
