@@ -23,14 +23,15 @@
 #include <policy/fees.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
-#include <rpc/mining.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
+#include <script/script.h>
 #include <script/sign.h>
 #include <shutdown.h>
 #include <spork.h>
 #include <txmempool.h>
+#include <univalue.h>
 #include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/string.h>
@@ -144,9 +145,9 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
     return true;
 }
 
-UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, CEvoDB& evodb,
+static UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, CEvoDB& evodb,
                         llmq::CQuorumBlockProcessor& quorum_block_processor, llmq::CChainLocksHandler& clhandler,
-                        llmq::CInstantSendManager& isman, std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+                        llmq::CInstantSendManager& isman, const CScript& coinbase_script, int nGenerate, uint64_t nMaxTries)
 {
     int nHeightEnd = 0;
     int nHeight = 0;
@@ -160,7 +161,7 @@ UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, 
     UniValue blockHashes(UniValue::VARR);
     while (nHeight < nHeightEnd && !ShutdownRequested())
     {
-        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(*sporkManager, *governance, quorum_block_processor, clhandler, isman, evodb, mempool, Params()).CreateNewBlock(coinbaseScript->reserveScript));
+        std::unique_ptr<CBlockTemplate> pblocktemplate(BlockAssembler(*sporkManager, *governance, quorum_block_processor, clhandler, isman, evodb, mempool, Params()).CreateNewBlock(coinbase_script));
         if (!pblocktemplate.get())
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
@@ -173,12 +174,6 @@ UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& mempool, 
         if (!block_hash.IsNull()) {
             ++nHeight;
             blockHashes.push_back(block_hash.GetHex());
-        }
-
-        // mark script as important because it was used at least for one coinbase output if the script came from the wallet
-        if (keepScript) {
-            LOCK(cs_main);
-            coinbaseScript->KeepScript();
         }
     }
     return blockHashes;
@@ -253,10 +248,7 @@ static UniValue generatetodescriptor(const JSONRPCRequest& request)
     ChainstateManager& chainman = EnsureChainman(request.context);
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
 
-    std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
-    coinbaseScript->reserveScript = coinbase_script;
-
-    return generateBlocks(chainman, mempool, *node_context.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbaseScript, num_blocks, max_tries, false);
+    return generateBlocks(chainman, mempool, *node_context.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbase_script, num_blocks, max_tries);
 }
 
 static UniValue generatetoaddress(const JSONRPCRequest& request)
@@ -296,10 +288,9 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
     ChainstateManager& chainman = EnsureChainman(request.context);
     LLMQContext& llmq_ctx = EnsureLLMQContext(request.context);
 
-    std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
-    coinbaseScript->reserveScript = GetScriptForDestination(destination);
+    CScript coinbase_script = GetScriptForDestination(destination);
 
-    return generateBlocks(chainman, mempool, *node_context.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbaseScript, nGenerate, nMaxTries, false);
+    return generateBlocks(chainman, mempool, *node_context.evodb, *llmq_ctx.quorum_block_processor, *llmq_ctx.clhandler, *llmq_ctx.isman, coinbase_script, nGenerate, nMaxTries);
 }
 
 static UniValue generateblock(const JSONRPCRequest& request)
