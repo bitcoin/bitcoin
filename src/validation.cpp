@@ -574,13 +574,18 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     std::vector<unsigned char> vchTxRoot;
+     if(!ibd && !fLiteMode && fLoaded && !fGethSynced){
+        while(!fGethSynced){
+            LogPrint(BCLog::SYS, "Geth is not synced, sleeping for 5 seconds and trying again...\n");
+            MilliSleep(5000);
+        }
+    }
     if(!ibd && !fLiteMode && fLoaded && fGethSynced){
         
         int32_t cutoffHeight;
        
         // validate that the block passed is commited to by the tx root he also passes in, then validate the spv proof to the tx root below  
         if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoot(mintSyscoin.nBlockNumber, vchTxRoot)){
-        LogPrintf("fGethSyncHeight %d mintSyscoin.nBlockNumber %d vchTxRoot %s mintSyscoin.vchTxRoot %s\n", fGethSyncHeight, mintSyscoin.nBlockNumber, HexStr(vchTxRoot).c_str(), HexStr(mintSyscoin.vchTxRoot).c_str());
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
             return state.DoS(100, false, REJECT_INVALID, errorMessage);
         }  
@@ -599,6 +604,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
             } 
         }
     }
+    
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     if(!vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoot){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
