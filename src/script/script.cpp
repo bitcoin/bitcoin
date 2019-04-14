@@ -281,8 +281,6 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
     opcodeRet = OP_INVALIDOPCODE;
     if (pvchRet)
         pvchRet->clear();
-    if (pc >= end)
-        return false;
 
     // Read instruction
     if (end - pc < 1)
