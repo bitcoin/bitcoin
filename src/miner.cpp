@@ -181,6 +181,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if(fLiteMode){
              throw std::runtime_error("You cannot mine in lite mode, set litemode=0 in your conf file!");
         }
+        if(!fGethSynced){
+            throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
+        }
     }
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate
