@@ -174,7 +174,6 @@ BITCOIN_CORE_H = \
   reverselock.h \
   rpc/blockchain.h \
   rpc/client.h \
-  rpc/mining.h \
   rpc/protocol.h \
   rpc/server.h \
   rpc/rawtransaction_util.h \
