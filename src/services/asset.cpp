@@ -2405,8 +2405,8 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
             "Sets ethereum syncing and network status for indication status of network sync.\n"
             "[syncing_status]      Syncing status either 'syncing' or 'synced'.\n"
             "[highestBlock]        What the highest block height on Ethereum is found to be. Usually coupled with syncing_status of 'syncing'. Set to 0 if syncing_status is 'synced'.\n" 
-            + HelpExampleCli("syscoinsetethheaders", "syncing 7000000")
-            + HelpExampleCli("syscoinsetethheaders", "synced 0"));
+            + HelpExampleCli("syscoinsetethstatus", "syncing 7000000")
+            + HelpExampleCli("syscoinsetethstatus", "synced 0"));
     string status = params[0].get_str();
     int highestBlock = params[1].get_int();
     
@@ -2455,7 +2455,6 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     return ret;
 }
 bool CEthereumTxRootsDB::PruneTxRoots() {
-    LogPrintf("Pruning Ethereum Transaction Roots...\n");
     EthereumTxRootMap mapEraseTxRoots;
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
