@@ -4906,7 +4906,6 @@ extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 extern UniValue createrawtransaction(const JSONRPCRequest& request);
 extern UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
 
-extern UniValue syscoinaddscript(const JSONRPCRequest& request);
 extern UniValue assetnew(const JSONRPCRequest& request);
 extern UniValue assetupdate(const JSONRPCRequest& request);
 extern UniValue addressbalance(const JSONRPCRequest& request);
@@ -5022,7 +5021,6 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationburn",              &assetallocationburn,           {"asset","address","amount","ethereum_destination_address"} }, 
     { "syscoin",            "assetallocationmint",              &assetallocationmint,           {"asset","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleroofpath_hex","witness"} },     
     { "syscoin",            "syscointxfund",                    &syscointxfund,                 {"hexstring","address","output_index"}},
-    { "syscoin",            "syscoinaddscript",                 &syscoinaddscript,              {} },
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
     { "syscoin",            "syscoinlistreceivedbyaddress",     &syscoinlistreceivedbyaddress,  {}},
 

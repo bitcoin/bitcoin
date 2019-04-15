@@ -2354,7 +2354,7 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 
-void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth,AvailableCoinsType nCoinType) const
+void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(cs_wallet);
@@ -2431,19 +2431,12 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             // SYSCOIN
             if((!coinControl || !coinControl->HasSelected() || !coinControl->IsSelected(COutPoint(entry.first, i))) && pcoin->tx->vout[i].nValue <= GetFee(3000))
                 continue;
-            if (nCoinType != ONLY_1000 && IsLockedCoin(entry.first, i))
+            if (IsLockedCoin(entry.first, i))
                 continue;
 
             if (IsSpent(wtxid, i))
                 continue;
-            // SYSCOIN
-            bool found = false;
-            if(nCoinType == ONLY_1000) {
-                found = pcoin->tx->vout[i].nValue == 100000*COIN;
-            } else {
-                found = true;
-            }
-            if(!found) continue;
+          
 
             isminetype mine = IsMine(pcoin->tx->vout[i]);
 
@@ -2781,55 +2774,23 @@ OutputType CWallet::TransactionChangeType(OutputType change_type, const std::vec
     // else use m_default_address_type for change
     return m_default_address_type;
 }
-bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+bool GetOutpointAndKeysFromOutput(const CWallet* pwallet, const Coin& coin, CPubKey& pubKeyRet, CKey& keyRet)
 {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
-    // Find possible candidates
-    std::vector<COutput> vPossibleCoins;
-    LOCK2(cs_main, cs_wallet);
-    // SYSCOIN
-    AvailableCoins(vPossibleCoins, true, NULL, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_1000);
-    if(vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate any valid masternode vin\n");
-        return false;
-    }
-
-    if(strTxHash.empty()) // No output specified, select the first one
-        return GetOutpointAndKeysFromOutput(vPossibleCoins[0], outpointRet, pubKeyRet, keyRet);
-
-    // Find specific outpoint
-    uint256 txHash = uint256S(strTxHash);
-    int nOutputIndex = atoi(strOutputIndex);
-
-    for (const auto& out : vPossibleCoins)
-        if(out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
-            return GetOutpointAndKeysFromOutput(out, outpointRet, pubKeyRet, keyRet);
-
-    LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
-    return false;
-}
-
-bool CWallet::GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet)
-{
-    // wait for reindex and/or import to finish
-    if (fImporting || fReindex) return false;
-
-    CScript pubScript;
-
-    outpointRet = COutPoint(out.tx->GetHash(), out.i);
-    pubScript = out.tx->tx->vout[out.i].scriptPubKey; // the inputs PubKey
-
-    CTxDestination address1;
-    ExtractDestination(pubScript, address1);
+  
     
-    const CKeyID *keyID = boost::get<CKeyID>(&address1);
+    const CScript &pubScript = coin.out.scriptPubKey;
+    CTxDestination address;
+    ExtractDestination(pubScript, address);
+    
+    const CKeyID *keyID = boost::get<CKeyID>(&address);
     if (!keyID) {
         LogPrintf("CWallet::GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
 
-    if (!GetKey(*keyID, keyRet)) {
+    if (!pwallet->GetKey(*keyID, keyRet)) {
         LogPrintf ("CWallet::GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
@@ -2837,6 +2798,28 @@ bool CWallet::GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpoi
     pubKeyRet = keyRet.GetPubKey();
     return true;
 }
+// SYSCOIN
+bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+{
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;  
+
+    // Find specific outpoint
+    uint256 txHash = uint256S(strTxHash);
+    int nOutputIndex = atoi(strOutputIndex);
+    COutPoint outpoint(txHash, nOutputIndex);
+   
+    Coin coin;
+    if(GetUTXOCoin(outpoint, coin)){
+        outpointRet = outpoint;
+        return GetOutpointAndKeysFromOutput(this, coin, pubKeyRet, keyRet);
+    }
+   
+    LogPrintf("CWallet::GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
+    return false;
+}
+
+
 bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount)
 {
     // make our change address
@@ -2852,7 +2835,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
     vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
-    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true, ALL_COINS);
+    bool success = CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
     if(!success){
         LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
         return false;
@@ -2861,7 +2844,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAm
     return true;
 }
 bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet,
-                         int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign,AvailableCoinsType nCoinType)
+                         int& nChangePosInOut, std::string& strFailReason, const CCoinControl& coin_control, bool sign)
 {
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
@@ -2925,8 +2908,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
         LOCK2(cs_main, cs_wallet);
         {
             std::vector<COutput> vAvailableCoins;
-            // SYSCOIN
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, nCoinType);
+            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
             // Create change script that will be used if we need change

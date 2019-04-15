@@ -44,7 +44,6 @@ UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request);
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
 
-UniValue syscoinaddscript(const JSONRPCRequest& request);
 UniValue assetnew(const JSONRPCRequest& request);
 UniValue assetupdate(const JSONRPCRequest& request);
 UniValue addressbalance(const JSONRPCRequest& request);
@@ -394,13 +393,11 @@ void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
 	CRecipient recp = { scriptPubKey, 0, false };
 	recipient = recp;
 }
-UniValue SyscoinListReceived(bool includeempty = true, bool includechange = false)
+UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, bool includechange = false)
 {
 	map<string, int> mapAddress;
 	UniValue ret(UniValue::VARR);
-	CWallet* const pwallet = GetDefaultWallet();
-    if(!pwallet)
-        return ret;
+  
 	const std::map<CKeyID, int64_t>& mapKeyPool = pwallet->GetAllReserveKeys();
 	for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
 
@@ -435,7 +432,7 @@ UniValue SyscoinListReceived(bool includeempty = true, bool includechange = fals
 	vector<COutput> vecOutputs;
 	{
 		LOCK(pwallet->cs_wallet);
-		pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ALL_COINS);
+		pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
 	}
 	for(const COutput& out: vecOutputs) {
 		CTxDestination address;
@@ -982,21 +979,11 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 	}
 	return count;
 }
-UniValue syscoinaddscript(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 1 != params.size())
-		throw runtime_error("syscoinaddscript redeemscript\n"
-			"Add redeemscript to local wallet for signing smart contract based syscoin transactions.\n");
-    CWallet* const pwallet = GetDefaultWallet();
-	std::vector<unsigned char> data(ParseHex(params[0].get_str()));
-    if(pwallet)
-	    pwallet->AddCScript(CScript(data.begin(), data.end()));
-	UniValue res(UniValue::VOBJ);
-	res.pushKV("result", "success");
-	return res;
-}
+
 UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request)
 {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 0)
 		throw runtime_error(
@@ -1016,7 +1003,7 @@ UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request)
 			+ HelpExampleCli("syscoinlistreceivedbyaddress", "")
 		);
 
-	return SyscoinListReceived(true, false);
+	return SyscoinListReceived(pwallet, true, false);
 }
 
 bool IsOutpointMature(const COutPoint& outpoint)
