@@ -95,7 +95,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, ctp
     pendingPrematureCommitments((size_t)_params.size * 2)
 {
     phaseHandlerThread = std::thread([this] {
-        RenameThread(strprintf("quorum-phase-%d", (uint8_t)params.type).c_str());
+        RenameThread(strprintf("dash-q-phase-%d", (uint8_t)params.type).c_str());
         PhaseHandlerThread();
     });
 }

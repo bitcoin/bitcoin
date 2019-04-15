@@ -40,7 +40,7 @@ void CDKGSessionManager::StartMessageHandlerPool()
     }
 
     messageHandlerPool.resize(2);
-    RenameThreadPool(messageHandlerPool, "quorum-msg");
+    RenameThreadPool(messageHandlerPool, "dash-q-msg");
 }
 
 void CDKGSessionManager::StopMessageHandlerPool()
