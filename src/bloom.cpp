@@ -108,12 +108,6 @@ void CBloomFilter::clear()
     isEmpty = true;
 }
 
-void CBloomFilter::reset(const unsigned int nNewTweak)
-{
-    clear();
-    nTweak = nNewTweak;
-}
-
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
