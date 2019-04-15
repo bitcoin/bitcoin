@@ -36,12 +36,12 @@ static const unsigned int DEFAULT_INCREMENTAL_RELAY_FEE = 1000;
 static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
-/** The maximum number of witness stack items in a standard P2WSH script */
-static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEMS = 100;
-/** The maximum size of each witness stack item in a standard P2WSH script */
-static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEM_SIZE = 80;
-/** The maximum size of a standard witnessScript */
-static const unsigned int MAX_STANDARD_P2WSH_SCRIPT_SIZE = 3600;
+/** The maximum number of witness input stack items in a standard witness script */
+static const unsigned int MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS = 210;
+/** The maximum size of each witness stack item in a standard witness script */
+static const unsigned int MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE = 80;
+/** The maximum size of a standard witness script */
+static const unsigned int MAX_STANDARD_WITNESS_SCRIPT_SIZE = 7100;
 /** Min feerate for defining dust. Historically this has been based on the
  * minRelayTxFee, however changing the dust limit changes which transactions are
  * standard and should be done with care and ideally rarely. It makes sense to
@@ -68,7 +68,12 @@ static constexpr unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VE
                                                              SCRIPT_VERIFY_WITNESS |
                                                              SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM |
                                                              SCRIPT_VERIFY_WITNESS_PUBKEYTYPE |
-                                                             SCRIPT_VERIFY_CONST_SCRIPTCODE;
+                                                             SCRIPT_VERIFY_CONST_SCRIPTCODE |
+                                                             SCRIPT_VERIFY_TAPROOT |
+                                                             SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_TAPROOT_VERSION |
+                                                             SCRIPT_VERIFY_DISCOURAGE_UNKNOWN_ANNEX |
+                                                             SCRIPT_VERIFY_DISCOURAGE_OP_SUCCESS |
+                                                             SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_PUBKEYTYPE;
 
 /** For convenience, standard but not mandatory verify flags. */
 static constexpr unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;

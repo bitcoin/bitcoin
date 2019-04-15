@@ -219,16 +219,27 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         if (!prevScript.IsWitnessProgram(witnessversion, witnessprogram))
             return false;
 
-        // Check P2WSH standard limits
-        if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            if (tx.vin[i].scriptWitness.stack.back().size() > MAX_STANDARD_P2WSH_SCRIPT_SIZE)
-                return false;
-            size_t sizeWitnessStack = tx.vin[i].scriptWitness.stack.size() - 1;
-            if (sizeWitnessStack > MAX_STANDARD_P2WSH_STACK_ITEMS)
-                return false;
-            for (unsigned int j = 0; j < sizeWitnessStack; j++) {
-                if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
-                    return false;
+        auto stack = tx.vin[i].scriptWitness.stack;
+        if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+            return false; // annex is non-standard
+        }
+
+        bool p2wsh = (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE);
+        bool taproot = (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && (witnessprogram[0] & 0xfe) == 0);
+
+        // Preprocessing for TAPROOT
+        if (taproot) {
+            if (stack.size() <= 1) return true;
+            stack.pop_back();
+        }
+
+        // Check P2WSH and TAPROOT standard limits
+        if (p2wsh || taproot) {
+            if (stack.back().size() > MAX_STANDARD_WITNESS_SCRIPT_SIZE) return false;
+            stack.pop_back();
+            if (stack.size() > MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS) return false;
+            for (const auto& item : stack) {
+                if (item.size() > MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE) return false;
             }
         }
     }

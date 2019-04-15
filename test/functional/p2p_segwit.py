@@ -89,6 +89,12 @@ VB_TOP_BITS = 0x20000000
 MAX_SIGOP_COST = 80000
 
 SEGWIT_HEIGHT = 120
+MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS = 210
+MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE = 80
+MAX_STANDARD_WITNESS_SCRIPT_SIZE = 7100
+# Extra restrictions make tests easier
+assert MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS < 403 and (MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS % 2) == 0
+assert MAX_STANDARD_WITNESS_SCRIPT_SIZE % 50 == 0
 
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
@@ -1797,10 +1803,12 @@ class SegWitTest(BitcoinTestFramework):
 
         # Create scripts for tests
         scripts = []
-        scripts.append(CScript([OP_DROP] * 100))
-        scripts.append(CScript([OP_DROP] * 99))
-        scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 60))
-        scripts.append(CScript([pad * 59] * 59 + [OP_DROP] * 61))
+        scripts.append(CScript([OP_2DROP] * (MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS // 2)))
+        scripts.append(CScript([OP_2DROP] * (MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS // 2 - 1) + [OP_DROP]))
+        scripts.append(CScript([pad * 48] * (MAX_STANDARD_WITNESS_SCRIPT_SIZE // 50) + [OP_DROP] * (MAX_STANDARD_WITNESS_SCRIPT_SIZE // 50)))
+        scripts.append(CScript([pad * 48] * (MAX_STANDARD_WITNESS_SCRIPT_SIZE // 50) + [OP_DROP] * (MAX_STANDARD_WITNESS_SCRIPT_SIZE // 50 + 1)))
+        assert len(scripts[2]) == MAX_STANDARD_WITNESS_SCRIPT_SIZE
+        assert len(scripts[3]) == MAX_STANDARD_WITNESS_SCRIPT_SIZE + 1
 
         p2wsh_scripts = []
 
@@ -1840,45 +1848,45 @@ class SegWitTest(BitcoinTestFramework):
             p2sh_txs.append(p2sh_tx)
 
         # Testing native P2WSH
-        # Witness stack size, excluding witnessScript, over 100 is non-standard
-        p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
+        # Witness stack size, excluding witnessScript, over MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS is non-standard
+        p2wsh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * (MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS + 1) + [scripts[0]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[0], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[0], True, True)
 
-        # Stack element size over 80 bytes is non-standard
-        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
+        # Stack element size over MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE bytes is non-standard
+        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * (MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE + 1)] * MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS + [scripts[1]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[1], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[1], True, True)
-        # Standard nodes should accept if element size is not over 80 bytes
-        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
+        # Standard nodes should accept if element size is not over MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE
+        p2wsh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE] * MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS + [scripts[1]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[1], True, True)
 
-        # witnessScript size at 3600 bytes is standard
-        p2wsh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
+        # witnessScript size at 7100 bytes is standard
+        p2wsh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, scripts[2]]
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[2], True, True)
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[2], True, True)
 
-        # witnessScript size at 3601 bytes is non-standard
-        p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
+        # witnessScript size at 7101 bytes is non-standard
+        p2wsh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[3]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2wsh_txs[3], True, False, 'bad-witness-nonstandard')
         # Non-standard nodes should accept
         test_transaction_acceptance(self.nodes[0], self.test_node, p2wsh_txs[3], True, True)
 
         # Repeating the same tests with P2SH-P2WSH
-        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * 101 + [scripts[0]]
+        p2sh_txs[0].wit.vtxinwit[0].scriptWitness.stack = [pad] * (MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS + 1) + [scripts[0]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[0], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[0], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 81] * 100 + [scripts[1]]
+        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * (MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE + 1)] * MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS + [scripts[1]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[1], True, True)
-        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * 80] * 100 + [scripts[1]]
+        p2sh_txs[1].wit.vtxinwit[0].scriptWitness.stack = [pad * MAX_STANDARD_WITNESS_INPUT_STACK_ITEM_SIZE] * MAX_STANDARD_WITNESS_INPUT_STACK_ITEMS + [scripts[1]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[1], True, True)
-        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[2]]
+        p2sh_txs[2].wit.vtxinwit[0].scriptWitness.stack = [pad, scripts[2]]
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[2], True, True)
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[2], True, True)
-        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
+        p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, scripts[3]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
 
