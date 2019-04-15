@@ -12,7 +12,7 @@
 #include <univalue.h>
 
 #include <boost/test/unit_test.hpp>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <wallet/test/wallet_test_fixture.h>
 
 BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)

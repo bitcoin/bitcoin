@@ -42,7 +42,7 @@ unit tests as possible).
 
 The build system is setup to compile an executable called `test_bitcoin`
 that runs all of the unit tests.  The main source file is called
-test_bitcoin.cpp. To add a new unit test file to our test suite you need
+setup_common.cpp. To add a new unit test file to our test suite you need
 to add the file to `src/Makefile.test.include`. The pattern is to create
 one test file for each class or source file for which you want to create
 unit tests.  The file naming convention is `<source_filename>_tests.cpp`
