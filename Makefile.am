@@ -11,8 +11,6 @@ endif
 
 export PYTHONPATH
 
-copy_bins: $(shell sudo cp -avr src/bin/linux/ /usr/local/bin/bin)
-
 if BUILD_SYSCOIN_LIBS
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsyscoinconsensus.pc
