@@ -805,6 +805,8 @@ void CInstantSendManager::UpdateWalletTransaction(const uint256& txid, const CTr
 
     if (tx) {
         GetMainSignals().NotifyTransactionLock(*tx);
+        // bump mempool counter to make sure newly mined txes are picked up by getblocktemplate
+        mempool.AddTransactionsUpdated(1);
     }
 }
 
