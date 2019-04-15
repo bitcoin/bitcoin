@@ -75,9 +75,10 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         auto dmn = mnList.GetValidMN(mnauth.proRegTxHash);
         if (!dmn) {
             LOCK(cs_main);
+            // in case he was unlucky and not up to date, just let him be connected as a regular node, which gives him
+            // a chance to get up-to-date and thus realize by himself that he's not a MN anymore. We still give him a
+            // low DoS score.
             Misbehaving(pnode->id, 10);
-            // in case he was unlucky and not up to date, let him retry the whole verification process
-            pnode->fDisconnect = true;
             return;
         }
 
@@ -90,9 +91,9 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator, signHash)) {
             LOCK(cs_main);
+            // Same as above, MN seems to not know about his fate yet, so give him a chance to update. If this is a
+            // malicious actor (DoSing us), we'll ban him soon.
             Misbehaving(pnode->id, 10);
-            // in case he was unlucky and not up to date, let him retry the whole verification process
-            pnode->fDisconnect = true;
             return;
         }
 
