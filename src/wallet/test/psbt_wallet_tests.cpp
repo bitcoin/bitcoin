@@ -56,10 +56,28 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     m_wallet.SetHDSeed(master_pub_key);
     m_wallet.NewKeyPool();
 
-    // Call FillPSBT
+    // Call FillPSBT and perform some very basic IsNull sanity checks
     PartiallySignedTransaction psbtx;
+    BOOST_CHECK(psbtx.IsNull());
     CDataStream ssData(ParseHex("70736274ff01009a020000000258e87a21b56daf0c23be8e7070456c336f7cbaa5c8757924f545887bb2abdd750000000000ffffffff838d0427d0ec650a68aa46bb0b098aea4422c071b2ca78352a077959d07cea1d0100000000ffffffff0270aaf00800000000160014d85c2b71d0060b09c9886aeb815e50991dda124d00e1f5050000000016001400aea9a2e5f0f876a588df5546e8742d1d87008f000000000000000000"), SER_NETWORK, PROTOCOL_VERSION);
     ssData >> psbtx;
+    BOOST_CHECK(!psbtx.IsNull());
+    BOOST_CHECK(!psbtx.inputs.empty());
+    for (const PSBTInput& input : psbtx.inputs) {
+        BOOST_CHECK(input.IsNull());
+        PSBTInput modifiedInput = input;
+        BOOST_CHECK(modifiedInput.IsNull());
+        modifiedInput.redeem_script = rs1;
+        BOOST_CHECK(!modifiedInput.IsNull());
+    }
+    BOOST_CHECK(!psbtx.outputs.empty());
+    for (const PSBTOutput& output : psbtx.outputs) {
+        BOOST_CHECK(output.IsNull());
+        PSBTOutput modifiedOutput = output;
+        BOOST_CHECK(modifiedOutput.IsNull());
+        modifiedOutput.redeem_script = rs1;
+        BOOST_CHECK(!modifiedOutput.IsNull());
+    }
 
     // Fill transaction with our data
     bool complete = true;

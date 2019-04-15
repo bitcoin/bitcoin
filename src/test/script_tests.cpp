@@ -180,6 +180,11 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     }
 
 #if defined(HAVE_CONSENSUS_LIB)
+    // Make sure bitcoinconsensus_version() is referenced at least once from
+    // within the project to make sure the removal of bitcoinconsensus_version
+    // wouldn't go unnoticed.
+    BOOST_CHECK(bitcoinconsensus_version() >= 1U);
+
     CDataStream stream(SER_NETWORK, PROTOCOL_VERSION);
     stream << tx2;
     int libconsensus_flags = flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL;

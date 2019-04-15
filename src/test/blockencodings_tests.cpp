@@ -389,4 +389,13 @@ BOOST_AUTO_TEST_CASE(TransactionsRequestDeserializationOverflowTest) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(BlockToStringTest) {
+    CBlock block1;
+    CBlock block2;
+    BOOST_CHECK_EQUAL(block1.ToString(), block2.ToString());
+    CBlock block3(BuildBlockTestCase());
+    CBlock block4(BuildBlockTestCase());
+    BOOST_CHECK_NE(block3.ToString(), block4.ToString());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
