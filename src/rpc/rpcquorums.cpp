@@ -17,7 +17,19 @@ void quorum_list_help()
     throw std::runtime_error(
             "quorum list ( count )\n"
             "\nArguments:\n"
-            "1. count           (number, optional, default=10) Number of quorums to list.\n"
+            "1. count           (number, optional) Number of quorums to list. Will list active quorums\n"
+            "                   if \"count\" is not specified.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"quorumName\" : [                    (array of strings) List of quorum hashes per some quorum type.\n"
+            "     \"quorumHash\"                     (string) Quorum hash. Note: most recent quorums come first.\n"
+            "     ,...\n"
+            "  ],\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("quorum", "list")
+            + HelpExampleCli("quorum", "list 10")
+            + HelpExampleRpc("quorum", "list, 10")
     );
 }
 
@@ -28,9 +40,12 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
     LOCK(cs_main);
 
-    int count = 10;
+    int count = -1;
     if (request.params.size() > 1) {
         count = ParseInt32V(request.params[1], "count");
+        if (count < 0) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
+        }
     }
 
     UniValue ret(UniValue::VOBJ);
@@ -38,7 +53,7 @@ UniValue quorum_list(const JSONRPCRequest& request)
     for (auto& p : Params().GetConsensus().llmqs) {
         UniValue v(UniValue::VARR);
 
-        auto quorums = llmq::quorumManager->ScanQuorums(p.first, chainActive.Tip(), count);
+        auto quorums = llmq::quorumManager->ScanQuorums(p.first, chainActive.Tip(), count > -1 ? count : p.second.signingActiveQuorumCount);
         for (auto& q : quorums) {
             v.push_back(q->qc.quorumHash.ToString());
         }
