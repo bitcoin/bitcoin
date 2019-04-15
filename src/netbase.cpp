@@ -65,6 +65,12 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
 
     {
         CNetAddr addr;
+        // From our perspective, onion addresses are not hostnames but rather
+        // direct encodings of CNetAddr much like IPv4 dotted-decimal notation
+        // or IPv6 colon-separated hextet notation. Since we can't use
+        // getaddrinfo to decode them and it wouldn't make sense to resolve
+        // them, we return a network address representing it instead. See
+        // CNetAddr::SetSpecial(const std::string&) for more details.
         if (addr.SetSpecial(std::string(pszName))) {
             vIP.push_back(addr);
             return true;
@@ -74,15 +80,25 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     struct addrinfo aiHint;
     memset(&aiHint, 0, sizeof(struct addrinfo));
 
+    // We want a TCP port, which is a streaming socket type
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
+    // We don't care which address family (IPv4 or IPv6) is returned
     aiHint.ai_family = AF_UNSPEC;
+    // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
+    // return addresses whose family we have an address configured for.
+    //
+    // If we don't allow lookups, then use the AI_NUMERICHOST flag for
+    // getaddrinfo to only decode numerical network addresses and suppress
+    // hostname lookups.
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
     struct addrinfo *aiRes = nullptr;
     int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
     if (nErr)
         return false;
 
+    // Traverse the linked list starting with aiTrav, add all non-internal
+    // IPv4,v6 addresses to vIP while respecting nMaxSolutions.
     struct addrinfo *aiTrav = aiRes;
     while (aiTrav != nullptr && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
     {
@@ -112,6 +128,21 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     return (vIP.size() > 0);
 }
 
+/**
+ * Resolve a host string to its corresponding network addresses.
+ *
+ * @param pszName The string representing a host. Could be a name or a numerical
+ *                IP address (IPv6 addresses in their bracketed form are
+ *                allowed).
+ * @param[out] vIP The resulting network addresses to which the specified host
+ *                 string resolved.
+ *
+ * @returns Whether or not the specified host string successfully resolved to
+ *          any resulting network addresses.
+ *
+ * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
+ *      for additional parameter descriptions.
+ */
 bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
 {
     std::string strHost(pszName);
@@ -124,6 +155,12 @@ bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nM
     return LookupIntern(strHost.c_str(), vIP, nMaxSolutions, fAllowLookup);
 }
 
+ /**
+ * Resolve a host string to its first corresponding network address.
+ *
+ * @see LookupHost(const char *, std::vector<CNetAddr>&, unsigned int, bool) for
+ *      additional parameter descriptions.
+ */
 bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup)
 {
     std::vector<CNetAddr> vIP;
@@ -134,6 +171,26 @@ bool LookupHost(const char *pszName, CNetAddr& addr, bool fAllowLookup)
     return true;
 }
 
+/**
+ * Resolve a service string to its corresponding service.
+ *
+ * @param pszName The string representing a service. Could be a name or a
+ *                numerical IP address (IPv6 addresses should be in their
+ *                disambiguated bracketed form), optionally followed by a port
+ *                number. (e.g. example.com:8333 or
+ *                [2001:db8:85a3:8d3:1319:8a2e:370:7348]:420)
+ * @param[out] vAddr The resulting services to which the specified service string
+ *                   resolved.
+ * @param portDefault The default port for resulting services if not specified
+ *                    by the service string.
+ * @param fAllowLookup Whether or not hostname lookups are permitted. If yes,
+ *                     external queries may be performed.
+ * @param nMaxSolutions The maximum number of results we want, specifying 0
+ *                      means "as many solutions as we get."
+ *
+ * @returns Whether or not the service string successfully resolved to any
+ *          resulting services.
+ */
 bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
 {
     if (pszName[0] == 0)
@@ -152,6 +209,12 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault, 
     return true;
 }
 
+/**
+ * Resolve a service string to its first corresponding service.
+ *
+ * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
+ *      for additional parameter descriptions.
+ */
 bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLookup)
 {
     std::vector<CService> vService;
@@ -162,6 +225,16 @@ bool Lookup(const char *pszName, CService& addr, int portDefault, bool fAllowLoo
     return true;
 }
 
+/**
+ * Resolve a service string with a numeric IP to its first corresponding
+ * service.
+ *
+ * @returns The resulting CService if the resolution was successful, [::]:0
+ *          otherwise.
+ *
+ * @see Lookup(const char *, CService&, int, bool) for additional parameter
+ *      descriptions.
+ */
 CService LookupNumeric(const char *pszName, int portDefault)
 {
     CService addr;
@@ -231,22 +304,29 @@ enum class IntrRecvError {
 };
 
 /**
- * Read bytes from socket. This will either read the full number of bytes requested
- * or return False on error or timeout.
- * This function can be interrupted by calling InterruptSocks5()
+ * Try to read a specified number of bytes from a socket. Please read the "see
+ * also" section for more detail.
  *
- * @param data Buffer to receive into
- * @param len  Length of data to receive
- * @param timeout  Timeout in milliseconds for receive operation
+ * @param data The buffer where the read bytes should be stored.
+ * @param len The number of bytes to read into the specified buffer.
+ * @param timeout The total timeout in milliseconds for this read.
+ * @param hSocket The socket (has to be in non-blocking mode) from which to read
+ *                bytes.
  *
- * @note This function requires that hSocket is in non-blocking mode.
+ * @returns An IntrRecvError indicating the resulting status of this read.
+ *          IntrRecvError::OK only if all of the specified number of bytes were
+ *          read.
+ *
+ * @see This function can be interrupted by calling InterruptSocks5(bool).
+ *      Sockets can be made non-blocking with SetSocketNonBlocking(const
+ *      SOCKET&, bool).
  */
 static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const SOCKET& hSocket)
 {
     int64_t curTime = GetTimeMillis();
     int64_t endTime = curTime + timeout;
-    // Maximum time to wait in one select call. It will take up until this time (in millis)
-    // to break off in case of an interruption.
+    // Maximum time to wait for I/O readiness. It will take up until this time
+    // (in millis) to break off in case of an interruption.
     const int64_t maxWait = 1000;
     while (len > 0 && curTime < endTime) {
         ssize_t ret = recv(hSocket, (char*)data, len, 0); // Optimistically try the recv first
@@ -261,6 +341,8 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
                 if (!IsSelectableSocket(hSocket)) {
                     return IntrRecvError::NetworkError;
                 }
+                // Only wait at most maxWait milliseconds at a time, unless
+                // we're approaching the end of the specified total timeout
                 int timeout_ms = std::min(endTime - curTime, maxWait);
 #ifdef USE_POLL
                 struct pollfd pollfd = {};
@@ -320,7 +402,24 @@ static std::string Socks5ErrorString(uint8_t err)
     }
 }
 
-/** Connect using SOCKS5 (as described in RFC1928) */
+/**
+ * Connect to a specified destination service through an already connected
+ * SOCKS5 proxy.
+ *
+ * @param strDest The destination fully-qualified domain name.
+ * @param port The destination port.
+ * @param auth The credentials with which to authenticate with the specified
+ *             SOCKS5 proxy.
+ * @param hSocket The SOCKS5 proxy socket.
+ *
+ * @returns Whether or not the operation succeeded.
+ *
+ * @note The specified SOCKS5 proxy socket must already be connected to the
+ *       SOCKS5 proxy.
+ *
+ * @see <a href="https://www.ietf.org/rfc/rfc1928.txt">RFC1928: SOCKS Protocol
+ *      Version 5</a>
+ */
 static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, const SOCKET& hSocket)
 {
     IntrRecvError recvr;
@@ -328,15 +427,15 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     if (strDest.size() > 255) {
         return error("Hostname too long");
     }
-    // Accepted authentication methods
+    // Construct the version identifier/method selection message
     std::vector<uint8_t> vSocks5Init;
-    vSocks5Init.push_back(SOCKSVersion::SOCKS5);
+    vSocks5Init.push_back(SOCKSVersion::SOCKS5); // We want the SOCK5 protocol
     if (auth) {
-        vSocks5Init.push_back(0x02); // Number of methods
+        vSocks5Init.push_back(0x02); // 2 method identifiers follow...
         vSocks5Init.push_back(SOCKS5Method::NOAUTH);
         vSocks5Init.push_back(SOCKS5Method::USER_PASS);
     } else {
-        vSocks5Init.push_back(0x01); // Number of methods
+        vSocks5Init.push_back(0x01); // 1 method identifier follows...
         vSocks5Init.push_back(SOCKS5Method::NOAUTH);
     }
     ssize_t ret = send(hSocket, (const char*)vSocks5Init.data(), vSocks5Init.size(), MSG_NOSIGNAL);
@@ -440,8 +539,16 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     return true;
 }
 
+/**
+ * Try to create a socket file descriptor with specific properties in the
+ * communications domain (address family) of the specified service.
+ *
+ * For details on the desired properties, see the inline comments in the source
+ * code.
+ */
 SOCKET CreateSocket(const CService &addrConnect)
 {
+    // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (!addrConnect.GetSockAddr((struct sockaddr*)&sockaddr, &len)) {
@@ -449,10 +556,13 @@ SOCKET CreateSocket(const CService &addrConnect)
         return INVALID_SOCKET;
     }
 
+    // Create a TCP socket in the address family of the specified service.
     SOCKET hSocket = socket(((struct sockaddr*)&sockaddr)->sa_family, SOCK_STREAM, IPPROTO_TCP);
     if (hSocket == INVALID_SOCKET)
         return INVALID_SOCKET;
 
+    // Ensure that waiting for I/O on this socket won't result in undefined
+    // behavior.
     if (!IsSelectableSocket(hSocket)) {
         CloseSocket(hSocket);
         LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
@@ -461,17 +571,18 @@ SOCKET CreateSocket(const CService &addrConnect)
 
 #ifdef SO_NOSIGPIPE
     int set = 1;
-    // Different way of disabling SIGPIPE on BSD
+    // Set the no-sigpipe option on the socket for BSD systems, other UNIXes
+    // should use the MSG_NOSIGNAL flag for every send.
     setsockopt(hSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&set, sizeof(int));
 #endif
 
-    //Disable Nagle's algorithm
+    // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
     SetSocketNoDelay(hSocket);
 
-    // Set to non-blocking
+    // Set the non-blocking option on the socket.
     if (!SetSocketNonBlocking(hSocket, true)) {
         CloseSocket(hSocket);
-        LogPrintf("ConnectSocketDirectly: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
+        LogPrintf("CreateSocket: Setting socket to non-blocking failed, error %s\n", NetworkErrorString(WSAGetLastError()));
     }
     return hSocket;
 }
@@ -486,8 +597,21 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
     }
 }
 
+/**
+ * Try to connect to the specified service on the specified socket.
+ *
+ * @param addrConnect The service to which to connect.
+ * @param hSocket The socket on which to connect.
+ * @param nTimeout Wait this many milliseconds for the connection to be
+ *                 established.
+ * @param manual_connection Whether or not the connection was manually requested
+ *                          (e.g. thru the addnode RPC)
+ *
+ * @returns Whether or not a connection was successfully made.
+ */
 bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout, bool manual_connection)
 {
+    // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
     if (hSocket == INVALID_SOCKET) {
@@ -498,12 +622,17 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
         LogPrintf("Cannot connect to %s: unsupported network\n", addrConnect.ToString());
         return false;
     }
+
+    // Connect to the addrConnect service on the hSocket socket.
     if (connect(hSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         // WSAEINVAL is here because some legacy version of winsock uses it
         if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL)
         {
+            // Connection didn't actually fail, but is being established
+            // asynchronously. Thus, use async I/O api (select/poll)
+            // synchronously to check for successful connection with a timeout.
 #ifdef USE_POLL
             struct pollfd pollfd = {};
             pollfd.fd = hSocket;
@@ -516,6 +645,10 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
             FD_SET(hSocket, &fdset);
             int nRet = select(hSocket + 1, nullptr, &fdset, nullptr, &timeout);
 #endif
+            // Upon successful completion, both select and poll return the total
+            // number of file descriptors that have been selected. A value of 0
+            // indicates that the call timed out and no file descriptors have
+            // been selected.
             if (nRet == 0)
             {
                 LogPrint(BCLog::NET, "connection to %s timeout\n", addrConnect.ToString());
@@ -526,6 +659,11 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
                 LogPrintf("select() for %s failed: %s\n", addrConnect.ToString(), NetworkErrorString(WSAGetLastError()));
                 return false;
             }
+
+            // Even if the select/poll was successful, the connect might not
+            // have been successful. The reason for this failure is hidden away
+            // in the SO_ERROR for the socket in modern systems. We read it into
+            // nRet here.
             socklen_t nRetSize = sizeof(nRet);
             if (getsockopt(hSocket, SOL_SOCKET, SO_ERROR, (sockopt_arg_type)&nRet, &nRetSize) == SOCKET_ERROR)
             {
@@ -569,6 +707,22 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     return true;
 }
 
+/**
+ * Set the name proxy to use for all connections to nodes specified by a
+ * hostname. After setting this proxy, connecting to a node sepcified by a
+ * hostname won't result in a local lookup of said hostname, rather, connect to
+ * the node by asking the name proxy for a proxy connection to the hostname,
+ * effectively delegating the hostname lookup to the specified proxy.
+ *
+ * This delegation increases privacy for those who set the name proxy as they no
+ * longer leak their external hostname queries to their DNS servers.
+ *
+ * @returns Whether or not the operation succeeded.
+ *
+ * @note SOCKS5's support for UDP-over-SOCKS5 has been considered, but no SOCK5
+ *       server in common use (most notably Tor) actually implements UDP
+ *       support, and a DNS resolver is beyond the scope of this project.
+ */
 bool SetNameProxy(const proxyType &addrProxy) {
     if (!addrProxy.IsValid())
         return false;
@@ -599,6 +753,21 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
+/**
+ * Connect to a specified destination service through a SOCKS5 proxy by first
+ * connecting to the SOCKS5 proxy.
+ *
+ * @param proxy The SOCKS5 proxy.
+ * @param strDest The destination service to which to connect.
+ * @param port The destination port.
+ * @param hSocket The socket on which to connect to the SOCKS5 proxy.
+ * @param nTimeout Wait this many milliseconds for the connection to the SOCKS5
+ *                 proxy to be established.
+ * @param outProxyConnectionFailed[out] Whether or not the connection to the
+ *                                      SOCKS5 proxy failed.
+ *
+ * @returns Whether or not the operation succeeded.
+ */
 bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, const SOCKET& hSocket, int nTimeout, bool *outProxyConnectionFailed)
 {
     // first connect to proxy server
@@ -623,6 +792,17 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
     return true;
 }
 
+/**
+ * Parse and resolve a specified subnet string into the appropriate internal
+ * representation.
+ *
+ * @param pszName A string representation of a subnet of the form `network
+ *                address [ "/", ( CIDR-style suffix | netmask ) ]`(e.g.
+ *                `2001:db8::/32`, `192.0.2.0/255.255.255.0`, or `8.8.8.8`).
+ * @param ret The resulting internal representation of a subnet.
+ *
+ * @returns Whether the operation succeeded or not.
+ */
 bool LookupSubNet(const char* pszName, CSubNet& ret)
 {
     std::string strSubnet(pszName);
@@ -630,6 +810,8 @@ bool LookupSubNet(const char* pszName, CSubNet& ret)
     std::vector<CNetAddr> vIP;
 
     std::string strAddress = strSubnet.substr(0, slash);
+    // TODO: Use LookupHost(const char *, CNetAddr&, bool) instead to just get
+    //       one CNetAddr.
     if (LookupHost(strAddress.c_str(), vIP, 1, false))
     {
         CNetAddr network = vIP[0];
@@ -637,8 +819,8 @@ bool LookupSubNet(const char* pszName, CSubNet& ret)
         {
             std::string strNetmask = strSubnet.substr(slash + 1);
             int32_t n;
-            // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
-            if (ParseInt32(strNetmask, &n)) { // If valid number, assume /24 syntax
+            if (ParseInt32(strNetmask, &n)) {
+                // If valid number, assume CIDR variable-length subnet masking
                 ret = CSubNet(network, n);
                 return ret.IsValid();
             }
