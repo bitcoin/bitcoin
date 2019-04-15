@@ -19,7 +19,7 @@ outgoing connections, but more is possible.
 
 	-onion=ip:port  Set the proxy server to use for Tor hidden services. You do not
 	                need to set this if it's the same as -proxy. You can use -noonion
-	                to explicitly disable access to hidden service.
+	                to explicitly disable access to hidden services.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run a hidden service (see next section), you'll need to enable
@@ -30,12 +30,15 @@ outgoing connections, but more is possible.
 	-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
 	                other P2P nodes.
 
-	-onlynet=tor    Only connect to .onion nodes and drop IPv4/6 connections.
+	-onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
+	                connections are not affected by this option. This option can be
+	                specified multiple times to allow multiple network types, e.g.
+	                ipv4, ipv6, or onion.
 
 An example how to start the client if the Tor proxy is running on local host on
 port 9050 and only allows .onion nodes to connect:
 
-	./dashd -onion=127.0.0.1:9050 -onlynet=tor -listen=0 -addnode=ssapp53tmftyjmjb.onion
+	./dashd -onion=127.0.0.1:9050 -onlynet=onion -listen=0 -addnode=ssapp53tmftyjmjb.onion
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
