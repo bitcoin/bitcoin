@@ -93,12 +93,11 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         self.log.info("Test fee rate histogram when mempool contains 2 transactions (tx1: 5 sat/vB, tx2: 14 sat/vB)")
         info = node.getmempoolinfo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
 
-        # Verify that tx1 and tx2 are reported in 5 sat/vB and 14 sat/vB in fee rate groups respectively
+        # Verify that both tx1 and tx2 are reported in 8 sat/vB fee rate group
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
-        assert_equal(2, non_empty_groups)
-        assert_equal(13, empty_groups)
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['5']['count'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['14']['count'])
+        assert_equal(1, non_empty_groups)
+        assert_equal(14, empty_groups)
+        assert_equal(2, info['fee_histogram']['fee_rate_groups']['8']['count'])
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
         # Unlock the second UTXO which we locked
@@ -110,31 +109,31 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         self.log.info("Test fee rate histogram when mempool contains 3 transactions (tx1: 5 sat/vB, tx2: 14 sat/vB, tx3: 6 sat/vB)")
         info = node.getmempoolinfo([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
 
-        # Verify that each of 5, 6 and 14 sat/vB fee rate groups contain one transaction
+        # Verify that each of 6, 7 and 8 sat/vB fee rate groups contain one transaction
         (non_empty_groups, empty_groups, total_fees) = self.histogram_stats(info['fee_histogram'])
         assert_equal(3, non_empty_groups)
         assert_equal(12, empty_groups)
 
-        for i in ['1', '2', '3', '4', '7', '8', '9', '10', '11', '12', '13', '15']:
+        for i in ['1', '2', '3', '4', '5', '9', '10', '11', '12', '13', '14', '15']:
             assert_equal(0, info['fee_histogram']['fee_rate_groups'][i]['size'])
             assert_equal(0, info['fee_histogram']['fee_rate_groups'][i]['count'])
             assert_equal(0, info['fee_histogram']['fee_rate_groups'][i]['fees'])
             assert_equal(int(i), info['fee_histogram']['fee_rate_groups'][i]['from'])
 
-        assert_equal(188, info['fee_histogram']['fee_rate_groups']['5']['size'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['5']['count'])
-        assert_equal(940, info['fee_histogram']['fee_rate_groups']['5']['fees'])
-        assert_equal(5, info['fee_histogram']['fee_rate_groups']['5']['from'])
-
-        assert_equal(356, info['fee_histogram']['fee_rate_groups']['6']['size'])
+        assert_equal(188, info['fee_histogram']['fee_rate_groups']['6']['size'])
         assert_equal(1, info['fee_histogram']['fee_rate_groups']['6']['count'])
-        assert_equal(2136, info['fee_histogram']['fee_rate_groups']['6']['fees'])
-        assert_equal(6, info['fee_histogram']['fee_rate_groups']['6']['from'])
+        assert_equal(940, info['fee_histogram']['fee_rate_groups']['6']['fees'])
+        assert_equal(5, info['fee_histogram']['fee_rate_groups']['6']['from'])
 
-        assert_equal(141, info['fee_histogram']['fee_rate_groups']['14']['size'])
-        assert_equal(1, info['fee_histogram']['fee_rate_groups']['14']['count'])
-        assert_equal(1974, info['fee_histogram']['fee_rate_groups']['14']['fees'])
-        assert_equal(14, info['fee_histogram']['fee_rate_groups']['14']['from'])
+        assert_equal(356, info['fee_histogram']['fee_rate_groups']['7']['size'])
+        assert_equal(1, info['fee_histogram']['fee_rate_groups']['7']['count'])
+        assert_equal(2136, info['fee_histogram']['fee_rate_groups']['7']['fees'])
+        assert_equal(6, info['fee_histogram']['fee_rate_groups']['7']['from'])
+
+        assert_equal(141, info['fee_histogram']['fee_rate_groups']['8']['size'])
+        assert_equal(1, info['fee_histogram']['fee_rate_groups']['8']['count'])
+        assert_equal(1974, info['fee_histogram']['fee_rate_groups']['8']['fees'])
+        assert_equal(14, info['fee_histogram']['fee_rate_groups']['8']['from'])
 
         assert_equal(total_fees, info['fee_histogram']['total_fees'])
 
