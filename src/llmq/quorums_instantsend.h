@@ -59,6 +59,8 @@ public:
     void WriteInstantSendLockMined(const uint256& hash, int nHeight);
     void RemoveInstantSendLockMined(const uint256& hash, int nHeight);
     std::unordered_map<uint256, CInstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight);
+    void RemoveArchivedInstantSendLocks(int nUntilHeight);
+    bool HasArchivedInstantSendLock(const uint256& islockHash);
 
     CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash);
     uint256 GetInstantSendLockHashByTxid(const uint256& txid);

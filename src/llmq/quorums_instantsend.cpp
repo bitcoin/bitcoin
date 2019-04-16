@@ -90,30 +90,30 @@ void CInstantSendDb::RemoveInstantSendLock(CDBBatch& batch, const uint256& hash,
     }
 }
 
-static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockMinedKey(int nHeight, const uint256& islockHash)
+static std::tuple<std::string, uint32_t, uint256> BuildInversedISLockKey(const std::string& k, int nHeight, const uint256& islockHash)
 {
-    return std::make_tuple(std::string("is_m"), htobe32(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
+    return std::make_tuple(k, htobe32(std::numeric_limits<uint32_t>::max() - nHeight), islockHash);
 }
 
 void CInstantSendDb::WriteInstantSendLockMined(const uint256& hash, int nHeight)
 {
-    db.Write(BuildInversedISLockMinedKey(nHeight, hash), true);
+    db.Write(BuildInversedISLockKey("is_m", nHeight, hash), true);
 }
 
 void CInstantSendDb::RemoveInstantSendLockMined(const uint256& hash, int nHeight)
 {
-    db.Erase(BuildInversedISLockMinedKey(nHeight, hash));
+    db.Erase(BuildInversedISLockKey("is_m", nHeight, hash));
 }
 
 std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmedInstantSendLocks(int nUntilHeight)
 {
     auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
 
-    auto firstKey = BuildInversedISLockMinedKey(nUntilHeight, uint256());
+    auto firstKey = BuildInversedISLockKey("is_m", nUntilHeight, uint256());
 
     it->Seek(firstKey);
 
-    CDBBatch deleteBatch(db);
+    CDBBatch batch(db);
     std::unordered_map<uint256, CInstantSendLockPtr> ret;
     while (it->Valid()) {
         decltype(firstKey) curKey;
@@ -128,18 +128,56 @@ std::unordered_map<uint256, CInstantSendLockPtr> CInstantSendDb::RemoveConfirmed
         auto& islockHash = std::get<2>(curKey);
         auto islock = GetInstantSendLockByHash(islockHash);
         if (islock) {
-            RemoveInstantSendLock(deleteBatch, islockHash, islock);
+            RemoveInstantSendLock(batch, islockHash, islock);
             ret.emplace(islockHash, islock);
         }
 
-        deleteBatch.Erase(curKey);
+        // archive the islock hash, so that we're still able to check if we've seen the islock in the past
+        batch.Write(BuildInversedISLockKey("is_a1", nHeight, islockHash), true);
+        batch.Write(std::make_tuple(std::string("is_a2"), islockHash), true);
+
+        batch.Erase(curKey);
 
         it->Next();
     }
 
-    db.WriteBatch(deleteBatch);
+    db.WriteBatch(batch);
 
     return ret;
+}
+
+void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
+{
+    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+
+    auto firstKey = BuildInversedISLockKey("is_a1", nUntilHeight, uint256());
+
+    it->Seek(firstKey);
+
+    CDBBatch batch(db);
+    while (it->Valid()) {
+        decltype(firstKey) curKey;
+        if (!it->GetKey(curKey) || std::get<0>(curKey) != "is_a1") {
+            break;
+        }
+        uint32_t nHeight = std::numeric_limits<uint32_t>::max() - be32toh(std::get<1>(curKey));
+        if (nHeight > nUntilHeight) {
+            break;
+        }
+
+        auto& islockHash = std::get<2>(curKey);
+        batch.Erase(std::make_tuple(std::string("is_a2"), islockHash));
+        batch.Erase(curKey);
+
+        it->Next();
+    }
+
+    db.WriteBatch(batch);
+}
+
+bool CInstantSendDb::HasArchivedInstantSendLock(const uint256& islockHash)
+{
+    return db.Exists(std::make_tuple(std::string("is_a2"), islockHash));
 }
 
 CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash)
@@ -927,6 +965,9 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
         LOCK(cs);
 
         removeISLocks = db.RemoveConfirmedInstantSendLocks(pindex->nHeight);
+        if (pindex->nHeight > 100) {
+            db.RemoveArchivedInstantSendLocks(pindex->nHeight - 100);
+        }
         for (auto& p : removeISLocks) {
             auto& islockHash = p.first;
             auto& islock = p.second;
@@ -1058,7 +1099,7 @@ bool CInstantSendManager::AlreadyHave(const CInv& inv)
     }
 
     LOCK(cs);
-    return db.GetInstantSendLockByHash(inv.hash) != nullptr || pendingInstantSendLocks.count(inv.hash) != 0;
+    return db.GetInstantSendLockByHash(inv.hash) != nullptr || pendingInstantSendLocks.count(inv.hash) != 0 || db.HasArchivedInstantSendLock(inv.hash);
 }
 
 bool CInstantSendManager::GetInstantSendLockByHash(const uint256& hash, llmq::CInstantSendLock& ret)
