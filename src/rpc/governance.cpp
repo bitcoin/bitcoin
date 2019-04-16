@@ -24,6 +24,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/rpcwallet.h"
+#include <wallet/coincontrol.h>
 #endif // ENABLE_WALLET
 #include <core_io.h>
 bool EnsureWalletIsAvailable(bool avoidException);
@@ -31,6 +32,29 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request);
 UniValue getsuperblockbudget(const JSONRPCRequest& request);
 UniValue gobject(const JSONRPCRequest& request);
 UniValue voteraw(const JSONRPCRequest& request);
+bool GetBudgetSystemCollateralTX(CWallet* const pwallet, CTransactionRef& tx, uint256 hash, CAmount amount)
+{
+    // make our change address
+    CReserveKey reservekey(pwallet);
+
+    CScript scriptChange;
+    scriptChange << OP_RETURN << ToByteVector(hash);
+
+    CAmount nFeeRet = 0;
+    int nChangePosRet = -1;
+    std::string strFail = "";
+    std::vector< CRecipient > vecSend;
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
+
+    CCoinControl coinControl;
+    bool success = pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
+    if(!success){
+        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
+        return false;
+    }
+
+    return true;
+}
 UniValue gobject(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -194,7 +218,7 @@ UniValue gobject(const JSONRPCRequest& request)
         EnsureWalletIsUnlocked(pwallet);
 
         CTransactionRef tx;
-        if(!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+        if(!GetBudgetSystemCollateralTX(pwallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
         if(tx->GetTotalSize() > 500u){

@@ -102,7 +102,7 @@ void MasternodeList::showContextMenu(const QPoint &point)
     if(item) contextMenu->exec(QCursor::pos());
 }
 
-void MasternodeList::StartAlias(std::string strAlias)
+void MasternodeList::StartAlias(interfaces::Wallet& wallet, std::string strAlias)
 {
     std::string strStatusHtml;
     strStatusHtml += "<center>Name: " + strAlias;
@@ -112,7 +112,7 @@ void MasternodeList::StartAlias(std::string strAlias)
             std::string strError;
             CMasternodeBroadcast mnb;
 
-            bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+            bool fSuccess = CMasternodeBroadcast::Create(wallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
             if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
@@ -138,7 +138,7 @@ void MasternodeList::StartAlias(std::string strAlias)
     updateMyNodeList(true);
 }
 
-void MasternodeList::StartAll(std::string strCommand)
+void MasternodeList::StartAll(interfaces::Wallet& wallet, std::string strCommand)
 {
     int nCountSuccessful = 0;
     int nCountFailed = 0;
@@ -157,7 +157,7 @@ void MasternodeList::StartAll(std::string strCommand)
 
         if(strCommand == "start-missing" && mnodeman.Has(outpoint)) continue;
 
-        bool fSuccess = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+        bool fSuccess = CMasternodeBroadcast::Create(wallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
         int nDoS;
         if (fSuccess && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
@@ -374,11 +374,11 @@ void MasternodeList::on_startButton_clicked()
 
         if(!ctx.isValid()) return; // Unlock wallet was cancelled
 
-        StartAlias(strAlias);
+        StartAlias(walletModel->wallet(), strAlias);
         return;
     }
 
-    StartAlias(strAlias);
+    StartAlias(walletModel->wallet(), strAlias);
 }
 
 void MasternodeList::on_startAllButton_clicked()
@@ -398,11 +398,11 @@ void MasternodeList::on_startAllButton_clicked()
 
         if(!ctx.isValid()) return; // Unlock wallet was cancelled
 
-        StartAll();
+        StartAll(walletModel->wallet());
         return;
     }
 
-    StartAll();
+    StartAll(walletModel->wallet());
 }
 
 void MasternodeList::on_startMissingButton_clicked()
@@ -430,11 +430,11 @@ void MasternodeList::on_startMissingButton_clicked()
 
         if(!ctx.isValid()) return; // Unlock wallet was cancelled
 
-        StartAll("start-missing");
+        StartAll(walletModel->wallet(), "start-missing");
         return;
     }
 
-    StartAll("start-missing");
+    StartAll(walletModel->wallet(), "start-missing");
 }
 
 void MasternodeList::on_tableWidgetMyMasternodes_itemSelectionChanged()
