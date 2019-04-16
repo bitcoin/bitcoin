@@ -66,7 +66,7 @@ By default, up to 4 tests will be run in parallel by test_runner. To specify
 how many jobs to run, append `--jobs=n`
 
 The individual tests and the test_runner harness have many command-line
-options. Run `test_runner.py -h` to see them all.
+options. Run `test/functional/test_runner.py -h` to see them all.
 
 #### Troubleshooting and debugging test failures
 
@@ -79,7 +79,7 @@ killed all its bitcoind nodes), then there may be a port conflict which will
 cause the test to fail. It is recommended that you run the tests on a system
 where no other bitcoind processes are running.
 
-On linux, the test_framework will warn if there is another
+On linux, the test framework will warn if there is another
 bitcoind process running when the tests are started.
 
 If there are zombie bitcoind processes after test failure, you can kill them
@@ -108,11 +108,18 @@ tests will fail. If this happens, remove the cache directory (and make
 sure bitcoind processes are stopped as above):
 
 ```bash
-rm -rf cache
+rm -rf test/cache
 killall bitcoind
 ```
 
 ##### Test logging
+
+The test framework logs to two files:
+ * `<test data directory>/test_framework.log`
+ * `<test data directory>/node<number>/regtest/debug.log`.
+
+The first line of the test output provides the test data directory path. The
+node number is the relevant test node, from node1 to node4.
 
 The tests contain logging at different levels (debug, info, warning, etc). By
 default:
@@ -133,7 +140,7 @@ aggregate log by running the `combine_logs.py` script. The output can be plain
 text, colorized text or html. For example:
 
 ```
-combine_logs.py -c <test data directory> | less -r
+test/functional/combine_logs.py -c <test data directory> | less -r
 ```
 
 will pipe the colorized logs from the test into less.
