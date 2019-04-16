@@ -1891,13 +1891,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                         // some messages need to be re-requested faster when the first announcing peer did not answer to GETDATA
                         switch (inv.type) {
                             case MSG_QUORUM_RECOVERED_SIG:
-                                doubleRequestDelay = 5 * 1000000;
+                                doubleRequestDelay = 15 * 1000000;
                                 break;
                             case MSG_CLSIG:
                                 doubleRequestDelay = 5 * 1000000;
                                 break;
                             case MSG_ISLOCK:
-                                doubleRequestDelay = 5 * 1000000;
+                                doubleRequestDelay = 10 * 1000000;
                                 break;
                         }
                         pfrom->AskFor(inv, doubleRequestDelay);
