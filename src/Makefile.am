@@ -95,6 +95,7 @@ SYSCOIN_CORE_H = \
   services/graph.h \
   services/asset.h \
   services/assetallocation.h \
+  services/assetconsensus.h \
   thread_pool/fixed_function.hpp \
   thread_pool/mpmc_bounded_queue.hpp \
   thread_pool/thread_pool.hpp \
@@ -272,6 +273,7 @@ libsyscoin_server_a_SOURCES = \
   services/graph.cpp \
   services/asset.cpp \
   services/assetallocation.cpp \
+  services/assetconsensus.cpp \
   activemasternode.cpp \
   dsnotificationinterface.cpp \
   governance.cpp \
