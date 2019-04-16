@@ -339,11 +339,16 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 4 != params.size())
 		throw runtime_error(
-			"assetallocationburn [asset] [address] [amount] [ethereum_destination_address]\n"
+			"assetallocationburn <asset> <address> <amount> <ethereum_destination_address>\n"
+            "\nArguments:\n"
 			"<asset> Asset guid.\n"
 			"<address> Address that owns this asset allocation.\n"
 			"<amount> Amount of asset to burn to SYSX.\n"
-            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n");
+            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetallocationburn", "\"asset\"", "\"address\"", "\"amount\"", "\"ethereum_destination_address\"")
+            + HelpExampleRpc("assetallocationburn", "\"asset\"", "\"address\"", "\"amount\"", "\"ethereum_destination_address\"")
+            );
 
 	const int &nAsset = params[0].get_int();
 	string strAddress = params[1].get_str();
@@ -601,7 +606,16 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
         throw runtime_error("assetallocationbalance <asset> <address>\n"
-                "Show stored balance of a single asset allocation.\n");
+                "Show stored balance of a single asset allocation.\n"
+                "\nArguments:\n"
+                "1. \"asset\"       (string, required) The guid of the asset\n"
+                "2. \"address\"        (string, required) The address of the allocation owner\n"
+                "\nResult (for verbose = true):\n"
+                "\"balance\"        (numeric) The balance of a single asset allocation.\n"
+                "\nExamples:\n"
+                + HelpExampleCli("assetallocationbalance","\"<guid>\"")
+                + HelpExampleRpc("assetallocationbalance", "\"<guid>\"")
+                );
 
     const int &nAsset = params[0].get_int();
     string strAddressFrom = params[1].get_str();
@@ -633,7 +647,8 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
         throw runtime_error("assetallocationinfo <asset> <address>\n"
-                "Show stored values of a single asset allocation.\n");
+                "Show stored values of a single asset allocation.\n"
+                );
 
     const int &nAsset = params[0].get_int();
 	string strAddressFrom = params[1].get_str();
