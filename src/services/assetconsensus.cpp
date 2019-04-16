@@ -1,10 +1,8 @@
-﻿// Copyright (c) 2017-2018 The Syscoin Core developers
+﻿// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "services/asset.h"
-#include "services/assetallocation.h"
-#include "services/assetconsensus.h"
+#include <services/assetconsensus.h>
 #include "init.h"
 #include "validation.h"
 #include "util.h"
