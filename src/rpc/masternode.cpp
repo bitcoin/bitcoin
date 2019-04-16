@@ -25,7 +25,6 @@
 UniValue masternodelist(const JSONRPCRequest& request);
 
 bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException);
-
 #ifdef ENABLE_WALLET
 void EnsureWalletIsUnlocked(CWallet * const pwallet);
 #endif
@@ -33,8 +32,8 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet);
 
 UniValue masternode(const JSONRPCRequest& request)
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* pwallet = wallet.get();
     std::string strCommand;
     if (request.params.size() >= 1) {
         strCommand = request.params[0].get_str();
@@ -200,8 +199,8 @@ UniValue masternode(const JSONRPCRequest& request)
                 fFound = true;
                 std::string strError;
                 CMasternodeBroadcast mnb;
-
-                bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+       
+                bool fResult = CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
                 int nDoS;
                 if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
@@ -256,8 +255,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
             if(strCommand == "start-missing" && fFound) continue;
             if(strCommand == "start-disabled" && fFound && mn.IsEnabled()) continue;
-
-            bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+            bool fResult = CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
             if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
@@ -654,8 +652,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 fFound = true;
                 std::string strError;
                 CMasternodeBroadcast mnb;
-
-                bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb, true);
+                bool fResult = CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb, true);
 
                 statusObj.pushKV("result", fResult ? "successful" : "failed");
                 if(fResult) {
@@ -702,8 +699,7 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
         for (const auto& mne : masternodeConfig.getEntries()) {
             std::string strError;
             CMasternodeBroadcast mnb;
-
-            bool fResult = CMasternodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb, true);
+            bool fResult = CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb, true);
 
             UniValue statusObj(UniValue::VOBJ);
             statusObj.pushKV("name", mne.getAlias());

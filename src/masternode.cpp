@@ -376,9 +376,94 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
     // or it was found in mnpayments blocks but wasn't found in the blockchain.
     // LogPrint(BCLog::MNPAYMENT, "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", outpoint.ToStringShort(), nBlockLastPaid);
 }
-
 #ifdef ENABLE_WALLET
-bool CMasternodeBroadcast::Create(const std::string& strService, const std::string& strKeyMasternode, const std::string& strTxHash, const std::string& strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
+bool GetOutpointAndKeysFromOutput(interfaces::Wallet& wallet, const Coin& coin, CPubKey& pubKeyRet, CKey& keyRet)
+{
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
+  
+    
+    const CScript &pubScript = coin.out.scriptPubKey;
+    CTxDestination address;
+    ExtractDestination(pubScript, address);
+    
+    const CKeyID *keyID = boost::get<CKeyID>(&address);
+    if (!keyID) {
+        LogPrintf("GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
+        return false;
+    }
+
+    if (!wallet.getPrivKey(*keyID, keyRet)) {
+        LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
+        return false;
+    }
+
+    pubKeyRet = keyRet.GetPubKey();
+    return true;
+}
+bool GetMasternodeOutpointAndKeys(interfaces::Wallet& wallet, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+{
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;  
+
+    // Find specific outpoint
+    uint256 txHash = uint256S(strTxHash);
+    int nOutputIndex = atoi(strOutputIndex);
+    COutPoint outpoint(txHash, nOutputIndex);
+   
+    Coin coin;
+    if(GetUTXOCoin(outpoint, coin)){
+        outpointRet = outpoint;
+        return GetOutpointAndKeysFromOutput(wallet, coin, pubKeyRet, keyRet);
+    }
+   
+    LogPrintf("GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
+    return false;
+}
+bool GetOutpointAndKeysFromOutput(CWallet* const pwallet, const Coin& coin, CPubKey& pubKeyRet, CKey& keyRet)
+{
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
+  
+    
+    const CScript &pubScript = coin.out.scriptPubKey;
+    CTxDestination address;
+    ExtractDestination(pubScript, address);
+    
+    const CKeyID *keyID = boost::get<CKeyID>(&address);
+    if (!keyID) {
+        LogPrintf("GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
+        return false;
+    }
+
+    if (!pwallet->GetKey(*keyID, keyRet)) {
+        LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
+        return false;
+    }
+
+    pubKeyRet = keyRet.GetPubKey();
+    return true;
+}
+bool GetMasternodeOutpointAndKeys(CWallet* const pwallet, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
+{
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;  
+
+    // Find specific outpoint
+    uint256 txHash = uint256S(strTxHash);
+    int nOutputIndex = atoi(strOutputIndex);
+    COutPoint outpoint(txHash, nOutputIndex);
+   
+    Coin coin;
+    if(GetUTXOCoin(outpoint, coin)){
+        outpointRet = outpoint;
+        return GetOutpointAndKeysFromOutput(pwallet, coin, pubKeyRet, keyRet);
+    }
+   
+    LogPrintf("GetMasternodeOutpointAndKeys -- Could not locate specified masternode vin\n");
+    return false;
+}
+bool CMasternodeBroadcast::Create(interfaces::Wallet& wallet, const std::string& strService, const std::string& strKeyMasternode, const std::string& strTxHash, const std::string& strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
 {
     COutPoint outpoint;
     CPubKey pubKeyCollateralAddressNew;
@@ -399,8 +484,8 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
 
     if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
         return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
-    CWallet* const pwallet = GetDefaultWallet();
-    if (!pwallet || !pwallet->GetMasternodeOutpointAndKeys(outpoint, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+
+    if (GetMasternodeOutpointAndKeys(wallet, outpoint, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
         return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
 
     CService service;
@@ -416,7 +501,44 @@ bool CMasternodeBroadcast::Create(const std::string& strService, const std::stri
 
     return Create(outpoint, service, keyCollateralAddressNew, pubKeyCollateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
 }
+bool CMasternodeBroadcast::Create(CWallet* const pwallet, const std::string& strService, const std::string& strKeyMasternode, const std::string& strTxHash, const std::string& strOutputIndex, std::string& strErrorRet, CMasternodeBroadcast &mnbRet, bool fOffline)
+{
+    COutPoint outpoint;
+    CPubKey pubKeyCollateralAddressNew;
+    CKey keyCollateralAddressNew;
+    CPubKey pubKeyMasternodeNew;
+    CKey keyMasternodeNew;
 
+    auto Log = [&strErrorRet](std::string sErr)->bool
+    {
+        strErrorRet = sErr;
+        LogPrint(BCLog::MN, "CMasternodeBroadcast::Create -- %s\n", strErrorRet);
+        return false;
+    };
+
+    // Wait for sync to finish because mnb simply won't be relayed otherwise
+    if (!fOffline && !masternodeSync.IsSynced())
+        return Log("Sync in progress. Must wait until sync is complete to start Masternode");
+
+    if (!CMessageSigner::GetKeysFromSecret(strKeyMasternode, keyMasternodeNew, pubKeyMasternodeNew))
+        return Log(strprintf("Invalid masternode key %s", strKeyMasternode));
+
+    if (GetMasternodeOutpointAndKeys(pwallet, outpoint, pubKeyCollateralAddressNew, keyCollateralAddressNew, strTxHash, strOutputIndex))
+        return Log(strprintf("Could not allocate outpoint %s:%s for masternode %s", strTxHash, strOutputIndex, strService));
+
+    CService service;
+    if (!Lookup(strService.c_str(), service, 0, false))
+        return Log(strprintf("Invalid address %s for masternode.", strService));
+    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    int mainnetDefaultPort = chainParams->GetDefaultPort();
+    if (Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        if (service.GetPort() != mainnetDefaultPort)
+            return Log(strprintf("Invalid port %u for masternode %s, only %d is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort));
+    } else if (service.GetPort() == mainnetDefaultPort)
+        return Log(strprintf("Invalid port %u for masternode %s, %d is the only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort));
+
+    return Create(outpoint, service, keyCollateralAddressNew, pubKeyCollateralAddressNew, keyMasternodeNew, pubKeyMasternodeNew, strErrorRet, mnbRet);
+}
 bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& service, const CKey& keyCollateralAddressNew, const CPubKey& pubKeyCollateralAddressNew, const CKey& keyMasternodeNew, const CPubKey& pubKeyMasternodeNew, std::string &strErrorRet, CMasternodeBroadcast &mnbRet)
 {
     // wait for reindex and/or import to finish
