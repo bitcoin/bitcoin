@@ -1218,7 +1218,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool bSanityCheck) {
+        bool fJustCheck, int nHeight, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, string &errorMessage, const bool &bSanityCheck, const bool &bMiner) {
 	if (passetdb == nullptr)
 		return false;
 	const uint256& txHash = tx.GetHash();
@@ -1423,7 +1423,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                     if (receiverAllocation.assetAllocationTuple.IsNull()) {
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
-                        if(fAssetIndex && !fJustCheck){
+                        if(fAssetIndex && !fJustCheck && !bMiner){
                             std::vector<uint32_t> assetGuids;
                             passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
                             if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
@@ -1443,7 +1443,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 				storedSenderAssetRef.nBalance -= amountTuple.second;                              
 			}
 		}
-        if (!bSanityCheck && !fJustCheck)
+        if (!bSanityCheck && !fJustCheck && !bMiner)
             passetallocationdb->WriteAssetAllocationIndex(tx, storedSenderAssetRef, true, nHeight);  
 	}
 	else if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
@@ -1494,7 +1494,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     storedSenderAssetRef.nHeight = nHeight;
 	storedSenderAssetRef.txHash = txHash;
 	// write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
-	if (!bSanityCheck && !fJustCheck) {
+	if (!bSanityCheck && !fJustCheck && !bMiner) {
         passetdb->WriteAssetIndex(tx, storedSenderAssetRef, nHeight);
 		LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
 				assetFromTx(tx.nVersion).c_str(),
