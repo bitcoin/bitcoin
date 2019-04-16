@@ -366,7 +366,7 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
-bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool bSanityCheck=false);
+bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, const bool &bSanityCheck=false, const bool &bMiner=false);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;

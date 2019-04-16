@@ -457,7 +457,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
     return true; 
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool& bOverflow, bool bSanityCheck, bool bMiner) {
+        bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
 		return false;
 	const uint256 & txHash = tx.GetHash();
@@ -606,7 +606,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                     dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress); 
-                    if(fAssetIndex){
+                    if(fAssetIndex && !bMiner){
                         std::vector<uint32_t> assetGuids;
                         passetindexdb->ReadAssetsByAddress(dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress, assetGuids);
                         if(std::find(assetGuids.begin(), assetGuids.end(), dbAssetAllocationReceiver.assetAllocationTuple.nAsset) == assetGuids.end())
@@ -618,7 +618,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                   
             } 
             mapAssetAllocationReceiver->second.nBalance += nAmountFromScript;                        
-        }else if (!bSanityCheck) {
+        }else if (!bSanityCheck && !bMiner) {
             LOCK(cs_assetallocationarrival);
             // add conflicting sender if using ZDAG
             assetAllocationConflicts.insert(senderTupleStr);
@@ -644,7 +644,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		}
         mapBalanceSenderCopy -= nTotal;
 		if (mapBalanceSenderCopy < 0) {
-            if(fJustCheck && !bSanityCheck)
+            if(fJustCheck && !bSanityCheck && !bMiner)
             {
                 LOCK(cs_assetallocationarrival);
 				// add conflicting sender
@@ -702,7 +702,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {                   
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress); 
-                        if(fAssetIndex){
+                        if(fAssetIndex && !bMiner){
                             std::vector<uint32_t> assetGuids;
                             passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
                             if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
@@ -733,16 +733,17 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();    
 
-            
-        // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
-        passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, true, nHeight);    
-        
-        LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
+        if(!bMiner) {   
+            // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
+            passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, true, nHeight);  
+            LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
                 senderTupleStr.c_str(),
                 txHash.ToString().c_str(),
                 nHeight,
-                fJustCheck ? 1 : 0);                
+                fJustCheck ? 1 : 0);      
+        }
+                    
     }
 	else{
         if(!bSanityCheck){
