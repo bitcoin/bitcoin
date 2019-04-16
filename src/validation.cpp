@@ -547,6 +547,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
 // SYSCOIN
 bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& state, const bool &fJustCheck, const int& nHeight, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
 {
+    static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     std::string errorMessage;
     // unserialize assetallocation from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
@@ -574,12 +575,6 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     std::vector<unsigned char> vchTxRoot;
-     if(!ibd && !fLiteMode && fLoaded && !fGethSynced){
-        while(!fGethSynced){
-            LogPrint(BCLog::SYS, "Geth is not synced, sleeping for 5 seconds and trying again...\n");
-            MilliSleep(5000);
-        }
-    }
     if(!ibd && !fLiteMode && fLoaded && fGethSynced){
         
         int32_t cutoffHeight;
@@ -598,7 +593,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
                 return state.DoS(100, false, REJECT_INVALID, errorMessage);
             } 
             // ensure that we wait atleast ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
-            if(fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < ETHEREUM_CONFIRMS_REQUIRED)){
+            if(fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
                 errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
                 return state.DoS(100, false, REJECT_INVALID, errorMessage);
             } 

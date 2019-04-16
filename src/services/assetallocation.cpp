@@ -972,7 +972,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string vchParentNodes = params[6].get_str();
     string vchPath = params[7].get_str();
     string strWitness = params[8].get_str();
-    
+    if(!fGethSynced){
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
+    }
     const CTxDestination &dest = DecodeDestination(strAddress);
     UniValue detail = DescribeAddress(dest);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)

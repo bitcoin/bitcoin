@@ -807,7 +807,9 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
 	const CTxDestination &dest = DecodeDestination(vchAddress);
     
 	CScript scriptPubKeyFromOrig = GetScriptForDestination(dest);
-
+    if(!fGethSynced){
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
+    }
 	CMutableTransaction txNew;
 	txNew.nVersion = SYSCOIN_TX_VERSION_MINT;
 	txNew.vout.push_back(CTxOut(nAmount, scriptPubKeyFromOrig));
@@ -2461,6 +2463,7 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
+       
             if (pcursor->GetKey(key) && key < (uint32_t)cutoffHeight) {
                 vecHeightKeys.emplace_back(std::move(key));
             }
