@@ -2428,9 +2428,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
                 continue;
-            // SYSCOIN
-            if((!coinControl || !coinControl->HasSelected() || !coinControl->IsSelected(COutPoint(entry.first, i))) && pcoin->tx->vout[i].nValue <= GetFee(3000))
-                continue;
+
             if (IsLockedCoin(entry.first, i))
                 continue;
 
