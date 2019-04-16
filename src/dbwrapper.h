@@ -525,6 +525,7 @@ private:
             if (!transaction.deletes.count(parentKey) && !transaction.writes.count(parentKey)) {
                 break;
             }
+            parentIt->Next();
         }
     }
 
