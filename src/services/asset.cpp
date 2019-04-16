@@ -26,7 +26,6 @@
 #include <services/assetconsensus.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
-unsigned int MAX_UPDATES_PER_BLOCK = 2;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
@@ -670,16 +669,6 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                     if (nCurrentAmount >= (nDesiredAmount + nFees) || (output_index >= 0 && output_index == i)) {
                         break;
                     }
-                }
-            }
-            if (countInputs <= 0 && !fTPSTestEnabled && !IsSyscoinMintTx(tx.nVersion))
-            {
-                for (unsigned int i = 0; i < MAX_UPDATES_PER_BLOCK; i++){
-                    nDesiredAmount += addressRecipient.nAmount;
-                    CTxOut out(addressRecipient.nAmount, addressRecipient.scriptPubKey);
-                    const unsigned int nBytes = ::GetSerializeSize(out, SER_NETWORK, PROTOCOL_VERSION);
-                    nFees += GetFee(nBytes);
-                    tx.vout.push_back(out);
                 }
             }
         }   
