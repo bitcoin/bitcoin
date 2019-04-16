@@ -698,7 +698,18 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHi
         for (const CTxMemPoolEntry& e : pool.mapTx) {
             const CAmount fee{e.GetFee()};
             const uint32_t size{uint32_t(e.GetTxSize())};
-            const CAmount fee_rate{CFeeRate{fee, size}.GetFee(1)};
+
+            const CAmount afees{e.GetModFeesWithAncestors()}, dfees{e.GetModFeesWithDescendants()};
+            const uint32_t asize{uint32_t(e.GetSizeWithAncestors())}, dsize{uint32_t(e.GetSizeWithDescendants())};
+
+            const CAmount fpb{CFeeRate{fee, size}.GetFee(1)};     // Fee rate per byte
+            const CAmount afpb{CFeeRate{afees, asize}.GetFee(1)}; // Fee rate per byte including ancestors
+            const CAmount dfpb{CFeeRate{dfees, dsize}.GetFee(1)}; // Fee rate per byte including descendants
+
+            // Fee rate per byte including ancestors & descendants
+            const CAmount tfpb{CFeeRate{afees + dfees - fee, asize + dsize - size}.GetFee(1)};
+
+            const CAmount fee_rate{std::max(std::min(dfpb, tfpb), std::min(fpb, afpb))};
 
             // Distribute fee rates
             for (size_t i = floors.size(); i-- > 0;) {
