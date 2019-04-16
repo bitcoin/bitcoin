@@ -7,6 +7,7 @@ WARNING: This code is slow, uses bad randomness, does not properly protect
 keys, and is trivially vulnerable to side channel attacks. Do not use for
 anything but tests."""
 import random
+import hashlib
 
 def modinv(a, n):
     """Compute the modular inverse of a modulo n
@@ -212,7 +213,8 @@ class EllipticCurve:
                     r = self.add(r, p)
         return r
 
-SECP256K1 = EllipticCurve(2**256 - 2**32 - 977, 0, 7)
+SECP256K1_FIELD_SIZE = 2**256 - 2**32 - 977
+SECP256K1 = EllipticCurve(SECP256K1_FIELD_SIZE, 0, 7)
 SECP256K1_G = (0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798, 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8, 1)
 SECP256K1_ORDER = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 SECP256K1_ORDER_HALF = SECP256K1_ORDER // 2
@@ -322,6 +324,38 @@ class ECPubKey():
             return False
         return True
 
+    def verify_schnorr(self, sig, msg):
+        assert(len(msg) == 32)
+        assert(len(sig) == 64)
+        assert(self.valid)
+        assert(self.compressed)
+        r = int.from_bytes(sig[0:32], 'big')
+        if r >= SECP256K1_FIELD_SIZE:
+            return False
+        s = int.from_bytes(sig[32:64], 'big')
+        if s >= SECP256K1_ORDER:
+            return False
+        e = int.from_bytes(hashlib.sha256(sig[0:32] + self.get_bytes() + msg).digest(), 'big') % SECP256K1_ORDER
+        R = SECP256K1.mul([(SECP256K1_G, s), (self.p, SECP256K1_ORDER - e)])
+        if R[2] == 0 or jacobi_symbol(R[1] * R[2], SECP256K1_FIELD_SIZE) != 1 or ((r * R[2] * R[2]) % SECP256K1_FIELD_SIZE) != R[0]:
+            return False
+        return True
+
+    def tweak_add(self, tweak):
+        assert(self.valid)
+        assert(len(tweak) == 32)
+        t = int.from_bytes(tweak, 'big')
+        if t >= SECP256K1_ORDER:
+            return None
+        tweaked = SECP256K1.affine(SECP256K1.mul([(self.p, 1), (SECP256K1_G, t)]))
+        if tweaked is None:
+            return None
+        ret = ECPubKey()
+        ret.p = tweaked
+        ret.valid = True
+        ret.compressed = self.compressed
+        return ret
+
 class ECKey():
     """A secp256k1 private key"""
 
@@ -384,3 +418,29 @@ class ECKey():
         rb = r.to_bytes((r.bit_length() + 8) // 8, 'big')
         sb = s.to_bytes((s.bit_length() + 8) // 8, 'big')
         return b'\x30' + bytes([4 + len(rb) + len(sb), 2, len(rb)]) + rb + bytes([2, len(sb)]) + sb
+
+    def sign_schnorr(self, msg):
+        """Construct a bip-schnorr compatible signature with this key."""
+        assert(self.valid)
+        assert(self.compressed)
+        assert(len(msg) == 32)
+        kp = int.from_bytes(hashlib.sha256(self.get_bytes() + msg).digest(), 'big') % SECP256K1_ORDER
+        assert(kp != 0)
+        R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, kp)]))
+        k = kp if jacobi_symbol(R[1], SECP256K1_FIELD_SIZE) == 1 else SECP256K1_ORDER - kp
+        e = int.from_bytes(hashlib.sha256(R[0].to_bytes(32, 'big') + self.get_pubkey().get_bytes() + msg).digest(), 'big') % SECP256K1_ORDER
+        return R[0].to_bytes(32, 'big') + ((k + e*self.secret) % SECP256K1_ORDER).to_bytes(32, 'big')
+
+    def tweak_add(self, tweak):
+        """Return a tweaked version of this private key."""
+        assert(self.valid)
+        assert(len(tweak) == 32)
+        t = int.from_bytes(tweak, 'big')
+        if t >= SECP256K1_ORDER:
+            return None
+        tweaked = (self.secret + t) % SECP256K1_ORDER
+        if tweaked == 0:
+            return None
+        ret = ECKey()
+        ret.set(tweaked.to_bytes(32, 'big'), self.compressed)
+        return ret
