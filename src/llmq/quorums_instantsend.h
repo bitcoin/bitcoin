@@ -93,9 +93,16 @@ private:
     // Incoming and not verified yet
     std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>> pendingInstantSendLocks;
 
-    // a set of recently IS locked TXs for which we can retry locking of children
+    // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
+    // of child TXs
+    struct NonLockedTxInfo {
+        const CBlockIndex* pindexMined{nullptr};
+        CTransactionRef tx;
+        std::unordered_set<uint256, StaticSaltedHasher> children;
+    };
+    std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs;
+
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
-    bool pendingRetryAllTxs{false};
 
 public:
     CInstantSendManager(CDBWrapper& _llmqDb);
@@ -127,6 +134,9 @@ public:
     void UpdateWalletTransaction(const uint256& txid, const CTransactionRef& tx);
 
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void AddNonLockedTx(const CTransactionRef& tx);
+    void RemoveNonLockedTx(const uint256& txid);
+
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
 
