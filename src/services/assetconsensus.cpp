@@ -103,30 +103,33 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     std::vector<unsigned char> vchTxRoot;
-    if(!ibd && !fLiteMode && fLoaded && fGethSynced){
-        
-        int32_t cutoffHeight;
-       
-        // validate that the block passed is commited to by the tx root he also passes in, then validate the spv proof to the tx root below  
-        if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoot(mintSyscoin.nBlockNumber, vchTxRoot)){
+   
+    int32_t cutoffHeight;
+    const bool &shouldProcessEthTxRoot = !ibd && !fLiteMode && fLoaded && fGethSynced;
+    // validate that the block passed is commited to by the tx root he also passes in, then validate the spv proof to the tx root below  
+    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
+    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoot(mintSyscoin.nBlockNumber, vchTxRoot)){
+        if(shouldProcessEthTxRoot){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
             return false;
-        }  
-        {
-            LOCK(cs_ethsyncheight);
-            // cutoff is ~1 week of blocks is about 40K blocks
-            cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-            if(cutoffHeight > 0 && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-                errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within ~1.5 months of the burn transaction on Ethereum blockchain");
-                return false;
-            } 
-            // ensure that we wait atleast ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
-            if(fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
-                errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
-                return false;
-            } 
         }
+    }  
+    if(shouldProcessEthTxRoot){
+        LOCK(cs_ethsyncheight);
+        // cutoff is ~1 week of blocks is about 40K blocks
+        cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
+        if(cutoffHeight > 0 && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within ~1.5 months of the burn transaction on Ethereum blockchain");
+            return false;
+        } 
+        
+        // ensure that we wait atleast ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
+        if(fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
+            return false;
+        } 
     }
+    
     
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     if(!vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoot){
