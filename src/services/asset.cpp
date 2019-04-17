@@ -26,6 +26,8 @@
 #include <services/assetconsensus.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
+extern CCriticalSection cs_assetallocation;
+extern CCriticalSection cs_assetallocationarrival;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;

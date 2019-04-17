@@ -19,6 +19,8 @@
 #include <future>
 #include <rpc/util.h>
 #include <services/assetconsensus.h>
+CCriticalSection cs_assetallocation;
+CCriticalSection cs_assetallocationarrival;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 
@@ -38,7 +40,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request);
 using namespace std;
 AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocation);
 ArrivalTimesMapImpl arrivalTimesMap GUARDED_BY(cs_assetallocationarrival);
-
+std::unordered_set<std::string> assetAllocationConflicts;
 string CWitnessAddress::ToString() const {
     if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
         return "burn";
@@ -773,9 +775,9 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     	int nStatus = ZDAG_STATUS_OK;
     	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
     		nStatus = ZDAG_MAJOR_CONFLICT;
-    	else {
+    	else
     		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
-    	}
+    	
         oAssetAllocationStatus.pushKV("status", nStatus);
     }
 	return oAssetAllocationStatus;

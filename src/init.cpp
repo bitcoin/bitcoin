@@ -67,6 +67,8 @@
 #include <services/assetallocation.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
+extern CCriticalSection cs_assetallocation;
+extern CCriticalSection cs_assetallocationarrival;
 #include <thread_pool/thread_pool.hpp>
 #include <key_io.h>
 #include <wallet/wallet.h>
