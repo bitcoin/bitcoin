@@ -611,6 +611,24 @@ libsyscoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 endif
 #
 
+# syscoin pre-built binaries #
+dist_bin_SCRIPTS =
+if TARGET_WINDOWS
+  dist_bin_SCRIPTS += bin/win64/syscoin-geth.exe bin/win64/syscoin-relayer.exe
+  dist_bin_SCRIPTS += bin/win64/sha3.node bin/win64/bufferutil.node bin/win64/scrypt.node bin/win64/validation.node
+endif
+if TARGET_LINUX
+  dist_bin_SCRIPTS += bin/linux/syscoin-geth bin/linux/syscoin-relayer
+  dist_bin_SCRIPTS += bin/linux/sha3.node bin/linux/bufferutil.node bin/linux/scrypt.node bin/linux/validation.node
+endif
+if TARGET_DARWIN
+  dist_bin_SCRIPTS += bin/osx/syscoin-geth bin/osx/syscoin-relayer
+  dist_bin_SCRIPTS += bin/osx/sha3.node bin/osx/bufferutil.node bin/osx/scrypt.node bin/osx/validation.node
+endif
+
+#
+
+
 CTAES_DIST =  crypto/ctaes/bench.c
 CTAES_DIST += crypto/ctaes/ctaes.c
 CTAES_DIST += crypto/ctaes/ctaes.h

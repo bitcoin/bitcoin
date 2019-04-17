@@ -1099,14 +1099,14 @@ void KillProcess(const pid_t& pid){
 std::string GetGethFilename(){
     // For Windows:
     #ifdef WIN32
-       return "bin/win64/geth.exe";
+       return "bin/win64/syscoin-geth.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "./bin/osx/geth";
+        return "bin/osx/syscoin-geth";
     #else
         // Linux
-        return "./bin/linux/geth";
+        return "bin/linux/syscoin-geth";
     #endif
 }
 bool StopGethNode(pid_t &pid)
@@ -1173,6 +1173,8 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
             return false;
         }
 
+	// TODO: sanitize environment variables as per
+	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
         if( pid == 0 ) {
             std::string portStr = std::to_string(websocketport);
             if(bGethTestnet){
@@ -1183,14 +1185,30 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
                     (char*)"--syncmode", (char*)"light", 
                     (char*)"--datadir", (char*)dataDir.c_str(),
                     NULL };
-                execvp(argv[0], &argv[0]);
-            }
+                    execvp(argv[0], &argv[0]);
+		    if (errno != 0) {
+			    LogPrintf("Geth not found at %s, trying in PATH", fpath.c_str());
+			    argv[0] = (char*)"syscoin-geth";
+			    execvp(argv[0], &argv[0]);
+			    if (errno != 0) {
+				    LogPrintf("Geth not found in PATH.  Geth not started");
+		            }
+		    }
+	    }
             else{
                 char * argv[] = {(char*)fpath.c_str(), (char*)"--rpc", (char*)"--rpccorsdomain", (char*)"*", 
                     (char*)"--rpcapi", (char*)"eth,net,web3,admin", (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                     (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", (char*)"--datadir", (char*)dataDir.c_str(),
                         NULL };
-                execvp(argv[0], &argv[0]);
+                    execvp(argv[0], &argv[0]);
+		    if (errno != 0) {
+			    LogPrintf("Geth not found at %s, trying in PATH", fpath.c_str());
+			    argv[0] = (char*)"syscoin-geth";
+			    execvp(argv[0], &argv[0]);
+			    if (errno != 0) {
+				    LogPrintf("Geth not found in PATH.  Geth not started");
+		            }
+		    }
             }
         }
         else{
@@ -1224,14 +1242,14 @@ fs::path GetRelayerPidFile()
 std::string GetRelayerFilename(){
     // For Windows:
     #ifdef WIN32
-       return "bin/win64/relayer-win.exe";
+       return "bin/win64/syscoin-relayer.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "./bin/osx/relayer-macos";
+        return "./bin/osx/syscoin-relayer";
     #else
         // Linux
-        return "./bin/linux/relayer-linux";
+        return "./bin/linux/syscoin-relayer";
     #endif
 }
 bool StopRelayerNode(pid_t &pid)
@@ -1304,6 +1322,14 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             execvp(argv[0], &argv[0]);
+	    if (errno != 0) {
+		    LogPrintf("Relayer not found at %s, trying in PATH", fpath.c_str());
+		    argv[0] = (char*)"syscoin-relayer";
+		    execvp(argv[0], &argv[0]);
+		    if (errno != 0) {
+			    LogPrintf("Relayer not found in PATH.  Relayer not started");
+	            }
+	    }
         }
         else{
             boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
