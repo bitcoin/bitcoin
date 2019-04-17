@@ -2415,8 +2415,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CValidationState state;
 
         CNodeState* nodestate = State(pfrom->GetId());
-        nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
-        nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash);
+        if (nodestate->m_tx_download.m_tx_in_flight.erase(inv.hash)) {
+            // only erase from m_tx_announced if we've already erased
+            // from m_tx_process_time
+            nodestate->m_tx_download.m_tx_announced.erase(inv.hash);
+        }
         EraseTxRequest(inv.hash);
 
         std::list<CTransactionRef> lRemovedTxn;
