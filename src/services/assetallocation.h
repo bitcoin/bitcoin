@@ -135,9 +135,6 @@ static const int ZDAG_MINIMUM_LATENCY_SECONDS = 10;
 static const int ONE_YEAR_IN_BLOCKS = 525600;
 static const int ONE_HOUR_IN_BLOCKS = 60;
 static const int ONE_MONTH_IN_BLOCKS = 43800;
-static sorted_vector<std::string> assetAllocationConflicts;
-static CCriticalSection cs_assetallocation;
-static CCriticalSection cs_assetallocationarrival;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,

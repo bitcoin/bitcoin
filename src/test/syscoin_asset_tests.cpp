@@ -761,10 +761,10 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress1 + "\\\",\\\"amount\\\":0.05}]\"");
     MilliSleep(1500);
     // check just sender, burn marks as major issue on zdag
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + assetguid + " " + useraddress1 + " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + assetguid + " " + useraddress1 + " ''"));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MAJOR_CONFLICT);
     // shouldn't affect downstream
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + assetguid + " " + useraddress2 + " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationsenderstatus " + assetguid + " " + useraddress2 + " ''"));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_STATUS_OK);
     
     GenerateBlocks(5, "node1");

@@ -32,7 +32,9 @@
 #include <ethereum/CommonData.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
-
+extern std::unordered_set<std::string> assetAllocationConflicts;
+extern CCriticalSection cs_assetallocation;
+extern CCriticalSection cs_assetallocationarrival;
 using namespace std::chrono;
 using namespace std;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<uint256> & vecTXIDs)
@@ -403,7 +405,7 @@ void ResyncAssetAllocationStates(){
                 if (!txRef){
                     vecToRemoveArrivalTimes.push_back(txHash);
                 }
-                if(!arrivalTime.first.IsNull() && ((chainActive.Tip()->GetMedianTimePast()*1000) - arrivalTime.second) > 1800000){
+                else if(!arrivalTime.first.IsNull() && ((chainActive.Tip()->GetMedianTimePast()*1000) - arrivalTime.second) > 1800000){
                     vecToRemoveArrivalTimes.push_back(txHash);
                 }
             }
@@ -423,9 +425,9 @@ void ResyncAssetAllocationStates(){
         for(auto& senderTuple: vecToRemoveMempoolBalances){
             mempoolMapAssetBalances.erase(senderTuple);
             // also remove from assetAllocationConflicts
-            sorted_vector<string>::const_iterator it = assetAllocationConflicts.find(senderTuple);
+            unordered_set<string>::const_iterator it = assetAllocationConflicts.find(senderTuple);
             if (it != assetAllocationConflicts.end()) {
-                assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
+                assetAllocationConflicts.erase(it);
             }
         }       
     }   
@@ -434,6 +436,8 @@ void ResyncAssetAllocationStates(){
 
 }
 bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const bool &bMiner, const bool& bCheckExpiryOnly) {
+
+
     bool removeAllConflicts = true;
     if(!bMiner){
         {
@@ -456,9 +460,9 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
             if(removeAllConflicts){
                 if(arrivalTimes != arrivalTimesMap.end())
                     arrivalTimesMap.erase(arrivalTimes);
-                sorted_vector<string>::const_iterator it = assetAllocationConflicts.find(senderStr);
+                unordered_set<string>::const_iterator it = assetAllocationConflicts.find(senderStr);
                 if (it != assetAllocationConflicts.end()) {
-                    assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
+                    assetAllocationConflicts.erase(it);
                 }   
             }
             else if(!bCheckExpiryOnly){
@@ -471,6 +475,12 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
         {
             LOCK(cs_assetallocation);
             mempoolMapAssetBalances.erase(senderStr);
+            if(!bCheckExpiryOnly){
+                unordered_set<string>::const_iterator it = assetAllocationConflicts.find(senderStr);
+                if (it != assetAllocationConflicts.end()) {
+                    assetAllocationConflicts.erase(it);
+                }  
+            }
         }
     }
     
@@ -903,23 +913,22 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         }
                     
     }
-    else{
-        if(!bSanityCheck){
+    else if(!bSanityCheck){
+        {
             LOCK(cs_assetallocationarrival);
             ArrivalTimesMap &arrivalTimes = arrivalTimesMap[senderTupleStr];
             arrivalTimes[txHash] = GetTimeMillis();
         }
-        if(!bSanityCheck)
+
+        // only send a realtime notification on zdag, send another when pow happens (above)
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+            passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, false, nHeight);
         {
-            // only send a realtime notification on zdag, send another when pow happens (above)
-            if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
-                passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, false, nHeight);
-            {
-                LOCK(cs_assetallocation);
-                mapBalanceSender->second = std::move(mapBalanceSenderCopy);
-            }
+            LOCK(cs_assetallocation);
+            mapBalanceSender->second = std::move(mapBalanceSenderCopy);
         }
-    } 
+    }
+     
     return true;
 }
 
