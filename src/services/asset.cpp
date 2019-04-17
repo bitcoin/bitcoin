@@ -2022,8 +2022,8 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
     int32_t cutoffHeight;
     {
         LOCK(cs_ethsyncheight);
-        // cutoff is ~1 week of blocks is about 40k blocks
-        cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
+        // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
+        cutoffHeight = fGethSyncHeight - (MAX_ETHEREUM_TX_ROOTS*3);
         if(cutoffHeight < 0){
             LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fGethSyncHeight);
             return true;
