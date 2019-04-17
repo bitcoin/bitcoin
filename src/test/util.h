@@ -13,6 +13,10 @@ class CScript;
 class CTxIn;
 class CWallet;
 
+// Constants //
+
+extern const std::string ADDRESS_BCRT1_UNSPENDABLE;
+
 // Lower-level utils //
 
 /** Returns the generated coin */

@@ -22,6 +22,8 @@
 
 #include <boost/thread.hpp>
 
+const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
+
 #ifdef ENABLE_WALLET
 std::string getnewaddress(CWallet& w)
 {
@@ -74,7 +76,6 @@ CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 
     return CTxIn{block->vtx[0]->GetHash(), 0};
 }
-
 
 std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey)
 {
