@@ -8,12 +8,13 @@
 #include <wallet/db.h>
 #include <wallet/rpcwallet.h>
 
-WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
-    TestingSetup(chainName), m_wallet(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock())
+WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
+    : TestingSetup(chainName),
+      m_wallet(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock())
 {
     bool fFirstRun;
     m_wallet.LoadWallet(fFirstRun);
-    m_wallet.m_chain_notifications_handler = m_chain->handleNotifications(m_wallet);
+    m_wallet.handleNotifications();
 
     m_chain_client->registerRpcs();
 }

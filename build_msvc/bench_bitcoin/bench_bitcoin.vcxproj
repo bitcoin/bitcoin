@@ -39,6 +39,7 @@
     <ClCompile Include="..\..\src\bench\rpc_mempool.cpp" />
     <ClCompile Include="..\..\src\bench\merkle_root.cpp" />
     <ClCompile Include="..\..\src\bench\rollingbloom.cpp" />
+    <ClCompile Include="..\..\src\bench\wallet_balance.cpp" />
     <ClCompile Include="..\..\src\bench\verify_script.cpp" />
   </ItemGroup>
   <ItemGroup>
