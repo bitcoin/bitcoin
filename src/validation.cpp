@@ -1166,11 +1166,12 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
 {
     // SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
     if (GetTime() - nLastMultithreadMempoolFailure < 60) {
-        LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: switching to single thread verification...");
+        LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: using single-threaded verification...");
         bMultiThreaded = false;
     }
-    else if(!fConcurrentProcessing || test_accept)
+    else if(!fConcurrentProcessing || test_accept || tx->nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
         bMultiThreaded = false;
+
     std::vector<COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept,bMultiThreaded);
     if (!res) {
