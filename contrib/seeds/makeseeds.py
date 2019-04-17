@@ -109,18 +109,30 @@ def filtermultiport(ips):
 # Based on Greg Maxwell's seed_filter.py
 def filterbyasn(ips, max_per_asn, max_total):
     # Sift out ips by type
-    ips_ipv4 = [ip for ip in ips if ip['net'] == 'ipv4']
-    ips_ipv6 = [ip for ip in ips if ip['net'] == 'ipv6']
+    ips_ipv46 = [ip for ip in ips if ip['net'] in ['ipv4', 'ipv6']]
     ips_onion = [ip for ip in ips if ip['net'] == 'onion']
 
-    # Filter IPv4 by ASN
+    # Filter IPv46 by ASN
     result = []
     asn_count = {}
-    for ip in ips_ipv4:
+    for ip in ips_ipv46:
         if len(result) == max_total:
             break
         try:
-            asn = int([x.to_text() for x in dns.resolver.query('.'.join(reversed(ip['ip'].split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
+            if ip['net'] == 'ipv4':
+                ipaddr = ip['ip']
+                prefix = '.origin'
+            else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
+                res = str()                         # 2001:4860:b002:23::68
+                for nb in ip['ip'].split(':')[:4]:  # pick the first 4 nibbles
+                    for c in nb.zfill(4):           # right padded with '0'
+                        res += c + '.'              # 2001 4860 b002 0023
+                ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
+                prefix = '.origin6'
+
+            asn = int([x.to_text() for x in dns.resolver.query('.'.join(
+                       reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
+                       'TXT').response.answer][0].split('\"')[1].split(' ')[0])
             if asn not in asn_count:
                 asn_count[asn] = 0
             if asn_count[asn] == max_per_asn:
@@ -130,10 +142,7 @@ def filterbyasn(ips, max_per_asn, max_total):
         except:
             sys.stderr.write('ERR: Could not resolve ASN for "' + ip['ip'] + '"\n')
 
-    # TODO: filter IPv6 by ASN
-
-    # Add back non-IPv4
-    result.extend(ips_ipv6)
+    # Add back Onions
     result.extend(ips_onion)
     return result
 
