@@ -47,17 +47,36 @@ def git_config_get(option, default=None):
     except subprocess.CalledProcessError:
         return default
 
-def retrieve_json(req, ghtoken):
+def get_response(req_url, ghtoken):
+    req = Request(req_url)
+    if ghtoken is not None:
+        req.add_header('Authorization', 'token ' + ghtoken)
+    return urlopen(req)
+
+def retrieve_json(req_url, ghtoken, use_pagination=False):
     '''
     Retrieve json from github.
     Return None if an error happens.
     '''
     try:
-        if ghtoken is not None:
-            req.add_header('Authorization', 'token ' + ghtoken)
-        result = urlopen(req)
         reader = codecs.getreader('utf-8')
-        obj = json.load(reader(result))
+        if not use_pagination:
+            return json.load(reader(get_response(req_url, ghtoken)))
+
+        obj = []
+        page_num = 1
+        while True:
+            req_url_page = '{}?page={}'.format(req_url, page_num)
+            result = get_response(req_url_page, ghtoken)
+            obj.extend(json.load(reader(result)))
+
+            link = result.headers.get('link', None)
+            if link is not None:
+                link_next = [l for l in link.split(',') if 'rel="next"' in l]
+                if len(link_next) > 0:
+                    page_num = int(link_next[0][link_next[0].find("page=")+5:link_next[0].find(">")])
+                    continue
+            break
         return obj
     except HTTPError as e:
         error_message = e.read()
@@ -69,16 +88,16 @@ def retrieve_json(req, ghtoken):
         return None
 
 def retrieve_pr_info(repo,pull,ghtoken):
-    req = Request("https://api.github.com/repos/"+repo+"/pulls/"+pull)
-    return retrieve_json(req,ghtoken)
+    req_url = "https://api.github.com/repos/"+repo+"/pulls/"+pull
+    return retrieve_json(req_url,ghtoken)
 
 def retrieve_pr_comments(repo,pull,ghtoken):
-    req = Request("https://api.github.com/repos/"+repo+"/issues/"+pull+"/comments")
-    return retrieve_json(req,ghtoken)
+    req_url = "https://api.github.com/repos/"+repo+"/issues/"+pull+"/comments"
+    return retrieve_json(req_url,ghtoken,use_pagination=True)
 
 def retrieve_pr_reviews(repo,pull,ghtoken):
-    req = Request("https://api.github.com/repos/"+repo+"/pulls/"+pull+"/reviews")
-    return retrieve_json(req,ghtoken)
+    req_url = "https://api.github.com/repos/"+repo+"/pulls/"+pull+"/reviews"
+    return retrieve_json(req_url,ghtoken,use_pagination=True)
 
 def ask_prompt(text):
     print(text,end=" ",file=stderr)
