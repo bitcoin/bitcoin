@@ -10,31 +10,16 @@
 #include <validationinterface.h>
 #include <wallet/wallet.h>
 
-struct WalletTestingSetup {
-    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
-    CWallet m_wallet;
-
-    WalletTestingSetup()
-        : m_wallet{m_chain.get(), WalletLocation(), WalletDatabase::CreateMock()}
-    {
-    }
-
-    void handleNotifications()
-    {
-        m_wallet.m_chain_notifications_handler = m_chain->handleNotifications(m_wallet);
-    }
-};
-
 static void WalletBalance(benchmark::State& state, const bool set_dirty, const bool add_watchonly, const bool add_mine)
 {
     const auto& ADDRESS_WATCHONLY = ADDRESS_BCRT1_UNSPENDABLE;
 
-    WalletTestingSetup wallet_t{};
-    auto& wallet = wallet_t.m_wallet;
+    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain();
+    CWallet wallet{chain.get(), WalletLocation(), WalletDatabase::CreateMock()};
     {
         bool first_run;
         if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
-        wallet_t.handleNotifications();
+        wallet.handleNotifications();
     }
 
 
