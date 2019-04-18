@@ -1677,6 +1677,8 @@ UniValue listassets(const JSONRPCRequest& request) {
 	return oRes;
 }
 bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes) {
+    if(!pblockindexdb)
+        return false;
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;
     if (!oOptions.isNull()) {
@@ -1730,7 +1732,7 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         UniValue oObj(UniValue::VOBJ);
         if(!ReadPayload(txid, oObj))
             continue;
-        if(ReadBlockHash(txid, block_hash)){
+        if(pblockindexdb && pblockindexdb->ReadBlockHash(txid, block_hash)){
             oObj.pushKV("block_hash", block_hash.GetHex());        
         }
         else
@@ -1746,7 +1748,7 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getblockhash txid\n"
-            "\nReturns hash of block in best-block-chain at txid provided. Requires -blockindex configuration flag.\n"
+            "\nReturns hash of block in best-block-chain at txid provided.\n"
             "\nArguments:\n"
             "1. txid         (string, required) A transaction that is in the block\n"
             "\nResult:\n"
@@ -1755,14 +1757,12 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
             + HelpExampleCli("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
             + HelpExampleRpc("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
         );
-    if(!fBlockIndex)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -blockindex enabled"));
     LOCK(cs_main);
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     uint256 blockhash;
-    if(!passetindexdb->ReadBlockHash(hash, blockhash))
+    if(!pblockindexdb || !pblockindexdb->ReadBlockHash(hash, blockhash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
 
     const CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
@@ -1777,7 +1777,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
             "syscoingetspvproof txid (blockhash) \n"
-            "\nReturns SPV proof for use with inter-chain transfers. Requires -blockindex configuration flag if you omit the blockhash parameter.\n"
+            "\nReturns SPV proof for use with inter-chain transfers.\n"
             "\nArguments:\n"
             "1. txid         (string, required) A transaction that is in the block\n"
             "1. blockhash    (string, not-required) Block containing txid\n"
@@ -1793,10 +1793,9 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     uint256 blockhash;
     if(request.params.size() > 1)
         blockhash = ParseHashV(request.params[1], "parameter 2");
-    if(fBlockIndex){
-        if(!passetindexdb->ReadBlockHash(txhash, blockhash))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
-    }
+    if(!pblockindexdb || !pblockindexdb->ReadBlockHash(txhash, blockhash))
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
+    
     CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
@@ -2014,7 +2013,6 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     return ret;
 }
 bool CEthereumTxRootsDB::PruneTxRoots() {
-    EthereumTxRootMap mapEraseTxRoots;
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
@@ -2069,8 +2067,6 @@ bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
     for (const uint256 &txid : vecTXIDs) {
         // erase payload
         batch.Erase(txid);
-        // erase blockhash
-        batch.Erase(std::make_pair(bh, txid));
     }
     LogPrint(BCLog::SYS, "Flushing %d asset index removals\n", vecTXIDs.size());
     return WriteBatch(batch);

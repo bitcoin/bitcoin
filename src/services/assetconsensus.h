@@ -8,7 +8,17 @@
 
 #include "primitives/transaction.h"
 #include "services/asset.h"
-
+class CBlockIndexDB : public CDBWrapper {
+public:
+    CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blockindex", nCacheSize, fMemory, fWipe) {}
+    
+    bool ReadBlockHash(const uint256& txid, uint256& block_hash){
+        return Read(txid, block_hash);
+    } 
+    bool FlushWrite(const std::vector<std::pair<uint256, uint256> > &blockIndex);
+    bool FlushErase(const std::vector<uint256> &vecTXIDs);
+};
+extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<uint256> & vecTXIDs);
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);

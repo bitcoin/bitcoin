@@ -32,6 +32,7 @@
 #include <ethereum/CommonData.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
+std::unique_ptr<CBlockIndexDB> pblockindexdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
@@ -105,16 +106,16 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     std::vector<unsigned char> vchTxRoot;
    
     int32_t cutoffHeight;
-    const bool &shouldProcessEthTxRoot = !ibd && !fLiteMode && fLoaded && fGethSynced;
+    const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
     // validate that the block passed is commited to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoot(mintSyscoin.nBlockNumber, vchTxRoot)){
-        if(shouldProcessEthTxRoot){
+        if(ethTxRootShouldExist){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
             return false;
         }
     }  
-    if(shouldProcessEthTxRoot){
+    if(ethTxRootShouldExist){
         LOCK(cs_ethsyncheight);
         // cutoff is ~1 week of blocks is about 40K blocks
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
@@ -322,15 +323,17 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         return true;
     }
     else if (!block.vtx.empty()) {
+        const uint256& blockHash = block.GetHash();
+        std::vector<std::pair<uint256, uint256> > blockIndex;
         for (unsigned int i = 0; i < block.vtx.size(); i++)
         {
 
             good = true;
-            const CTransaction &tx = *(block.vtx[i]);     
-            if(!bMiner && fBlockIndex && !fJustCheck && !bSanity){
-                if(!passetindexdb->WriteBlockHash(tx.GetHash(), block.GetHash())){
-                    return state.DoS(0, false, REJECT_INVALID, "Could not write block hash to asset index db");
-                }
+            const CTransaction &tx = *(block.vtx[i]);    
+            
+            if(!bMiner && !fJustCheck && !bSanity){
+                const uint256& txHash = tx.GetHash(); 
+                blockIndex.push_back(std::make_pair(txHash, blockHash));
             }  
             if(tx.IsCoinBase()) 
                 continue;                 
@@ -369,11 +372,13 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
                 
             } 
         }
-
+                        
         if(!bSanity && !fJustCheck){
-            if(!bMiner && (!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets))){
-                good = false;
-                errorMessage = "Error flushing to asset dbs";
+            if(!bMiner){
+                if((pblockindexdb && !pblockindexdb->FlushWrite(blockIndex)) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets)){
+                    good = false;
+                    errorMessage = "Error flushing to asset dbs";
+                }
             }
             mapAssetAllocations.clear();
             mapAssets.clear();
@@ -1354,4 +1359,25 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     }
     
     return true;
+}
+bool CBlockIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
+    if(vecTXIDs.empty())
+        return true;
+
+    CDBBatch batch(*this);
+    for (const uint256 &txid : vecTXIDs) {
+        batch.Erase(txid);
+    }
+    LogPrint(BCLog::SYS, "Flushing %d block index removals\n", vecTXIDs.size());
+    return WriteBatch(batch);
+}
+bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint256> > &blockIndex){
+    if(blockIndex.empty())
+        return true;
+    CDBBatch batch(*this);
+    for (const auto &pair : blockIndex) {
+        batch.Write(pair.first, pair.second);
+    }
+    LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());
+    return WriteBatch(batch);
 }

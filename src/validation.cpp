@@ -1946,7 +1946,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             fClean = false;
     } 
     // SYSCOIN 
-    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs)){
+    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || (pblockindexdb && !pblockindexdb->FlushErase(vecTXIDs))){
        error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
        return DISCONNECT_FAILED;
     }  

@@ -232,7 +232,6 @@ public:
 };
 static std::string assetindexpage = std::string("assetindexpage");
 static std::string assetallocationindexpage = std::string("assetallocationindexpage");
-static std::string bh = std::string("bh");
 class CAssetIndexDB : public CDBWrapper {
 public:
     CAssetIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assetindex", nCacheSize, fMemory, fWipe) {
@@ -344,13 +343,7 @@ public:
         std::string strPayload;
         bool res = Read(txid, strPayload);
         return res && payload.read(strPayload);
-    }    
-    bool ReadBlockHash(const uint256& txid, uint256& block_hash){
-        return Read(std::make_pair(bh, txid), block_hash);
-    }
-    bool WriteBlockHash(const uint256& txid, const uint256& block_hash){
-        return Write(std::make_pair(bh, txid), block_hash);
-    }       
+    }        
     bool ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
