@@ -13,7 +13,7 @@
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "util.h"
-
+#include <services/assetconsensus.h>
 #include <univalue.h>
 
 CGovernanceObject::CGovernanceObject():
@@ -23,8 +23,7 @@ CGovernanceObject::CGovernanceObject():
     nRevision(0),
     nTime(0),
     nDeletionTime(0),
-    nCollateralTxHash(),
-    nCollateralBlockHash(),
+    nCollateralHash(),
     vchData(),
     masternodeOutpoint(),
     vchSig(),
@@ -45,15 +44,14 @@ CGovernanceObject::CGovernanceObject():
     LoadData();
 }
 
-CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const uint256& nCollateralTxHashIn, const uint256& nCollateralBlockHashIn, const std::string& strDataHexIn):
+CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nTimeIn, const uint256& nCollateralHashIn, const std::string& strDataHexIn):
     cs(),
     nObjectType(GOVERNANCE_OBJECT_UNKNOWN),
     nHashParent(nHashParentIn),
     nRevision(nRevisionIn),
     nTime(nTimeIn),
     nDeletionTime(0),
-    nCollateralTxHash(nCollateralTxHashIn),
-    nCollateralBlockHash(nCollateralBlockHashIn),
+    nCollateralHash(nCollateralHashIn),
     vchData(ParseHex(strDataHexIn)),
     masternodeOutpoint(),
     vchSig(),
@@ -81,8 +79,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other):
     nRevision(other.nRevision),
     nTime(other.nTime),
     nDeletionTime(other.nDeletionTime),
-    nCollateralTxHash(other.nCollateralTxHash),
-    nCollateralBlockHash(other.nCollateralBlockHash),
+    nCollateralHash(other.nCollateralHash),
     vchData(other.vchData),
     masternodeOutpoint(other.masternodeOutpoint),
     vchSig(other.vchSig),
@@ -233,8 +230,7 @@ std::string CGovernanceObject::GetSignatureMessage() const
         boost::lexical_cast<std::string>(nTime) + "|" +
         GetDataAsHexString() + "|" +
         masternodeOutpoint.ToStringShort() + "|" +
-        nCollateralTxHash.ToString() + "|" +
-        nCollateralBlockHash.ToString();
+        nCollateralHash.ToString();
 
     return strMessage;
 }
@@ -520,35 +516,40 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     int nConfirmationsIn = 0;
     // RETRIEVE TRANSACTION IN QUESTION
     uint256 hash_block;
-    CBlockIndex* blockindex = nullptr;
     CTransactionRef txCollateral;
-
-    blockindex = LookupBlockIndex(GetCollateralBlockHash());
+    uint256 blockhash;
+    if(!pblockindexdb || !pblockindexdb->ReadBlockHash(nCollateralHash, blockhash)){
+        strError = strprintf("Can't find collateral blockhash %s in asset index", blockhash.ToString());
+        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        return false;   
+    }
+      
+    CBlockIndex* blockindex = LookupBlockIndex(blockhash);
     if(!blockindex){
-        strError = strprintf("Can't find collateral blockhash %s", GetCollateralBlockHash().ToString());
+        strError = strprintf("Can't find collateral blockhash %s", blockhash.ToString());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;   
     }
      
-    if (GetTransaction(GetCollateralTxHash(), txCollateral, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+    if (GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
         nConfirmationsIn = chainActive.Height() - blockindex->nHeight + 1;
     else{
-        strError = strprintf("Can't find collateral tx %s", GetCollateralTxHash().ToString());
+        strError = strprintf("Can't find collateral tx %s", GetCollateralHash().ToString());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;       
     }
-    
+    if(hash_block == uint256()) {
+        strError = strprintf("Collateral tx %s is not mined yet", txCollateral->ToString());
+        LogPrintf("CGovernanceObject::IsCollateralValid -- %s\n", strError);
+        return false;
+    }
 
     if(txCollateral->vout.size() < 1) {
         strError = strprintf("tx vout size less than 1 | %d", txCollateral->vout.size());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;
     }
-    if(txCollateral->GetTotalSize() > 500u){
-        strError = strprintf("tx collateral too big (limit is 500 bytes), try reducing number of inputs used, size in bytes %d", txCollateral->GetTotalSize());
-        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
-        return false;
-    }
+
     const CAmount &nMinFee = GetMinCollateralFee();
     const uint256 &nExpectedHash = GetHash();
     // LOOK FOR SPECIALIZED GOVERNANCE SCRIPT (PROOF OF BURN)
