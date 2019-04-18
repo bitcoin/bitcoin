@@ -66,6 +66,7 @@ src/qt/bitcoin-qt.includes
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -120,3 +121,6 @@ contrib/devtools/split-debug.sh
 
 # Output from running db4 installation
 db4/
+
+# clang-check
+*.plist
