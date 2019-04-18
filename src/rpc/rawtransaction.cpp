@@ -36,7 +36,7 @@
 
 #include <univalue.h>
 // SYSCOIN
-#include <services/asset.h>
+#include <services/assetconsensus.h>
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -168,10 +168,10 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
         in_active_chain = chainActive.Contains(blockindex);
-    }else if(fBlockIndex){      
+    }else {      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!passetindexdb->ReadBlockHash(hash, blockhash))
+        if(!pblockindexdb || !pblockindexdb->ReadBlockHash(hash, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
         blockindex = LookupBlockIndex(blockhash);
         if (!blockindex) {
@@ -259,10 +259,10 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
         // SYSCOIN
-    } else if(fBlockIndex && setTxids.size() == 1){      
+    } else if(setTxids.size() == 1){      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!passetindexdb->ReadBlockHash(oneTxid, blockhash))
+        if(!pblockindexdb || !pblockindexdb->ReadBlockHash(oneTxid, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
         pblockindex = LookupBlockIndex(blockhash);     
     }
