@@ -151,6 +151,18 @@ Most autotools projects can be properly staged using:
 
     $(MAKE) DESTDIR=$($(package)_staging_dir) install
 
+## Build outputs:
+
+In general, the output of a depends package should not contain any libtool
+archives. Instead, the package should output `.pc` (`pkg-config`) files where
+possible.
+
+From the [Gentoo Wiki entry](https://wiki.gentoo.org/wiki/Project:Quality_Assurance/Handling_Libtool_Archives):
+
+>  Libtool pulls in all direct and indirect dependencies into the .la files it
+>  creates. This leads to massive overlinking, which is toxic to the Gentoo
+>  ecosystem, as it leads to a massive number of unnecessary rebuilds.
+
 ## Secondary dependencies:
 
 Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
