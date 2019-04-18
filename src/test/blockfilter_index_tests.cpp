@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 #include <index/blockfilterindex.h>
 #include <miner.h>
 #include <pow.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <script/standard.h>
 #include <validation.h>
 
