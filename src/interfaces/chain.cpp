@@ -136,12 +136,6 @@ class LockImpl : public Chain::Lock
         }
         return nullopt;
     }
-    bool isPotentialTip(const uint256& hash) override
-    {
-        if (::chainActive.Tip()->GetBlockHash() == hash) return true;
-        CBlockIndex* block = LookupBlockIndex(hash);
-        return block && block->GetAncestor(::chainActive.Height()) == ::chainActive.Tip();
-    }
     CBlockLocator getTipLocator() override { return ::chainActive.GetLocator(); }
     Optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
@@ -358,7 +352,16 @@ public:
     {
         return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
     }
-    void waitForNotifications() override { SyncWithValidationInterfaceQueue(); }
+    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
+    {
+        if (!old_tip.IsNull()) {
+            LOCK(::cs_main);
+            if (old_tip == ::chainActive.Tip()->GetBlockHash()) return;
+            CBlockIndex* block = LookupBlockIndex(old_tip);
+            if (block && block->GetAncestor(::chainActive.Height()) == ::chainActive.Tip()) return;
+        }
+        SyncWithValidationInterfaceQueue();
+    }
     std::unique_ptr<Handler> handleRpc(const CRPCCommand& command) override
     {
         return MakeUnique<RpcHandlerImpl>(command);
