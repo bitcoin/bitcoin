@@ -112,13 +112,16 @@ quint64 ClientModel::getTotalBytesSent() const
     return CNode::GetTotalBytesSent();
 }
 
-QDateTime ClientModel::getLastBlockDate() const
+void ClientModel::getLastBlockData(QDateTime& date, int& nHeight) const
 {
     LOCK(cs_main);
-    if (chainActive.Tip())
-        return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
-    else
-        return QDateTime::fromTime_t(Params().GenesisBlock().GetBlockTime()); // Genesis block's time of current network
+    if (chainActive.Tip()) {
+        date = QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
+        nHeight = chainActive.Height();
+    } else {
+        date = QDateTime::fromTime_t(Params().GenesisBlock().GetBlockTime()); // Genesis block's time of current network
+        nHeight = 0;
+    }
 }
 
 double ClientModel::getVerificationProgress() const
