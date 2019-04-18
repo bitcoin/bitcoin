@@ -486,12 +486,36 @@
         <translation>Ontvangstadressen</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Portemonnee Openen</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Open een portemonnee</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Portemonnee Sluiten...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Portemonnee Sluiten</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Toon het %1 hulpbericht om een lijst te krijgen met mogelijke Bitcoin commandoregelopties</translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>standaard portemonnee</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Open Portemonnee&lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Portemonnee Openen Mislukt</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -959,7 +983,11 @@
         <source>Hide</source>
         <translation>Verbergen</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Onbekend. Kopteksten synchroniseren (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -3086,7 +3114,19 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
 </context>
 <context>
     <name>WalletController</name>
-    </context>
+    <message>
+        <source>Close wallet</source>
+        <translation>Portemonnee Sluiten</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Weet u zeker dat u portemonnee &lt;i&gt;%1&lt;/i&gt; wilt sluiten?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>De portemonee te lang gesloten houden kan leiden tot het moeten hersynchroniseren van de hele keten als snoeien aktief is. </translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3217,6 +3257,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>The %s developers</source>
         <translation>De %s ontwikkelaars</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Kan geen rest-adres sleutel genereren. Er zijn geen sleutels in de interne sleutelverzameling en ik kan geen sleutels genereren. </translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3373,6 +3417,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Opgegeven blocks map "%s" bestaat niet.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Kan de PID file niet creëren. '%s': %s </translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>

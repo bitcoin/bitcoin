@@ -466,12 +466,40 @@
         <translation>به روز</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>ادرس ارسال</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>ادرس درسافت</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>باز کردن حساب</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>باز کردن یک حساب</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>کیف پول پیش‌فرض</translation>
     </message>
     <message>
         <source>&amp;Window</source>
         <translation>پنجره</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>بزرگنمایی</translation>
+    </message>
+    <message>
+        <source>Restore</source>
+        <translation>بازگرداندن</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>پنجره اصلی</translation>
     </message>
     <message>
         <source>Connecting to peers...</source>
@@ -810,6 +838,11 @@
         <translation>اندازه کش پایگاه داده.</translation>
     </message>
     <message>
+        <source>&amp;Hide tray icon</source>
+        <translation> مخفی کردن ایکون
+</translation>
+    </message>
+    <message>
         <source>Open Configuration File</source>
         <translation>بازکردن فایل پیکربندی</translation>
     </message>
@@ -1010,6 +1043,10 @@
     <message>
         <source>Payment request error</source>
         <translation>درخواست پرداخت با خطا مواجه شد</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>درحال پردازش درخواست پرداخت</translation>
     </message>
     <message>
         <source>Payment request rejected</source>
@@ -2271,6 +2308,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>در حال بارگذاری لیست بن...</translation>
     </message>
     <message>
+        <source>Not enough file descriptors available.</source>
+        <translation>توصیفگرهای فایل به اندازه کافی در دسترس نیست</translation>
+    </message>
+    <message>
         <source>Unable to generate keys</source>
         <translation>نمیتوان کلید ها را تولید کرد</translation>
     </message>
@@ -2353,6 +2394,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Transaction amounts must not be negative</source>
         <translation>مقدار تراکنش نمی‌تواند منفی باشد.</translation>
+    </message>
+    <message>
+        <source>Transaction has too long of a mempool chain</source>
+        <translation>تراکنش بیش از حد طولانی از یک زنجیر مهر و موم شده است
+</translation>
     </message>
     <message>
         <source>Transaction must have at least one recipient</source>

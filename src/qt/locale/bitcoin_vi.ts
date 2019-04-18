@@ -132,6 +132,10 @@
         <translation>Lặp lại cụm mật khẩu mới</translation>
     </message>
     <message>
+        <source>Show password</source>
+        <translation>Hiện mật khẩu</translation>
+    </message>
+    <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Gõ cụm mật khẩu mới cho ví.&lt;br/&gt;Vui lòng dùng cụm mật khẩu của&lt;b&gt;mười hoặc hơn ký tự ngẫu nhiên&lt;/b&gt;, hoặc &lt;b&gt;tám hoặc nhiều từ hơn&lt;/b&gt;.</translation>
     </message>
@@ -178,6 +182,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Ví đã được mã hóa</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Ví bạn đã được mã hóa bây giờ. Hãy nhớ rằng việc mã hóa ví bạn không thể hoàn toàn bảo vệ bitcoin của bạn bị đánh cắp bới phần mềm độc hại dính vào máy tính bạn</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -326,6 +334,10 @@
         <translation>Khôi phục các khối trên ổ đĩa...</translation>
     </message>
     <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy là &lt;b&gt; cho phép &lt;/b&gt;: %1</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Gửi coin đến một địa chỉ Bitcoin</translation>
     </message>
@@ -462,8 +474,40 @@
         <translation>Đã cập nhật</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Các địa chỉ đang gửi</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;Các địa chỉ đang nhận</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Mớ ví</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Mở một ví</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Đóng ví...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Đông ví</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách Bitcoin command-line khả dụng</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>ví mặc định</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Đang mở ví &lt;b&gt; %1&lt;/b&gt;...</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -2856,6 +2900,10 @@
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Đông ví</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -2906,7 +2954,11 @@
         <source>Could not commit transaction</source>
         <translation>Could not commit transaction</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>ví mặc định</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

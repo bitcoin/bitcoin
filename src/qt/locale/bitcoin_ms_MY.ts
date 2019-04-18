@@ -420,9 +420,41 @@ Alihkan fail data ke dalam tab semasa</translation>
 </translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Amaran</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Notis</translation>
+    </message>
+    <message>
+        <source>Up to date</source>
+        <translation>Terkini</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Buka Wallet</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Tutup Wallet...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Tutup Wallet</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>dompet lalai
 </translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Buka sedang Wallet &lt;b&gt;%1&lt;/b&gt;...</translation>
     </message>
     </context>
 <context>
@@ -455,6 +487,10 @@ Alihkan fail data ke dalam tab semasa</translation>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -464,6 +500,10 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -589,6 +629,10 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Tutup Wallet</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -611,5 +655,25 @@ Alihkan fail data ke dalam tab semasa</translation>
     </context>
 <context>
     <name>bitcoin-core</name>
-    </context>
+    <message>
+        <source>Information</source>
+        <translation>Notis</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>Amaran</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>Sedang baca wallet...</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation>Baca Selesai</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Ralat</translation>
+    </message>
+</context>
 </TS>

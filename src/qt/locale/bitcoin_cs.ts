@@ -478,6 +478,26 @@
         <translation>Aktuální</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses</source>
+        <translation>Odesílací adresy</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>Přijímací adresy</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Otevřít peněženku</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Otevřít peněženku</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Zavřít peněženku</translation>
+    </message>
+    <message>
         <source>Close wallet</source>
         <translation>Zavřít peněženku</translation>
     </message>
@@ -490,12 +510,24 @@
         <translation>výchozí peněženka</translation>
     </message>
     <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Otevírám peněženku &lt;b&gt;%1&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Otevírání peněženky selhalo</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>O&amp;kno</translation>
     </message>
     <message>
         <source>Minimize</source>
         <translation>Skryj</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Přiblížit</translation>
     </message>
     <message>
         <source>Restore</source>
@@ -568,6 +600,10 @@
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
         <translation>HD generování klíčů je &lt;b&gt;vypnuté&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
+        <translation>Privátní klíč &lt;b&gt;disabled&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
@@ -1194,6 +1230,10 @@
         <translation>&amp;URL třetích stran pro transakce</translation>
     </message>
     <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Nastavení v tomto dialogu jsou přepsány konzolí nebo konfiguračním souborem:</translation>
+    </message>
+    <message>
         <source>&amp;OK</source>
         <translation>&amp;Budiž</translation>
     </message>
@@ -1609,6 +1649,18 @@
     <message>
         <source>Datadir</source>
         <translation>Adresář s daty</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Pro specifikaci neklasické lokace pro data použij možnost '%1'</translation>
+    </message>
+    <message>
+        <source>Blocksdir</source>
+        <translation>Blocksdir</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Pro specifikaci neklasické lokace pro data použij možnost '%1'</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -2181,6 +2233,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Dust:</source>
         <translation>Prach:</translation>
+    </message>
+    <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Když je zde měně transakcí než místa na bloky, mineři stejně tak relay-e mohou nasadit minimální poplatky. Zaplacením pouze minimálního poplatku je v pohodě, ale mějte na paměti že toto může mít za následek nikdy neověřenou transakci pokud zde bude více bitcoinových transakcí než může síť zvládnout.</translation>
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
@@ -3063,6 +3119,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Zavřít peněženku</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Ste si jist že chete zavřít peněženku &lt;i&gt;%1&lt;/i&gt;</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Zavření peněženky na příliš dlouhou dobu může vyústit v potřebu resynchronizace celého blockchainu pokud je zapnuté prořezávání.</translation>
     </message>
@@ -3199,6 +3259,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Vývojáři %s</translation>
     </message>
     <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Nelze vygenerovat klíč pro změnu adresy. Nejsou žádní klíče v key-poolu a tedy nemůžeme žádné klíče vygenerovat.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Nedaří se mi získat zámek na datový adresář %s. %s pravděpodobně už jednou běží.</translation>
     </message>
@@ -3265,6 +3329,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Change index out of range</source>
         <translation>Index drobných je mimo platný rozsah</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>Nastavení pro %s je nastaveno pouze na síťi %s pokud jste v sekci [%s]</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
@@ -3349,6 +3417,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Zadaný adresář bloků "%s" neexistuje.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Nebylo možné vytvořit soubor PID '%s': %s</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>

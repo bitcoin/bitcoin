@@ -63,7 +63,7 @@
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Endereços de recebimento</translation>
+        <translation>Endereço de &amp;recebimento</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -479,11 +479,27 @@
     </message>
     <message>
         <source>&amp;Sending addresses</source>
-        <translation>Endereço remetente</translation>
+        <translation>Endereços de &amp;envio</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
-        <translation>Endereço destinatário</translation>
+        <translation>Endereço de &amp;recebimento</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Abrir carteira</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Abrir uma carteira</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Fechar carteira...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fechar carteira</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -494,8 +510,16 @@
         <translation>carteira padrão</translation>
     </message>
     <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Abrindo carteira &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>Falha ao abrir a carteira</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
-        <translation>&amp;Janela</translation>
+        <translation>&amp;Janelas</translation>
     </message>
     <message>
         <source>Minimize</source>
@@ -959,7 +983,11 @@
         <source>Hide</source>
         <translation>Ocultar</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>Desconhecido. Sincronizando cabeçalhos (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1864,7 +1892,7 @@
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>ATENÇÃO: Fraudadores tem solicitado a usuários que digitem comandos aqui, e assim roubando o conteúdo de suas carteiras. Não utilize este console sem antes conhecer os comandos e seus efeitos.</translation>
+        <translation>ATENÇÃO: Fraudadores solicitam a usuários que digitem comandos aqui, e assim roubão o conteúdo de suas carteiras. Não utilize este console sem antes conhecer os comandos e seus efeitos.</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -3086,7 +3114,19 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
 </context>
 <context>
     <name>WalletController</name>
-    </context>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fechar carteira</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Tem certeza que deseja fechar a carteira &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Manter a carteira fechada por muito tempo pode resultar na necessidade de ressincronizar a block chain se prune está ativado.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3217,6 +3257,10 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     <message>
         <source>The %s developers</source>
         <translation>Desenvolvedores do %s</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>Não é possível criar uma chave de endereço de troco. Nenhuma chave disponível na keypool interna e não é possível gerar novas chaves.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3374,6 +3418,10 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>
 Diretório de blocos especificados "%s" não existe.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>Não foi possível criar arquivo de PID '%s': %s</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>

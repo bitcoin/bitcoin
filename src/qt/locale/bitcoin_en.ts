@@ -1575,12 +1575,12 @@
         <translation>default</translation>
     </message>
     <message>
-        <location line="+63"/>
+        <location line="+67"/>
         <source>none</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location line="+93"/>
+        <location line="+89"/>
         <source>Confirm options reset</source>
         <translation>Confirm options reset</translation>
     </message>

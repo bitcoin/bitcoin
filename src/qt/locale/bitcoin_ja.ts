@@ -486,12 +486,36 @@
         <translation>受取用アドレス一覧(&amp;R)...</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>ウォレットを開く</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>ウォレットを開く</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>ウォレットを閉じる</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>ウォレットを閉じる</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>%1 のヘルプ メッセージを表示して、使用可能な XPChain のコマンドライン オプションの一覧を見る。</translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>デフォルトウォレット</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>ウォレット &lt;b&gt;%1&lt;/b&gt;を開いています...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>ウォレットを開くことに失敗しました</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -797,7 +821,7 @@
     </message>
     <message>
         <source>New key generation failed.</source>
-        <translation>新しいキーの生成に失敗しました。</translation>
+        <translation>新しい鍵の生成に失敗しました。</translation>
     </message>
 </context>
 <context>
@@ -3086,7 +3110,19 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 </context>
 <context>
     <name>WalletController</name>
-    </context>
+    <message>
+        <source>Close wallet</source>
+        <translation>ウォレットを閉じる</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>本当にウォレット&lt;i&gt;%1&lt;/i&gt;を閉じますか？</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>ブロックファイル剪定が有効の場合、長期間ウォレットを起動しないと全チェーンを再度同期させる必要があるかもしれません。</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3217,6 +3253,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>%s の開発者</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>おつりアドレスの鍵を作成することができません。内部のキープールに鍵が存在しないため、鍵を生成することができません。</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3373,6 +3413,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>指定されたブロックディレクトリ "%s" は存在しません｡</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>PIDファイルの作成に失敗しました ('%s': %s)</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3590,7 +3634,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Keypool ran out, please call keypoolrefill first</source>
-        <translation>鍵プールが枯渇しました。まずはじめに keypoolrefill を呼び出してください</translation>
+        <translation>キープールが枯渇しました。まずはじめに keypoolrefill を呼び出してください</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

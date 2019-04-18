@@ -486,12 +486,36 @@
         <translation>받는 주소(&amp;R)</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>지갑 열기</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>지갑 하나 열기</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>지갑 닫기...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>지갑 닫기</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>사용할 수 있는 비트코인 명령줄 옵션 목록을 가져오기 위해 %1 도움말 메시지를 표시합니다</translation>
     </message>
     <message>
         <source>default wallet</source>
         <translation>기본 지갑</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>지갑 &lt;b&gt;%1&lt;/b&gt; 여는중...</translation>
+    </message>
+    <message>
+        <source>Open Wallet Failed</source>
+        <translation>지갑 열기 실패</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -959,7 +983,11 @@
         <source>Hide</source>
         <translation>숨기기</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>알 수 없음. 헤더 동기화 중(%1,%2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -3086,7 +3114,19 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 </context>
 <context>
     <name>WalletController</name>
-    </context>
+    <message>
+        <source>Close wallet</source>
+        <translation>지갑 닫기</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>정말로 지갑 &lt;i&gt;%1&lt;/i&gt;을 닫겠습니까?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>블록축소를 하고 지갑을 너무 오랫동안 닫으면 체인 전체를 다시 동기화해야 할 수도 있습니다.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3219,6 +3259,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%s 개발자</translation>
     </message>
     <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>거스름돈 주소 생성 불가. 내장 지갑 열쇠 보관함에 열쇠가 없으면 새로운 열쇠를 생성할 수 없습니다.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>%s 데이터 디렉토리에 락을 걸 수 없었습니다. %s가 이미 실행 중인 것으로 보입니다.</translation>
     </message>
@@ -3285,6 +3329,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Change index out of range</source>
         <translation>범위 밖의 인덱스 변경</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>%s의 설정은 [%s] 항목에 있을 때 %s 네트워크에만 적용됩니다.</translation>
     </message>
     <message>
         <source>Copyright (C) %i-%i</source>
@@ -3369,6 +3417,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>지정한 블록 디렉토리 "%s" 가 존재하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>PID 파일 생성 실패 '%s': %s</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>

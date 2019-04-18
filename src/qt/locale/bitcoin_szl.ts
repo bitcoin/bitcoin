@@ -427,7 +427,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Ôp&amp;cyje piski kōmynd</translation>
+        <translation>Ôp&amp;cyje piski nakŏzań</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -472,6 +472,10 @@
     <message>
         <source>Up to date</source>
         <translation>Terŏźny</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;Adresy posyłaniŏ</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -799,7 +803,7 @@
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>Ôpcyje piski kōmynd</translation>
+        <translation>Ôpcyje piski nakŏzań</translation>
     </message>
 </context>
 <context>
@@ -1160,6 +1164,10 @@
 <context>
     <name>PaymentServer</name>
     <message>
+        <source>Payment request error</source>
+        <translation>Feler żōndaniŏ płatu</translation>
+    </message>
+    <message>
         <source>URI handling</source>
         <translation>Bedynōng URI</translation>
     </message>
@@ -1174,6 +1182,10 @@
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>Niyzweryfikowane żōndaniŏ płatu do włŏsnych skryptōw płatu sōm niypodpiyrane.</translation>
+    </message>
+    <message>
+        <source>Error communicating with %1: %2</source>
+        <translation>Feler kōmunikacyje z %1: %2</translation>
     </message>
     <message>
         <source>Network request error</source>
@@ -1654,6 +1666,10 @@
         <translation>To je normalny płat.</translation>
     </message>
     <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>Adresa Bitcoin, na kerõ chcesz posłać płat</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1993,6 +2009,10 @@
     <message>
         <source>Verifying blocks...</source>
         <translation>Weryfikacyjŏ blokōw...</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Feler: Za mało wolnego placu na dysku dlŏ %s</translation>
     </message>
     <message>
         <source>Information</source>

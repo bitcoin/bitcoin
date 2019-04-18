@@ -781,7 +781,7 @@
     </message>
     <message>
         <source>The label associated with this address list entry</source>
-        <translation>Popis tejto položký v zozname adries je prázdny</translation>
+        <translation>Popis spojený s týmto záznamom v adresári</translation>
     </message>
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
@@ -836,7 +836,7 @@
     </message>
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
-        <translation>Priečinok už existuje. Pridajte "%1" ak chcete vytvoriť nový priečinok tu.</translation>
+        <translation>Priečinok už existuje. Pridajte "%1", ak tu chcete vytvoriť nový priečinok.</translation>
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
@@ -906,7 +906,7 @@
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>Aspoň %1 GB dát bude uložených v tejto zložke a postupom času bude narastať.</translation>
+        <translation>V tejto zložke bude uložených aspoň %1 GB dát a postupom času sa bude zväčšovať.</translation>
     </message>
     <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
@@ -941,7 +941,7 @@
     <name>ModalOverlay</name>
     <message>
         <source>Form</source>
-        <translation>Forma</translation>
+        <translation>Formulár</translation>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
@@ -1119,11 +1119,11 @@
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>Povoliť možnosti "&amp;coin control"</translation>
+        <translation>Povoliť možnosti &amp;kontroly minci</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Ak vypnete míňanie nepotvrdeného výdavku tak výdavok z transakcie bude možné použiť až keď daná transakcia bude mať aspoň jedno potvrdenie. Toto má vplyv aj na výpočet vášho zostatku.</translation>
+        <translation>Ak vypnete míňanie nepotvrdeného výdavku, tak výdavok z transakcie bude možné použiť, až keď daná transakcia bude mať aspoň jedno potvrdenie. Toto má vplyv aj na výpočet vášho zostatku.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1223,7 +1223,7 @@
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
-        <translation>Či zobrazovať možnosti "Coin control" alebo nie.</translation>
+        <translation>Či zobrazovať možnosti kontroly minci alebo nie.</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1290,7 +1290,7 @@
     <name>OverviewPage</name>
     <message>
         <source>Form</source>
-        <translation>Forma</translation>
+        <translation>Formulár</translation>
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Bitcoin network after a connection is established, but this process has not completed yet.</source>
@@ -1869,7 +1869,7 @@
     </message>
     <message>
         <source>Ban for</source>
-        <translation>Zakázať na</translation>
+        <translation>Zákaz pre</translation>
     </message>
     <message>
         <source>&amp;Unban</source>
@@ -2125,7 +2125,7 @@
     </message>
     <message>
         <source>Coin Control Features</source>
-        <translation>Možnosti "Coin Control"</translation>
+        <translation>Možnosti kontroly minci</translation>
     </message>
     <message>
         <source>Inputs...</source>
@@ -2389,15 +2389,15 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     </message>
     <message>
         <source>Warning: Unknown change address</source>
-        <translation>UPOZORNENIE: Neznáma zmena adresy</translation>
+        <translation>UPOZORNENIE: Neznáma výdavková adresa</translation>
     </message>
     <message>
         <source>Confirm custom change address</source>
-        <translation>Potvrďte zmenu adresy</translation>
+        <translation>Potvrďte vlastnú výdavkovú adresu</translation>
     </message>
     <message>
         <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
-        <translation>Zadaná adresa nie je súčasťou tejto peňaženky. Časť alebo všetky peniaze z peňaženky môžu byť odoslané na túto adresu. Ste si istý?</translation>
+        <translation>Zadaná adresa pre výdavok nie je súčasťou tejto peňaženky. Časť alebo všetky peniaze z peňaženky môžu byť odoslané na túto adresu. Ste si istý?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -3461,7 +3461,7 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     </message>
     <message>
         <source>Transaction fee and change calculation failed</source>
-        <translation>Zlyhal výpočet transakčného poplatku a drobných</translation>
+        <translation>Zlyhal výpočet transakčného poplatku a výdavku</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
