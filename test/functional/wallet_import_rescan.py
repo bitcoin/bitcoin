@@ -38,7 +38,7 @@ Data = enum.Enum("Data", "address pub priv")
 Rescan = enum.Enum("Rescan", "no yes late_timestamp")
 
 
-class Variant(collections.namedtuple("Variant", "call data address_type rescan prune")):
+class Variant(collections.namedtuple("Variant", "call data address_type rescan prune blockfilter")):
     """Helper for importing one key and verifying scanned transactions."""
 
     def do_import(self, timestamp):
@@ -120,7 +120,10 @@ class Variant(collections.namedtuple("Variant", "call data address_type rescan p
 
 
 # List of Variants for each way a key or address could be imported.
-IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Data, AddressType, Rescan, (False, True))]
+IMPORT_VARIANTS = [
+    v for v in [Variant(*variants) for variants in itertools.product(Call, Data, AddressType, Rescan, (False, True), (False, True))]
+    if not (v.prune and v.blockfilter)  # filter out incompatible options
+]
 
 # List of nodes to import keys to. Half the nodes will have pruning disabled,
 # half will have it enabled. Different nodes will be used for imports that are
@@ -128,8 +131,11 @@ IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Da
 # rescans, in order to prevent rescans during later imports picking up
 # transactions associated with earlier imports. This makes it easier to keep
 # track of expected balances and transactions.
-ImportNode = collections.namedtuple("ImportNode", "prune rescan")
-IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True), repeat=2)]
+ImportNode = collections.namedtuple("ImportNode", "prune expect_rescan blockfilter")
+IMPORT_NODES = [
+    n for n in [ImportNode(*fields) for fields in itertools.product((False, True), repeat=3)]
+    if not (n.prune and n.blockfilter)  # filter out incompatible options
+]
 
 # Rescans start at the earliest block up to 2 hours before the key timestamp.
 TIMESTAMP_WINDOW = 2 * 60 * 60
@@ -154,6 +160,8 @@ class ImportRescanTest(BitcoinTestFramework):
         for i, import_node in enumerate(IMPORT_NODES, 2):
             if import_node.prune:
                 self.extra_args[i] += ["-prune=1"]
+            if import_node.blockfilter:
+                self.extra_args[i] += ["-blockfilterindex=1"]
 
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
 
@@ -197,7 +205,7 @@ class ImportRescanTest(BitcoinTestFramework):
         for variant in IMPORT_VARIANTS:
             self.log.info('Run import for variant {}'.format(variant))
             expect_rescan = variant.rescan == Rescan.yes
-            variant.node = self.nodes[2 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
+            variant.node = self.nodes[2 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan, variant.blockfilter))]
             variant.do_import(variant.timestamp)
             if expect_rescan:
                 variant.expected_balance = variant.initial_amount
