@@ -21,3 +21,7 @@ define $(package)_stage_cmds
   $(MAKE) -C dbus DESTDIR=$($(package)_staging_dir) install-libLTLIBRARIES install-dbusincludeHEADERS install-nodist_dbusarchincludeHEADERS && \
   $(MAKE) DESTDIR=$($(package)_staging_dir) install-pkgconfigDATA
 endef
+
+define $(package)_postprocess_cmds
+  rm lib/*.la
+endef
