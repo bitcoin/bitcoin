@@ -567,7 +567,7 @@ struct sortProposalsByVotes {
     bool operator()(const std::pair<CGovernanceObject*, int> &left, const std::pair<CGovernanceObject*, int> &right) {
         if (left.second != right.second)
             return (left.second > right.second);
-        return (UintToArith256(left.first->GetCollateralTxHash()) > UintToArith256(right.first->GetCollateralTxHash()));
+        return (UintToArith256(left.first->GetCollateralHash()) > UintToArith256(right.first->GetCollateralHash()));
     }
 };
 
