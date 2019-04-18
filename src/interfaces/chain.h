@@ -43,12 +43,6 @@ class Wallet;
 //!   asynchronously
 //!   (https://github.com/syscoin/syscoin/pull/10973#issuecomment-380101269).
 //!
-//! * The isPotentialTip() and waitForNotifications() methods are too low-level
-//!   and should be replaced with a higher level
-//!   waitForNotificationsUpTo(block_hash) method that the wallet can call
-//!   instead
-//!   (https://github.com/syscoin/syscoin/pull/10973#discussion_r266995234).
-//!
 //! * The relayTransactions() and submitToMemoryPool() methods could be replaced
 //!   with a higher-level broadcastTransaction method
 //!   (https://github.com/syscoin/syscoin/pull/14978#issuecomment-459373984).
@@ -122,11 +116,6 @@ public:
         //! parameter (to avoid the cost of a second hash lookup in case this
         //! information is desired).
         virtual Optional<int> findFork(const uint256& hash, Optional<int>* height) = 0;
-
-        //! Return true if block hash points to the current chain tip, or to a
-        //! possible descendant of the current chain tip that isn't currently
-        //! connected.
-        virtual bool isPotentialTip(const uint256& hash) = 0;
 
         //! Get locator for the current chain tip.
         virtual CBlockLocator getTipLocator() = 0;
@@ -256,8 +245,10 @@ public:
     //! Register handler for notifications.
     virtual std::unique_ptr<Handler> handleNotifications(Notifications& notifications) = 0;
 
-    //! Wait for pending notifications to be handled.
-    virtual void waitForNotifications() = 0;
+    //! Wait for pending notifications to be processed unless block hash points to the current
+    //! chain tip, or to a possible descendant of the current chain tip that isn't currently
+    //! connected.
+    virtual void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) = 0;
 
     //! Register handler for RPC. Command is not copied, so reference
     //! needs to remain valid until Handler is disconnected.

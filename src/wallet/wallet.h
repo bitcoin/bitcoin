@@ -694,7 +694,7 @@ private:
      * to have seen all transactions in the chain, but is only used to track
      * live BlockConnected callbacks.
      */
-    uint256 m_last_block_processed;
+    uint256 m_last_block_processed GUARDED_BY(cs_wallet);
 
 public:
     /*

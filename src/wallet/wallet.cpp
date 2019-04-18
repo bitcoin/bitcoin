@@ -1296,24 +1296,12 @@ void CWallet::UpdatedBlockTip()
 
 void CWallet::BlockUntilSyncedToCurrentChain() {
     AssertLockNotHeld(cs_wallet);
-
-    {
-        // Skip the queue-draining stuff if we know we're caught up with
-        // chainActive.Tip()...
-        // We could also take cs_wallet here, and call m_last_block_processed
-        // protected by cs_wallet instead of cs_main, but as long as we need
-        // cs_main here anyway, it's easier to just call it cs_main-protected.
-        auto locked_chain = chain().lock();
-
-        if (!m_last_block_processed.IsNull() && locked_chain->isPotentialTip(m_last_block_processed)) {
-            return;
-        }
-    }
-
-    // ...otherwise put a callback in the validation interface queue and wait
+    // Skip the queue-draining stuff if we know we're caught up with
+    // chainActive.Tip(), otherwise put a callback in the validation interface queue and wait
     // for the queue to drain enough to execute it (indicating we are caught up
     // at least with the time we entered this function).
-    chain().waitForNotifications();
+    uint256 last_block_hash = WITH_LOCK(cs_wallet, return m_last_block_processed);
+    chain().waitForNotificationsIfNewBlocksConnected(last_block_hash);
 }
 
 
