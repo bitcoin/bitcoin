@@ -584,7 +584,6 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     string otherNode1, otherNode2;
     GetOtherNodes(node, otherNode1, otherNode2);
     UniValue r;
-    string fundingaddress = GetNewFundedAddress("node1");
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
     UniValue arr = r.get_array();
     CAmount nAmountBefore = AmountFromValue(arr[0]);
@@ -608,8 +607,6 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + boost::lexical_cast<string>(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleroofpath_hex + " " + witness));
     
     arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + fundingaddress));
-    arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
@@ -619,7 +616,8 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
     arr = r.get_array();
     CAmount nAmountAfter = AmountFromValue(arr[0]);
-    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount), nAmountAfter);
+    // account for fees
+    BOOST_CHECK(abs((nAmountBefore+AmountFromValue(amount)) -  nAmountAfter) < 0.1*COIN);
     return hex_str;
 }
 string AssetNew(const string& node, const string& address, const string& pubdata, const string& contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness)
@@ -632,8 +630,6 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + address + " " + pubdata + " " + contract + " " + precision + " " + supply + " " + maxsupply + " " + updateflags + " " + witness));
 	UniValue arr = r.get_array();
     string guid = boost::lexical_cast<string>(arr[1].get_int());
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + address));
-    arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
@@ -727,8 +723,6 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	// increase supply to new amount if we passed in a supply value
 	newsupply = supply == "''" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
     UniValue arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + oldaddress));
-    arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
@@ -778,8 +772,6 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 	// "assettransfer [asset] [address] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assettransfer " + guid + " " + toaddress + " " + witness));
     UniValue arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + oldaddress));
-    arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
@@ -856,8 +848,6 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	// "assetallocationsendmany [asset] [addressfrom] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationsendmany " + guid + " " + fromaddress + " " + inputs + " " + witness));
     UniValue arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + fromaddress));
-    arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 
@@ -907,8 +897,6 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
     
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " 0x931D387731bBbC988B312206c74F77D004D6B84b"));
     UniValue arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + address));
-    arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
 	string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hexStr + "\\\"]\""));
@@ -969,8 +957,6 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	// "assetsendmany [asset] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsendmany " + guid + " " + inputs + " " + witness));
     UniValue arr = r.get_array();
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscointxfund " + arr[0].get_str() + " " + fromAddress));
-    arr = r.get_array();
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	if (completetx) {

@@ -46,19 +46,7 @@ CWallet* GetDefaultWallet() {
     CWallet* const pwallet = wallet.get();
     return pwallet;
 }
-CAmount GetFee(const size_t nBytes) {
-    CWallet* const pwallet = GetDefaultWallet();
-    FeeCalculation feeCalc;
-    CFeeRate feeRate = ::feeEstimator.estimateSmartFee(1, &feeCalc, true);
-    CAmount minFee=0;
-    if (feeRate != CFeeRate(0)) {
-        minFee = feeRate.GetFeePerK()*nBytes / 1000;
-    }
-    else if(pwallet != nullptr){
-        minFee = GetRequiredFee(*pwallet, nBytes);
-    }
-    return minFee;
-}
+
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallets);

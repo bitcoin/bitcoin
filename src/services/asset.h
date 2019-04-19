@@ -43,8 +43,6 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient);
-void CreateAssetRecipient(const CScript& scriptPubKey, CRecipient& recipient);
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient);
 unsigned int addressunspent(const std::string& strAddressFrom, COutPoint& outpoint);
 int GetSyscoinDataOutput(const CTransaction& tx);
@@ -56,7 +54,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
-UniValue syscointxfund_helper(const int &nVersion, const std::string &vchWitness, std::vector<CRecipient> &vecSend);
+UniValue syscointxfund_helper(const std::string& strAddress, const int &nVersion, const std::string &vchWitness, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
 bool IsAssetAllocationTx(const int &nVersion);
@@ -64,7 +62,6 @@ bool IsSyscoinTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 CWallet* GetDefaultWallet();
-CAmount GetFee(const size_t nBytes);
 
 int GenerateSyscoinGuid();
 

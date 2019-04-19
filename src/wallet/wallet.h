@@ -35,7 +35,6 @@
 #include <vector>
 // SYSCOIN
 CWallet* GetDefaultWallet();
-CAmount GetFee(const size_t nBytes);
 
 //! Explicitly unload and delete the wallet.
 //  Blocks the current thread after signaling the unload intent so that all
