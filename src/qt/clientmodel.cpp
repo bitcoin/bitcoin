@@ -11,7 +11,6 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <checkpoints.h>
 #include <clientversion.h>
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
