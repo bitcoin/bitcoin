@@ -221,8 +221,10 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
             dataDir = intro.getDataDirectory();
             try {
                 if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
+#ifdef ENABLE_WALLET
                     // If a new data directory has been created, make wallets subdirectory too
                     TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir) / "wallets");
+#endif
                 }
                 break;
             } catch (const fs::filesystem_error&) {
