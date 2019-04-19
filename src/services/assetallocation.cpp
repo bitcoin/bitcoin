@@ -403,7 +403,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN, "", vecSend);
+	return syscointxfund_helper(strAddress, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN, "", vecSend);
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -459,7 +459,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, fee);
     vecSend.push_back(fee);
        
-    return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT, strWitness, vecSend);
+    return syscointxfund_helper(strAddress, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT, strWitness, vecSend);
 }
 
 UniValue assetallocationsend(const JSONRPCRequest& request) {
@@ -598,7 +598,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
+	return syscointxfund_helper(vchAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
 }
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;

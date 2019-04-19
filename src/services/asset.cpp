@@ -373,21 +373,6 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 	}
 	return false;
 }
-void CreateAssetRecipient(const CScript& scriptPubKey, CRecipient& recipient)
-{
-	CRecipient recp = { scriptPubKey, recipient.nAmount, false };
-	recipient = recp;
-	const CAmount &minFee = GetFee(3000);
-	recipient.nAmount = minFee;
-}
-void CreateRecipient(const CScript& scriptPubKey, CRecipient& recipient)
-{
-	CRecipient recp = { scriptPubKey, recipient.nAmount, false };
-	recipient = recp;
-	CTxOut txout(recipient.nAmount, scriptPubKey);
-	size_t nSize = GetSerializeSize(txout, SER_DISK, 0) + 148u;
-	recipient.nAmount = GetFee(nSize);
-}
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
 {
 	CRecipient recp = { scriptPubKey, 0, false };
@@ -472,11 +457,11 @@ UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, b
 	}
 	return ret;
 }
-UniValue syscointxfund_helper(const int &nVersion, const string &vchWitness, vector<CRecipient> &vecSend) {
+UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, vector<CRecipient> &vecSend) {
 	CMutableTransaction txNew;
 	txNew.nVersion = nVersion;
 
-	COutPoint witnessOutpoint;
+	COutPoint witnessOutpoint, addressOutpoint;
 	if (!vchWitness.empty() && vchWitness != "''")
 	{
 		string strWitnessAddress;
@@ -484,13 +469,21 @@ UniValue syscointxfund_helper(const int &nVersion, const string &vchWitness, vec
 		addressunspent(strWitnessAddress, witnessOutpoint);
 		if (witnessOutpoint.IsNull())
 		{
-			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress + _(". Please make sure the address is funded with a small output to cover fees, current fee rate: ") + ValueFromAmount(GetFee(3000)).write() + " SYS");
+			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but no enough outputs found for witness address: ") + strWitnessAddress);
 		}
 		Coin pcoinW;
-		if (GetUTXOCoin(witnessOutpoint, pcoinW))
+		if (GetUTXOCoin(witnessOutpoint, pcoinW) && !pcoinW.IsSpent())
 			txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
 	}
-
+    addressunspent(strAddress, addressOutpoint);
+    if (addressOutpoint.IsNull())
+    {
+        throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Not enough outputs found for address: ") + strAddress);
+    }
+    Coin pcoin;
+    if (GetUTXOCoin(addressOutpoint, pcoin) && !pcoin.IsSpent())
+        txNew.vin.push_back(CTxIn(addressOutpoint, pcoin.out.scriptPubKey));
+        
 	// vouts to the payees
 	for (const auto& recipient : vecSend)
 	{
@@ -500,10 +493,14 @@ UniValue syscointxfund_helper(const int &nVersion, const string &vchWitness, vec
 			txNew.vout.push_back(txout);
 		}
 	}   
-
-	UniValue paramsFund(UniValue::VARR);
-	paramsFund.push_back(EncodeHexTx(txNew));
-	return paramsFund;
+    
+    UniValue paramsFund(UniValue::VARR);
+    paramsFund.push_back(EncodeHexTx(txNew));
+    paramsFund.push_back(strAddress);
+    
+    JSONRPCRequest request;
+    request.params = paramsFund;
+    return syscointxfund(request);
 }
 
 
@@ -580,38 +577,39 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
         output_index = params[2].get_int();
     }
  
-    CRecipient addressRecipient;
     CScript scriptPubKeyFromOrig = GetScriptForDestination(DecodeDestination(strAddress));
-    CreateAssetRecipient(scriptPubKeyFromOrig, addressRecipient);  
     addressArray.push_back("addr(" + strAddress + ")"); 
     
     
     CTransaction txIn_t(tx);    
- 
+    LOCK(cs_main);
+    CCoinsViewCache view(pcoinsTip.get());
     
     // add total output amount of transaction to desired amount
     CAmount nDesiredAmount = txIn_t.GetValueOut();
-    CAmount nCurrentAmount = 0;
+    // mint transactions should start with 0 because the output is minted based on spv proof
+    if(txIn_t.nVersion == SYSCOIN_TX_VERSION_MINT) 
+        nDesiredAmount = 0;
+    CAmount nCurrentAmount = view.GetValueIn(txIn_t);
 
-    LOCK(cs_main);
+    FeeCalculation fee_calc;
+    CCoinControl coin_control;
 
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
-    CAmount nFees = GetFee(10 + 34);
-
+    CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control, ::mempool, ::feeEstimator, &fee_calc);
     for (auto& vin : tx.vin) {
         Coin coin;
         if (!GetUTXOCoin(vin.prevout, coin))
             continue;
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
-        nFees += GetFee(numSigs * 200);
+        nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, ::mempool, ::feeEstimator, &fee_calc);
     }
     for (auto& vout : tx.vout) {
         const unsigned int nBytes = ::GetSerializeSize(vout, SER_NETWORK, PROTOCOL_VERSION);
-        nFees += GetFee(nBytes);
+        nFees += GetMinimumFee(*pwallet, nBytes, coin_control, ::mempool, ::feeEstimator, &fee_calc);
     }
-    
-    
+
 	UniValue paramsBalance(UniValue::VARR);
 	paramsBalance.push_back("start");
 	paramsBalance.push_back(addressArray);
@@ -629,96 +627,50 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	else
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No funds found in addresses provided"));
 
-    const CAmount &minFee = GetFee(3000);
-    if (nCurrentAmount < (nDesiredAmount + nFees)) {
-        // only look for small inputs if addresses were passed in, if looking through wallet we do not want to fund via small inputs as we may end up spending small inputs inadvertently
-        if (IsSyscoinTx(tx.nVersion) && params.size() > 1) {
-            LOCK(mempool.cs);
-            int countInputs = 0;
-            // fund with small inputs first
-            for (int i = 0; i < (int)utxoArray.size(); i++)
-            {
-                const UniValue& utxoObj = utxoArray[i].get_obj();
-                const string &strTxid = find_value(utxoObj, "txid").get_str();
-                const uint256& txid = uint256S(strTxid);
-                const int& nOut = find_value(utxoObj, "vout").get_int();
-                const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
-                const CScript& scriptPubKey = CScript(data.begin(), data.end());
-                const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
-                const CTxIn txIn(txid, nOut, scriptPubKey);
-                const COutPoint outPoint(txid, nOut);
-                if (std::find(tx.vin.begin(), tx.vin.end(), txIn) != tx.vin.end())
-                    continue;
-                // look for small inputs only, if not selecting all
-                if (nValue <= minFee || (output_index >= 0 && output_index == i)) {
+   
+	if (nCurrentAmount < (nDesiredAmount + nFees)) {
 
-                    if (mempool.mapNextTx.find(outPoint) != mempool.mapNextTx.end())
-                        continue;
-                    {
-                        LOCK(pwallet->cs_wallet);
-                        if (pwallet->IsLockedCoin(txid, nOut))
-                            continue;
-                    }
-                    if (!IsOutpointMature(outPoint))
-                        continue;
-                    int numSigs = 0;
-                    CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
-                    // add fees to account for every input added to this transaction
-                    nFees += GetFee(numSigs * 200);
-                    tx.vin.push_back(txIn);
-                    countInputs++;
-                    nCurrentAmount += nValue;
-                    if (nCurrentAmount >= (nDesiredAmount + nFees) || (output_index >= 0 && output_index == i)) {
-                        break;
-                    }
-                }
-            }
-        }   
-		if (nCurrentAmount < (nDesiredAmount + nFees)) {
+		LOCK(mempool.cs);
+		for (unsigned int i = 0; i < utxoArray.size(); i++)
+		{
+			const UniValue& utxoObj = utxoArray[i].get_obj();
+			const string &strTxid = find_value(utxoObj, "txid").get_str();
+			const uint256& txid = uint256S(strTxid);
+			const int& nOut = find_value(utxoObj, "vout").get_int();
+			const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
+			const CScript& scriptPubKey = CScript(data.begin(), data.end());
+			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
+			const CTxIn txIn(txid, nOut, scriptPubKey);
+			const COutPoint outPoint(txid, nOut);
+			if (std::find(tx.vin.begin(), tx.vin.end(), txIn) != tx.vin.end())
+				continue;
 
-			LOCK(mempool.cs);
-			for (unsigned int i = 0; i < utxoArray.size(); i++)
+			if (mempool.mapNextTx.find(outPoint) != mempool.mapNextTx.end())
+				continue;
 			{
-				const UniValue& utxoObj = utxoArray[i].get_obj();
-				const string &strTxid = find_value(utxoObj, "txid").get_str();
-				const uint256& txid = uint256S(strTxid);
-				const int& nOut = find_value(utxoObj, "vout").get_int();
-				const std::vector<unsigned char> &data(ParseHex(find_value(utxoObj, "scriptPubKey").get_str()));
-				const CScript& scriptPubKey = CScript(data.begin(), data.end());
-				const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
-				const CTxIn txIn(txid, nOut, scriptPubKey);
-				const COutPoint outPoint(txid, nOut);
-				if (std::find(tx.vin.begin(), tx.vin.end(), txIn) != tx.vin.end())
+				LOCK(pwallet->cs_wallet);
+				if (pwallet->IsLockedCoin(txid, nOut))
 					continue;
-                // look for bigger inputs
-                if (nValue <= minFee)
-                    continue;
-				if (mempool.mapNextTx.find(outPoint) != mempool.mapNextTx.end())
-					continue;
-				{
-					LOCK(pwallet->cs_wallet);
-					if (pwallet->IsLockedCoin(txid, nOut))
-						continue;
-				}
-				if (!IsOutpointMature(outPoint))
-					continue;
-				int numSigs = 0;
-				CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
-				// add fees to account for every input added to this transaction
-				nFees += GetFee(numSigs * 200);
-				tx.vin.push_back(txIn);
-				nCurrentAmount += nValue;
-				if (nCurrentAmount >= (nDesiredAmount + nFees)) {
-					break;
-				}
+			}
+			if (!IsOutpointMature(outPoint))
+				continue;
+			int numSigs = 0;
+			CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
+			// add fees to account for every input added to this transaction
+			nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+			tx.vin.push_back(txIn);
+			nCurrentAmount += nValue;
+			if (nCurrentAmount >= (nDesiredAmount + nFees)) {
+				break;
 			}
 		}
 	}
+	
     
   
 	const CAmount &nChange = nCurrentAmount - nDesiredAmount - nFees;
 	if (nChange < 0)
-		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds"));
+		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Insufficient funds, short by: ") + ValueFromAmount(-1*nChange).write() + " SYS");
         
     // change back to funding address
 	const CTxDestination & dest = DecodeDestination(strAddress);
@@ -800,10 +752,7 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
     if(!fGethSynced){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
     }
-	CMutableTransaction txNew;
-	txNew.nVersion = SYSCOIN_TX_VERSION_MINT;
-	txNew.vout.push_back(CTxOut(nAmount, scriptPubKeyFromOrig));
-    
+
     CMintSyscoin mintSyscoin;
     mintSyscoin.vchValue = ParseHex(vchValue);
     mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
@@ -814,28 +763,17 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
     
+    
+    CRecipient recp = { scriptPubKeyFromOrig, nAmount, false };
+    vecSend.push_back(recp);
     CScript scriptData;
     scriptData << OP_RETURN << data;
+    CRecipient fee;
+    CreateFeeRecipient(scriptData, fee);
+    vecSend.push_back(fee);
     
-    CTxOut txout(0, scriptData);
-    txNew.vout.push_back(txout);
- 
-    COutPoint witnessOutpoint;
-    if (!strWitnessAddress.empty() && strWitnessAddress != "''")
-    {
-        addressunspent(strWitnessAddress, witnessOutpoint);
-        if (witnessOutpoint.IsNull())
-        {
-            throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but not enough outputs found for witness address: ") + strWitnessAddress + _(". Please make sure the address is funded with a small output to cover fees, current fee rate: ") + ValueFromAmount(GetFee(3000)).write() + " SYS");
-        }
-        Coin pcoinW;
-        if (GetUTXOCoin(witnessOutpoint, pcoinW))
-            txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
-    }    
-    
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(txNew));
-	return res;
+    UniValue res = syscointxfund_helper(vchAddress, SYSCOIN_TX_VERSION_MINT, strWitnessAddress, vecSend);
+    return res;
 }
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
@@ -951,15 +889,12 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 	unsigned int count = 0;
 	{
 		LOCK(mempool.cs);
-		const CAmount &minFee = GetFee(3000);
 		for (unsigned int i = 0; i < utxoArray.size(); i++)
 		{
 			const UniValue& utxoObj = utxoArray[i].get_obj();
 			const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
 			const int& nOut = find_value(utxoObj, "vout").get_int();
-			const CAmount &nValue = AmountFromValue(find_value(utxoObj, "amount"));
-			if (nValue > minFee)
-				continue;
+
 			const COutPoint &outPointToCheck = COutPoint(txid, nOut);
 
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
@@ -1141,7 +1076,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	UniValue res = syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
+	UniValue res = syscointxfund_helper(vchAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
 	res.push_back((int)newAsset.nAsset);
 	return res;
 }
@@ -1220,7 +1155,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_UPDATE, vchWitness, vecSend);
+	return syscointxfund_helper(theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_UPDATE, vchWitness, vecSend);
 }
 
 UniValue assettransfer(const JSONRPCRequest& request) {
@@ -1255,7 +1190,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
 
-    
+    CWitnessAddress fromWitnessAddress;
+    fromWitnessAddress.vchWitnessProgram = theAsset.witnessAddress.vchWitnessProgram;
+    fromWitnessAddress.nVersion = theAsset.witnessAddress.nVersion;
 	theAsset.ClearAsset();
     CScript scriptPubKey;
 	theAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
@@ -1272,7 +1209,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
+	return syscointxfund_helper(fromWitnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -1366,7 +1303,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(SYSCOIN_TX_VERSION_ASSET_SEND, vchWitness, vecSend);
+	return syscointxfund_helper(theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_SEND, vchWitness, vecSend);
 }
 
 UniValue assetinfo(const JSONRPCRequest& request) {
