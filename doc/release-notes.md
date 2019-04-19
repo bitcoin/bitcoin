@@ -216,7 +216,7 @@ New RPCs
 - `getdescriptorinfo` accepts a descriptor and returns information about
   it, including its computed checksum.
 
-- `joinpsbts` merges multiple distinct PSBTs into a single PSBT. The 
+- `joinpsbts` merges multiple distinct PSBTs into a single PSBT. The
   multiple PSBTs must have different inputs. The resulting PSBT will
   contain every input and output from all of the PSBTs. Any signatures
   provided in any of the PSBTs will be dropped.
@@ -501,16 +501,6 @@ Network
   multiple IP addresses. If you manually ban a peer, such as by using
   the `setban` RPC, all connections from that peer will still be
   rejected.
-
-- When fetching a transaction announced by multiple peers, previous
-  versions of Bitcoin Core would sequentially attempt to download the
-  the transaction from each announcing peer until the transaction is
-  received, in the order that those peers' announcements were received.
-  In this release, the download logic has changed to randomize the fetch
-  order across peers and to prefer sending download requests to outbound
-  peers over inbound peers.
-
-(TODO pieter: perhaps mention orphan tx handling from #14626)
 
 Wallet
 -------
