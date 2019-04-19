@@ -17,7 +17,6 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
-#include <checkpoints.h>
 #include <node/coinstats.h>
 #include <compat/sanity.h>
 #include <consensus/validation.h>
