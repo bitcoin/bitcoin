@@ -459,7 +459,8 @@ UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, b
 }
 UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, vector<CRecipient> &vecSend) {
 	CMutableTransaction txNew;
-	txNew.nVersion = nVersion;
+    if(nVersion > 0)
+	    txNew.nVersion = nVersion;
 
 	COutPoint witnessOutpoint, addressOutpoint;
 	if (!vchWitness.empty() && vchWitness != "''")
@@ -688,15 +689,17 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 3 != params.size())
+	if (request.fHelp || 4 != params.size())
 		throw runtime_error(
-			"syscoinburn [amount] [burn_to_sysx] [ethereum_destination_address]\n"
+			"syscoinburn [funding_address] [amount] [burn_to_sysx] [ethereum_destination_address]\n"
+            "<funding_address> Funding address to burn SYS from.\n"
 			"<amount> Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees.\n"
 			"<burn_to_sysx> Boolean. Set to true if you are provably burning SYS to go to SYSX. False if you are provably burning SYS forever.\n");
-            
-	CAmount nAmount = AmountFromValue(params[0]);
-	bool bBurnToSYSX = params[1].get_bool();
-    string ethAddress = params[2].get_str();
+      
+    string fundingAddress = params[0].get_str();      
+	CAmount nAmount = AmountFromValue(params[1]);
+	bool bBurnToSYSX = params[2].get_bool();
+    string ethAddress = params[3].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
 
    
@@ -710,13 +713,16 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
 	CMutableTransaction txNew;
     if(bBurnToSYSX)
         txNew.nVersion = SYSCOIN_TX_VERSION_BURN;
-	CTxOut txout(nAmount, scriptData);
-	txNew.vout.push_back(txout);
-       
-
-	UniValue paramsFund(UniValue::VARR);
-	paramsFund.push_back(EncodeHexTx(txNew));
-	return paramsFund;
+    
+    
+    
+    CRecipient burn;
+    CreateFeeRecipient(scriptData, burn);
+    burn.nAmount = nAmount;
+    vecSend.push_back(burn);
+    
+    UniValue res = syscointxfund_helper(fundingAddress, bBurnToSYSX? SYSCOIN_TX_VERSION_BURN: 0, "", vecSend);
+    return res;
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
