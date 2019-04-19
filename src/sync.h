@@ -205,6 +205,16 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
         LeaveCritical();           \
     }
 
+//! Run code while locking a mutex.
+//!
+//! Examples:
+//!
+//!   WITH_LOCK(cs, shared_val = shared_val + 1);
+//!
+//!   int val = WITH_LOCK(cs, return shared_val);
+//!
+#define WITH_LOCK(cs, code) [&] { LOCK(cs); code; }()
+
 class CSemaphore
 {
 private:
