@@ -114,6 +114,7 @@ void benchmark::BenchRunner::RunAll(Printer& printer, uint64_t num_evals, double
     for (const auto& p : benchmarks()) {
         TestingSetup test{CBaseChainParams::REGTEST};
         {
+            LOCK(cs_main);
             assert(::ChainActive().Height() == 0);
             const bool witness_enabled{IsWitnessEnabled(::ChainActive().Tip(), Params().GetConsensus())};
             assert(witness_enabled);
