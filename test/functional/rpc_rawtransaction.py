@@ -443,9 +443,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000)[0]
         assert_equal(testres['allowed'], False)
         assert_equal(testres['reject-reason'], '256: absurdly-high-fee')
+        testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], "0.00001000")[0]
+        assert_equal(testres['allowed'], False)
+        assert_equal(testres['reject-reason'], '256: absurdly-high-fee')
         # and sendrawtransaction should throw
         assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], 0.00001000)
+        assert_raises_rpc_error(-26, "absurdly-high-fee", self.nodes[2].sendrawtransaction, rawTxSigned['hex'], "0.00001000")
         # And below calls should both succeed
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate=0.00007000)[0]
+        assert_equal(testres['allowed'], True)
+        testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate="0.00007000")[0]
+        assert_equal(testres['allowed'], True)
         testres = self.nodes[2].testmempoolaccept(rawtxs=[rawTxSigned['hex']], maxfeerate=0.00007000)[0]
         assert_equal(testres['allowed'], True)
         self.nodes[2].sendrawtransaction(hexstring=rawTxSigned['hex'], maxfeerate=0.00007000)
