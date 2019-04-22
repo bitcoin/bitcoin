@@ -341,13 +341,14 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 		throw runtime_error(
 			"assetallocationburn <asset> <address> <amount> <ethereum_destination_address>\n"
             "\nArguments:\n"
-			"<asset> Asset guid.\n"
-			"<address> Address that owns this asset allocation.\n"
-			"<amount> Amount of asset to burn to SYSX.\n"
-            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n"
+			"1. <asset>                         (numeric, required) Asset guid.\n"
+			"2. <address>                       (string, required) Address that owns this asset allocation.\n"
+			"3. <amount>                        (numeric, required) Amount of asset to burn to SYSX.\n"
+            "4. <ethereum_destination_address>  (string, required) The 20 byte (40 character) hex string of the ethereum destination address.\n"
+            "\nResult:\n"
             "\nExamples:\n"
-            + HelpExampleCli("assetallocationburn", "\"asset\"", "\"address\"", "\"amount\"", "\"ethereum_destination_address\"")
-            + HelpExampleRpc("assetallocationburn", "\"asset\"", "\"address\"", "\"amount\"", "\"ethereum_destination_address\"")
+            + HelpExampleCli("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
+            + HelpExampleRpc("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
             );
 
 	const int &nAsset = params[0].get_int();
@@ -412,15 +413,21 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     if (request.fHelp || 9 != params.size())
         throw runtime_error(
             "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [witness]\n"
-            "<asset> Asset guid.\n"
-            "<address> Address that will get this minting.\n"
-            "<amount> Amount of asset to mint. Note that fees will be taken from the owner address.\n"
-            "<blocknumber> Block number of the block that included the burn transaction on Ethereum.\n"
-            "<tx_hex> Raw transaction hex of the burn transaction on Ethereum.\n"
-            "<txroot_hex> The transaction merkle root that commits this transaction to the block header.\n"
-            "<txmerkleproof_hex> The list of parent nodes of the Merkle Patricia Tree for SPV proof.\n"
-            "<txmerkleroofpath_hex> The merkle path to walk through the tree to recreate the merkle root.\n"
-            "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
+            "\nArguments:\n"
+            "1. <asset>                 (numeric, required) Asset guid.\n"
+            "2. <address>               (string, required) Address that will get this minting.\n"
+            "3. <amount>                (numeric, required) Amount of asset to mint. Note that fees will be taken from the owner address.\n"
+            "4. <blocknumber>           (numeric, required) Block number of the block that included the burn transaction on Ethereum.\n"
+            "5. <tx_hex>                (string, required) Raw transaction hex of the burn transaction on Ethereum.\n"
+            "6. <txroot_hex>            (string, required) The transaction merkle root that commits this transaction to the block header.\n"
+            "7. <txmerkleproof_hex>     (string, required) The list of parent nodes of the Merkle Patricia Tree for SPV proof.\n"
+            "8. <txmerkleroofpath_hex>  (string, required) The merkle path to walk through the tree to recreate the merkle root.\n"
+            "9. <witness>               (string, optional) Witness address that will sign for web-of-trust notarization of this transaction.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"witness\"")
+            + HelpExampleRpc("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"witness\"")
+            );
 
     const int &nAsset = params[0].get_int();
     string strAddress = params[1].get_str();
@@ -468,13 +475,21 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 4)
         throw runtime_error(
-            "assetallocationsend [asset] [addressfrom] [addressTo] [amount]\n"
-            "Send an asset allocation you own to another address.\n"
-            "<asset> Asset guid.\n"
-            "<addressfrom> Address that owns this asset allocation.\n"
-            "<addressTo> Address to transfer to.\n"
-            "<amount> Quantity of asset to send.\n");
-            
+            "assetallocationsend <asset> <addressfrom> <addressTo> <amount>\n"
+            "\nSend an asset allocation you own to another address.\n"
+            "\nArguments:\n"
+            "1. \"asset\":       (numeric, required) The asset GUID\n"
+            "2. \"addressfrom\": (string, required) The address to send the allocation from\n"
+            "3. \"addressto\":   (string, required) The address to send the allocation to\n"
+            "4. \"amount\":      (numeric, required) The quantity of asset to send\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"hexstring\":    (string) the unsigned and unfunded transaction hexstring.\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetallocationsend", "\"assetguid\" \"addressfrom\" \"addressto\" \"amount\"")
+            + HelpExampleRpc("assetallocationsend", "\"assetguid\" \"addressfrom\" \"addressto\" \"amount\"")
+            );
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.pushKV("address", params[2].get_str());
@@ -494,14 +509,31 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
-			"assetallocationsend [asset] [addressfrom] ([{\"address\":\"string\",\"amount\":amount},...] [witness]\n"
-			"Send an asset allocation you own to another address. Maximimum recipients is 250.\n"
-			"<asset> Asset guid.\n"
-			"<addressfrom> Address that owns this asset allocation.\n"
-			"<address> Address to transfer to.\n"
-			"<amount> Quantity of asset to send.\n"
-			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
-
+			"assetallocationsendmany \"asset\" \"addressfrom\" \'[{\"address\":\"string\",\"amount\":amount},...]\' \"witness\"\n"
+			"\nSend an asset allocation you own to another address. Maximimum recipients is 250.\n"
+            "\nArguments:\n"
+            "1. \"asset\":         (numeric, required) The asset GUID\n"
+            "2. \"addressfrom\":   (string, required) The address to send the allocation from\n"
+            "3. \"amounts\":       (string, required) a json array of json objects\n"
+            "   [\n"
+            "     {\n"
+            "       \"address\":\"addressto\"  (string, required) The address to send the assetallocation to\n"
+            "       ,\n"
+            "       \"amount\":\"amount\"      (numeric, required) The amount of allocation to send\n"
+            "     }\n"
+            "    ,...\n"
+            "   ]\n"
+            "4. \"witness\":       (string, optional) THe list of witnesses\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"hexstring\":      (string) the unsigned and unfunded transaction hexstring.\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
+            + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            );
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
 	string vchAddressFrom = params[1].get_str();
@@ -647,7 +679,21 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
         throw runtime_error("assetallocationinfo <asset> <address>\n"
-                "Show stored values of a single asset allocation.\n"
+                "\nShow stored values of a single asset allocation.\n"
+                "\nArguments:\n"
+                "1. \"asset\"     (string, required) The guid of the asset\n"
+                "2. \"address\"   (string, required) The address of the owner\n"
+                "\nResult:\n"
+                "{\n"
+                "  \"_id\":           (string) The unique id of this allocation\n"
+                "  \"asset\":         (string) The guid of the asset\n"
+                "  \"address\":       (string) The address of the owner of this allocation\n"
+                "  \"balance\":       (numeric) The current balance\n"
+                "  \"balance_zdag\":  (numeric) The zdag balance\n"
+                "}\n"
+                "\nExamples:\n"
+                + HelpExampleCli("assetallocationinfo", "\"assetguid\" \"address\"")
+                + HelpExampleRpc("assetallocationinfo", "\"assetguid\" \"address\"")
                 );
 
     const int &nAsset = params[0].get_int();
@@ -757,12 +803,24 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 != params.size())
 		throw runtime_error("assetallocationsenderstatus <asset> <address> <txid>\n"
-			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
+			"\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
 			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
 			"Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
 			"Level 0 means OK.\n"
 			"Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
-			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n");
+			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n"
+            "\nArguments:\n"
+            "1. \"asset\":      (numeric, required) The guid of the asset\n"
+            "2. \"address\":    (string, required) The address of the sender\n"
+            "3. \"txid\":       (string, required) The transaction id of the assetallocationsend\n"   
+            "\nResult:\n"
+            "{\n"
+            "  \"status\":      (numeric) The status level of the transaction\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetallocationsenderstatus", "\"asset\" \"address\" \"txid\"")
+            + HelpExampleRpc("assetallocationsenderstatus", "\"asset\" \"address\" \"txid\"")
+            );
 
 	const int &nAsset = params[0].get_int();
 	string strAddressSender = params[1].get_str();
@@ -1082,13 +1140,15 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 UniValue listassetallocations(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
-		throw runtime_error("listassetallocations [count] [from] [{options}]\n"
-			"scan through all asset allocations.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return.\n"
-			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
-			"[options]        (array, optional) A json object with options to filter results\n"
+		throw runtime_error(
+            "listassetallocations (count) (from) ({options})\n"
+			"\nScan through all asset allocations.\n"
+            "\nArguments:\n"
+			"1. <count>          (numeric, optional, default=10) The number of results to return.\n"
+			"2. <from>           (numeric, optional, default=0) The number of results to skip.\n"
+			"3. <options>        (string, optional) A json object with options to filter results\n"
 			"    {\n"
-			"	   \"asset\":guid					(number) Asset GUID to filter.\n"
+			"	   \"asset\":guid					(numeric) Asset GUID to filter.\n"
 			"	   \"addresses\"					(array) a json array with addresses owning allocations\n"
 			"		[\n"
 			"			{\n"
@@ -1097,10 +1157,12 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 			"			,...\n"
 			"		]\n"
 			"    }\n"
+            "\nResult:\n"
+            "\nExamples:\n"
 			+ HelpExampleCli("listassetallocations", "0")
 			+ HelpExampleCli("listassetallocations", "10 10")
 			+ HelpExampleCli("listassetallocations", "0 0 '{\"asset\":92922}'")
-			+ HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
+			+ HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 		);
 	UniValue options;
 	int count = 10;
@@ -1131,13 +1193,15 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 3 < params.size())
-        throw runtime_error("listassetallocationmempoolbalances [count] [from] [{options}]\n"
-            "scan through all asset allocation mempool balances. Useful for ZDAG analysis on senders of allocations.\n"
-            "[count]          (numeric, optional, default=10) The number of results to return.\n"
-            "[from]           (numeric, optional, default=0) The number of results to skip.\n"
-            "[options]        (array, optional) A json object with options to filter results\n"
+        throw runtime_error(
+            "listassetallocationmempoolbalances (count) (from) ([options])\n"
+            "\nScan through all asset allocation mempool balances. Useful for ZDAG analysis on senders of allocations.\n"
+            "\nArguments:\n"
+            "1. <count>          (numeric, optional, default=10) The number of results to return.\n"
+            "2. <from>           (numeric, optional, default=0) The number of results to skip.\n"
+            "3. <options>        (array, optional) A json object with options to filter results\n"
             "    {\n"
-            "      \"senders\"                    (array) a json array with senders\n"
+            "      \"senders\"                      (array) a json array with senders\n"
             "       [\n"
             "           {\n"
             "               \"address\":string      (string) Sender address to filter.\n"
@@ -1145,9 +1209,14 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
             "           ,...\n"
             "       ]\n"
             "    }\n"
+            "\nResult:\n"
+            "\nExamples:\n"
             + HelpExampleCli("listassetallocationmempoolbalances", "0")
             + HelpExampleCli("listassetallocationmempoolbalances", "10 10")
             + HelpExampleCli("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
+            + HelpExampleRpc("listassetallocationmempoolbalances", "0")
+            + HelpExampleRpc("listassetallocationmempoolbalances", "10 10")
+            + HelpExampleRpc("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
         );
     UniValue options;
     int count = 10;

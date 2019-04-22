@@ -589,15 +589,19 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 1 > params.size() || 3 < params.size())
 		throw runtime_error(
-			"syscointxfund\n"
+			"syscointxfund \"hexstring\" \"address\" ( \"output_index\" )\n"
 			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added everytime you call this function.\n"
 			"\nArguments:\n"
-			"  \"hexstring\" (string, required) The raw syscoin transaction output given from rpc (ie: assetnew, assetupdate)\n"
-			"  \"address\"  (string, required) Address belonging to this asset transaction. \n"
-			"  \"output_index\"  (number, optional) Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction. \n"
+			"1.  \"hexstring\"    (string, required) The raw syscoin transaction output given from rpc (ie: assetnew, assetupdate)\n"
+			"2.  \"address\"      (string, required) Address belonging to this asset transaction. \n"
+			"3.  \"output_index\" (number, optional) Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction. \n"
+            "\nResult:\n"
+            "[\n"
+            "  \"hexstring\"       (string) the unsigned funded transaction hexstring. \n"
+            "]\n"
 			"\nExamples:\n"
-			+ HelpExampleCli("syscointxfund", " <hexstring> \"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"")
-			+ HelpExampleCli("syscointxfund", " <hexstring> \"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\" 0")
+			+ HelpExampleCli("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
+			+ HelpExampleRpc("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" 0")
 			+ HelpRequiringPassphrase(pwallet));
 	const string &hexstring = params[0].get_str();
     const string &strAddress = params[1].get_str();
@@ -734,10 +738,18 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 4 != params.size())
 		throw runtime_error(
-			"syscoinburn [funding_address] [amount] [burn_to_sysx] [ethereum_destination_address]\n"
-            "<funding_address> Funding address to burn SYS from.\n"
-			"<amount> Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees.\n"
-			"<burn_to_sysx> Boolean. Set to true if you are provably burning SYS to go to SYSX. False if you are provably burning SYS forever.\n");
+			"syscoinburn <amount> <burn_to_sysx> <ethereum_destination_address>\n"
+            "\nArguments:\n"
+			"1. <amount>         (numeric, required) Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees.\n"
+			"2. <burn_to_sysx>   (boolean, required) Set to true if you are provably burning SYS to go to SYSX. False if you are provably burning SYS forever.\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"txid\":        (string) The transaction ID\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("syscoinburn", "\"amount\" \"true\" \"ethaddress\"")
+            + HelpExampleRpc("syscoinburn", "\"amount\" \"true\" \"ethaddress\"")
+            );
       
     string fundingAddress = params[0].get_str();      
 	CAmount nAmount = AmountFromValue(params[1]);
@@ -771,15 +783,24 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 8 != params.size())
 		throw runtime_error(
-			"syscoinmint [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [witness]\n"
-			"<address> Mint to this address.\n"
-			"<amount> Amount of SYS to mint. Note that fees are applied on top. It is not inclusive of fees.\n"
-            "<blocknumber> Block number of the block that included the burn transaction on Ethereum.\n"
-            "<tx_hex> Raw transaction hex of the burn transaction on Ethereum.\n"
-            "<txroot_hex> The transaction merkle root that commits this transaction to the block header.\n"
-            "<txmerkleproof_hex> The list of parent nodes of the Merkle Patricia Tree for SPV proof.\n"
-            "<txmerkleroofpath_hex> The merkle path to walk through the tree to recreate the merkle root.\n"
-            "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
+			"syscoinmint <address> <amount> <blocknumber> <tx_hex> <txroot_hex> <txmerkleproof_hex> <txmerkleroofpath_hex> <witness>\n"
+            "\nArguments:\n"
+			"1. <address>               (string, required) Mint to this address.\n"
+			"2. <amount>                (numeric, required) Amount of SYS to mint. Note that fees are applied on top. It is not inclusive of fees.\n"
+            "3. <blocknumber>           (numeric, required) Block number of the block that included the burn transaction on Ethereum.\n"
+            "4. <tx_hex>                (string, required) Raw transaction hex of the burn transaction on Ethereum.\n"
+            "5. <txroot_hex>            (string, required) The transaction merkle root that commits this transaction to the block header.\n"
+            "6. <txmerkleproof_hex>     (string, required) The list of parent nodes of the Merkle Patricia Tree for SPV proof.\n"
+            "7. <txmerkleroofpath_hex>  (string, requird) The merkle path to walk through the tree to recreate the merkle root.\n"
+            "8. <witness>               (string, optional) Witness address that will sign for web-of-trust notarization of this transaction.\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"txid\"                 (string) The transaction ID"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"\"")
+            + HelpExampleRpc("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"\"")
+            );
 
 	string vchAddress = params[0].get_str();
 	CAmount nAmount = AmountFromValue(params[1]);
@@ -827,9 +848,17 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 1 != params.size())
-		throw runtime_error("syscoindecoderawtransaction <hexstring>\n"
-			"Decode raw syscoin transaction (serialized, hex-encoded) and display information pertaining to the service that is included in the transactiion data output(OP_RETURN)\n"
-			"<hexstring> The transaction hex string.\n");
+		throw runtime_error(
+            "syscoindecoderawtransaction <hexstring>\n"
+			"\nDecode raw syscoin transaction (serialized, hex-encoded) and display information pertaining to the service that is included in the transactiion data output(OP_RETURN)\n"
+            "\nArguments:\n"
+			"1. <hexstring>     (string, required) The transaction hex string.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("syscoindecoderawtransaction", "\"hexstring\"")
+            + HelpExampleRpc("syscoindecoderawtransaction", "\"hexstring\"")
+            );
+
 	string hexstring = params[0].get_str();
 	CMutableTransaction tx;
 	if(!DecodeHexTx(tx, hexstring, false, true))
@@ -969,14 +998,14 @@ UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request)
 			"[\n"
 			"  {\n"
 			"    \"address\" : \"receivingaddress\",    (string) The receiving address\n"
-			"    \"amount\" : x.xxx,					(numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
+			"    \"amount\" : x.xxx,                 	(numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
 			"    \"label\" : \"label\"                  (string) A comment for the address/transaction, if any\n"
 			"  }\n"
 			"  ,...\n"
 			"]\n"
-
 			"\nExamples:\n"
 			+ HelpExampleCli("syscoinlistreceivedbyaddress", "")
+			+ HelpExampleRpc("syscoinlistreceivedbyaddress", "")
 		);
 
 	return SyscoinListReceived(pwallet, true, false);
@@ -1065,15 +1094,26 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 8)
         throw runtime_error(
-			"assetnew [address] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
-						"<address> An address that you own.\n"
-                        "<public value> public data, 256 characters max.\n"
-                        "<contract> Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge.\n" 
-						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
-						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
-						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
-						"<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
-						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
+			"assetnew <address> <public value> <contract> <precision=8> <supply> <max_supply> <update_flags> <witness>\n"
+            "\nCreate a new asset\n"
+            "\nArguments:\n"
+			"1. <address> An address that you own.\n"
+            "2. <public value> public data, 256 characters max.\n"
+            "3. <contract> Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge.\n" 
+			"4. <precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
+			"5. <supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
+			"6. <max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
+			"7. <update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
+			"8. <witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
+            "\nResult:\n"
+            "[                       (array of strings)\n"
+            "  \"rawtransaction\"           (string) The unfunded and unsigned raw transaction of the new asset creation transaction\n"
+            "  \"assetguid\"                (string) The guid of asset to be created\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31")
+            + HelpExampleRpc("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31")
+            );
 	string vchAddress = params[0].get_str();
 	vector<unsigned char> vchPubData = vchFromString(params[1].get_str());
     string strContract = params[2].get_str();
@@ -1144,14 +1184,20 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 6)
         throw runtime_error(
-			"assetupdate [asset] [public value] [contract] [supply] [update_flags] [witness]\n"
-				"Perform an update on an asset you control.\n"
-				"<asset> Asset guid.\n"
-                "<public value> Public data, 256 characters max.\n"
-                "<contract> Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n"             
-				"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
-                "<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
-                "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
+			"assetupdate <asset> <public value> <contract> <supply> <update_flags> <witness>\n"
+			"\nPerform an update on an asset you control.\n"
+            "\nArguments:\n"
+			"1. <asset>             (numeric, required) Asset guid.\n"
+            "2. <public value>      (string, required) Public data, 256 characters max.\n"
+            "3. <contract>          (string, required) Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n"             
+		    "4. <supply>            (numeric, required) New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
+            "5. <update_flags>      (string, required) Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
+            "6. <witness>           (string, optional) Witness address that will sign for web-of-trust notarization of this transaction.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \" update_flags\" \"\"")
+            + HelpExampleRpc("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \" update_flags\" \"\"")
+            );
 	const int &nAsset = params[0].get_int();
 	string strData = "";
 	string strPubData = "";
@@ -1212,10 +1258,19 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
 			"assettransfer [asset] [address] [witness]\n"
-						"Transfer an asset you own to another address.\n"
-						"<asset> Asset guid.\n"
-						"<address> Address to transfer to.\n"
-						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"	);
+			"\nTransfer an asset you own to another address.\n"
+            "\nArguments:\n"
+			"1. <asset>      (numeric, required) Asset guid.\n"
+			"2. <address>    (string, required) Address to transfer to.\n"
+			"3. <witness>    (string, optional) Witness address that will sign for web-of-trust notarization of this transaction.\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"hexstring\"    (string) Unfunded and unsigned transaction hexstring\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assettransfer", "\"asset\" \"address\" \"\"")
+            + HelpExampleRpc("assettransfer", "\"asset\" \"address\" \"\"")
+            );
 
     // gather & validate inputs
 	const int &nAsset = params[0].get_int();
@@ -1264,12 +1319,21 @@ UniValue assetsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
-            "assetsend [asset] [addressTo] [amount]\n"
-            "Send an asset you own to another address.\n"
-            "<asset> Asset guid.\n"
-            "<addressTo> Address to transfer to.\n"
-            "<amount> Quantity of asset to send.\n");
-            
+            "assetsend <asset> <addressTo> <amount>\n"
+            "\nSend an asset you own to another address.\n"
+            "\nArguments:\n"
+            "1. \"asset\":        (numeric, required) The asset GUID\n"
+            "2. \"addressto\":    (string, required) The address to send the asset (creates an asset allocation)\n"
+            "3. \"amount\":       (numeric, required) the quantity of asset to send\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"hexstring\":    (string) the unsigned and unfunded transaction hexstring.\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetsend", "\"assetguid\" \"addressto\" \"amount\"")
+            + HelpExampleRpc("assetsend", "\"assetguid\" \"addressto\" \"amount\"")
+            );
+
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.pushKV("address", params[1].get_str());
@@ -1287,8 +1351,30 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
-			"assetsend [asset] ([{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
-			"Send an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
+			"assetsendmany \"asset\" \'[{\"address\":\"address\",\"amount\":amount},...]\' [witness]\n"
+			"\nSend an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
+            "\nArguments:\n"
+            "1. \"asset\":         (numeric, required) The asset GUID\n"
+            "2. \"amounts\":       (string, required) a json array of json objects\n"
+            "   [\n"
+            "     {\n"
+            "       \"address\":\"addressto\"  (string, required) The address to send the assetallocation to\n"
+            "       ,\n"
+            "       \"amount\":\"amount\"      (numeric, required) The amount of allocation to send\n"
+            "     }\n"
+            "    ,...\n"
+            "   ]\n"
+            "3. \"witness\":       (string, optional) THe list of witnesses\n"
+            "\nResult:\n"
+            "[\n"
+            "  \"hexstring\":      (string) the unsigned and unfunded transaction hexstring.\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("assetsendmany", "\"assetguid\" '[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
+            + HelpExampleCli("assetsendmany", "\"assetguid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            + HelpExampleRpc("assetsendmany", "\"assetguid\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
+            + HelpExampleRpc("assetsendmany", "\"assetguid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            );
 			"<asset> Asset guid.\n"
 			"<address> Address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"
@@ -1359,7 +1445,26 @@ UniValue assetinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
         throw runtime_error("assetinfo <asset>\n"
-                "Show stored values of a single asset and its.\n");
+                "\nShow stored values of a single asset and its.\n"
+                "\nArguments:\n"
+                "1. \"asset\":       (numeric, required) The asset guid"
+                "\nResult:\n"
+                "{\n"
+                "  \"_id\":          (numeric) The asset guid\n"
+                "  \"txid\":         (string) The transaction id that created this asset\n"
+                "  \"publicvalue\":  (string) The public value attached to this asset\n"
+                "  \"address\":      (string) The address that controls this address\n"
+                "  \"contract\":     (string) The ethereum contract address\n"
+                "  \"balance\":      (numeric) The current balance\n"
+                "  \"total_supply\": (numeric) The total supply of this asset\n"
+                "  \"max_supply\":   (numeric) The maximum supply of this asset\n"
+                "  \"update_flag\":  (numeric) The flag in decimal \n"
+                "  \"precision\":    (numeric) The precision of this asset \n"   
+                "}\n"
+                "\nExamples:\n"
+                + HelpExampleCli("assetinfo", "\"assetguid\"")
+                + HelpExampleRpc("assetinfo", "\"assetguid\"")
+                );
 
     const int &nAsset = params[0].get_int();
 	UniValue oAsset(UniValue::VOBJ);
@@ -1615,14 +1720,16 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 UniValue listassets(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 < params.size())
-		throw runtime_error("listassets [count] [from] [{options}]\n"
-			"scan through all assets.\n"
-			"[count]          (numeric, optional, default=10) The number of results to return.\n"
-			"[from]           (numeric, optional, default=0) The number of results to skip.\n"
-			"[options]        (object, optional) A json object with options to filter results\n"
+		throw runtime_error(
+            "listassets (count) (from) ([{options}])\n"
+			"\nScan through all assets.\n"
+            "\nArguments:\n"
+			"1. <count>          (numeric, optional, default=10) The number of results to return.\n"
+			"2. <from>           (numeric, optional, default=0) The number of results to skip.\n"
+			"3. <options>        (object, optional) A json object with options to filter results\n"
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
-			"	   \"asset\":guid					(number) Asset GUID to filter.\n"
+			"	   \"asset\":guid					(numeric) Asset GUID to filter.\n"
 			"	   \"addresses\"			        (array) a json array with owners\n"
 			"		[\n"
 			"			{\n"
@@ -1631,10 +1738,14 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"			,...\n"
 			"		]\n"
 			"    }\n"
+            "\nResult:\n"
+            "\nExampels:\n"
 			+ HelpExampleCli("listassets", "0")
 			+ HelpExampleCli("listassets", "10 10")
 			+ HelpExampleCli("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 			+ HelpExampleCli("listassets", "0 0 '{\"asset\":3473733}'")
+			+ HelpExampleRpc("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
+			+ HelpExampleRpc("listassets", "0 0 '{\"asset\":3473733}'")
 		);
 	UniValue options;
 	int count = 10;
@@ -1850,16 +1961,20 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
 UniValue listassetindex(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
-        throw runtime_error("listassetindex [page] [options]\n"
-            "Scan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n"
-            "[page]           (numeric, default=0) Return specific page number of transactions. Lower page number means more recent transactions.\n"
-            "[options]        (array, required) A json object with options to filter results\n"
+        throw runtime_error(
+            "listassetindex <page> <options>\n"
+            "\nScan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n"
+            "\nArguments:\n"
+            "1. <page>           (numeric, default=0) Return specific page number of transactions. Lower page number means more recent transactions.\n"
+            "2. <options>        (array, required) A json object with options to filter results\n"
             "    {\n"
-            "      \"asset\":guid                   (number) Asset GUID to filter.\n"
+            "      \"asset\":guid                   (numeric) Asset GUID to filter.\n"
             "      \"address\":string               (string, optional) Address to filter. Leave empty to scan globally through asset.\n"
             "    }\n"
             + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
             + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
+            + HelpExampleRpc("listassetindex", "0 '{\"asset\":92922}'")
+            + HelpExampleRpc("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
         );
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
@@ -1881,10 +1996,15 @@ UniValue listassetindex(const JSONRPCRequest& request) {
 UniValue listassetindexassets(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
-        throw runtime_error("listassetindexassets [address]\n"
-            "Return a list of assets an address is associated with.\n"
-            "[asset]          (numeric, required) Address to find assets associated with.\n"
+        throw runtime_error(
+            "listassetindexassets <address>\n"
+            "\nReturn a list of assets an address is associated with.\n"
+            "\nArguments:\n"
+            "1. <asset>          (numeric, required) Address to find assets associated with.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
             + HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+            + HelpExampleRpc("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
         );
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
@@ -1911,8 +2031,10 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
 UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 0 != params.size())
-        throw runtime_error("syscoinstopgeth\n"
-            "Stops Geth and the relayer from running.\n");
+        throw runtime_error(
+            "syscoinstopgeth\n"
+            "\nStops Geth and the relayer from running.\n"
+            );
     if(!StopRelayerNode(relayerPID))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     if(!StopGethNode(gethPID))
@@ -1924,8 +2046,10 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
 UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 0 != params.size())
-        throw runtime_error("syscoinstartgeth\n"
-            "Starts Geth and the relayer.\n");
+        throw runtime_error(
+            "syscoinstartgeth\n"
+            "\nStarts Geth and the relayer.\n"
+            );
     
     StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
@@ -1946,12 +2070,19 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
 UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
-        throw runtime_error("syscoinsetethstatus [syncing_status] [highestBlock]\n"
-            "Sets ethereum syncing and network status for indication status of network sync.\n"
-            "[syncing_status]      Syncing status either 'syncing' or 'synced'.\n"
-            "[highestBlock]        What the highest block height on Ethereum is found to be. Usually coupled with syncing_status of 'syncing'. Set to 0 if syncing_status is 'synced'.\n" 
+        throw runtime_error(
+            "syscoinsetethstatus <syncing_status> <highestBlock>\n"
+            "\nSets ethereum syncing and network status for indication status of network sync.\n"
+            "\nArguments:\n"
+            "1. <syncing_status>    (string, required)  Syncing status either 'syncing' or 'synced'.\n"
+            "2. <highestBlock>      (numeric, require)  What the highest block height on Ethereum is found to be. Usually coupled with syncing_status of 'syncing'. Set to 0 if syncing_status is 'synced'.\n" 
+            "\nResult:\n"
+            "\nExamples:\n"
             + HelpExampleCli("syscoinsetethstatus", "syncing 7000000")
-            + HelpExampleCli("syscoinsetethstatus", "synced 0"));
+            + HelpExampleCli("syscoinsetethstatus", "synced 0")
+            + HelpExampleRpc("syscoinsetethstatus", "syncing 7000000")
+            + HelpExampleRpc("syscoinsetethstatus", "synced 0")
+            );
     string status = params[0].get_str();
     int highestBlock = params[1].get_int();
     
@@ -1970,10 +2101,16 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
 UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
-        throw runtime_error("syscoinsetethheaders [headers]\n"
-            "Sets Ethereum headers in Syscoin to validate transactions through the SYSX bridge.\n"
-            "[headers]         A JSON objects representing an array of arrays (block number, tx root) from Ethereum blockchain.\n"
-            + HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\""));  
+        throw runtime_error(
+            "syscoinsetethheaders <headers>\n"
+            "\nSets Ethereum headers in Syscoin to validate transactions through the SYSX bridge.\n"
+            "\nArguments:\n"
+            "1. <headers>      (string, required)   A JSON objects representing an array of arrays (block number, tx root) from Ethereum blockchain.\n"
+            "\nResult:\n"
+            "\nExamples:\n"
+            + HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+            + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+            );  
 
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
