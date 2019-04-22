@@ -2488,6 +2488,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
             "      \"duration\" : xxxx              (numeric) elapsed seconds since scan start\n"
             "      \"progress\" : x.xxxx,           (numeric) scanning progress percentage [0.0, 1.0]\n"
             "    }\n"
+            "  \"descriptors\": true|false          (boolean) true if the wallet supports descriptors\n"
             "}\n"
                 },
                 RPCExamples{
@@ -2539,6 +2540,7 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     } else {
         obj.pushKV("scanning", false);
     }
+    obj.pushKV("descriptors", pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
     return obj;
 }
 
