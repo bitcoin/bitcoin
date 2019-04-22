@@ -1455,12 +1455,19 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
     if (!vNotFound.empty()) {
         // Let the peer know that we didn't find what it asked for, so it doesn't
-        // have to wait around forever. Currently only SPV clients actually care
-        // about this message: it's needed when they are recursively walking the
-        // dependencies of relevant unconfirmed transactions. SPV clients want to
-        // do that because they want to know about (and store and rebroadcast and
-        // risk analyze) the dependencies of transactions relevant to them, without
-        // having to download the entire memory pool.
+        // have to wait around forever.
+        // SPV clients care about this message: it's needed when they are
+        // recursively walking the dependencies of relevant unconfirmed
+        // transactions. SPV clients want to do that because they want to know
+        // about (and store and rebroadcast and risk analyze) the dependencies
+        // of transactions relevant to them, without having to download the
+        // entire memory pool.
+        // Also, other nodes can use these messages to automatically request a
+        // transaction from some other peer that annnounced it, and stop
+        // waiting for us to respond.
+        // In normal operation, we often send NOTFOUND messages for parents of
+        // transactions that we relay; if a peer is missing a parent, they may
+        // assume we have them and request the parents from us.
         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::NOTFOUND, vNotFound));
     }
 }
