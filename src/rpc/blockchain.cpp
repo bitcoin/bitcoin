@@ -705,6 +705,37 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
     return info;
 }
 
+static UniValue removemempoolentry(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"removemempoolentry",
+               "\nRemove mempool data for given transaction\n",
+               {
+                       {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id (must be in mempool)"},
+               },
+               RPCResults{},
+               RPCExamples{
+                       HelpExampleCli("removemempoolentry", "\"mytxid\"")
+                       + HelpExampleRpc("removemempoolentry", "\"mytxid\"")
+               },
+            }.ToString());
+    }
+
+    uint256 hash = ParseHashV(request.params[0], "txid");
+
+    LOCK(mempool.cs);
+
+    CTxMemPool::txiter it = mempool.mapTx.find(hash);
+    if (it == mempool.mapTx.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
+    }
+
+    mempool.removeRecursive(it->GetTx());
+
+    return NullUniValue;
+}
+
 static UniValue getblockhash(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -2398,6 +2429,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose"} },
+    { "blockchain",         "removemempoolentry",     &removemempoolentry,     {"txid"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {} },
     { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
