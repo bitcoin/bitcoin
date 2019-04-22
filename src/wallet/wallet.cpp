@@ -3831,7 +3831,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
     }
 
     if (gArgs.GetBoolArg("-upgradewallet", false)) {
-        if (!UpgradeWallet(walletInstance, error, warnings)) {
+        if (!UpgradeWallet(walletInstance, gArgs.GetBoolArg("-upgradewallet", 0), error, warnings)) {
             return nullptr;
         }
     }
@@ -4097,10 +4097,10 @@ const CAddressBookData* CWallet::FindAddressBookEntry(const CTxDestination& dest
     return &address_book_it->second;
 }
 
-bool CWallet::UpgradeWallet(std::shared_ptr<CWallet> walletInstance, std::string& error, std::vector<std::string>& warnings)
+bool CWallet::UpgradeWallet(std::shared_ptr<CWallet> walletInstance, int version, std::string& error, std::vector<std::string>& warnings)
 {
     int prev_version = walletInstance->GetVersion();
-    int nMaxVersion = gArgs.GetArg("-upgradewallet", 0);
+    int nMaxVersion = version;
     if (nMaxVersion == 0) // the -upgradewallet without argument case
     {
         walletInstance->WalletLogPrintf("Performing wallet upgrade to %i\n", FEATURE_LATEST);
