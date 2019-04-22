@@ -765,9 +765,12 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    if (fs::create_directories(path)) {
+    // Try to create data dir and wallets subdirectory. Errors are ignored here
+    // since there are further checks.
+    boost::system::error_code ec;
+    if (fs::create_directories(path, ec)) {
         // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
+        fs::create_directories(path / "wallets", ec);
     }
 
     return path;
