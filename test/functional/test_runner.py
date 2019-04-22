@@ -92,6 +92,7 @@ BASE_SCRIPTS = [
     'wallet_importmulti.py',
     'mempool_limit.py',
     'rpc_txoutproof.py',
+    'rpc_removemempoolentry.py',
     'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
     'feature_csv_activation.py',
