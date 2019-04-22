@@ -1375,10 +1375,6 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetsendmany", "\"assetguid\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
             + HelpExampleRpc("assetsendmany", "\"assetguid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
             );
-			"<asset> Asset guid.\n"
-			"<address> Address to transfer to.\n"
-			"<amount> Quantity of asset to send.\n"
-			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
 	UniValue valueTo = params[1];
