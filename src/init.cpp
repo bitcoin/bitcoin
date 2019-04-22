@@ -960,7 +960,7 @@ bool AppInitParameterInteraction()
         }
     }
 
-    // if using block pruning, then disallow txindex
+    // if using block pruning, then disallow indexes
     if (gArgs.GetArg("-prune", 0)) {
         if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex.").translated);
