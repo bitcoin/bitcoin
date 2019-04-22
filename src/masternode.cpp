@@ -396,11 +396,14 @@ bool CMasternodeBroadcast::Create(std::string strService, std::string strKeyMast
     CPubKey pubKeyMasternodeNew;
     CKey keyMasternodeNew;
 
-    //need correct blocks to send ping
-    if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
-        strErrorMessage = "Sync in progress. Must wait until sync is complete to start Masternode";
-        LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
-        return false;
+    if (!GetBoolArg("-jumpstart", false))
+    {
+        //need correct blocks to send ping
+        if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
+            strErrorMessage = "Sync in progress. Must wait until sync is complete to start Masternode";
+            LogPrintf("CMasternodeBroadcast::Create -- %s\n", strErrorMessage);
+            return false;
+        }
     }
 
     if(!legacySigner.SetKey(strKeyMasternode, strErrorMessage, keyMasternodeNew, pubKeyMasternodeNew))

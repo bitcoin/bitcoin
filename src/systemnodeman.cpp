@@ -96,7 +96,10 @@ void CSystemnodeMan::ProcessSystemnodeConnections()
 void CSystemnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all Systemnode related functionality
-    if(!systemnodeSync.IsBlockchainSynced()) return;
+    if (!GetBoolArg("-jumpstart", false))
+    {
+        if(!systemnodeSync.IsBlockchainSynced()) return;
+    }
 
     LOCK(cs_process_message);
 

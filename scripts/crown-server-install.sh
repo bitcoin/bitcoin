@@ -7,7 +7,7 @@
 #
 # Setup crown server or update existing one
 
-LATEST_RELEASE="0.13.0.0"
+LATEST_RELEASE="0.13.2.0"
 
 systemnode=false
 masternode=false
@@ -146,7 +146,7 @@ download_package() {
        BITS=64
     fi
     # Change this later to take latest release version.
-    wget "https://github.com/Crowndev/crowncoin/releases/download/v0.13.0/Crown-$LATEST_RELEASE-Linux64.zip" -O $dir/crown.zip
+    wget "https://github.com/Crowndev/crowncoin/releases/download/v0.13.2.0/Crown-$LATEST_RELEASE-Linux64.zip" -O $dir/crown.zip
 }
 
 install_package() {

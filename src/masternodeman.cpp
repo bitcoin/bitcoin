@@ -533,7 +533,10 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 {
 
     if(fLiteMode) return; //disable all Masternode related functionality
-    if(!masternodeSync.IsBlockchainSynced()) return;
+    if (!GetBoolArg("-jumpstart", false))
+    {
+        if(!masternodeSync.IsBlockchainSynced()) return;
+    }
 
     LOCK(cs_process_message);
 
