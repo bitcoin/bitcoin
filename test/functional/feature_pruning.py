@@ -128,6 +128,10 @@ class PruneTest(BitcoinTestFramework):
 
     def test_height_min(self):
         assert os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), "blk00000.dat is missing, pruning too early"
+        info = self.nodes[2].getblockchaininfo()
+        assert_equal(info["pruned"], True)
+        assert_equal(info["have_pruned"], False)
+
         self.log.info("Success")
         self.log.info("Though we're already using more than 550MiB, current usage: %d" % calc_usage(self.prunedir))
         self.log.info("Mining 25 more blocks should cause the first block file to be pruned")
@@ -136,6 +140,9 @@ class PruneTest(BitcoinTestFramework):
 
         # Wait for blk00000.dat to be pruned
         wait_until(lambda: not os.path.isfile(os.path.join(self.prunedir, "blk00000.dat")), timeout=30)
+        info = self.nodes[2].getblockchaininfo()
+        assert_equal(info["pruned"], True)
+        assert_equal(info["have_pruned"], True)
 
         self.log.info("Success")
         usage = calc_usage(self.prunedir)

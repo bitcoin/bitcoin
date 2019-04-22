@@ -180,7 +180,7 @@ extern CBlockIndex *pindexBestHeader;
 
 /** Pruning-related variables and constants */
 /** True if any block files have ever been pruned. */
-extern bool fHavePruned;
+extern bool fHavePruned GUARDED_BY(cs_main);
 /** True if we're running in -prune mode. */
 extern bool fPruneMode;
 /** Number of MiB of block files that we're trying to stay below. */
@@ -488,7 +488,7 @@ bool DumpMempool();
 bool LoadMempool();
 
 //! Check whether the block associated with this index entry is pruned or not.
-inline bool IsBlockPruned(const CBlockIndex* pblockindex)
+inline bool IsBlockPruned(const CBlockIndex* pblockindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
 }

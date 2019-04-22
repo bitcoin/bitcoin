@@ -95,7 +95,7 @@ class BlockchainTest(BitcoinTestFramework):
         res = self.nodes[0].getblockchaininfo()
 
         # result should have these additional pruning keys if manual pruning is enabled
-        assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning'] + keys))
+        assert_equal(sorted(res.keys()), sorted(['have_pruned', 'pruneheight', 'automatic_pruning'] + keys))
 
         # size_on_disk should be > 0
         assert_greater_than(res['size_on_disk'], 0)
@@ -115,7 +115,7 @@ class BlockchainTest(BitcoinTestFramework):
         self.restart_node(0, ['-stopatheight=207', '-prune=550'])
         res = self.nodes[0].getblockchaininfo()
         # result should have these additional pruning keys if prune=550
-        assert_equal(sorted(res.keys()), sorted(['pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
+        assert_equal(sorted(res.keys()), sorted(['have_pruned', 'pruneheight', 'automatic_pruning', 'prune_target_size'] + keys))
 
         # check related fields
         assert res['pruned']
