@@ -137,6 +137,7 @@ public:
         uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
         int64_t m_peer_connect_timeout = DEFAULT_PEER_CONNECT_TIMEOUT;
+        bool m_tx_relay_force_flush{false};
         std::vector<std::string> vSeedNodes;
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;
@@ -159,6 +160,7 @@ public:
         nSendBufferMaxSize = connOptions.nSendBufferMaxSize;
         nReceiveFloodSize = connOptions.nReceiveFloodSize;
         m_peer_connect_timeout = connOptions.m_peer_connect_timeout;
+        m_tx_relay_force_flush = connOptions.m_tx_relay_force_flush;
         {
             LOCK(cs_totalBytesSent);
             nMaxOutboundTimeframe = connOptions.nMaxOutboundTimeframe;
@@ -305,6 +307,9 @@ public:
     unsigned int GetReceiveFloodSize() const;
 
     void WakeMessageHandler();
+
+    /** Send transactions without any delay */
+    std::atomic<bool> m_tx_relay_force_flush;
 
     /** Attempts to obfuscate tx time through exponentially distributed emitting.
         Works assuming that a single interval is used.

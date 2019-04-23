@@ -1787,6 +1787,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
+    connOptions.m_tx_relay_force_flush = chainparams.MineBlocksOnDemand(); // Send txs without delay on regtest
 
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;
