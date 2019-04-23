@@ -748,7 +748,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("syscoinburn", "\"amount\" \"true\" \"ethaddress\"")
-            + HelpExampleRpc("syscoinburn", "\"amount\" \"true\" \"ethaddress\"")
+            + HelpExampleRpc("syscoinburn", "\"amount\", \"true\", \"ethaddress\"")
             );
       
     string fundingAddress = params[0].get_str();      
@@ -799,7 +799,7 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"\"")
-            + HelpExampleRpc("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"\"")
+            + HelpExampleRpc("syscoinmint","\"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof\", \"txmerkleproofpath\", \"\"")
             );
 
 	string vchAddress = params[0].get_str();
@@ -1112,7 +1112,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31")
-            + HelpExampleRpc("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31")
+            + HelpExampleRpc("assetnew", "\"myaddress\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31")
             );
 	string vchAddress = params[0].get_str();
 	vector<unsigned char> vchPubData = vchFromString(params[1].get_str());
@@ -1195,8 +1195,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             "6. <witness>           (string, optional) Witness address that will sign for web-of-trust notarization of this transaction.\n"
             "\nResult:\n"
             "\nExamples:\n"
-            + HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \" update_flags\" \"\"")
-            + HelpExampleRpc("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \" update_flags\" \"\"")
+            + HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \"update_flags\" \"\"")
+            + HelpExampleRpc("assetupdate", "\"assetguid\", \"publicvalue\", \"contractaddress\", \"supply\", \"update_flags\", \"\"")
             );
 	const int &nAsset = params[0].get_int();
 	string strData = "";
@@ -1257,7 +1257,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
-			"assettransfer [asset] [address] [witness]\n"
+			"assettransfer <asset> <address> <witness>\n"
 			"\nTransfer an asset you own to another address.\n"
             "\nArguments:\n"
 			"1. <asset>      (numeric, required) Asset guid.\n"
@@ -1269,7 +1269,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("assettransfer", "\"asset\" \"address\" \"\"")
-            + HelpExampleRpc("assettransfer", "\"asset\" \"address\" \"\"")
+            + HelpExampleRpc("assettransfer", "\"asset\", \"address\", \"\"")
             );
 
     // gather & validate inputs
@@ -1331,7 +1331,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("assetsend", "\"assetguid\" \"addressto\" \"amount\"")
-            + HelpExampleRpc("assetsend", "\"assetguid\" \"addressto\" \"amount\"")
+            + HelpExampleRpc("assetsend", "\"assetguid\", \"addressto\", \"amount\"")
             );
 
     UniValue output(UniValue::VARR);
@@ -1740,8 +1740,8 @@ UniValue listassets(const JSONRPCRequest& request) {
 			+ HelpExampleCli("listassets", "10 10")
 			+ HelpExampleCli("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 			+ HelpExampleCli("listassets", "0 0 '{\"asset\":3473733}'")
-			+ HelpExampleRpc("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-			+ HelpExampleRpc("listassets", "0 0 '{\"asset\":3473733}'")
+			+ HelpExampleRpc("listassets", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
+			+ HelpExampleRpc("listassets", "0, 0, '{\"asset\":3473733}'")
 		);
 	UniValue options;
 	int count = 10;
@@ -1969,8 +1969,8 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             "    }\n"
             + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
             + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
-            + HelpExampleRpc("listassetindex", "0 '{\"asset\":92922}'")
-            + HelpExampleRpc("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
+            + HelpExampleRpc("listassetindex", "0, '{\"asset\":92922}'")
+            + HelpExampleRpc("listassetindex", "2, '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
         );
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
@@ -1996,7 +1996,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
             "listassetindexassets <address>\n"
             "\nReturn a list of assets an address is associated with.\n"
             "\nArguments:\n"
-            "1. <asset>          (numeric, required) Address to find assets associated with.\n"
+            "1. <address>          (numeric, required) Address to find assets associated with.\n"
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
@@ -2074,10 +2074,10 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
             "2. <highestBlock>      (numeric, require)  What the highest block height on Ethereum is found to be. Usually coupled with syncing_status of 'syncing'. Set to 0 if syncing_status is 'synced'.\n" 
             "\nResult:\n"
             "\nExamples:\n"
-            + HelpExampleCli("syscoinsetethstatus", "syncing 7000000")
-            + HelpExampleCli("syscoinsetethstatus", "synced 0")
-            + HelpExampleRpc("syscoinsetethstatus", "syncing 7000000")
-            + HelpExampleRpc("syscoinsetethstatus", "synced 0")
+            + HelpExampleCli("syscoinsetethstatus", "\"syncing\" 7000000")
+            + HelpExampleCli("syscoinsetethstatus", "\"synced\" 0")
+            + HelpExampleRpc("syscoinsetethstatus", "\"syncing\", 7000000")
+            + HelpExampleRpc("syscoinsetethstatus", "\"synced\", 0")
             );
     string status = params[0].get_str();
     int highestBlock = params[1].get_int();
