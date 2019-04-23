@@ -1678,13 +1678,24 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // ********************************************************* Step 11: import blocks
 
-    if (!CheckDiskSpace(GetDataDir())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
-        return false;
-    }
-    if (!CheckDiskSpace(GetBlocksDir())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
-        return false;
+    {
+        LOCK(cs_main);
+        uint64_t additional_bytes_needed = 0;
+        if (!fReindex && chainActive.Height() <= 1) {
+            // If first startup
+            if (fPruneMode)
+                additional_bytes_needed = nPruneTarget;
+            else
+                additional_bytes_needed = chainparams.AssumedBlockchainSize() * 1024 * 1024 * 1024;
+        }
+        if (!CheckDiskSpace(GetDataDir())) {
+            InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
+            return false;
+        }
+        if (!CheckDiskSpace(GetBlocksDir(), additional_bytes_needed)) {
+            InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
+            return false;
+        }
     }
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
