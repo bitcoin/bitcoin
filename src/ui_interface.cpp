@@ -28,10 +28,6 @@ struct UISignals {
     boost::signals2::connection CClientUIInterface::signal_name##_connect(std::function<signal_name##Sig> fn) \
     {                                                                                                         \
         return g_ui_signals.signal_name.connect(fn);                                                          \
-    }                                                                                                         \
-    void CClientUIInterface::signal_name##_disconnect(std::function<signal_name##Sig> fn)                     \
-    {                                                                                                         \
-        return g_ui_signals.signal_name.disconnect(&fn);                                                      \
     }
 
 ADD_SIGNALS_IMPL_WRAPPER(ThreadSafeMessageBox);
