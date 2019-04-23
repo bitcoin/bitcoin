@@ -24,6 +24,8 @@
 #include <boost/thread.hpp>
 #include <merkleblock.h>
 #include <services/assetconsensus.h>
+#include <util/system.h>
+#include <masternodeconfig.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern CCriticalSection cs_assetallocation;
@@ -33,7 +35,7 @@ std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CAssetIndexDB> passetindexdb;
-
+std::vector<CTxIn> savedtxins;
 // SYSCOIN service rpc functions
 UniValue syscoinburn(const JSONRPCRequest& request);
 UniValue syscoinmint(const JSONRPCRequest& request);
@@ -41,7 +43,6 @@ UniValue syscointxfund(const JSONRPCRequest& request);
 
 
 UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request);
-extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
 
 UniValue assetnew(const JSONRPCRequest& request);
@@ -303,6 +304,28 @@ bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
     }
     return true;
 }
+void LockMasternodesInDefaultWallet(){
+    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile().string());
+    CWallet* const pwallet = GetDefaultWallet();
+    if(gArgs.GetBoolArg("-mnconflock", true) && pwallet && (masternodeConfig.getCount() > 0)) {
+        LOCK(pwallet->cs_wallet);
+        LogPrintf("Locking Masternodes:\n");
+        uint256 mnTxHash;
+        uint32_t outputIndex;
+        for (const auto& mne : masternodeConfig.getEntries()) {
+            mnTxHash.SetHex(mne.getTxHash());
+            outputIndex = (uint32_t)atoi(mne.getOutputIndex());
+            COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
+            // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
+            if(pwallet->IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
+                LogPrintf("  %s %s - IS NOT SPENDABLE, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
+                continue;
+            }
+            pwallet->LockCoin(outpoint);
+            LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
+        }
+    }
+}
 bool FlushSyscoinDBs() {
     bool ret = true;
 	 {
@@ -380,6 +403,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
 }
 UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, bool includechange = false)
 {
+    LOCK(pwallet->cs_wallet);
 	map<string, int> mapAddress;
 	UniValue ret(UniValue::VARR);
   
@@ -416,8 +440,9 @@ UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, b
 
 	vector<COutput> vecOutputs;
 	{
-		LOCK(pwallet->cs_wallet);
-		pwallet->AvailableCoins(vecOutputs, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
+        auto locked_chain = pwallet->chain().lock();
+        
+		pwallet->AvailableCoins(*locked_chain, vecOutputs, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
 	}
 	for(const COutput& out: vecOutputs) {
 		CTxDestination address;
@@ -482,21 +507,31 @@ UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, con
         throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Not enough outputs found for address: ") + strAddress);
     }
     Coin pcoin;
-    if (GetUTXOCoin(addressOutpoint, pcoin) && !pcoin.IsSpent())
-        txNew.vin.push_back(CTxIn(addressOutpoint, pcoin.out.scriptPubKey));
+    if (GetUTXOCoin(addressOutpoint, pcoin) && !pcoin.IsSpent()){
+        CTxIn txIn(addressOutpoint, pcoin.out.scriptPubKey);
+        // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs everytime we call this function
+        if(fTPSTest && fTPSTestEnabled){
+            if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end()){
+                savedtxins.push_back(txIn);
+                txNew.vin.push_back(txIn);
+            }   
+            else{
+                LogPrint(BCLog::SYS, "Skipping saved output in syscointxfund_helper...\n");
+            }
+        }
+        else
+            txNew.vin.push_back(txIn);
+    }
         
 	// vouts to the payees
 	for (const auto& recipient : vecSend)
 	{
 		CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
-		if (!IsDust(txout, dustRelayFee))
-		{
-			txNew.vout.push_back(txout);
-		}
+        txNew.vout.push_back(txout);
 	}   
     
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back(EncodeHexTx(txNew));
+    paramsFund.push_back(EncodeHexTx(CTransaction(txNew)));
     paramsFund.push_back(strAddress);
     
     JSONRPCRequest request;
@@ -564,7 +599,6 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			+ HelpExampleCli("syscointxfund", " <hexstring> \"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\"")
 			+ HelpExampleCli("syscointxfund", " <hexstring> \"175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W\" 0")
 			+ HelpRequiringPassphrase(pwallet));
-
 	const string &hexstring = params[0].get_str();
     const string &strAddress = params[1].get_str();
 	CMutableTransaction tx;
@@ -597,18 +631,18 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     CCoinControl coin_control;
 
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
-    CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+    CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
     for (auto& vin : tx.vin) {
         Coin coin;
         if (!GetUTXOCoin(vin.prevout, coin))
             continue;
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
-        nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+        nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
     }
     for (auto& vout : tx.vout) {
-        const unsigned int nBytes = ::GetSerializeSize(vout, SER_NETWORK, PROTOCOL_VERSION);
-        nFees += GetMinimumFee(*pwallet, nBytes, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+        const unsigned int nBytes = ::GetSerializeSize(vout, PROTOCOL_VERSION);
+        nFees += GetMinimumFee(*pwallet, nBytes, coin_control, &fee_calc);
     }
 
 	UniValue paramsBalance(UniValue::VARR);
@@ -655,10 +689,19 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			}
 			if (!IsOutpointMature(outPoint))
 				continue;
+            // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs everytime we call this function
+            if(fTPSTest && fTPSTestEnabled){
+                if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end())
+                    savedtxins.push_back(txIn);
+                else{
+                    LogPrint(BCLog::SYS, "Skipping saved output in syscointxfund...\n");
+                    continue;
+                }
+            }
 			int numSigs = 0;
 			CCountSigsVisitor(*pwallet, numSigs).Process(scriptPubKey);
 			// add fees to account for every input added to this transaction
-			nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+			nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
 			tx.vin.push_back(txIn);
 			nCurrentAmount += nValue;
 			if (nCurrentAmount >= (nDesiredAmount + nFees)) {
@@ -678,13 +721,13 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	if (!IsValidDestination(dest))
 		throw runtime_error("Change address is not valid");
 	CTxOut changeOut(nChange, GetScriptForDestination(dest));
-	if (!IsDust(changeOut, dustRelayFee))
+	if (!IsDust(changeOut, pwallet->chain().relayDustFee()))
 		tx.vout.push_back(changeOut);
 	
     
 	// pass back new raw transaction
 	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(tx));
+	res.push_back(EncodeHexTx(CTransaction(tx)));
 	return res;
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
@@ -842,7 +885,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     uint256 hash_block;
     CBlockIndex* blockindex = nullptr;
     CTransactionRef txRef;
-    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
         nHeight = blockindex->nHeight; 
     entry.pushKV("txtype", "syscoinburn");
     entry.pushKV("_id", tx.GetHash().GetHex());
@@ -1356,7 +1399,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     uint256 hash_block;
     CBlockIndex* blockindex = nullptr;
     CTransactionRef txRef;
-    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
         nHeight = blockindex->nHeight; 
         	
 
@@ -1745,7 +1788,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }
     CTransactionRef tx;
     uint256 hash_block;
-    if (!GetTransaction(txhash, tx, Params().GetConsensus(), hash_block, true, pblockindex))   
+    if (!GetTransaction(txhash, tx, Params().GetConsensus(), hash_block, pblockindex))   
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not found"); 
 
     CBlock block;
@@ -1763,7 +1806,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }   
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
-    const std::string &rawTx = EncodeHexTx(*tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+    const std::string &rawTx = EncodeHexTx(CTransaction(*tx), PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
     res.pushKV("transaction",rawTx);
     // get first 80 bytes of header (non auxpow part)
     res.pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));

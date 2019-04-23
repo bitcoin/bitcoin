@@ -11,7 +11,7 @@
 #include <qt/walletmodel.h>
 
 #include <key_io.h>
-#include <validation.h> // For strMessageMagic
+#include <util/validation.h> // For strMessageMagic
 #include <wallet/wallet.h>
 
 #include <string>
@@ -22,7 +22,7 @@
 SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(0),
+    model(nullptr),
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);

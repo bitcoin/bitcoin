@@ -1,13 +1,13 @@
-// Copyright (c) 2015-2018 The Syscoin Core developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2015-2019 The Syscoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
 #include <chainparams.h>
 #include <pow.h>
 #include <random.h>
-#include <util.h>
-#include <test/test_syscoin.h>
+#include <util/system.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -22,7 +22,6 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     pindexLast.nHeight = 32255;
     pindexLast.nTime = 1262152739;  // Block #32255
     pindexLast.nBits = 0x1d00ffff;
-    // SYSCOIN
     BOOST_CHECK_EQUAL(CalculateNextWorkRequired(&pindexLast, nLastRetargetTime, chainParams->GetConsensus()), 486801404);
 }
 

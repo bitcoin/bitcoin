@@ -7,6 +7,8 @@ clang-format-diff.py
 
 A script to format unified git diffs according to [.clang-format](../../src/.clang-format).
 
+Requires `clang-format`, installed e.g. via `brew install clang-format` on macOS.
+
 For instance, to format the last commit with 0 lines of context,
 the script should be called from the git root folder as follows.
 
@@ -119,7 +121,25 @@ Configuring the github-merge tool for the syscoin repository is done in the foll
 
     git config githubmerge.repository syscoin/syscoin
     git config githubmerge.testcmd "make -j4 check" (adapt to whatever you want to use for testing)
-    git config --global user.signingkey mykeyid (if you want to GPG sign)
+    git config --global user.signingkey mykeyid
+
+Authentication (optional)
+--------------------------
+
+The API request limit for unauthenticated requests is quite low, but the
+limit for authenticated requests is much higher. If you start running
+into rate limiting errors it can be useful to set an authentication token
+so that the script can authenticate requests.
+
+- First, go to [Personal access tokens](https://github.com/settings/tokens).
+- Click 'Generate new token'.
+- Fill in an arbitrary token description. No further privileges are needed.
+- Click the `Generate token` button at the bottom of the form.
+- Copy the generated token (should be a hexadecimal string)
+
+Then do:
+
+    git config --global user.ghtoken "pasted token"
 
 Create and verify timestamps of merge commits
 ---------------------------------------------
@@ -149,7 +169,7 @@ still compatible with the minimum supported Linux distribution versions.
 
 Example usage after a gitian build:
 
-    find ../gitian-builder/build -type f -executable | xargs python contrib/devtools/symbol-check.py 
+    find ../gitian-builder/build -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 
 If only supported symbols are used the return value will be 0 and the output will be empty.
 
@@ -172,3 +192,13 @@ It will do the following automatically:
 
 See doc/translation-process.md for more information.
 
+circular-dependencies.py
+========================
+
+Run this script from the root of the source tree (`src/`) to find circular dependencies in the source code.
+This looks only at which files include other files, treating the `.cpp` and `.h` file as one unit.
+
+Example usage:
+
+    cd .../src
+    ../contrib/devtools/circular-dependencies.py {*,*/*,*/*/*}.{h,cpp}

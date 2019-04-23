@@ -85,9 +85,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[char foo;]])],
     ])
 
 AC_ARG_ENABLE(benchmark,
-    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is yes)]),
+    AS_HELP_STRING([--enable-benchmark],[compile benchmark (default is no)]),
     [use_benchmark=$enableval],
-    [use_benchmark=yes])
+    [use_benchmark=no])
 
 AC_ARG_ENABLE(coverage,
     AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis]),
@@ -115,7 +115,7 @@ AC_ARG_ENABLE(exhaustive_tests,
     [use_exhaustive_tests=yes])
 
 AC_ARG_ENABLE(endomorphism,
-    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is no)]),
+    AS_HELP_STRING([--enable-endomorphism],[enable endomorphism (default is yes)]),
     [use_endomorphism=$enableval],
     [use_endomorphism=yes])
 
@@ -135,9 +135,9 @@ AC_ARG_ENABLE(module_recovery,
     [enable_module_recovery=no])
 
 AC_ARG_ENABLE(jni,
-    AS_HELP_STRING([--enable-jni],[enable libsecp256k1_jni (default is no)]),
+    AS_HELP_STRING([--enable-jni],[enable libsecp256k1_jni (default is auto)]),
     [use_jni=$enableval],
-    [use_jni=no])
+    [use_jni=auto])
 
 AC_ARG_WITH([field], [AS_HELP_STRING([--with-field=64bit|32bit|auto],
 [Specify Field Implementation. Default is auto])],[req_field=$withval], [req_field=auto])
@@ -447,7 +447,6 @@ AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 AC_MSG_NOTICE([Using endomorphism optimizations: $use_endomorphism])
-AC_MSG_NOTICE([Building benchmarks: $use_benchmark])
 AC_MSG_NOTICE([Building for coverage analysis: $enable_coverage])
 AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
 AC_MSG_NOTICE([Building ECDSA pubkey recovery module: $enable_module_recovery])

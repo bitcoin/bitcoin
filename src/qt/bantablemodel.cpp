@@ -10,7 +10,7 @@
 
 #include <interfaces/node.h>
 #include <sync.h>
-#include <utiltime.h>
+#include <util/time.h>
 
 #include <QDebug>
 #include <QList>
@@ -40,8 +40,8 @@ class BanTablePriv
 public:
     /** Local cache of peer information */
     QList<CCombinedBan> cachedBanlist;
-    /** Column to sort nodes by */
-    int sortColumn;
+    /** Column to sort nodes by (default to unsorted) */
+    int sortColumn{-1};
     /** Order (ascending or descending) to sort nodes by */
     Qt::SortOrder sortOrder;
 
@@ -76,7 +76,7 @@ public:
         if (idx >= 0 && idx < cachedBanlist.size())
             return &cachedBanlist[idx];
 
-        return 0;
+        return nullptr;
     }
 };
 
@@ -87,8 +87,6 @@ BanTableModel::BanTableModel(interfaces::Node& node, ClientModel *parent) :
 {
     columns << tr("IP/Netmask") << tr("Banned Until");
     priv.reset(new BanTablePriv());
-    // default to unsorted
-    priv->sortColumn = -1;
 
     // load initial data
     refresh();
@@ -147,8 +145,7 @@ QVariant BanTableModel::headerData(int section, Qt::Orientation orientation, int
 
 Qt::ItemFlags BanTableModel::flags(const QModelIndex &index) const
 {
-    if(!index.isValid())
-        return 0;
+    if (!index.isValid()) return Qt::NoItemFlags;
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     return retval;

@@ -8,6 +8,10 @@ if ENABLE_QT
   dist_man1_MANS+=syscoin-qt.1
 endif
 
-if BUILD_SYSCOIN_UTILS
-  dist_man1_MANS+=syscoin-cli.1 syscoin-tx.1
+if BUILD_SYSCOIN_CLI
+  dist_man1_MANS+=syscoin-cli.1
+endif
+
+if BUILD_SYSCOIN_TX
+  dist_man1_MANS+=syscoin-tx.1
 endif

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 Daniel Kraft
+# Copyright (c) 2014-2019 Daniel Kraft
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -55,7 +55,7 @@ def getCoinbaseAddr (node, blockHash):
     txn = blockData['tx']
     assert len (txn) >= 1
 
-    txData = node.getrawtransaction (txn[0], 1)
+    txData = node.getrawtransaction (txn[0], True, blockHash)
     assert len (txData['vout']) >= 1 and len (txData['vin']) == 1
     assert 'coinbase' in txData['vin'][0]
 

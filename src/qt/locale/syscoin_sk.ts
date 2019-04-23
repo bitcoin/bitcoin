@@ -768,6 +768,14 @@
         <translation>Vložená adresa "%1" nieje platnou adresou Syscoin.</translation>
     </message>
     <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Adresa "%1" už existuje ako prijímacia adresa s označením "%2" .Nemôže tak byť pridaná ako odosielacia adresa.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Zadaná adresa "%1" sa už nachádza v zozname adries s označením "%2".</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation>Nepodarilo sa odomknúť peňaženku.</translation>
     </message>
@@ -1046,8 +1054,20 @@
         <translation>&amp;Sieť</translation>
     </message>
     <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Zakáže niektoré pokročilé funkcie, ale všetky bloky budú stále plne overené. Obnovenie tohto nastavenia vyžaduje opätovné prevzatie celého blockchainu. Skutočné využitie disku môže byť o niečo vyššie.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Redukovať priestor pre &amp;bloky na</translation>
+    </message>
+    <message>
         <source>GB</source>
         <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Obnovenie tohto nastavenia vyžaduje opätovné prevzatie celého blockchainu.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1517,8 +1537,16 @@
 <context>
     <name>QObject::QObject</name>
     <message>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation>Chyba pri spracovaní argumentov príkazového riadku: %1.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Chyba: Zadaný adresár pre dáta „%1“ neexistuje.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Chyba: Konfiguračný súbor sa nedá spracovať: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1816,6 +1844,14 @@
         <translation>Sieťová aktivita zakázaná</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>Príkaz sa vykonáva bez peňaženky</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Príkaz sa vykonáva s použitím peňaženky "%1"</translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(ID uzlu: %1)</translation>
     </message>
@@ -2100,6 +2136,14 @@
         <translation>zbaliť nastavenia poplatkov</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>Špecifikujte vlastný poplatok za kB (1000 bajtov) virtuálnej veľkosti transakcie.
+
+Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 satoshi za kB" a veľkosti transakcie 500 bajtov (polovica z 1 kB) by stál len 50 satoshi.</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>za kilobajt</translation>
     </message>
@@ -2222,6 +2266,10 @@
     <message>
         <source>from wallet %1</source>
         <translation>z peňaženky %1</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <translation>Prosím, skontrolujte Vašu transakciu.</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -2689,6 +2737,10 @@
         <translation>Celková veľkosť transakcie</translation>
     </message>
     <message>
+        <source>Transaction virtual size</source>
+        <translation>Virtuálna veľkosť transakcie</translation>
+    </message>
+    <message>
         <source>Output index</source>
         <translation>Index výstupu</translation>
     </message>
@@ -3149,6 +3201,10 @@
         <translation>Nastala chyba pri čítaní súboru %s! Všetkz kľúče sa prečítali správne, ale dáta o transakcíách alebo záznamy v adresári môžu chýbať alebo byť nesprávne.</translation>
     </message>
     <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation>Zoskupenie výstupov podľa adresy, pri vybratí všetkých alebo žiadnych, namiesto vybratia na báze za výstup. Zlepší sa súkromie, keďže adresa je použitá len raz (pokiaľ nikto na túto adresu už nič nepošle po minutí), ale môže vyústiť v trochu väčšie poplatky keďže ne-optimalizovaný výber mincí môže vyústiť v pridané obmedzenia (predvolené: %u)</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Prosím skontrolujte systémový čas a dátum. Keď je váš čas nesprávny, %s nebude fungovať správne.</translation>
     </message>
@@ -3233,6 +3289,10 @@
         <translation>Chyba načítania %s</translation>
     </message>
     <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Chyba pri načítaní %s: Súkromné kľúče môžu byť zakázané len počas vytvárania</translation>
+    </message>
+    <message>
         <source>Error loading %s: Wallet corrupted</source>
         <translation>Chyba načítania %s: Peňaženka je poškodená</translation>
     </message>
@@ -3283,6 +3343,10 @@
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Neplatná suma pre -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Zadaný adresár blokov "%s" neexistuje.</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3567,6 +3631,22 @@
     <message>
         <source>Insufficient funds</source>
         <translation>Nedostatok prostriedkov</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation>Nie je možné vygenerovať kľúč na zmenu adresy. Súkromné kľúče sú pre túto peňaženku zakázané.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>Nie je možné vylepšiť peňaženku bez HD bez aktualizácie, ktorá podporuje delenie keypoolu. Použite prosím -upgradewallet=169900 alebo -upgradewallet bez špecifikovania verzie.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Odhad poplatku sa nepodaril. Fallbackfee je zakázaný. Počkajte niekoľko blokov alebo povoľte -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Upozornenie: Boli zistené súkromné kľúče v peňaženke {%s} so zakázanými súkromnými kľúčmi.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

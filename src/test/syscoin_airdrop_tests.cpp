@@ -4,7 +4,7 @@
 
 #include "test/test_syscoin_services.h"
 #include "data/utxo.json.h"
-#include "utiltime.h"
+#include <util/time.h>
 #include "rpc/server.h"
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>

@@ -6,8 +6,7 @@
 #include <primitives/pureheader.h>
 
 #include <hash.h>
-#include <utilstrencodings.h>
-#include <versionbits.h>
+#include <util/strencodings.h>
 
 uint256 CPureBlockHeader::GetHash() const
 {

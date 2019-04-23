@@ -4,6 +4,7 @@
 
 #include <qt/transactionrecord.h>
 
+#include <chain.h>
 #include <consensus/consensus.h>
 #include <interfaces/wallet.h>
 #include <key_io.h>
@@ -11,6 +12,9 @@
 #include <validation.h>
 
 #include <stdint.h>
+
+#include <QDateTime>
+
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction()
@@ -75,14 +79,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     {
         bool involvesWatchAddress = false;
         isminetype fAllFromMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txin_is_mine)
+        for (const isminetype mine : wtx.txin_is_mine)
         {
             if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
         isminetype fAllToMe = ISMINE_SPENDABLE;
-        for (isminetype mine : wtx.txout_is_mine)
+        for (const isminetype mine : wtx.txout_is_mine)
         {
             if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllToMe > mine) fAllToMe = mine;
@@ -101,7 +105,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
         {
             //
             // Debit
-            //          
+            //
             CAmount nTxFee = nDebit - wtx.tx->GetValueOut();
 
             for (unsigned int nOut = 0; nOut < wtx.tx->vout.size(); nOut++)
@@ -156,7 +160,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
     return parts;
 }
 
-void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t adjustedTime)
+void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t block_time)
 {
     // Determine transaction status
 
@@ -170,10 +174,9 @@ void TransactionRecord::updateStatus(const interfaces::WalletTxStatus& wtx, int 
     status.depth = wtx.depth_in_main_chain;
     status.cur_num_blocks = numBlocks;
 
-    if (!wtx.is_final)
-    {
-        if (wtx.lock_time < LOCKTIME_THRESHOLD)
-        {
+    const bool up_to_date = ((int64_t)QDateTime::currentMSecsSinceEpoch() / 1000 - block_time < MAX_BLOCK_TIME_GAP);
+    if (up_to_date && !wtx.is_final) {
+        if (wtx.lock_time < LOCKTIME_THRESHOLD) {
             status.status = TransactionStatus::OpenUntilBlock;
             status.open_for = wtx.lock_time - numBlocks;
         }

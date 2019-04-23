@@ -10,9 +10,13 @@
 
 #include <vector>
 
+// DoS prevention: limit cache size to 32MB (over 1000000 entries on 64-bit
+// systems). Due to how we count cache size, actual memory usage is slightly
+// more (~32.25 MB)
 // SYSCOIN
 static const unsigned int DEFAULT_MAX_SIG_CACHE_SIZE = 192;
 // Maximum sig cache size allowed
+// SYSCOIN
 static const int64_t MAX_MAX_SIG_CACHE_SIZE = (DEFAULT_MAX_SIG_CACHE_SIZE/2) * 1024;
 
 class CPubKey;
@@ -44,6 +48,7 @@ private:
     bool store;
 
 public:
+    // SYSCOIN
     CachingTransactionSignatureChecker(const CTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, bool storeIn, const PrecomputedTransactionData& txdataIn) : TransactionSignatureChecker(txToIn, nInIn, amountIn, txdataIn), store(storeIn) {}
 
     bool VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& vchPubKey, const uint256& sighash) const override;

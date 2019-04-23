@@ -4,7 +4,7 @@
 
 #include "uint256.h"
 #include "util.h"
-#include "utilstrencodings.h"
+#include <util/strencodings.h>
 #include "ethereum/ethereum.h"
 #include "ethereum/Common.h"
 #include "ethereum/RLP.h"

@@ -354,6 +354,10 @@
         <translation>Vytvářím nový index bloků na disku...</translation>
     </message>
     <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Proxy je &lt;b&gt;zapnutá&lt;/b&gt;: %1</translation>
+    </message>
+    <message>
         <source>Send coins to a Syscoin address</source>
         <translation>Pošli mince na syscoinovou adresu</translation>
     </message>
@@ -519,6 +523,12 @@
         <source>Amount: %1
 </source>
         <translation>Částka: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Peněženka: %1
 </translation>
     </message>
     <message>
@@ -756,6 +766,14 @@
     <message>
         <source>The entered address "%1" is not a valid Syscoin address.</source>
         <translation>Zadaná adresa „%1“ není platná syscoinová adresa.</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>Adresa "%1" již existuje jako přijímací adresa s označením "%2" a proto nemůže být přidána jako odesílací adresa.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Zadaná adresa „%1“ už v adresáři je s označením "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -1034,6 +1052,22 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Síť</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Zakáže některé pokročilé funkce, ale všechny bloky budou stále plně otevřené. Obnovení tohoto nastavení vyžaduje opětovné převzetí celého blockchainu. Skutečné využít disku může být o něco vyšší.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Redukovat prostor pro &amp;bloky na</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Obnovení tohoto nastavení vyžaduje opětovné převzetí celého blockchainu.</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1503,8 +1537,16 @@
 <context>
     <name>QObject::QObject</name>
     <message>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation>Chyba při zpracování argumentů příkazového řádku: %1.</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Chyba: Zadaný adresář pro data „%1“ neexistuje.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Chyba: Konfigurační soubor se nedá zpracovat: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1595,6 +1637,14 @@
     <message>
         <source>Memory usage</source>
         <translation>Obsazenost paměti</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation>Peněženka:</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(žádné)</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -1777,12 +1827,28 @@
         <translation>V historii se pohybuješ šipkami nahoru a dolů a pomocí %1 čistíš obrazovku.</translation>
     </message>
     <message>
+        <source>Type %1 for an overview of available commands.</source>
+        <translation>Napiš %1 pro přehled dostupných příkazů.</translation>
+    </message>
+    <message>
+        <source>For more information on using this console type %1.</source>
+        <translation>Pro více informací jak používat tuto konzoli napište %1.</translation>
+    </message>
+    <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
         <translation>UPOZORNĚNÍ: Podvodníci jsou aktivní a říkají uživatelům, aby sem zadávali příkazy, kterými jim pak ale vykradou jejich peněženky. Nepoužívej tuhle konzoli, pokud úplně neznáš důsledky jednotlivých příkazů.</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
         <translation>Síť je vypnutá</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation>Spouštění příkazu bez jakékoliv peněženky</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Příkaz se vykonává s použitím peněženky "%1"</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -1854,6 +1920,14 @@
     <message>
         <source>Clear</source>
         <translation>Vyčistit</translation>
+    </message>
+    <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Nativní segwit adresy (Bech32 nebo BIP-173) snižují Vaše budoucí transakční poplatky a nabízejí lepší ochranu před překlepy, avšak staré peněženky je nepodporují. Pokud je toto pole nezaškrtnuté, bude vytvořena adresa kompatibilní se staršími peněženkami.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Generovat nativní segwit adresu (Bench32)</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -2061,6 +2135,14 @@
         <translation>sbal nastavení poplatků</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>Specifikujte vlastní poplatek za kB (1000 bajtů) virtuální velikosti transakce.
+
+Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 satoshi za kB" a velikost transakce 500 bajtů (polovina z 1 kB) by stál jen 50 satoshi.</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>za kilobajt</translation>
     </message>
@@ -2111,6 +2193,10 @@
     <message>
         <source>Enable Replace-By-Fee</source>
         <translation>Povolit možnost dodatečně transakci navýšit poplatek (tzv. „replace-by-fee“)</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>S dodatečným navýšením poplatku (BIP-125, tzv. „Replace-By-Fee“) můžete zvýšit poplatek i po odeslání. Bez dodatečného navýšení bude navrhnut vyšší transakční poplatek, tak aby kompenzoval zvýšené riziko prodlení transakce.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -2173,8 +2259,28 @@
         <translation>nebo</translation>
     </message>
     <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>Poplatek můžete navýšit později (vysílá se "Replace-By-Fee" - nahrazení poplatkem, BIP-125).</translation>
+    </message>
+    <message>
+        <source>from wallet %1</source>
+        <translation>z peněženky %1</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <translation>Prosím, zkontrolujte vaši transakci.</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Transakční poplatek</translation>
+    </message>
+    <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Nevysílá se "Replace-By-Fee" - nahrazení poplatkem, BIP-125.</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Celková částka</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2294,6 +2400,10 @@
     <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>Od&amp;ečíst poplatek od částky</translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Použít dostupný zůstatek</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2624,6 +2734,10 @@
     <message>
         <source>Transaction total size</source>
         <translation>Celková velikost transakce</translation>
+    </message>
+    <message>
+        <source>Transaction virtual size</source>
+        <translation>Virtuální velikost transakce</translation>
     </message>
     <message>
         <source>Output index</source>
@@ -3030,7 +3144,11 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Data z peněženky byla v pořádku uložena do %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>Zrušit</translation>
+    </message>
+</context>
 <context>
     <name>syscoin-core</name>
     <message>
@@ -3080,6 +3198,10 @@
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Nastala chyba při čtení souboru %s! Všechny klíče se přečetly správně, ale data o transakcích nebo záznamy v adresáři mohou chybět či být nesprávné.</translation>
+    </message>
+    <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation>Seskupení výstupů podle adresy, při výběru všech nebo žádných, namísto výběru báze za výstup. Zvýšena ochrana soukromí, protože je adresa použita pouze jednou (pokud nikdo na tuto adresu již nic po minutě nepošle). Může být spojeno s vyššími poplatky, jelikož neoptimalizovaný výběr mincí může vyústit v přidané omezení (předvolené: %u)</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -3166,6 +3288,10 @@
         <translation>Chyba při načítání %s</translation>
     </message>
     <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Chyba při načítání %s: Soukromé klíče můžou být zakázané jen v průběhu vytváření.</translation>
+    </message>
+    <message>
         <source>Error loading %s: Wallet corrupted</source>
         <translation>Chyba při načítání %s: peněženka je poškozená</translation>
     </message>
@@ -3190,6 +3316,10 @@
         <translation>Nepodařilo se naslouchat na žádném portu. Použij -listen=0, pokud to byl tvůj záměr.</translation>
     </message>
     <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>Během inicializace se nepodařilo proskenovat peněženku</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importuji...</translation>
     </message>
@@ -3212,6 +3342,14 @@
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Neplatná částka pro -fallbackfee=&lt;částka&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Zadaný adresář bloků "%s" neexistuje.</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>Aktualizuje se txindex databáze</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
@@ -3252,6 +3390,10 @@
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Nedaří se mi připojit na %s na tomhle počítači. %s už pravděpodobně jednou běží.</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation>Nepodařilo se vygenerovat klíče</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -3346,6 +3488,18 @@
         <translation>Nepodařilo se podepsat transakci</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>Uvedená -walletdir "%s" neexistuje</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>Uvedená -walletdir "%s" je relatívna cesta</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>Uvedená -walletdir "%s" není složkou</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Částka v transakci je příliš malá na pokrytí poplatku</translation>
     </message>
@@ -3376,6 +3530,10 @@
     <message>
         <source>Verifying wallet(s)...</source>
         <translation>Kontroluji peněženku/y…</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>Peněženka %s se nachází mimo adresář pro peněženky %s</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3472,6 +3630,22 @@
     <message>
         <source>Insufficient funds</source>
         <translation>Nedostatek prostředků</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation>Není možné vygenerovat klíč na změnu adresy. Soukromé klíče jsou pro tuto peněženku zakázané.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>Není možné vylepšit peněženku bez HD bez aktualizace, která podporuje dělení keypoolu. Použijte prosím -upgradewallet=169900 nebo -upgradewallet bez specifikované verze.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Odhad poplatku se nepodařil. Fallbackfee je zakázaný. Počkejte několik bloků nebo povolte -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Upozornění: Byly zjištěné soukromé klíče v peněžence {%s} se zakázanými soukromými klíči.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

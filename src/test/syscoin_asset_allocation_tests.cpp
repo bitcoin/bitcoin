@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "test/test_syscoin_services.h"
-#include "utiltime.h"
+#include <util/time.h>
 #include "util.h"
 #include "rpc/server.h"
 #include "services/asset.h"

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Syscoin Core developers
+# Copyright (c) 2014-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the abandontransaction RPC.
@@ -13,7 +13,13 @@
 from decimal import Decimal
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes, disconnect_nodes, sync_blocks, sync_mempools
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    connect_nodes,
+    disconnect_nodes,
+)
+
 
 class AbandonConflictTest(SyscoinTestFramework):
     def set_test_params(self):
@@ -25,12 +31,12 @@ class AbandonConflictTest(SyscoinTestFramework):
 
     def run_test(self):
         self.nodes[1].generate(100)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         balance = self.nodes[0].getbalance()
         txA = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txB = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txC = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
-        sync_mempools(self.nodes)
+        self.sync_mempools()
         self.nodes[1].generate(1)
 
         # Can not abandon non-wallet transaction
@@ -38,23 +44,23 @@ class AbandonConflictTest(SyscoinTestFramework):
         # Can not abandon confirmed transaction
         assert_raises_rpc_error(-5, 'Transaction not eligible for abandonment', lambda: self.nodes[0].abandontransaction(txid=txA))
 
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         newbalance = self.nodes[0].getbalance()
-        assert(balance - newbalance < Decimal("0.001")) #no more than fees lost
+        assert balance - newbalance < Decimal("0.001")  #no more than fees lost
         balance = newbalance
 
         # Disconnect nodes so node0's transactions don't get into node1's mempool
         disconnect_nodes(self.nodes[0], 1)
 
         # Identify the 10sys outputs
-        nA = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txA, 1)["vout"]) if vout["value"] == Decimal("10"))
-        nB = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txB, 1)["vout"]) if vout["value"] == Decimal("10"))
-        nC = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txC, 1)["vout"]) if vout["value"] == Decimal("10"))
+        nA = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txA)["details"] if tx_out["amount"] == Decimal("10"))
+        nB = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txB)["details"] if tx_out["amount"] == Decimal("10"))
+        nC = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txC)["details"] if tx_out["amount"] == Decimal("10"))
 
-        inputs =[]
+        inputs = []
         # spend 10sys outputs from txA and txB
-        inputs.append({"txid":txA, "vout":nA})
-        inputs.append({"txid":txB, "vout":nB})
+        inputs.append({"txid": txA, "vout": nA})
+        inputs.append({"txid": txB, "vout": nB})
         outputs = {}
 
         outputs[self.nodes[0].getnewaddress()] = Decimal("14.99998")
@@ -63,12 +69,12 @@ class AbandonConflictTest(SyscoinTestFramework):
         txAB1 = self.nodes[0].sendrawtransaction(signed["hex"])
 
         # Identify the 14.99998sys output
-        nAB = next(i for i, vout in enumerate(self.nodes[0].getrawtransaction(txAB1, 1)["vout"]) if vout["value"] == Decimal("14.99998"))
+        nAB = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txAB1)["details"] if tx_out["amount"] == Decimal("14.99998"))
 
         #Create a child tx spending AB1 and C
         inputs = []
-        inputs.append({"txid":txAB1, "vout":nAB})
-        inputs.append({"txid":txC, "vout":nC})
+        inputs.append({"txid": txAB1, "vout": nAB})
+        inputs.append({"txid": txC, "vout": nC})
         outputs = {}
         outputs[self.nodes[0].getnewaddress()] = Decimal("24.9996")
         signed2 = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
@@ -76,8 +82,8 @@ class AbandonConflictTest(SyscoinTestFramework):
 
         # Create a child tx spending ABC2
         signed3_change = Decimal("24.999")
-        inputs = [ {"txid":txABC2, "vout":0} ]
-        outputs = { self.nodes[0].getnewaddress(): signed3_change }
+        inputs = [{"txid": txABC2, "vout": 0}]
+        outputs = {self.nodes[0].getnewaddress(): signed3_change}
         signed3 = self.nodes[0].signrawtransactionwithwallet(self.nodes[0].createrawtransaction(inputs, outputs))
         # note tx is never directly referenced, only abandoned as a child of the above
         self.nodes[0].sendrawtransaction(signed3["hex"])
@@ -105,7 +111,7 @@ class AbandonConflictTest(SyscoinTestFramework):
         unconfbalance = self.nodes[0].getunconfirmedbalance() + self.nodes[0].getbalance()
         assert_equal(unconfbalance, newbalance)
         # Also shouldn't show up in listunspent
-        assert(not txABC2 in [utxo["txid"] for utxo in self.nodes[0].listunspent(0)])
+        assert not txABC2 in [utxo["txid"] for utxo in self.nodes[0].listunspent(0)]
         balance = newbalance
 
         # Abandon original transaction and verify inputs are available again
@@ -145,8 +151,8 @@ class AbandonConflictTest(SyscoinTestFramework):
 
         # Create a double spend of AB1 by spending again from only A's 10 output
         # Mine double spend from node 1
-        inputs =[]
-        inputs.append({"txid":txA, "vout":nA})
+        inputs = []
+        inputs.append({"txid": txA, "vout": nA})
         outputs = {}
         outputs[self.nodes[1].getnewaddress()] = Decimal("9.9999")
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
@@ -155,7 +161,7 @@ class AbandonConflictTest(SyscoinTestFramework):
         self.nodes[1].generate(1)
 
         connect_nodes(self.nodes[0], 1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # Verify that B and C's 10 SYS outputs are available for spending again because AB1 is now conflicted
         newbalance = self.nodes[0].getbalance()
@@ -171,6 +177,7 @@ class AbandonConflictTest(SyscoinTestFramework):
         self.log.info("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
         self.log.info("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
         self.log.info(str(balance) + " -> " + str(newbalance) + " ?")
+
 
 if __name__ == '__main__':
     AbandonConflictTest().main()

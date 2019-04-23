@@ -67,7 +67,7 @@ const std::string CLIENT_NAME("Satoshi");
 #endif
 
 const std::string CLIENT_BUILD(BUILD_DESC CLIENT_VERSION_SUFFIX);
-
+// SYSCOIN
 std::string FormatVersion(int nVersion)
 {
     if (nVersion % 100 == 0)

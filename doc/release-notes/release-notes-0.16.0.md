@@ -1,6 +1,6 @@
-﻿Syscoin Core version 0.16.0 is now available from:
+Syscoin Core version 0.16.0 is now available from:
 
-  <https://syscoin.org/bin/syscoin-core-0.16.0/>
+  <https://syscoincore.org/bin/syscoin-core-0.16.0/>
 
 This is a new major version release, including new features, various bugfixes
 and performance improvements, as well as updated translations.
@@ -11,7 +11,7 @@ Please report bugs using the issue tracker at GitHub:
 
 To receive security and update notifications, please subscribe to:
 
-  <https://syscoin.org/en/list/announcements/join/>
+  <https://syscoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
@@ -197,7 +197,7 @@ Other changed command-line options
 
 Testing changes
 ----------------
-- The default regtest JSON-RPC port has been changed to 18443 to avoid conflict with testnet's default of 18332.
+- The default regtest JSON-RPC port has been changed to 18470 to avoid conflict with testnet's default of 18370.
 - Segwit is now always active in regtest mode by default. Thus, if you upgrade a regtest node you will need to either -reindex or use the old rules by adding `vbparams=segwit:0:999999999999` to your regtest syscoin.conf. Failure to do this will result in a CheckBlockIndex() assertion failure that will look like: Assertion `(pindexFirstNeverProcessed != nullptr) == (pindex->nChainTx == 0)' failed.
 
 0.16.0 change log
@@ -312,7 +312,7 @@ Testing changes
 - #11415 `69ec021` Disallow using addresses in createmultisig (achow101)
 - #12278 `288deac` Add special error for genesis coinbase to getrawtransaction (MeshCollider)
 - #11362 `c6223b3` Remove nBlockMaxSize from miner opt struct as it is no longer used (gmaxwell)
-- #10825 `28485c7` Set regtest JSON-RPC port to 18443 to avoid conflict with testnet 18332 (fametrano)
+- #10825 `28485c7` Set regtest JSON-RPC port to 18470 to avoid conflict with testnet 18370 (fametrano)
 - #11303 `e542728` Fix estimatesmartfee rounding display issue (TheBlueMatt)
 - #7061 `8c2de82` Add RPC call "rescanblockchain <startheight> <stopheight>" (jonasschnelli)
 - #11055 `95e14dc` RPC getreceivedbyaddress should return error if called with address not owned by the wallet (jnewbery)
@@ -420,7 +420,7 @@ Testing changes
 - #11648 `ccc70a2` Add messages.py (jnewbery)
 - #11713 `49667a7` Fix for mismatched extern definition in wallet tests (sipsorcery)
 - #11707 `0d89fa0` Fix sendheaders (jnewbery)
-- #11718 `9cdd2bc` Move pwallet to wallet test fixture (laanwj)
+- #11718 `9cdd2bc` Move pwalletMain to wallet test fixture (laanwj)
 - #11714 `901ba3e` Test that mempool rejects coinbase transactions (jamesob)
 - #11743 `3d6ad40` Add multiwallet prefix test (MarcoFalke)
 - #11683 `a892218` Remove unused mininode functions {ser,deser}_int_vector(...). Remove unused imports (practicalswift)

@@ -2,12 +2,43 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+
+FUZZ_TARGETS = \
+  test/fuzz/address_deserialize \
+  test/fuzz/addrman_deserialize \
+  test/fuzz/banentry_deserialize \
+  test/fuzz/block_deserialize \
+  test/fuzz/blockheader_deserialize \
+  test/fuzz/blocklocator_deserialize \
+  test/fuzz/blockmerkleroot \
+  test/fuzz/blocktransactions_deserialize \
+  test/fuzz/blocktransactionsrequest_deserialize \
+  test/fuzz/blockundo_deserialize \
+  test/fuzz/bloomfilter_deserialize \
+  test/fuzz/coins_deserialize \
+  test/fuzz/diskblockindex_deserialize \
+  test/fuzz/inv_deserialize \
+  test/fuzz/messageheader_deserialize \
+  test/fuzz/netaddr_deserialize \
+  test/fuzz/script_flags \
+  test/fuzz/service_deserialize \
+  test/fuzz/transaction_deserialize \
+  test/fuzz/txoutcompressor_deserialize \
+  test/fuzz/txundo_deserialize
+
+if ENABLE_FUZZ
+noinst_PROGRAMS += $(FUZZ_TARGETS:=)
+else
 bin_PROGRAMS += test/test_syscoin
+endif
+
 TEST_SRCDIR = test
 TEST_BINARY=test/test_syscoin$(EXEEXT)
 
 JSON_TEST_FILES = \
+  test/data/script_tests.json \
   test/data/base58_encode_decode.json \
+  test/data/blockfilters.json \
   test/data/key_io_valid.json \
   test/data/key_io_invalid.json \
   test/data/script_tests.json \
@@ -25,9 +56,31 @@ RAW_TEST_FILES =
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 SYSCOIN_TEST_SUITE = \
-  test/test_syscoin_main.cpp \
-  test/test_syscoin.h \
-  test/test_syscoin.cpp
+  test/main.cpp \
+  test/setup_common.h \
+  test/setup_common.cpp
+
+FUZZ_SUITE = \
+  test/setup_common.h \
+  test/setup_common.cpp \
+  test/fuzz/fuzz.cpp \
+  test/fuzz/fuzz.h
+
+FUZZ_SUITE_LD_COMMON = \
+ $(LIBSYSCOIN_SERVER) \
+ $(LIBSYSCOIN_COMMON) \
+ $(LIBSYSCOIN_UTIL) \
+ $(LIBSYSCOIN_CONSENSUS) \
+ $(LIBSYSCOIN_CRYPTO) \
+ $(LIBUNIVALUE) \
+ $(LIBLEVELDB) \
+ $(LIBLEVELDB_SSE42) \
+ $(BOOST_LIBS) \
+ $(LIBMEMENV) \
+ $(LIBSECP256K1) \
+ $(EVENT_LIBS) \
+ $(CRYPTO_LIBS) \
+ $(EVENT_PTHREADS_LIBS)
 
 # test_syscoin binary #
 SYSCOIN_TESTS =\
@@ -50,6 +103,8 @@ SYSCOIN_TESTS =\
   test/bip32_tests.cpp \
   test/blockchain_tests.cpp \
   test/blockencodings_tests.cpp \
+  test/blockfilter_tests.cpp \
+  test/blockfilter_index_tests.cpp \
   test/bloom_tests.cpp \
   test/bswap_tests.cpp \
   test/checkqueue_tests.cpp \
@@ -59,11 +114,13 @@ SYSCOIN_TESTS =\
   test/cuckoocache_tests.cpp \
   test/denialofservice_tests.cpp \
   test/descriptor_tests.cpp \
+  test/flatfile_tests.cpp \
+  test/fs_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
+  test/key_tests.cpp \
   test/limitedmap_tests.cpp \
   test/dbwrapper_tests.cpp \
-  test/main_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
@@ -80,6 +137,7 @@ SYSCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
+  test/script_p2sh_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -88,6 +146,7 @@ SYSCOIN_TESTS =\
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
+  test/sync_tests.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
@@ -97,20 +156,31 @@ SYSCOIN_TESTS =\
   test/util_tests.cpp \
   test/versionbits_tests.cpp
 # FIXME: Update and re-enable these tests:
-#   miner_tests
+#   miner_tests txvalidationcache_tests validation_block_tests key_io_tests
+
+if ENABLE_PROPERTY_TESTS
+SYSCOIN_TESTS += \
+  test/key_properties.cpp
+
+SYSCOIN_TEST_SUITE += \
+  test/gen/crypto_gen.cpp \
+  test/gen/crypto_gen.h
+endif
 
 if ENABLE_WALLET
 SYSCOIN_TESTS += \
-  wallet/test/accounting_tests.cpp \
   wallet/test/db_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
-  wallet/test/coinselector_tests.cpp
+  wallet/test/coinselector_tests.cpp \
+  wallet/test/init_tests.cpp
 
 SYSCOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
-  wallet/test/wallet_test_fixture.h
+  wallet/test/wallet_test_fixture.h \
+  wallet/test/init_test_fixture.cpp \
+  wallet/test/init_test_fixture.h
 endif
 
 test_test_syscoin_SOURCES = $(SYSCOIN_TEST_SUITE) $(SYSCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
@@ -121,36 +191,161 @@ test_test_syscoin_LDADD += $(LIBSYSCOIN_WALLET)
 endif
 
 test_test_syscoin_LDADD += $(LIBSYSCOIN_SERVER) $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) \
-  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(LIBETHEREUM) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
-test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+  $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS) $(LIBETHEREUM)
+test_test_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) 
 
-test_test_syscoin_LDADD += $(LIBSYSCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
+test_test_syscoin_LDADD += $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(RAPIDCHECK_LIBS)
 test_test_syscoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
 
 if ENABLE_ZMQ
-test_test_syscoin_LDADD += $(ZMQ_LIBS)
+test_test_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
 endif
-#
 
-# test_syscoin_fuzzy binary #
-test_test_syscoin_fuzzy_SOURCES = test/test_syscoin_fuzzy.cpp
-test_test_syscoin_fuzzy_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
-test_test_syscoin_fuzzy_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_test_syscoin_fuzzy_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+if ENABLE_FUZZ
+test_fuzz_block_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCK_DESERIALIZE=1
+test_fuzz_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_block_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
-test_test_syscoin_fuzzy_LDADD = $(test_test_syscoin_LDADD)
+test_fuzz_transaction_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DTRANSACTION_DESERIALIZE=1
+test_fuzz_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_transaction_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 
-#
+test_fuzz_blocklocator_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_blocklocator_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCKLOCATOR_DESERIALIZE=1
+test_fuzz_blocklocator_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blocklocator_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_blocklocator_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_blockmerkleroot_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_blockmerkleroot_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCKMERKLEROOT=1
+test_fuzz_blockmerkleroot_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blockmerkleroot_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_blockmerkleroot_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_addrman_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_addrman_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DADDRMAN_DESERIALIZE=1
+test_fuzz_addrman_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_addrman_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_addrman_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_blockheader_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
+test_fuzz_blockheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blockheader_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_blockheader_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_banentry_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_banentry_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBANENTRY_DESERIALIZE=1
+test_fuzz_banentry_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_banentry_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_banentry_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_txundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
+test_fuzz_txundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_txundo_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_txundo_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_blockundo_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_blockundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCKUNDO_DESERIALIZE=1
+test_fuzz_blockundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blockundo_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_blockundo_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_coins_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DCOINS_DESERIALIZE=1
+test_fuzz_coins_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_coins_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_coins_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_netaddr_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DNETADDR_DESERIALIZE=1
+test_fuzz_netaddr_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_netaddr_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_netaddr_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_script_flags_SOURCES = $(FUZZ_SUITE) test/fuzz/script_flags.cpp
+test_fuzz_script_flags_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+test_fuzz_script_flags_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_script_flags_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_script_flags_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_service_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
+test_fuzz_service_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_service_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_service_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_messageheader_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
+test_fuzz_messageheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_messageheader_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_messageheader_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_address_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_address_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DADDRESS_DESERIALIZE=1
+test_fuzz_address_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_address_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_address_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_inv_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_inv_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DINV_DESERIALIZE=1
+test_fuzz_inv_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_inv_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_inv_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_bloomfilter_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_bloomfilter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOOMFILTER_DESERIALIZE=1
+test_fuzz_bloomfilter_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_bloomfilter_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_bloomfilter_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_diskblockindex_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_diskblockindex_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DDISKBLOCKINDEX_DESERIALIZE=1
+test_fuzz_diskblockindex_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_diskblockindex_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_diskblockindex_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_txoutcompressor_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
+test_fuzz_txoutcompressor_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_txoutcompressor_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_txoutcompressor_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_blocktransactions_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_blocktransactions_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCKTRANSACTIONS_DESERIALIZE=1
+test_fuzz_blocktransactions_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blocktransactions_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_blocktransactions_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+
+test_fuzz_blocktransactionsrequest_deserialize_SOURCES = $(FUZZ_SUITE) test/fuzz/deserialize.cpp
+test_fuzz_blocktransactionsrequest_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -DBLOCKTRANSACTIONSREQUEST_DESERIALIZE=1
+test_fuzz_blocktransactionsrequest_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_blocktransactionsrequest_deserialize_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_blocktransactionsrequest_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
+endif # ENABLE_FUZZ
 
 nodist_test_test_syscoin_SOURCES = $(GENERATED_TEST_FILES)
 
 $(SYSCOIN_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_SYSCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES)
+CLEAN_SYSCOIN_TEST = test/*.gcda test/*.gcno $(GENERATED_TEST_FILES) $(SYSCOIN_TESTS:=.log)
 
 CLEANFILES += $(CLEAN_SYSCOIN_TEST)
 
+if TARGET_WINDOWS
 syscoin_test: $(TEST_BINARY)
+else
+if ENABLE_BENCH
+syscoin_test: $(TEST_BINARY) $(BENCH_BINARY)
+else
+syscoin_test: $(TEST_BINARY)
+endif
+endif
 
 syscoin_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
@@ -159,10 +354,19 @@ syscoin_test_clean : FORCE
 	rm -f $(CLEAN_SYSCOIN_TEST) $(test_test_syscoin_OBJECTS) $(TEST_BINARY)
 
 check-local: $(SYSCOIN_TESTS:.cpp=.cpp.test)
+if BUILD_SYSCOIN_TX
 	@echo "Running test/util/syscoin-util-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/syscoin-util-test.py
+endif
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
+if TARGET_WINDOWS
+else
+if ENABLE_BENCH
+	@echo "Running bench/bench_syscoin -evals=1 -scaling=0..."
+	$(BENCH_BINARY) -evals=1 -scaling=0 > /dev/null
+endif
+endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check

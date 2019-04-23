@@ -8,14 +8,10 @@
 #include <atomic>
 
 static std::atomic<bool> fRequestShutdown(false);
-static std::atomic<bool> fRequestRestart(false);
+
 void StartShutdown()
 {
     fRequestShutdown = true;
-}
-void StartRestart()
-{
-    fRequestShutdown = fRequestRestart = true;
 }
 void AbortShutdown()
 {
@@ -24,9 +20,4 @@ void AbortShutdown()
 bool ShutdownRequested()
 {
     return fRequestShutdown;
-}
-// SYSCOIN
-bool RestartRequested()
-{
-    return fRequestRestart;
 }

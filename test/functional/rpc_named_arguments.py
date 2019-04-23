@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Syscoin Core developers
+# Copyright (c) 2016-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test using named arguments for RPCs."""
@@ -17,7 +17,7 @@ class NamedArgumentTest(SyscoinTestFramework):
     def run_test(self):
         node = self.nodes[0]
         h = node.help(command='getblockchaininfo')
-        assert(h.startswith('getblockchaininfo\n'))
+        assert h.startswith('getblockchaininfo\n')
 
         assert_raises_rpc_error(-8, 'Unknown named parameter', node.help, random='getblockchaininfo')
 

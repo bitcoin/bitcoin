@@ -1,4 +1,4 @@
-﻿package=boost
+package=boost
 $(package)_version=1_64_0
 $(package)_download_path=https://dl.bintray.com/boostorg/release/1.64.0/source/
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2
@@ -18,7 +18,7 @@ $(package)_config_opts_i686_linux=address-model=32 architecture=x86
 $(package)_toolset_$(host_os)=gcc
 $(package)_archiver_$(host_os)=$($(package)_ar)
 $(package)_toolset_darwin=darwin
-$(package)_archiver_darwin=$($(package)_libtool) 
+$(package)_archiver_darwin=$($(package)_libtool)
 $(package)_config_libraries=chrono,filesystem,system,thread,test
 $(package)_cxxflags=-std=c++11 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
@@ -39,4 +39,3 @@ endef
 define $(package)_stage_cmds
   ./b2 -d0 -j4 --prefix=$($(package)_staging_prefix_dir) $($(package)_config_opts) install
 endef
-

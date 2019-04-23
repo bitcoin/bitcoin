@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Syscoin Core developers
+# Copyright (c) 2017-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test recovery from a crash during chainstate writing.
@@ -28,25 +28,19 @@
 import errno
 import http.client
 import random
-import sys
 import time
 
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, ToHex
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, create_confirmed_utxos, hex_str_to_bytes
 
-HTTP_DISCONNECT_ERRORS = [http.client.CannotSendRequest]
-try:
-    HTTP_DISCONNECT_ERRORS.append(http.client.RemoteDisconnected)
-except AttributeError:
-    pass
 
 class ChainstateWriteCrashTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
         # Need a bit of extra time for the nodes to start up for this test
-        self.rpc_timewait = 90
+        self.rpc_timeout = 90
 
         # Set -maxmempool=0 to turn off mempool memory sharing with dbcache
         # Set -rpcservertimeout=900 to reduce socket disconnects in this
@@ -69,6 +63,7 @@ class ChainstateWriteCrashTest(SyscoinTestFramework):
     def setup_network(self):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args)
         self.start_nodes()
+        self.import_deterministic_coinbase_privkeys()
         # Leave them unconnected, we'll use submitblock directly in this test
 
     def restart_node(self, node_index, expected_tip):
@@ -109,14 +104,7 @@ class ChainstateWriteCrashTest(SyscoinTestFramework):
         try:
             self.nodes[node_index].submitblock(block)
             return True
-        except http.client.BadStatusLine as e:
-            # Prior to 3.5 BadStatusLine('') was raised for a remote disconnect error.
-            if sys.version_info[0] == 3 and sys.version_info[1] < 5 and e.line == "''":
-                self.log.debug("node %d submitblock raised exception: %s", node_index, e)
-                return False
-            else:
-                raise
-        except tuple(HTTP_DISCONNECT_ERRORS) as e:
+        except (http.client.CannotSendRequest, http.client.RemoteDisconnected) as e:
             self.log.debug("node %d submitblock raised exception: %s", node_index, e)
             return False
         except OSError as e:

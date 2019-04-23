@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Syscoin Core developers
+# Copyright (c) 2016-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test version bits warning system.
@@ -22,7 +22,6 @@ VB_TOP_BITS = 0x20000000
 VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
 
-WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible unknown rules are in effect"
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
 
@@ -30,9 +29,6 @@ class VersionBitsWarningTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
 
     def setup_network(self):
         self.alert_filename = os.path.join(self.options.tmpdir, "alert.txt")
@@ -68,43 +64,39 @@ class VersionBitsWarningTest(SyscoinTestFramework):
         node = self.nodes[0]
         node.add_p2p_connection(P2PInterface())
 
+        node_deterministic_address = node.get_deterministic_priv_key().address
         # Mine one period worth of blocks
-        node.generate(VB_PERIOD)
+        node.generatetoaddress(VB_PERIOD, node_deterministic_address)
 
         self.log.info("Check that there is no warning if previous VB_BLOCKS have <VB_THRESHOLD blocks with unknown versionbits version.")
         # Build one period of blocks with < VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(node.p2p, VB_THRESHOLD - 1, VB_UNKNOWN_VERSION)
-        node.generate(VB_PERIOD - VB_THRESHOLD + 1)
+        node.generatetoaddress(VB_PERIOD - VB_THRESHOLD + 1, node_deterministic_address)
 
         # Check that we're not getting any versionbit-related errors in get*info()
-        assert(not VB_PATTERN.match(node.getmininginfo()["warnings"]))
-        assert(not VB_PATTERN.match(node.getnetworkinfo()["warnings"]))
+        assert not VB_PATTERN.match(node.getmininginfo()["warnings"])
+        assert not VB_PATTERN.match(node.getnetworkinfo()["warnings"])
 
-        self.log.info("Check that there is a warning if >50 blocks in the last 100 were an unknown version")
         # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(node.p2p, VB_THRESHOLD, VB_UNKNOWN_VERSION)
-        node.generate(VB_PERIOD - VB_THRESHOLD)
-
-        # Check that get*info() shows the 51/100 unknown block version error.
-        assert(WARN_UNKNOWN_RULES_MINED in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_MINED in node.getnetworkinfo()["warnings"])
+        node.generatetoaddress(VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
 
         self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
         # Mine a period worth of expected blocks so the generic block-version warning
         # is cleared. This will move the versionbit state to ACTIVE.
-        node.generate(VB_PERIOD)
+        node.generatetoaddress(VB_PERIOD, node_deterministic_address)
 
         # Stop-start the node. This is required because syscoind will only warn once about unknown versions or unknown rules activating.
         self.restart_node(0)
 
         # Generating one block guarantees that we'll get out of IBD
-        node.generate(1)
+        node.generatetoaddress(1, node_deterministic_address)
         wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'], timeout=10, lock=mininode_lock)
         # Generating one more block will be enough to generate an error.
-        node.generate(1)
+        node.generatetoaddress(1, node_deterministic_address)
         # Check that get*info() shows the versionbits unknown rules warning
-        assert(WARN_UNKNOWN_RULES_ACTIVE in node.getmininginfo()["warnings"])
-        assert(WARN_UNKNOWN_RULES_ACTIVE in node.getnetworkinfo()["warnings"])
+        assert WARN_UNKNOWN_RULES_ACTIVE in node.getmininginfo()["warnings"]
+        assert WARN_UNKNOWN_RULES_ACTIVE in node.getnetworkinfo()["warnings"]
         # Check that the alert file shows the versionbits unknown rules warning
         wait_until(lambda: self.versionbits_in_alert_file(), timeout=60)
 

@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "test_syscoin_services.h"
-#include "utiltime.h"
-#include "util.h"
+#include <util/time.h>
+#include <util/system.h>
 #include "amount.h"
 #include "rpc/server.h"
 #include "services/asset.h"
@@ -107,7 +107,7 @@ void StopNodes()
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 {
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -daemon -server -debug=0 -concurrentprocessing=1 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -tpstest -daemon -server -debug=1 -concurrentprocessing=1 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (!extraArgs.empty())

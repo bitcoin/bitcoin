@@ -33,8 +33,10 @@ buffering or reassembly.
 
 ## Prerequisites
 
-The ZeroMQ feature in Syscoin Core requires ZeroMQ API version 4.x or
-newer. Typically, it is packaged by distributions as something like
+The ZeroMQ feature in Syscoin Core requires the ZeroMQ API >= 4.0.0
+[libzmq](https://github.com/zeromq/libzmq/releases).
+For version information, see [dependencies.md](dependencies.md).
+Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
 In order to run the example Python client scripts in contrib/ one must
@@ -60,16 +62,25 @@ Currently, the following notifications are supported:
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
-    -zmqpubassetallocation=address
-    -zmqpubassetrecord=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
 
+The option to set the PUB socket's outbound message high water mark
+(SNDHWM) may be set individually for each notification:
+
+    -zmqpubhashtxhwm=n
+    -zmqpubhashblockhwm=n
+    -zmqpubrawblockhwm=n
+    -zmqpubrawtxhwm=n
+
+The high water mark value must be an integer greater than or equal to 0.
+
 For instance:
 
     $ syscoind -zmqpubhashtx=tcp://127.0.0.1:28370 \
-               -zmqpubrawtx=ipc:///tmp/syscoind.tx.raw
+               -zmqpubrawtx=ipc:///tmp/syscoind.tx.raw \
+               -zmqpubhashtxhwm=10000
 
 Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the

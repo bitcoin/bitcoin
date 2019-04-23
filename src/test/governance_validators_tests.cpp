@@ -2,12 +2,12 @@
 // Copyright (c) 2017-2018 The Syscoin Core developers
 
 #include "governance-validators.h"
-#include "utilstrencodings.h"
+#include <util/strencodings.h>
 
 #include "data/proposals_valid.json.h"
 #include "data/proposals_invalid.json.h"
 
-#include "test/test_syscoin.h"
+#include "test/setup_common.h"
 
 #include <iostream>
 #include <fstream>

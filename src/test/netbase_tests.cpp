@@ -1,10 +1,10 @@
-﻿// Copyright (c) 2012-2018 The Syscoin Core developers
+// Copyright (c) 2012-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <netbase.h>
-#include <test/test_syscoin.h>
-#include <utilstrencodings.h>
+#include <test/setup_common.h>
+#include <util/strencodings.h>
 
 #include <string>
 
@@ -82,10 +82,10 @@ bool static TestSplitHost(std::string test, std::string host, int port)
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
 {
-    BOOST_CHECK(TestSplitHost("www.syscoin.org", "www.syscoin.org", -1));
-    BOOST_CHECK(TestSplitHost("[www.syscoin.org]", "www.syscoin.org", -1));
-    BOOST_CHECK(TestSplitHost("www.syscoin.org:80", "www.syscoin.org", 80));
-    BOOST_CHECK(TestSplitHost("[www.syscoin.org]:80", "www.syscoin.org", 80));
+    BOOST_CHECK(TestSplitHost("www.syscoincore.org", "www.syscoincore.org", -1));
+    BOOST_CHECK(TestSplitHost("[www.syscoincore.org]", "www.syscoincore.org", -1));
+    BOOST_CHECK(TestSplitHost("www.syscoincore.org:80", "www.syscoincore.org", 80));
+    BOOST_CHECK(TestSplitHost("[www.syscoincore.org]:80", "www.syscoincore.org", 80));
     BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", -1));
     BOOST_CHECK(TestSplitHost("127.0.0.1:8369", "127.0.0.1", 8369));
     BOOST_CHECK(TestSplitHost("[127.0.0.1]", "127.0.0.1", -1));
@@ -300,6 +300,24 @@ BOOST_AUTO_TEST_CASE(netbase_getgroup)
     // baz.net sha256 hash: 12929400eb4607c4ac075f087167e75286b179c693eb059a01774b864e8fe505
     std::vector<unsigned char> internal_group = {NET_INTERNAL, 0x12, 0x92, 0x94, 0x00, 0xeb, 0x46, 0x07, 0xc4, 0xac, 0x07};
     BOOST_CHECK(CreateInternal("baz.net").GetGroup() == internal_group);
+}
+
+BOOST_AUTO_TEST_CASE(netbase_parsenetwork)
+{
+    BOOST_CHECK_EQUAL(ParseNetwork("ipv4"), NET_IPV4);
+    BOOST_CHECK_EQUAL(ParseNetwork("ipv6"), NET_IPV6);
+    BOOST_CHECK_EQUAL(ParseNetwork("onion"), NET_ONION);
+    BOOST_CHECK_EQUAL(ParseNetwork("tor"), NET_ONION);
+
+    BOOST_CHECK_EQUAL(ParseNetwork("IPv4"), NET_IPV4);
+    BOOST_CHECK_EQUAL(ParseNetwork("IPv6"), NET_IPV6);
+    BOOST_CHECK_EQUAL(ParseNetwork("ONION"), NET_ONION);
+    BOOST_CHECK_EQUAL(ParseNetwork("TOR"), NET_ONION);
+
+    BOOST_CHECK_EQUAL(ParseNetwork(":)"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("tÖr"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork("\xfe\xff"), NET_UNROUTABLE);
+    BOOST_CHECK_EQUAL(ParseNetwork(""), NET_UNROUTABLE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

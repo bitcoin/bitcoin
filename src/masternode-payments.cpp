@@ -16,6 +16,7 @@
 #include "util.h"
 #include <outputtype.h>
 #include <boost/lexical_cast.hpp>
+#include <net_processing.h>
 // SYSCOIN
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern std::vector<unsigned char> vchFromString(const std::string &str);
@@ -318,10 +319,12 @@ void CMasternodePayments::ProcessMessage(CNode* pfrom, const std::string& strCom
             return;
         }
 
-        uint256 nHash = vote.GetHash();
+        const uint256 &nHash = vote.GetHash();
 
-        pfrom->setAskFor.erase(nHash);
-
+        {
+            LOCK(cs_main);
+            EraseInvRequest(pfrom, nHash);
+        }
         // TODO: clear setAskFor for MSG_MASTERNODE_PAYMENT_BLOCK too
 
         // Ignore any payments messages until masternode list is synced

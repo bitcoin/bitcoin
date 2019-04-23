@@ -6,7 +6,8 @@
 #include <script/script.h>
 
 #include <tinyformat.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
+
 const char* GetOpName(opcodetype opcode)
 {
     switch (opcode)
@@ -192,6 +193,7 @@ unsigned int CScript::GetSigOpCount(const CScript& scriptSig) const
     CScript subscript(vData.begin(), vData.end());
     return subscript.GetSigOpCount(true);
 }
+
 bool CScript::IsPayToScriptHash() const
 {
     // Extra-fast test for pay-to-script-hash CScripts:

@@ -11,6 +11,8 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <uint256.h>
+
+
 namespace {
 
 inline bool set_success(ScriptError* ret)
@@ -97,7 +99,7 @@ bool static IsCompressedPubKey(const valtype &vchPubKey) {
  * excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
  * in which case a single 0 byte is necessary and even required).
  *
- * See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
+ * See https://syscointalk.org/index.php?topic=8392.msg127623#msg127623
  *
  * This function is consensus-critical since BIP66.
  */
@@ -284,22 +286,22 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
     static const valtype vchFalse(0);
     // static const valtype vchZero(0);
     static const valtype vchTrue(1, 1);
-    // SYSCOIN
+
+    CScript::const_iterator pc = script.begin();
+    CScript::const_iterator pend = script.end();
+    CScript::const_iterator pbegincodehash = script.begin();
+    opcodetype opcode;
+    valtype vchPushValue;
+    std::vector<bool> vfExec;
+    std::vector<valtype> altstack;
+    set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
+    if (script.size() > MAX_SCRIPT_SIZE)
+        return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
+    int nOpCount = 0;
+    bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
+
     try
     {
-        CScript::const_iterator pc = script.begin();
-        CScript::const_iterator pend = script.end();
-        CScript::const_iterator pbegincodehash = script.begin();
-        opcodetype opcode;
-        valtype vchPushValue;
-        std::vector<bool> vfExec;
-        std::vector<valtype> altstack;
-        set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
-        if (script.size() > MAX_SCRIPT_SIZE)
-            return set_error(serror, SCRIPT_ERR_SCRIPT_SIZE);
-        int nOpCount = 0;
-        bool fRequireMinimal = (flags & SCRIPT_VERIFY_MINIMALDATA) != 0;
-    
         while (pc < pend)
         {
             bool fExec = !count(vfExec.begin(), vfExec.end(), false);
@@ -1068,15 +1070,14 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (stack.size() + altstack.size() > MAX_STACK_SIZE)
                 return set_error(serror, SCRIPT_ERR_STACK_SIZE);
         }
-        // SYSCOIN
-        if (!vfExec.empty())
-            return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
     }
     catch (...)
     {
         return set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
     }
-    
+
+    if (!vfExec.empty())
+        return set_error(serror, SCRIPT_ERR_UNBALANCED_CONDITIONAL);
 
     return set_success(serror);
 }
@@ -1468,7 +1469,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
 }
 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
-{     
+{
     static const CScriptWitness emptyWitness;
     if (witness == nullptr) {
         witness = &emptyWitness;

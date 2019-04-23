@@ -49,8 +49,8 @@ class PeerTablePriv
 public:
     /** Local cache of peer information */
     QList<CNodeCombinedStats> cachedNodeStats;
-    /** Column to sort nodes by */
-    int sortColumn;
+    /** Column to sort nodes by (default to unsorted) */
+    int sortColumn{-1};
     /** Order (ascending or descending) to sort nodes by */
     Qt::SortOrder sortOrder;
     /** Index of rows by node ID */
@@ -65,7 +65,7 @@ public:
             interfaces::Node::NodesStats nodes_stats;
             node.getNodesStats(nodes_stats);
             cachedNodeStats.reserve(nodes_stats.size());
-            for (auto& node_stats : nodes_stats)
+            for (const auto& node_stats : nodes_stats)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStats = std::get<0>(node_stats);
@@ -96,7 +96,7 @@ public:
         if (idx >= 0 && idx < cachedNodeStats.size())
             return &cachedNodeStats[idx];
 
-        return 0;
+        return nullptr;
     }
 };
 
@@ -104,16 +104,14 @@ PeerTableModel::PeerTableModel(interfaces::Node& node, ClientModel *parent) :
     QAbstractTableModel(parent),
     m_node(node),
     clientModel(parent),
-    timer(0)
+    timer(nullptr)
 {
     columns << tr("NodeId") << tr("Node/Service") << tr("Ping") << tr("Sent") << tr("Received") << tr("User Agent");
     priv.reset(new PeerTablePriv());
-    // default to unsorted
-    priv->sortColumn = -1;
 
     // set up timer for auto refresh
     timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), SLOT(refresh()));
+    connect(timer, &QTimer::timeout, this, &PeerTableModel::refresh);
     timer->setInterval(MODEL_UPDATE_DELAY);
 
     // load initial data
@@ -199,8 +197,7 @@ QVariant PeerTableModel::headerData(int section, Qt::Orientation orientation, in
 
 Qt::ItemFlags PeerTableModel::flags(const QModelIndex &index) const
 {
-    if(!index.isValid())
-        return 0;
+    if (!index.isValid()) return Qt::NoItemFlags;
 
     Qt::ItemFlags retval = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     return retval;

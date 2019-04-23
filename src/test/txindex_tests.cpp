@@ -1,13 +1,13 @@
-// Copyright (c) 2017-2018 The Syscoin Core developers
+// Copyright (c) 2017-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <index/txindex.h>
 #include <script/standard.h>
-#include <test/test_syscoin.h>
-#include <util.h>
-#include <utiltime.h>
+#include <test/setup_common.h>
+#include <util/system.h>
+#include <util/time.h>
 #include <validation.h>
 
 #include <boost/test/unit_test.hpp>
@@ -69,7 +69,13 @@ BOOST_FIXTURE_TEST_CASE(txindex_initial_sync, TestChain100Setup)
         }
     }
 
-    txindex.Stop(); // Stop thread before calling destructor
+    // shutdown sequence (c.f. Shutdown() in init.cpp)
+    txindex.Stop();
+
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
+
+    // Rest of shutdown sequence and destructors happen in ~TestingSetup()
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Spustelėkite dešinįjį klavišą norint keisti adresą arba etiketę</translation>
+        <translation>Spustelėkite dešinįjį klaviša norint keisti adresą arba etiketę</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -49,14 +49,74 @@
         <source>Choose the address to send coins to</source>
         <translation>Pasirinkite adresą, kuriam siūsite monetas</translation>
     </message>
-    </context>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Pasirinkite adresą su kuriuo gauti monetas</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>P&amp;asirinkti</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Išsiuntimo adresai</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Gavimo adresai</translation>
+    </message>
+    <message>
+        <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Tai yra jūsų Syscoin adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas. </translation>
+    </message>
+    <message>
+        <source>These are your Syscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Tai yra Jūsų Syscoin adresai įeinantiems mokėjimams. Kiekvienam mokėjimui rekomenduojama naudoti naują adresą. </translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Kopijuoti adresą</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopijuoti &amp;Žymę</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Keisti</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Eksportuoti adresų sąrašą</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kableliais atskirtų duomenų failas (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportavimas nepavyko</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Bandant išsaugoti adresų sąrašą - įvyko klaida keliant į %1. Prašome bandyti dar kartą.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Žymė</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Adresas</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(nėra žymės)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
@@ -75,7 +135,95 @@
         <source>Repeat new passphrase</source>
         <translation>Pakartokite naują slaptafrazę</translation>
     </message>
-    </context>
+    <message>
+        <source>Show password</source>
+        <translation>Rodyti slaptažodį</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Įveskite naują piniginės slaptafrazę.&lt;br/&gt;Prašome naudoti slaptafrazę iš &lt;b&gt; 10 ar daugiau atsitiktinių simbolių&lt;/b&gt; arba &lt;b&gt;aštuonių ar daugiau žodžių&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>Užšifruoti piniginę</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to unlock the wallet.</source>
+        <translation>Ši operacija reikalauja jūsų piniginės slaptafrazės jai atrakinti.</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>Atrakinti piniginę</translation>
+    </message>
+    <message>
+        <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
+        <translation>Ši operacija reikalauja jūsų piniginės slaptafrazės jai iššifruoti.</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>Iššifruoti piniginę</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>Pakeisti slaptafrazę</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Įveskite seną ir naują piniginės slaptafrazes.</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>Patvirtinkite piniginės užšifravimą</translation>
+    </message>
+    <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYSCOINS&lt;/b&gt;!</source>
+        <translation>Dėmesio: jei užšifruosite savo piniginę ir pamesite slaptafrazę, jūs&lt;b&gt;PRARASITE VISUS SAVO SYSCOINUS&lt;/b&gt;! </translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Ar tikrai norite šifruoti savo piniginę?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>Piniginė užšifruota</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>SVARBU: Betkokios ankstesnės jūsų piniginės atsarginės kopijos turėtų būti pakeistos naujai sugeneruotu, užšifruotu piniginės failu. Dėl saugumo sumetimų, anstesnės neužšifruotos piniginės kopijos failas taps nenaudingu nuo momento, kai nauja ir užšifruota piniginė bus pradėta naudoti. </translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>Nepavyko užšifruoti piniginę</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>Dėl vidinės klaidos nepavyko užšifruoti piniginę.Piniginė neužšifruota.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Įvestos slaptafrazės nesutampa.</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Nepavyko atrakinti piniginę</translation>
+    </message>
+    <message>
+        <source>The passphrase entered for the wallet decryption was incorrect.</source>
+        <translation>Neteisingai įvestas slaptažodis piniginės iššifravimui.</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Nepavyko iššifruoti piniginės</translation>
+    </message>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Piniginės slaptažodis sėkmingai pakeistas.</translation>
+    </message>
+    <message>
+        <source>Warning: The Caps Lock key is on!</source>
+        <translation>Įspėjimas: įjungtas Caps Lock klavišas!</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     <message>
@@ -142,6 +290,10 @@
         <translation>&amp;Parinktys...</translation>
     </message>
     <message>
+        <source>Modify configuration options for %1</source>
+        <translation>Keisti %1 konfigūracijos galimybes</translation>
+    </message>
+    <message>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Užšifruoti piniginę...</translation>
     </message>
@@ -164,6 +316,30 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Atidaryti &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Piniginė</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>numatyta piniginė</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>Spauskite norėdami išjungti tinklo veiklą.</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Tinklo veikla išjungta.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>Spauskite norėdami įjungti tinklo veiklą.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Sinchronizuojamos Antraštės (%1%)...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -222,6 +398,14 @@
         <translation>Užšifruoti privačius raktus, kurie priklauso jūsų piniginei</translation>
     </message>
     <message>
+        <source>Sign messages with your Syscoin addresses to prove you own them</source>
+        <translation>Pasirašydami žinutes su savo Syscoin adresais įrodysite jog esate jų savininkas </translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Syscoin addresses</source>
+        <translation>Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas Syscoin adresas</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;Failas</translation>
     </message>
@@ -242,6 +426,18 @@
         <translation>Komandinės eilutės parametrai</translation>
     </message>
     <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Blokai apdirbami diske...</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Paskutinis gautas blokas buvo sukurtas prieš %1.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Sekančios operacijos dar nebus matomos. </translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Klaida</translation>
     </message>
@@ -258,6 +454,10 @@
         <translation>Atnaujinta</translation>
     </message>
     <message>
+        <source>%1 client</source>
+        <translation>%1 klientas</translation>
+    </message>
+    <message>
         <source>Catching up...</source>
         <translation>Vejamasi...</translation>
     </message>
@@ -265,6 +465,36 @@
         <source>Date: %1
 </source>
         <translation>Data: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Suma: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>Piniginė: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Spausti: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Antraštė: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Adresas: %1
 </translation>
     </message>
     <message>
@@ -342,6 +572,50 @@
         <source>Confirmed</source>
         <translation>Patvirtintas</translation>
     </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Kopijuoti adresą</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopijuoti žymę</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopijuoti sumą</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Sandorio ID</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Kopijuoti mokestį</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Kopijuoti po mokesčio</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopijuoti baitus</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Kopijuoti keisti</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>taip</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>ne</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(nėra žymės)</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -385,6 +659,10 @@
     <message>
         <source>Syscoin</source>
         <translation>Syscoin</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Piniginė taip pat bus saugojama šiame direktyve.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -701,6 +979,10 @@
         <translation>Išvalyti konsolę</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>numatyta piniginė</translation>
+    </message>
+    <message>
         <source>never</source>
         <translation>Niekada</translation>
     </message>
@@ -731,7 +1013,15 @@
         <source>Clear</source>
         <translation>Išvalyti</translation>
     </message>
-    </context>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopijuoti žymę</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopijuoti sumą</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -747,12 +1037,24 @@
         <translation>Adresas</translation>
     </message>
     <message>
+        <source>Label</source>
+        <translation>Žymė</translation>
+    </message>
+    <message>
         <source>Wallet</source>
         <translation>Piniginė</translation>
     </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Žymė</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(nėra žymės)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -817,10 +1119,34 @@
         <translation>&amp;Siųsti</translation>
     </message>
     <message>
+        <source>Copy amount</source>
+        <translation>Kopijuoti sumą</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>Kopijuoti mokestį</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>Kopijuoti po mokesčio</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>Kopijuoti baitus</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Kopijuoti keisti</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Sandorio mokestis</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(nėra žymės)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     <message>
@@ -935,12 +1261,48 @@
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Label</source>
+        <translation>Žymė</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(nėra žymės)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Copy address</source>
+        <translation>Kopijuoti adresą</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Kopijuoti žymę</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>Kopijuoti sumą</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Sandorio ID</translation>
+    </message>
+    <message>
+        <source>Comma separated file (*.csv)</source>
+        <translation>Kableliais atskirtų duomenų failas (*.csv)</translation>
+    </message>
+    <message>
+        <source>Label</source>
+        <translation>Žymė</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Adresas</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportavimas nepavyko</translation>
     </message>
     </context>
 <context>

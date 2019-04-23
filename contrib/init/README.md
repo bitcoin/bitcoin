@@ -5,7 +5,7 @@ Upstart: syscoind.conf
 OpenRC:  syscoind.openrc
          syscoind.openrcconf
 CentOS:  syscoind.init
-macOS:    org.syscoin.syscoind.plist
+macOS:   org.syscoin.syscoind.plist
 ```
 have been made available to assist packagers in creating node packages here.
 

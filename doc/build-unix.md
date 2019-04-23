@@ -6,8 +6,8 @@ Some notes on how to build Syscoin Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile Syscoin Core and the dependencies,
-for example, when specifying the path of the dependency:
+Always use absolute paths to configure and compile Syscoin Core and the dependencies.
+For example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
@@ -24,7 +24,7 @@ make
 make install # optional
 ```
 
-This will build syscoin-qt as well if the dependencies are met.
+This will build syscoin-qt as well, if the dependencies are met.
 
 Dependencies
 ---------------------
@@ -47,7 +47,7 @@ Optional dependencies:
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
  univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
- libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.x)
+ libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.0.0)
 
 For the versions used, see [dependencies.md](dependencies.md)
 
@@ -70,34 +70,33 @@ tuned to conserve memory with additional CXXFLAGS:
 
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3 libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3
+
+Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+
+    sudo apt-get install libssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
 
 BerkeleyDB is required for the wallet.
 
-**For Ubuntu only:** db4.8 packages are available [here](https://launchpad.net/~syscoin/+archive/syscoin).
-You can add the repository and install using the following commands:
-
-    sudo apt-get install software-properties-common
-    sudo add-apt-repository ppa:bitcoin/bitcoin
-    sudo apt-get update
-    sudo apt-get install libdb4.8-dev libdb4.8++-dev
-
 Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
-BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
+BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure.
 
-See the section "Disable-wallet mode" to build Syscoin Core without wallet.
+Otherwise, you can build from self-compiled `depends` (see above).
+
+To build Syscoin Core without wallet, see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)
+
 
 Optional (see --with-miniupnpc and --enable-upnp-default):
 
     sudo apt-get install libminiupnpc-dev
 
-ZMQ dependencies (provides ZMQ API 4.x):
+ZMQ dependencies (provides ZMQ API):
 
     sudo apt-get install libzmq3-dev
 
-#### Dependencies for the GUI
+GUI dependencies:
 
 If you want to build syscoin-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
@@ -157,7 +156,7 @@ Berkeley DB
 -----------
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
 you can use [the installation script included in contrib/](/contrib/install_db4.sh)
-like so
+like so:
 
 ```shell
 ./contrib/install_db4.sh `pwd`
@@ -165,7 +164,7 @@ like so
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)).
 
 Boost
 -----
@@ -189,9 +188,7 @@ Hardening Flags:
 
 
 Hardening enables the following features:
-
-* Position Independent Executable
-    Build position independent code to take advantage of Address Space Layout Randomization
+* _Position Independent Executable_: Build position independent code to take advantage of Address Space Layout Randomization
     offered by some kernels. Attackers who can cause execution of code at an arbitrary memory
     location are thwarted if they don't know where anything useful is located.
     The stack and heap are randomly located by default, but this allows the code section to be
@@ -209,8 +206,7 @@ Hardening enables the following features:
      TYPE
     ET_DYN
 
-* Non-executable Stack
-    If the stack is executable then trivial stack-based buffer overflow exploits are possible if
+* _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
     vulnerable buffers are found. By default, Syscoin Core should be built with a non-executable stack,
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
@@ -234,8 +230,7 @@ disable-wallet mode with:
 
 In this case there is no dependency on Berkeley DB 4.8.
 
-Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC
-call not `getwork`.
+Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
 Additional Configure Flags
 --------------------------
@@ -285,4 +280,3 @@ To build executables for ARM:
 
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
-

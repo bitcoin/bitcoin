@@ -22,6 +22,65 @@ class CTxMemPoolEntry;
 class CTxMemPool;
 class TxConfirmStats;
 
+/* Identifier for each of the 3 different TxConfirmStats which will track
+ * history over different time horizons. */
+enum class FeeEstimateHorizon {
+    SHORT_HALFLIFE = 0,
+    MED_HALFLIFE = 1,
+    LONG_HALFLIFE = 2
+};
+
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
+
+/* Enumeration of reason for returned fee estimate */
+enum class FeeReason {
+    NONE,
+    HALF_ESTIMATE,
+    FULL_ESTIMATE,
+    DOUBLE_ESTIMATE,
+    CONSERVATIVE,
+    MEMPOOL_MIN,
+    PAYTXFEE,
+    FALLBACK,
+    REQUIRED,
+    MAXTXFEE,
+};
+
+/* Used to determine type of fee estimation requested */
+enum class FeeEstimateMode {
+    UNSET,        //!< Use default settings based on other criteria
+    ECONOMICAL,   //!< Force estimateSmartFee to use non-conservative estimates
+    CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
+};
+
+/* Used to return detailed information about a feerate bucket */
+struct EstimatorBucket
+{
+    double start = -1;
+    double end = -1;
+    double withinTarget = 0;
+    double totalConfirmed = 0;
+    double inMempool = 0;
+    double leftMempool = 0;
+};
+
+/* Used to return detailed information about a fee estimate calculation */
+struct EstimationResult
+{
+    EstimatorBucket pass;
+    EstimatorBucket fail;
+    double decay = 0;
+    unsigned int scale = 0;
+};
+
+struct FeeCalculation
+{
+    EstimationResult est;
+    FeeReason reason = FeeReason::NONE;
+    int desiredTarget = 0;
+    int returnedTarget = 0;
+};
+
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the feerate needed
  * for a transaction to be included in a block within a certain number of
@@ -65,72 +124,7 @@ class TxConfirmStats;
  * outstanding and use both of these numbers to increase the number of transactions
  * we've seen in that feerate bucket when calculating an estimate for any number
  * of confirmations below the number of blocks they've been outstanding.
- */
-
-/* Identifier for each of the 3 different TxConfirmStats which will track
- * history over different time horizons. */
-enum class FeeEstimateHorizon {
-    SHORT_HALFLIFE = 0,
-    MED_HALFLIFE = 1,
-    LONG_HALFLIFE = 2
-};
-
-std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
-
-/* Enumeration of reason for returned fee estimate */
-enum class FeeReason {
-    NONE,
-    HALF_ESTIMATE,
-    FULL_ESTIMATE,
-    DOUBLE_ESTIMATE,
-    CONSERVATIVE,
-    MEMPOOL_MIN,
-    PAYTXFEE,
-    FALLBACK,
-    REQUIRED,
-    MAXTXFEE,
-};
-
-std::string StringForFeeReason(FeeReason reason);
-
-/* Used to determine type of fee estimation requested */
-enum class FeeEstimateMode {
-    UNSET,        //! Use default settings based on other criteria
-    ECONOMICAL,   //! Force estimateSmartFee to use non-conservative estimates
-    CONSERVATIVE, //! Force estimateSmartFee to use conservative estimates
-};
-
-bool FeeModeFromString(const std::string& mode_string, FeeEstimateMode& fee_estimate_mode);
-
-/* Used to return detailed information about a feerate bucket */
-struct EstimatorBucket
-{
-    double start = -1;
-    double end = -1;
-    double withinTarget = 0;
-    double totalConfirmed = 0;
-    double inMempool = 0;
-    double leftMempool = 0;
-};
-
-/* Used to return detailed information about a fee estimate calculation */
-struct EstimationResult
-{
-    EstimatorBucket pass;
-    EstimatorBucket fail;
-    double decay = 0;
-    unsigned int scale = 0;
-};
-
-struct FeeCalculation
-{
-    EstimationResult est;
-    FeeReason reason = FeeReason::NONE;
-    int desiredTarget = 0;
-    int returnedTarget = 0;
-};
-
-/**
+ *
  *  We want to be able to estimate feerates that are needed on tx's to be included in
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
  * stats on the transactions included in that block
@@ -230,10 +224,12 @@ public:
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
 private:
-    unsigned int nBestSeenHeight;
-    unsigned int firstRecordedHeight;
-    unsigned int historicalFirst;
-    unsigned int historicalBest;
+    mutable CCriticalSection m_cs_fee_estimator;
+
+    unsigned int nBestSeenHeight GUARDED_BY(m_cs_fee_estimator);
+    unsigned int firstRecordedHeight GUARDED_BY(m_cs_fee_estimator);
+    unsigned int historicalFirst GUARDED_BY(m_cs_fee_estimator);
+    unsigned int historicalBest GUARDED_BY(m_cs_fee_estimator);
 
     struct TxStatsInfo
     {
@@ -243,34 +239,32 @@ private:
     };
 
     // map of txids to information about that transaction
-    std::map<uint256, TxStatsInfo> mapMemPoolTxs;
+    std::map<uint256, TxStatsInfo> mapMemPoolTxs GUARDED_BY(m_cs_fee_estimator);
 
     /** Classes to track historical data on transaction confirmations */
-    std::unique_ptr<TxConfirmStats> feeStats;
-    std::unique_ptr<TxConfirmStats> shortStats;
-    std::unique_ptr<TxConfirmStats> longStats;
+    std::unique_ptr<TxConfirmStats> feeStats PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr<TxConfirmStats> shortStats PT_GUARDED_BY(m_cs_fee_estimator);
+    std::unique_ptr<TxConfirmStats> longStats PT_GUARDED_BY(m_cs_fee_estimator);
 
-    unsigned int trackedTxs;
-    unsigned int untrackedTxs;
+    unsigned int trackedTxs GUARDED_BY(m_cs_fee_estimator);
+    unsigned int untrackedTxs GUARDED_BY(m_cs_fee_estimator);
 
-    std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
-    std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
-
-    mutable CCriticalSection cs_feeEstimator;
+    std::vector<double> buckets GUARDED_BY(m_cs_fee_estimator); // The upper-bound of the range for the bucket (inclusive)
+    std::map<double, unsigned int> bucketMap GUARDED_BY(m_cs_fee_estimator); // Map of bucket upper-bound to index into all vectors by bucket
 
     /** Process a transaction confirmed in a block*/
-    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry);
+    bool processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry* entry) EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 
     /** Helper for estimateSmartFee */
-    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const;
+    double estimateCombinedFee(unsigned int confTarget, double successThreshold, bool checkShorterHorizon, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Helper for estimateSmartFee */
-    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const;
+    double estimateConservativeFee(unsigned int doubleTarget, EstimationResult *result) const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Number of blocks of data recorded while fee estimates have been running */
-    unsigned int BlockSpan() const;
+    unsigned int BlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Number of blocks of recorded fee estimate data represented in saved data file */
-    unsigned int HistoricalBlockSpan() const;
+    unsigned int HistoricalBlockSpan() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
     /** Calculation of highest target that reasonable estimate can be provided for */
-    unsigned int MaxUsableEstimate() const;
+    unsigned int MaxUsableEstimate() const EXCLUSIVE_LOCKS_REQUIRED(m_cs_fee_estimator);
 };
 
 class FeeFilterRounder

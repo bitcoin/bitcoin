@@ -11,17 +11,21 @@
 #include <clientversion.h>
 #include <compat.h>
 #include <fs.h>
+#include <interfaces/chain.h>
 #include <rpc/server.h>
 #include <init.h>
 #include <noui.h>
 #include <shutdown.h>
-#include <util.h>
+#include <util/system.h>
 #include <httpserver.h>
 #include <httprpc.h>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 #include <walletinitinterface.h>
-#include <masternodeconfig.h>
+
 #include <stdio.h>
+// SYSCOIN
+#include <masternodeconfig.h>
+const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 /* Introduction text for doxygen: */
 
@@ -35,7 +39,7 @@
  *
  * The software is a community-driven open source project, released under the MIT license.
  *
- * See https://github.com/syscoin/syscoin and https://syscoin.org/ for further information about the project.
+ * See https://github.com/syscoin/syscoin and https://syscoincore.org/ for further information about the project.
  *
  * \section Navigation
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
@@ -56,6 +60,9 @@ static void WaitForShutdown()
 //
 static bool AppInit(int argc, char* argv[])
 {
+    InitInterfaces interfaces;
+    interfaces.chain = interfaces::MakeChain();
+
     bool fRet = false;
 
     //
@@ -75,7 +82,7 @@ static bool AppInit(int argc, char* argv[])
 
         if (gArgs.IsArgSet("-version"))
         {
-            strUsage += FormatParagraph(LicenseInfo());
+            strUsage += FormatParagraph(LicenseInfo()) + "\n";
         }
         else
         {
@@ -167,7 +174,7 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
-        fRet = AppInitMain();
+        fRet = AppInitMain(interfaces);
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, "AppInit()");
@@ -181,13 +188,17 @@ static bool AppInit(int argc, char* argv[])
     } else {
         WaitForShutdown();
     }
-    Shutdown();
+    Shutdown(interfaces);
 
     return fRet;
 }
 
 int main(int argc, char* argv[])
 {
+#ifdef WIN32
+    util::WinCmdLineArgs winArgs;
+    std::tie(argc, argv) = winArgs.get();
+#endif
     SetupEnvironment();
 
     // Connect syscoind signal handlers

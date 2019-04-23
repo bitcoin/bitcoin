@@ -18,23 +18,32 @@ bench_bench_syscoin_SOURCES = \
   bench/block_assemble.cpp \
   bench/checkblock.cpp \
   bench/checkqueue.cpp \
+  bench/duplicate_inputs.cpp \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
+  bench/gcs_filter.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/rpc_mempool.cpp \
   bench/verify_script.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
   bench/lockedpool.cpp \
-  bench/prevector.cpp
+  bench/poly1305.cpp \
+  bench/prevector.cpp \
+  test/setup_common.h \
+  test/setup_common.cpp \
+  test/util.h \
+  test/util.cpp
 
 nodist_bench_bench_syscoin_SOURCES = $(GENERATED_BENCH_FILES)
 
 bench_bench_syscoin_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_syscoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_syscoin_LDADD = \
+  $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_COMMON) \
@@ -46,7 +55,9 @@ bench_bench_syscoin_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE) \
-  $(LIBETHEREUM)
+  $(LIBETHEREUM) \
+  $(EVENT_PTHREADS_LIBS) \
+  $(EVENT_LIBS)
 
 if ENABLE_ZMQ
 bench_bench_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
@@ -54,10 +65,10 @@ endif
 
 if ENABLE_WALLET
 bench_bench_syscoin_SOURCES += bench/coin_selection.cpp
-bench_bench_syscoin_LDADD += $(LIBSYSCOIN_WALLET) $(LIBSYSCOIN_CRYPTO)
+bench_bench_syscoin_SOURCES += bench/wallet_balance.cpp
 endif
 
-bench_bench_syscoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+bench_bench_syscoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS)
 bench_bench_syscoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 CLEAN_SYSCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)

@@ -38,6 +38,12 @@ static const int MAX_STACK_SIZE = 1000;
 // otherwise as UNIX timestamp.
 static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
 
+// Maximum nLockTime. Since a lock time indicates the last invalid timestamp, a
+// transaction with this lock time will never be valid unless lock time
+// checking is disabled (by setting all input sequence numbers to
+// SEQUENCE_FINAL).
+static const uint32_t LOCKTIME_MAX = 0xFFFFFFFFU;
+
 typedef std::vector<unsigned char> valtype;
 
 template <typename T>
@@ -48,7 +54,7 @@ std::vector<unsigned char> ToByteVector(const T& in)
 
 /** Script opcodes */
 enum opcodetype
-{    
+{
     // push value
     OP_0 = 0x00,
     OP_FALSE = OP_0,
@@ -533,7 +539,6 @@ public:
     unsigned int GetSigOpCount(const CScript& scriptSig) const;
 
     bool IsPayToScriptHash() const;
-    bool IsPayToWitnessPublicKeyHash() const;
     bool IsPayToWitnessScriptHash() const;
     bool IsWitnessProgram(int& version, std::vector<unsigned char>& program) const;
 
@@ -578,12 +583,12 @@ struct CScriptWitness
     std::string ToString() const;
 };
 
-class CReserveScript
-{
-public:
-    CScript reserveScript;
-    virtual void KeepScript() {}
-    CReserveScript() {}
-    virtual ~CReserveScript() {}
+class CReserveScript	
+{	
+public:	
+    CScript reserveScript;	
+    virtual void KeepScript() {}	
+    CReserveScript() {}	
+    virtual ~CReserveScript() {}	
 };
 #endif // SYSCOIN_SCRIPT_SCRIPT_H

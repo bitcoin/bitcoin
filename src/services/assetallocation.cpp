@@ -811,7 +811,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     uint256 hash_block;
     CBlockIndex* blockindex = nullptr;
     CTransactionRef txRef;
-    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
         nHeight = blockindex->nHeight; 
     entry.pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
@@ -874,7 +874,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         uint256 hash_block;
         CTransactionRef txRef;
         CBlockIndex* blockindex = nullptr;
-        if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+        if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
             nHeight = blockindex->nHeight; 
         entry.pushKV("txtype", "assetallocationmint");
         entry.pushKV("_id", mintsyscoin.assetAllocationTuple.ToString());

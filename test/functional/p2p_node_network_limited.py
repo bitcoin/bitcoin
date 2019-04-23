@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Syscoin Core developers
+# Copyright (c) 2017-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_NETWORK_LIMITED.
@@ -11,7 +11,13 @@ and that it responds to getdata requests for blocks correctly:
 from test_framework.messages import CInv, msg_getdata, msg_verack, NODE_BLOOM, NODE_NETWORK_LIMITED, NODE_WITNESS
 from test_framework.mininode import P2PInterface, mininode_lock
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, disconnect_nodes, connect_nodes_bi, sync_blocks, wait_until
+from test_framework.util import (
+    assert_equal,
+    disconnect_nodes,
+    connect_nodes_bi,
+    wait_until,
+)
+
 
 class P2PIgnoreInv(P2PInterface):
     firstAddrnServices = 0
@@ -34,9 +40,6 @@ class NodeNetworkLimitedTest(SyscoinTestFramework):
         self.num_nodes = 3
         self.extra_args = [['-prune=550', '-addrmantest'], [], []]
 
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
-
     def disconnect_all(self):
         disconnect_nodes(self.nodes[0], 1)
         disconnect_nodes(self.nodes[1], 0)
@@ -46,8 +49,8 @@ class NodeNetworkLimitedTest(SyscoinTestFramework):
         disconnect_nodes(self.nodes[1], 2)
 
     def setup_network(self):
-        super(NodeNetworkLimitedTest, self).setup_network()
-        self.disconnect_all()
+        self.add_nodes(self.num_nodes, self.extra_args)
+        self.start_nodes()
 
     def run_test(self):
         node = self.nodes[0].add_p2p_connection(P2PIgnoreInv())
@@ -62,8 +65,8 @@ class NodeNetworkLimitedTest(SyscoinTestFramework):
 
         self.log.info("Mine enough blocks to reach the NODE_NETWORK_LIMITED range.")
         connect_nodes_bi(self.nodes, 0, 1)
-        blocks = self.nodes[1].generate(292)
-        sync_blocks([self.nodes[0], self.nodes[1]])
+        blocks = self.nodes[1].generatetoaddress(292, self.nodes[1].get_deterministic_priv_key().address)
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         self.log.info("Make sure we can max retrieve block at tip-288.")
         node.send_getdata_for_block(blocks[1])  # last block in valid range
@@ -89,29 +92,29 @@ class NodeNetworkLimitedTest(SyscoinTestFramework):
         # because node 2 is in IBD and node 0 is a NODE_NETWORK_LIMITED peer, sync must not be possible
         connect_nodes_bi(self.nodes, 0, 2)
         try:
-            sync_blocks([self.nodes[0], self.nodes[2]], timeout=5)
+            self.sync_blocks([self.nodes[0], self.nodes[2]], timeout=5)
         except:
             pass
-        # node2 must remain at heigh 0
+        # node2 must remain at height 0
         assert_equal(self.nodes[2].getblockheader(self.nodes[2].getbestblockhash())['height'], 0)
 
         # now connect also to node 1 (non pruned)
         connect_nodes_bi(self.nodes, 1, 2)
 
         # sync must be possible
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
         # disconnect all peers
         self.disconnect_all()
 
         # mine 10 blocks on node 0 (pruned node)
-        self.nodes[0].generate(10)
+        self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
 
         # connect node1 (non pruned) with node0 (pruned) and check if the can sync
         connect_nodes_bi(self.nodes, 0, 1)
 
         # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
-        sync_blocks([self.nodes[0], self.nodes[1]])
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
 if __name__ == '__main__':
     NodeNetworkLimitedTest().main()

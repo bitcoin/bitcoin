@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,6 @@
 typedef int64_t CAmount;
 
 static const CAmount COIN = 100000000;
-static const CAmount CENT = 1000000;
 
 /** No amount larger than this (in satoshi) is valid.
  *

@@ -1,5 +1,5 @@
 # ===========================================================================
-#    https://www.gnu.org/software/autoconf-archive/ax_jni_include_dir.html
+#    http://www.gnu.org/software/autoconf-archive/ax_jni_include_dir.html
 # ===========================================================================
 #
 # SYNOPSIS
@@ -44,7 +44,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 14
+#serial 10
 
 AU_ALIAS([AC_JNI_INCLUDE_DIR], [AX_JNI_INCLUDE_DIR])
 AC_DEFUN([AX_JNI_INCLUDE_DIR],[
@@ -66,17 +66,9 @@ else
 fi
 
 case "$host_os" in
-        darwin*)        # Apple Java headers are inside the Xcode bundle.
-            macos_version=$(sw_vers -productVersion | sed -n -e 's/^@<:@0-9@:>@*.\(@<:@0-9@:>@*\).@<:@0-9@:>@*/\1/p')
-            if @<:@ "$macos_version" -gt "7" @:>@; then
-                _JTOPDIR="$(xcrun --show-sdk-path)/System/Library/Frameworks/JavaVM.framework"
-                _JINC="$_JTOPDIR/Headers"
-            else
-                _JTOPDIR="/System/Library/Frameworks/JavaVM.framework"
-                _JINC="$_JTOPDIR/Headers"
-            fi
-            ;;
-        *) _JINC="$_JTOPDIR/include";;
+        darwin*)        _JTOPDIR=`echo "$_JTOPDIR" | sed -e 's:/[[^/]]*$::'`
+                        _JINC="$_JTOPDIR/Headers";;
+        *)              _JINC="$_JTOPDIR/include";;
 esac
 _AS_ECHO_LOG([_JTOPDIR=$_JTOPDIR])
 _AS_ECHO_LOG([_JINC=$_JINC])
@@ -84,27 +76,30 @@ _AS_ECHO_LOG([_JINC=$_JINC])
 # On Mac OS X 10.6.4, jni.h is a symlink:
 # /System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers/jni.h
 # -> ../../CurrentJDK/Headers/jni.h.
+
 AC_CACHE_CHECK(jni headers, ac_cv_jni_header_path,
 [
-  if test -f "$_JINC/jni.h"; then
-    ac_cv_jni_header_path="$_JINC"
+if test -f "$_JINC/jni.h"; then
+  ac_cv_jni_header_path="$_JINC"
+  JNI_INCLUDE_DIRS="$JNI_INCLUDE_DIRS $ac_cv_jni_header_path"
+else
+  _JTOPDIR=`echo "$_JTOPDIR" | sed -e 's:/[[^/]]*$::'`
+  if test -f "$_JTOPDIR/include/jni.h"; then
+    ac_cv_jni_header_path="$_JTOPDIR/include"
     JNI_INCLUDE_DIRS="$JNI_INCLUDE_DIRS $ac_cv_jni_header_path"
   else
-    _JTOPDIR=`echo "$_JTOPDIR" | sed -e 's:/[[^/]]*$::'`
-    if test -f "$_JTOPDIR/include/jni.h"; then
-      ac_cv_jni_header_path="$_JTOPDIR/include"
-      JNI_INCLUDE_DIRS="$JNI_INCLUDE_DIRS $ac_cv_jni_header_path"
-    else
-      ac_cv_jni_header_path=none
-    fi
+    ac_cv_jni_header_path=none
   fi
+fi
 ])
+
+
 
 # get the likely subdirectories for system specific java includes
 case "$host_os" in
 bsdi*)          _JNI_INC_SUBDIRS="bsdos";;
-freebsd*)       _JNI_INC_SUBDIRS="freebsd";;
 darwin*)        _JNI_INC_SUBDIRS="darwin";;
+freebsd*)       _JNI_INC_SUBDIRS="freebsd";;
 linux*)         _JNI_INC_SUBDIRS="linux genunix";;
 osf*)           _JNI_INC_SUBDIRS="alpha";;
 solaris*)       _JNI_INC_SUBDIRS="solaris";;
@@ -117,9 +112,9 @@ if test "x$ac_cv_jni_header_path" != "xnone"; then
   # add any subdirectories that are present
   for JINCSUBDIR in $_JNI_INC_SUBDIRS
   do
-    if test -d "$_JTOPDIR/include/$JINCSUBDIR"; then
-         JNI_INCLUDE_DIRS="$JNI_INCLUDE_DIRS $_JTOPDIR/include/$JINCSUBDIR"
-    fi
+      if test -d "$_JTOPDIR/include/$JINCSUBDIR"; then
+           JNI_INCLUDE_DIRS="$JNI_INCLUDE_DIRS $_JTOPDIR/include/$JINCSUBDIR"
+      fi
   done
 fi
 ])

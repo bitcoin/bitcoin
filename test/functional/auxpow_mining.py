@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 Daniel Kraft
+# Copyright (c) 2014-2019 Daniel Kraft
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,11 @@
 # getauxblock, createauxblock, submitauxblock
 
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+  assert_equal,
+  assert_greater_than_or_equal,
+  assert_raises_rpc_error,
+)
 
 from test_framework.auxpow import reverseHex
 from test_framework.auxpow_testing import (
@@ -15,6 +19,8 @@ from test_framework.auxpow_testing import (
   getCoinbaseAddr,
   mineAuxpowBlockWithMethods,
 )
+
+from decimal import Decimal
 
 class AuxpowMiningTest (SyscoinTestFramework):
 
@@ -27,9 +33,6 @@ class AuxpowMiningTest (SyscoinTestFramework):
                          help="Test behaviour with SegWit active")
 
   def run_test (self):
-    # Enable mock time to be out of IBD.
-    self.enable_mocktime ()
-
     # Activate segwit if requested.
     if self.options.segwit:
       self.nodes[0].generate (500)
@@ -79,6 +82,12 @@ class AuxpowMiningTest (SyscoinTestFramework):
     auxblock = create ()
     target = reverseHex (auxblock['_target'])
 
+    # Cross-check target value with GBT to make explicitly sure that it is
+    # correct (not just implicitly by successfully mining blocks for it
+    # later on).
+    gbt = self.nodes[0].getblocktemplate ({"rules": ["segwit"]})
+    assert_equal (target, gbt['target'].encode ("ascii"))
+
     # Compute invalid auxpow.
     apow = computeAuxpow (auxblock['hash'], target, False)
     res = submit (auxblock['hash'], apow)
@@ -100,7 +109,6 @@ class AuxpowMiningTest (SyscoinTestFramework):
     data = self.nodes[1].getblock (auxblock['hash'])
     assert 'auxpow' in data
     auxJson = data['auxpow']
-    assert_equal (auxJson['index'], 0)
     assert_equal (auxJson['chainindex'], 0)
     assert_equal (auxJson['merklebranch'], [])
     assert_equal (auxJson['chainmerklebranch'], [])
@@ -130,7 +138,7 @@ class AuxpowMiningTest (SyscoinTestFramework):
     # this for simplicity.)
     if not self.options.segwit:
       blk = self.nodes[1].getblock (auxblock['hash'])
-      tx = self.nodes[1].getrawtransaction (blk['tx'][0], 1)
+      tx = self.nodes[1].getrawtransaction (blk['tx'][0], True, blk['hash'])
       coinbase = tx['vin'][0]['coinbase']
       assert_equal ("02%02x00" % auxblock['height'], coinbase[0 : 6])
 

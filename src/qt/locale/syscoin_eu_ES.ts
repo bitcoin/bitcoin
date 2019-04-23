@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Klikatu eskuinean helbidea edo etiketa aldatzeko</translation>
+        <translation>Klikatu eskuinarekin helbidea edo etiketa aldatzeko</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -134,6 +134,14 @@
     <message>
         <source>Repeat new passphrase</source>
         <translation>Pasahitz berria errepiikatu</translation>
+    </message>
+    <message>
+        <source>Show password</source>
+        <translation>Erakutsi pasahitza</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Sartu pasaesaldi bat diru-zorrorako. Mesedez erabili ausazko hamar edo gehiago karaktere edo zortzi edo gehiago hitz.</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -274,6 +282,10 @@
         <translation>Fitxen tresna-barra</translation>
     </message>
     <message>
+        <source>Error</source>
+        <translation>Akatsa</translation>
+    </message>
+    <message>
         <source>Up to date</source>
         <translation>Eguneratua</translation>
     </message>
@@ -368,6 +380,10 @@
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Error</source>
+        <translation>Akatsa</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
@@ -384,6 +400,10 @@
     <message>
         <source>Options</source>
         <translation>Aukerak</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Akatsa</translation>
     </message>
     </context>
 <context>
@@ -808,6 +828,10 @@
 <context>
     <name>syscoin-core</name>
     <message>
+        <source>Loading wallet...</source>
+        <translation>Diru-zorroa kargatzen</translation>
+    </message>
+    <message>
         <source>Rescanning...</source>
         <translation>Birbilatzen...</translation>
     </message>
@@ -815,5 +839,9 @@
         <source>Done loading</source>
         <translation>Zamaketa amaitua</translation>
     </message>
-    </context>
+    <message>
+        <source>Error</source>
+        <translation>Akatsa</translation>
+    </message>
+</context>
 </TS>

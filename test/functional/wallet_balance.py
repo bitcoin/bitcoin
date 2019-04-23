@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Syscoin Core developers
+# Copyright (c) 2018-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet balance RPC methods."""
@@ -128,6 +128,18 @@ class WalletTest(SyscoinTestFramework):
 
         # getbalance with minconf=2 will show the new balance.
         assert_equal(self.nodes[1].getbalance(minconf=2), Decimal('0'))
+
+        # check mempool transactions count for wallet unconfirmed balance after
+        # dynamically loading the wallet.
+        before = self.nodes[1].getunconfirmedbalance()
+        dst = self.nodes[1].getnewaddress()
+        self.nodes[1].unloadwallet('')
+        self.nodes[0].sendtoaddress(dst, 0.1)
+        self.sync_all()
+        self.nodes[1].loadwallet('')
+        after = self.nodes[1].getunconfirmedbalance()
+        assert_equal(before + Decimal('0.1'), after)
+
 
 if __name__ == '__main__':
     WalletTest().main()

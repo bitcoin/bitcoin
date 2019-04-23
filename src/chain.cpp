@@ -4,18 +4,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
+#include <validation.h>
 
-#include "validation.h"
-
-/* Moved here from the header, because we need auxpow and the logic
+ /* Moved here from the header, because we need auxpow and the logic
    becomes more involved.  */
 CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams) const
 {
     CBlockHeader block;
 
-    block.nVersion       = nVersion;
+     block.nVersion       = nVersion;
 
-    /* The CBlockIndex object's block header is missing the auxpow.
+     /* The CBlockIndex object's block header is missing the auxpow.
        So if this is an auxpow block, read it from disk instead.  We only
        have to read the actual *header*, not the full block.  */
     if (block.IsAuxpow())
@@ -24,7 +23,7 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
         return block;
     }
 
-    if (pprev)
+     if (pprev)
         block.hashPrevBlock = pprev->GetBlockHash();
     block.hashMerkleRoot = hashMerkleRoot;
     block.nTime          = nTime;
@@ -32,7 +31,6 @@ CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParam
     block.nNonce         = nNonce;
     return block;
 }
-
 /**
  * CChain implementation
  */
@@ -87,10 +85,11 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
     return pindex;
 }
 
-CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime) const
+CBlockIndex* CChain::FindEarliestAtLeast(int64_t nTime, int height) const
 {
-    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), nTime,
-        [](CBlockIndex* pBlock, const int64_t& time) -> bool { return pBlock->GetBlockTimeMax() < time; });
+    std::pair<int64_t, int> blockparams = std::make_pair(nTime, height);
+    std::vector<CBlockIndex*>::const_iterator lower = std::lower_bound(vChain.begin(), vChain.end(), blockparams,
+        [](CBlockIndex* pBlock, const std::pair<int64_t, int>& blockparams) -> bool { return pBlock->GetBlockTimeMax() < blockparams.first || pBlock->nHeight < blockparams.second; });
     return (lower == vChain.end() ? nullptr : *lower);
 }
 

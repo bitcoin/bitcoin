@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activemasternode.h"
-#include "checkpoints.h"
 #include "governance.h"
 #include "validation.h"
 #include "masternode.h"

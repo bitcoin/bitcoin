@@ -2,9 +2,9 @@
 
 The following interfaces are defined here:
 
-* [`Chain`](chain.h) — used by wallet to access blockchain and mempool state. Added in [#10973](https://github.com/syscoin/syscoin/pull/10973).
+* [`Chain`](chain.h) — used by wallet to access blockchain and mempool state. Added in [#14437](https://github.com/syscoin/syscoin/pull/14437), [#14711](https://github.com/syscoin/syscoin/pull/14711), [#15288](https://github.com/syscoin/syscoin/pull/15288), and [#10973](https://github.com/syscoin/syscoin/pull/10973).
 
-* [`Chain::Client`](chain.h) — used by node to start & stop `Chain` clients. Added in [#10973](https://github.com/syscoin/syscoin/pull/10973).
+* [`ChainClient`](chain.h) — used by node to start & stop `Chain` clients. Added in [#14437](https://github.com/syscoin/syscoin/pull/14437).
 
 * [`Node`](node.h) — used by GUI to start & stop syscoin node. Added in [#10244](https://github.com/syscoin/syscoin/pull/10244).
 

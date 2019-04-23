@@ -1,0 +1,16 @@
+# ThreadSanitizer suppressions
+# ============================
+
+# WalletBatch (unidentified deadlock)
+deadlock:WalletBatch
+
+# Intentional deadlock in tests
+deadlock:TestPotentialDeadLockDetected
+
+# Wildcard for all gui tests, should be replaced with non-wildcard suppressions
+race:src/qt/test/*
+deadlock:src/qt/test/*
+
+# External libraries
+deadlock:libdb
+race:libzmq

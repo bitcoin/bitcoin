@@ -1,11 +1,11 @@
-// Copyright (c) 2012-2018 The Syscoin Core developers
+// Copyright (c) 2012-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <dbwrapper.h>
 #include <uint256.h>
 #include <random.h>
-#include <test/test_syscoin.h>
+#include <test/setup_common.h>
 
 #include <memory>
 
@@ -26,7 +26,7 @@ BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (bool obfuscate : {false, true}) {
+    for (const bool obfuscate : {false, true}) {
         fs::path ph = SetDataDir(std::string("dbwrapper").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper)
 BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (bool obfuscate : {false, true}) {
+    for (const bool obfuscate : {false, true}) {
         fs::path ph = SetDataDir(std::string("dbwrapper_batch").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
         // Remove key3 before it's even been written
         batch.Erase(key3);
 
-        dbw.WriteBatch(batch);
+        BOOST_CHECK(dbw.WriteBatch(batch));
 
         BOOST_CHECK(dbw.Read(key, res));
         BOOST_CHECK_EQUAL(res.ToString(), in.ToString());
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 {
     // Perform tests both obfuscated and non-obfuscated.
-    for (bool obfuscate : {false, true}) {
+    for (const bool obfuscate : {false, true}) {
         fs::path ph = SetDataDir(std::string("dbwrapper_iterator").append(obfuscate ? "_true" : "_false"));
         CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
@@ -102,15 +102,15 @@ BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
         char key_res;
         uint256 val_res;
 
-        it->GetKey(key_res);
-        it->GetValue(val_res);
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(key_res, key);
         BOOST_CHECK_EQUAL(val_res.ToString(), in.ToString());
 
         it->Next();
 
-        it->GetKey(key_res);
-        it->GetValue(val_res);
+        BOOST_REQUIRE(it->GetKey(key_res));
+        BOOST_REQUIRE(it->GetValue(val_res));
         BOOST_CHECK_EQUAL(key_res, key2);
         BOOST_CHECK_EQUAL(val_res.ToString(), in2.ToString());
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(iterator_ordering)
         if (x & 1) BOOST_CHECK(dbw.Write(key, value));
     }
 
-    for (int seek_start : {0x00, 0x80}) {
+    for (const int seek_start : {0x00, 0x80}) {
         it->Seek((uint8_t)seek_start);
         for (unsigned int x=seek_start; x<255; ++x) {
             uint8_t key;
@@ -262,7 +262,7 @@ struct StringContentsSerializer {
                 try {
                     READWRITE(c);
                     str.push_back(c);
-                } catch (const std::ios_base::failure& e) {
+                } catch (const std::ios_base::failure&) {
                     break;
                 }
             }
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
     }
 
     std::unique_ptr<CDBIterator> it(const_cast<CDBWrapper&>(dbw).NewIterator());
-    for (int seek_start : {0, 5}) {
+    for (const int seek_start : {0, 5}) {
         snprintf(buf, sizeof(buf), "%d", seek_start);
         StringContentsSerializer seek_key(buf);
         it->Seek(seek_key);

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <test/test_syscoin.h>
-#include <utilstrencodings.h>
+#include <test/setup_common.h>
+#include <util/strencodings.h>
 #include <wallet/crypter.h>
 
 #include <vector>

@@ -8,7 +8,7 @@ Transifex is setup to monitor the GitHub repo for updates, and when code contain
 
 Multiple language support is critical in assisting Syscoin’s global adoption, and growth. One of Syscoin’s greatest strengths is cross-border money transfers, any help making that easier is greatly appreciated.
 
-See the [Transifex Syscoin project](https://www.transifex.com/projects/p/syscoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
+See the [Transifex Syscoin project](https://www.transifex.com/syscoin/syscoin/) to assist in translations. You should also join the translation mailing list for announcements - see details below.
 
 ### Writing code with translations
 We use automated scripts to help extract translations in both Qt, and non-Qt source files. It is rarely necessary to manually edit the files in `src/qt/locale/`. The translation source files must adhere to the following format:
@@ -43,7 +43,7 @@ git commit
 ### Creating a Transifex account
 Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
 
-You can find the Syscoin translation project at [https://www.transifex.com/projects/p/syscoin/](https://www.transifex.com/projects/p/syscoin/).
+You can find the Syscoin translation project at [https://www.transifex.com/syscoin/syscoin/](https://www.transifex.com/syscoin/syscoin/).
 
 ### Installing the Transifex client command-line tool
 The client is used to fetch updated translations. If you are having problems, or need more details, see [https://docs.transifex.com/client/installing-the-client](https://docs.transifex.com/client/installing-the-client)
@@ -68,11 +68,21 @@ The Transifex Syscoin project config file is included as part of the repo. It ca
 To assist in updating translations, we have created a script to help.
 
 1. `python contrib/devtools/update-translations.py`
-2. Update `src/qt/syscoin_locale.qrc` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(syscoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'`
-3. Update `src/Makefile.qt.include` manually or via
-   `ls src/qt/locale/*ts|xargs -n1 basename|sed 's/\(syscoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'`
-4. `git add` new translations from `src/qt/locale/`
+2. `git add` new translations from `src/qt/locale/`
+3. Update `src/qt/syscoin_locale.qrc` manually or via
+```bash
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(syscoin_\(.*\)\).ts/<file alias="\2">locale\/\1.qm<\/file>/'
+```
+4. Update `src/Makefile.qt.include` manually or via
+```bash
+git ls-files src/qt/locale/*ts|xargs -n1 basename|sed 's/\(syscoin_\(.*\)\).ts/  qt\/locale\/\1.ts \\/'
+```
+5. Update `build_msvc/libsyscoin_qt/libsyscoin_qt.vcxproj` or via
+```bash
+git ls-files src/qt/locale/*ts|xargs -n1 basename |
+  sed 's/@/%40/' |
+  sed 's/\(syscoin_\(.*\)\).ts/    <None Include="..\\..\\src\\qt\\locale\\\1.ts">\n      <DeploymentContent>true<\/DeploymentContent>\n    <\/None>/'
+```
 
 **Do not directly download translations** one by one from the Transifex website, as we do a few post-processing steps before committing the translations.
 

@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Syscoin Core developers
+# Copyright (c) 2016-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Encode and decode BASE58, P2PKH and P2SH addresses."""
 
 from .script import hash256, hash160, sha256, CScript, OP_0
-from .util import bytes_to_hex_str, hex_str_to_bytes
+from .util import hex_str_to_bytes
 
 from . import segwit_addr
 
+ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
+
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
 
 def byte_to_base58(b, version):
     result = ''
-    str = bytes_to_hex_str(b)
-    str = bytes_to_hex_str(chr(version).encode('latin-1')) + str
-    checksum = bytes_to_hex_str(hash256(hex_str_to_bytes(str)))
+    str = b.hex()
+    str = chr(version).encode('latin-1').hex() + str
+    checksum = hash256(hex_str_to_bytes(str)).hex()
     str += checksum[:8]
     value = int('0x'+str,0)
     while value > 0:
@@ -29,12 +32,12 @@ def byte_to_base58(b, version):
 # TODO: def base58_decode
 
 def keyhash_to_p2pkh(hash, main = False):
-    assert (len(hash) == 20)
+    assert len(hash) == 20
     version = 0 if main else 111
     return byte_to_base58(hash, version)
 
 def scripthash_to_p2sh(hash, main = False):
-    assert (len(hash) == 20)
+    assert len(hash) == 20
     version = 5 if main else 196
     return byte_to_base58(hash, version)
 
@@ -77,11 +80,11 @@ def check_key(key):
         key = hex_str_to_bytes(key) # Assuming this is hex string
     if (type(key) is bytes and (len(key) == 33 or len(key) == 65)):
         return key
-    assert(False)
+    assert False
 
 def check_script(script):
     if (type(script) is str):
         script = hex_str_to_bytes(script) # Assuming this is hex string
     if (type(script) is bytes or type(script) is CScript):
         return script
-    assert(False)
+    assert False

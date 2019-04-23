@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>Închide</translation>
+        <translation>Î&amp;nchide</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -1050,6 +1050,22 @@
         <translation>Reţea</translation>
     </message>
     <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Dezactiveaza unele caracteristici avansate insa toate blocurile vor fi validate pe deplin. Inversarea acestei setari necesita re-descarcarea intregului blockchain. Utilizarea reala a discului poate fi ceva mai mare.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Reductie &amp;block storage la  </translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation> Inversarea acestei setari necesita re-descarcarea intregului blockchain.</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = automat, &lt;0 = lasă atîtea nuclee libere)</translation>
     </message>
@@ -1316,6 +1332,10 @@
         <translation>Gestionare URI</translation>
     </message>
     <message>
+        <source>'syscoin://' is not a valid URI. Use 'syscoin:' instead.</source>
+        <translation>'syscoin://' nu este un URI valid. Folositi 'syscoin:' in loc.</translation>
+    </message>
+    <message>
         <source>Payment request fetch URL is invalid: %1</source>
         <translation>URL-ul cererii de plată preluat nu este valid: %1</translation>
     </message>
@@ -1513,8 +1533,16 @@
 <context>
     <name>QObject::QObject</name>
     <message>
+        <source>Error parsing command line arguments: %1.</source>
+        <translation>Eroare la analiza argumentelor linie de comanda: %1</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
         <translation>Eroare: Directorul de date specificat "%1" nu există.</translation>
+    </message>
+    <message>
+        <source>Error: Cannot parse configuration file: %1.</source>
+        <translation>Eroare: Nu se poate analiza fişierul de configuraţie: %1.</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -1605,6 +1633,14 @@
     <message>
         <source>Memory usage</source>
         <translation>Memorie folosită</translation>
+    </message>
+    <message>
+        <source>Wallet: </source>
+        <translation>Portofel:</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(nimic)</translation>
     </message>
     <message>
         <source>&amp;Reset</source>
@@ -1801,6 +1837,14 @@
     <message>
         <source>Network activity disabled</source>
         <translation>Activitatea retelei a fost oprita.</translation>
+    </message>
+    <message>
+        <source>Executing command without any wallet</source>
+        <translation>Executarea comenzii fara nici un portofel.</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Executarea comenzii folosind portofelul "%1"</translation>
     </message>
     <message>
         <source>(node id: %1)</source>
@@ -2087,6 +2131,14 @@
         <translation>inchide setarile de taxare</translation>
     </message>
     <message>
+        <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
+
+Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis per kB" for a transaction size of 500 bytes (half of 1 kB) would ultimately yield a fee of only 50 satoshis.</source>
+        <translation>Specificati o taxa anume pe kB (1000 byte) din marimea virtuala a tranzactiei.
+
+Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o tranzactie de 500 byte (jumatate de kB) va produce o taxa de doar 50 satoshi.</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>per kilooctet</translation>
     </message>
@@ -2207,12 +2259,24 @@
         <translation>Puteti creste taxa mai tarziu (semnaleaza Replace-By-Fee, BIP-125).</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>de la portofelul %1</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction.</source>
+        <translation>Va rugam sa revizuiti tranzactia.</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Taxă tranzacţie</translation>
     </message>
     <message>
         <source>Not signalling Replace-By-Fee, BIP-125.</source>
         <translation>Nu se semnalizeaza Replace-By-Fee, BIP-125</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Suma totală</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2668,6 +2732,10 @@
         <translation>Dimensiune totala tranzacţie</translation>
     </message>
     <message>
+        <source>Transaction virtual size</source>
+        <translation>Dimensiune virtuala a tranzactiei</translation>
+    </message>
+    <message>
         <source>Output index</source>
         <translation>Index debit</translation>
     </message>
@@ -3068,7 +3136,11 @@
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Datele portofelului s-au salvat cu succes la %1.</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>Anulare</translation>
+    </message>
+</context>
 <context>
     <name>syscoin-core</name>
     <message>
@@ -3118,6 +3190,10 @@
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Eroare la citirea %s! Toate cheile sînt citite corect, dar datele tranzactiei sau anumite intrări din agenda sînt incorecte sau lipsesc.</translation>
+    </message>
+    <message>
+        <source>Group outputs by address, selecting all or none, instead of selecting on a per-output basis. Privacy is improved as an address is only used once (unless someone sends to it after spending from it), but may result in slightly higher fees as suboptimal coin selection may result due to the added limitation (default: %u)</source>
+        <translation>Gruparea a iesirilor pe adrese, selectand totul sau nimic, in loc de selectarea bazata per-iesire. Intimitatea este imbunatatita deoarece o adresa este folosita doar o singura data (cu exceptia cuiva care trimite catre aceiasi adresa dup ce cheltuie din ea), dar se pot genera taxe mai mari deoarece poate rezulta o selectare suboptimala a monedelor datorata limitarii impuse (implicit: %u)</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -3204,6 +3280,10 @@
         <translation>Eroare la încărcarea %s</translation>
     </message>
     <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Eroare la incarcarea %s: Cheile private pot fi dezactivate doar in momentul crearii</translation>
+    </message>
+    <message>
         <source>Error loading %s: Wallet corrupted</source>
         <translation>Eroare la încărcarea %s: Portofel corupt</translation>
     </message>
@@ -3256,6 +3336,14 @@
         <translation>Suma nevalidă pentru -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Directorul de blocuri "%s" specificat nu exista.</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>Actualizarea bazei de date txindex</translation>
+    </message>
+    <message>
         <source>Loading P2P addresses...</source>
         <translation>Încărcare adrese P2P...</translation>
     </message>
@@ -3294,6 +3382,10 @@
     <message>
         <source>Unable to bind to %s on this computer. %s is probably already running.</source>
         <translation>Nu se poate efectua legatura la %s pe acest computer. %s probabil ruleaza deja.</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation>Nu s-au putut genera cheile</translation>
     </message>
     <message>
         <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
@@ -3522,6 +3614,22 @@
     <message>
         <source>Insufficient funds</source>
         <translation>Fonduri insuficiente</translation>
+    </message>
+    <message>
+        <source>Can't generate a change-address key. Private keys are disabled for this wallet.</source>
+        <translation>Nu se poate genera o adresa pentru rest. Cheile private sunt dezactivate pentru acest portofel.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>Estimarea taxei a esuat. Taxa implicita este dezactivata. Asteptati cateva blocuri, sau activati -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Atentie: S-au detectat chei private in portofelul {%s} cu cheile private dezactivate</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>Nu se poate scrie in directorul de date '%s"; verificati permisiunile.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

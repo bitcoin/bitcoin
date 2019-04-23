@@ -1,9 +1,11 @@
-// Copyright (c) 2016-2017 The Syscoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_THREADINTERRUPT_H
 #define SYSCOIN_THREADINTERRUPT_H
+
+#include <sync.h>
 
 #include <atomic>
 #include <chrono>
@@ -28,7 +30,7 @@ public:
 
 private:
     std::condition_variable cond;
-    std::mutex mut;
+    Mutex mut;
     std::atomic<bool> flag;
 };
 

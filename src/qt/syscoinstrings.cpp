@@ -30,8 +30,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Error loading %s: You can't enable HD on an already existing non-HD wallet"),
-QT_TRANSLATE_NOOP("syscoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
@@ -39,12 +37,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -"
 "fallbackfee."),
-QT_TRANSLATE_NOOP("syscoin-core", ""
-"Group outputs by address, selecting all or none, instead of selecting on a "
-"per-output basis. Privacy is improved as an address is only used once "
-"(unless someone sends to it after spending from it), but may result in "
-"slightly higher fees as suboptimal coin selection may result due to the "
-"added limitation (default: %u)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
@@ -91,12 +83,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Unable to rewind the database to a pre-fork state. You will need to "
 "redownload the blockchain"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Unsupported argument -socks found. Setting SOCKS version isn't possible "
-"anymore, only SOCKS5 proxies are supported."),
-QT_TRANSLATE_NOOP("syscoin-core", ""
-"Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/"
-"or -whitelistforcerelay."),
-QT_TRANSLATE_NOOP("syscoin-core", ""
 "Warning: Private keys detected in wallet {%s} with disabled private keys"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
@@ -122,18 +108,17 @@ QT_TRANSLATE_NOOP("syscoin-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("syscoin-core", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Cannot write to data directory '%s'; check permissions."),
 QT_TRANSLATE_NOOP("syscoin-core", "Change index out of range"),
+QT_TRANSLATE_NOOP("syscoin-core", "Config setting for %s only applied on %s network when in [%s] section."),
 QT_TRANSLATE_NOOP("syscoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("syscoin-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("syscoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("syscoin-core", "Done loading"),
-QT_TRANSLATE_NOOP("syscoin-core", "Error creating %s: You can't create non-HD wallets with this version."),
 QT_TRANSLATE_NOOP("syscoin-core", "Error initializing block database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error initializing wallet database environment %s!"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s: Private keys can only be disabled during creation"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s: Wallet corrupted"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s: Wallet requires newer version of %s"),
-QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s: You can't disable HD on an already existing HD wallet"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading block database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading wallet %s. Duplicate -wallet filename specified."),
 QT_TRANSLATE_NOOP("syscoin-core", "Error opening block database"),
@@ -141,6 +126,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Error reading from database, shutting down.")
 QT_TRANSLATE_NOOP("syscoin-core", "Error upgrading chainstate database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: A fatal internal error occurred, see debug.log for details"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is low for %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is low!"),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to rescan the wallet during initialization"),
@@ -170,6 +156,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Reducing -maxconnections from %d to %d, becau
 QT_TRANSLATE_NOOP("syscoin-core", "Replaying blocks..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Rewinding blocks..."),
+QT_TRANSLATE_NOOP("syscoin-core", "Section [%s] is not recognized."),
 QT_TRANSLATE_NOOP("syscoin-core", "Signing transaction failed"),
 QT_TRANSLATE_NOOP("syscoin-core", "Specified -walletdir \"%s\" does not exist"),
 QT_TRANSLATE_NOOP("syscoin-core", "Specified -walletdir \"%s\" is a relative path"),
@@ -177,6 +164,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Specified -walletdir \"%s\" is not a director
 QT_TRANSLATE_NOOP("syscoin-core", "Specified blocks directory \"%s\" does not exist."),
 QT_TRANSLATE_NOOP("syscoin-core", "Starting network threads..."),
 QT_TRANSLATE_NOOP("syscoin-core", "The source code is available from %s."),
+QT_TRANSLATE_NOOP("syscoin-core", "The specified config file %s does not exist\n"),
 QT_TRANSLATE_NOOP("syscoin-core", "The transaction amount is too small to pay the fee"),
 QT_TRANSLATE_NOOP("syscoin-core", "The wallet will avoid paying less than the minimum relay fee."),
 QT_TRANSLATE_NOOP("syscoin-core", "This is experimental software."),
@@ -195,9 +183,6 @@ QT_TRANSLATE_NOOP("syscoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to generate keys"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("syscoin-core", "Unknown network specified in -onlynet: '%s'"),
-QT_TRANSLATE_NOOP("syscoin-core", "Unsupported argument -benchmark ignored, use -debug=bench."),
-QT_TRANSLATE_NOOP("syscoin-core", "Unsupported argument -debugnet ignored, use -debug=net."),
-QT_TRANSLATE_NOOP("syscoin-core", "Unsupported argument -tor found, use -onion."),
 QT_TRANSLATE_NOOP("syscoin-core", "Unsupported logging category %s=%s."),
 QT_TRANSLATE_NOOP("syscoin-core", "Upgrading UTXO database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Upgrading txindex database"),

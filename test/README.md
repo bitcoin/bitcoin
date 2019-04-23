@@ -3,21 +3,23 @@ utilities in their entirety. It does not contain unit tests, which
 can be found in [/src/test](/src/test), [/src/wallet/test](/src/wallet/test),
 etc.
 
-There are currently two sets of tests in this directory:
+This directory contains the following sets of tests:
 
 - [functional](/test/functional) which test the functionality of
 syscoind and syscoin-qt by interacting with them through the RPC and P2P
 interfaces.
 - [util](/test/util) which tests the syscoin utilities, currently only
 syscoin-tx.
+- [lint](/test/lint/) which perform various static analysis checks.
 
 The util tests are run as part of `make check` target. The functional
-tests are run by the travis continuous build process whenever a pull
-request is opened. Both sets of tests can also be run locally.
+tests and lint scripts are run by the travis continuous build process whenever a pull
+request is opened. All sets of tests can also be run locally.
 
 # Running tests locally
 
-Build for your system first. Be sure to enable wallet, utils and daemon when you configure. Tests will not run otherwise.
+Before tests can be run locally, Syscoin Core must be built.  See the [building instructions](/doc#building) for help.
+
 
 ### Functional tests
 
@@ -30,7 +32,7 @@ The ZMQ functional test requires a python ZMQ library. To install it:
 
 #### Running the tests
 
-Individual tests can be run by directly calling the test script, eg:
+Individual tests can be run by directly calling the test script, e.g.:
 
 ```
 test/functional/feature_rbf.py
@@ -173,12 +175,53 @@ cat /tmp/user/1000/testo9vsdjo3/node1/regtest/syscoind.pid
 gdb /home/example/syscoind <pid>
 ```
 
-Note: gdb attach step may require `sudo`
+Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
+See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
+
+##### Profiling
+
+An easy way to profile node performance during functional tests is provided
+for Linux platforms using `perf`.
+
+Perf will sample the running node and will generate profile data in the node's
+datadir. The profile data can then be presented using `perf report` or a graphical
+tool like [hotspot](https://github.com/KDAB/hotspot).
+
+To generate a profile during test suite runs, use the `--perf` flag.
+
+To see render the output to text, run
+
+```sh
+perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt | less
+```
+
+For ways to generate more granular profiles, see the README in
+[test/functional](/test/functional).
 
 ### Util tests
 
 Util tests can be run locally by running `test/util/syscoin-util-test.py`.
 Use the `-v` option for verbose output.
+
+### Lint tests
+
+#### Dependencies
+
+The lint tests require codespell and flake8. To install: `pip3 install codespell flake8`.
+
+#### Running the tests
+
+Individual tests can be run by directly calling the test script, e.g.:
+
+```
+test/lint/lint-filenames.sh
+```
+
+You can run all the shell-based lint tests by running:
+
+```
+test/lint/lint-all.sh
+```
 
 # Writing functional tests
 
