@@ -161,11 +161,12 @@ class ImportRescanTest(BitcoinTestFramework):
         timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
         set_node_times(self.nodes, timestamp + TIMESTAMP_WINDOW + 1)
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_all()
 
         # For each variation of wallet key import, invoke the import RPC and
         # check the results from getbalance and listtransactions.
         for variant in IMPORT_VARIANTS:
+            self.log.info('Run import for variant {}'.format(variant))
             variant.expect_disabled = variant.rescan == Rescan.yes and variant.prune and variant.call == Call.single
             expect_rescan = variant.rescan == Rescan.yes and not variant.expect_disabled
             variant.node = self.nodes[2 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
@@ -187,10 +188,11 @@ class ImportRescanTest(BitcoinTestFramework):
         # Generate a block containing the new transactions.
         self.nodes[0].generate(1)
         assert_equal(self.nodes[0].getrawmempool(), [])
-        self.sync_blocks()
+        self.sync_all()
 
         # Check the latest results from getbalance and listtransactions.
         for variant in IMPORT_VARIANTS:
+            self.log.info('Run check for variant {}'.format(variant))
             if not variant.expect_disabled:
                 variant.expected_balance += variant.sent_amount
                 variant.expected_txs += 1
