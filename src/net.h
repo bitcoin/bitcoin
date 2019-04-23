@@ -73,6 +73,8 @@ static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** The default timeframe for -maxuploadtarget. 1 day. */
 static const uint64_t MAX_UPLOAD_TIMEFRAME = 60 * 60 * 24;
+/** -tx_relay_force_flush default */
+static const bool DEFAULT_TX_RELAY_FORCE_FLUSH{false};
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
@@ -137,7 +139,7 @@ public:
         uint64_t nMaxOutboundTimeframe = 0;
         uint64_t nMaxOutboundLimit = 0;
         int64_t m_peer_connect_timeout = DEFAULT_PEER_CONNECT_TIMEOUT;
-        bool m_tx_relay_force_flush{false};
+        bool m_tx_relay_force_flush{DEFAULT_TX_RELAY_FORCE_FLUSH};
         std::vector<std::string> vSeedNodes;
         std::vector<CSubNet> vWhitelistedRange;
         std::vector<CService> vBinds, vWhiteBinds;

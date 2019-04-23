@@ -443,6 +443,7 @@ void SetupServerArgs()
     gArgs.AddArg("-seednode=<ip>", "Connect to a node to retrieve peer addresses, and disconnect. This option can be specified multiple times to connect to multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-timeout=<n>", strprintf("Specify connection timeout in milliseconds (minimum: 1, default: %d)", DEFAULT_CONNECT_TIMEOUT), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-peertimeout=<n>", strprintf("Specify p2p connection timeout in seconds. This option determines the amount of time a peer may be inactive before the connection to it is dropped. (minimum: 1, default: %d)", DEFAULT_PEER_CONNECT_TIMEOUT), true, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-tx_relay_force_flush", strprintf("Force transaction relay without delay. Regtest only. (default: %d)", DEFAULT_TX_RELAY_FORCE_FLUSH), true, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control port to use if onion listening enabled (default: %s)", DEFAULT_TOR_CONTROL), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", false, OptionsCategory::CONNECTION);
 #ifdef USE_UPNP
@@ -1787,7 +1788,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
     connOptions.m_peer_connect_timeout = peer_connect_timeout;
-    connOptions.m_tx_relay_force_flush = chainparams.MineBlocksOnDemand(); // Send txs without delay on regtest
+    connOptions.m_tx_relay_force_flush = DEFAULT_TX_RELAY_FORCE_FLUSH;
+    if (chainparams.NetworkIDString() == CBaseChainParams::REGTEST) {
+        // Send txs without delay on regtest
+        connOptions.m_tx_relay_force_flush = gArgs.GetBoolArg("-tx_relay_force_flush", DEFAULT_TX_RELAY_FORCE_FLUSH);
+    }
 
     for (const std::string& strBind : gArgs.GetArgs("-bind")) {
         CService addrBind;

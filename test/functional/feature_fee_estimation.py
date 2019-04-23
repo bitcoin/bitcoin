@@ -123,6 +123,9 @@ def check_estimates(node, fees_seen):
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
+        self.extra_args = [[
+            '-tx_relay_force_flush=1',  # No delay in tx relay to speed up test
+        ]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()

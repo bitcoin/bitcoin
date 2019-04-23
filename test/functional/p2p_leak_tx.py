@@ -20,6 +20,9 @@ class P2PNode(P2PDataStore):
 class P2PLeakTxTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
+        self.extra_args = [[
+            '-tx_relay_force_flush=0',  # Delay tx relay to avoid test failures on really slow machines
+        ]]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
