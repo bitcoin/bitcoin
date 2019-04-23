@@ -348,7 +348,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
-            + HelpExampleRpc("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
+            + HelpExampleRpc("assetallocationburn", "\"asset\", \"address\", \"amount\", \"ethereum_destination_address\"")
             );
 
 	const int &nAsset = params[0].get_int();
@@ -412,7 +412,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 9 != params.size())
         throw runtime_error(
-            "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [witness]\n"
+            "assetallocationmint <asset> <address> <amount> <blocknumber> <tx_hex> <txroot_hex> <txmerkleproof_hex> <txmerkleroofpath_hex> <witness>\n"
             "\nArguments:\n"
             "1. <asset>                 (numeric, required) Asset guid.\n"
             "2. <address>               (string, required) Address that will get this minting.\n"
@@ -426,7 +426,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             "\nResult:\n"
             "\nExamples:\n"
             + HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"witness\"")
-            + HelpExampleRpc("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"witness\"")
+            + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"addressto\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"\"")
             );
 
     const int &nAsset = params[0].get_int();
@@ -488,7 +488,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
             "]\n"
             "\nExamples:\n"
             + HelpExampleCli("assetallocationsend", "\"assetguid\" \"addressfrom\" \"addressto\" \"amount\"")
-            + HelpExampleRpc("assetallocationsend", "\"assetguid\" \"addressfrom\" \"addressto\" \"amount\"")
+            + HelpExampleRpc("assetallocationsend", "\"assetguid\", \"addressfrom\", \"addressto\", \"amount\"")
             );
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
@@ -531,8 +531,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             "\nExamples:\n"
             + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
             + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
-            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
-            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
             );
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
@@ -693,7 +693,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                 "}\n"
                 "\nExamples:\n"
                 + HelpExampleCli("assetallocationinfo", "\"assetguid\" \"address\"")
-                + HelpExampleRpc("assetallocationinfo", "\"assetguid\" \"address\"")
+                + HelpExampleRpc("assetallocationinfo", "\"assetguid\", \"address\"")
                 );
 
     const int &nAsset = params[0].get_int();
@@ -819,7 +819,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("assetallocationsenderstatus", "\"asset\" \"address\" \"txid\"")
-            + HelpExampleRpc("assetallocationsenderstatus", "\"asset\" \"address\" \"txid\"")
+            + HelpExampleRpc("assetallocationsenderstatus", "\"asset\", \"address\", \"txid\"")
             );
 
 	const int &nAsset = params[0].get_int();
@@ -1163,6 +1163,10 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 			+ HelpExampleCli("listassetallocations", "10 10")
 			+ HelpExampleCli("listassetallocations", "0 0 '{\"asset\":92922}'")
 			+ HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
+			+ HelpExampleRpc("listassetallocations", "0")
+			+ HelpExampleRpc("listassetallocations", "10, 10")
+			+ HelpExampleRpc("listassetallocations", "0, 0, '{\"asset\":92922}'")
+			+ HelpExampleRpc("listassetallocations", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 		);
 	UniValue options;
 	int count = 10;
@@ -1215,8 +1219,8 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
             + HelpExampleCli("listassetallocationmempoolbalances", "10 10")
             + HelpExampleCli("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
             + HelpExampleRpc("listassetallocationmempoolbalances", "0")
-            + HelpExampleRpc("listassetallocationmempoolbalances", "10 10")
-            + HelpExampleRpc("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
+            + HelpExampleRpc("listassetallocationmempoolbalances", "10, 10")
+            + HelpExampleRpc("listassetallocationmempoolbalances", "0, 0, '{\"senders\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
         );
     UniValue options;
     int count = 10;
