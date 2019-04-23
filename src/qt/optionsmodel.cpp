@@ -17,7 +17,6 @@
 #include <net.h>
 #include <netbase.h>
 #include <txdb.h> // for -dbcache defaults
-#include <qt/intro.h>
 
 #include <QNetworkProxy>
 #include <QSettings>
@@ -113,7 +112,7 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-par");
 
     if (!settings.contains("strDataDir"))
-        settings.setValue("strDataDir", Intro::getDefaultDataDirectory());
+        settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
 
     // Wallet
 #ifdef ENABLE_WALLET
@@ -192,7 +191,7 @@ void OptionsModel::Reset()
     BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
 
     // Save the strDataDir setting
-    QString dataDir = Intro::getDefaultDataDirectory();
+    QString dataDir = GUIUtil::getDefaultDataDirectory();
     dataDir = settings.value("strDataDir", dataDir).toString();
 
     // Remove all entries from our QSettings object

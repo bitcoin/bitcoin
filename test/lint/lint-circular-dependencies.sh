@@ -36,7 +36,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "txmempool -> validation -> validationinterface -> txmempool"
     "qt/addressbookpage -> qt/syscoingui -> qt/walletview -> qt/receivecoinsdialog -> qt/addressbookpage"
     "qt/addressbookpage -> qt/syscoingui -> qt/walletview -> qt/signverifymessagedialog -> qt/addressbookpage"
-    "qt/guiutil -> qt/walletmodel -> qt/optionsmodel -> qt/intro -> qt/guiutil"
     "qt/addressbookpage -> qt/syscoingui -> qt/walletview -> qt/sendcoinsdialog -> qt/sendcoinsentry -> qt/addressbookpage"
 
     # Circular dependencies from auxpow.
