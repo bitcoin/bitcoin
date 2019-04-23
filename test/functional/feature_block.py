@@ -630,7 +630,7 @@ class FullBlockTest(BitcoinTestFramework):
         while b47.sha256 < target:
             b47.nNonce += 1
             b47.rehash()
-        self.sync_blocks([b47], False, force_send=True, reject_reason='high-hash')
+        self.sync_blocks([b47], False, force_send=True, reject_reason='high-hash', reconnect=True)
 
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
@@ -827,7 +827,7 @@ class FullBlockTest(BitcoinTestFramework):
         assert(tx.vin[0].nSequence < 0xffffffff)
         tx.calc_sha256()
         b62 = self.update_block(62, [tx])
-        self.sync_blocks([b62], success=False, reject_reason='bad-txns-nonfinal')
+        self.sync_blocks([b62], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
 
         # Test a non-final coinbase is also rejected
         #
@@ -841,7 +841,7 @@ class FullBlockTest(BitcoinTestFramework):
         b63.vtx[0].vin[0].nSequence = 0xDEADBEEF
         b63.vtx[0].rehash()
         b63 = self.update_block(63, [])
-        self.sync_blocks([b63], success=False, reject_reason='bad-txns-nonfinal')
+        self.sync_blocks([b63], success=False, reject_reason='bad-txns-nonfinal', reconnect=True)
 
         #  This checks that a block with a bloated VARINT between the block_header and the array of tx such that
         #  the block is > MAX_BLOCK_BASE_SIZE with the bloated varint, but <= MAX_BLOCK_BASE_SIZE without the bloated varint,
@@ -1355,7 +1355,7 @@ class FullBlockTest(BitcoinTestFramework):
         """Add a P2P connection to the node.
 
         Helper to connect and wait for version handshake."""
-        self.nodes[0].add_p2p_connection(P2PDataStore())
+        self.nodes[0].add_p2p_connection(P2PDataStore(), node_outgoing=True)
         # We need to wait for the initial getheaders from the peer before we
         # start populating our blockstore. If we don't, then we may run ahead
         # to the next subtest before we receive the getheaders. We'd then send
