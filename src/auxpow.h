@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Syscoin developers
-// Copyright (c) 2014-2016 Daniel Kraft
+// Copyright (c) 2014-2019 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,6 +13,7 @@
 #include <serialize.h>
 #include <uint256.h>
 
+#include <cassert>
 #include <memory>
 #include <vector>
 
@@ -31,64 +32,8 @@ class CAuxPowForTest;
 static const unsigned char pchMergedMiningHeader[] = { 0xfa, 0xbe, 'm', 'm' };
 
 /**
- * Base class for CMerkleTx that just holds the fields and implements
- * serialisation.  This is the part that is needed for CAuxPow.  The other
- * functionality, needed by the wallet, is kept in CMerkleTx itself (defined
- * in wallet/wallet.h as in upstream Syscoin).
- */
-class CBaseMerkleTx
-{
-public:
-    CTransactionRef tx;
-    uint256 hashBlock;
-    std::vector<uint256> vMerkleBranch;
-
-    /* An nIndex == -1 means that hashBlock (in nonzero) refers to the earliest
-     * block in the chain we know this or any in-wallet dependency conflicts
-     * with. Older clients interpret nIndex == -1 as unconfirmed for backward
-     * compatibility.
-     */
-    int nIndex;
-
-    CBaseMerkleTx()
-    {
-        SetTx(MakeTransactionRef());
-        Init();
-    }
-
-    explicit CBaseMerkleTx(CTransactionRef arg)
-    {
-        SetTx(std::move(arg));
-        Init();
-    }
-
-    void Init()
-    {
-        hashBlock = uint256();
-        nIndex = -1;
-    }
-
-    void SetTx(CTransactionRef arg)
-    {
-        tx = std::move(arg);
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(tx);
-        READWRITE(hashBlock);
-        READWRITE(vMerkleBranch);
-        READWRITE(nIndex);
-    }
-
-    const uint256& GetHash() const { return tx->GetHash(); }
-};
-
-/**
  * Data for the merge-mining auxpow.  This uses a merkle tx (the parent block's
- * coinbase tx) and a manual merkle branch to link the actual Namecoin block
+ * coinbase tx) and a second merkle branch to link the actual Namecoin block
  * header to the parent block header, which is mined to satisfy the PoW.
  */
 class CAuxPow
@@ -96,18 +41,20 @@ class CAuxPow
 
 private:
 
-  /**
-   * The parent block's coinbase tx, which is used to link the auxpow from
-   * the tx input to the parent block header.
-   */
-  CBaseMerkleTx coinbaseTx;
+  /** The parent block's coinbase transaction.  */
+  CTransactionRef coinbaseTx;
+
+  /** The Merkle branch of the coinbase tx to the parent block's root.  */
+  std::vector<uint256> vMerkleBranch;
 
   /** The merkle branch connecting the aux block to our coinbase.  */
   std::vector<uint256> vChainMerkleBranch;
 
   /** Merkle tree index of the aux block header in the coinbase.  */
   int nChainIndex;
-  
+
+  /** Parent block header (on which the real PoW is done).  */
+  CPureBlockHeader parentBlock;
 
   /**
    * Check a merkle branch.  This used to be in CBlock, but was removed
@@ -121,11 +68,10 @@ private:
   friend class auxpow_tests::CAuxPowForTest;
 
 public:
-  /** Parent block header (on which the real PoW is done).  */
-  CPureBlockHeader parentBlock;
+
   /* Prevent accidental conversion.  */
-  inline explicit CAuxPow (CTransactionRef txIn)
-    : coinbaseTx (txIn)
+  inline explicit CAuxPow (CTransactionRef&& txIn)
+    : coinbaseTx (std::move (txIn))
   {}
 
   CAuxPow () = default;
@@ -136,7 +82,23 @@ public:
     inline void
     SerializationOp (Stream& s, Operation ser_action)
   {
+    /* The coinbase Merkle tx' hashBlock field is never actually verified
+       or used in the code for an auxpow (and never was).  The parent block
+       is known anyway directly, so this is also redundant.  By setting the
+       value to zero (for serialising), we make sure that the format is
+       backwards compatible but the data can be compressed.  */
+    uint256 hashBlock;
+
+    /* The index of the parent coinbase tx is always zero.  */
+    int nIndex = 0;
+
+    /* Data from the coinbase transaction as Merkle tx.  */
     READWRITE (coinbaseTx);
+    READWRITE (hashBlock);
+    READWRITE (vMerkleBranch);
+    READWRITE (nIndex);
+
+    /* Additional data for the auxpow itself.  */
     READWRITE (vChainMerkleBranch);
     READWRITE (nChainIndex);
     READWRITE (parentBlock);

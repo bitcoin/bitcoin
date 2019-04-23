@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018 Daniel Kraft
+// Copyright (c) 2014-2019 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,12 +12,12 @@
 #include <primitives/block.h>
 #include <rpc/auxpow_miner.h>
 #include <script/script.h>
-#include <utilstrencodings.h>
-#include <utiltime.h>
+#include <util/strencodings.h>
+#include <util/time.h>
 #include <uint256.h>
 #include <univalue.h>
 
-#include <test/test_syscoin.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -52,10 +52,11 @@ class CAuxPowForTest : public CAuxPow
 public:
 
   explicit inline CAuxPowForTest (CTransactionRef txIn)
-    : CAuxPow (txIn)
+    : CAuxPow (std::move (txIn))
   {}
 
   using CAuxPow::coinbaseTx;
+  using CAuxPow::vMerkleBranch;
   using CAuxPow::vChainMerkleBranch;
   using CAuxPow::nChainIndex;
   using CAuxPow::parentBlock;
@@ -195,10 +196,7 @@ CAuxpowBuilder::get (const CTransactionRef tx) const
   LOCK(cs_main);
 
   CAuxPowForTest res(tx);
-  res.coinbaseTx.hashBlock = parentBlock.GetHash ();
-  res.coinbaseTx.nIndex = 0;
-  res.coinbaseTx.vMerkleBranch
-      = merkle_tests::BlockMerkleBranch (parentBlock, res.coinbaseTx.nIndex);
+  res.vMerkleBranch = merkle_tests::BlockMerkleBranch (parentBlock, 0);
 
   res.vChainMerkleBranch = auxpowChainMerkleBranch;
   res.nChainIndex = auxpowChainIndex;
@@ -214,13 +212,22 @@ CAuxpowBuilder::buildCoinbaseData (bool header, const valtype& auxRoot,
   valtype res;
 
   if (header)
-    res.insert (res.end (), UBEGIN (pchMergedMiningHeader),
-                UEND (pchMergedMiningHeader));
+    res.insert (res.end (),
+                pchMergedMiningHeader,
+                pchMergedMiningHeader + sizeof (pchMergedMiningHeader));
   res.insert (res.end (), auxRoot.begin (), auxRoot.end ());
 
-  const int size = (1 << h);
-  res.insert (res.end (), UBEGIN (size), UEND (size));
-  res.insert (res.end (), UBEGIN (nonce), UEND (nonce));
+  int size = (1 << h);
+  for (int i = 0; i < 4; ++i)
+    {
+      res.insert (res.end (), size & 0xFF);
+      size >>= 8;
+    }
+  for (int i = 0; i < 4; ++i)
+    {
+      res.insert (res.end (), nonce & 0xFF);
+      nonce >>= 8;
+    }
 
   return res;
 }
@@ -411,6 +418,7 @@ BOOST_FIXTURE_TEST_CASE (auxpow_pow, BasicTestingSetup)
 
   block.nVersion = 1;
   mineBlock (block, true);
+  // SYSCOIN AUXPOW ENFORCED
   BOOST_CHECK (!CheckProofOfWork (block, params));
 
   block.nVersion = 2;
@@ -553,7 +561,7 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
   mtx.vout.emplace_back (1234, scriptPubKey);
   {
     LOCK (mempool.cs);
-    mempool.addUnchecked (mtx.GetHash (), entry.FromTx (mtx));
+    mempool.addUnchecked (entry.FromTx (mtx));
   }
 
   /* We should still get back the cached block, for now.  */

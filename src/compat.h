@@ -10,21 +10,7 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <type_traits>
-
-// GCC 4.8 is missing some C++11 type_traits,
-// https://www.gnu.org/software/gcc/gcc-5/changes.html
-#if defined(__GNUC__) && __GNUC__ < 5
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivial
-#else
-#define IS_TRIVIALLY_CONSTRUCTIBLE std::is_trivially_constructible
-#endif
-
 #ifdef WIN32
-#ifdef _WIN32_WINNT
-#undef _WIN32_WINNT
-#endif
-#define _WIN32_WINNT 0x0501
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
@@ -102,8 +88,15 @@ typedef void* sockopt_arg_type;
 typedef char* sockopt_arg_type;
 #endif
 
+// Note these both should work with the current usage of poll, but best to be safe
+// WIN32 poll is broken https://daniel.haxx.se/blog/2012/10/10/wsapoll-is-broken/
+// __APPLE__ poll is broke https://github.com/syscoin/syscoin/pull/14336#issuecomment-437384408
+#if defined(__linux__)
+#define USE_POLL
+#endif
+
 bool static inline IsSelectableSocket(const SOCKET& s) {
-#ifdef WIN32
+#if defined(USE_POLL) || defined(WIN32)
     return true;
 #else
     return (s < FD_SETSIZE);

@@ -121,7 +121,7 @@
          <item>
           <widget class="QLabel" name="databaseCacheUnitLabel">
            <property name="text">
-            <string>MB</string>
+            <string>MiB</string>
            </property>
            <property name="textFormat">
             <enum>Qt::PlainText</enum>
@@ -178,7 +178,7 @@
            </property>
           </spacer>
          </item>
-          <item>
+            <item>
            <widget class="QCheckBox" name="showMasternodesTab">
             <property name="toolTip">
              <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
@@ -187,7 +187,7 @@
              <string>Show Masternodes Tab</string>
             </property>
            </widget>
-          </item>     
+          </item>  
         </layout>
        </item>
        <item>
@@ -724,7 +724,7 @@
         <item>
          <widget class="QLabel" name="overriddenByCommandLineInfoLabel">
           <property name="text">
-           <string>Active command-line options that override above options:</string>
+           <string>Options set in this dialog are overridden by the command line or in the configuration file:</string>
           </property>
           <property name="textFormat">
            <enum>Qt::PlainText</enum>

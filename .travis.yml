@@ -1,22 +1,49 @@
-dist: trusty
+# The test build matrix (stage: test) is constructed to test a wide range of
+# configurations, rather than a single pass/fail. This helps to catch build
+# failures and logic errors that present on platforms other than the ones the
+# author has tested.
+#
+# Some builders use the dependency-generator in `./depends`, rather than using
+# apt-get to install build dependencies. This guarantees that the tester is
+# using the same versions as Gitian, so the build results are nearly identical
+# to what would be found in a final release.
+#
+# In order to avoid rebuilding all dependencies for each build, the binaries
+# are cached and re-used when possible. Changes in the dependency-generator
+# will trigger cache-invalidation and rebuilds as necessary.
+#
+# These caches can be manually removed if necessary. This is one of the very
+# few manual operations that is possible with Travis, and it can be done by a
+# Syscoin Core GitHub member via the Travis web interface [0].
+#
+# Travis CI uploads the cache after the script phase of the build [1].
+# However, the build is terminated without saving the chache if it takes over
+# 50 minutes [2]. Thus, if we spent too much time in early build stages, fail
+# with an error and save the cache.
+#
+# [0] https://travis-ci.org/syscoin/syscoin/caches
+# [1] https://docs.travis-ci.com/user/caching/#build-phases
+# [2] https://docs.travis-ci.com/user/customizing-the-build#build-timeouts
+
+dist: xenial
 os: linux
 language: minimal
 cache:
   ccache: true
   directories:
-  - depends/built
-  - depends/sdk-sources
-  - $HOME/.ccache
+    - depends/built
+    - depends/sdk-sources
+    - $HOME/.ccache
 stages:
   - lint
   - test
 env:
   global:
     - MAKEJOBS=-j3
-    - RUN_TESTS=false
-    - RUN_BENCH=false  # Set to true for any one job that has debug enabled, to quickly check bench is not crashing or hitting assertions
+    - RUN_UNIT_TESTS=true
+    - RUN_FUNCTIONAL_TESTS=true
+    - RUN_FUZZ_TESTS=false
     - DOCKER_NAME_TAG=ubuntu:18.04
-    - LC_ALL=C.UTF-8
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=100M
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
@@ -26,122 +53,145 @@ env:
     - SDK_URL=https://bitcoincore.org/depends-sources/sdks
     - WINEDEBUG=fixme-all
     - DOCKER_PACKAGES="build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache"
+    - CACHE_ERR_MSG="Error! Initial build successful, but not enough time remains to run later build stages and tests. Please manually re-run this job by using the travis restart button or asking a syscoin maintainer to restart. The next run should not time out because the build cache has been saved."
 before_install:
-    - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - BEGIN_FOLD () { echo ""; CURRENT_FOLD_NAME=$1; echo "travis_fold:start:${CURRENT_FOLD_NAME}"; }
-    - END_FOLD () { RET=$?; echo "travis_fold:end:${CURRENT_FOLD_NAME}"; return $RET; }
+  - set -o errexit; source .travis/test_03_before_install.sh
 install:
-    - travis_retry docker pull $DOCKER_NAME_TAG
-    - env | grep -E '^(CCACHE_|WINEDEBUG|LC_ALL|BOOST_TEST_RANDOM|CONFIG_SHELL)' | tee /tmp/env
-    - if [[ $HOST = *-mingw32 ]]; then DOCKER_ADMIN="--cap-add SYS_ADMIN"; fi
-    - DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$TRAVIS_BUILD_DIR,dst=$TRAVIS_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $TRAVIS_BUILD_DIR --env-file /tmp/env $DOCKER_NAME_TAG)
-    - DOCKER_EXEC () { docker exec $DOCKER_ID bash -c "cd $PWD && $*"; }
-    - if [ -n "$DPKG_ADD_ARCH" ]; then DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
-    - travis_retry DOCKER_EXEC apt-get update
-    - travis_retry DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
+  - set -o errexit; source .travis/test_04_install.sh
 before_script:
-    - DOCKER_EXEC echo \> \$HOME/.syscoin  # Make sure default datadir does not exist and is never read by creating a dummy file
-    - mkdir -p depends/SDKs depends/sdk-sources
-    - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
-    - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
-    - if [[ $HOST = *-mingw32 ]]; then DOCKER_EXEC update-alternatives --set $HOST-g++ \$\(which $HOST-g++-posix\); fi
-    - if [ -z "$NO_DEPENDS" ]; then DOCKER_EXEC CONFIG_SHELL= make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS; fi
+  - set -o errexit; source .travis/test_05_before_script.sh
 script:
-    - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
-    - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
-    - SYSCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
-    - if [ -z "$NO_DEPENDS" ]; then DOCKER_EXEC ccache --max-size=$CCACHE_SIZE; fi
-    - BEGIN_FOLD autogen; test -n "$CONFIG_SHELL" && DOCKER_EXEC "$CONFIG_SHELL" -c "./autogen.sh" || DOCKER_EXEC ./autogen.sh; END_FOLD
-    - mkdir build && cd build
-    - BEGIN_FOLD configure; DOCKER_EXEC ../configure --cache-file=config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( cat config.log && false); END_FOLD
-    - BEGIN_FOLD distdir; DOCKER_EXEC make distdir VERSION=$HOST; END_FOLD
-    - cd syscoin-$HOST
-    - BEGIN_FOLD configure; DOCKER_EXEC ./configure --cache-file=../config.cache $SYSCOIN_CONFIG_ALL $SYSCOIN_CONFIG || ( cat config.log && false); END_FOLD
-    - BEGIN_FOLD build; DOCKER_EXEC make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && DOCKER_EXEC make $GOAL V=1 ; false ); END_FOLD
-    - if [ "$RUN_TESTS" = "true" ]; then BEGIN_FOLD unit-tests; DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1; END_FOLD; fi
-    - if [ "$RUN_BENCH" = "true" ]; then BEGIN_FOLD bench; DOCKER_EXEC LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib $OUTDIR/bin/bench_syscoin -scaling=0.001 ; END_FOLD; fi
-    - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude feature_pruning,feature_dbcrash"; fi
-    - if [ "$RUN_TESTS" = "true" ]; then BEGIN_FOLD functional-tests; DOCKER_EXEC test/functional/test_runner.py --combinedlogslen=4000 --coverage --quiet --failfast ${extended}; END_FOLD; fi
+  - export CONTINUE=1
+  - if [ $SECONDS -gt 1200 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
+  - if [ $CONTINUE = "1" ]; then set -o errexit; source .travis/test_06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
+  - if [ $SECONDS -gt 2000 ]; then export CONTINUE=0; fi  # Likely the build took very long; The tests take about 1000s, so we should abort if we have less than 50*60-1000=2000s left
+  - if [ $CONTINUE = "1" ]; then set -o errexit; source .travis/test_06_script_b.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
 after_script:
-    - echo $TRAVIS_COMMIT_RANGE
-    - echo $TRAVIS_COMMIT_LOG
+  - echo $TRAVIS_COMMIT_RANGE
+  - echo $TRAVIS_COMMIT_LOG
 jobs:
   include:
-# ARM
+
+    - stage: lint
+      name: 'lint'
+      env:
+      cache: false
+      language: python
+      python: '3.5' # Oldest supported version according to doc/dependencies.md
+      install:
+        - set -o errexit; source .travis/lint_04_install.sh
+      before_script:
+        - set -o errexit; source .travis/lint_05_before_script.sh
+      script:
+        - set -o errexit; source .travis/lint_06_script.sh
+
     - stage: test
+      name: 'ARM  [GOAL: install]  [no unit or functional tests]'
       env: >-
         HOST=arm-linux-gnueabihf
-        PACKAGES="g++-arm-linux-gnueabihf"
-        DEP_OPTS="NO_QT=1"
+        PACKAGES="python3 g++-arm-linux-gnueabihf"
+        RUN_UNIT_TESTS=false
+        RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
-        SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
-# Win32
+        # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"
+        # This could be removed once the ABI change warning does not show up by default
+        SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
+
     - stage: test
+      name: 'Win32  [GOAL: deploy]  [no gui or functional tests]'
       env: >-
         HOST=i686-w64-mingw32
         DPKG_ADD_ARCH="i386"
-        DEP_OPTS="NO_QT=1"
         PACKAGES="python3 nsis g++-mingw-w64-i686 wine-binfmt wine32"
-        RUN_TESTS=false
-        GOAL="install"
-        SYSCOIN_CONFIG="--enable-reduce-exports"
-# Win64
+        RUN_FUNCTIONAL_TESTS=false
+        GOAL="deploy"
+        SYSCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
+
     - stage: test
+      name: 'Win64  [GOAL: deploy]  [no gui or functional tests]'
       env: >-
         HOST=x86_64-w64-mingw32
-        DEP_OPTS="NO_QT=1"
         PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
-        RUN_TESTS=false
-        GOAL="install"
-        SYSCOIN_CONFIG="--enable-reduce-exports"
-# 32-bit + dash
+        RUN_FUNCTIONAL_TESTS=false
+        GOAL="deploy"
+        SYSCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests"
+
     - stage: test
+      name: '32-bit + dash  [GOAL: install]  [GUI: no BIP70]'
       env: >-
         HOST=i686-pc-linux-gnu
         PACKAGES="g++-multilib python3-zmq"
-        DEP_OPTS="NO_QT=1"
-        RUN_TESTS=false
         GOAL="install"
-        SYSCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+        SYSCOIN_CONFIG="--enable-zmq --with-gui=qt5 --disable-bip70 --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
         CONFIG_SHELL="/bin/dash"
-# x86_64 Linux (uses qt5 dev package instead of depends Qt to speed up build and avoid timeout)
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [uses qt5 dev package instead of depends Qt to speed up build and avoid timeout]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
         PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
         DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1 ALLOW_HOST_PACKAGES=1"
-        RUN_TESTS=false
-        RUN_BENCH=true
         GOAL="install"
         SYSCOIN_CONFIG="--enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug CXXFLAGS=\"-g0 -O2\""
-# x86_64 Linux (Qt5 & system libs)
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [trusty]  [no functional tests, no depends, only system libs]'
       env: >-
         HOST=x86_64-unknown-linux-gnu
-        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        DOCKER_NAME_TAG=ubuntu:14.04
+        PACKAGES="python3-zmq qtbase5-dev qttools5-dev-tools libicu-dev libpng-dev libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.1++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
         NO_DEPENDS=1
-        RUN_TESTS=false
+        RUN_FUNCTIONAL_TESTS=false
         GOAL="install"
-        SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --enable-glibc-back-compat --enable-reduce-exports --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER"
-# Cross-Mac
+        SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=no"
+
     - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        DOCKER_NAME_TAG=ubuntu:16.04
+        PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        NO_DEPENDS=1
+        GOAL="install"
+        SYSCOIN_CONFIG="--enable-zmq --disable-wallet --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
+
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
+        NO_DEPENDS=1
+        GOAL="install"
+        SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
+
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address]'
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="clang llvm python3 libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev"
+        NO_DEPENDS=1
+        RUN_UNIT_TESTS=false
+        RUN_FUNCTIONAL_TESTS=false
+        RUN_FUZZ_TESTS=true
+        GOAL="install"
+        SYSCOIN_CONFIG="--disable-wallet --disable-bench --with-utils=no --with-daemon=no --with-libs=no --with-gui=no --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
+
+    - stage: test
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+      env: >-
+        HOST=x86_64-unknown-linux-gnu
+        PACKAGES="python3-zmq"
+        DEP_OPTS="NO_WALLET=1"
+        GOAL="install"
+        SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+
+    - stage: test
+      name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
       env: >-
         HOST=x86_64-apple-darwin14
-        PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python3-setuptools-git"
+        PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python3-dev python3-setuptools"
         OSX_SDK=10.11
-        GOAL="all deploy"
+        RUN_UNIT_TESTS=false
+        RUN_FUNCTIONAL_TESTS=false
+        GOAL="deploy"
         SYSCOIN_CONFIG="--enable-gui --enable-reduce-exports --enable-werror"
-    - stage: lint
-      env:
-      cache: false
-      language: python
-      python: '3.6'
-      install:
-        - travis_retry pip install flake8==3.5.0
-      before_script:
-        - git fetch --unshallow
-      script:
-        - if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then test/lint/commit-script-check.sh $TRAVIS_COMMIT_RANGE; fi
-        - test/lint/check-doc.py
-        - test/lint/check-rpc-mappings.py .
-

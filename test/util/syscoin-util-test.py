@@ -9,14 +9,9 @@ Runs automatically during `make check`.
 
 Can also be run manually."""
 
-from __future__ import division,print_function,unicode_literals
-
 import argparse
 import binascii
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
+import configparser
 import difflib
 import json
 import logging
@@ -28,7 +23,7 @@ import sys
 def main():
     config = configparser.ConfigParser()
     config.optionxform = str
-    config.readfp(open(os.path.join(os.path.dirname(__file__), "../config.ini"), encoding="utf8"))
+    config.read_file(open(os.path.join(os.path.dirname(__file__), "../config.ini"), encoding="utf8"))
     env_conf = dict(config.items('environment'))
 
     parser = argparse.ArgumentParser(description=__doc__)

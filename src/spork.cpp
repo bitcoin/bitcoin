@@ -13,6 +13,7 @@
 #include "netmessagemaker.h"
 #include <key_io.h>
 #include <boost/lexical_cast.hpp>
+#include <net_processing.h>
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 CSporkManager sporkManager;
 
@@ -35,12 +36,12 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         CSporkMessage spork;
         vRecv >> spork;
 
-        uint256 hash = spork.GetHash();
+        const uint256 &hash = spork.GetHash();
 
         std::string strLogMsg;
         {
             LOCK(cs_main);
-            pfrom->setAskFor.erase(hash);
+            EraseInvRequest(pfrom, hash);
             if(!chainActive.Tip()) return;
             strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, chainActive.Height(), pfrom->GetId());
         }

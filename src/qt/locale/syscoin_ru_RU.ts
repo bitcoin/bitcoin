@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Скопировать текущий выбранный адрес в буфер обмена системы</translation>
+        <translation>Скопировать выбранный адрес в буфер обмена</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>В&amp;ыбрать</translation>
+        <translation>Выбрать</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -67,11 +67,11 @@
     </message>
     <message>
         <source>These are your Syscoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Это ваши биткойн адреса для отправки платежа. Всегда проверяйте сумму и адрес получателя перед отправкой платежа.</translation>
+        <translation>Это ваши Syscoin адреса для отправки платежа. Всегда проверяйте сумму и адрес получателя перед отправкой платежа.</translation>
     </message>
     <message>
         <source>These are your Syscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Это ваши биткойн адреса для получения платежей. Настоятельно рекомендуем использовать новые адреса для получения каждой транзакции.</translation>
+        <translation>Это ваши Syscoin адреса для получения платежей. Настоятельно рекомендуем использовать новые адреса для получения каждой транзакции.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -137,19 +137,19 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Введите новый пароль для кошелька.&lt;br/&gt; Пожалуйста используйте пароль из &lt;b&gt; десяти или более произвольных символов&lt;/b&gt;, или &lt;b&gt;восемь или боле слов&lt;/b&gt;</translation>
+        <translation>Введите новый пароль для кошелька.&lt;br/&gt; Пожалуйста используйте пароль из &lt;b&gt; десяти или более произвольных символов&lt;/b&gt;, или &lt;b&gt;восемь или более слов&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Зашифровать бумажник</translation>
+        <translation>Зашифровать кошелек</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Эта операция требует вашего пароля для разблокировки бумажника</translation>
+        <translation>Эта операция требует вашего пароля для разблокировки кошелька</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>Разблокировать бумажник</translation>
+        <translation>Разблокировать кошелек</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Расшифровать бумажник</translation>
+        <translation>Расшифровать кошелек</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -165,11 +165,11 @@
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Введите старый и новый пароль для кошелька.</translation>
+        <translation>Введите старый и новый пароль к кошельку.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Подтвердите шифрование бумажника</translation>
+        <translation>Подтвердите шифрование кошелька</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR SYSCOINS&lt;/b&gt;!</source>
@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>Бумажник зашифрован</translation>
+        <translation>Кошелек зашифрован</translation>
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
@@ -198,6 +198,10 @@
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>Шифрование кошелька завершилось неудачно из-за внутренней ошибки. Ваш кошелек не был зашифрован.</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>Пароли не совпадают.</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -251,7 +255,7 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Отобразить общий обзор кошелька</translation>
+        <translation>Отобразить главное окно кошелька</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
@@ -299,7 +303,7 @@
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Создать резервную копию бумажника</translation>
+        <translation>&amp;Создать резервную копию кошелька</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
@@ -344,6 +348,10 @@
     <message>
         <source>Reindexing blocks on disk...</source>
         <translation>Реиндексация блоков на диске...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>Прокси &lt;b&gt;включен&lt;/b&gt;: %1</translation>
     </message>
     <message>
         <source>Send coins to a Syscoin address</source>
@@ -422,6 +430,10 @@
         <translation>Панель вкладок</translation>
     </message>
     <message>
+        <source>Request payments (generates QR codes and syscoin: URIs)</source>
+        <translation>Запросить платеж</translation>
+    </message>
+    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Показать список использованных адресов и меток получателей</translation>
     </message>
@@ -437,6 +449,10 @@
         <source>&amp;Command-line options</source>
         <translation>Опции командной строки</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Syscoin network</source>
+        <translation><numerusform>%n активное подключение к сети Syscoin</numerusform><numerusform>%n активных подключения к сети Syscoin</numerusform><numerusform>%n активных подключений к сети Syscoin</numerusform><numerusform>%n активных подключений к сети Syscoin</numerusform></translation>
+    </message>
     <message>
         <source>Indexing blocks on disk...</source>
         <translation>Выполняется индексирование блоков на диске...</translation>
@@ -444,6 +460,10 @@
     <message>
         <source>Processing blocks on disk...</source>
         <translation>Выполняется обработка блоков на диске...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Обработан %n блок истории транзакций.</numerusform><numerusform>Обработано %n блока истории транзакций.</numerusform><numerusform>Обработано %n блоков истории транзакций.</numerusform><numerusform>Обработано %n блоков истории транзакций.</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -573,6 +593,10 @@
         <translation>Сдача:</translation>
     </message>
     <message>
+        <source>(un)select all</source>
+        <translation>Выбрать все</translation>
+    </message>
+    <message>
         <source>Tree mode</source>
         <translation>Режим дерева</translation>
     </message>
@@ -696,10 +720,18 @@
         <translation>Изменить адрес отправки</translation>
     </message>
     <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>Введённый адрес "%1" уже существует в адресной книге с меткой "%2".</translation>
+    </message>
+    <message>
         <source>Could not unlock wallet.</source>
         <translation>Невозможно разблокировать кошелек.</translation>
     </message>
-    </context>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>Произошла ошибка при генерации нового ключа.</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
     <message>
@@ -709,6 +741,14 @@
     <message>
         <source>name</source>
         <translation>имя</translation>
+    </message>
+    <message>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation>Каталог уже существует. Добавьте %1, если хотите создать новую директорию здесь.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>Данный путь уже существует и это не каталог.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -739,6 +779,14 @@
     <message>
         <source>Welcome to %1.</source>
         <translation>Добро пожаловать в %1.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Поскольку программа запущена впервые, вы должны указать где %1 будет хранить данные.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Если вы указали сокращать объём хранимого блокчейна (pruning), все исторические данные все равно должны быть скачаны и обработаны, но впоследствии они будут удалены для экономии места на диске.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -866,6 +914,10 @@
         <translation>IP-адрес прокси-сервера (к примеру, IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Использовать отдельные SOCKS&amp;5 прокси для подключения к пирам через Tor hidden services:</translation>
+    </message>
+    <message>
         <source>Hide the icon from the system tray.</source>
         <translation>Убрать значок с области уведомлений.</translation>
     </message>
@@ -890,8 +942,16 @@
         <translation>&amp;Сеть</translation>
     </message>
     <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Сокращать объём хранимого блокчейна до</translation>
+    </message>
+    <message>
         <source>GB</source>
         <translation>ГБ</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Отмена этой настройки требует повторного скачивания всего блокчейна.</translation>
     </message>
     <message>
         <source>W&amp;allet</source>
@@ -900,6 +960,10 @@
     <message>
         <source>Expert</source>
         <translation>Эксперт</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Включить возможность &amp;управления монетами</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -938,6 +1002,10 @@
         <translation>Порт прокси: (напр. 9050)</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Используется для подключения к пирам по:</translation>
+    </message>
+    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -950,12 +1018,20 @@
         <translation>Tor</translation>
     </message>
     <message>
+        <source>Connect to the Syscoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Соединяться к Биткоин-сети через отдельные SOCKS5 прокси через Tor hidden services:</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Окно</translation>
     </message>
     <message>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Отобразить только значок в области уведомлений после сворачивания окна.</translation>
+    </message>
+    <message>
+        <source>M&amp;inimize on close</source>
+        <translation>З&amp;акрыть при сворачивании</translation>
     </message>
     <message>
         <source>User Interface &amp;language:</source>
@@ -1021,6 +1097,14 @@
         <translation>Форма</translation>
     </message>
     <message>
+        <source>Watch-only:</source>
+        <translation>Только просмотр:</translation>
+    </message>
+    <message>
+        <source>Available:</source>
+        <translation>Доступно:</translation>
+    </message>
+    <message>
         <source>Your current spendable balance</source>
         <translation>Ваш доступный баланс</translation>
     </message>
@@ -1062,6 +1146,10 @@
     <message>
         <source>Payment request error</source>
         <translation>Ошибка запроса платежа</translation>
+    </message>
+    <message>
+        <source>'syscoin://' is not a valid URI. Use 'syscoin:' instead.</source>
+        <translation>'syscoin://' не верный URI. Используйте 'syscoin:' вместо этого.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1235,6 +1323,10 @@
         <translation>Количество соединений</translation>
     </message>
     <message>
+        <source>Block chain</source>
+        <translation>Блокчейн</translation>
+    </message>
+    <message>
         <source>Current number of blocks</source>
         <translation>Текущее количество блоков</translation>
     </message>
@@ -1273,6 +1365,10 @@
     <message>
         <source>Banned peers</source>
         <translation>Заблокированные пиры</translation>
+    </message>
+    <message>
+        <source>Select a peer to view detailed information.</source>
+        <translation>Выберите пира для просмотра детальной информации.</translation>
     </message>
     <message>
         <source>Version</source>
@@ -1404,6 +1500,14 @@
     <message>
         <source>Clear</source>
         <translation>Отчистить</translation>
+    </message>
+    <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>"Родные" segwit адреса (Bech32 или BIP-173) в дальнейшем уменьшат комиссии ваших транзакций и предоставят улучшенную защиту от опечаток, однако старые кошельки не поддерживают эти адреса. Если не выбрано, будет создан совместимый со старыми кошелёк.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Создать "родной" segwit (Bech32) адрес </translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -1639,6 +1743,10 @@
         <translation>Баланс:</translation>
     </message>
     <message>
+        <source>Confirm the send action</source>
+        <translation>Подтвердить отправку</translation>
+    </message>
+    <message>
         <source>Copy quantity</source>
         <translation>Копировать количество</translation>
     </message>
@@ -1705,6 +1813,14 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Истекло время ожидания запроса платежа</translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Syscoin address</source>
+        <translation>Предупреждение: Неверный Syscoin адрес</translation>
+    </message>
+    <message>
+        <source>Warning: Unknown change address</source>
+        <translation>Предупреждение: Неизвестный адрес сдачи</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2238,6 +2354,10 @@
     <message>
         <source>Warning</source>
         <translation>Предупреждение</translation>
+    </message>
+    <message>
+        <source>Starting network threads...</source>
+        <translation>Запуск сетевых потоков...</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>

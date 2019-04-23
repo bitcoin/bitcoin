@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Syscoin Core developers
+// Copyright (c) 2017-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 #include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
-#include <test/test_syscoin.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
     coinbaseTx.vout[0].nValue = 1 * CENT;
     coinbaseTx.vout[0].scriptPubKey = scriptPubKey;
 
-    assert(CTransaction(coinbaseTx).IsCoinBase());
+    BOOST_CHECK(CTransaction(coinbaseTx).IsCoinBase());
 
     CValidationState state;
 

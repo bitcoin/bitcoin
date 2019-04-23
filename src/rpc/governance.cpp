@@ -20,7 +20,7 @@
 #include "messagesigner.h"
 #include "rpc/server.h"
 #include "util.h"
-#include "utilmoneystr.h"
+#include <util/moneystr.h>
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/rpcwallet.h"
@@ -47,7 +47,9 @@ bool GetBudgetSystemCollateralTX(CWallet* const pwallet, CTransactionRef& tx, ui
     vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
-    bool success = pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+    bool success = pwallet->CreateTransaction(*locked_chain, vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
     if(!success){
         LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
         return false;
@@ -221,15 +223,12 @@ UniValue gobject(const JSONRPCRequest& request)
         if(!GetBudgetSystemCollateralTX(pwallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
         }
-        if(tx->GetTotalSize() > 500u){
-            std::string strError = strprintf("tx collateral too big (limit is 500 bytes), try reducing number of inputs used, size in bytes %d", tx->GetTotalSize());
-            throw JSONRPCError(RPC_INTERNAL_ERROR, strError);
-        }
         // -- make our change address
         CReserveKey reservekey(pwallet);
         // -- send the tx to the network
         CValidationState state;
-        if (!pwallet->CommitTransaction(tx, {}, {}, {}, reservekey, g_connman.get(), state)) {
+        mapValue_t mapValue;
+        if (!pwallet->CommitTransaction(tx, std::move(mapValue), {} /* orderForm */, reservekey, state)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 

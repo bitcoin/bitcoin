@@ -5,7 +5,6 @@
 
 #ifndef SYSCOIN_PRIMITIVES_BLOCK_H
 #define SYSCOIN_PRIMITIVES_BLOCK_H
-
 #include <auxpow.h>
 #include <primitives/transaction.h>
 #include <primitives/pureheader.h>
@@ -24,7 +23,6 @@
 class CBlockHeader : public CPureBlockHeader
 {
 public:
-
     // auxpow (if this is a merge-minded block)
     std::shared_ptr<CAuxPow> auxpow;
 

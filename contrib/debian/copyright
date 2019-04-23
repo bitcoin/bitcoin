@@ -5,7 +5,7 @@ Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
 Source: https://github.com/syscoin/syscoin
 
 Files: *
-Copyright: 2009-2018, Syscoin Core Developers
+Copyright: 2009-2019, Syscoin Core Developers
 License: Expat
 Comment: The Syscoin Core Developers encompasses the current developers listed on syscoin.org,
          as well as the numerous contributors to the project.
@@ -91,12 +91,12 @@ Files: src/qt/res/icons/about.png
        src/qt/res/src/syscoin.svg
 Copyright: Bitboy, Jonas Schnelli
 License: public-domain
-Comment: Site: https://bitcointalk.org/?topic=1756.0
+Comment: Site: https://syscointalk.org/?topic=1756.0
 
 Files: src/qt/res/icons/proxy.png
        src/qt/res/src/proxy.svg
 Copyright: Cristian Mircea Messel
-Licese: public-domain
+License: public-domain
 
 
 License: Expat

@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2018 The Syscoin Core developers
+// Copyright (c) 2013-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,9 @@
 #include <key.h>
 #include <key_io.h>
 #include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <test/test_syscoin.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <test/setup_common.h>
 
 #include <string>
 #include <vector>

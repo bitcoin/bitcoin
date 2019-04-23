@@ -9,7 +9,5 @@
 void StartShutdown();
 void AbortShutdown();
 bool ShutdownRequested();
-// SYSCOIN
-bool RestartRequested();
-void StartRestart();
+
 #endif

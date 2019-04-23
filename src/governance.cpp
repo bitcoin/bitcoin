@@ -17,6 +17,7 @@
 #include "messagesigner.h"
 #include "netfulfilledman.h"
 #include "util.h"
+#include <net_processing.h>
 CGovernanceManager governance;
 
 int nSubmittedFinalBudget;
@@ -134,8 +135,12 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         vRecv >> govobj;
 
         uint256 nHash = govobj.GetHash();
+        {
+            LOCK(cs_main);
+            EraseInvRequest(pfrom, nHash);
+        }
+       
 
-        pfrom->setAskFor.erase(nHash);
 
         if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
@@ -195,7 +200,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                     LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Too many orphan objects, missing masternode=%s\n", govobj.GetMasternodeOutpoint().ToStringShort());
                     // ask for this object again in 2 minutes
                     CInv inv(MSG_GOVERNANCE_OBJECT, govobj.GetHash());
-                    pfrom->AskFor(inv);
+                    RequestInv(pfrom, inv);
                     return;
                 }
 
@@ -226,7 +231,10 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         uint256 nHash = vote.GetHash();
 
-        pfrom->setAskFor.erase(nHash);
+        {
+            LOCK(cs_main);
+            EraseInvRequest(pfrom, nHash);
+        }
 
         if(pfrom->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) {
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECTVOTE -- peer=%d using obsolete version %i\n", pfrom->GetId(), pfrom->nVersion);
@@ -1107,7 +1115,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
     FastRandomContext insecure_rand;
     std::shuffle(vTriggerObjHashes.begin(), vTriggerObjHashes.end(), insecure_rand);
     std::shuffle(vOtherObjHashes.begin(), vOtherObjHashes.end(), insecure_rand);
-
+    
     for (int i = 0; i < nMaxObjRequestsPerNode; ++i) {
         uint256 nHashGovobj;
 
@@ -1128,8 +1136,11 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // only use up to date peers
             if(pnode->nVersion < MIN_GOVERNANCE_PEER_PROTO_VERSION) continue;
             // stop early to prevent setAskFor overflow
-            size_t nProjectedSize = pnode->setAskFor.size() + nProjectedVotes;
-            if(nProjectedSize > SETASKFOR_MAX_SZ/2) continue;
+            {
+                LOCK(cs_main);
+                if(!IsAnnouncementAllowed(pnode, nProjectedVotes, nHashGovobj)) continue;
+            }
+            
             // to early to ask the same node
             if(mapAskedRecently[nHashGovobj].count(pnode->addr)) continue;
 

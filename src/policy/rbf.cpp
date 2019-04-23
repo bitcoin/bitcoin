@@ -3,18 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/rbf.h>
+#include <util/rbf.h>
 
-bool SignalsOptInRBF(const CTransaction &tx)
-{
-    for (const CTxIn &txin : tx.vin) {
-        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1) {
-            return true;
-        }
-    }
-    return false;
-}
-
-RBFTransactionState IsRBFOptIn(const CTransaction &tx, CTxMemPool &pool)
+RBFTransactionState IsRBFOptIn(const CTransaction& tx, const CTxMemPool& pool)
 {
     AssertLockHeld(pool.cs);
 

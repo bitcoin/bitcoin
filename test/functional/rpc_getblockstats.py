@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Syscoin Core developers
+# Copyright (c) 2017-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -170,11 +170,18 @@ class GetblockstatsTest(SyscoinTestFramework):
                                 self.nodes[0].getblockstats, hash_or_height=1, stats=['minfee' , 'aaa%s' % inv_sel_stat])
 
         assert_raises_rpc_error(-8, 'One or more of the selected stats requires -txindex enabled',
+                                self.nodes[1].getblockstats, hash_or_height=1)
+        assert_raises_rpc_error(-8, 'One or more of the selected stats requires -txindex enabled',
                                 self.nodes[1].getblockstats, hash_or_height=self.start_height + self.max_stat_pos)
 
         # Mainchain's genesis block shouldn't be found on regtest
         assert_raises_rpc_error(-5, 'Block not found', self.nodes[0].getblockstats,
                                 hash_or_height='000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f')
+
+        # Invalid number of args
+        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats, '00', 1, 2)
+        assert_raises_rpc_error(-1, 'getblockstats hash_or_height ( stats )', self.nodes[0].getblockstats)
+
 
 if __name__ == '__main__':
     GetblockstatsTest().main()

@@ -46,7 +46,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(interfaces::Node& node, OptionsModel *optionsModel, QObject *parent = nullptr);
     ~ClientModel();
 
     interfaces::Node& node() const { return m_node; }
@@ -70,6 +70,7 @@ public:
     bool isReleaseVersion() const;
     QString formatClientStartupTime() const;
     QString dataDir() const;
+    QString blocksDir() const;
 
     bool getProxyInfo(std::string& ip_port) const;
 
@@ -88,24 +89,21 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     // SYSCOIN
     std::unique_ptr<interfaces::Handler>  m_handler_additional_data_sync_progress_changed;
+    QString cachedMasternodeCountString;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
-    QString cachedMasternodeCountString;
     BanTableModel *banTableModel;
-
-    QTimer *pollTimer;
+    
 	// SYSCOIN
 	QTimer *pollMnTimer;
+    QTimer *pollTimer;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void strMasternodesChanged(const QString &strMasternodes);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
-    // SYSCOIN
-    void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
@@ -116,14 +114,18 @@ Q_SIGNALS:
 
     // Show progress dialog e.g. for verifychain
     void showProgress(const QString &title, int nProgress);
+    // SYSCOIN
+    void strMasternodesChanged(const QString &strMasternodes);
+    void additionalDataSyncProgressChanged(double nSyncProgress);
 
 public Q_SLOTS:
     void updateTimer();
-    void updateMnTimer();
     void updateNumConnections(int numConnections);
     void updateNetworkActive(bool networkActive);
     void updateAlert();
     void updateBanlist();
+    // SYSCOIN
+    void updateMnTimer();
 };
 
 #endif // SYSCOIN_QT_CLIENTMODEL_H

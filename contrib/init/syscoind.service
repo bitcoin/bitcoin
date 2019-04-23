@@ -5,20 +5,44 @@
 # See "man systemd.service" for details.
 
 # Note that almost all daemon options could be specified in
-# /etc/syscoin/syscoin.conf
+# /etc/syscoin/syscoin.conf, except for those explicitly specified as arguments
+# in ExecStart=
 
 [Unit]
 Description=Syscoin daemon
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/syscoind -daemon -conf=/etc/syscoin/syscoin.conf -pid=/run/syscoind/syscoind.pid
-# Creates /run/syscoind owned by syscoin
-RuntimeDirectory=syscoind
-User=syscoin
+ExecStart=/usr/bin/syscoind -daemon \
+                            -pid=/run/syscoind/syscoind.pid \
+                            -conf=/etc/syscoin/syscoin.conf \
+                            -datadir=/var/lib/syscoind
+
+# Process management
+####################
+
 Type=forking
 PIDFile=/run/syscoind/syscoind.pid
 Restart=on-failure
+
+# Directory creation and permissions
+####################################
+
+# Run as syscoin:syscoin
+User=syscoin
+Group=syscoin
+
+# /run/syscoind
+RuntimeDirectory=syscoind
+RuntimeDirectoryMode=0710
+
+# /etc/syscoin
+ConfigurationDirectory=syscoin
+ConfigurationDirectoryMode=0710
+
+# /var/lib/syscoind
+StateDirectory=syscoind
+StateDirectoryMode=0710
 
 # Hardening measures
 ####################

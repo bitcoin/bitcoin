@@ -232,7 +232,7 @@
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>bannato fino </translation>
+        <translation>Bannato fino </translation>
     </message>
 </context>
 <context>
@@ -760,7 +760,7 @@
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation>Il portafoglio sara' </translation>
+        <translation>Il wallet verra' inoltre memorizzato su questa cartella.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -769,6 +769,14 @@
     </context>
 <context>
     <name>ModalOverlay</name>
+    <message>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the syscoin network, as detailed below.</source>
+        <translation>Le transazioni recenti potrebbero non essere ancora visibili, e quindi il saldo del wallet potrebbe essere incorretto. Questa informazione verra' corretta non appena il tuo wallet ha finito di sincronizzarsi con la rete syscoin, come specificato di seguito.</translation>
+    </message>
+    <message>
+        <source>Attempting to spend syscoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Tentare di spendere syscoin che sono affetti da transazioni non ancora mostrate, non verra' accettato dal network.</translation>
+    </message>
     <message>
         <source>Number of blocks left</source>
         <translation>Numero di blocchi rimanente</translation>

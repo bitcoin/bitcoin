@@ -1,5 +1,6 @@
 ---
 name: "syscoin-dmg-signer"
+distro: "ubuntu"
 suites:
 - "bionic"
 architectures:
@@ -12,6 +13,8 @@ remotes:
 files:
 - "syscoin-osx-unsigned.tar.gz"
 script: |
+  set -e -o pipefail
+
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
   export PATH=`pwd`:$PATH

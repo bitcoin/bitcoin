@@ -5,8 +5,8 @@
 
 #include "chainparams.h"
 #include "netfulfilledman.h"
-#include "util.h"
-
+#include <util/time.h>
+#include <sstream>
 CNetFulfilledRequestManager netfulfilledman;
 
 void CNetFulfilledRequestManager::AddFulfilledRequest(const CService& addr, const std::string& strRequest)

@@ -1,8 +1,8 @@
-﻿// Copyright (c) 2012-2018 The Syscoin Core developers
+// Copyright (c) 2012-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <addrman.h>
-#include <test/test_syscoin.h>
+#include <test/setup_common.h>
 #include <string>
 #include <boost/test/unit_test.hpp>
 #include <hash.h>
@@ -11,7 +11,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <chainparams.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <memory>
 
@@ -54,10 +54,10 @@ public:
         s << nUBuckets;
 
         CService serv;
-        Lookup("252.1.1.1", serv, 7777, false);
+        BOOST_CHECK(Lookup("252.1.1.1", serv, 7777, false));
         CAddress addr = CAddress(serv, NODE_NONE);
         CNetAddr resolved;
-        LookupHost("252.2.2.2", resolved, false);
+        BOOST_CHECK(LookupHost("252.2.2.2", resolved, false));
         CAddrInfo info = CAddrInfo(addr, resolved);
         s << info;
     }
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(cnode_listen_port)
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     unsigned short altPort = 12345;
-    gArgs.SoftSetArg("-port", std::to_string(altPort));
+    BOOST_CHECK(gArgs.SoftSetArg("-port", std::to_string(altPort)));
     port = GetListenPort();
     BOOST_CHECK(port == altPort);
 }
@@ -94,16 +94,16 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     addrmanUncorrupted.MakeDeterministic();
 
     CService addr1, addr2, addr3;
-    Lookup("250.7.1.1", addr1, 8369, false);
-    Lookup("250.7.2.2", addr2, 9999, false);
-    Lookup("250.7.3.3", addr3, 9999, false);
+    BOOST_CHECK(Lookup("250.7.1.1", addr1, 8369, false));
+    BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
+    BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
 
     // Add three addresses to new table.
     CService source;
-    Lookup("252.5.1.1", source, 8369, false);
-    addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source);
-    addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source);
-    addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source);
+    BOOST_CHECK(Lookup("252.5.1.1", source, 8369, false));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr1, NODE_NONE), source));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr2, NODE_NONE), source));
+    BOOST_CHECK(addrmanUncorrupted.Add(CAddress(addr3, NODE_NONE), source));
 
     // Test that the de-serialization does not throw an exception.
     CDataStream ssPeers1 = AddrmanToStream(addrmanUncorrupted);
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         exceptionThrown = true;
     }
 
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     CAddrMan addrman2;
     CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    adb.Read(addrman2, ssPeers2);
+    BOOST_CHECK(adb.Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 3);
 }
 
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
         unsigned char pchMsgTmp[4];
         ssPeers1 >> pchMsgTmp;
         ssPeers1 >> addrman1;
-    } catch (const std::exception& e) {
+    } catch (const std::exception&) {
         exceptionThrown = true;
     }
     // Even through de-serialization failed addrman is not left in a clean state.
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(caddrdb_read_corrupted)
     CAddrMan addrman2;
     CAddrDB adb;
     BOOST_CHECK(addrman2.size() == 0);
-    adb.Read(addrman2, ssPeers2);
+    BOOST_CHECK(!adb.Read(addrman2, ssPeers2));
     BOOST_CHECK(addrman2.size() == 0);
 }
 
@@ -179,12 +179,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    std::unique_ptr<CNode> pnode1(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode1 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 0, 0, CAddress(), pszDest, fInboundIn);
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    std::unique_ptr<CNode> pnode2(new CNode(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn));
+    std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(id++, NODE_NETWORK, height, hSocket, addr, 1, 1, CAddress(), pszDest, fInboundIn);
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }
@@ -226,5 +226,81 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
     BOOST_CHECK(1);
 }
+
+
+BOOST_AUTO_TEST_CASE(LimitedAndReachable_Network)
+{
+    BOOST_CHECK_EQUAL(IsReachable(NET_IPV4), true);
+    BOOST_CHECK_EQUAL(IsReachable(NET_IPV6), true);
+    BOOST_CHECK_EQUAL(IsReachable(NET_ONION), true);
+
+    SetReachable(NET_IPV4, false);
+    SetReachable(NET_IPV6, false);
+    SetReachable(NET_ONION, false);
+
+    BOOST_CHECK_EQUAL(IsReachable(NET_IPV4), false);
+    BOOST_CHECK_EQUAL(IsReachable(NET_IPV6), false);
+    BOOST_CHECK_EQUAL(IsReachable(NET_ONION), false);
+
+    SetReachable(NET_IPV4, true);
+    SetReachable(NET_IPV6, true);
+    SetReachable(NET_ONION, true);
+
+    BOOST_CHECK_EQUAL(IsReachable(NET_IPV4), true);
+    BOOST_CHECK_EQUAL(IsReachable(NET_IPV6), true);
+    BOOST_CHECK_EQUAL(IsReachable(NET_ONION), true);
+}
+
+BOOST_AUTO_TEST_CASE(LimitedAndReachable_NetworkCaseUnroutableAndInternal)
+{
+    BOOST_CHECK_EQUAL(IsReachable(NET_UNROUTABLE), true);
+    BOOST_CHECK_EQUAL(IsReachable(NET_INTERNAL), true);
+
+    SetReachable(NET_UNROUTABLE, false);
+    SetReachable(NET_INTERNAL, false);
+
+    BOOST_CHECK_EQUAL(IsReachable(NET_UNROUTABLE), true); // Ignored for both networks
+    BOOST_CHECK_EQUAL(IsReachable(NET_INTERNAL), true);
+}
+
+CNetAddr UtilBuildAddress(unsigned char p1, unsigned char p2, unsigned char p3, unsigned char p4)
+{
+    unsigned char ip[] = {p1, p2, p3, p4};
+
+    struct sockaddr_in sa;
+    memset(&sa, 0, sizeof(sockaddr_in)); // initialize the memory block
+    memcpy(&(sa.sin_addr), &ip, sizeof(ip));
+    return CNetAddr(sa.sin_addr);
+}
+
+
+BOOST_AUTO_TEST_CASE(LimitedAndReachable_CNetAddr)
+{
+    CNetAddr addr = UtilBuildAddress(0x001, 0x001, 0x001, 0x001); // 1.1.1.1
+
+    SetReachable(NET_IPV4, true);
+    BOOST_CHECK_EQUAL(IsReachable(addr), true);
+
+    SetReachable(NET_IPV4, false);
+    BOOST_CHECK_EQUAL(IsReachable(addr), false);
+
+    SetReachable(NET_IPV4, true); // have to reset this, because this is stateful.
+}
+
+
+BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
+{
+    CService addr = CService(UtilBuildAddress(0x002, 0x001, 0x001, 0x001), 1000); // 2.1.1.1:1000
+
+    SetReachable(NET_IPV4, true);
+
+    BOOST_CHECK_EQUAL(IsLocal(addr), false);
+    BOOST_CHECK_EQUAL(AddLocal(addr, 1000), true);
+    BOOST_CHECK_EQUAL(IsLocal(addr), true);
+
+    RemoveLocal(addr);
+    BOOST_CHECK_EQUAL(IsLocal(addr), false);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

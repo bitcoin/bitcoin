@@ -5,6 +5,7 @@
 """Verify commits against a trusted keys list."""
 import argparse
 import hashlib
+import logging
 import os
 import subprocess
 import sys
@@ -66,6 +67,11 @@ def tree_sha512sum(commit='HEAD'):
     return overall.hexdigest()
 
 def main():
+
+    # Enable debug logging if running in CI
+    if 'CI' in os.environ and os.environ['CI'].lower() == "true":
+        logging.getLogger().setLevel(logging.DEBUG)
+
     # Parse arguments
     parser = argparse.ArgumentParser(usage='%(prog)s [options] [commit id]')
     parser.add_argument('--disable-tree-check', action='store_false', dest='verify_tree', help='disable SHA-512 tree check')
@@ -91,10 +97,14 @@ def main():
     no_sha1 = True
     prev_commit = ""
     initial_commit = current_commit
-    branch = subprocess.check_output([GIT, 'show', '-s', '--format=%H', initial_commit], universal_newlines=True).splitlines()[0]
+    branch = subprocess.check_output([GIT, 'show', '-s', '--format=%H', initial_commit]).decode('utf8').splitlines()[0]
 
     # Iterate through commits
     while True:
+
+        # Log a message to prevent Travis from timing out
+        logging.debug("verify-commits: [in-progress] processing commit {}".format(current_commit[:8]))
+
         if current_commit == verified_root:
             print('There is a valid path from "{}" to {} where all commits are signed!'.format(initial_commit, verified_root))
             sys.exit(0)
@@ -112,7 +122,7 @@ def main():
             if prev_commit != "":
                 print("No parent of {} was signed with a trusted key!".format(prev_commit), file=sys.stderr)
                 print("Parents are:", file=sys.stderr)
-                parents = subprocess.check_output([GIT, 'show', '-s', '--format=format:%P', prev_commit], universal_newlines=True).splitlines()[0].split(' ')
+                parents = subprocess.check_output([GIT, 'show', '-s', '--format=format:%P', prev_commit]).decode('utf8').splitlines()[0].split(' ')
                 for parent in parents:
                     subprocess.call([GIT, 'show', '-s', parent], stdout=sys.stderr)
             else:
@@ -122,25 +132,25 @@ def main():
         # Check the Tree-SHA512
         if (verify_tree or prev_commit == "") and current_commit not in incorrect_sha512_allowed:
             tree_hash = tree_sha512sum(current_commit)
-            if ("Tree-SHA512: {}".format(tree_hash)) not in subprocess.check_output([GIT, 'show', '-s', '--format=format:%B', current_commit], universal_newlines=True).splitlines():
+            if ("Tree-SHA512: {}".format(tree_hash)) not in subprocess.check_output([GIT, 'show', '-s', '--format=format:%B', current_commit]).decode('utf8').splitlines():
                 print("Tree-SHA512 did not match for commit " + current_commit, file=sys.stderr)
                 sys.exit(1)
 
         # Merge commits should only have two parents
-        parents = subprocess.check_output([GIT, 'show', '-s', '--format=format:%P', current_commit], universal_newlines=True).splitlines()[0].split(' ')
+        parents = subprocess.check_output([GIT, 'show', '-s', '--format=format:%P', current_commit]).decode('utf8').splitlines()[0].split(' ')
         if len(parents) > 2:
             print("Commit {} is an octopus merge".format(current_commit), file=sys.stderr)
             sys.exit(1)
 
         # Check that the merge commit is clean
-        commit_time = int(subprocess.check_output([GIT, 'show', '-s', '--format=format:%ct', current_commit], universal_newlines=True).splitlines()[0])
+        commit_time = int(subprocess.check_output([GIT, 'show', '-s', '--format=format:%ct', current_commit]).decode('utf8').splitlines()[0])
         check_merge = commit_time > time.time() - args.clean_merge * 24 * 60 * 60  # Only check commits in clean_merge days
         allow_unclean = current_commit in unclean_merge_allowed
         if len(parents) == 2 and check_merge and not allow_unclean:
-            current_tree = subprocess.check_output([GIT, 'show', '--format=%T', current_commit], universal_newlines=True).splitlines()[0]
+            current_tree = subprocess.check_output([GIT, 'show', '--format=%T', current_commit]).decode('utf8').splitlines()[0]
             subprocess.call([GIT, 'checkout', '--force', '--quiet', parents[0]])
-            subprocess.call([GIT, 'merge', '--no-ff', '--quiet', parents[1]], stdout=subprocess.DEVNULL)
-            recreated_tree = subprocess.check_output([GIT, 'show', '--format=format:%T', 'HEAD'], universal_newlines=True).splitlines()[0]
+            subprocess.call([GIT, 'merge', '--no-ff', '--quiet', '--no-gpg-sign', parents[1]], stdout=subprocess.DEVNULL)
+            recreated_tree = subprocess.check_output([GIT, 'show', '--format=format:%T', 'HEAD']).decode('utf8').splitlines()[0]
             if current_tree != recreated_tree:
                 print("Merge commit {} is not clean".format(current_commit), file=sys.stderr)
                 subprocess.call([GIT, 'diff', current_commit])

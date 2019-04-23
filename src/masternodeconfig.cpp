@@ -1,12 +1,12 @@
 
 #include "netbase.h"
 #include "masternodeconfig.h"
-#include "util.h"
+#include <util/system.h>
 #include "chainparams.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <utilstrencodings.h>
+#include <util/strencodings.h>
 CMasternodeConfig masternodeConfig;
 
 void CMasternodeConfig::add(const std::string& alias, const std::string& ip, const std::string& privKey, const std::string& txHash, const std::string& outputIndex) {

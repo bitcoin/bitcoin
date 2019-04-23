@@ -5,11 +5,15 @@
 #ifndef SYSCOIN_WALLET_WALLETUTIL_H
 #define SYSCOIN_WALLET_WALLETUTIL_H
 
-#include <chainparamsbase.h>
-#include <util.h>
+#include <fs.h>
+
+#include <vector>
 
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
+
+//! Get wallets in wallet directory.
+std::vector<fs::path> ListWalletDir();
 
 //! The WalletLocation class provides wallet information.
 class WalletLocation final
@@ -32,4 +36,3 @@ public:
 };
 
 #endif // SYSCOIN_WALLET_WALLETUTIL_H
-

@@ -126,43 +126,46 @@ static void secp256k1_ge_set_gej_var(secp256k1_ge *r, secp256k1_gej *a) {
     r->y = a->y;
 }
 
-static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len) {
-    secp256k1_fe u;
+static void secp256k1_ge_set_all_gej_var(secp256k1_ge *r, const secp256k1_gej *a, size_t len, const secp256k1_callback *cb) {
+    secp256k1_fe *az;
+    secp256k1_fe *azi;
     size_t i;
-    size_t last_i = SIZE_MAX;
-
+    size_t count = 0;
+    az = (secp256k1_fe *)checked_malloc(cb, sizeof(secp256k1_fe) * len);
     for (i = 0; i < len; i++) {
         if (!a[i].infinity) {
-            /* Use destination's x coordinates as scratch space */
-            if (last_i == SIZE_MAX) {
-                r[i].x = a[i].z;
-            } else {
-                secp256k1_fe_mul(&r[i].x, &r[last_i].x, &a[i].z);
-            }
-            last_i = i;
+            az[count++] = a[i].z;
         }
     }
-    if (last_i == SIZE_MAX) {
-        return;
-    }
-    secp256k1_fe_inv_var(&u, &r[last_i].x);
 
-    i = last_i;
-    while (i > 0) {
-        i--;
-        if (!a[i].infinity) {
-            secp256k1_fe_mul(&r[last_i].x, &r[i].x, &u);
-            secp256k1_fe_mul(&u, &u, &a[last_i].z);
-            last_i = i;
-        }
-    }
-    VERIFY_CHECK(!a[last_i].infinity);
-    r[last_i].x = u;
+    azi = (secp256k1_fe *)checked_malloc(cb, sizeof(secp256k1_fe) * count);
+    secp256k1_fe_inv_all_var(azi, az, count);
+    free(az);
 
+    count = 0;
     for (i = 0; i < len; i++) {
         r[i].infinity = a[i].infinity;
         if (!a[i].infinity) {
-            secp256k1_ge_set_gej_zinv(&r[i], &a[i], &r[i].x);
+            secp256k1_ge_set_gej_zinv(&r[i], &a[i], &azi[count++]);
+        }
+    }
+    free(azi);
+}
+
+static void secp256k1_ge_set_table_gej_var(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zr, size_t len) {
+    size_t i = len - 1;
+    secp256k1_fe zi;
+
+    if (len > 0) {
+        /* Compute the inverse of the last z coordinate, and use it to compute the last affine output. */
+        secp256k1_fe_inv(&zi, &a[i].z);
+        secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zi);
+
+        /* Work out way backwards, using the z-ratios to scale the x/y values. */
+        while (i > 0) {
+            secp256k1_fe_mul(&zi, &zi, &zr[i]);
+            i--;
+            secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zi);
         }
     }
 }
@@ -195,12 +198,6 @@ static void secp256k1_gej_set_infinity(secp256k1_gej *r) {
     secp256k1_fe_clear(&r->x);
     secp256k1_fe_clear(&r->y);
     secp256k1_fe_clear(&r->z);
-}
-
-static void secp256k1_ge_set_infinity(secp256k1_ge *r) {
-    r->infinity = 1;
-    secp256k1_fe_clear(&r->x);
-    secp256k1_fe_clear(&r->y);
 }
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {

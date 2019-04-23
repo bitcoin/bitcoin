@@ -9,14 +9,14 @@
 #include <list>
 #include <vector>
 
-static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void AddTx(const CTransactionRef& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;
     bool spendsCoinbase = false;
     unsigned int sigOpCost = 4;
     LockPoints lp;
-    pool.addUnchecked(tx->GetHash(), CTxMemPoolEntry(
+    pool.addUnchecked(CTxMemPoolEntry(
                                          tx, nFee, nTime, nHeight,
                                          spendsCoinbase, sigOpCost, lp));
 }
@@ -108,7 +108,7 @@ static void MempoolEviction(benchmark::State& state)
     tx7.vout[1].nValue = 10 * COIN;
 
     CTxMemPool pool;
-    LOCK(pool.cs);
+    LOCK2(cs_main, pool.cs);
     // Create transaction references outside the "hot loop"
     const CTransactionRef tx1_r{MakeTransactionRef(tx1)};
     const CTransactionRef tx2_r{MakeTransactionRef(tx2)};
@@ -127,7 +127,7 @@ static void MempoolEviction(benchmark::State& state)
         AddTx(tx6_r, 1100LL, pool);
         AddTx(tx7_r, 9000LL, pool);
         pool.TrimToSize(pool.DynamicMemoryUsage() * 3 / 4);
-        pool.TrimToSize(GetVirtualTransactionSize(tx1));
+        pool.TrimToSize(GetVirtualTransactionSize(*tx1_r));
     }
 }
 

@@ -18,4 +18,5 @@ UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<s
  * as well as objects and arrays.
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal);
+
 #endif // SYSCOIN_RPC_CLIENT_H

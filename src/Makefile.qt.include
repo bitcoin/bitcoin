@@ -103,10 +103,10 @@ QT_FORMS_UI = \
   qt/forms/intro.ui \
   qt/forms/modaloverlay.ui \
   qt/forms/masternodelist.ui \
-  qt/forms/qrdialog.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
+  qt/forms/qrdialog.ui \
   qt/forms/receivecoinsdialog.ui \
   qt/forms/receiverequestdialog.ui \
   qt/forms/debugwindow.ui \
@@ -122,9 +122,9 @@ QT_MOC_CPP = \
   qt/moc_bantablemodel.cpp \
   qt/moc_syscoinaddressvalidator.cpp \
   qt/moc_syscoinamountfield.cpp \
+  qt/moc_syscoin.cpp \
   qt/moc_syscoingui.cpp \
   qt/moc_syscoinunits.cpp \
-  qt/moc_callback.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
@@ -161,18 +161,18 @@ QT_MOC_CPP = \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
+  qt/moc_walletcontroller.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp
 
 SYSCOIN_MM = \
   qt/macdockiconhandler.mm \
-  qt/macnotificationhandler.mm
+  qt/macnotificationhandler.mm \
+  qt/macos_appnap.mm
 
 QT_MOC = \
-  qt/syscoin.moc \
   qt/syscoinamountfield.moc \
-  qt/callback.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
@@ -182,9 +182,15 @@ QT_QRC = qt/syscoin.qrc
 QT_QRC_LOCALE_CPP = qt/qrc_syscoin_locale.cpp
 QT_QRC_LOCALE = qt/syscoin_locale.qrc
 
+if ENABLE_BIP70
 PROTOBUF_CC = qt/paymentrequest.pb.cc
 PROTOBUF_H = qt/paymentrequest.pb.h
 PROTOBUF_PROTO = qt/paymentrequest.proto
+else
+PROTOBUF_CC =
+PROTOBUF_H =
+PROTOBUF_PROTO =
+endif
 
 SYSCOIN_QT_H = \
   qt/addressbookpage.h \
@@ -193,9 +199,9 @@ SYSCOIN_QT_H = \
   qt/bantablemodel.h \
   qt/syscoinaddressvalidator.h \
   qt/syscoinamountfield.h \
+  qt/syscoin.h \
   qt/syscoingui.h \
   qt/syscoinunits.h \
-  qt/callback.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
@@ -206,6 +212,7 @@ SYSCOIN_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/macos_appnap.h \
   qt/modaloverlay.h \
   qt/masternodelist.h \
   qt/networkstyle.h \
@@ -237,6 +244,7 @@ SYSCOIN_QT_H = \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
   qt/utilitydialog.h \
+  qt/walletcontroller.h \
   qt/walletframe.h \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
@@ -304,6 +312,7 @@ RES_ICONS = \
 
 SYSCOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
+  qt/syscoin.cpp \
   qt/syscoinaddressvalidator.cpp \
   qt/syscoinamountfield.cpp \
   qt/syscoingui.cpp \
@@ -338,7 +347,6 @@ SYSCOIN_QT_WALLET_CPP = \
   qt/masternodelist.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
-  qt/paymentrequestplus.cpp \
   qt/paymentserver.cpp \
   qt/qrdialog.cpp \
   qt/receivecoinsdialog.cpp \
@@ -353,10 +361,14 @@ SYSCOIN_QT_WALLET_CPP = \
   qt/transactionrecord.cpp \
   qt/transactiontablemodel.cpp \
   qt/transactionview.cpp \
+  qt/walletcontroller.cpp \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp
+
+SYSCOIN_QT_WALLET_BIP70_CPP = \
+  qt/paymentrequestplus.cpp
 
 SYSCOIN_QT_CPP = $(SYSCOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
@@ -364,7 +376,10 @@ SYSCOIN_QT_CPP += $(SYSCOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
 SYSCOIN_QT_CPP += $(SYSCOIN_QT_WALLET_CPP)
-endif
+if ENABLE_BIP70
+SYSCOIN_QT_CPP += $(SYSCOIN_QT_WALLET_BIP70_CPP)
+endif # ENABLE_BIP70
+endif # ENABLE_WALLET
 
 RES_IMAGES =
 
@@ -381,6 +396,9 @@ qt_libsyscoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libsyscoinqt_a_SOURCES = $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+if TARGET_DARWIN
+  qt_libsyscoinqt_a_SOURCES += $(SYSCOIN_MM)
+endif
 
 nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
@@ -403,10 +421,7 @@ qt_syscoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INCLUDE
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 qt_syscoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_syscoin_qt_SOURCES = qt/syscoin.cpp
-if TARGET_DARWIN
-  qt_syscoin_qt_SOURCES += $(SYSCOIN_MM)
-endif
+qt_syscoin_qt_SOURCES = qt/main.cpp
 if TARGET_WINDOWS
   qt_syscoin_qt_SOURCES += $(SYSCOIN_RC)
 endif
@@ -418,8 +433,16 @@ if ENABLE_ZMQ
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_syscoin_qt_LDADD += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(LIBSYSCOIN_CONSENSUS) $(LIBSYSCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
-  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
+  $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(LIBETHEREUM)
+if ENABLE_BIP70
+qt_syscoin_qt_LDADD += $(SSL_LIBS)
+else
+if TARGET_WINDOWS
+qt_syscoin_qt_LDADD += $(SSL_LIBS)
+endif
+endif
+qt_syscoin_qt_LDADD += $(CRYPTO_LIBS)
 qt_syscoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_syscoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 

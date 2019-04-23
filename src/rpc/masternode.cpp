@@ -15,7 +15,7 @@
 #include "masternodeman.h"
 #include "rpc/server.h"
 #include "util.h"
-#include "utilmoneystr.h"
+#include <util/moneystr.h>
 #include <key_io.h>
 #include <fstream>
 #include <iomanip>
@@ -325,7 +325,8 @@ UniValue masternode(const JSONRPCRequest& request)
         LOCK(pwallet->cs_wallet);
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
-        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
+        auto locked_chain = pwallet->chain().lock();
+        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
    
         UniValue obj(UniValue::VOBJ);
         for (const auto& out : vPossibleCoins) {

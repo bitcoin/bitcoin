@@ -5,10 +5,10 @@
 
 #include "base58.h"
 #include "hash.h"
-#include "validation.h" // For strMessageMagic
+#include <util/validation.h>
 #include "messagesigner.h"
 #include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <util/strencodings.h>
 #include <key_io.h>
 bool CMessageSigner::GetKeysFromSecret(const std::string& strSecret, CKey& keyRet, CPubKey& pubkeyRet)
 {

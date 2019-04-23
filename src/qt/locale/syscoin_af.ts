@@ -1205,6 +1205,10 @@
 </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Stoor beeld</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
@@ -1364,6 +1368,10 @@
         <translation>&amp;Boodslap:</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Vee alle velde op die vorm skoon</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>Skoonmaak</translation>
     </message>
@@ -1399,8 +1407,16 @@
         <translation>QR Kode</translation>
     </message>
     <message>
+        <source>Copy &amp;URI</source>
+        <translation>Kopieer &amp;URI</translation>
+    </message>
+    <message>
         <source>Copy &amp;Address</source>
         <translation>Kopieer &amp;Address</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Stoor beeld</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1434,7 +1450,15 @@
         <source>Wallet</source>
         <translation>Beursie</translation>
     </message>
-    </context>
+    <message>
+        <source>Resulting URI too long, try to reduce the text for label / message.</source>
+        <translation>Gevolglike URI te lank, probeer teks verkort vir etiket/boodskap</translation>
+    </message>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Fout met enkodering van URI na QR kode</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1521,12 +1545,33 @@
         <translation>Kies...</translation>
     </message>
     <message>
+        <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
+        <translation>Die verstekfooi kan veroorsaak dat 'n transaksie gestuur word wat
+etlike ure of dae (of nooit) sal neem om te bevestig. Oorweeg om
+'n fooi met die hand te kies, of wag tot jy die hele ketting bevestig het.</translation>
+    </message>
+    <message>
+        <source>Warning: Fee estimation is currently not possible.</source>
+        <translation>Waarskuwing: fooiskatting is tans onbeskikbaar</translation>
+    </message>
+    <message>
+        <source>collapse fee-settings</source>
+        <translation>Vou fooi-nistellings in</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>per kilogreep</translation>
     </message>
     <message>
         <source>Hide</source>
         <translation>Versteek</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
+        <translation>Om die minimumfooi te betaal is in die haak, mits daar minder transaksievolume
+as ruimte in die blok is. Wees bewus dat de gevolg kan wees dat 'n transaksie nooit
+bevestig nie indien daar meer aanvraag vir syscoin transaksies is as wat die netwerk kan
+verwerk.</translation>
     </message>
     <message>
         <source>Recommended:</source>
@@ -1537,12 +1582,38 @@
         <translation>Aangepaste:</translation>
     </message>
     <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Slimfooi nog nie opgestel nie. Dit neem gewoonlik 'n paar blokke...)</translation>
+    </message>
+    <message>
+        <source>Send to multiple recipients at once</source>
+        <translation>Stuur aan veelvuldige ontvangers tegelyk</translation>
+    </message>
+    <message>
         <source>Add &amp;Recipient</source>
         <translation>Voeg by &amp;Ontvanger</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Vee alle velde op die vorm skoon</translation>
+    </message>
+    <message>
         <source>Dust:</source>
         <translation>Stof:</translation>
+    </message>
+    <message>
+        <source>Confirmation time target:</source>
+        <translation>Bevestigingstyd teiken:</translation>
+    </message>
+    <message>
+        <source>Enable Replace-By-Fee</source>
+        <translation>Bemontlik vervang-deur-fooi</translation>
+    </message>
+    <message>
+        <source>With Replace-By-Fee (BIP-125) you can increase a transaction's fee after it is sent. Without this, a higher fee may be recommended to compensate for increased transaction delay risk.</source>
+        <translation>Met Vervang-Met-Fooi (BIP-125) kan jy 'n transaskiefooi verhoog nadat dit gestuur is.
+Daarsonder mag 'n hoër fooi dalk aanbeveel word om te kompenseer vir 'n verhoogde
+transaksievertragingsrisiko.</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1551,6 +1622,10 @@
     <message>
         <source>Balance:</source>
         <translation>Balans:</translation>
+    </message>
+    <message>
+        <source>Confirm the send action</source>
+        <translation>Bevestig stuuraksie</translation>
     </message>
     <message>
         <source>S&amp;end</source>
@@ -1593,12 +1668,78 @@
         <translation>%1 tot %2</translation>
     </message>
     <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Is u seker u wil verstuur?</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>of</translation>
+    </message>
+    <message>
+        <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
+        <translation>U kan die fooi later verhoog (sein Vervang-met-Fooi, BIP-125)</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Transaksie fooi</translation>
     </message>
     <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Sein nie Vervang-Met-Fooi nie, BIP-25</translation>
+    </message>
+    <message>
+        <source>Confirm send coins</source>
+        <translation>Bevestig versending van munte</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Die ontvangeradres is ongeldig. Kyk asseblief weer mooi.</translation>
+    </message>
+    <message>
+        <source>The amount to pay must be larger than 0.</source>
+        <translation>Bedrag moet groter as nul wees</translation>
+    </message>
+    <message>
+        <source>The amount exceeds your balance.</source>
+        <translation>Die bedrag oorskry jou saldo</translation>
+    </message>
+    <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>Die somtotaal oorskry jou saldo as die %1 transaksiefooi ingereken word</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Duplikaatadres: adresse behoort slegs eenkeer gebruik te word</translation>
+    </message>
+    <message>
+        <source>Transaction creation failed!</source>
+        <translation>Transaksieopstelling het gefaal</translation>
+    </message>
+    <message>
+        <source>The transaction was rejected with the following reason: %1</source>
+        <translation>Die transaksie is afgekeur met die volgende rede: %1</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>'n Fooi hoër as %1 word as buitensporig beskou</translation>
+    </message>
+    <message>
         <source>Payment request expired.</source>
         <translation>Betalings versoek verstryk.</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Betaal slegs die verlangde fooi van %1</translation>
+    </message>
+    <message>
+        <source>Warning: Invalid Syscoin address</source>
+        <translation>Waarskuwing: Ongeldige Syscoinadres</translation>
+    </message>
+    <message>
+        <source>The address you selected for change is not part of this wallet. Any or all funds in your wallet may be sent to this address. Are you sure?</source>
+        <translation>Die adres wat u gekies het vir verandering is nie deel van hierdie
+beursie nie. Enige of alle fondse mag dalk daarheen gestuur word.
+Is u seker?</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1616,12 +1757,55 @@
         <translation>&amp;Etiket:</translation>
     </message>
     <message>
+        <source>Choose previously used address</source>
+        <translation>Kies voorhen gebruikte adres</translation>
+    </message>
+    <message>
+        <source>This is a normal payment.</source>
+        <translation>Hierdie is 'n gewone betaling</translation>
+    </message>
+    <message>
+        <source>The Syscoin address to send the payment to</source>
+        <translation>Die Syscoinadres waarheen die betaling gestuur word</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
+        <source>Paste address from clipboard</source>
+        <translation>Plak adres van aanknipbord af</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation>Verwyder hierdie inskrywing</translation>
+    </message>
+    <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less syscoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>De fooi word afgetrek van die gestuurde bedrag.
+Die ontvanger sal minder ontvang as wat u in die
+bedrag opgee. As daar meer as een ontvanger is,
+word die fooi eweredig verdeel.</translation>
+    </message>
+    <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>Bedrag &amp;Sonder fooi </translation>
+    </message>
+    <message>
+        <source>Use available balance</source>
+        <translation>Gebruik beskikbare saldo</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>Boodskap:</translation>
+    </message>
+    <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Hierdie is 'n ongemagtigde uitbetalingsversoek</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>Hierdie is 'n gemagtigde uitbetalingsversoek</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -1645,8 +1829,16 @@
         <translation>&amp;Teken Boodskap</translation>
     </message>
     <message>
+        <source>Choose previously used address</source>
+        <translation>Kies voorhen gebruikte adres</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>Plak adres van aanknipbord af</translation>
     </message>
     <message>
         <source>Signature</source>

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright (c) 2018 The Syscoin Core developers
+# Copyright (c) 2018-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -16,10 +16,11 @@ FALSE_POSITIVES = [
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
     ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
-    ("src/util.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
-    ("src/util.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
+    ("src/util/system.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
+    ("src/util/system.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
+    ("src/logging.h", "LogPrintf(const char* fmt, const Args&... args)"),
 ]
 
 
@@ -38,7 +39,7 @@ def parse_function_calls(function_name, source_code):
     >>> len(parse_function_calls("foo", "#define FOO foo();"))
     0
     """
-    assert(type(function_name) is str and type(source_code) is str and function_name)
+    assert type(function_name) is str and type(source_code) is str and function_name
     lines = [re.sub("// .*", " ", line).strip()
              for line in source_code.split("\n")
              if not line.strip().startswith("#")]
@@ -52,7 +53,7 @@ def normalize(s):
     >>> normalize("  /* nothing */   foo\tfoo  /* bar */  foo     ")
     'foo foo foo'
     """
-    assert(type(s) is str)
+    assert type(s) is str
     s = s.replace("\n", " ")
     s = s.replace("\t", " ")
     s = re.sub("/\*.*?\*/", " ", s)
@@ -76,7 +77,7 @@ def escape(s):
     >>> escape(r'foo \\t foo \\n foo \\\\ foo \\ foo \\"bar\\"')
     'foo [escaped-tab] foo [escaped-newline] foo \\\\\\\\ foo \\\\ foo [escaped-quote]bar[escaped-quote]'
     """
-    assert(type(s) is str)
+    assert type(s) is str
     for raw_value, escaped_value in ESCAPE_MAP.items():
         s = s.replace(raw_value, escaped_value)
     return s
@@ -91,7 +92,7 @@ def unescape(s):
     >>> unescape("foo [escaped-tab] foo [escaped-newline] foo \\\\\\\\ foo \\\\ foo [escaped-quote]bar[escaped-quote]")
     'foo \\\\t foo \\\\n foo \\\\\\\\ foo \\\\ foo \\\\"bar\\\\"'
     """
-    assert(type(s) is str)
+    assert type(s) is str
     for raw_value, escaped_value in ESCAPE_MAP.items():
         s = s.replace(escaped_value, raw_value)
     return s
@@ -150,10 +151,10 @@ def parse_function_call_and_arguments(function_name, function_call):
     >>> parse_function_call_and_arguments("strprintf", 'strprintf("%s (%d)", foo>foo<1,2>(1,2),err)');
     ['strprintf(', '"%s (%d)",', ' foo>foo<1,2>(1,2),', 'err', ')']
     """
-    assert(type(function_name) is str and type(function_call) is str and function_name)
+    assert type(function_name) is str and type(function_call) is str and function_name
     remaining = normalize(escape(function_call))
     expected_function_call = "{}(".format(function_name)
-    assert(remaining.startswith(expected_function_call))
+    assert remaining.startswith(expected_function_call)
     parts = [expected_function_call]
     remaining = remaining[len(expected_function_call):]
     open_parentheses = 1
@@ -212,7 +213,7 @@ def parse_string_content(argument):
     >>> parse_string_content('1 2 3')
     ''
     """
-    assert(type(argument) is str)
+    assert type(argument) is str
     string_content = ""
     in_string = False
     for char in normalize(escape(argument)):
@@ -239,13 +240,12 @@ def count_format_specifiers(format_string):
     >>> count_format_specifiers("foo %d bar %i foo %% foo %*d foo")
     4
     """
-    assert(type(format_string) is str)
+    assert type(format_string) is str
+    format_string = format_string.replace('%%', 'X')
     n = 0
     in_specifier = False
     for i, char in enumerate(format_string):
-        if format_string[i - 1:i + 1] == "%%" or format_string[i:i + 2] == "%%":
-            pass
-        elif char == "%":
+        if char == "%":
             in_specifier = True
             n += 1
         elif char in "aAcdeEfFgGinopsuxX":
@@ -262,27 +262,27 @@ def main():
     parser.add_argument("--skip-arguments", type=int, help="number of arguments before the format string "
                         "argument (e.g. 1 in the case of fprintf)", default=0)
     parser.add_argument("function_name", help="function name (e.g. fprintf)", default=None)
-    parser.add_argument("file", type=argparse.FileType("r", encoding="utf-8"), nargs="*", help="C++ source code file (e.g. foo.cpp)")
+    parser.add_argument("file", nargs="*", help="C++ source code file (e.g. foo.cpp)")
     args = parser.parse_args()
-
     exit_code = 0
-    for f in args.file:
-        for function_call_str in parse_function_calls(args.function_name, f.read()):
-            parts = parse_function_call_and_arguments(args.function_name, function_call_str)
-            relevant_function_call_str = unescape("".join(parts))[:512]
-            if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
-                continue
-            if len(parts) < 3 + args.skip_arguments:
-                exit_code = 1
-                print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
-                continue
-            argument_count = len(parts) - 3 - args.skip_arguments
-            format_str = parse_string_content(parts[1 + args.skip_arguments])
-            format_specifier_count = count_format_specifiers(format_str)
-            if format_specifier_count != argument_count:
-                exit_code = 1
-                print("{}: Expected {} argument(s) after format string but found {} argument(s): {}".format(f.name, format_specifier_count, argument_count, relevant_function_call_str))
-                continue
+    for filename in args.file:
+        with open(filename, "r", encoding="utf-8") as f:
+            for function_call_str in parse_function_calls(args.function_name, f.read()):
+                parts = parse_function_call_and_arguments(args.function_name, function_call_str)
+                relevant_function_call_str = unescape("".join(parts))[:512]
+                if (f.name, relevant_function_call_str) in FALSE_POSITIVES:
+                    continue
+                if len(parts) < 3 + args.skip_arguments:
+                    exit_code = 1
+                    print("{}: Could not parse function call string \"{}(...)\": {}".format(f.name, args.function_name, relevant_function_call_str))
+                    continue
+                argument_count = len(parts) - 3 - args.skip_arguments
+                format_str = parse_string_content(parts[1 + args.skip_arguments])
+                format_specifier_count = count_format_specifiers(format_str)
+                if format_specifier_count != argument_count:
+                    exit_code = 1
+                    print("{}: Expected {} argument(s) after format string but found {} argument(s): {}".format(f.name, format_specifier_count, argument_count, relevant_function_call_str))
+                    continue
     sys.exit(exit_code)
 
 

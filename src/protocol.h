@@ -238,7 +238,6 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
-
 // Syscoin message types
 // NOTE: do NOT declare non-implmented here, we don't want them to be exposed to the outside
 // TODO: add description
@@ -391,6 +390,7 @@ enum GetDataMsg
     MSG_BLOCK = 2,
     // The following can only occur in getdata. Invs always use TX or BLOCK.
     MSG_FILTERED_BLOCK = 3,  //!< Defined in BIP37
+    MSG_CMPCT_BLOCK = 4,     //!< Defined in BIP152
     // Syscoin message types
     // NOTE: declare non-implmented here, we must keep this enum consistent and backwards compatible
     MSG_SPORK = 6,
@@ -402,9 +402,6 @@ enum GetDataMsg
     MSG_GOVERNANCE_OBJECT = 12,
     MSG_GOVERNANCE_OBJECT_VOTE = 13,
     MSG_MASTERNODE_VERIFY = 14,
-    // Nodes may always request a MSG_CMPCT_BLOCK in a getdata, however,
-    // MSG_CMPCT_BLOCK should not appear in any invs except as a part of getdata.  
-    MSG_CMPCT_BLOCK = 4,     //!< Defined in BIP152
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
     MSG_WITNESS_TX = MSG_TX | MSG_WITNESS_FLAG,       //!< Defined in BIP144
     MSG_FILTERED_WITNESS_BLOCK = MSG_FILTERED_BLOCK | MSG_WITNESS_FLAG,
@@ -431,7 +428,6 @@ public:
     std::string GetCommand() const;
     std::string ToString() const;
 
-    // TODO: make private (improves encapsulation)
 public:
     int type;
     uint256 hash;

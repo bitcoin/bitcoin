@@ -20,6 +20,7 @@
 #include "warnings.h"
 #include <shutdown.h>
 #include <outputtype.h>
+#include <net_processing.h>
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Masternode manager */
 CMasternodeMan mnodeman;
@@ -761,7 +762,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
 
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
-        pfrom->setAskFor.erase(mnb.GetHash());
+   
+        const uint256& nHash = mnb.GetHash();
+        {
+            LOCK(cs_main);
+            EraseInvRequest(pfrom, nHash);
+        }
 
         if(!masternodeSync.IsBlockchainSynced()) return;
 
@@ -785,9 +791,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         CMasternodePing mnp;
         vRecv >> mnp;
 
-        uint256 nHash = mnp.GetHash();
+        const uint256 &nHash = mnp.GetHash();
 
-        pfrom->setAskFor.erase(nHash);
+        {
+            LOCK(cs_main);
+            EraseInvRequest(pfrom, nHash);
+        }
 
         if(!masternodeSync.IsBlockchainSynced()) return;
 
@@ -851,7 +860,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, const std::string& strCommand,
         CMasternodeVerification mnv;
         vRecv >> mnv;
 
-        pfrom->setAskFor.erase(mnv.GetHash());
+        const uint256& nHash = mnv.GetHash();
+        EraseInvRequest(pfrom, nHash);
+        
 
         if(!masternodeSync.IsMasternodeListSynced()) return;
 

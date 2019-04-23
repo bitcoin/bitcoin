@@ -6,6 +6,7 @@ src/syscoind
 src/syscoinbench
 src/syscoin-cli
 src/syscoin-tx
+src/syscoin-wallet
 src/test/test_syscoin
 src/test/test_syscoin_fuzzy
 src/qt/test/test_syscoin-qt
@@ -67,6 +68,7 @@ src/qt/syscoin-qt.includes
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -118,3 +120,9 @@ test/cache/*
 
 libsyscoinconsensus.pc
 contrib/devtools/split-debug.sh
+
+# Output from running db4 installation
+db4/
+
+# clang-check
+*.plist

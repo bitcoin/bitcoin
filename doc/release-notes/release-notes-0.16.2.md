@@ -1,6 +1,6 @@
 Syscoin Core version 0.16.2 is now available from:
 
-  <https://syscoin.org/bin/syscoin-core-0.16.2/>
+  <https://syscoincore.org/bin/syscoin-core-0.16.2/>
 
 This is a new minor version release, with various bugfixes
 as well as updated translations.
@@ -11,7 +11,7 @@ Please report bugs using the issue tracker at GitHub:
 
 To receive security and update notifications, please subscribe to:
 
-  <https://syscoin.org/en/list/announcements/join/>
+  <https://syscoincore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============

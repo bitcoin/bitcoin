@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Syscoin Core developers
+# Copyright (c) 2014-2019 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
@@ -8,7 +8,11 @@ from decimal import Decimal
 
 from test_framework.messages import COIN
 from test_framework.test_framework import SyscoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round, sync_blocks, sync_mempools
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+    satoshi_round,
+)
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
@@ -33,7 +37,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
         signedtx = node.signrawtransactionwithwallet(rawtx)
         txid = node.sendrawtransaction(signedtx['hex'])
         fulltx = node.getrawtransaction(txid, 1)
-        assert(len(fulltx['vout']) == num_outputs) # make sure we didn't generate a change output
+        assert len(fulltx['vout']) == num_outputs  # make sure we didn't generate a change output
         return (txid, send_value)
 
     def run_test(self):
@@ -58,9 +62,9 @@ class MempoolPackagesTest(SyscoinTestFramework):
         assert_equal(len(mempool), MAX_ANCESTORS)
         descendant_count = 1
         descendant_fees = 0
-        descendant_size = 0
+        descendant_vsize = 0
 
-        ancestor_size = sum([mempool[tx]['size'] for tx in mempool])
+        ancestor_vsize = sum([mempool[tx]['vsize'] for tx in mempool])
         ancestor_count = MAX_ANCESTORS
         ancestor_fees = sum([mempool[tx]['fee'] for tx in mempool])
 
@@ -79,15 +83,15 @@ class MempoolPackagesTest(SyscoinTestFramework):
             assert_equal(mempool[x]['fees']['modified'], mempool[x]['modifiedfee'])
             assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN)
             assert_equal(mempool[x]['fees']['descendant'], descendant_fees)
-            descendant_size += mempool[x]['size']
-            assert_equal(mempool[x]['descendantsize'], descendant_size)
+            descendant_vsize += mempool[x]['vsize']
+            assert_equal(mempool[x]['descendantsize'], descendant_vsize)
             descendant_count += 1
 
             # Check that ancestor calculations are correct
             assert_equal(mempool[x]['ancestorcount'], ancestor_count)
             assert_equal(mempool[x]['ancestorfees'], ancestor_fees * COIN)
-            assert_equal(mempool[x]['ancestorsize'], ancestor_size)
-            ancestor_size -= mempool[x]['size']
+            assert_equal(mempool[x]['ancestorsize'], ancestor_vsize)
+            ancestor_vsize -= mempool[x]['vsize']
             ancestor_fees -= mempool[x]['fee']
             ancestor_count -= 1
 
@@ -125,13 +129,13 @@ class MempoolPackagesTest(SyscoinTestFramework):
         assert_equal(len(v_ancestors), len(chain)-1)
         for x in v_ancestors.keys():
             assert_equal(mempool[x], v_ancestors[x])
-        assert(chain[-1] not in v_ancestors.keys())
+        assert chain[-1] not in v_ancestors.keys()
 
         v_descendants = self.nodes[0].getmempooldescendants(chain[0], True)
         assert_equal(len(v_descendants), len(chain)-1)
         for x in v_descendants.keys():
             assert_equal(mempool[x], v_descendants[x])
-        assert(chain[0] not in v_descendants.keys())
+        assert chain[0] not in v_descendants.keys()
 
         # Check that ancestor modified fees includes fee deltas from
         # prioritisetransaction
@@ -163,7 +167,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         # Prioritise a transaction that has been mined, then add it back to the
         # mempool by using invalidateblock.
@@ -228,7 +232,7 @@ class MempoolPackagesTest(SyscoinTestFramework):
         # Test reorg handling
         # First, the basics:
         self.nodes[0].generate(1)
-        sync_blocks(self.nodes)
+        self.sync_blocks()
         self.nodes[1].invalidateblock(self.nodes[0].getbestblockhash())
         self.nodes[1].reconsiderblock(self.nodes[0].getbestblockhash())
 
@@ -283,12 +287,12 @@ class MempoolPackagesTest(SyscoinTestFramework):
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         signedtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         txid = self.nodes[0].sendrawtransaction(signedtx['hex'])
-        sync_mempools(self.nodes)
+        self.sync_mempools()
 
         # Now try to disconnect the tip on each node...
         self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
-        sync_blocks(self.nodes)
+        self.sync_blocks()
 
 if __name__ == '__main__':
     MempoolPackagesTest().main()

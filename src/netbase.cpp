@@ -10,25 +10,29 @@
 #include <uint256.h>
 #include <random.h>
 #include <tinyformat.h>
-#include <util.h>
-#include <utilstrencodings.h>
+#include <util/system.h>
+#include <util/strencodings.h>
 
 #include <atomic>
 
 #ifndef WIN32
 #include <fcntl.h>
+#else
+#include <codecvt>
 #endif
 
-#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
+#ifdef USE_POLL
+#include <poll.h>
+#endif
 
 #if !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
 #endif
 
 // Settings
-static proxyType proxyInfo[NET_MAX];
-static proxyType nameProxy;
 static CCriticalSection cs_proxyInfos;
+static proxyType proxyInfo[NET_MAX] GUARDED_BY(cs_proxyInfos);
+static proxyType nameProxy GUARDED_BY(cs_proxyInfos);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
@@ -37,7 +41,7 @@ static const int SOCKS5_RECV_TIMEOUT = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
 
 enum Network ParseNetwork(std::string net) {
-    boost::to_lower(net);
+    Downcase(net);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
     if (net == "onion") return NET_ONION;
@@ -76,11 +80,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
     aiHint.ai_socktype = SOCK_STREAM;
     aiHint.ai_protocol = IPPROTO_TCP;
     aiHint.ai_family = AF_UNSPEC;
-#ifdef WIN32
-    aiHint.ai_flags = fAllowLookup ? 0 : AI_NUMERICHOST;
-#else
     aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
-#endif
     struct addrinfo *aiRes = nullptr;
     int nErr = getaddrinfo(pszName, nullptr, &aiHint, &aiRes);
     if (nErr)
@@ -191,10 +191,10 @@ enum SOCKSVersion: uint8_t {
 
 /** Values defined for METHOD in RFC1928 */
 enum SOCKS5Method: uint8_t {
-    NOAUTH = 0x00,        //! No authentication required
-    GSSAPI = 0x01,        //! GSSAPI
-    USER_PASS = 0x02,     //! Username/password
-    NO_ACCEPTABLE = 0xff, //! No acceptable methods
+    NOAUTH = 0x00,        //!< No authentication required
+    GSSAPI = 0x01,        //!< GSSAPI
+    USER_PASS = 0x02,     //!< Username/password
+    NO_ACCEPTABLE = 0xff, //!< No acceptable methods
 };
 
 /** Values defined for CMD in RFC1928 */
@@ -206,15 +206,15 @@ enum SOCKS5Command: uint8_t {
 
 /** Values defined for REP in RFC1928 */
 enum SOCKS5Reply: uint8_t {
-    SUCCEEDED = 0x00,        //! Succeeded
-    GENFAILURE = 0x01,       //! General failure
-    NOTALLOWED = 0x02,       //! Connection not allowed by ruleset
-    NETUNREACHABLE = 0x03,   //! Network unreachable
-    HOSTUNREACHABLE = 0x04,  //! Network unreachable
-    CONNREFUSED = 0x05,      //! Connection refused
-    TTLEXPIRED = 0x06,       //! TTL expired
-    CMDUNSUPPORTED = 0x07,   //! Command not supported
-    ATYPEUNSUPPORTED = 0x08, //! Address type not supported
+    SUCCEEDED = 0x00,        //!< Succeeded
+    GENFAILURE = 0x01,       //!< General failure
+    NOTALLOWED = 0x02,       //!< Connection not allowed by ruleset
+    NETUNREACHABLE = 0x03,   //!< Network unreachable
+    HOSTUNREACHABLE = 0x04,  //!< Network unreachable
+    CONNREFUSED = 0x05,      //!< Connection refused
+    TTLEXPIRED = 0x06,       //!< TTL expired
+    CMDUNSUPPORTED = 0x07,   //!< Command not supported
+    ATYPEUNSUPPORTED = 0x08, //!< Address type not supported
 };
 
 /** Values defined for ATYPE in RFC1928 */
@@ -264,11 +264,19 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
                 if (!IsSelectableSocket(hSocket)) {
                     return IntrRecvError::NetworkError;
                 }
-                struct timeval tval = MillisToTimeval(std::min(endTime - curTime, maxWait));
+                int timeout_ms = std::min(endTime - curTime, maxWait);
+#ifdef USE_POLL
+                struct pollfd pollfd = {};
+                pollfd.fd = hSocket;
+                pollfd.events = POLLIN | POLLOUT;
+                int nRet = poll(&pollfd, 1, timeout_ms);
+#else
+                struct timeval tval = MillisToTimeval(timeout_ms);
                 fd_set fdset;
                 FD_ZERO(&fdset);
                 FD_SET(hSocket, &fdset);
                 int nRet = select(hSocket + 1, &fdset, nullptr, nullptr, &tval);
+#endif
                 if (nRet == SOCKET_ERROR) {
                     return IntrRecvError::NetworkError;
                 }
@@ -499,11 +507,18 @@ bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, i
         // WSAEINVAL is here because some legacy version of winsock uses it
         if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL)
         {
+#ifdef USE_POLL
+            struct pollfd pollfd = {};
+            pollfd.fd = hSocket;
+            pollfd.events = POLLIN | POLLOUT;
+            int nRet = poll(&pollfd, 1, nTimeout);
+#else
             struct timeval timeout = MillisToTimeval(nTimeout);
             fd_set fdset;
             FD_ZERO(&fdset);
             FD_SET(hSocket, &fdset);
             int nRet = select(hSocket + 1, nullptr, &fdset, nullptr, &timeout);
+#endif
             if (nRet == 0)
             {
                 LogPrint(BCLog::NET, "connection to %s timeout\n", addrConnect.ToString());
@@ -651,13 +666,13 @@ bool LookupSubNet(const char* pszName, CSubNet& ret)
 #ifdef WIN32
 std::string NetworkErrorString(int err)
 {
-    char buf[256];
+    wchar_t buf[256];
     buf[0] = 0;
-    if(FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
+    if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK,
             nullptr, err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            buf, sizeof(buf), nullptr))
+            buf, ARRAYSIZE(buf), nullptr))
     {
-        return strprintf("%s (%d)", buf, err);
+        return strprintf("%s (%d)", std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().to_bytes(buf), err);
     }
     else
     {

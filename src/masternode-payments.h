@@ -11,7 +11,7 @@
 #include "key.h"
 #include "masternode.h"
 #include "net_processing.h"
-#include "utilstrencodings.h"
+#include <util/strencodings.h>
 
 class CMasternodePayments;
 class CMasternodePaymentVote;

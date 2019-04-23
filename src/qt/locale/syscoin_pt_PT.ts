@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Syscoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Estes são os seus endereços Syscoin para receber pagamentos. É recomendado que utilize um endereço novo para cada transacção.</translation>
+        <translation>Estes são os seus endereços Syscoin para receber pagamentos. É recomendado que utilize um endereço novo para cada transação.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -189,7 +189,7 @@
     </message>
     <message>
         <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your syscoins from being stolen by malware infecting your computer.</source>
-        <translation>%1 irá agora ser fechado para terminar o processo de encriptação. Recorde que a encriptação da sua carteira não protegerá totalmente os seus syscoins de serem roubados por programas maliciosos que infectem o seu computador.</translation>
+        <translation>%1 irá agora ser fechado para terminar o processo de encriptação. Recorde que a encriptação da sua carteira não protegerá totalmente os seus syscoins de serem roubados por programas maliciosos que infetem o seu computador.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -780,7 +780,7 @@
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Será criada uma nova diretoria de dados.</translation>
+        <translation>Será criada uma nova pasta de dados.</translation>
     </message>
     <message>
         <source>name</source>
@@ -792,11 +792,11 @@
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>O caminho já existe, e este não é uma pasta.</translation>
+        <translation>O caminho já existe, e não é uma pasta.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
-        <translation>Não é possível criar aqui uma diretoria de dados.</translation>
+        <translation>Não é possível criar aqui uma pasta de dados.</translation>
     </message>
 </context>
 <context>
@@ -854,11 +854,11 @@
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
-        <translation>No mínimo %1 GB de dados irão ser armazenados neste diretório. </translation>
+        <translation>No mínimo %1 GB de dados irão ser armazenados nesta pasta. </translation>
     </message>
     <message>
         <source>Approximately %1 GB of data will be stored in this directory.</source>
-        <translation>Aproximadamente %1 GB de dados irão ser guardados nesta directoria. </translation>
+        <translation>Aproximadamente %1 GB de dados irão ser guardados nesta pasta. </translation>
     </message>
     <message>
         <source>%1 will download and store a copy of the Syscoin block chain.</source>
@@ -866,7 +866,7 @@
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
-        <translation>A carteira também será guardada nesta directoria.</translation>
+        <translation>A carteira também será guardada nesta pasta.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1024,7 +1024,7 @@
     </message>
     <message>
         <source>Open the %1 configuration file from the working directory.</source>
-        <translation>Abrir o ficheiro de configuração %1 da directoria aberta.</translation>
+        <translation>Abrir o ficheiro de configuração %1 da pasta aberta.</translation>
     </message>
     <message>
         <source>Open Configuration File</source>
@@ -1100,11 +1100,11 @@
     </message>
     <message>
         <source>&amp;Port:</source>
-        <translation>&amp;Porto:</translation>
+        <translation>&amp;Porta:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Porto do proxy (p.ex. 9050)</translation>
+        <translation>Porta do proxy (por ex. 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -1235,7 +1235,7 @@
     </message>
     <message>
         <source>Watch-only:</source>
-        <translation>Modo-verificação:</translation>
+        <translation>Apenas vigiar:</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1263,7 +1263,7 @@
     </message>
     <message>
         <source>Balances</source>
-        <translation>Balanços</translation>
+        <translation>Saldos</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1271,11 +1271,11 @@
     </message>
     <message>
         <source>Your current total balance</source>
-        <translation>O seu saldo total actual</translation>
+        <translation>O seu saldo total atual</translation>
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>O seu balanço atual em endereços de apenas observação</translation>
+        <translation>O seu balanço atual em endereços de apenas vigiar</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1287,15 +1287,15 @@
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation>Transações não confirmadas para endereços modo-verificação</translation>
+        <translation>Transações não confirmadas para endereços de apenas vigiar</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Saldo minado ainda não disponivél de endereços modo-verificação</translation>
+        <translation>Saldo minado ainda não disponível de endereços de apenas vigiar</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation>Saldo disponivél em enderços modo-verificação</translation>
+        <translation>Saldo disponível em endereços de apenas vigiar</translation>
     </message>
 </context>
 <context>
@@ -1326,7 +1326,7 @@
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Syscoin address or malformed URI parameters.</source>
-        <translation>URI não foi lido correctamente! Isto pode ser causado por um endereço Syscoin inválido ou por parâmetros URI malformados.</translation>
+        <translation>URI não foi lido corretamente! Isto pode ser causado por um endereço Syscoin inválido ou por parâmetros URI malformados.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1428,7 +1428,7 @@
     </message>
     <message>
         <source>Enter a Syscoin address (e.g. %1)</source>
-        <translation>Entre um endereço Syscoin (ex. %1)</translation>
+        <translation>Introduza um endereço Syscoin (ex. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1519,7 +1519,7 @@
     </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
-        <translation>Erro: Pasta de dados especificada "%1" não existe.</translation>
+        <translation>Erro: a pasta de dados especificada "%1" não existe.</translation>
     </message>
     <message>
         <source>Error: Cannot parse configuration file: %1.</source>
@@ -1601,7 +1601,7 @@
     </message>
     <message>
         <source>Current number of blocks</source>
-        <translation>Número actual de blocos</translation>
+        <translation>Número atual de blocos</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1609,7 +1609,7 @@
     </message>
     <message>
         <source>Current number of transactions</source>
-        <translation>Número actual de transacções</translation>
+        <translation>Número atual de transações</translation>
     </message>
     <message>
         <source>Memory usage</source>
@@ -1653,7 +1653,7 @@
     </message>
     <message>
         <source>Direction</source>
-        <translation>Direcção</translation>
+        <translation>Direção</translation>
     </message>
     <message>
         <source>Version</source>
@@ -1677,7 +1677,7 @@
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>Abrir o ficheiro de registo de depuração %1 da pasta de dados actual. Isto pode demorar alguns segundos para ficheiros de registo maiores.</translation>
+        <translation>Abrir o ficheiro de registo de depuração %1 da pasta de dados atual. Isto pode demorar alguns segundos para ficheiros de registo maiores.</translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1701,11 +1701,11 @@
     </message>
     <message>
         <source>Last Send</source>
-        <translation>Ultimo Envio</translation>
+        <translation>Último Envio</translation>
     </message>
     <message>
         <source>Last Receive</source>
-        <translation>Ultimo Recebimento</translation>
+        <translation>Último Recebimento</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1809,7 +1809,7 @@
     </message>
     <message>
         <source>WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.</source>
-        <translation>AVISO: Burlões têm estado activos, dizendo a utilizadores para digitar comandos aqui, roubando assim os conteúdos das suas carteiras. Não utilize esta consola sem perceber perfeitamente as ramificações de um comando.</translation>
+        <translation>AVISO: alguns burlões têm estado ativos, dizendo a utilizadores para digitarem comandos aqui, roubando assim os conteúdos das suas carteiras. Não utilize esta consola sem perceber perfeitamente as ramificações de um comando.</translation>
     </message>
     <message>
         <source>Network activity disabled</source>
@@ -1896,7 +1896,7 @@
     </message>
     <message>
         <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
-        <translation>Endereços nativos SegWit (também conhecidos como Bech32 ou BIP-173) reduzem as taxas da sua transação mais tarde e oferecem melhor protecção contra erros, mas carteiras antigas não os suportam. Quando não selecionado, um endereço compatível com carteiras antigas irá ser criado em vez.</translation>
+        <translation>Endereços nativos SegWit (também conhecidos como Bech32 ou BIP-173) reduzem as taxas da sua transação mais tarde e oferecem melhor proteção contra erros, mas carteiras antigas não os suportam. Quando não selecionado, um endereço compatível com carteiras antigas irá ser criado em vez.</translation>
     </message>
     <message>
         <source>Generate native segwit (Bech32) address</source>
@@ -1912,7 +1912,7 @@
     </message>
     <message>
         <source>Show the selected request (does the same as double clicking an entry)</source>
-        <translation>Mostrar o pedido seleccionado (faz o mesmo que clicar 2 vezes numa entrada)</translation>
+        <translation>Mostrar o pedido selecionado (faz o mesmo que clicar 2 vezes numa entrada)</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1920,7 +1920,7 @@
     </message>
     <message>
         <source>Remove the selected entries from the list</source>
-        <translation>Remover as entradas seleccionadas da lista</translation>
+        <translation>Remover as entradas selecionadas da lista</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -2113,7 +2113,7 @@
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for syscoin transactions than the network can process.</source>
-        <translation>Pode pagar somente a taxa minima desde que haja um volume de transações inferior ao espaço nos blocos. No entanto tenha em atenção que esta opção poderá acabar em uma transação nunca confirmada assim que os pedidos de transações excedam a capacidade de processamento da rede.</translation>
+        <translation>Pode pagar somente a taxa mínima desde que haja um volume de transações inferior ao espaço nos blocos. No entanto tenha em atenção que esta opção poderá acabar em uma transação nunca confirmada assim que os pedidos de transações excedam a capacidade de processamento da rede.</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -2125,7 +2125,7 @@
     </message>
     <message>
         <source>Custom:</source>
-        <translation>Uso:</translation>
+        <translation>Personalizado:</translation>
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
@@ -2442,7 +2442,7 @@
     </message>
     <message>
         <source>Copy the current signature to the system clipboard</source>
-        <translation>Copiar a assinatura actual para a área de transferência</translation>
+        <translation>Copiar a assinatura atual para a área de transferência</translation>
     </message>
     <message>
         <source>Sign the message to prove you own this Syscoin address</source>
@@ -2466,7 +2466,7 @@
     </message>
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
-        <translation>Introduza o endereço de assinatura, mensagem (assegure-se que copia quebras de linha, espaços, tabulações, etc. exactamente) e assinatura abaixo para verificar a mensagem. Tenha atenção para não ler mais na assinatura do que o que estiver na mensagem assinada, para evitar ser enganado por um atacante que se encontre entre si e quem assinou a mensagem.</translation>
+        <translation>Introduza o endereço de assinatura, mensagem (assegure-se que copia quebras de linha, espaços, tabulações, etc. exatamente) e assinatura abaixo para verificar a mensagem. Tenha atenção para não ler mais na assinatura do que o que estiver na mensagem assinada, para evitar ser enganado por um atacante que se encontre entre si e quem assinou a mensagem.</translation>
     </message>
     <message>
         <source>The Syscoin address the message was signed with</source>
@@ -2615,7 +2615,7 @@
     </message>
     <message>
         <source>watch-only</source>
-        <translation>vigiar apenas</translation>
+        <translation>apenas vigiar</translation>
     </message>
     <message>
         <source>label</source>
@@ -2793,7 +2793,7 @@
     </message>
     <message>
         <source>watch-only</source>
-        <translation>vigiar apenas</translation>
+        <translation>apenas vigiar</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -2817,7 +2817,7 @@
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Se um endereço de monitoração está ou não envolvido nesta transação.</translation>
+        <translation>Se um endereço de apenas vigiar está ou não envolvido nesta transação.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -2940,7 +2940,7 @@
     </message>
     <message>
         <source>Watch-only</source>
-        <translation>Vigiar apenas</translation>
+        <translation>Apenas vigiar</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3118,6 +3118,10 @@
         <translation>Os programadores de %s</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
+        <translation>Não foi possível obter o bloqueio de escrita no da pasta de dados %s. %s provavelmente já está a ser executado.</translation>
+    </message>
+    <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
         <translation>Não é possível fornecer conexões específicas e ter o addrman a procurar conexões de saída ao mesmo tempo.</translation>
     </message>
@@ -3131,7 +3135,7 @@
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
-        <translation>A base de dados de blocos contém um bloco que aparenta ser do futuro. Isto pode ser causado por uma data incorrecta definida no seu computador. Reconstrua apenas a base de dados de blocos caso tenha a certeza de que a data e hora do seu computador estão correctos.</translation>
+        <translation>A base de dados de blocos contém um bloco que aparenta ser do futuro. Isto pode ser causado por uma data incorreta definida no seu computador. Reconstrua apenas a base de dados de blocos caso tenha a certeza de que a data e hora do seu computador estão corretos.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -3167,7 +3171,7 @@
     </message>
     <message>
         <source>Corrupted block database detected</source>
-        <translation>Cadeia de blocos corrompida detectada</translation>
+        <translation>Detetada cadeia de blocos corrompida</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3232,6 +3236,11 @@
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Valor inválido para -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>
+A pasta de blocos especificados "%s" não existe.</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
@@ -3307,7 +3316,7 @@
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
-        <translation>O montante da transacção é demasiado baixo após a dedução da taxa</translation>
+        <translation>O montante da transação é demasiado baixo após a dedução da taxa</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -3346,8 +3355,12 @@
         <translation>Falhou assinatura da transação</translation>
     </message>
     <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>O -walletdir "%s" especificado não é uma pasta</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to pay the fee</source>
-        <translation>O montante da transacção é demasiado baixo para pagar a taxa</translation>
+        <translation>O montante da transação é demasiado baixo para pagar a taxa</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3359,7 +3372,7 @@
     </message>
     <message>
         <source>Transaction too large for fee policy</source>
-        <translation>Transacção demasiado grande para a política de taxas</translation>
+        <translation>Transação demasiado grande para a política de taxas</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3378,6 +3391,10 @@
         <translation>A verificar a(s) carteira(s)...</translation>
     </message>
     <message>
+        <source>Wallet %s resides outside wallet directory %s</source>
+        <translation>A carteira %s reside fora da pasta da carteira %s</translation>
+    </message>
+    <message>
         <source>Warning</source>
         <translation>Aviso</translation>
     </message>
@@ -3391,7 +3408,7 @@
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>-maxtxfee está definido com um valor muito alto! Taxas desta magnitude podem ser pagas numa única transacção.</translation>
+        <translation>-maxtxfee está definido com um valor muito alto! Taxas desta magnitude podem ser pagas numa única transação.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
@@ -3452,6 +3469,10 @@
     <message>
         <source>Insufficient funds</source>
         <translation>Fundos insuficientes</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>Não foi possível escrever na pasta de dados '%s': verifique as permissões.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

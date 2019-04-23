@@ -1,4 +1,4 @@
-﻿Syscoin Core version 0.14.0 is now available from:
+Syscoin Core version 0.14.0 is now available from:
 
   <https://syscoin.org/bin/syscoin-core-0.14.0/>
 
@@ -11,7 +11,7 @@ Please report bugs using the issue tracker at github:
 
 To receive security and update notifications, please subscribe to:
 
-  <https://syscoin.org/en/list/announcements/join/>
+  <https://syscoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
@@ -671,11 +671,11 @@ and git merge commit are mentioned.
 - #9269 `43e8150` Align struct COrphan definition (sipa)
 - #9820 `599c69a` Fix pruning test broken by 2 hour manual prune window (ryanofsky)
 - #9824 `260c71c` qa: Check return code when stopping nodes (MarcoFalke)
-- #9875 `50953c2` tests: Fix dangling pwallet pointer in wallet tests (laanwj)
+- #9875 `50953c2` tests: Fix dangling pwalletMain pointer in wallet tests (laanwj)
 - #9839 `eddaa6b` [qa] Make import-rescan.py watchonly check reliable (ryanofsky)
 
 ### Documentation
-- #8332 `806b9e7` Clarify witness branches in transaction.h serialization (dcousens)
+- #8370 `806b9e7` Clarify witness branches in transaction.h serialization (dcousens)
 - #8935 `0306978` Documentation: Building on Windows with WSL (pooleja)
 - #9144 `c98f6b3` Correct waitforblockheight example help text (fanquake)
 - #9407 `041331e` Added missing colons in when running help command (anditto)

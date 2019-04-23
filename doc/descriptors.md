@@ -1,11 +1,18 @@
 # Support for Output Descriptors in Syscoin Core
 
-Since Syscoin Core v0.17, there is support for Output Descriptors in the
-`scantxoutset` RPC call. This is a simple language which can be used to
-describe collections of output scripts.
+Since Syscoin Core v0.17, there is support for Output Descriptors. This is a
+simple language which can be used to describe collections of output scripts.
+Supporting RPCs are:
+- `scantxoutset` takes as input descriptors to scan for, and also reports
+  specialized descriptors for the matching UTXOs.
+- `getdescriptorinfo` analyzes a descriptor, and reports a canonicalized version
+  with checksum added.
+- `deriveaddresses` takes as input a descriptor and computes the corresponding
+  addresses.
+- `listunspent` outputs a specialized descriptor for the reported unspent outputs.
 
-This document describes the language. For the specifics on usage for scanning
-the UTXO set, see the `scantxoutset` RPC help.
+This document describes the language. For the specifics on usage, see the RPC
+documentation for the functions mentioned above.
 
 ## Features
 
@@ -34,11 +41,12 @@ Output descriptors currently support:
 - `sh(wsh(multi(1,03f28773c2d975288bc7d1d205c3748651b075fbc6610e58cddeeddf8f19405aa8,03499fdf9e895e719cfd64e67f07d38e3226aa7b63678949e6e49b241a60e823e4,02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e)))` describes a P2SH-P2WSH *1-of-3* multisig output with keys in the specified order.
 - `pk(xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8)` describes a P2PK output with the public key of the specified xpub.
 - `pkh(xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw/1'/2)` describes a P2PKH output with child key *1'/2* of the specified xpub.
+- `pkh([d34db33f/44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)` describes a set of P2PKH outputs, but additionally specifies that the specified xpub is a child of a master with fingerprint `d34db33f`, and derived using path `44'/0'/0'`.
 - `wsh(multi(1,xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/*,xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/*))` describes a set of *1-of-2* P2WSH multisig outputs where the first multisig key is the *1/0/`i`* child of the first specified xpub and the second multisig key is the *0/0/`i`* child of the second specified xpub, and `i` is any number in a configurable range (`0-1000` by default).
 
 ## Reference
 
-Descriptors consist of several types of expressions. The top level expression is always a `SCRIPT`.
+Descriptors consist of several types of expressions. The top level expression is either a `SCRIPT`, or `SCRIPT#CHECKSUM` where `CHECKSUM` is an 8-character alphanumeric descriptor checksum.
 
 `SCRIPT` expressions:
 - `sh(SCRIPT)` (top level only): P2SH embed the argument.
@@ -52,19 +60,26 @@ Descriptors consist of several types of expressions. The top level expression is
 - `raw(HEX)` (top level only): the script whose hex encoding is HEX.
 
 `KEY` expressions:
-- Hex encoded public keys (66 characters starting with `02` or `03`, or 130 characters starting with `04`).
-  - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
-- [WIF](https://en.syscoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
--`xpub` encoded extended public key or `xprv` encoded private key (as defined in [BIP 32](https://github.com/syscoin/bips/blob/master/bip-0032.mediawiki)).
-  - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.
-  - Optionally followed by a single `/*` or `/*'` final step to denote all (direct) unhardened or hardened children.
-  - The usage of hardened derivation steps requires providing the private key.
-  - Instead of a `'`, the suffix `h` can be used to denote hardened derivation.
+- Optionally, key origin information, consisting of:
+  - An open bracket `[`
+  - Exactly 8 hex characters for the fingerprint of the key where the derivation starts (see BIP32 for details)
+  - Followed by zero or more `/NUM` or `/NUM'` path elements to indicate unhardened or hardened derivation steps between the fingerprint and the key or xpub/xprv root that follows
+  - A closing bracket `]`
+- Followed by the actual key, which is either:
+  - Hex encoded public keys (either 66 characters starting with `02` or `03` for a compressed pubkey, or 130 characters starting with `04` for an uncompressed pubkey).
+    - Inside `wpkh` and `wsh`, only compressed public keys are permitted.
+  - [WIF](https://en.syscoin.it/wiki/Wallet_import_format) encoded private keys may be specified instead of the corresponding public key, with the same meaning.
+  - `xpub` encoded extended public key or `xprv` encoded extended private key (as defined in [BIP 32](https://github.com/syscoin/bips/blob/master/bip-0032.mediawiki)).
+    - Followed by zero or more `/NUM` unhardened and `/NUM'` hardened BIP32 derivation steps.
+    - Optionally followed by a single `/*` or `/*'` final step to denote all (direct) unhardened or hardened children.
+    - The usage of hardened derivation steps requires providing the private key.
+
+(Anywhere a `'` suffix is permitted to denote hardened derivation, the suffix `h` can be used instead.)
 
 `ADDR` expressions are any type of supported address:
-- P2PKH addresses (base58, of the form `1...`). Note that P2PKH addresses in descriptors cannot be used for P2PK outputs (use the `pk` function instead).
-- P2SH addresses (base58, of the form `3...`, defined in [BIP 13](https://github.com/syscoin/bips/blob/master/bip-0013.mediawiki)).
-- Segwit addresses (bech32, of the form `bc1...`, defined in [BIP 173](https://github.com/syscoin/bips/blob/master/bip-0173.mediawiki)).
+- P2PKH addresses (base58, of the form `1...` for mainnet or `[nm]...` for testnet). Note that P2PKH addresses in descriptors cannot be used for P2PK outputs (use the `pk` function instead).
+- P2SH addresses (base58, of the form `3...` for mainnet or `2...` for testnet, defined in [BIP 13](https://github.com/syscoin/bips/blob/master/bip-0013.mediawiki)).
+- Segwit addresses (bech32, of the form `bc1...` for mainnet or `tb1...` for testnet, defined in [BIP 173](https://github.com/syscoin/bips/blob/master/bip-0173.mediawiki)).
 
 ## Explanation
 
@@ -76,10 +91,9 @@ imaginable, though they may not be optimal: P2SH-P2PK, P2SH-P2PKH,
 P2WSH-P2PK, P2WSH-P2PKH, P2SH-P2WSH-P2PK, P2SH-P2WSH-P2PKH.
 
 To describe these, we model these as functions. The functions `pk`
-(P2PK), `pkh` (P2PKH) and `wpkh` (P2WPKH) take as input a public key in
-hexadecimal notation (which will be extended later), and return the
+(P2PK), `pkh` (P2PKH) and `wpkh` (P2WPKH) take as input a `KEY` expression, and return the
 corresponding *scriptPubKey*. The functions `sh` (P2SH) and `wsh` (P2WSH)
-take as input a script, and return the script describing P2SH and P2WSH
+take as input a `SCRIPT` expression, and return the script describing P2SH and P2WSH
 outputs with the input as embedded script. The names of the functions do
 not contain "p2" for brevity.
 
@@ -88,7 +102,7 @@ not contain "p2" for brevity.
 Several pieces of software use multi-signature (multisig) scripts based
 on Syscoin's OP_CHECKMULTISIG opcode. To support these, we introduce the
 `multi(k,key_1,key_2,...,key_n)` function. It represents a *k-of-n*
-multisig policy, where any *k* out of the *n* provided public keys must
+multisig policy, where any *k* out of the *n* provided `KEY` expressions must
 sign.
 
 Key order is significant. A `multi()` expression describes a multisig script
@@ -116,6 +130,37 @@ Whenever a public key is described using a hardened derivation step, the
 script cannot be computed without access to the corresponding private
 key.
 
+### Key origin identification
+
+In order to describe scripts whose signing keys reside on another device,
+it may be necessary to identify the master key and derivation path an
+xpub was derived with.
+
+For example, when following BIP44, it would be useful to describe a
+change chain directly as `xpub.../44'/0'/0'/1/*` where `xpub...`
+corresponds with the master key `m`. Unfortunately, since there are
+hardened derivation steps that follow the xpub, this descriptor does not
+let you compute scripts without access to the corresponding private keys.
+Instead, it should be written as `xpub.../1/*`, where xpub corresponds to
+`m/44'/0'/0'`.
+
+When interacting with a hardware device, it may be necessary to include
+the entire path from the master down. [BIP174](https://github.com/syscoin/bips/blob/master/bip-0174.mediawiki) standardizes this by
+providing the master key *fingerprint* (first 32 bit of the Hash160 of
+the master pubkey), plus all derivation steps. To support constructing
+these, we permit providing this key origin information inside the
+descriptor language, even though it does not affect the actual
+scriptPubKeys it refers to.
+
+Every public key can be prefixed by an 8-character hexadecimal
+fingerprint plus optional derivation steps (hardened and unhardened)
+surrounded by brackets, identifying the master and derivation path the key or xpub
+that follows was derived with.
+
+Note that the fingerprint of the parent only serves as a fast way to detect
+parent and child nodes in software, and software must be willing to deal with
+collisions.
+
 ### Including private keys
 
 Often it is useful to communicate a description of scripts along with the
@@ -131,3 +176,20 @@ existing Syscoin Core wallets, a convenience function `combo` is
 provided, which takes as input a public key, and describes a set of P2PK,
 P2PKH, P2WPKH, and P2SH-P2WPH scripts for that key. In case the key is
 uncompressed, the set only includes P2PK and P2PKH scripts.
+
+### Checksums
+
+Descriptors can optionally be suffixed with a checksum to protect against
+typos or copy-paste errors.
+
+These checksums consist of 8 alphanumeric characters. As long as errors are
+restricted to substituting characters in `0123456789()[],'/*abcdefgh@:$%{}`
+for others in that set and changes in letter case, up to 4 errors will always
+be detected in descriptors up to 501 characters, and up to 3 errors in longer
+ones. For larger numbers of errors, or other types of errors, there is a
+roughly 1 in a trillion chance of not detecting the errors.
+
+All RPCs in Syscoin Core will include the checksum in their output. Only
+certain RPCs require checksums on input, including `deriveaddress` and
+`importmulti`. The checksum for a descriptor without one can be computed
+using the `getdescriptorinfo` RPC.

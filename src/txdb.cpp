@@ -11,7 +11,7 @@
 #include <pow.h>
 #include <shutdown.h>
 #include <uint256.h>
-#include <util.h>
+#include <util/system.h>
 #include <ui_interface.h>
 
 #include <stdint.h>
@@ -273,12 +273,11 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
-                // SYSCOIN
-                /* Syscoin checks the PoW here.  We don't do this because
+
+               /* Syscoin checks the PoW here.  We don't do this because
                    the CDiskBlockIndex does not contain the auxpow.
                    This check isn't important, since the data on disk should
                    already be valid and can be trusted.  */
-
                 pcursor->Next();
             } else {
                 return error("%s: failed to read value", __func__);

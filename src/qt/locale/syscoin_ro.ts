@@ -501,6 +501,10 @@
         <translation>Schimbă:</translation>
     </message>
     <message>
+        <source>(un)select all</source>
+        <translation>(de)selectează tot</translation>
+    </message>
+    <message>
         <source>Tree mode</source>
         <translation>Mod arbore</translation>
     </message>

@@ -2,7 +2,7 @@
 
 Since Syscoin Core 0.17, an RPC interface exists for Partially Signed Syscoin
 Transactions (PSBTs, as specified in
-[BIP 174](https://github.com/bitcoin/bips/blob/master/bip-0174.mediawiki)).
+[BIP 174](https://github.com/syscoin/bips/blob/master/bip-0174.mediawiki)).
 
 This document describes the overall workflow for producing signed transactions
 through the use of PSBT, and the specific RPC commands used in typical
@@ -14,7 +14,7 @@ PSBT is an interchange format for Syscoin transactions that are not fully signed
 yet, together with relevant metadata to help entities work towards signing it.
 It is intended to simplify workflows where multiple parties need to cooperate to
 produce a transaction. Examples include hardware wallets, multisig setups, and
-[CoinJoin](https://bitcointalk.org/?topic=279249) transactions.
+[CoinJoin](https://syscointalk.org/?topic=279249) transactions.
 
 ### Overall workflow
 
@@ -67,6 +67,9 @@ hardware implementations will typically implement multiple roles simultaneously.
   input a PSBT, adds UTXO, key, and script data to inputs and outputs that miss
   it, and optionally signs inputs. Where possible it also finalizes the partial
   signatures.
+- **`utxoupdatepsbt` (Updater)** is a node RPC that takes a PSBT and updates it
+  to include information available from the UTXO set (works only for SegWit
+  inputs).
 - **`finalizepsbt` (Finalizer, Extractor)** is a utility RPC that finalizes any
   partial signatures, and if all inputs are finalized, converts the result to a
   fully signed transaction which can be broadcast with `sendrawtransaction`.
@@ -74,8 +77,15 @@ hardware implementations will typically implement multiple roles simultaneously.
   can be used at any point in the workflow to merge information added to
   different versions of the same PSBT. In particular it is useful to combine the
   output of multiple Updaters or Signers.
+- **`joinpsbts`** (Creator) is a utility RPC that joins multiple PSBTs together,
+  concatenating the inputs and outputs. This can be used to construct CoinJoin
+  transactions.
 - **`decodepsbt`** is a diagnostic utility RPC which will show all information in
   a PSBT in human-readable form, as well as compute its eventual fee if known.
+- **`analyzepsbt`** is a utility RPC that examines an RPC and reports the
+  next steps in the workflow if known, computes the fee of the resulting
+  transaction, and estimates the weight and feerate if possible.
+
 
 ### Workflows
 

@@ -1,6 +1,6 @@
 OpenBSD build guide
 ======================
-(updated for OpenBSD 6.3)
+(updated for OpenBSD 6.4)
 
 This guide describes how to build syscoind and command-line utilities on OpenBSD.
 
@@ -14,7 +14,7 @@ Run the following as root to install the base dependencies for building:
 ```bash
 pkg_add git gmake libevent libtool boost
 pkg_add autoconf # (select highest version, e.g. 2.69)
-pkg_add automake # (select highest version, e.g. 1.15)
+pkg_add automake # (select highest version, e.g. 1.16)
 pkg_add python # (select highest version, e.g. 3.6)
 
 git clone https://github.com/syscoin/syscoin.git
@@ -36,7 +36,7 @@ BerkeleyDB is only necessary for the wallet functionality. To skip this, pass
 It is recommended to use Berkeley DB 4.8. You cannot use the BerkeleyDB library
 from ports, for the same reason as boost above (g++/libstd++ incompatibility).
 If you have to build it yourself, you can use [the installation script included
-in contrib/](/contrib/install_db4.sh) like so
+in contrib/](/contrib/install_db4.sh) like so:
 
 ```shell
 ./contrib/install_db4.sh `pwd` CC=cc CXX=c++
@@ -60,8 +60,8 @@ Preparation:
 export AUTOCONF_VERSION=2.69
 
 # Replace this with the automake version that you installed. Include only
-# the major and minor parts of the version: use "1.15" for "automake-1.15.1".
-export AUTOMAKE_VERSION=1.15
+# the major and minor parts of the version: use "1.16" for "automake-1.16.1".
+export AUTOMAKE_VERSION=1.16
 
 ./autogen.sh
 ```
@@ -94,7 +94,7 @@ The standard ulimit restrictions in OpenBSD are very strict:
 
     data(kbytes)         1572864
 
-This, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
+This is, unfortunately, in some cases not enough to compile some `.cpp` files in the project,
 (see issue [#6658](https://github.com/syscoin/syscoin/issues/6658)).
 If your user is in the `staff` group the limit can be raised with:
 

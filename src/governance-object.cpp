@@ -531,7 +531,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         return false;   
     }
      
-    if (GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), hash_block, true, blockindex) && blockindex)
+    if (GetTransaction(nCollateralHash, txCollateral, Params().GetConsensus(), hash_block, blockindex))
         nConfirmationsIn = chainActive.Height() - blockindex->nHeight + 1;
     else{
         strError = strprintf("Can't find collateral tx %s", GetCollateralHash().ToString());

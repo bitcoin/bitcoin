@@ -20,9 +20,13 @@ don't have test cases for.
 - Where possible, try to adhere to [PEP-8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 - Use a python linter like flake8 before submitting PRs to catch common style
   nits (eg trailing whitespace, unused imports, etc)
+- The oldest supported Python version is specified in [doc/dependencies.md](/doc/dependencies.md).
+  Consider using [pyenv](https://github.com/pyenv/pyenv), which checks [.python-version](/.python-version),
+  to prevent accidentally introducing modern syntax from an unsupported Python version.
+  The Travis linter also checks this, but [possibly not in all cases](https://github.com/syscoin/syscoin/pull/14884#discussion_r239585126).
 - See [the python lint script](/test/lint/lint-python.sh) that checks for violations that
   could lead to bugs and issues in the test code.
-- Avoid wildcard imports where possible
+- Avoid wildcard imports
 - Use a module-level docstring to describe what the test is testing, and how it
   is testing it.
 - When subclassing the SyscoinTestFramwork, place overrides for the
@@ -39,6 +43,7 @@ don't have test cases for.
     - `mining` for tests for mining features, eg `mining_prioritisetransaction.py`
     - `p2p` for tests that explicitly test the p2p interface, eg `p2p_disconnect_ban.py`
     - `rpc` for tests for individual RPC methods or features, eg `rpc_listtransactions.py`
+    - `tool` for tests for tools, eg `tool_wallet.py`
     - `wallet` for tests for wallet features, eg `wallet_keypool.py`
 - use an underscore to separate words
     - exception: for tests for specific RPCs or command line options which don't include underscores, name the test after the exact RPC or argument name, eg `rpc_decodescript.py`, not `rpc_decode_script.py`
@@ -60,6 +65,11 @@ don't have test cases for.
 - When calling RPCs with lots of arguments, consider using named keyword
   arguments instead of positional arguments to make the intent of the call
   clear to readers.
+- Many of the core test framework classes such as `CBlock` and `CTransaction`
+  don't allow new attributes to be added to their objects at runtime like
+  typical Python objects allow. This helps prevent unpredictable side effects
+  from typographical errors or usage of the objects outside of their intended
+  purpose.
 
 #### RPC and P2P definitions
 
@@ -72,7 +82,7 @@ P2P messages. These can be found in the following source files:
 
 #### Using the P2P interface
 
-- `mininode.py` contains all the definitions for objects that pass
+- `messages.py` contains all the definitions for objects that pass
 over the network (`CBlock`, `CTransaction`, etc, along with the network-level
 wrappers for them, `msg_block`, `msg_tx`, etc).
 
@@ -113,3 +123,36 @@ Helpers for script.py
 
 #### [test_framework/blocktools.py](test_framework/blocktools.py)
 Helper functions for creating blocks and transactions.
+
+### Benchmarking with perf
+
+An easy way to profile node performance during functional tests is provided
+for Linux platforms using `perf`.
+
+Perf will sample the running node and will generate profile data in the node's
+datadir. The profile data can then be presented using `perf report` or a graphical
+tool like [hotspot](https://github.com/KDAB/hotspot).
+
+There are two ways of invoking perf: one is to use the `--perf` flag when
+running tests, which will profile each node during the entire test run: perf
+begins to profile when the node starts and ends when it shuts down. The other
+way is the use the `profile_with_perf` context manager, e.g.
+
+```python
+with node.profile_with_perf("send-big-msgs"):
+    # Perform activity on the node you're interested in profiling, e.g.:
+    for _ in range(10000):
+        node.p2p.send_message(some_large_message)
+```
+
+To see useful textual output, run
+
+```sh
+perf report -i /path/to/datadir/send-big-msgs.perf.data.xxxx --stdio | c++filt | less
+```
+
+#### See also:
+
+- [Installing perf](https://askubuntu.com/q/50145)
+- [Perf examples](http://www.brendangregg.com/perf.html)
+- [Hotspot](https://github.com/KDAB/hotspot): a GUI for perf output analysis

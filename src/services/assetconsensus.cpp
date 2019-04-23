@@ -825,6 +825,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 LOCK(cs_assetallocationarrival);
                 // add conflicting sender
                 assetAllocationConflicts.insert(senderTupleStr);
+                // If we already have this transaction in the arrival map we must have already accepted it, so don't set to overflow.
+                // We return true so that the mempool doesn't remove this transaction erroneously
+                ArrivalTimesMap &arrivalTimes = arrivalTimesMap[senderTupleStr];
+                ArrivalTimesMap::iterator it = arrivalTimes.find(txHash);
+                if (it != arrivalTimes.end()){
+                    LogPrint(BCLog::SYS, "Syscoin ZDAG transaction overflowed but already accepted in mempool, so this transaction acts as a no-op...\n");
+                    return true;
+                }
             }
             if(fJustCheck)
             {

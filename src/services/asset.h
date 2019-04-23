@@ -56,6 +56,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
 UniValue syscointxfund_helper(const std::string& strAddress, const int &nVersion, const std::string &vchWitness, std::vector<CRecipient> &vecSend);
 bool FlushSyscoinDBs();
+void LockMasternodesInDefaultWallet();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);

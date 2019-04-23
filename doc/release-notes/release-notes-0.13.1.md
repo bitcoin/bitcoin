@@ -12,7 +12,7 @@ Please report bugs using the issue tracker at github:
 
 To receive security and update notifications, please subscribe to:
 
-  <https://syscoin.org/en/list/announcements/join/>
+  <https://syscoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============
@@ -159,13 +159,13 @@ For more information about segwit, please see the [segwit FAQ][], the
 operator, please see the [versionbits FAQ][] for information about
 signaling support for a soft fork.
 
-[Segwit FAQ]: https://syscoin.org/en/2016/01/26/segwit-benefits/
-[segwit wallet developers guide]: https://syscoin.org/en/segwit_wallet_dev/
+[Segwit FAQ]: https://syscoincore.org/en/2016/01/26/segwit-benefits/
+[segwit wallet developers guide]: https://syscoincore.org/en/segwit_wallet_dev/
 [BIP141]: https://github.com/syscoin/bips/blob/master/bip-0141.mediawiki
 [BIP143]: https://github.com/syscoin/bips/blob/master/bip-0143.mediawiki
 [BIP144]: https://github.com/syscoin/bips/blob/master/bip-0144.mediawiki
 [BIP145]: https://github.com/syscoin/bips/blob/master/bip-0145.mediawiki
-[versionbits FAQ]: https://syscoin.org/en/2016/06/08/version-bits-miners-faq/
+[versionbits FAQ]: https://syscoincore.org/en/2016/06/08/version-bits-miners-faq/
 
 
 Null dummy soft fork
@@ -296,7 +296,7 @@ git merge commit are mentioned.
 - #7579 `f1c0d78` Show network/chain errors in the GUI (jonasschnelli)
 
 ### Wallet
-- #8443 `464dedd` Trivial cleanup of HD wallet changes (jonasschnelli)
+- #8470 `464dedd` Trivial cleanup of HD wallet changes (jonasschnelli)
 - #8539 `cb07f19` CDB: fix debug output (crowning-)
 - #8664 `091cdeb` Fix segwit-related wallet bug (sdaftuar)
 - #8693 `c6a6291` Add witness address to address book (instagibbs)

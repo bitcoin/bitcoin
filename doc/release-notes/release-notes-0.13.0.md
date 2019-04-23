@@ -11,7 +11,7 @@ Please report bugs using the issue tracker at github:
 
 To receive security and update notifications, please subscribe to:
 
-  <https://syscoin.org/en/list/announcements/join/>
+  <https://syscoincore.org/en/list/announcements/join/>
 
 Compatibility
 ==============

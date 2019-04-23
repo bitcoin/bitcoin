@@ -202,27 +202,7 @@ bool CPubKey::RecoverCompact(const uint256 &hash, const std::vector<unsigned cha
     Set(pub, pub + publen);
     return true;
 }
-bool CPubKey::RecoverEthereum(const int _sig, const unsigned char* hash, const unsigned char* vchSig, unsigned char *serializedPubkey) {
-    int v = _sig;
-    if (v > 3)
-        return false;
-        
-    secp256k1_ecdsa_recoverable_signature rawSig;
-    if (!secp256k1_ecdsa_recoverable_signature_parse_compact(secp256k1_context_verify, &rawSig, vchSig, v))
-        return false;
 
-    secp256k1_pubkey rawPubkey;
-    if (!secp256k1_ecdsa_recover(secp256k1_context_verify, &rawPubkey, &rawSig, hash))
-        return false;
-        
-    size_t publen = CPubKey::PUBLIC_KEY_SIZE;
-    secp256k1_ec_pubkey_serialize(
-            secp256k1_context_verify, serializedPubkey, &publen,
-            &rawPubkey, SECP256K1_EC_UNCOMPRESSED
-    );
-    assert(serializedPubkey[0] == 0x04);
-    return true;
-}
 bool CPubKey::IsFullyValid() const {
     if (!IsValid())
         return false;

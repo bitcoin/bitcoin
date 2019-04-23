@@ -8,7 +8,7 @@
 #include "base58.h"
 #include "timedata.h"
 #include "tinyformat.h"
-#include "utilstrencodings.h"
+#include <util/strencodings.h>
 #include <validation.h>
 #include <key_io.h>
 #include <algorithm>

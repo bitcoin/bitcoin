@@ -7,10 +7,12 @@
 #define SYSCOIN_VALIDATIONINTERFACE_H
 
 #include <primitives/transaction.h> // CTransaction(Ref)
+#include <sync.h>
 
 #include <functional>
 #include <memory>
 
+extern CCriticalSection cs_main;
 class CBlock;
 class CBlockIndex;
 struct CBlockLocator;
@@ -51,7 +53,7 @@ void CallFunctionInValidationInterfaceQueue(std::function<void ()> func);
  *     });
  *     promise.get_future().wait();
  */
-void SyncWithValidationInterfaceQueue();
+void SyncWithValidationInterfaceQueue() LOCKS_EXCLUDED(cs_main);
 
 /**
  * Implement this to subscribe to events generated in validation
@@ -132,8 +134,6 @@ protected:
      * Called on a background thread.
      */
     virtual void ChainStateFlushed(const CBlockLocator &locator) {}
-    /** Tells listeners to broadcast their data. */
-    virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     /**
      * Notifies listeners of a block validation result.
      * If the provided CValidationState IsValid, the provided block
@@ -145,13 +145,13 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    friend void ::RegisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterValidationInterface(CValidationInterface*);
+    friend void ::UnregisterAllValidationInterfaces();
     // SYSCOIN
     virtual void NotifySyscoinUpdate(const char *value, const char *topic) {}
     virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
     virtual void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
-    friend void ::RegisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterValidationInterface(CValidationInterface*);
-    friend void ::UnregisterAllValidationInterfaces();
 };
 
 struct MainSignalsInstance;
@@ -186,7 +186,6 @@ public:
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>> &);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &);
     void ChainStateFlushed(const CBlockLocator &);
-    void Broadcast(int64_t nBestBlockTime, CConnman* connman);
     void BlockChecked(const CBlock&, const CValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
     // SYSCOIN
@@ -194,7 +193,7 @@ public:
     /** Notifies listeners of accepted block header */
     void AcceptedBlockHeader(const CBlockIndex *);
     /** Notifies listeners of updated block header tip */
-    void NotifyHeaderTip(const CBlockIndex *, bool fInitialDownload);    
+    void NotifyHeaderTip(const CBlockIndex *, bool fInitialDownload);   
 };
 
 CMainSignals& GetMainSignals();

@@ -227,6 +227,10 @@
 <context>
     <name>BanTableModel</name>
     <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmasker</translation>
+    </message>
+    <message>
         <source>Banned Until</source>
         <translation>Verban Tot</translation>
     </message>
@@ -330,6 +334,14 @@
         <translation>Klik om netwerk aktiwiteit weer aan te skakel.</translation>
     </message>
     <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>Sinkroniseer tans Hoofde (%1%)...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>Herindekseer blokke op skyf...</translation>
+    </message>
+    <message>
         <source>Send coins to a Syscoin address</source>
         <translation>Stuur muntstukke na 'n Syscoin adres</translation>
     </message>
@@ -344,6 +356,10 @@
     <message>
         <source>&amp;Debug window</source>
         <translation>&amp;Ontfoutvenster</translation>
+    </message>
+    <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>Open ontfouting en diagnostiese konsole</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -414,8 +430,20 @@
         <translation>Wys die lys van gebruikte ontvangsadresse en etikette</translation>
     </message>
     <message>
+        <source>Open a syscoin: URI or payment request</source>
+        <translation>Open 'n syscoin: URI of betalingsversoek</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Opdrag lys opsies</translation>
+    </message>
+    <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>Indekseer tans blokke op skyf...</translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>Prosesseer tans blokke op skyf...</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -424,6 +452,10 @@
     <message>
         <source>Last received block was generated %1 ago.</source>
         <translation>Ontvangs van laaste blok is %1 terug.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Opvolgende transaksies sal nog nie sigbaar wees nie.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -442,8 +474,16 @@
         <translation>Op datum</translation>
     </message>
     <message>
+        <source>Show the %1 help message to get a list with possible Syscoin command-line options</source>
+        <translation>Wys die %1 hulpboodskap om 'n lys met moontlike Syscoin bevel-lyn opsies te verkry</translation>
+    </message>
+    <message>
         <source>%1 client</source>
         <translation>%1 klient</translation>
+    </message>
+    <message>
+        <source>Connecting to peers...</source>
+        <translation>Verbind tans aan eweknieë...</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -468,10 +508,20 @@
 </translation>
     </message>
     <message>
+        <source>Label: %1
+</source>
+        <translation>Etiket: %1
+</translation>
+    </message>
+    <message>
         <source>Address: %1
 </source>
         <translation>Adres: %1
 </translation>
+    </message>
+    <message>
+        <source>Sent transaction</source>
+        <translation>Gestuurde transaksie</translation>
     </message>
     <message>
         <source>Incoming transaction</source>
@@ -493,7 +543,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Beursie is &lt;b&gt;versleutel&lt;/b&gt; en is tans &lt;b&gt;gesluit&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. Syscoin can no longer continue safely and will quit.</source>
+        <translation>'n Noodlottige fout het voorgekom. Syscoin kan nie langer voortgaan nie en sal afsluit.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -521,8 +575,16 @@
         <translation>Stof:</translation>
     </message>
     <message>
+        <source>After Fee:</source>
+        <translation>Na Fooi:</translation>
+    </message>
+    <message>
         <source>Change:</source>
         <translation>Verander:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>(on)selekteer alles</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -617,6 +679,14 @@
         <translation>nee</translation>
     </message>
     <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>Hierdie etiket verander na rooi as enige ontvanger 'n bedrag kleiner as die huidige stof drempelwaarde ontvang.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Kan wissel met +/- %1 satoshi(s) per inset.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(geen etiket)</translation>
     </message>
@@ -640,6 +710,14 @@
         <translation>&amp;Etiket</translation>
     </message>
     <message>
+        <source>The label associated with this address list entry</source>
+        <translation>Die etiket geassosieer met hierdie adreslys inskrywing</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>Die adres geassosieer met hierdie adreslys inskrywing. Dié kan slegs gewysig word vir stuur-adresse.</translation>
+    </message>
+    <message>
         <source>&amp;Address</source>
         <translation>&amp;Adres</translation>
     </message>
@@ -654,6 +732,10 @@
     <message>
         <source>Edit sending address</source>
         <translation>Wysig stuurende adres</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is not a valid Syscoin address.</source>
+        <translation>Die ingeskrewe adres "%1" is nie 'n geldige Syscoin adres nie.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -677,6 +759,10 @@
     <message>
         <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
         <translation>Lêer bestaan reeds. Voeg %1 indien u van plan is om n nuwe lêer hier te skep.</translation>
+    </message>
+    <message>
+        <source>Path already exists, and is not a directory.</source>
+        <translation>Pad bestaan reeds en is nie 'n lêergids nie.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -969,6 +1055,10 @@
     <message>
         <source>Fee:</source>
         <translation>Fooi:</translation>
+    </message>
+    <message>
+        <source>After Fee:</source>
+        <translation>Na Fooi:</translation>
     </message>
     <message>
         <source>Change:</source>
