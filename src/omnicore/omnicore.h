@@ -157,6 +157,13 @@ int mastercore_handler_block_begin(int nBlockNow, CBlockIndex const * pBlockInde
 int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex, unsigned int);
 bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx, const CBlockIndex* pBlockIndex);
 
+/** Scans for marker and if one is found, add transaction to marker cache. */
+void TryToAddToMarkerCache(const CTransaction& tx);
+/** Removes transaction from marker cache. */
+void RemoveFromMarkerCache(const CTransaction& tx);
+/** Checks, if transaction is in marker cache. */
+bool IsInMarkerCache(const uint256& txHash);
+
 /** Global handler to total wallet balances. */
 void CheckWalletUpdate(bool forceUpdate = false);
 

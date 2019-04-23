@@ -2086,6 +2086,10 @@ UniValue omni_listpendingtransactions(const UniValue& params, bool fHelp)
 
     UniValue result(UniValue::VARR);
     BOOST_FOREACH(const uint256& hash, vTxid) {
+        if (!IsInMarkerCache(hash)) {
+            continue;
+        }
+
         UniValue txObj(UniValue::VOBJ);
         if (populateRPCTransactionObject(hash, txObj, filterAddress) == 0) {
             result.push_back(txObj);

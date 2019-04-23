@@ -677,6 +677,74 @@ static bool TXExodusFundraiser(const CTransaction& tx, const std::string& sender
     return false;
 }
 
+//! Cache for potential Omni Layer transactions
+static std::set<uint256> setMarkerCache;
+
+//! Guards marker cache
+static CCriticalSection cs_marker_cache;
+
+/**
+ * Checks, if transaction has any Omni marker.
+ *
+ * Note: this may include invalid or malformed Omni Layer transactions!
+ *
+ * MUST NOT BE USED FOR CONSENSUS CRITICAL STUFF!
+ */
+static bool HasMarkerUnsafe(const CTransaction& tx)
+{
+    const std::string strClassC("6f6d6e69");
+    const std::string strClassAB("76a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac");
+    const std::string strClassABTest("76a914643ce12b1590633077b8620316f43a9362ef18e588ac");
+    const std::string strClassMoney("76a9145ab93563a289b74c355a9b9258b86f12bb84affb88ac");
+
+    for (unsigned int n = 0; n < tx.vout.size(); ++n) {
+        const CTxOut& out = tx.vout[n];
+        std::string str = HexStr(out.scriptPubKey.begin(), out.scriptPubKey.end());
+
+        if (str.find(strClassC) != std::string::npos) {
+            return true;
+        }
+
+        if (MainNet()) {
+            if (str == strClassAB) {
+                return true;
+            }
+        } else {
+            if (str == strClassABTest) {
+                return true;
+            }
+            if (str == strClassMoney) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/** Scans for marker and if one is found, add transaction to marker cache. */
+void TryToAddToMarkerCache(const CTransaction& tx)
+{
+    if (HasMarkerUnsafe(tx)) {
+        LOCK(cs_marker_cache);
+        setMarkerCache.insert(tx.GetHash());
+    }
+}
+
+/** Removes transaction from marker cache. */
+void RemoveFromMarkerCache(const CTransaction& tx)
+{
+    LOCK(cs_marker_cache);
+    setMarkerCache.erase(tx.GetHash());
+}
+
+/** Checks, if transaction is in marker cache. */
+bool IsInMarkerCache(const uint256& txHash)
+{
+    LOCK(cs_marker_cache);
+    return (setMarkerCache.find(txHash) != setMarkerCache.end());
+}
+
 /**
  * Returns the encoding class, used to embed a payload.
  *
