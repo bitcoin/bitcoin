@@ -408,14 +408,15 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
+static boost::signals2::connection rpc_notify_block_change_connection;
 static void OnRPCStarted()
 {
-    uiInterface.NotifyBlockTip_connect(&RPCNotifyBlockChange);
+    rpc_notify_block_change_connection = uiInterface.NotifyBlockTip_connect(&RPCNotifyBlockChange);
 }
 
 static void OnRPCStopped()
 {
-    uiInterface.NotifyBlockTip_disconnect(&RPCNotifyBlockChange);
+    rpc_notify_block_change_connection.disconnect();
     RPCNotifyBlockChange(false, nullptr);
     g_best_block_cv.notify_all();
     LogPrint(BCLog::RPC, "RPC stopped.\n");
@@ -1869,8 +1870,9 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.
     // No locking, as this happens before any background thread is started.
+    boost::signals2::connection block_notify_genesis_wait_connection;
     if (chainActive.Tip() == nullptr) {
-        uiInterface.NotifyBlockTip_connect(BlockNotifyGenesisWait);
+        block_notify_genesis_wait_connection = uiInterface.NotifyBlockTip_connect(BlockNotifyGenesisWait);
     } else {
         fHaveGenesis = true;
     }
@@ -1894,7 +1896,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         while (!fHaveGenesis && !ShutdownRequested()) {
             g_genesis_wait_cv.wait_for(lock, std::chrono::milliseconds(500));
         }
-        uiInterface.NotifyBlockTip_disconnect(BlockNotifyGenesisWait);
+        block_notify_genesis_wait_connection.disconnect();
     }
     // SYSCOIN
     fUnitTest = gArgs.GetBoolArg("-unittest", false);
