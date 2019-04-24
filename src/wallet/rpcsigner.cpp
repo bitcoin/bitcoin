@@ -13,6 +13,10 @@
 #include <script/descriptor.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <util/fees.h>
+#include <util/moneystr.h>
+#include <wallet/coincontrol.h>
+#include <wallet/feebumper.h>
 #include <wallet/psbtwallet.h>
 #include <wallet/rpcdump.h>
 #include <wallet/rpcsigner.h>
@@ -88,6 +92,176 @@ ExternalSigner *GetSignerForJSONRPCRequest(const JSONRPCRequest& request, int in
     }
     throw JSONRPCError(RPC_WALLET_ERROR, "Signer fingerprint not found");
 }
+
+UniValue signerbumpfee(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3) {
+        throw std::runtime_error(
+            RPCHelpMan{"signerbumpfee",
+                "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
+                "See bumpfee documentation for more details.\n",
+                {
+                    {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The txid to be bumped"},
+                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                        {
+                            {"confTarget", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
+                            {"feeRate", RPCArg::Type::AMOUNT, /* default */ "not set: makes wallet determine the fee", "Set a specific fee rate in " + CURRENCY_UNIT + "/kB"},
+                            {"replaceable", RPCArg::Type::BOOL, /* default */ "true", "Whether the new transaction should still be\n"
+            "                         marked bip-125 replaceable."},
+                            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
+            "         \"UNSET\"\n"
+            "         \"ECONOMICAL\"\n"
+            "         \"CONSERVATIVE\""},
+                        },
+                        "options"},
+                    {"fingerprint", RPCArg::Type::STR, /* default_val */ "", "master key fingerprint of signer"},
+                },
+                RPCResult{
+            "{\n"
+            "  \"txid\":    \"value\",   (string)  The id of the new transaction\n"
+            "  \"origfee\":  n,         (numeric) Fee of the replaced transaction\n"
+            "  \"fee\":      n,         (numeric) Fee of the new transaction\n"
+            "  \"errors\":  [ str... ] (json array of strings) Errors encountered during processing (may be empty)\n"
+            "}\n"
+                },
+                RPCExamples{
+            "\nBump the fee, get the new transaction\'s txid\n" +
+                    HelpExampleCli("signerbumpfee", "<txid>")
+                },
+            }.ToString());
+    }
+
+    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});
+    uint256 hash(ParseHashV(request.params[0], "txid"));
+
+    CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = true;
+    coin_control.m_signal_bip125_rbf = true;
+    if (!request.params[1].isNull()) {
+        UniValue options = request.params[1];
+        RPCTypeCheckObj(options,
+            {
+                {"confTarget", UniValueType(UniValue::VNUM)},
+                {"feeRate", UniValueType(UniValue::VNUM)},
+                {"replaceable", UniValueType(UniValue::VBOOL)},
+                {"estimate_mode", UniValueType(UniValue::VSTR)},
+            },
+            true, true);
+
+        if (options.exists("confTarget") && options.exists("feeRate")) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "confTarget and feeRate options should not both be set. Please provide either a confirmation target for fee estimation or an explicit fee rate for the transaction.");
+        } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
+            coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
+        } else if (options.exists("feeRate")) {
+            coin_control.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coin_control.fOverrideFeeRate = true;
+        }
+
+        if (options.exists("replaceable")) {
+            coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
+        }
+        if (options.exists("estimate_mode")) {
+            if (!FeeModeFromString(options["estimate_mode"].get_str(), coin_control.m_fee_mode)) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
+            }
+        }
+    }
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
+
+
+    std::vector<std::string> errors;
+    CAmount old_fee;
+    CAmount new_fee;
+    CMutableTransaction mtx;
+    feebumper::Result res;
+    res = feebumper::CreateRateBumpTransaction(pwallet, hash, coin_control, errors, old_fee, new_fee, mtx);
+    if (res != feebumper::Result::OK) {
+        switch(res) {
+            case feebumper::Result::INVALID_ADDRESS_OR_KEY:
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errors[0]);
+                break;
+            case feebumper::Result::INVALID_REQUEST:
+                throw JSONRPCError(RPC_INVALID_REQUEST, errors[0]);
+                break;
+            case feebumper::Result::INVALID_PARAMETER:
+                throw JSONRPCError(RPC_INVALID_PARAMETER, errors[0]);
+                break;
+            case feebumper::Result::WALLET_ERROR:
+                throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
+                break;
+            default:
+                throw JSONRPCError(RPC_MISC_ERROR, errors[0]);
+                break;
+        }
+    }
+
+    // Make a blank psbt
+    PartiallySignedTransaction psbtx(mtx);
+
+    // Fill transaction with out data but don't sign
+    bool complete_dummy;
+
+    TransactionError fill_psbt_error = FillPSBT(pwallet, psbtx, complete_dummy, 1, false, true);
+    if (fill_psbt_error != TransactionError::OK) {
+        throw JSONRPCTransactionError(fill_psbt_error);
+    }
+
+    // TODO: if more than one signer is known and no fingerprint argument is present,
+    //       loop through inputs to find a matching fingerprint.
+    ExternalSigner *signer = GetSignerForJSONRPCRequest(request, 2, pwallet);
+
+    // Send to signer and process result
+    std::string error;
+    if( !signer->signTransaction(psbtx, error)) throw JSONRPCError(RPC_WALLET_ERROR, error);
+
+    CMutableTransaction mtx_out;
+    bool complete = FinalizeAndExtractPSBT(psbtx, mtx_out);
+
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+
+    UniValue result(UniValue::VOBJ);
+
+    if (complete) {
+        // CTransactionRef tx(MakeTransactionRef(std::move(mtx_out)));
+        // commit the bumped transaction
+        uint256 txid;
+        if (feebumper::CommitTransaction(pwallet, hash, std::move(mtx_out), errors, txid) != feebumper::Result::OK) {
+            throw JSONRPCError(RPC_WALLET_ERROR, errors[0]);
+        }
+        result.pushKV("txid", txid.GetHex());
+    } else {
+        // Add PSBT to result so the user can pass it on
+        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+        ssTx << psbtx;
+        result.pushKV("psbt", EncodeBase64(ssTx.str()));
+    }
+
+    result.pushKV("fee", ValueFromAmount(new_fee));
+    result.pushKV("origfee", ValueFromAmount(old_fee));
+    result.pushKV("complete", complete);
+
+    UniValue result_errors(UniValue::VARR);
+    for (const std::string& error : errors) {
+        result_errors.push_back(error);
+    }
+    result.pushKV("errors", result_errors);
+
+    return result;
+}
+
 
 UniValue signerdissociate(const JSONRPCRequest& request)
 {
@@ -596,6 +770,7 @@ static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
     { "signer",             "enumeratesigners",                 &enumeratesigners,              {} },
+    { "signer",             "signerbumpfee",                    &signerbumpfee,                 {"txid", "options", "fingerprint"} },
     { "signer",             "signerdissociate",                 &signerdissociate,              {"fingerprint"} },
     { "signer",             "signerdisplayaddress",             &signerdisplayaddress,          {"address", "fingerprint"} },
     { "signer",             "signerfetchkeys",                  &signerfetchkeys,               {"account", "fingerprint"} },

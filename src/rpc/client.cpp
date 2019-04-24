@@ -109,6 +109,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "walletcreatefundedpsbt", 4, "bip32derivs" },
     { "walletprocesspsbt", 1, "sign" },
     { "walletprocesspsbt", 3, "bip32derivs" },
+    { "signerbumpfee", 1, "options" },
     { "signerfetchkeys", 0, "account" },
     { "signersend", 0, "inputs" },
     { "signersend", 1, "outputs" },
