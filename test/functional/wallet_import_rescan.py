@@ -64,10 +64,11 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             }], {"rescan": self.rescan in (Rescan.yes, Rescan.late_timestamp)})
             assert_equal(response, [{"success": True}])
 
-    def check(self, txid=None, amount=None, confirmations=None):
+    def check(self, txid=None, amount=None, confirmation_height=None):
         """Verify that listtransactions/listreceivedbyaddress return expected values."""
 
         txs = self.node.listtransactions(label=self.label, count=10000, include_watchonly=True)
+        current_height = self.node.getblockcount()
         assert_equal(len(txs), self.expected_txs)
 
         addresses = self.node.listreceivedbyaddress(minconf=0, include_watchonly=True, address_filter=self.address['address'])
@@ -82,13 +83,13 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             assert_equal(tx["category"], "receive")
             assert_equal(tx["label"], self.label)
             assert_equal(tx["txid"], txid)
-            assert_equal(tx["confirmations"], confirmations)
+            assert_equal(tx["confirmations"], 1 + current_height - confirmation_height)
             assert_equal("trusted" not in tx, True)
 
             address, = [ad for ad in addresses if txid in ad["txids"]]
             assert_equal(address["address"], self.address["address"])
             assert_equal(address["amount"], self.expected_balance)
-            assert_equal(address["confirmations"], confirmations)
+            assert_equal(address["confirmations"], 1 + current_height - confirmation_height)
             # Verify the transaction is correctly marked watchonly depending on
             # whether the transaction pays to an imported public key or
             # imported private key. The test setup ensures that transaction
@@ -151,13 +152,16 @@ class ImportRescanTest(BitcoinTestFramework):
             variant.key = self.nodes[1].dumpprivkey(variant.address["address"])
             variant.initial_amount = 1 - (i + 1) / 64
             variant.initial_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.initial_amount)
+            self.nodes[0].generate(1)  # Generate one block for each send
+            variant.confirmation_height = self.nodes[0].getblockcount()
+            variant.timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
 
-        # Generate a block containing the initial transactions, then another
-        # block further in the future (past the rescan window).
-        self.nodes[0].generate(1)
+        # Generate a block further in the future (past the rescan window).
         assert_equal(self.nodes[0].getrawmempool(), [])
-        timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
-        set_node_times(self.nodes, timestamp + TIMESTAMP_WINDOW + 1)
+        set_node_times(
+            self.nodes,
+            self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"] + TIMESTAMP_WINDOW + 1,
+        )
         self.nodes[0].generate(1)
         self.sync_all()
 
@@ -167,11 +171,11 @@ class ImportRescanTest(BitcoinTestFramework):
             self.log.info('Run import for variant {}'.format(variant))
             expect_rescan = variant.rescan == Rescan.yes
             variant.node = self.nodes[2 + IMPORT_NODES.index(ImportNode(variant.prune, expect_rescan))]
-            variant.do_import(timestamp)
+            variant.do_import(variant.timestamp)
             if expect_rescan:
                 variant.expected_balance = variant.initial_amount
                 variant.expected_txs = 1
-                variant.check(variant.initial_txid, variant.initial_amount, 2)
+                variant.check(variant.initial_txid, variant.initial_amount, variant.confirmation_height)
             else:
                 variant.expected_balance = 0
                 variant.expected_txs = 0
@@ -181,9 +185,9 @@ class ImportRescanTest(BitcoinTestFramework):
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.sent_amount = 1 - (2 * i + 1) / 128
             variant.sent_txid = self.nodes[0].sendtoaddress(variant.address["address"], variant.sent_amount)
+            self.nodes[0].generate(1)  # Generate one block for each send
+            variant.confirmation_height = self.nodes[0].getblockcount()
 
-        # Generate a block containing the new transactions.
-        self.nodes[0].generate(1)
         assert_equal(self.nodes[0].getrawmempool(), [])
         self.sync_all()
 
@@ -192,7 +196,7 @@ class ImportRescanTest(BitcoinTestFramework):
             self.log.info('Run check for variant {}'.format(variant))
             variant.expected_balance += variant.sent_amount
             variant.expected_txs += 1
-            variant.check(variant.sent_txid, variant.sent_amount, 1)
+            variant.check(variant.sent_txid, variant.sent_amount, variant.confirmation_height)
 
 if __name__ == "__main__":
     ImportRescanTest().main()
