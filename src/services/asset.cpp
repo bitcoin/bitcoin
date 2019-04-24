@@ -1393,7 +1393,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 
 	CAsset dbAsset;
 	if (!GetAsset(asset.nAsset, dbAsset))
-        dbAsset = asset;
+        dbAsset.nPrecision = asset.nPrecision;
     
     int nHeight = 0;
     uint256 hash_block;
