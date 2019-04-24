@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 
 // Test different ways settings can be merged, and verify results. This test can
 // be used to confirm that updates to settings code don't change behavior
-// unintentially.
+// unintentionally.
 //
 // The test covers:
 //
@@ -687,7 +687,7 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
 // Regression test covering different ways config settings can be merged. The
 // test parses and merges settings, representing the results as strings that get
 // compared against an expected hash. To debug, the result strings can be dumped
-// to a file (see below).
+// to a file (see comments below).
 BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
 {
     CHash256 out_sha;
@@ -706,7 +706,7 @@ BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
         desc += network;
         parser.m_network = network;
 
-        const std::string& name = net_specific ? "server" : "wallet";
+        const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
         parser.AddArg(key, name, false, OptionsCategory::OPTIONS);
         if (net_specific) parser.SetNetworkOnlyArg(key);
@@ -801,7 +801,7 @@ BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "80964e17fbd3c5569d3c824d032e28e2d319ef57494735b0e76eb7aad9957f2c");
+    BOOST_CHECK_EQUAL(out_sha_hex, "f4281d9bff4c0b398ff118386e3a40caa6bac7645e17b296d6a10b95bff632ae");
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
