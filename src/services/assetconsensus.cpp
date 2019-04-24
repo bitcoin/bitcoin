@@ -1195,7 +1195,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     const bool & mapAssetNotFound = result.second; 
     if (mapAssetNotFound)
     {
-        if(!GetAsset(nAsset, dbAsset)){
+        if (!GetAsset(nAsset, dbAsset)){
             if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2024 - " + _("Failed to read from asset DB");
                 return error(errorMessage.c_str());
