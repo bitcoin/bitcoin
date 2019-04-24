@@ -137,7 +137,6 @@ SYSCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
-  test/script_p2sh_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -156,7 +155,7 @@ SYSCOIN_TESTS =\
   test/util_tests.cpp \
   test/versionbits_tests.cpp
 # FIXME: Update and re-enable these tests:
-#   miner_tests txvalidationcache_tests validation_block_tests key_io_tests
+#   script_p2sh_tests miner_tests txvalidationcache_tests validation_block_tests key_io_tests
 
 if ENABLE_PROPERTY_TESTS
 SYSCOIN_TESTS += \
