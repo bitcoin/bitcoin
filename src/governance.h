@@ -17,8 +17,6 @@
 #include "governance-vote.h"
 #include "net.h"
 #include "sync.h"
-#include "timedata.h"
-#include "util.h"
 
 #include <univalue.h>
 

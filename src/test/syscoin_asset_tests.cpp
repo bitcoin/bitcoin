@@ -5,7 +5,6 @@
 #include "test/test_syscoin_services.h"
 #include <test/data/ethspv_valid.json.h>
 #include <util/time.h>
-#include "util.h"
 #include "rpc/server.h"
 #include "services/asset.h"
 #include "base58.h"

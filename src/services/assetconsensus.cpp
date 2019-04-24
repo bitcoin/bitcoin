@@ -5,7 +5,6 @@
 #include <services/assetconsensus.h>
 #include "init.h"
 #include "validation.h"
-#include "util.h"
 #include "core_io.h"
 #include "wallet/wallet.h"
 #include "wallet/rpcwallet.h"

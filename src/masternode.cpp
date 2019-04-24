@@ -14,7 +14,6 @@
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "script/standard.h"
-#include "util.h"
 #include <shutdown.h>
 #include <key_io.h>
 #ifdef ENABLE_WALLET
@@ -22,7 +21,7 @@
 #endif // ENABLE_WALLET
 #include <boost/lexical_cast.hpp>
 #include <outputtype.h>
-
+#include <rpc/util.h>
 CMasternode::CMasternode() :
     masternode_info_t{ MASTERNODE_PRE_ENABLED, MIN_PEER_PROTO_VERSION, GetAdjustedTime(), 0}
 {}

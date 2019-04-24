@@ -14,7 +14,6 @@
 #include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "rpc/server.h"
-#include "util.h"
 #include <util/moneystr.h>
 #include <key_io.h>
 #include <fstream>
@@ -22,6 +21,7 @@
 #include <univalue.h>
 #include "wallet/wallet.h"
 #include "wallet/rpcwallet.h"
+#include <rpc/util.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 
 bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException);

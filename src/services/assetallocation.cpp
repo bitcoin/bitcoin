@@ -5,7 +5,6 @@
 #include "init.h"
 #include "validation.h"
 #include "txmempool.h"
-#include "util.h"
 #include "core_io.h"
 #include "wallet/wallet.h"
 #include "wallet/rpcwallet.h"

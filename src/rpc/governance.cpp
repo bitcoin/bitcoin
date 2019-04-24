@@ -19,7 +19,6 @@
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "rpc/server.h"
-#include "util.h"
 #include <util/moneystr.h>
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -27,6 +26,7 @@
 #include <wallet/coincontrol.h>
 #endif // ENABLE_WALLET
 #include <core_io.h>
+#include <rpc/util.h>
 bool EnsureWalletIsAvailable(bool avoidException);
 UniValue getgovernanceinfo(const JSONRPCRequest& request);
 UniValue getsuperblockbudget(const JSONRPCRequest& request);

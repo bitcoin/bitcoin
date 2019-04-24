@@ -15,7 +15,6 @@
 #include "key.h"
 #include "net.h"
 #include "sync.h"
-#include "util.h"
 #include <util/strencodings.h>
 
 #include <univalue.h>
