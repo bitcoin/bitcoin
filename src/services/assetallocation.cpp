@@ -531,8 +531,8 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             "\nExamples:\n"
             + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
             + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
-            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
-            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\', \"\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\", \"\"")
             );
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();

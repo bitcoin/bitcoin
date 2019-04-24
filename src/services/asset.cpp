@@ -601,7 +601,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
             "]\n"
 			"\nExamples:\n"
 			+ HelpExampleCli("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
-			+ HelpExampleRpc("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" 0")
+			+ HelpExampleRpc("syscointxfund", "<hexstring>, \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\", 0")
 			+ HelpRequiringPassphrase(pwallet));
 	const string &hexstring = params[0].get_str();
     const string &strAddress = params[1].get_str();
@@ -854,6 +854,23 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
             "\nArguments:\n"
 			"1. <hexstring>     (string, required) The transaction hex string.\n"
             "\nResult:\n"
+            "{\n"
+            "  \"txtype\" : \"txtype\",         (string) The syscoin transaction type\n"
+            "  \"_id\" : \"id\",                (string) The identifier\n"
+            "  \"txid\" : \"id\",               (string) The transaction id\n"
+            "  \"height\" : n,                (numeric) The blockheight of the transaction \n"
+            "  \"asset\" : n,                 (numeric) The asset guid\n"
+            "  \"sender\" : \"address\",        (string) The address of the sender\n"
+            "  \"allocations\" : [            (array of json objects)\n"
+            "    {\n"
+            "      \"address\": \"address\",    (string) The address of the receiver\n"
+            "      \"amount\" : n,            (numeric) The amount of the transaction\n"
+            "    },\n"
+            "    ...\n"
+            "  ]\n"
+            "  \"total\" : n,                 (numeric) The total amount in this transaction\n"
+            "  \"confirmed\" : true|false     (boolean) If the transaction is confirmed\n"
+            "}\n"
             "\nExamples:\n"
             + HelpExampleCli("syscoindecoderawtransaction", "\"hexstring\"")
             + HelpExampleRpc("syscoindecoderawtransaction", "\"hexstring\"")
@@ -1173,7 +1190,18 @@ UniValue addressbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 1)
         throw runtime_error(
-            "addressbalance [address]\n");
+            "addressbalance <address>\n"
+            "\nShow the Syscoin balance of an address\n"
+            "\nArguments:\n"
+            "1. <address>           (string, required) Address to holding the balance\n"
+            "\nResult:\n"
+            "[\n"
+            "  <balance>            (numeric) Syscoin balance of the address\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("addressbalance", "\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"")
+            + HelpExampleRpc("addressbalance", "\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"")
+            );
     string address = params[0].get_str();
     UniValue res(UniValue::VARR);
     res.push_back(ValueFromAmount(getaddressbalance(address)));
@@ -1372,8 +1400,8 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
             "\nExamples:\n"
             + HelpExampleCli("assetsendmany", "\"assetguid\" '[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
             + HelpExampleCli("assetsendmany", "\"assetguid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
-            + HelpExampleRpc("assetsendmany", "\"assetguid\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
-            + HelpExampleRpc("assetsendmany", "\"assetguid\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
+            + HelpExampleRpc("assetsendmany", "\"assetguid\",\'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
+            + HelpExampleRpc("assetsendmany", "\"assetguid\",\"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
             );
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
