@@ -1392,7 +1392,8 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 		return false;
 
 	CAsset dbAsset;
-	GetAsset(asset.nAsset, dbAsset);
+	if (!GetAsset(asset.nAsset, dbAsset))
+        dbAsset = asset;
     
     int nHeight = 0;
     uint256 hash_block;
@@ -1833,7 +1834,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }
     if(!assetVal.isNull()) {
         CAsset asset;
-        if(!GetAsset(assetVal.get_int(), asset))
+        if (!GetAsset(assetVal.get_int(), asset))
              throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
         if(asset.vchContract.empty())
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
