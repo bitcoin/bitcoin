@@ -13,7 +13,6 @@
 #include "netfulfilledman.h"
 #include "netmessagemaker.h"
 #include "spork.h"
-#include "util.h"
 #include <outputtype.h>
 #include <boost/lexical_cast.hpp>
 #include <net_processing.h>

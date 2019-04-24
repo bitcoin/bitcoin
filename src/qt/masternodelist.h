@@ -4,7 +4,6 @@
 #include "primitives/transaction.h"
 #include "platformstyle.h"
 #include "sync.h"
-#include "util.h"
 #include <interfaces/wallet.h>
 
 #include <QMenu>

@@ -10,7 +10,6 @@
 #include "clientversion.h"
 #include "hash.h"
 #include "streams.h"
-#include "util.h"
 
 #include <boost/filesystem.hpp>
 

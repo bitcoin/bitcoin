@@ -16,7 +16,6 @@
 #include "netmessagemaker.h"
 #include "script/standard.h"
 #include "ui_interface.h"
-#include "util.h"
 #include "warnings.h"
 #include <shutdown.h>
 #include <outputtype.h>

@@ -12,7 +12,6 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
-#include "util.h"
 #include <services/assetconsensus.h>
 #include <univalue.h>
 

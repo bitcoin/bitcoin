@@ -3,7 +3,6 @@
 #include <test/data/ethspv_invalid.json.h>
 
 #include "uint256.h"
-#include "util.h"
 #include <util/strencodings.h>
 #include "ethereum/ethereum.h"
 #include "ethereum/Common.h"
