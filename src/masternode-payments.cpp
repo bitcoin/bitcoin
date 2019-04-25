@@ -15,7 +15,7 @@
 #include "spork.h"
 #include <outputtype.h>
 #include <boost/lexical_cast.hpp>
-#include <net_processing.h>
+
 // SYSCOIN
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern std::vector<unsigned char> vchFromString(const std::string &str);

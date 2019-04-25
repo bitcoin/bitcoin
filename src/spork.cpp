@@ -9,11 +9,10 @@
 #include "chainparams.h"
 #include "validation.h"
 #include "messagesigner.h"
-#include "net_processing.h"
 #include "netmessagemaker.h"
 #include <key_io.h>
 #include <boost/lexical_cast.hpp>
-#include <net_processing.h>
+extern void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 CSporkManager sporkManager;
 
