@@ -23,7 +23,7 @@ class FilelockTest(SyscoinTestFramework):
         self.log.info("Using datadir {}".format(datadir))
 
         self.log.info("Check that we can't start a second syscoind instance using the same datadir")
-        expected_msg = "Error: Cannot obtain a lock on data directory {}. Syscoin Core is probably already running.".format(datadir)
+        expected_msg = "Error: Cannot obtain a lock on data directory {0}. {1} is probably already running.".format(datadir, self.config['environment']['PACKAGE_NAME'])
         self.nodes[1].assert_start_raises_init_error(extra_args=['-datadir={}'.format(self.nodes[0].datadir), '-noserver'], expected_msg=expected_msg)
 
         if self.is_wallet_compiled():
