@@ -146,20 +146,6 @@ class FullBlockTest(BitcoinTestFramework):
             badtx = template.get_tx()
             if TxTemplate != invalid_txs.InputMissing:
                 self.sign_tx(badtx, attempt_spend_tx)
-            else:
-                # Segwit is active in regtest at this point, so to deserialize a
-                # transaction without any inputs correctly, we set the outputs
-                # to an empty list. This is a hack, as the serialization of an
-                # empty list of outputs is deserialized as flags==0 and thus
-                # deserialization of the outputs is skipped.
-                # A policy check requires "loose" txs to be of a minimum size,
-                # so vtx is not set to be empty in the TxTemplate class and we
-                # only apply the workaround where txs are not "loose", i.e. in
-                # blocks.
-                #
-                # The workaround has the purpose that both sides calculate
-                # the same tx hash in the merkle tree
-                badtx.vout = []
             badtx.rehash()
             badblock = self.update_block(blockname, [badtx])
             self.sync_blocks(
