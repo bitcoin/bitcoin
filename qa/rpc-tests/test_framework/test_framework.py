@@ -266,7 +266,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.fast_dip3_enforcement = fast_dip3_enforcement
         if fast_dip3_enforcement:
-            self.extra_args += ["-bip9params=dip0003:0:999999999999:10:5", "-dip3enforcementheight=50"]
+            self.extra_args += ["-dip3params=30:50"]
 
     def create_simple_node(self):
         idx = len(self.nodes)

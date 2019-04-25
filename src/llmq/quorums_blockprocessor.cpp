@@ -119,14 +119,14 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 {
     AssertLockHeld(cs_main);
 
-    bool fDIP0003Active = VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+    bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
     if (!fDIP0003Active) {
         evoDb.Write(DB_BEST_BLOCK_UPGRADE, block.GetHash());
         return true;
     }
 
     std::map<Consensus::LLMQType, CFinalCommitment> qcs;
-    if (!GetCommitmentsFromBlock(block, pindex->pprev, qcs, state)) {
+    if (!GetCommitmentsFromBlock(block, pindex, qcs, state)) {
         return false;
     }
 
@@ -231,7 +231,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
 
     std::map<Consensus::LLMQType, CFinalCommitment> qcs;
     CValidationState dummy;
-    if (!GetCommitmentsFromBlock(block, pindex->pprev, qcs, dummy)) {
+    if (!GetCommitmentsFromBlock(block, pindex, qcs, dummy)) {
         return false;
     }
 
@@ -277,7 +277,7 @@ void CQuorumBlockProcessor::UpgradeDB()
 
             std::map<Consensus::LLMQType, CFinalCommitment> qcs;
             CValidationState dummyState;
-            GetCommitmentsFromBlock(block, pindex->pprev, qcs, dummyState);
+            GetCommitmentsFromBlock(block, pindex, qcs, dummyState);
 
             for (const auto& p : qcs) {
                 const auto& qc = p.second;
@@ -298,12 +298,12 @@ void CQuorumBlockProcessor::UpgradeDB()
     LogPrintf("CQuorumBlockProcessor::%s -- Upgrade done...\n", __func__);
 }
 
-bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state)
+bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state)
 {
     AssertLockHeld(cs_main);
 
     auto& consensus = Params().GetConsensus();
-    bool fDIP0003Active = VersionBitsState(pindexPrev, consensus, Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+    bool fDIP0003Active = pindex->nHeight >= consensus.DIP0003Height;
 
     ret.clear();
 

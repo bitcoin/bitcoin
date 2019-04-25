@@ -463,7 +463,8 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
 {
     AssertLockHeld(cs_main);
 
-    bool fDIP0003Active = VersionBitsState(pindex->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
+    const auto& consensusParams = Params().GetConsensus();
+    bool fDIP0003Active = pindex->nHeight >= consensusParams.DIP0003Height;
     if (!fDIP0003Active) {
         return true;
     }
@@ -507,7 +508,6 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         uiInterface.NotifyMasternodeListChanged();
     }
 
-    const auto& consensusParams = Params().GetConsensus();
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {
         if (!consensusParams.DIP0003EnforcementHash.IsNull() && consensusParams.DIP0003EnforcementHash != pindex->GetBlockHash()) {
             LogPrintf("CDeterministicMNManager::%s -- DIP3 enforcement block has wrong hash: hash=%s, expected=%s, nHeight=%d\n", __func__,

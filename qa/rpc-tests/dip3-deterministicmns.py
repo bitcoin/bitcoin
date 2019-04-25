@@ -24,7 +24,7 @@ class DIP3Test(BitcoinTestFramework):
 
         self.extra_args = ["-budgetparams=10:10:10"]
         self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
-        self.extra_args += ["-bip9params=dip0003:0:999999999999:45:45", "-dip3enforcementheight=150"]
+        self.extra_args += ["-dip3params=135:150"]
 
     def setup_network(self):
         disable_mocktime()
@@ -69,7 +69,7 @@ class DIP3Test(BitcoinTestFramework):
         self.create_mn_collateral(self.nodes[0], before_dip3_mn)
         mns.append(before_dip3_mn)
 
-        # block 500 starts enforcing DIP3 MN payments
+        # block 150 starts enforcing DIP3 MN payments
         while self.nodes[0].getblockcount() < 150:
             self.nodes[0].generate(1)
 
@@ -80,7 +80,7 @@ class DIP3Test(BitcoinTestFramework):
         self.log.info("syncing blocks for all nodes")
         sync_blocks(self.nodes, timeout=120)
 
-        # DIP3 has activated here
+        # DIP3 is fully enforced here
 
         self.register_mn(self.nodes[0], before_dip3_mn)
         self.start_mn(before_dip3_mn)

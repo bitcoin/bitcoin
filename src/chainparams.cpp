@@ -219,6 +219,7 @@ public:
         consensus.BIP65Height = 619382; // 00000000000076d8fcea02ec0963de4abfd01e771fec0863f960c2c64fe6f357
         consensus.BIP66Height = 245817; // 00000000000b1fa2dfa312863570e13fae9ca7b5566cb27e55422620b469aefa
         consensus.DIP0001Height = 782208;
+        consensus.DIP0003Height = 1028160;
         consensus.DIP0003EnforcementHeight = 1047200;
         consensus.DIP0003EnforcementHash = uint256S("000000000000002d1734087b4c5afc3133e4e1c3e1a89218f62bcd9bb3d17f81");
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
@@ -394,6 +395,7 @@ public:
         consensus.BIP65Height = 2431; // 0000039cf01242c7f921dcb4806a5994bc003b48c1973ae0c89b67809c2bb2ab
         consensus.BIP66Height = 2075; // 0000002acdd29a14583540cb72e1c5cc83783560e38fa7081495d474fe1671f7
         consensus.DIP0001Height = 5500;
+        consensus.DIP0003Height = 7000;
         consensus.DIP0003EnforcementHeight = 7300;
         consensus.DIP0003EnforcementHash = uint256S("00000055ebc0e974ba3a3fb785c5ad4365a39637d4df168169ee80d313612f8f");
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
@@ -552,6 +554,7 @@ public:
         consensus.BIP65Height = 1; // BIP65 activated immediately on devnet
         consensus.BIP66Height = 1; // BIP66 activated immediately on devnet
         consensus.DIP0001Height = 2; // DIP0001 activated immediately on devnet
+        consensus.DIP0003Height = 2; // DIP0003 activated immediately on devnet
         consensus.DIP0003EnforcementHeight = 2; // DIP0003 activated immediately on devnet
         consensus.DIP0003EnforcementHash = uint256();
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
@@ -719,6 +722,7 @@ public:
         consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in rpc activation tests)
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.DIP0001Height = 2000;
+        consensus.DIP0003Height = 432;
         consensus.DIP0003EnforcementHeight = 500;
         consensus.DIP0003EnforcementHash = uint256();
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
@@ -830,9 +834,10 @@ public:
         }
     }
 
-    void UpdateDIP3EnforcementHeight(int nHeight)
+    void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
     {
-        consensus.DIP0003EnforcementHeight = nHeight;
+        consensus.DIP0003Height = nActivationHeight;
+        consensus.DIP0003EnforcementHeight = nEnforcementHeight;
     }
 
     void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)
@@ -883,9 +888,9 @@ void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime,
     regTestParams.UpdateBIP9Parameters(d, nStartTime, nTimeout, nWindowSize, nThreshold);
 }
 
-void UpdateRegtestDIP3EnforcementHeight(int nHeight)
+void UpdateRegtestDIP3Parameters(int nActivationHeight, int nEnforcementHeight)
 {
-    regTestParams.UpdateDIP3EnforcementHeight(nHeight);
+    regTestParams.UpdateDIP3Parameters(nActivationHeight, nEnforcementHeight);
 }
 
 void UpdateRegtestBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock)

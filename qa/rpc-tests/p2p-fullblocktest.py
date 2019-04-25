@@ -61,6 +61,12 @@ class FullBlockTest(ComparisonTestFramework):
         self.tip = None
         self.blocks = {}
 
+    def setup_network(self):
+        # Must set '-dip3params=2000:2000' to create pre-dip3 blocks only
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
+                                 extra_args=[['-whitelist=127.0.0.1', '-dip3params=2000:2000']],
+                                 binary=[self.options.testbinary])
+
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_option("--runbarelyexpensive", dest="runbarelyexpensive", default=True)

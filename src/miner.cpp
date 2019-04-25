@@ -146,11 +146,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     LOCK2(cs_main, mempool.cs);
 
-    bool fDIP0003Active_context = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE;
-    bool fDIP0008Active_context = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
-
     CBlockIndex* pindexPrev = chainActive.Tip();
     nHeight = pindexPrev->nHeight + 1;
+
+    bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
+    bool fDIP0008Active_context = VersionBitsState(chainActive.Tip(), chainparams.GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == THRESHOLD_ACTIVE;
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), chainparams.BIP9CheckMasternodesUpgraded());
     // -regtest only: allow overriding block.nVersion with
@@ -166,7 +166,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
                        : pblock->GetBlockTime();
 
     if (fDIP0003Active_context) {
-        for (auto& p : Params().GetConsensus().llmqs) {
+        for (auto& p : chainparams.GetConsensus().llmqs) {
             CTransactionRef qcTx;
             if (llmq::quorumBlockProcessor->GetMinableCommitmentTx(p.first, nHeight, qcTx)) {
                 pblock->vtx.emplace_back(qcTx);

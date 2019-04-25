@@ -51,8 +51,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     // Update global DIP0001 activation status
     fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
     // update instantsend autolock activation flag (we reuse the DIP3 deployment)
-    instantsend.isAutoLockBip9Active =
-            (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0003, versionbitscache) == THRESHOLD_ACTIVE);
+    instantsend.isAutoLockBip9Active = pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0003Height;
 
     if (fInitialDownload)
         return;
