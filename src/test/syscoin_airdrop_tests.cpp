@@ -107,13 +107,13 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts, CAmount& nTotal)
 		}
 		nTotal += amountInSys1;
 		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "validateaddress " + test[0].get_str(), false));
-		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() !+ "");
+		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() != "");
 		countTx++;
 		payment.alias = find_value(r.get_obj(), "alias").get_str();
         payment.amount = amountInSys1;
 		paymentAmounts.push_back(payment);
     }
-	printf("Read %d total utxo sets, rejected %d, valid aliases %d, total amount %lld\n", rejectTx+countTx, rejectTx, countTx);
+	printf("Read %d total utxo sets, rejected %d, total amount %lld\n", rejectTx+countTx, rejectTx, countTx);
 }
 bool IsMainNetAlreadyCreated()
 {
