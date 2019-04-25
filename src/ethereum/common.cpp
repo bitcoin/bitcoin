@@ -19,8 +19,8 @@
  * @date 2014
  */
 
-#include "Common.h"
-#include "Exceptions.h"
+#include "common.h"
+#include "exceptions.h"
 //#include "Log.h"
 //#include "BuildInfo.h"
 using namespace std;

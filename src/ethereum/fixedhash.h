@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <random>
 #include <boost/functional/hash.hpp>
-#include "CommonData.h"
+#include "commondata.h"
 
 namespace dev
 {

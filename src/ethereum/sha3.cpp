@@ -19,12 +19,12 @@
  * @date 2014
  */
 
-#include "SHA3.h"
+#include "sha3.h"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include "RLP.h"
+#include "rlp.h"
 using namespace std;
 using namespace dev;
 

@@ -29,7 +29,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/tuple/tuple.hpp>
-#include "FixedHash.h"
+#include "fixedhash.h"
 
 namespace dev
 {

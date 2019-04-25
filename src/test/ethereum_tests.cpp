@@ -5,8 +5,8 @@
 #include "uint256.h"
 #include <util/strencodings.h>
 #include "ethereum/ethereum.h"
-#include "ethereum/Common.h"
-#include "ethereum/RLP.h"
+#include "ethereum/common.h"
+#include "ethereum/rlp.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
 #include "policy/policy.h"

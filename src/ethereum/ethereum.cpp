@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "ethereum.h"
-#include "SHA3.h"
+#include "sha3.h"
 #include <services/witnessaddress.h>
 using namespace dev;
 

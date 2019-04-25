@@ -283,21 +283,19 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
  # ethereum
  ethereum_libethereum_a_CPPFLAGS = $(SYSCOIN_INCLUDES)
  ethereum_libethereum_a_SOURCES = \
-  ethereum/Address.cpp \
-  ethereum/Address.h \
-  ethereum/Common.cpp \
-  ethereum/Common.h \
-  ethereum/CommonData.cpp \
-  ethereum/CommonData.h \
-  ethereum/Exceptions.h \
-  ethereum/FixedHash.cpp \
-  ethereum/FixedHash.h \
-  ethereum/Guards.cpp \
-  ethereum/Guards.h \
-  ethereum/RLP.cpp \
-  ethereum/RLP.h \
-  ethereum/SHA3.cpp \
-  ethereum/SHA3.h \
+  ethereum/address.cpp \
+  ethereum/address.h \
+  ethereum/common.cpp \
+  ethereum/common.h \
+  ethereum/commondata.cpp \
+  ethereum/commondata.h \
+  ethereum/exceptions.h \
+  ethereum/fixedhash.cpp \
+  ethereum/fixedhash.h \
+  ethereum/rlp.cpp \
+  ethereum/rlp.h \
+  ethereum/sha3.cpp \
+  ethereum/sha3.h \
   ethereum/ethereum.cpp \
   ethereum/ethereum.h \
   ethereum/vector_ref.h

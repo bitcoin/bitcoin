@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "FixedHash.h"
+#include "fixedhash.h"
 
 namespace dev
 {
