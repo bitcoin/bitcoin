@@ -15,16 +15,10 @@
 #include <boost/range/algorithm_ext/erase.hpp>
 #include <chrono>
 #include "wallet/coincontrol.h"
-#include <rpc/util.h>
 #include <key_io.h>
-#include <policy/policy.h>
 #include <consensus/validation.h>
-#include <wallet/fees.h>
-#include <outputtype.h>
 #include <boost/thread.hpp>
 #include <merkleblock.h>
-#include <services/asset.h>
-#include <services/assetallocation.h>
 #include <ethereum/ethereum.h>
 #include <ethereum/Address.h>
 #include <ethereum/Common.h>
