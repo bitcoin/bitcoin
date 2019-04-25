@@ -33,7 +33,6 @@
 // SYSCOIN
 #include <thread_pool/thread_pool.hpp>
 #include <script/interpreter.h>
-class JSONRPCRequest;
 class CBlockIndex;
 class CBlockTreeDB;
 class CBlockUndo;
@@ -546,7 +545,6 @@ extern std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 extern int64_t nTPSTestingStartTime;
 extern double nTPSTestingSendRawEndTime;
 extern int64_t nTPSTestingSendRawStartTime;
-extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 /**
  * Return true if hash can be found in chainActive at nBlockHeight height.
  * Fills hashRet with found hash, if no nBlockHeight is specified - chainActive.Height() is used.
