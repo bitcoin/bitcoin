@@ -4,7 +4,7 @@
 
 #include "ethereum.h"
 #include "SHA3.h"
-#include <services/assetallocation.h>
+#include <services/assetconsensus.h>
 using namespace dev;
 
 
