@@ -1458,15 +1458,16 @@ bool CWallet::IsDenominated(const COutPoint& outpoint) const
 {
     LOCK(cs_wallet);
 
-    std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(outpoint.hash);
-    if (mi != mapWallet.end()) {
-        const CWalletTx& prev = (*mi).second;
-        if (outpoint.n < prev.tx->vout.size()) {
-            return CPrivateSend::IsDenominatedAmount(prev.tx->vout[outpoint.n].nValue);
-        }
+    const auto it = mapWallet.find(outpoint.hash);
+    if (it == mapWallet.end()) {
+        return false;
     }
 
-    return false;
+    if (outpoint.n >= it->second.tx->vout.size()) {
+        return false;
+    }
+
+    return CPrivateSend::IsDenominatedAmount(it->second.tx->vout[outpoint.n].nValue);
 }
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
@@ -2099,8 +2100,8 @@ CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
     if (pwallet == 0)
         return 0;
 
-    // Must wait until coinbase is safely deep enough in the chain before valuing it
-    if (IsCoinBase() && GetBlocksToMaturity() > 0)
+    // Exclude coinbase and conflicted txes
+    if (IsCoinBase() || GetDepthInMainChain() < 0)
         return 0;
 
     if (fUseCache && fAnonymizedCreditCached)
@@ -2113,10 +2114,10 @@ CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
         const CTxOut &txout = tx->vout[i];
         const COutPoint outpoint = COutPoint(hashTx, i);
 
-        if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominated(outpoint)) continue;
+        if (pwallet->IsSpent(hashTx, i) || !CPrivateSend::IsDenominatedAmount(txout.nValue)) continue;
 
         const int nRounds = pwallet->GetCappedOutpointPrivateSendRounds(outpoint);
-        if(nRounds >= privateSendClient.nPrivateSendRounds){
+        if (nRounds >= privateSendClient.nPrivateSendRounds){
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error(std::string(__func__) + ": value out of range");
@@ -2138,10 +2139,10 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
         return 0;
 
     int nDepth = GetDepthInMainChain();
-    if(nDepth < 0) return 0;
+    if (nDepth < 0) return 0;
 
     bool isUnconfirmed = IsTrusted() && nDepth == 0;
-    if(unconfirmed != isUnconfirmed) return 0;
+    if (unconfirmed != isUnconfirmed) return 0;
 
     if (fUseCache) {
         if(unconfirmed && fDenomUnconfCreditCached)
@@ -2156,14 +2157,14 @@ CAmount CWalletTx::GetDenominatedCredit(bool unconfirmed, bool fUseCache) const
     {
         const CTxOut &txout = tx->vout[i];
 
-        if(pwallet->IsSpent(hashTx, i) || !CPrivateSend::IsDenominatedAmount(tx->vout[i].nValue)) continue;
+        if (pwallet->IsSpent(hashTx, i) || !CPrivateSend::IsDenominatedAmount(txout.nValue)) continue;
 
         nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         if (!MoneyRange(nCredit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
 
-    if(unconfirmed) {
+    if (unconfirmed) {
         nDenomUnconfCreditCached = nCredit;
         fDenomUnconfCreditCached = true;
     } else {
@@ -2340,13 +2341,12 @@ CAmount CWallet::GetAnonymizedBalance() const
     std::set<uint256> setWalletTxesCounted;
     for (const auto& outpoint : setWalletUTXO) {
 
-        if (setWalletTxesCounted.find(outpoint.hash) != setWalletTxesCounted.end()) continue;
-        setWalletTxesCounted.insert(outpoint.hash);
+        if (!setWalletTxesCounted.emplace(outpoint.hash).second) continue;
 
-        for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash); it != mapWallet.end() && it->first == outpoint.hash; ++it) {
-            if (it->second.IsTrusted())
-                nTotal += it->second.GetAnonymizedCredit();
-        }
+        const auto it = mapWallet.find(outpoint.hash);
+        if (it == mapWallet.end() || !it->second.IsTrusted()) continue;
+
+        nTotal += it->second.GetAnonymizedCredit();
     }
 
     return nTotal;
@@ -2384,13 +2384,15 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
     LOCK2(cs_main, cs_wallet);
     for (const auto& outpoint : setWalletUTXO) {
-        std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
+        const auto it = mapWallet.find(outpoint.hash);
         if (it == mapWallet.end()) continue;
-        if (!IsDenominated(outpoint)) continue;
+
+        CAmount nValue = it->second.tx->vout[outpoint.n].nValue;
+        if (!CPrivateSend::IsDenominatedAmount(nValue)) continue;
         if (it->second.GetDepthInMainChain() < 0) continue;
 
         int nRounds = GetCappedOutpointPrivateSendRounds(outpoint);
-        nTotal += it->second.tx->vout[outpoint.n].nValue * nRounds / privateSendClient.nPrivateSendRounds;
+        nTotal += nValue * nRounds / privateSendClient.nPrivateSendRounds;
     }
 
     return nTotal;
@@ -2425,14 +2427,17 @@ CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
     if(fLiteMode) return 0;
 
     CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            const CWalletTx* pcoin = &(*it).second;
 
-            nTotal += pcoin->GetDenominatedCredit(unconfirmed);
-        }
+    LOCK2(cs_main, cs_wallet);
+
+    std::set<uint256> setWalletTxesCounted;
+    for (const auto& outpoint : setWalletUTXO) {
+        if (!setWalletTxesCounted.emplace(outpoint.hash).second) continue;
+
+        const auto it = mapWallet.find(outpoint.hash);
+        if (it == mapWallet.end()) continue;
+
+        nTotal += it->second.GetDenominatedCredit(unconfirmed);
     }
 
     return nTotal;
@@ -3029,8 +3034,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
     std::set<uint256> setWalletTxesCounted;
     for (const auto& outpoint : setWalletUTXO) {
 
-        if (setWalletTxesCounted.find(outpoint.hash) != setWalletTxesCounted.end()) continue;
-        setWalletTxesCounted.insert(outpoint.hash);
+        if (!setWalletTxesCounted.emplace(outpoint.hash).second) continue;
 
         std::map<uint256, CWalletTx>::const_iterator it = mapWallet.find(outpoint.hash);
         if (it == mapWallet.end()) continue;
@@ -3146,19 +3150,16 @@ bool CWallet::GetCollateralTxDSIn(CTxDSIn& txdsinRet, CAmount& nValueRet) const
 
     std::vector<COutput> vCoins;
 
-    AvailableCoins(vCoins);
+    AvailableCoins(vCoins, true, NULL, false, ONLY_PRIVATESEND_COLLATERAL);
 
-    for (const auto& out : vCoins)
-    {
-        if(CPrivateSend::IsCollateralAmount(out.tx->tx->vout[out.i].nValue))
-        {
-            txdsinRet = CTxDSIn(CTxIn(out.tx->tx->GetHash(), out.i), out.tx->tx->vout[out.i].scriptPubKey);
-            nValueRet = out.tx->tx->vout[out.i].nValue;
-            return true;
-        }
+    if (vCoins.empty()) {
+        return false;
     }
 
-    return false;
+    const auto& out = vCoins.at((int)GetRandInt(vCoins.size()));
+    txdsinRet = CTxDSIn(CTxIn(out.tx->tx->GetHash(), out.i), out.tx->tx->vout[out.i].scriptPubKey);
+    nValueRet = out.tx->tx->vout[out.i].nValue;
+    return true;
 }
 
 bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
@@ -3218,29 +3219,19 @@ bool CWallet::GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpoi
     return true;
 }
 
-int CWallet::CountInputsWithAmount(CAmount nInputAmount)
+int CWallet::CountInputsWithAmount(CAmount nInputAmount) const
 {
     CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            const CWalletTx* pcoin = &(*it).second;
-            if (pcoin->IsTrusted()){
-                int nDepth = pcoin->GetDepthInMainChain();
 
-                for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
-                    COutput out = COutput(pcoin, i, nDepth, true, true, false);
-                    COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
+    LOCK2(cs_main, cs_wallet);
 
-                    if(out.tx->tx->vout[out.i].nValue != nInputAmount) continue;
-                    if(!CPrivateSend::IsDenominatedAmount(pcoin->tx->vout[i].nValue)) continue;
-                    if(IsSpent(out.tx->GetHash(), i) || IsMine(pcoin->tx->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(outpoint)) continue;
+    for (const auto& outpoint : setWalletUTXO) {
+        const auto it = mapWallet.find(outpoint.hash);
+        if (it == mapWallet.end()) continue;
+        if (it->second.tx->vout[outpoint.n].nValue != nInputAmount) continue;
+        if (it->second.GetDepthInMainChain() < 0) continue;
 
-                    nTotal++;
-                }
-            }
-        }
+        nTotal++;
     }
 
     return nTotal;

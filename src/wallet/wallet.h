@@ -860,7 +860,7 @@ public:
     bool GetOutpointAndKeysFromOutput(const COutput& out, COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet);
 
     bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
-    int  CountInputsWithAmount(CAmount nInputAmount);
+    int  CountInputsWithAmount(CAmount nInputAmount) const;
 
     // get the PrivateSend chain depth for a given input
     int GetRealOutpointPrivateSendRounds(const COutPoint& outpoint, int nRounds = 0) const;
