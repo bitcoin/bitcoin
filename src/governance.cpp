@@ -9,14 +9,13 @@
 #include "governance-validators.h"
 #include "governance-vote.h"
 #include "governance-classes.h"
-#include "net_processing.h"
 #include "netmessagemaker.h"
 #include "masternode.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include "netfulfilledman.h"
-#include <net_processing.h>
+
 CGovernanceManager governance;
 
 int nSubmittedFinalBudget;

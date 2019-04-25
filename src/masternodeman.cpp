@@ -19,7 +19,6 @@
 #include "warnings.h"
 #include <shutdown.h>
 #include <outputtype.h>
-#include <net_processing.h>
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Masternode manager */
 CMasternodeMan mnodeman;
