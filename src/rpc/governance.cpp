@@ -116,11 +116,12 @@ UniValue gobject_check(const JSONRPCRequest& request)
 }
 
 #ifdef ENABLE_WALLET
-void gobject_prepare_help()
+void gobject_prepare_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject prepare <parent-hash> <revision> <time> <data-hex>\n"
                 "Prepare governance object by signing and creating tx\n"
+                + HelpRequiringPassphrase(pwallet) + "\n"
                 "\nArguments:\n"
                 "1. parent-hash   (string, required) hash of the parent object, \"0\" is root\n"
                 "2. revision      (numeric, required) object revision in the system\n"
@@ -136,10 +137,12 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() != 5 && request.params.size() != 6 && request.params.size() != 8)) 
-        gobject_prepare_help();
+        gobject_prepare_help(pwallet);
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
+
+    EnsureWalletIsUnlocked(pwallet);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -189,8 +192,6 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     std::string strError = "";
     if (!govobj.IsValidLocally(strError, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
-
-    EnsureWalletIsUnlocked(pwallet);
 
     // If specified, spend this outpoint as the proposal fee
     COutPoint outpoint;
@@ -505,11 +506,12 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
 }
 
 #ifdef ENABLE_WALLET
-void gobject_vote_many_help()
+void gobject_vote_many_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject vote-many <governance-hash> <vote> <vote-outcome>\n"
                 "Vote on a governance object by all masternodes for which the voting key is present in the local wallet\n"
+                + HelpRequiringPassphrase(pwallet) + "\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -521,7 +523,10 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 4)
-        gobject_vote_many_help();
+        gobject_vote_many_help(pwallet);
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
@@ -539,9 +544,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    if (!pwallet) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-many not supported when wallet is disabled.");
-    }
+    EnsureWalletIsUnlocked(pwallet);
 
     std::map<uint256, CKey> votingKeys;
 
@@ -556,11 +559,12 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome);
 }
 
-void gobject_vote_alias_help()
+void gobject_vote_alias_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
                 "gobject vote-alias <governance-hash> <vote> <vote-outcome> <alias-name>\n"
                 "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
+                + HelpRequiringPassphrase(pwallet) + "\n"
                 "\nArguments:\n"
                 "1. governance-hash   (string, required) hash of the governance object\n"
                 "2. vote              (string, required) vote, possible values: [funding|valid|delete|endorsed]\n"
@@ -573,7 +577,10 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || request.params.size() != 5)
-        gobject_vote_alias_help();
+        gobject_vote_alias_help(pwallet);
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
 
     uint256 hash = ParseHashV(request.params[1], "Object hash");
     std::string strVoteSignal = request.params[2].get_str();
@@ -591,9 +598,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    if (!pwallet) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "vote-alias not supported when wallet is disabled");
-    }
+    EnsureWalletIsUnlocked(pwallet);
 
     uint256 proTxHash = ParseHashV(request.params[4], "protx-hash");
     auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(proTxHash);
@@ -602,7 +607,7 @@ UniValue gobject_vote_alias(const JSONRPCRequest& request)
     }
 
     CKey votingKey;
-    if (!pwalletMain->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
+    if (!pwallet->GetKey(dmn->pdmnState->keyIDVoting, votingKey)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Private key for voting address %s not known by wallet", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
     }
 
@@ -881,9 +886,13 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
             "  list               - List governance objects (can be filtered by signal and/or object type)\n"
             "  diff               - List differences since last diff\n"
+#ifdef ENABLE_WALLET
             "  vote-alias         - Vote on a governance object by masternode alias/proTxHash\n"
+#endif // ENABLE_WALLET
             "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
+#ifdef ENABLE_WALLET
             "  vote-many          - Vote on a governance object by all masternodes for which the voting key is in the wallet\n"
+#endif // ENABLE_WALLET
             );
 }
 
