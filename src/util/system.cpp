@@ -73,6 +73,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <signal.h>
+#include <rpc/server.h>
 bool fMasternodeMode = false;
 bool fUnitTest = false;
 bool fTPSTest = false;
@@ -91,6 +92,7 @@ pid_t relayerPID = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
+std::vector<JSONRPCRequest> vecTPSRawTransactions;
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 

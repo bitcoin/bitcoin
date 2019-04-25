@@ -36,6 +36,7 @@
 
 #include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 // SYSCOIN
+class JSONRPCRequest;
 extern bool fMasternodeMode;
 extern bool fUnitTest;
 extern bool fTPSTest;
@@ -54,6 +55,7 @@ extern pid_t relayerPID;
 extern bool fAssetIndex;
 extern int fAssetIndexPageSize;
 extern std::vector<uint32_t> fAssetIndexGuids; 
+extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.
     long MemTotalKiB;

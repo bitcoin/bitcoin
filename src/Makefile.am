@@ -104,6 +104,7 @@ bin_PROGRAMS += syscoinbench
 # syscoin core #
 SYSCOIN_CORE_H = \
   services/graph.h \
+  services/witnessaddress.h \
   services/asset.h \
   services/assetallocation.h \
   services/assetconsensus.h \
