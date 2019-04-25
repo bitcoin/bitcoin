@@ -14,7 +14,7 @@
 #include <coins.h>
 #include <util/moneystr.h>
 // SYSCOIN
-#include <services/asset.h>
+const int SYSCOIN_TX_VERSION_MINT = 0x7400;
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)

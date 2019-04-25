@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "init.h"
 #include "validation.h"
 #include "core_io.h"
 #include "wallet/wallet.h"
@@ -18,13 +17,14 @@
 #include <key_io.h>
 #include <policy/policy.h>
 #include <consensus/validation.h>
-#include <wallet/fees.h>
 #include <outputtype.h>
 #include <boost/thread.hpp>
 #include <merkleblock.h>
 #include <services/assetconsensus.h>
 #include <util/system.h>
 #include <masternodeconfig.h>
+extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
+
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 extern CCriticalSection cs_assetallocation;
