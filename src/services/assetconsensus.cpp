@@ -20,9 +20,9 @@
 #include <boost/thread.hpp>
 #include <merkleblock.h>
 #include <ethereum/ethereum.h>
-#include <ethereum/Address.h>
-#include <ethereum/Common.h>
-#include <ethereum/CommonData.h>
+#include <ethereum/address.h>
+#include <ethereum/common.h>
+#include <ethereum/commondata.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;

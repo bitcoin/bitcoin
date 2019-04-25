@@ -29,8 +29,8 @@
 #include <iosfwd>
 #include <iomanip>
 #include "vector_ref.h"
-#include "Exceptions.h"
-#include "FixedHash.h"
+#include "exceptions.h"
+#include "fixedhash.h"
 
 namespace dev
 {

@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "Guards.h"
+#include "guards.h"
 using namespace std;
 using namespace dev;
 

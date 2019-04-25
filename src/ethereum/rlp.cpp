@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "RLP.h"
+#include "rlp.h"
 using namespace std;
 using namespace dev;
 

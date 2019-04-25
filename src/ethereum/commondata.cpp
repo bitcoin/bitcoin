@@ -19,10 +19,10 @@
  * @date 2014
  */
 
-#include "CommonData.h"
+#include "commondata.h"
 #include <random>
 
-#include "Exceptions.h"
+#include "exceptions.h"
 
 using namespace std;
 using namespace dev;
