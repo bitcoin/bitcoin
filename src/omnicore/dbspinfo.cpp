@@ -49,6 +49,42 @@ void CMPSPInfo::Entry::print() const
             category, subcategory, url, data);
 }
 
+/**
+ * Stores a new issuer in the DB.
+ *
+ * @param block  The block of the update
+ * @param idx    The position within the block of the update
+ * @param newIssuer  The new issuer
+ */
+void CMPSPInfo::Entry::updateIssuer(int block, int idx, const std::string& newIssuer)
+{
+    historicalIssuers[std::make_pair(block, idx)] = newIssuer;
+}
+
+/**
+ * Returns the issuer for the given block.
+ *
+ * @param block  The block to check
+ * @return The issuer of that block
+ */
+std::string CMPSPInfo::Entry::getIssuer(int block) const
+{
+    std::string _issuer = issuer;
+
+    for (auto const& entry : historicalIssuers) {
+        int currentBlock = entry.first.first;
+        std::string currentIssuer = entry.second;
+
+        if (currentBlock > block) {
+            break;
+        }
+
+        _issuer = currentIssuer;
+    }
+
+    return _issuer;
+}
+
 CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
