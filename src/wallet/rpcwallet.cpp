@@ -72,7 +72,8 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         chainlock = llmq::chainLocksHandler->HasChainLock(mapBlockIndex[wtx.hashBlock]->nHeight, wtx.hashBlock);
     }
     entry.push_back(Pair("confirmations", confirms));
-    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked));
+    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked || chainlock));
+    entry.push_back(Pair("instantlock_internal", fLocked || fLLMQLocked));
     entry.push_back(Pair("chainlock", chainlock));
     if (wtx.IsCoinBase())
         entry.push_back(Pair("generated", true));
@@ -1575,6 +1576,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "                                         'receive' category of transactions. Negative confirmations indicate the\n"
             "                                         transation conflicts with the block chain\n"
             "    \"instantlock\" : true|false, (bool) Current transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
             "    \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock\n"
             "    \"trusted\": xxx,           (bool) Whether we consider the outputs of this unconfirmed transaction safe to spend.\n"
             "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
@@ -1779,6 +1781,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "    \"confirmations\" : n,      (numeric) The number of blockchain confirmations for the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "                                          When it's < 0, it means the transaction conflicted that many blocks ago.\n"
             "    \"instantlock\" : true|false, (bool) Current transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state. Available for 'send' and 'receive' category of transactions.\n"
             "    \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock\n"
             "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive' category of transactions.\n"
             "    \"blockindex\": n,          (numeric) The index of the transaction in the block that includes it. Available for 'send' and 'receive' category of transactions.\n"
@@ -1880,6 +1883,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"fee\": x.xxx,            (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
             "                              'send' category of transactions.\n"
             "  \"instantlock\" : true|false, (bool) Current transaction lock state\n"
+            "  \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state\n"
             "  \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock\n"
             "  \"confirmations\" : n,     (numeric) The number of blockchain confirmations\n"
             "  \"blockhash\" : \"hash\",    (string) The block hash\n"

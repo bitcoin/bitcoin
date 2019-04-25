@@ -201,7 +201,8 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
     }
     bool fLocked = instantsend.IsLockedInstantSendTransaction(txid);
     bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(txid);
-    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked));
+    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked || chainLock));
+    entry.push_back(Pair("instantlock_internal", fLocked || fLLMQLocked));
     entry.push_back(Pair("chainlock", chainLock));
 }
 
@@ -269,6 +270,7 @@ UniValue getrawtransaction(const JSONRPCRequest& request)
             "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"instantlock\" : true|false, (bool) Current transaction lock state\n"
+            "  \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state\n"
             "  \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock\n"
             "}\n"
 
