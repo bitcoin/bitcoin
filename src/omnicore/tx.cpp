@@ -1629,6 +1629,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed()
 
     CMPSPInfo::Entry newSP;
     newSP.issuer = sender;
+    newSP.updateIssuer(block, tx_idx, sender);
     newSP.txid = txid;
     newSP.prop_type = prop_type;
     newSP.num_tokens = nValue;
@@ -1727,6 +1728,7 @@ int CMPTransaction::logicMath_CreatePropertyVariable()
 
     CMPSPInfo::Entry newSP;
     newSP.issuer = sender;
+    newSP.updateIssuer(block, tx_idx, sender);
     newSP.txid = txid;
     newSP.prop_type = prop_type;
     newSP.num_tokens = nValue;
@@ -1863,6 +1865,7 @@ int CMPTransaction::logicMath_CreatePropertyManaged()
 
     CMPSPInfo::Entry newSP;
     newSP.issuer = sender;
+    newSP.updateIssuer(block, tx_idx, sender);
     newSP.txid = txid;
     newSP.prop_type = prop_type;
     newSP.category.assign(category);
@@ -1926,7 +1929,7 @@ int CMPTransaction::logicMath_GrantTokens()
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.issuer) {
+    if (sender != sp.getIssuer(block)) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
         return (PKT_ERROR_TOKENS -43);
     }
@@ -2073,7 +2076,7 @@ int CMPTransaction::logicMath_ChangeIssuer()
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
 
-    if (sender != sp.issuer) {
+    if (sender != sp.getIssuer(block)) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
         return (PKT_ERROR_TOKENS -43);
     }
@@ -2094,6 +2097,8 @@ int CMPTransaction::logicMath_ChangeIssuer()
     }
 
     // ------------------------------------------
+
+    sp.updateIssuer(block, tx_idx, receiver);
 
     sp.issuer = receiver;
     sp.update_block = blockHash;
@@ -2141,7 +2146,7 @@ int CMPTransaction::logicMath_EnableFreezing()
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.issuer) {
+    if (sender != sp.getIssuer(block)) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
         return (PKT_ERROR_TOKENS -43);
     }
@@ -2202,7 +2207,7 @@ int CMPTransaction::logicMath_DisableFreezing()
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.issuer) {
+    if (sender != sp.getIssuer(block)) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
         return (PKT_ERROR_TOKENS -43);
     }
@@ -2255,7 +2260,7 @@ int CMPTransaction::logicMath_FreezeTokens()
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.issuer) {
+    if (sender != sp.getIssuer(block)) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
         return (PKT_ERROR_TOKENS -43);
     }
@@ -2313,7 +2318,7 @@ int CMPTransaction::logicMath_UnfreezeTokens()
         return (PKT_ERROR_TOKENS -42);
     }
 
-    if (sender != sp.issuer) {
+    if (sender != sp.getIssuer(block)) {
         PrintToLog("%s(): rejected: sender %s is not issuer of property %d [issuer=%s]\n", __func__, sender, property, sp.issuer);
         return (PKT_ERROR_TOKENS -43);
     }
