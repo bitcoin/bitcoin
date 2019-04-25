@@ -46,6 +46,9 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "chain -> validation -> pow -> chain"
     "chain -> validation -> txdb -> chain"
     "chain -> validation -> versionbits -> chain"
+    # syscoin
+    "rpc/server -> util/system -> rpc/server"
+    "net -> rpc/server -> rpc/util -> node/transaction -> net"
 )
 
 EXIT_CODE=0

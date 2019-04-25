@@ -64,7 +64,6 @@ std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
 double nTPSTestingSendRawEndTime = 0;
 int64_t nTPSTestingSendRawStartTime = 0;
-std::vector<JSONRPCRequest> vecTPSRawTransactions;
 int64_t nLastMultithreadMempoolFailure = 0;
 bool fLogThreadpool = false;
 tp::ThreadPool *threadpool = NULL;
