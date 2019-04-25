@@ -40,7 +40,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
 
     # Circular dependencies from auxpow.
     "auxpow -> primitives/block -> auxpow"
-    "rpc/blockchain -> rpc/rawtransaction -> wallet/rpcwallet -> rpc/mining -> rpc/blockchain"
     "chain -> validation -> chain"
     "chain -> validation -> consensus/tx_verify -> chain"
     "chain -> validation -> pow -> chain"
