@@ -1991,7 +1991,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         string txRoot = tupleArray[1].get_str();
         boost::erase_all(txRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
-        txRootMap.try_emplace(nHeight, vchTxRoot);
+        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(vchTxRoot));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap) && pethereumtxrootsdb->PruneTxRoots();
     UniValue ret(UniValue::VOBJ);
