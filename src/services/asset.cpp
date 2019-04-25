@@ -1271,11 +1271,11 @@ UniValue assetsend(const JSONRPCRequest& request) {
             
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    outputObj.pushKV("address", params[1]);
-    outputObj.pushKV("amount", params[2]);
+    outputObj.pushKV("address", params[1].get_str());
+    outputObj.pushKV("amount", params[2].get_str());
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back(params[0]);
+    paramsFund.push_back(params[0].get_int());
     paramsFund.push_back(output);
     paramsFund.push_back("");
     JSONRPCRequest requestMany;
