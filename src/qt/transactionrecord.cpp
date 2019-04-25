@@ -11,7 +11,6 @@
 #include "timedata.h"
 #include "wallet/wallet.h"
 
-#include "instantx.h"
 #include "privatesend.h"
 
 #include <stdint.h>
@@ -252,7 +251,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     return parts;
 }
 
-void TransactionRecord::updateStatus(const CWalletTx &wtx)
+void TransactionRecord::updateStatus(const CWalletTx &wtx, int numISLocks, int chainLockHeight)
 {
     AssertLockHeld(cs_main);
     // Determine transaction status
@@ -272,7 +271,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
-    status.cur_num_ix_locks = nCompleteTXLocks;
+    status.cachedNumISLocks = numISLocks;
+    status.cachedChainLockHeight = chainLockHeight;
 
     if (!CheckFinalTx(wtx))
     {
@@ -341,10 +341,12 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 
 }
 
-bool TransactionRecord::statusUpdateNeeded()
+bool TransactionRecord::statusUpdateNeeded(int numISLocks, int chainLockHeight)
 {
     AssertLockHeld(cs_main);
-    return status.cur_num_blocks != chainActive.Height() || status.cur_num_ix_locks != nCompleteTXLocks;
+    return status.cur_num_blocks != chainActive.Height()
+        || status.cachedNumISLocks != numISLocks
+        || status.cachedChainLockHeight != chainLockHeight;
 }
 
 QString TransactionRecord::getTxID() const

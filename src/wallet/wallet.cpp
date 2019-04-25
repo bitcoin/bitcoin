@@ -5333,6 +5333,21 @@ bool AutoBackupWallet(CWallet* wallet, const std::string& strWalletFile_, std::s
     return true;
 }
 
+void CWallet::NotifyTransactionLock(const CTransaction &tx)
+{
+    LOCK(cs_wallet);
+    // Only notify UI if this transaction is in this wallet
+    std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(tx.GetHash());
+    if (mi != mapWallet.end()){
+        NotifyISLockReceived();
+    }
+}
+
+void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock)
+{
+    NotifyChainLockReceived(pindexChainLock->nHeight);
+}
+
 CKeyPool::CKeyPool()
 {
     nTime = GetTime();

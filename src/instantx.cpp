@@ -36,7 +36,6 @@ extern CWallet* pwalletMain;
 extern CTxMemPool mempool;
 
 bool fEnableInstantSend = true;
-int nCompleteTXLocks;
 
 std::atomic<bool> CInstantSend::isAutoLockBip9Active{false};
 const double CInstantSend::AUTO_IX_MEMPOOL_THRESHOLD = 0.1;
@@ -531,8 +530,6 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
 
 #ifdef ENABLE_WALLET
     if (pwalletMain && pwalletMain->UpdatedTransaction(txHash)) {
-        // bumping this to update UI
-        nCompleteTXLocks++;
         // notify an external script once threshold is reached
         std::string strCmd = GetArg("-instantsendnotify", "");
         if (!strCmd.empty()) {

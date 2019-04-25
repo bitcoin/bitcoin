@@ -1124,6 +1124,12 @@ public:
     /** Watch-only address added */
     boost::signals2::signal<void (bool fHaveWatchOnly)> NotifyWatchonlyChanged;
 
+    /** IS-lock received */
+    boost::signals2::signal<void ()> NotifyISLockReceived;
+
+    /** ChainLock received */
+    boost::signals2::signal<void (int height)> NotifyChainLockReceived;
+
     /** Inquire whether this wallet broadcasts transactions. */
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
@@ -1165,6 +1171,9 @@ public:
     bool SetHDChain(const CHDChain& chain, bool memonly);
     bool SetCryptedHDChain(const CHDChain& chain, bool memonly);
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
+
+    void NotifyTransactionLock(const CTransaction &tx) override;
+    void NotifyChainLock(const CBlockIndex* pindexChainLock) override;
 };
 
 /** A key allocated from the key pool. */

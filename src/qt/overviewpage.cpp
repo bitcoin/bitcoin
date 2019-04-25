@@ -132,6 +132,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     currentWatchOnlyBalance(-1),
     currentWatchUnconfBalance(-1),
     currentWatchImmatureBalance(-1),
+    cachedNumISLocks(-1),
     txdelegate(new TxViewDelegate(platformStyle, this))
 {
     ui->setupUi(this);
@@ -230,11 +231,12 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
 
     updatePrivateSendProgress();
 
-    static int cachedTxLocks = 0;
-
-    if(cachedTxLocks != nCompleteTXLocks){
-        cachedTxLocks = nCompleteTXLocks;
-        ui->listTransactions->update();
+    if (walletModel) {
+        int numISLocks = walletModel->getNumISLocks();
+        if(cachedNumISLocks != numISLocks) {
+            cachedNumISLocks = numISLocks;
+            ui->listTransactions->update();
+        }
     }
 }
 

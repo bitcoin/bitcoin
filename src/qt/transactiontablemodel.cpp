@@ -195,13 +195,13 @@ public:
             if(lockMain)
             {
                 TRY_LOCK(wallet->cs_wallet, lockWallet);
-                if(lockWallet && rec->statusUpdateNeeded())
+                if(lockWallet && (rec->statusUpdateNeeded(parent->getNumISLocks(), parent->getChainLockHeight())))
                 {
                     std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(rec->hash);
 
                     if(mi != wallet->mapWallet.end())
                     {
-                        rec->updateStatus(mi->second);
+                        rec->updateStatus(mi->second, parent->getNumISLocks(), parent->getChainLockHeight());
                     }
                 }
             }
@@ -281,6 +281,27 @@ void TransactionTableModel::updateConfirmations()
     //  visible rows.
     Q_EMIT dataChanged(index(0, Status), index(priv->size()-1, Status));
     Q_EMIT dataChanged(index(0, ToAddress), index(priv->size()-1, ToAddress));
+}
+
+void TransactionTableModel::updateNumISLocks(int numISLocks)
+{
+    cachedNumISLocks = numISLocks;
+}
+
+void TransactionTableModel::updateChainLockHeight(int chainLockHeight)
+{
+    cachedChainLockHeight = chainLockHeight;
+    updateConfirmations();
+}
+
+int TransactionTableModel::getNumISLocks() const
+{
+    return cachedNumISLocks;
+}
+
+int TransactionTableModel::getChainLockHeight() const
+{
+    return cachedChainLockHeight;
 }
 
 int TransactionTableModel::rowCount(const QModelIndex &parent) const

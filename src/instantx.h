@@ -38,7 +38,6 @@ static const int INSTANTSEND_LOCK_TIMEOUT_SECONDS   = 15;
 static const int INSTANTSEND_FAILED_TIMEOUT_SECONDS = 60;
 
 extern bool fEnableInstantSend;
-extern int nCompleteTXLocks;
 
 /**
  * Manages InstantSend. Processes lock requests, candidates, and votes.

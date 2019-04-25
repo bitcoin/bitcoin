@@ -19,7 +19,7 @@
 #include "wallet/wallet.h"
 #endif
 
-// needed for nCompleteTXLocks
+// needed for AUTO_IX_MEMPOOL_THRESHOLD
 #include "instantx.h"
 
 #include <boost/algorithm/string/replace.hpp>
@@ -831,8 +831,6 @@ void CInstantSendManager::UpdateWalletTransaction(const uint256& txid, const CTr
     }
 
     if (pwalletMain->UpdatedTransaction(txid)) {
-        // bumping this to update UI
-        nCompleteTXLocks++;
         // notify an external script once threshold is reached
         std::string strCmd = GetArg("-instantsendnotify", "");
         if (!strCmd.empty()) {
