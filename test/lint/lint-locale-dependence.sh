@@ -19,16 +19,8 @@ KNOWN_VIOLATIONS=(
     "src/util/strencodings.cpp:.*strtoul"
     "src/util/strencodings.h:.*atoi"
     "src/util/system.cpp:.*atoi"
-    "src/masternode.cpp:.*atoi"
-    "src/qt/masternodelist.cpp:.*atoi"
-    "src/rpc/governance.cpp:.*atoi"
-    "src/rpc/masternode.cpp:.*atoi"
-    "src/test/test_syscoin_services.cpp:.*atoi"
-    "src/governancevalidators.cpp:.*isspace"
-    "src/governancevalidators.cpp:.*isspace"
-    "src/init.cpp:.*atoi"
     "src/ethereum/ethereum.cpp:.*strtol"
-
+    "src/util/system.cpp:.*strtol"
 
 )
 

@@ -48,7 +48,10 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		if(sendManyString != "") 
 			sendManyString += ",";
 		sendManyString += "\\\"" + paymentAmounts[i].address + "\\\":" + paymentAmounts[i].amount;
-		nTotal += atof(paymentAmounts[i].amount.c_str());
+		double total;
+		ParseDouble(paymentAmounts[i].amount, &total);
+		
+		nTotal += total;
 		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{

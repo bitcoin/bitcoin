@@ -1919,8 +1919,12 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
     if (gArgs.IsArgSet("-assetindexguids")) {
         const std::vector<std::string> &assetguidsStr = gArgs.GetArgs("-assetindexguids");
-        for(const std::string& guidStr: assetguidsStr)
-            fAssetIndexGuids.push_back(std::stoi(guidStr));
+        for(const std::string& guidStr: assetguidsStr){
+            uint32_t guid;
+            if(!ParseUInt32(guidStr, &guid))
+                return InitError(_("Could not parse Asset GUID"));
+            fAssetIndexGuids.push_back(guid);
+        }
     }
      //lite mode disables all masternode functionality
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
@@ -1949,12 +1953,16 @@ bool AppInitMain(InitInterfaces& interfaces)
         std::string result;
         std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("pidof syscoind | wc -w", "r"), pclose);
         if (!pipe) {
-            throw std::runtime_error("popen() failed!");
+           return InitError("popen() failed!");
         }
         while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
             result += buffer.data();
         }
-        if(std::stoi(result) != 1)   
+        int resultInt = 0;
+        if(!ParseInt32(result, &resultInt))
+            return InitError("Could not parse result from pidof");
+
+        if(resultInt != 1)   
             return InitError(_("Ensure you are running this masternode in a Unix OS and that only on syscoind is running...")); 
                          
         std::string strMasterNodePrivKey = gArgs.GetArg("-masternodeprivkey", "");
