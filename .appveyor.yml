@@ -39,6 +39,7 @@ after_build:
 - ps:  clcache -z
 before_test:
 - ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
+- ps:  ${conf_ini} = ${conf_ini}.Replace("@PACKAGE_NAME@", "Bitcoin Core")
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_srcdir@", ${env:APPVEYOR_BUILD_FOLDER})
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_builddir@", ${env:APPVEYOR_BUILD_FOLDER})
 - ps:  ${conf_ini} = ${conf_ini}.Replace("@EXEEXT@", ".exe")
