@@ -72,6 +72,15 @@ EXPECTED_BOOST_INCLUDES=(
     boost/variant.hpp
     boost/variant/apply_visitor.hpp
     boost/variant/static_visitor.hpp
+    boost/exception/diagnostic_information.hpp
+    boost/exception/exception.hpp
+    boost/exception/info.hpp
+    boost/exception/info_tuple.hpp
+    boost/functional/hash.hpp
+    boost/lexical_cast.hpp
+    boost/multiprecision/cpp_int.hpp
+    boost/throw_exception.hpp
+    boost/tuple/tuple.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do
