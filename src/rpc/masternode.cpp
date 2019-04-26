@@ -54,8 +54,8 @@ UniValue masternode(const JSONRPCRequest& request)
          strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
          strCommand != "connect" && strCommand != "status"))
             throw std::runtime_error(
-                "masternode \"command\"...\n"
-                "Set of commands to execute masternode related actions\n"
+                RPCHelpMan{"masternode",
+                "\nSet of commands to execute masternode related actions\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "\nAvailable commands:\n"
@@ -71,8 +71,13 @@ UniValue masternode(const JSONRPCRequest& request)
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
                 "  winner       - Print info on next masternode winner to vote for\n"
-                "  winners      - Print list of masternode winners\n"
-                );
+                "  winners      - Print list of masternode winners\n",
+                    {
+                        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "(count|current|genkey|outputs|initialize|start-<mode>|status|list|list-conf|winner|winners"}
+                    },
+                    {},
+                    {},
+                });
 
     if (strCommand == "list")
     {
