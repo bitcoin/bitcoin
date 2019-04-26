@@ -1180,7 +1180,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
 			    argv[0] = (char*)"syscoin-geth";
 			    execvp(argv[0], &argv[0]);
 			    if (errno != 0) {
-				    LogPrintf("Geth not found in PATH.  Geth not started");
+				    LogPrintf("Geth not found in PATH.  Geth not started\n");
 		            }
 		    }
 	    }
@@ -1195,7 +1195,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
 			    argv[0] = (char*)"syscoin-geth";
 			    execvp(argv[0], &argv[0]);
 			    if (errno != 0) {
-				    LogPrintf("Geth not found in PATH.  Geth not started");
+				    LogPrintf("Geth not found in PATH.  Geth not started\n");
 		            }
 		    }
             }
