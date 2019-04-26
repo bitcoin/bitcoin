@@ -78,12 +78,7 @@ from test_framework.util import (
     disconnect_nodes,
     get_bip9_status,
     hex_str_to_bytes,
-<<<<<<< HEAD
-    sync_blocks,
-    sync_mempools,
-=======
     assert_raises_rpc_error,
->>>>>>> cc556e4a3... Add test for superfluous witness record in deserialization
 )
 
 # Activation height of segwit.
