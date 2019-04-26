@@ -80,7 +80,7 @@ bool CProposalValidator::ValidateName()
 
     static const std::string strAllowedChars = "-_abcdefghijklmnopqrstuvwxyz0123456789";
 
-    std::transform(strName.begin(), strName.end(), strName.begin(), ::tolower);
+    std::transform(strName.begin(), strName.end(), strName.begin(), ToLower);
 
     if(strName.find_first_not_of(strAllowedChars) != std::string::npos) {
         strErrorMessages += "name contains invalid characters;";
@@ -148,7 +148,7 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    if(std::find_if(strPaymentAddress.begin(), strPaymentAddress.end(), ::isspace) != strPaymentAddress.end()) {
+    if(std::find_if(strPaymentAddress.begin(), strPaymentAddress.end(), IsSpace) != strPaymentAddress.end()) {
         strErrorMessages += "payment_address can't have whitespaces;";
         return false;
     }
@@ -175,7 +175,7 @@ bool CProposalValidator::ValidateURL()
         return false;
     }
 
-    if(std::find_if(strURL.begin(), strURL.end(), ::isspace) != strURL.end()) {
+    if(std::find_if(strURL.begin(), strURL.end(), IsSpace) != strURL.end()) {
         strErrorMessages += "url can't have whitespaces;";
         return false;
     }
