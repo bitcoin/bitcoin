@@ -18,7 +18,8 @@
 /// This file defined Address alias for FixedHash of 160 bits and some
 /// special Address constants.
 
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_ADDRESS_H
+#define SYSCOIN_ETHEREUM_ADDRESS_H
 
 #include "fixedhash.h"
 
@@ -45,4 +46,4 @@ extern Address const MaxAddress;
 extern Address const SystemAddress;
 
 }
-
+#endif // SYSCOIN_ETHEREUM_ADDRESS_H

@@ -3,13 +3,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_VOTEDB_H
-#define GOVERNANCE_VOTEDB_H
+#ifndef SYSCOIN_GOVERNANCEVOTEDB_H
+#define SYSCOIN_GOVERNANCEVOTEDB_H
 
 #include <list>
 #include <map>
 
-#include "governance-vote.h"
+#include "governancevote.h"
 #include "serialize.h"
 #include "streams.h"
 #include "uint256.h"
@@ -90,4 +90,4 @@ private:
 
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCEVOTEDB_H

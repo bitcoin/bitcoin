@@ -1,7 +1,7 @@
 // Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2017-2018 The Syscoin Core developers
 
-#include "governance-validators.h"
+#include "governancevalidators.h"
 #include <util/strencodings.h>
 
 #include "data/proposals_valid.json.h"

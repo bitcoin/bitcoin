@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MASTERNODEMAN_H
-#define MASTERNODEMAN_H
+#ifndef SYSCOIN_MASTERNODEMAN_H
+#define SYSCOIN_MASTERNODEMAN_H
 
 #include "masternode.h"
 #include "sync.h"
@@ -245,4 +245,4 @@ public:
     void DoMaintenance(CConnman &connman);
 };
 
-#endif
+#endif // SYSCOIN_MASTERNODEMAN_H

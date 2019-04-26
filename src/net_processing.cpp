@@ -35,8 +35,8 @@
 // SYSCOIN
 #include <spork.h>
 #include <governance.h>
-#include <masternode-payments.h>
-#include <masternode-sync.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
 #include <masternodeman.h>
 #if defined(NDEBUG)
 # error "Syscoin cannot be compiled without assertions."

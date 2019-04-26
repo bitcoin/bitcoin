@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_VECTOR_REF_H
+#define SYSCOIN_ETHEREUM_VECTOR_REF_H
 
 #include "db.h"
 
@@ -121,3 +122,4 @@ template<class _T> vector_ref<_T const> ref(std::vector<_T> const& _t) { return 
 template<class _T> vector_ref<_T> ref(std::vector<_T>& _t) { return vector_ref<_T>(&_t); }
 
 }
+#endif // SYSCOIN_ETHEREUM_VECTOR_REF_H

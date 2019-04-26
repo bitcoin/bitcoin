@@ -30,7 +30,7 @@
 
 #include <univalue.h>
 // SYSCOIN
-#include <masternode-sync.h>
+#include <masternodesync.h>
 #include <spork.h>
 UniValue mnsync(const JSONRPCRequest& request);
 UniValue spork(const JSONRPCRequest& request);

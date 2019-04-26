@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ASSETALLOCATION_H
-#define ASSETALLOCATION_H
+#ifndef SYSCOIN_SERVICES_ASSETALLOCATION_H
+#define SYSCOIN_SERVICES_ASSETALLOCATION_H
 
 #include "dbwrapper.h"
 #include "primitives/transaction.h"
@@ -164,4 +164,4 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
 void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);
-#endif // ASSETALLOCATION_H
+#endif // SYSCOIN_SERVICES_ASSETALLOCATION_H

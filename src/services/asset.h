@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ASSET_H
-#define ASSET_H
+#ifndef SYSCOIN_SERVICES_ASSET_H
+#define SYSCOIN_SERVICES_ASSET_H
 
 #include "rpc/server.h"
 #include "dbwrapper.h"
@@ -359,4 +359,4 @@ extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CAssetIndexDB> passetindexdb;
-#endif // ASSET_H
+#endif // SYSCOIN_SERVICES_ASSET_H

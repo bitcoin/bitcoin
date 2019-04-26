@@ -21,7 +21,8 @@
  * The FixedHash fixed-size "hash" container type.
  */
 
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_SHA3_H
+#define SYSCOIN_ETHEREUM_SHA3_H
 
 #include <string>
 #include "fixedhash.h"
@@ -69,3 +70,4 @@ extern h256 EmptySHA3;
 extern h256 EmptyListSHA3;
 
 }
+#endif // SYSCOIN_ETHEREUM_SHA3_H

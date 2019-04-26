@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MASTERNODE_PAYMENTS_H
-#define MASTERNODE_PAYMENTS_H
+#ifndef SYSCOIN_MASTERNODEPAYMENTS_H
+#define SYSCOIN_MASTERNODEPAYMENTS_H
 
 #include "core_io.h"
 #include "key.h"
@@ -232,4 +232,4 @@ public:
     void DoMaintenance() { CheckAndRemove(); }
 };
 
-#endif
+#endif // SYSCOIN_MASTERNODEPAYMENTS_H

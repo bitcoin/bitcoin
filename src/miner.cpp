@@ -30,8 +30,8 @@
 #include <queue>
 #include <utility>
 // SYSCOIN
-#include <masternode-payments.h>
-#include <masternode-sync.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
 #include <services/graph.h>
 #include <services/assetconsensus.h>
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)

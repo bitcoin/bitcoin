@@ -57,7 +57,7 @@
 #include <key_io.h>
 #include <outputtype.h>
 #include <masternodeman.h>
-#include <masternode-payments.h>
+#include <masternodepayments.h>
 #include <thread_pool/thread_pool.hpp>
 #include <services/assetconsensus.h>
 std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;

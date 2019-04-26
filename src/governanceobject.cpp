@@ -5,11 +5,11 @@
 
 #include "core_io.h"
 #include "governance.h"
-#include "governance-classes.h"
-#include "governance-object.h"
-#include "governance-vote.h"
-#include "governance-validators.h"
-#include "masternode-sync.h"
+#include "governanceclasses.h"
+#include "governanceobject.h"
+#include "governancevote.h"
+#include "governancevalidators.h"
+#include "masternodesync.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
 #include <services/assetconsensus.h>

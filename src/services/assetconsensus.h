@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ASSETCONSENSUS_H
-#define ASSETCONSENSUS_H
+#ifndef SYSCOIN_SERVICES_ASSETCONSENSUS_H
+#define SYSCOIN_SERVICES_ASSETCONSENSUS_H
 
 
 #include "primitives/transaction.h"
@@ -33,4 +33,4 @@ static CAssetAllocation emptyAllocation;
 bool ResetAssetAllocation(const std::string &senderStr, const uint256 &txHash, const bool &bMiner=false, const bool &bExpiryOnly=false);
 void ResyncAssetAllocationStates();
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool& bOverflow, const bool &bSanityCheck = false, const bool &bMiner = false);
-#endif // ASSETCONSENSUS_H
+#endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

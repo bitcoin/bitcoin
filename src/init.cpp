@@ -79,14 +79,14 @@
 #include <activemasternode.h>
 #include <dsnotificationinterface.h>
 #include <governance.h>
-#include <masternode-payments.h>
-#include <masternode-sync.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
 #include <masternodeman.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <netfulfilledman.h>
 #include <thread_pool/thread_pool.hpp>
-#include <flat-database.h>
+#include <flatdatabase.h>
 #include <services/assetconsensus.h>
 #include <key_io.h>
 extern AssetBalanceMap mempoolMapAssetBalances;

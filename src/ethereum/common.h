@@ -21,7 +21,8 @@
  * Very common stuff (i.e. that every other header needs except vector_ref.h).
  */
 
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_COMMON_H
+#define SYSCOIN_ETHEREUM_COMMON_H
 
 // way too many unsigned to size_t warnings in 32 bit build
 #ifdef _M_IX86
@@ -302,3 +303,4 @@ enum class WithExisting: int
 uint64_t utcTime();
 
 }
+#endif // SYSCOIN_ETHEREUM_COMMON_H

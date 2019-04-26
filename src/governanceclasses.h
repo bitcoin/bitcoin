@@ -2,8 +2,8 @@
 // Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef GOVERNANCE_CLASSES_H
-#define GOVERNANCE_CLASSES_H
+#ifndef SYSCOIN_GOVERNANCECLASSES_H
+#define SYSCOIN_GOVERNANCECLASSES_H
 
 //#define ENABLE_SYS_DEBUG
 
@@ -190,4 +190,4 @@ public:
     bool IsExpired();
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCECLASSES_H

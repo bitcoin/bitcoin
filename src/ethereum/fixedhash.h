@@ -21,7 +21,8 @@
  * The FixedHash fixed-size "hash" container type.
  */
 
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_FIXEDHASH_H
+#define SYSCOIN_ETHEREUM_FIXEDHASH_H
 
 #include <array>
 #include <cstdint>
@@ -384,3 +385,4 @@ namespace std
 	template<> struct hash<dev::h256>: dev::h256::hash {};
 	template<> struct hash<dev::h512>: dev::h512::hash {};
 }
+  #endif // SYSCOIN_ETHEREUM_FIXEDHASH_H

@@ -1,5 +1,5 @@
-#ifndef WITNESSADDRESS_H
-#define WITNESSADDRESS_H
+#ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
+#define SYSCOIN_SERVICES_WITNESSADDRESS_H
 #include <serialize.h>
 class CWitnessAddress{
 public:
@@ -60,4 +60,4 @@ public:
         return (nVersion == 0 && vchWitnessProgram.empty());
     }
 };  
-#endif // WITNESSADDRESS_H
+#endif // SYSCOIN_SERVICES_WITNESSADDRESS_H

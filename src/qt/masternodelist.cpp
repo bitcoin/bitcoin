@@ -6,7 +6,7 @@
 #include "clientversion.h"
 #include "init.h"
 #include "guiutil.h"
-#include "masternode-sync.h"
+#include "masternodesync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
 #include <qt/qrdialog.h>

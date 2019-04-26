@@ -19,7 +19,8 @@
  * @date 2014
  */
 
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_EXCEPTIONS_H
+#define SYSCOIN_ETHEREUM_EXCEPTIONS_H
 
 #include <exception>
 #include <string>
@@ -143,3 +144,4 @@ DEV_SIMPLE_EXCEPTION(DAGCreationFailure);
 DEV_SIMPLE_EXCEPTION(DAGComputeFailure);
 
 }
+#endif // SYSCOIN_ETHEREUM_EXCEPTIONS_H

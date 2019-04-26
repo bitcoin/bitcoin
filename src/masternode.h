@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MASTERNODE_H
-#define MASTERNODE_H
+#ifndef SYSCOIN_MASTERNODE_H
+#define SYSCOIN_MASTERNODE_H
 
 #include "key.h"
 #include "validation.h"
@@ -420,4 +420,4 @@ public:
     }
 };
 
-#endif
+#endif // SYSCOIN_MASTERNODE_H

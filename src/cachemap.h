@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef CACHEMAP_H_
-#define CACHEMAP_H_
+#ifndef SYSCOIN_CACHEMAP_H
+#define SYSCOIN_CACHEMAP_H
 
 #include <map>
 #include <list>
@@ -187,4 +187,4 @@ private:
     }
 };
 
-#endif /* CACHEMAP_H_ */
+#endif // SYSCOIN_CACHEMAP_H
