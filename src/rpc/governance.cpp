@@ -190,8 +190,12 @@ UniValue gobject(const JSONRPCRequest& request)
 
         std::string strRevision = request.params[2].get_str();
         std::string strTime = request.params[3].get_str();
-        int nRevision = atoi(strRevision);
-        int64_t nTime = atoi64(strTime);
+        int nRevision;
+        int64_t nTime;
+        if(!ParseInt32(strRevision, &nRevision))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not parse revision");
+        if(!ParseInt64(strTime, &nTime))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not parse time");
         std::string strDataHex = request.params[4].get_str();
 
         // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
@@ -277,8 +281,12 @@ UniValue gobject(const JSONRPCRequest& request)
 
         std::string strRevision = request.params[2].get_str();
         std::string strTime = request.params[3].get_str();
-        int nRevision = atoi(strRevision);
-        int64_t nTime = atoi64(strTime);
+        int nRevision;
+        int64_t nTime;
+        if(!ParseInt32(strRevision, &nRevision))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not parse revision");
+        if(!ParseInt64(strTime, &nTime))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not parse time");
         std::string strDataHex = request.params[4].get_str();
         CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
         
@@ -859,7 +867,10 @@ UniValue gobject(const JSONRPCRequest& request)
         if (request.params.size() == 4) {
             uint256 txid = ParseHashV(request.params[2], "Masternode Collateral hash");
             std::string strVout = request.params[3].get_str();
-            mnCollateralOutpoint = COutPoint(txid, (uint32_t)atoi(strVout));
+            uint32_t vote ;
+            if(!ParseUInt32(strVout, &vote))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not parse vote");
+            mnCollateralOutpoint = COutPoint(txid,vote);
         }
 
         // FIND OBJECT USER IS LOOKING FOR

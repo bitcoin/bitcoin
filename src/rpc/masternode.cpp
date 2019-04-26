@@ -247,15 +247,19 @@ UniValue masternode(const JSONRPCRequest& request)
 
         for (const auto& mne : masternodeConfig.getEntries()) {
             std::string strError;
-
-            COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), (uint32_t)atoi(mne.getOutputIndex()));
+            uint32_t outputIndex;
+            if(!ParseUInt32(mne.getOutputIndex(), &outputIndex)){
+                strError = "Could not parse output index";
+                fResult = false;
+            }
+            COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), outputIndex);
             CMasternode mn;
             bool fFound = mnodeman.Get(outpoint, mn);
             CMasternodeBroadcast mnb;
 
             if(strCommand == "start-missing" && fFound) continue;
             if(strCommand == "start-disabled" && fFound && mn.IsEnabled()) continue;
-            bool fResult = CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+            fResult = fResult && CMasternodeBroadcast::Create(pwallet, mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             int nDoS;
             if (fResult && !mnodeman.CheckMnbAndUpdateMasternodeList(NULL, mnb, nDoS, *g_connman)) {
@@ -299,7 +303,11 @@ UniValue masternode(const JSONRPCRequest& request)
         UniValue resultObj(UniValue::VOBJ);
 
         for (const auto& mne : masternodeConfig.getEntries()) {
-            COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), (uint32_t)atoi(mne.getOutputIndex()));
+            uint32_t outputIndex;
+            if(!ParseUInt32(mne.getOutputIndex(), &outputIndex)){
+                continue;
+            }
+            COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), outputIndex);
             CMasternode mn;
             bool fFound = mnodeman.Get(outpoint, mn);
 
@@ -371,7 +379,8 @@ UniValue masternode(const JSONRPCRequest& request)
         std::string strFilter = "";
 
         if (request.params.size() >= 2) {
-            nLast = atoi(request.params[1].get_str());
+            if(!ParseInt32(request.params[1].get_str(), &nLast))
+                nLast = 10;
         }
 
         if (request.params.size() == 3) {

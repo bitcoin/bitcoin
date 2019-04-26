@@ -488,7 +488,10 @@ void MasternodeList::ShowQRCode(std::string strAlias) {
             strMNPrivKey = mne.getPrivKey();
             strCollateral = mne.getTxHash() + "-" + mne.getOutputIndex();
             strIP = mne.getIp();
-            fFound = mnodeman.Get(COutPoint(uint256S(mne.getTxHash()), atoi(mne.getOutputIndex())), mn);
+            uint32_t outputIndex;
+            if(!ParseUInt32(mne.getOutputIndex(), &outputIndex))
+                continue;
+            fFound = mnodeman.Get(COutPoint(uint256S(mne.getTxHash()), outputIndex), mn);
             break;
         }
     }

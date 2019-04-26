@@ -407,7 +407,11 @@ bool GetMasternodeOutpointAndKeys(interfaces::Wallet& wallet, COutPoint& outpoin
 
     // Find specific outpoint
     uint256 txHash = uint256S(strTxHash);
-    int nOutputIndex = atoi(strOutputIndex);
+    uint32_t nOutputIndex;
+    if(!ParseUInt32(strOutputIndex, &nOutputIndex)){
+        LogPrintf("GetMasternodeOutpointAndKeys -- Could not parse output index\n");
+        return false;
+    }
     COutPoint outpoint(txHash, nOutputIndex);
    
     Coin coin;
@@ -450,7 +454,11 @@ bool GetMasternodeOutpointAndKeys(CWallet* const pwallet, COutPoint& outpointRet
 
     // Find specific outpoint
     uint256 txHash = uint256S(strTxHash);
-    int nOutputIndex = atoi(strOutputIndex);
+    uint32_t nOutputIndex;
+    if(!ParseUInt32(strOutputIndex, &nOutputIndex)){
+        LogPrintf("GetMasternodeOutpointAndKeys -- Could not parse output index\n");
+        return false;
+    }
     COutPoint outpoint(txHash, nOutputIndex);
    
     Coin coin;

@@ -637,7 +637,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid ));
-	int nprecision = atoi(precision);
+	int nprecision;
+	ParseInt32(precision, &nprecision);
 
 	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "_id").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == address);
@@ -653,7 +654,9 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision), AssetAmountFromValue(maxsupplytmp, nprecision));
 	int update_flags = find_value(r.get_obj(), "update_flags").get_int();
-	int paramUpdateFlags = atoi(updateflags);
+	int paramUpdateFlags;
+	ParseInt32(updateflags, &paramUpdateFlags);
+
 	BOOST_CHECK(update_flags == paramUpdateFlags);
 
 
@@ -670,7 +673,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == AssetAmountFromValue(supplytmp, nprecision));
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision), AssetAmountFromValue(maxsupplytmp, nprecision));
         int update_flags = find_value(r.get_obj(), "update_flags").get_int();
-        int paramUpdateFlags = atoi(updateflags);
+        int paramUpdateFlags;
+		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
 	}
 	if (!otherNode2.empty())
@@ -686,7 +690,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 		BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupplyu, nprecision), AssetAmountFromValue(maxsupplytmp, nprecision));
 
         int update_flags = find_value(r.get_obj(), "update_flags").get_int();
-        int paramUpdateFlags = atoi(updateflags);
+        int paramUpdateFlags;
+		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
 	}
 	return guid;

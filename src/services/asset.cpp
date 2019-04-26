@@ -311,7 +311,10 @@ void LockMasternodesInDefaultWallet(){
         uint32_t outputIndex;
         for (const auto& mne : masternodeConfig.getEntries()) {
             mnTxHash.SetHex(mne.getTxHash());
-            outputIndex = (uint32_t)atoi(mne.getOutputIndex());
+            if(!ParseUInt32(mne.getOutputIndex(), &outputIndex)){
+                LogPrintf("  %s %s - Could not parse output index, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
+                continue;
+            }
             COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
             // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
             if(pwallet->IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
