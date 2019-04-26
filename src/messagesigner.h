@@ -6,7 +6,7 @@
 #ifndef SYSCOIN_MESSAGESIGNER_H
 #define SYSCOIN_MESSAGESIGNER_H
 
-#include "key.h"
+#include <key.h>
 
 /** Helper class for signing messages and checking their signatures
  */

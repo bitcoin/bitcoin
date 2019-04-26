@@ -5,7 +5,7 @@
 #ifndef SYSCOIN_DSNOTIFICATIONINTERFACE_H
 #define SYSCOIN_DSNOTIFICATIONINTERFACE_H
 
-#include "validationinterface.h"
+#include <validationinterface.h>
 
 class CDSNotificationInterface : public CValidationInterface
 {

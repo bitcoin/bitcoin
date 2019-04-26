@@ -6,9 +6,9 @@
 #ifndef SYSCOIN_GOVERNANCEMISC_H
 #define SYSCOIN_GOVERNANCEMISC_H
 
-#include "validation.h"
-#include "governance.h"
-#include "init.h"
+#include <validation.h>
+#include <governance.h>
+#include <init.h>
 
 class CGovernanceVote;
 

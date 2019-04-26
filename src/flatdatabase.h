@@ -6,10 +6,10 @@
 #ifndef SYSCOIN_FLATDATABASE_H
 #define SYSCOIN_FLATDATABASE_H
 
-#include "chainparams.h"
-#include "clientversion.h"
-#include "hash.h"
-#include "streams.h"
+#include <chainparams.h>
+#include <clientversion.h>
+#include <hash.h>
+#include <streams.h>
 
 #include <boost/filesystem.hpp>
 

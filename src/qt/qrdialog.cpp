@@ -6,11 +6,11 @@
 #include <qt/qrdialog.h>
 #include <qt/forms/ui_qrdialog.h>
 
-#include "syscoinunits.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
+#include <syscoinunits.h>
+#include <guiconstants.h>
+#include <guiutil.h>
+#include <optionsmodel.h>
+#include <walletmodel.h>
 
 #include <QClipboard>
 #include <QDrag>
@@ -23,7 +23,7 @@
 #endif
 
 #if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h" /* for USE_QRCODE */
+#include <config/syscoin-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE

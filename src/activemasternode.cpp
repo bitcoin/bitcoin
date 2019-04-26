@@ -3,14 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "masternode.h"
-#include "masternodesync.h"
-#include "masternodeman.h"
-#include "masternodepayments.h"
-#include "netbase.h"
-#include "protocol.h"
-#include "script/standard.h"
+#include <activemasternode.h>
+#include <masternode.h>
+#include <masternodesync.h>
+#include <masternodeman.h>
+#include <masternodepayments.h>
+#include <netbase.h>
+#include <protocol.h>
+#include <script/standard.h>
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;

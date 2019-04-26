@@ -3,24 +3,24 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "base58.h"
-#include "clientversion.h"
-#include "init.h"
-#include "netbase.h"
-#include "validation.h"
-#include "masternodepayments.h"
-#include "masternodesync.h"
-#include "masternodeconfig.h"
-#include "masternodeman.h"
-#include "rpc/server.h"
+#include <activemasternode.h>
+#include <base58.h>
+#include <clientversion.h>
+#include <init.h>
+#include <netbase.h>
+#include <validation.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
+#include <masternodeconfig.h>
+#include <masternodeman.h>
+#include <rpc/server.h>
 #include <util/moneystr.h>
 #include <key_io.h>
 #include <fstream>
 #include <iomanip>
 #include <univalue.h>
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
+#include <wallet/wallet.h>
+#include <wallet/rpcwallet.h>
 #include <rpc/util.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 

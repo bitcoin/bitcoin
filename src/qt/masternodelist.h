@@ -1,9 +1,9 @@
 #ifndef SYSCOIN_QT_MASTERNODELIST_H
 #define SYSCOIN_QT_MASTERNODELIST_H
 
-#include "primitives/transaction.h"
-#include "platformstyle.h"
-#include "sync.h"
+#include <primitives/transaction.h>
+#include <platformstyle.h>
+#include <sync.h>
 #include <interfaces/wallet.h>
 
 #include <QMenu>

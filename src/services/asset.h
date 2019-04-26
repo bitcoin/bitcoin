@@ -5,12 +5,12 @@
 #ifndef SYSCOIN_SERVICES_ASSET_H
 #define SYSCOIN_SERVICES_ASSET_H
 
-#include "rpc/server.h"
-#include "dbwrapper.h"
-#include "script/standard.h"
-#include "serialize.h"
-#include "primitives/transaction.h"
-#include "services/assetallocation.h"
+#include <rpc/server.h>
+#include <dbwrapper.h>
+#include <script/standard.h>
+#include <serialize.h>
+#include <primitives/transaction.h>
+#include <services/assetallocation.h>
 #include <sys/types.h>
 class CTransaction;
 class CReserveKey;

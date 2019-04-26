@@ -6,8 +6,8 @@
 #define SYSCOIN_SERVICES_ASSETCONSENSUS_H
 
 
-#include "primitives/transaction.h"
-#include "services/asset.h"
+#include <primitives/transaction.h>
+#include <services/asset.h>
 class CBlockIndexDB : public CDBWrapper {
 public:
     CBlockIndexDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "blockindex", nCacheSize, fMemory, fWipe) {}

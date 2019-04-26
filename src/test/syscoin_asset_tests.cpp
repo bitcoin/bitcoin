@@ -2,17 +2,17 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_syscoin_services.h"
+#include <test/test_syscoin_services.h>
 #include <test/data/ethspv_valid.json.h>
 #include <util/time.h>
-#include "rpc/server.h"
-#include "services/asset.h"
-#include "base58.h"
-#include "chainparams.h"
+#include <rpc/server.h>
+#include <services/asset.h>
+#include <base58.h>
+#include <chainparams.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iterator>
-#include "core_io.h"
+#include <core_io.h>
 #include <key.h>
 #include <math.h>
 #include <key_io.h>

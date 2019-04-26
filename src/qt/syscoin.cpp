@@ -53,7 +53,7 @@
 #include <QTimer>
 #include <QTranslator>
 // SYSCOIN
-#include "masternodeconfig.h"
+#include <masternodeconfig.h>
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
 #if defined(QT_QPA_PLATFORM_XCB)

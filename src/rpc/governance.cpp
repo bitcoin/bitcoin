@@ -5,24 +5,24 @@
 
 //#define ENABLE_SYS_DEBUG
 
-#include "activemasternode.h"
-#include "consensus/validation.h"
-#include "governance.h"
-#include "governancevote.h"
-#include "governanceclasses.h"
-#include "governancevalidators.h"
-#include "init.h"
-#include "validation.h"
-#include "masternode.h"
-#include "masternodesync.h"
-#include "masternodeconfig.h"
-#include "masternodeman.h"
-#include "messagesigner.h"
-#include "rpc/server.h"
+#include <activemasternode.h>
+#include <consensus/validation.h>
+#include <governance.h>
+#include <governancevote.h>
+#include <governanceclasses.h>
+#include <governancevalidators.h>
+#include <init.h>
+#include <validation.h>
+#include <masternode.h>
+#include <masternodesync.h>
+#include <masternodeconfig.h>
+#include <masternodeman.h>
+#include <messagesigner.h>
+#include <rpc/server.h>
 #include <util/moneystr.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
+#include <wallet/wallet.h>
+#include <wallet/rpcwallet.h>
 #include <wallet/coincontrol.h>
 #endif // ENABLE_WALLET
 #include <core_io.h>

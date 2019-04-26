@@ -1,18 +1,18 @@
 #include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
-#include "activemasternode.h"
-#include "clientmodel.h"
-#include "clientversion.h"
-#include "init.h"
-#include "guiutil.h"
-#include "masternodesync.h"
-#include "masternodeconfig.h"
-#include "masternodeman.h"
+#include <activemasternode.h>
+#include <clientmodel.h>
+#include <clientversion.h>
+#include <init.h>
+#include <guiutil.h>
+#include <masternodesync.h>
+#include <masternodeconfig.h>
+#include <masternodeman.h>
 #include <qt/qrdialog.h>
-#include "sync.h"
-#include "wallet/wallet.h"
-#include "walletmodel.h"
+#include <sync.h>
+#include <wallet/wallet.h>
+#include <walletmodel.h>
 
 #include <QTimer>
 #include <QMessageBox>

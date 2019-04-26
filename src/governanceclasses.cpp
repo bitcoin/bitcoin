@@ -5,10 +5,10 @@
 
 //#define ENABLE_SYS_DEBUG
 
-#include "core_io.h"
-#include "governanceclasses.h"
-#include "init.h"
-#include "validation.h"
+#include <core_io.h>
+#include <governanceclasses.h>
+#include <init.h>
+#include <validation.h>
 #include <util/strencodings.h>
 
 #include <boost/algorithm/string.hpp>

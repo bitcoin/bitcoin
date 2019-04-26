@@ -3,18 +3,18 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "consensus/validation.h"
-#include "governance.h"
-#include "governanceobject.h"
-#include "governancevalidators.h"
-#include "governancevote.h"
-#include "governanceclasses.h"
-#include "netmessagemaker.h"
-#include "masternode.h"
-#include "masternodesync.h"
-#include "masternodeman.h"
-#include "messagesigner.h"
-#include "netfulfilledman.h"
+#include <consensus/validation.h>
+#include <governance.h>
+#include <governanceobject.h>
+#include <governancevalidators.h>
+#include <governancevote.h>
+#include <governanceclasses.h>
+#include <netmessagemaker.h>
+#include <masternode.h>
+#include <masternodesync.h>
+#include <masternodeman.h>
+#include <messagesigner.h>
+#include <netfulfilledman.h>
 
 CGovernanceManager governance;
 

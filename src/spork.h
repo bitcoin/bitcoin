@@ -6,10 +6,10 @@
 #ifndef SYSCOIN_SPORK_H
 #define SYSCOIN_SPORK_H
 
-#include "hash.h"
-#include "net.h"
+#include <hash.h>
+#include <net.h>
 #include <util/strencodings.h>
-#include "key.h"
+#include <key.h>
 
 class CSporkMessage;
 class CSporkManager;

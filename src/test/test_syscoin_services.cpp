@@ -2,18 +2,18 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test_syscoin_services.h"
+#include <test_syscoin_services.h>
 #include <util/time.h>
 #include <util/system.h>
-#include "amount.h"
-#include "rpc/server.h"
-#include "services/asset.h"
-#include "services/assetallocation.h"
-#include "wallet/crypter.h"
-#include "random.h"
-#include "base58.h"
-#include "chainparams.h"
-#include "core_io.h"
+#include <amount.h>
+#include <rpc/server.h>
+#include <services/asset.h>
+#include <services/assetallocation.h>
+#include <wallet/crypter.h>
+#include <random.h>
+#include <base58.h>
+#include <chainparams.h>
+#include <core_io.h>
 #include <key_io.h>
 #include <memory>
 #include <string>

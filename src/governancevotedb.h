@@ -9,10 +9,10 @@
 #include <list>
 #include <map>
 
-#include "governancevote.h"
-#include "serialize.h"
-#include "streams.h"
-#include "uint256.h"
+#include <governancevote.h>
+#include <serialize.h>
+#include <streams.h>
+#include <uint256.h>
 
 /**
  * Represents the collection of votes associated with a given CGovernanceObject

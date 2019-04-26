@@ -6,8 +6,8 @@
 #define SYSCOIN_ETHEREUM_ETHEREUM_H
 
 #include <vector>
-#include "commondata.h"
-#include "rlp.h"
+#include <commondata.h>
+#include <rlp.h>
 #include <amount.h>
 class CWitnessAddress;
 

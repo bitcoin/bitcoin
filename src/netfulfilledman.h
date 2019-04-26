@@ -6,9 +6,9 @@
 #ifndef SYSCOIN_NETFULFILLEDMAN_H
 #define SYSCOIN_NETFULFILLEDMAN_H
 
-#include "netaddress.h"
-#include "serialize.h"
-#include "sync.h"
+#include <netaddress.h>
+#include <serialize.h>
+#include <sync.h>
 
 class CNetFulfilledRequestManager;
 extern CNetFulfilledRequestManager netfulfilledman;

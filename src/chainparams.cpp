@@ -17,10 +17,10 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 // SYSCOIN includes for gen block
-#include "uint256.h"
-#include "arith_uint256.h"
-#include "hash.h"
-#include "streams.h"
+#include <uint256.h>
+#include <arith_uint256.h>
+#include <hash.h>
+#include <streams.h>
 #include <time.h>
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {

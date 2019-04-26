@@ -6,8 +6,8 @@
 #ifndef SYSCOIN_MASTERNODEMAN_H
 #define SYSCOIN_MASTERNODEMAN_H
 
-#include "masternode.h"
-#include "sync.h"
+#include <masternode.h>
+#include <sync.h>
 
 class CMasternodeMan;
 class CConnman;
