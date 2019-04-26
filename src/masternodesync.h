@@ -5,8 +5,8 @@
 #ifndef SYSCOIN_MASTERNODESYNC_H
 #define SYSCOIN_MASTERNODESYNC_H
 
-#include "chain.h"
-#include "net.h"
+#include <chain.h>
+#include <net.h>
 
 #include <univalue.h>
 

@@ -1,7 +1,7 @@
 #ifndef SYSCOIN_ETHEREUM_VECTOR_REF_H
 #define SYSCOIN_ETHEREUM_VECTOR_REF_H
 
-#include "db.h"
+#include <db.h>
 
 #include <cstring>
 #include <cassert>

@@ -3,21 +3,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "base58.h"
-#include "clientversion.h"
-#include "init.h"
-#include "netbase.h"
-#include "masternode.h"
-#include "masternodepayments.h"
-#include "masternodesync.h"
-#include "masternodeman.h"
-#include "messagesigner.h"
-#include "script/standard.h"
+#include <activemasternode.h>
+#include <base58.h>
+#include <clientversion.h>
+#include <init.h>
+#include <netbase.h>
+#include <masternode.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
+#include <masternodeman.h>
+#include <messagesigner.h>
+#include <script/standard.h>
 #include <shutdown.h>
 #include <key_io.h>
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h"
+#include <wallet/wallet.h>
 #endif // ENABLE_WALLET
 #include <boost/lexical_cast.hpp>
 #include <outputtype.h>

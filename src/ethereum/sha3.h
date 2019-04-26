@@ -25,8 +25,8 @@
 #define SYSCOIN_ETHEREUM_SHA3_H
 
 #include <string>
-#include "fixedhash.h"
-#include "vector_ref.h"
+#include <fixedhash.h>
+#include <vector_ref.h>
 
 namespace dev
 {

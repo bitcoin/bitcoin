@@ -8,17 +8,17 @@
 
 //#define ENABLE_SYS_DEBUG
 
-#include "cachemultimap.h"
-#include "governanceexceptions.h"
-#include "governancevote.h"
-#include "governancevotedb.h"
-#include "key.h"
-#include "net.h"
-#include "sync.h"
+#include <cachemultimap.h>
+#include <governanceexceptions.h>
+#include <governancevote.h>
+#include <governancevotedb.h>
+#include <key.h>
+#include <net.h>
+#include <sync.h>
 #include <util/strencodings.h>
 
 #include <univalue.h>
-#include "version.h"
+#include <version.h>
 class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;

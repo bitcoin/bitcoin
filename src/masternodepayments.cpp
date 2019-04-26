@@ -3,16 +3,16 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "consensus/validation.h"
-#include "governanceclasses.h"
-#include "masternodepayments.h"
-#include "masternodesync.h"
-#include "masternodeman.h"
-#include "messagesigner.h"
-#include "netfulfilledman.h"
-#include "netmessagemaker.h"
-#include "spork.h"
+#include <activemasternode.h>
+#include <consensus/validation.h>
+#include <governanceclasses.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
+#include <masternodeman.h>
+#include <messagesigner.h>
+#include <netfulfilledman.h>
+#include <netmessagemaker.h>
+#include <spork.h>
 #include <outputtype.h>
 #include <boost/lexical_cast.hpp>
 

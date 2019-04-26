@@ -6,8 +6,8 @@
 #ifndef SYSCOIN_GOVERNANCEVOTE_H
 #define SYSCOIN_GOVERNANCEVOTE_H
 
-#include "key.h"
-#include "primitives/transaction.h"
+#include <key.h>
+#include <primitives/transaction.h>
 
 #include <boost/lexical_cast.hpp>
 

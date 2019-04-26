@@ -6,10 +6,10 @@
 #ifndef SYSCOIN_ACTIVEMASTERNODE_H
 #define SYSCOIN_ACTIVEMASTERNODE_H
 
-#include "chainparams.h"
-#include "key.h"
-#include "net.h"
-#include "primitives/transaction.h"
+#include <chainparams.h>
+#include <key.h>
+#include <net.h>
+#include <primitives/transaction.h>
 
 class CActiveMasternode;
 

@@ -3,13 +3,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "spork.h"
+#include <spork.h>
 
-#include "base58.h"
-#include "chainparams.h"
-#include "validation.h"
-#include "messagesigner.h"
-#include "netmessagemaker.h"
+#include <base58.h>
+#include <chainparams.h>
+#include <validation.h>
+#include <messagesigner.h>
+#include <netmessagemaker.h>
 #include <key_io.h>
 #include <boost/lexical_cast.hpp>
 extern void EraseInvRequest(const CNode* pfrom, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

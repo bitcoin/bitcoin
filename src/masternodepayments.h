@@ -6,10 +6,10 @@
 #ifndef SYSCOIN_MASTERNODEPAYMENTS_H
 #define SYSCOIN_MASTERNODEPAYMENTS_H
 
-#include "core_io.h"
-#include "key.h"
-#include "masternode.h"
-#include "net_processing.h"
+#include <core_io.h>
+#include <key.h>
+#include <masternode.h>
+#include <net_processing.h>
 #include <util/strencodings.h>
 
 class CMasternodePayments;

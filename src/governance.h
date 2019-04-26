@@ -8,15 +8,15 @@
 
 //#define ENABLE_SYS_DEBUG
 
-#include "bloom.h"
-#include "cachemap.h"
-#include "cachemultimap.h"
-#include "chain.h"
-#include "governanceexceptions.h"
-#include "governanceobject.h"
-#include "governancevote.h"
-#include "net.h"
-#include "sync.h"
+#include <bloom.h>
+#include <cachemap.h>
+#include <cachemultimap.h>
+#include <chain.h>
+#include <governanceexceptions.h>
+#include <governanceobject.h>
+#include <governancevote.h>
+#include <net.h>
+#include <sync.h>
 
 #include <univalue.h>
 

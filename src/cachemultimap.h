@@ -11,9 +11,9 @@
 #include <list>
 #include <set>
 
-#include "serialize.h"
+#include <serialize.h>
 
-#include "cachemap.h"
+#include <cachemap.h>
 
 /**
  * Map like container that keeps the N most recently added items

@@ -2,13 +2,13 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "init.h"
-#include "validation.h"
-#include "txmempool.h"
-#include "core_io.h"
-#include "wallet/wallet.h"
-#include "wallet/rpcwallet.h"
-#include "chainparams.h"
+#include <init.h>
+#include <validation.h>
+#include <txmempool.h>
+#include <core_io.h>
+#include <wallet/wallet.h>
+#include <wallet/rpcwallet.h>
+#include <chainparams.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string/predicate.hpp>

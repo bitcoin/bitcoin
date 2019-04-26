@@ -2,15 +2,15 @@
 #include <test/data/ethspv_valid.json.h>
 #include <test/data/ethspv_invalid.json.h>
 
-#include "uint256.h"
+#include <uint256.h>
 #include <util/strencodings.h>
-#include "ethereum/ethereum.h"
-#include "ethereum/common.h"
-#include "ethereum/rlp.h"
-#include "script/interpreter.h"
-#include "script/standard.h"
-#include "policy/policy.h"
-#include "services/asset.h"
+#include <ethereum/ethereum.h>
+#include <ethereum/common.h>
+#include <ethereum/rlp.h>
+#include <script/interpreter.h>
+#include <script/standard.h>
+#include <policy/policy.h>
+#include <services/asset.h>
 #include <univalue.h>
 
 extern UniValue read_json(const std::string& jsondata);

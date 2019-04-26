@@ -5,10 +5,10 @@
 #ifndef SYSCOIN_SERVICES_ASSETALLOCATION_H
 #define SYSCOIN_SERVICES_ASSETALLOCATION_H
 
-#include "dbwrapper.h"
-#include "primitives/transaction.h"
+#include <dbwrapper.h>
+#include <primitives/transaction.h>
 #include <unordered_map>
-#include "services/graph.h"
+#include <services/graph.h>
 #include <txmempool.h>
 #include <services/witnessaddress.h>
 class CTransaction;

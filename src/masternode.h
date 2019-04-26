@@ -6,10 +6,10 @@
 #ifndef SYSCOIN_MASTERNODE_H
 #define SYSCOIN_MASTERNODE_H
 
-#include "key.h"
-#include "validation.h"
-#include "spork.h"
-#include "clientversion.h"
+#include <key.h>
+#include <validation.h>
+#include <spork.h>
+#include <clientversion.h>
 #include <net_processing.h>
 #include <interfaces/wallet.h>
 class CMasternode;

@@ -3,17 +3,17 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "governance.h"
-#include "validation.h"
-#include "masternode.h"
-#include "masternodepayments.h"
-#include "masternodesync.h"
-#include "masternodeman.h"
-#include "netfulfilledman.h"
-#include "netmessagemaker.h"
-#include "spork.h"
-#include "ui_interface.h"
+#include <activemasternode.h>
+#include <governance.h>
+#include <validation.h>
+#include <masternode.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
+#include <masternodeman.h>
+#include <netfulfilledman.h>
+#include <netmessagemaker.h>
+#include <spork.h>
+#include <ui_interface.h>
 
 class CMasternodeSync;
 CMasternodeSync masternodeSync;

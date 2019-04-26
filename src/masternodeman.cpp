@@ -3,20 +3,20 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activemasternode.h"
-#include "addrman.h"
-#include "clientversion.h"
-#include "init.h"
-#include "governance.h"
-#include "masternodepayments.h"
-#include "masternodesync.h"
-#include "masternodeman.h"
-#include "messagesigner.h"
-#include "netfulfilledman.h"
-#include "netmessagemaker.h"
-#include "script/standard.h"
-#include "ui_interface.h"
-#include "warnings.h"
+#include <activemasternode.h>
+#include <addrman.h>
+#include <clientversion.h>
+#include <init.h>
+#include <governance.h>
+#include <masternodepayments.h>
+#include <masternodesync.h>
+#include <masternodeman.h>
+#include <messagesigner.h>
+#include <netfulfilledman.h>
+#include <netmessagemaker.h>
+#include <script/standard.h>
+#include <ui_interface.h>
+#include <warnings.h>
 #include <shutdown.h>
 #include <outputtype.h>
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);

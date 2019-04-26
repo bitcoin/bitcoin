@@ -7,11 +7,11 @@
 
 //#define ENABLE_SYS_DEBUG
 
-#include "base58.h"
-#include "governance.h"
-#include "key.h"
+#include <base58.h>
+#include <governance.h>
+#include <key.h>
 #include <key_io.h>
-#include "script/standard.h"
+#include <script/standard.h>
 
 #include <boost/shared_ptr.hpp>
 
