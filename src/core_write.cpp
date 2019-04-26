@@ -17,7 +17,6 @@
 #include <util/strencodings.h>
 // SYSCOIN
 #include <services/asset.h>
-#include <key_io.h>
 UniValue ValueFromAmount(const CAmount& amount)
 {
     bool sign = amount < 0;
