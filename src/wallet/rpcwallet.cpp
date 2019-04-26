@@ -48,8 +48,6 @@
 #include <functional>
 // SYSCOIN
 #include <services/assetconsensus.h>
-#include <rpc/governance.cpp>
-#include <rpc/masternode.cpp>
 #include <base58.h>
 #include <bech32.h>
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
