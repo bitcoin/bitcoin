@@ -20,10 +20,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/thread.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string/case_conv.hpp> // for to_upper()
 #include <bech32.h>
 #include <rpc/util.h>
 static int node1LastBlock = 0;

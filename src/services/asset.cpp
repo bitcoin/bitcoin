@@ -7,10 +7,8 @@
 #include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
-#include <boost/algorithm/string/classification.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <chrono>
 #include <wallet/coincontrol.h>
 #include <rpc/util.h>

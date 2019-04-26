@@ -9,15 +9,10 @@
 #include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <chrono>
 #include <wallet/coincontrol.h>
 #include <key_io.h>
 #include <consensus/validation.h>
-#include <boost/thread.hpp>
 #include <merkleblock.h>
 #include <ethereum/ethereum.h>
 #include <ethereum/address.h>

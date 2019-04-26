@@ -11,9 +11,7 @@
 #include <chainparams.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string.hpp>
-#include <boost/range/adaptor/reversed.hpp>
 #include <key_io.h>
 #include <future>
 #include <rpc/util.h>
