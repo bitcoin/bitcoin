@@ -94,6 +94,11 @@ UniValue gobject(const JSONRPCRequest& request)
                 "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n",
                     {
                         {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "command to call (check|prepare|submit|deserialize|count|get|getvotes|getcurrentvotes|list|diff|vote-name|vote-conf|vote-many)"}
+                    },
+                    RPCResult{""},
+                    RPCExamples{
+                        HelpExampleCli("gobject", "list")
+                        + HelpExampleRpc("gobject", "list")
                     }
                 }.ToString());
 
@@ -917,8 +922,13 @@ UniValue voteraw(const JSONRPCRequest& request)
                         {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "The vote (yes|no|abstain)"},
                         {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "The linux epoche time"},
                         {"vote-sig", RPCArg::Type::STR, RPCArg::Optional::NO, "The external signature of the vote"}
-                    }
-                });
+                    },
+                    RPCResult{""},
+                    RPCExamples{
+                        HelpExampleCli("voteraw", "\"tx-hash\" \"tx-index\" \"gov-hash\" \"funding\" \"yes\" \"time\" \"vote-sig\"")
+                        + HelpExampleRpc("voteraw", "\"tx-hash\", \"tx-index\", \"gov-hash\", \"funding\", \"yes\", \"time\", \"vote-sig\"")
+                        }
+                }.ToString());
 
     uint256 hashMnTx = ParseHashV(request.params[0], "mn tx hash");
     int nMnTxIndex = request.params[1].get_int();
@@ -1027,7 +1037,7 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
             RPCHelpMan{"getsuperblockbudget",
-                "\nReturns the absolute maximum sum of superblock payments allowed.\n"
+                "\nReturns the absolute maximum sum of superblock payments allowed.\n",
                 {
                     {"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block index"}
                 },
@@ -1038,7 +1048,7 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
                     HelpExampleCli("getsuperblockbudget", "1000")
                     + HelpExampleRpc("getsuperblockbudget", "1000")
                 }    
-         }.ToString());
+             }.ToString());
     }
 
     int nBlockHeight = request.params[0].get_int();

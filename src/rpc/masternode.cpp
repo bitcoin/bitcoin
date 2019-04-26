@@ -75,9 +75,12 @@ UniValue masternode(const JSONRPCRequest& request)
                     {
                         {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "(count|current|genkey|outputs|initialize|start-<mode>|status|list|list-conf|winner|winners"}
                     },
-                    {},
-                    {},
-                });
+                    RPCResult{""},
+                    RPCExamples{
+                        HelpExampleCli("masternode", "list")
+                        + HelpExampleRpc("masternode", "list")
+                    },
+                }.ToString());
 
     if (strCommand == "list")
     {
