@@ -1,5 +1,5 @@
-#ifndef MASTERNODELIST_H
-#define MASTERNODELIST_H
+#ifndef SYSCOIN_QT_MASTERNODELIST_H
+#define SYSCOIN_QT_MASTERNODELIST_H
 
 #include "primitives/transaction.h"
 #include "platformstyle.h"
@@ -77,4 +77,4 @@ private Q_SLOTS:
     void on_tableWidgetMyMasternodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
 };
-#endif // MASTERNODELIST_H
+#endif // SYSCOIN_QT_MASTERNODELIST_H

@@ -3,8 +3,8 @@
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef GOVERNANCE_MISC_H
-#define GOVERNANCE_MISC_H
+#ifndef SYSCOIN_GOVERNANCEMISC_H
+#define SYSCOIN_GOVERNANCEMISC_H
 
 #include "validation.h"
 #include "governance.h"
@@ -50,4 +50,4 @@ class CGovernanceVote;
 // 	}
 // };
 
-#endif
+#endif // SYSCOIN_GOVERNANCEMISC_H

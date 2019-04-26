@@ -7,8 +7,8 @@
 #include "dsnotificationinterface.h"
 #include "governance.h"
 #include "masternodeman.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
+#include "masternodepayments.h"
+#include "masternodesync.h"
 
 
 void CDSNotificationInterface::InitializeCurrentBlockTip()

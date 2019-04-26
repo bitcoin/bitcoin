@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SPORK_H
-#define SPORK_H
+#ifndef SYSCOIN_SPORK_H
+#define SYSCOIN_SPORK_H
 
 #include "hash.h"
 #include "net.h"
@@ -107,4 +107,4 @@ public:
     bool SetPrivKey(const std::string& strPrivKey);
 };
 
-#endif
+#endif // SYSCOIN_SPORK_H

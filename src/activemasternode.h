@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ACTIVEMASTERNODE_H
-#define ACTIVEMASTERNODE_H
+#ifndef SYSCOIN_ACTIVEMASTERNODE_H
+#define SYSCOIN_ACTIVEMASTERNODE_H
 
 #include "chainparams.h"
 #include "key.h"
@@ -83,4 +83,4 @@ private:
     void ManageStateRemote();
 };
 
-#endif
+#endif // SYSCOIN_ACTIVEMASTERNODE_H

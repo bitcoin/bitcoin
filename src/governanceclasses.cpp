@@ -6,7 +6,7 @@
 //#define ENABLE_SYS_DEBUG
 
 #include "core_io.h"
-#include "governance-classes.h"
+#include "governanceclasses.h"
 #include "init.h"
 #include "validation.h"
 #include <util/strencodings.h>

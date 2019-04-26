@@ -8,13 +8,13 @@
 #include "activemasternode.h"
 #include "consensus/validation.h"
 #include "governance.h"
-#include "governance-vote.h"
-#include "governance-classes.h"
-#include "governance-validators.h"
+#include "governancevote.h"
+#include "governanceclasses.h"
+#include "governancevalidators.h"
 #include "init.h"
 #include "validation.h"
 #include "masternode.h"
-#include "masternode-sync.h"
+#include "masternodesync.h"
 #include "masternodeconfig.h"
 #include "masternodeman.h"
 #include "messagesigner.h"
@@ -352,7 +352,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if(strCommand == "vote-conf")
     {
         if(request.params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-conf <governance-hash> [funding|valid|delete] [yes|no|abstain]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-conf <governancehash> [funding|valid|delete] [yes|no|abstain]'");
 
         uint256 hash;
         std::string strVote;
@@ -430,7 +430,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if(strCommand == "vote-many")
     {
         if(request.params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-many <governance-hash> [funding|valid|delete] [yes|no|abstain]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-many <governancehash> [funding|valid|delete] [yes|no|abstain]'");
 
         uint256 hash;
         std::string strVote;
@@ -533,7 +533,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if(strCommand == "vote-name")
     {
         if(request.params.size() != 5)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-name <governance-hash> [funding|valid|delete] [yes|no|abstain] <masternode-name>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject vote-name <governancehash> [funding|valid|delete] [yes|no|abstain] <masternode-name>'");
 
         uint256 hash;
         std::string strVote;
@@ -735,7 +735,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if(strCommand == "get")
     {
         if (request.params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject get <governance-hash>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject get <governancehash>'");
 
         // COLLECT VARIABLES FROM OUR USER
         uint256 hash = ParseHashV(request.params[1], "GovObj hash");
@@ -812,7 +812,7 @@ UniValue gobject(const JSONRPCRequest& request)
     {
         if (request.params.size() != 2)
             throw std::runtime_error(
-                "Correct usage is 'gobject getvotes <governance-hash>'"
+                "Correct usage is 'gobject getvotes <governancehash>'"
                 );
 
         // COLLECT PARAMETERS FROM USER
@@ -826,7 +826,7 @@ UniValue gobject(const JSONRPCRequest& request)
         CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
 
         if(pGovObj == NULL) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governancehash");
         }
 
         // REPORT RESULTS TO USER
@@ -848,7 +848,7 @@ UniValue gobject(const JSONRPCRequest& request)
     {
         if (request.params.size() != 2 && request.params.size() != 4)
             throw std::runtime_error(
-                "Correct usage is 'gobject getcurrentvotes <governance-hash> [txid vout_index]'"
+                "Correct usage is 'gobject getcurrentvotes <governancehash> [txid vout_index]'"
                 );
 
         // COLLECT PARAMETERS FROM USER
@@ -869,7 +869,7 @@ UniValue gobject(const JSONRPCRequest& request)
         CGovernanceObject* pGovObj = governance.FindGovernanceObject(hash);
 
         if(pGovObj == NULL) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governancehash");
         }
 
         // REPORT RESULTS TO USER
@@ -893,7 +893,7 @@ UniValue voteraw(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 7)
         throw std::runtime_error(
-                "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
+                "voteraw <masternode-tx-hash> <masternode-tx-index> <governancehash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
                 );
 

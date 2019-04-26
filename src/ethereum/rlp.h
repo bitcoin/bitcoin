@@ -21,7 +21,8 @@
  * RLP (de-)serialisation.
  */
 
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_RLP_H
+#define SYSCOIN_ETHEREUM_RLP_H
 
 #include <vector>
 #include <array>
@@ -484,3 +485,4 @@ extern bytes RLPEmptyList;
 std::ostream& operator<<(std::ostream& _out, dev::RLP const& _d);
 
 }
+#endif // SYSCOIN_ETHEREUM_RLP_H

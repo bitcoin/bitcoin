@@ -5,9 +5,9 @@
 
 #include "activemasternode.h"
 #include "masternode.h"
-#include "masternode-sync.h"
+#include "masternodesync.h"
 #include "masternodeman.h"
-#include "masternode-payments.h"
+#include "masternodepayments.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "script/standard.h"

@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_H
-#define GOVERNANCE_H
+#ifndef SYSCOIN_GOVERNANCE_H
+#define SYSCOIN_GOVERNANCE_H
 
 //#define ENABLE_SYS_DEBUG
 
@@ -12,9 +12,9 @@
 #include "cachemap.h"
 #include "cachemultimap.h"
 #include "chain.h"
-#include "governance-exceptions.h"
-#include "governance-object.h"
-#include "governance-vote.h"
+#include "governanceexceptions.h"
+#include "governanceobject.h"
+#include "governancevote.h"
 #include "net.h"
 #include "sync.h"
 
@@ -445,4 +445,4 @@ private:
 
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_H

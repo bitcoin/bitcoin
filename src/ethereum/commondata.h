@@ -20,8 +20,8 @@
  *
  * Shared algorithms and data types.
  */
-
-#pragma once
+#ifndef SYSCOIN_ETHEREUM_COMMONDATA_H
+#define SYSCOIN_ETHEREUM_COMMONDATA_H
 
 #include <vector>
 #include <algorithm>
@@ -362,3 +362,4 @@ bool contains(T const& _t, V const& _v)
 }
 
 }
+#endif // SYSCOIN_ETHEREUM_COMMONDATA_H

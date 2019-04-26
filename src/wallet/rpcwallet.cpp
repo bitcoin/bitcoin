@@ -4405,7 +4405,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "getgovernanceinfo",                &getgovernanceinfo,             {} },
     { "syscoin",            "getsuperblockbudget",              &getsuperblockbudget,           {"index"} },
     { "syscoin",            "gobject",                          &gobject,                       {} },
-    { "syscoin",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governance-hash","vote-signal","vote","time","vote-sig"} },  
+    { "syscoin",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governancehash","vote-signal","vote","time","vote-sig"} },  
     { "syscoin",            "masternode",                       &masternode,                    {"command","data"} },
     { "syscoin",            "masternodelist",                   &masternodelist,                {"mode","filter"} },
     { "syscoin",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },

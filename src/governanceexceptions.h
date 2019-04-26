@@ -3,8 +3,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_EXCEPTIONS_H
-#define GOVERNANCE_EXCEPTIONS_H
+#ifndef SYSCOIN_GOVERNANCEEXCEPTIONS_H
+#define SYSCOIN_GOVERNANCEEXCEPTIONS_H
 
 #include <exception>
 #include <iostream>
@@ -97,4 +97,4 @@ public:
     }
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCEEXCEPTIONS_H

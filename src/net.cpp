@@ -42,7 +42,7 @@
 
 #include <math.h>
 // SYSCOIN
-#include <masternode-sync.h>
+#include <masternodesync.h>
 #include <masternodeman.h>
 #include <rpc/server.h>
 // Dump addresses to peers.dat every 15 minutes (900s)

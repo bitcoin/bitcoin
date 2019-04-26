@@ -1,7 +1,7 @@
-#ifndef GRAPH_H
-#define GRAPH_H
+#ifndef SYSCOIN_SERVICES_GRAPH_H
+#define SYSCOIN_SERVICES_GRAPH_H
 #include <vector>
 #include <primitives/transaction.h>
 
 bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx);
-#endif // GRAPH_H
+#endif // SYSCOIN_SERVICES_GRAPH_H

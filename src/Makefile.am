@@ -117,20 +117,20 @@ SYSCOIN_CORE_H = \
   spork.h \
   dsnotificationinterface.h \
   governance.h \
-  governance-classes.h \
-  governance-exceptions.h \
-  governance-object.h \
-  governance-validators.h \
-  governance-vote.h \
-  governance-votedb.h \
+  governanceclasses.h \
+  governanceexceptions.h \
+  governanceobject.h \
+  governancevalidators.h \
+  governancevote.h \
+  governancevotedb.h \
   masternode.h \
-  masternode-payments.h \
-  masternode-sync.h \
+  masternodepayments.h \
+  masternodesync.h \
   masternodeman.h \
   masternodeconfig.h \
   messagesigner.h \
   netfulfilledman.h \
-  flat-database.h \
+  flatdatabase.h \
   cachemap.h \
   cachemultimap.h \
   addrdb.h \
@@ -314,14 +314,14 @@ libsyscoin_server_a_SOURCES = \
   activemasternode.cpp \
   dsnotificationinterface.cpp \
   governance.cpp \
-  governance-classes.cpp \
-  governance-object.cpp \
-  governance-validators.cpp \
-  governance-vote.cpp \
-  governance-votedb.cpp \
+  governanceclasses.cpp \
+  governanceobject.cpp \
+  governancevalidators.cpp \
+  governancevote.cpp \
+  governancevotedb.cpp \
   masternode.cpp \
-  masternode-payments.cpp \
-  masternode-sync.cpp \
+  masternodepayments.cpp \
+  masternodesync.cpp \
   masternodeconfig.cpp \
   masternodeman.cpp \
   messagesigner.cpp \
