@@ -13,8 +13,6 @@
 #include <key_io.h>
 #include <script/standard.h>
 
-#include <boost/shared_ptr.hpp>
-
 class CSuperblock;
 class CGovernanceTrigger;
 class CGovernanceTriggerManager;
@@ -23,7 +21,7 @@ class CSuperblockManager;
 static const int TRIGGER_UNKNOWN            = -1;
 static const int TRIGGER_SUPERBLOCK         = 1000;
 
-typedef boost::shared_ptr<CSuperblock> CSuperblock_sptr;
+typedef std::shared_ptr<CSuperblock> CSuperblock_sptr;
 
 // DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
 extern CGovernanceTriggerManager triggerman;
