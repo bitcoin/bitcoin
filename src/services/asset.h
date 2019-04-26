@@ -68,7 +68,7 @@ int GenerateSyscoinGuid();
 
 
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
-bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry);
+bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry);
 std::string assetFromTx(const int &nVersion);
 /** Upper bound for mantissa.
 * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
@@ -224,7 +224,7 @@ public:
     bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
     } 
-	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight);
+	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
 	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
 };

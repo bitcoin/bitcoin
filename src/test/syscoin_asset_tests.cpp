@@ -42,12 +42,12 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
-	BOOST_CHECK_EQUAL(boost::lexical_cast<string>(find_value(rArray[0].get_obj(), "_id").get_int()), guid);
+	BOOST_CHECK_EQUAL(boost::lexical_cast<string>(find_value(rArray[0].get_obj(), "asset_guid").get_int()), guid);
 	string guid1 = AssetNew("node1", newaddress, gooddata);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid));
-	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "_id").get_int()) == guid);
+	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
-    BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "_id").get_int()) == guid1);
+    BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
 
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
