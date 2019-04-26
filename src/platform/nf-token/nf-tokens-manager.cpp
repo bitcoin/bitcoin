@@ -4,6 +4,9 @@
 
 #include "primitives/transaction.h"
 #include "chain.h"
+
+#include "platform/specialtx.h"
+#include "platform/platform-db.h"
 #include "nf-tokens-manager.h"
 
 namespace Platform
@@ -14,33 +17,47 @@ namespace Platform
 
     /*static*/ std::unique_ptr<NfTokensManager> NfTokensManager::s_instance;
 
+    NfTokensManager::NfTokensManager()
+    {
+        PlatformDb::Instance().LoadNftIndexGuts([this](NfTokenIndex nftIndex) -> bool
+        {
+            return m_nfTokensIndexSet.emplace(std::move(nftIndex)).second;
+        });
+    }
+
     bool NfTokensManager::AddNfToken(const NfToken & nfToken, const CTransaction & tx, const CBlockIndex * pindex)
     {
         assert(nfToken.tokenProtocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!nfToken.tokenId.IsNull());
         assert(!nfToken.tokenOwnerKeyId.IsNull());
         assert(!nfToken.metadataAdminKeyId.IsNull());
-
         assert(pindex != nullptr);
         assert(!tx.GetHash().IsNull());
 
-        NfTokenIndex newNfTokenIndex {pindex, tx.GetHash(), std::shared_ptr<NfToken>(new NfToken(nfToken))};
+        std::shared_ptr<NfToken> nfTokenPtr(new NfToken(nfToken));
+        NfTokenIndex nftIndex(pindex, tx.GetHash(), nfTokenPtr);
+        auto itRes = m_nfTokensIndexSet.emplace(std::move(nftIndex));
 
-        return m_nfTokensIndexSet.emplace(std::move(newNfTokenIndex)).second;
+        if (itRes.second)
+        {
+            NfTokenDiskIndex nftDiskIndex(*pindex->phashBlock, pindex, tx.GetHash(), nfTokenPtr);
+            PlatformDb::Instance().WriteNftDiskIndex(nftDiskIndex);
+        }
+        return itRes.second;
     }
 
-    const NfTokenIndex * NfTokensManager::GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const
+    NfTokenIndex NfTokensManager::GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
 
         NfTokensIndexSet::const_iterator it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-
         if (it != m_nfTokensIndexSet.end())
         {
-            return &(*it);
+            return *it;
         }
-        return nullptr;
+
+        return NfTokenIndex();//TODO: read when needed GetNftIndexFromDb(protocolId, tokenId);
     }
 
     std::weak_ptr<const NfToken> NfTokensManager::GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const
@@ -49,10 +66,11 @@ namespace Platform
         assert(!tokenId.IsNull());
 
         NfTokensIndexSet::const_iterator it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
+        //TODO: read from db if not found
 
         if (it != m_nfTokensIndexSet.end())
         {
-            return it->nfToken;
+            return it->NfTokenPtr();
         }
         return std::weak_ptr<const NfToken>();
     }
@@ -64,8 +82,8 @@ namespace Platform
         assert(height >= 0);
 
         auto nfTokenIdx = this->GetNfTokenIndex(protocolId, tokenId);
-        if (nfTokenIdx != nullptr)
-            return nfTokenIdx->blockIndex->nHeight <= height;
+        if (!nfTokenIdx.IsNull())
+            return nfTokenIdx.BlockIndex()->nHeight <= height;
         return false;
     }
 
@@ -75,6 +93,7 @@ namespace Platform
         assert(!tokenId.IsNull());
 
         return m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId)) != m_nfTokensIndexSet.end();
+        //TODO: read from db if not found
     }
 
     CKeyID NfTokensManager::OwnerOf(const uint64_t & protocolId, const uint256 & tokenId) const
@@ -83,7 +102,8 @@ namespace Platform
         assert(!tokenId.IsNull());
 
         NfTokensIndexSet::const_iterator it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        return it->nfToken->tokenOwnerKeyId;
+        //TODO: read from db if not found
+        return it->NfTokenPtr()->tokenOwnerKeyId;
     }
 
     std::size_t NfTokensManager::BalanceOf(const uint64_t & protocolId, const CKeyID & ownerId) const
@@ -115,7 +135,7 @@ namespace Platform
         //nfTokens.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
-            nfTokens.emplace_back(nfTokenIdx.nfToken);
+            nfTokens.emplace_back(nfTokenIdx.NfTokenPtr());
         });
 
         return nfTokens;
@@ -132,7 +152,7 @@ namespace Platform
         //nfTokens.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
-            nfTokens.emplace_back(nfTokenIdx.nfToken);
+            nfTokens.emplace_back(nfTokenIdx.NfTokenPtr());
         });
 
         return nfTokens;
@@ -150,7 +170,7 @@ namespace Platform
         //nfTokenIds.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
-            nfTokenIds.emplace_back(nfTokenIdx.nfToken->tokenId);
+            nfTokenIds.emplace_back(nfTokenIdx.NfTokenPtr()->tokenId);
         });
         return nfTokenIds;
     }
@@ -166,7 +186,7 @@ namespace Platform
         //nfTokenIds.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
-            nfTokenIds.emplace_back(nfTokenIdx.nfToken->tokenId);
+            nfTokenIds.emplace_back(nfTokenIdx.NfTokenPtr()->tokenId);
         });
         return nfTokenIds;
     }
@@ -204,12 +224,13 @@ namespace Platform
 
     bool NfTokensManager::Delete(const uint64_t & protocolId, const uint256 & tokenId, int height)
     {
+        //TODO: delete from the db
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
         assert(height >= 0);
 
         auto it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        if (it != m_nfTokensIndexSet.end() && it->blockIndex->nHeight <= height)
+        if (it != m_nfTokensIndexSet.end() && it->BlockIndex()->nHeight <= height)
         {
             m_nfTokensIndexSet.erase(it);
             return true;
@@ -225,5 +246,17 @@ namespace Platform
             m_tipHeight = pindex->nHeight;
             m_tipBlockHash = pindex->GetBlockHash();
         }
+    }
+
+    NfTokenIndex NfTokensManager::GetNftIndexFromDb(const uint64_t & protocolId, const uint256 & tokenId)
+    {
+        NfTokenIndex nftIndex = PlatformDb::Instance().ReadNftIndex(protocolId, tokenId);
+        if (!nftIndex.IsNull())
+        {
+            auto insRes = m_nfTokensIndexSet.emplace(std::move(nftIndex));
+            assert(insRes.second);
+            return *insRes.first;
+        }
+        return nftIndex;
     }
 }

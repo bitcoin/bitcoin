@@ -39,6 +39,7 @@
 #include "utilmoneystr.h"
 #include "dbmanager.h"
 #include "instantx.h"
+#include "platform/platform-db.h"
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
@@ -216,6 +217,7 @@ void PrepareShutdown()
         pcoinsdbview = NULL;
         delete pblocktree;
         pblocktree = NULL;
+        Platform::PlatformDb::DestroyInstance();
     }
 #ifdef ENABLE_WALLET
     if (pwalletMain)
@@ -1255,6 +1257,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     nTotalCache -= nCoinDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
     int64_t nMempoolSizeMax = GetArg("-maxmempool", 300) * 1000000;
+    int64_t nPlatformDbCache = 1024 * 1024 * 10; //TODO: set appropriate platform db cache size
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
@@ -1275,7 +1278,9 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pcoinsdbview;
                 delete pcoinscatcher;
                 delete pblocktree;
+                Platform::PlatformDb::DestroyInstance();
 
+                Platform::PlatformDb::CreateInstance(nPlatformDbCache, false, fReindex);
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
@@ -1310,7 +1315,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (!CVerifyDB().VerifyDB(pcoinsdbview, GetArg("-checklevel", 3),
+                if (!CVerifyDB().VerifyDB(pcoinsdbview, GetArg("-checklevel", 4),
                               GetArg("-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
                     break;

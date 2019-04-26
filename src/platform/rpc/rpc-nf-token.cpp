@@ -91,20 +91,20 @@ namespace Platform
     {
         json_spirit::Object nftJsonObj;
 
-        nftJsonObj.push_back(json_spirit::Pair("blockHash", nftIndex.blockIndex->phashBlock->ToString()));
-        nftJsonObj.push_back(json_spirit::Pair("registrationTxHash", nftIndex.regTxHash.ToString()));
-        nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.blockIndex->nHeight));
-        auto blockTime = static_cast<time_t>(nftIndex.blockIndex->nTime);
+        nftJsonObj.push_back(json_spirit::Pair("blockHash", nftIndex.BlockIndex()->phashBlock->ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("registrationTxHash", nftIndex.RegTxHash().ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("height", nftIndex.BlockIndex()->nHeight));
+        auto blockTime = static_cast<time_t>(nftIndex.BlockIndex()->nTime);
         std::string timeStr(asctime(gmtime(&blockTime)));
         nftJsonObj.push_back(json_spirit::Pair("timestamp", timeStr));
 
-        nftJsonObj.push_back(json_spirit::Pair("nftProtocolId", ProtocolName{nftIndex.nfToken->tokenProtocolId}.ToString()));
-        nftJsonObj.push_back(json_spirit::Pair("nftId", nftIndex.nfToken->tokenId.ToString()));
-        nftJsonObj.push_back(json_spirit::Pair("nftOwnerKeyId", CBitcoinAddress(nftIndex.nfToken->tokenOwnerKeyId).ToString()));
-        nftJsonObj.push_back(json_spirit::Pair("metadataAdminKeyId", CBitcoinAddress(nftIndex.nfToken->metadataAdminKeyId).ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("nftProtocolId", ProtocolName{nftIndex.NfTokenPtr()->tokenProtocolId}.ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("nftId", nftIndex.NfTokenPtr()->tokenId.ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("nftOwnerKeyId", CBitcoinAddress(nftIndex.NfTokenPtr()->tokenOwnerKeyId).ToString()));
+        nftJsonObj.push_back(json_spirit::Pair("metadataAdminKeyId", CBitcoinAddress(nftIndex.NfTokenPtr()->metadataAdminKeyId).ToString()));
 
         //TODO: mimetype text/plan only for now
-        std::string textMeta(nftIndex.nfToken->metadata.begin(), nftIndex.nfToken->metadata.end());
+        std::string textMeta(nftIndex.NfTokenPtr()->metadata.begin(), nftIndex.NfTokenPtr()->metadata.end());
         nftJsonObj.push_back(json_spirit::Pair("metadata", textMeta));
 
         return nftJsonObj;
@@ -133,7 +133,7 @@ namespace Platform
             else
             {
                 json_spirit::Object hashObj;
-                hashObj.push_back(json_spirit::Pair("registrationTxHash", nftIndex.regTxHash.GetHex()));
+                hashObj.push_back(json_spirit::Pair("registrationTxHash", nftIndex.RegTxHash().GetHex()));
                 nftList.push_back(hashObj);
             }
         }

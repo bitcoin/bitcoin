@@ -10,19 +10,21 @@
 
 #include "chain.h"
 #include "nf-token-multiindex-utils.h"
-#include "nf-token.h"
+#include "nf-token-index.h"
 
 class CTransaction;
 class CBlockIndex;
 
 namespace Platform
 {
-    class NfTokenIndex
+    struct RegTxHashExtractor
     {
-    public:
-        const CBlockIndex * blockIndex;
-        uint256 regTxHash;
-        std::shared_ptr<const NfToken> nfToken;
+        using result_type = uint256;
+
+        result_type operator()(const NfTokenIndex & nfTokenIndex) const
+        {
+            return nfTokenIndex.RegTxHash();
+        }
     };
 
     struct TokenProtocolIdExtractor
@@ -31,7 +33,7 @@ namespace Platform
 
         result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
-            return nfTokenIndex.nfToken->tokenProtocolId;
+            return nfTokenIndex.NfTokenPtr()->tokenProtocolId;
         }
     };
 
@@ -41,7 +43,7 @@ namespace Platform
 
         result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
-            return nfTokenIndex.nfToken->tokenId;
+            return nfTokenIndex.NfTokenPtr()->tokenId;
         }
     };
 
@@ -51,7 +53,7 @@ namespace Platform
 
         result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
-            return nfTokenIndex.nfToken->tokenOwnerKeyId;
+            return nfTokenIndex.NfTokenPtr()->tokenOwnerKeyId;
         }
     };
 
@@ -61,7 +63,7 @@ namespace Platform
 
         result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
-            return nfTokenIndex.nfToken->metadataAdminKeyId;
+            return nfTokenIndex.NfTokenPtr()->metadataAdminKeyId;
         }
     };
 
@@ -71,7 +73,7 @@ namespace Platform
 
         result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
-            return *nfTokenIndex.blockIndex->phashBlock;
+            return *nfTokenIndex.BlockIndex()->phashBlock;
         }
     };
 
@@ -81,7 +83,7 @@ namespace Platform
 
         result_type operator()(const NfTokenIndex & nfTokenIndex) const
         {
-            return nfTokenIndex.blockIndex->nHeight;
+            return nfTokenIndex.BlockIndex()->nHeight;
         }
     };
 
@@ -102,7 +104,8 @@ namespace Platform
             /// gives access to the nf-token registered in a specified transaction
             bmx::hashed_unique<
                 bmx::tag<Tags::RegTxHash>,
-                bmx::member<NfTokenIndex, uint256, &NfTokenIndex::regTxHash>
+                //bmx::member<NfTokenIndex, uint256, &NfTokenIndex::RegTxHash>
+                RegTxHashExtractor
             >,
             /// hash-indexed by nf-token registration block hash
             /// gives access to all nf-tokens registered in a specified block
@@ -133,7 +136,7 @@ namespace Platform
                 bmx::tag<Tags::ProtocolId>,
                 TokenProtocolIdExtractor
             >,
-            /// hash-indexed by the OwnerId in the gloabal nf-tokens set
+            /// hash-indexed by the OwnerId in the global nf-tokens set
             /// gives access a global set of nf-tokens owned by the OwnerId
             bmx::hashed_non_unique<
                 bmx::tag<Tags::OwnerId>,
@@ -147,7 +150,7 @@ namespace Platform
         public:
             static NfTokensManager & Instance()
             {
-                if (s_instance.get() == nullptr)
+                if (s_instance == nullptr)
                 {
                     s_instance.reset(new NfTokensManager());
                 }
@@ -162,8 +165,8 @@ namespace Platform
             /// Checks the existence of a specified nf-token at a specified height
             bool Contains(const uint64_t & protocolId, const uint256 & tokenId, int height) const;
 
-            /// Retrieve a specified nf-token index
-            const NfTokenIndex * GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
+            /// Retrieve a specified nf-token index, may be null
+            NfTokenIndex GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
             /// Retrieve a specified nf-token
             std::weak_ptr<const NfToken> GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const;
 
@@ -202,6 +205,11 @@ namespace Platform
 
             /// Update with the best block tip
             void UpdateBlockTip(const CBlockIndex * pindex);
+
+        private:
+            NfTokensManager();
+
+            NfTokenIndex GetNftIndexFromDb(const uint64_t & protocolId, const uint256 & tokenId);
 
         private:
             NfTokensIndexSet m_nfTokensIndexSet;

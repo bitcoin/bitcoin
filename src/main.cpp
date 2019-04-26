@@ -31,6 +31,7 @@
 #include "spork.h"
 #include "utilmoneystr.h"
 #include "platform/specialtx.h"
+#include "platform/platform-db.h"
 
 #include <sstream>
 
@@ -2425,10 +2426,16 @@ bool static DisconnectTip(CValidationState &state) {
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
+        auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
+
         CCoinsViewCache view(pcoinsTip);
         if (!DisconnectBlock(block, state, pindexDelete, view))
             return error("DisconnectTip() : DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
-        assert(view.Flush());
+
+        bool flushed = view.Flush();
+        assert(flushed);
+        bool committed = platformDbTx->Commit();
+        assert(committed);
     }
     LogPrint("bench", "- Disconnect block: %.2fms\n", (GetTimeMicros() - nStart) * 0.001);
     // Write the chain state to disk, if necessary.
@@ -2480,6 +2487,8 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CB
     int64_t nTime3;
     LogPrint("bench", "  - Load block from disk: %.2fms [%.2fs]\n", (nTime2 - nTime1) * 0.001, nTimeReadFromDisk * 0.000001);
     {
+        auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
+
         CCoinsViewCache view(pcoinsTip);
         g_signals.BlockChecked(*pblock, state);
         if (!ConnectBlock(*pblock, state, pindexNew, view)) {
@@ -2490,7 +2499,11 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CB
         mapBlockSource.erase(pindexNew->GetBlockHash());
         nTime3 = GetTimeMicros(); nTimeConnectTotal += nTime3 - nTime2;
         LogPrint("bench", "  - Connect total: %.2fms [%.2fs]\n", (nTime3 - nTime2) * 0.001, nTimeConnectTotal * 0.000001);
-        assert(view.Flush());
+
+        bool flushed = view.Flush();
+        assert(flushed);
+        bool committed = platformDbTx->Commit();
+        assert(committed);
     }
     int64_t nTime4 = GetTimeMicros(); nTimeFlush += nTime4 - nTime3;
     LogPrint("bench", "  - Flush: %.2fms [%.2fs]\n", (nTime4 - nTime3) * 0.001, nTimeFlush * 0.000001);
@@ -3467,6 +3480,9 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     indexDummy.pprev = pindexPrev;
     indexDummy.nHeight = pindexPrev->nHeight + 1;
 
+    // begin tx and let it rollback
+    auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
+
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
@@ -3682,6 +3698,9 @@ bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth
     LOCK(cs_main);
     if (chainActive.Tip() == NULL || chainActive.Tip()->pprev == NULL)
         return true;
+
+    // begin tx and let it rollback
+    auto platformDbTx = Platform::PlatformDb::Instance().BeginTransaction();
 
     // Verify blocks in the best chain
     if (nCheckDepth <= 0)
