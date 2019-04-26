@@ -115,7 +115,7 @@ void QRDialog::setModel(OptionsModel *model)
     this->model = model;
 
     if (model)
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
+        connect(model, &OptionsModel::displayUnitChanged, this, &QRDialog::update());
 
     // update the display unit if necessary
     update();
