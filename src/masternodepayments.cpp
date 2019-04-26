@@ -85,13 +85,13 @@ bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blo
     if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(*block.vtx[0], nBlockHeight, blockRewardWithFee)) {
-                LogPrint(BCLog::GOBJECT, "IsBlockValueValid -- Valid superblock at height %d: %s", nBlockHeight, block.vtx[0]->ToString());
+                LogPrint(BCLog::GOBJECT, "IsBlockValueValid -- Valid superblock at height %d: %s\n", nBlockHeight, block.vtx[0]->ToString());
                 // all checks are done in CSuperblock::IsValid, nothing to do here
                 return true;
             }
 
             // triggered but invalid? that's weird
-            LogPrint(BCLog::MNPAYMENT, "IsBlockValueValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, block.vtx[0]->ToString());
+            LogPrint(BCLog::MNPAYMENT, "IsBlockValueValid -- ERROR: Invalid superblock detected at height %d: %s\n", nBlockHeight, block.vtx[0]->ToString());
             // should NOT allow invalid superblocks, when superblocks are enabled
             strErrorRet = strprintf("invalid superblock detected at height %d", nBlockHeight);
             return false;
@@ -142,11 +142,11 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight,  const CAmou
     if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
             if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
-                LogPrint(BCLog::GOBJECT, "IsBlockPayeeValid -- Valid superblock at height %d: %s", nBlockHeight, txNew.ToString());
+                LogPrint(BCLog::GOBJECT, "IsBlockPayeeValid -- Valid superblock at height %d: %s\n", nBlockHeight, txNew.ToString());
                 return true;
             }
 
-            LogPrint(BCLog::MNPAYMENT, "IsBlockPayeeValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, txNew.ToString());
+            LogPrint(BCLog::MNPAYMENT, "IsBlockPayeeValid -- ERROR: Invalid superblock detected at height %d: %s\n", nBlockHeight, txNew.ToString());
             // should NOT allow such superblocks, when superblocks are enabled
             return false;
         }
@@ -159,12 +159,12 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight,  const CAmou
 
     // IF THIS ISN'T A SUPERBLOCK OR SUPERBLOCK IS INVALID, IT SHOULD PAY A MASTERNODE DIRECTLY
     if(mnpayments.IsTransactionValid(txNew, nBlockHeight, fee, nTotalRewardWithMasternodes)) {
-        LogPrint(BCLog::MNPAYMENT, "IsBlockPayeeValid -- Valid masternode payment at height %d: %s", nBlockHeight, txNew.ToString());
+        LogPrint(BCLog::MNPAYMENT, "IsBlockPayeeValid -- Valid masternode payment at height %d: %s\n", nBlockHeight, txNew.ToString());
         return true;
     }
 
     if(sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
-        LogPrint(BCLog::MNPAYMENT, "IsBlockPayeeValid -- ERROR: Invalid masternode payment detected at height %d: %s", nBlockHeight, txNew.ToString());
+        LogPrint(BCLog::MNPAYMENT, "IsBlockPayeeValid -- ERROR: Invalid masternode payment detected at height %d: %s\n", nBlockHeight, txNew.ToString());
         return false;
     }
 
@@ -185,7 +185,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount &bl
 
     // FILL BLOCK PAYEE WITH MASTERNODE PAYMENT OTHERWISE
 	mnpayments.FillBlockPayee(txNew, nBlockHeight, blockReward, fees, txoutMasternodeRet);
-	LogPrint(BCLog::MNPAYMENT, "FillBlockPayments -- nBlockHeight %d blockReward %lld txoutMasternodeRet %s",
+	LogPrint(BCLog::MNPAYMENT, "FillBlockPayments -- nBlockHeight %d blockReward %lld txoutMasternodeRet %s\n",
 		nBlockHeight, blockReward, txoutMasternodeRet.ToString());
 }
 
@@ -882,7 +882,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
     }
 
     if (mapMasternodesDidNotVote.empty()) {
-        LogPrint(BCLog::MNPAYMENT, "%s", debugStr);
+        LogPrint(BCLog::MNPAYMENT, "%s\n", debugStr);
         return;
     }
 
@@ -891,7 +891,7 @@ void CMasternodePayments::CheckBlockVotes(int nBlockHeight)
         debugStr += strprintf("    - %s: %d\n", item.first.ToStringShort(), item.second);
     }
 
-    LogPrint(BCLog::MNPAYMENT, "%s", debugStr);
+    LogPrint(BCLog::MNPAYMENT, "%s\n", debugStr);
 }
 
 void CMasternodePaymentVote::Relay(CConnman& connman) const

@@ -712,7 +712,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 		TRY_LOCK(cs_main, lockMain);
 		if (!lockMain) {
 			// not mnb fault, let it to be checked again later
-			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Failed to aquire lock, addr=%s", addr.ToString());
+			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Failed to aquire lock, addr=%s\n", addr.ToString());
 			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
 			return false;
 		}

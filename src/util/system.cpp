@@ -1176,7 +1176,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
                     NULL };
                     execvp(argv[0], &argv[0]);
 		    if (errno != 0) {
-			    LogPrintf("Geth not found at %s, trying in PATH", fpath.c_str());
+			    LogPrintf("Geth not found at %s, trying in PATH\n", fpath.c_str());
 			    argv[0] = (char*)"syscoin-geth";
 			    execvp(argv[0], &argv[0]);
 			    if (errno != 0) {
@@ -1191,7 +1191,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
                         NULL };
                     execvp(argv[0], &argv[0]);
 		    if (errno != 0) {
-			    LogPrintf("Geth not found at %s, trying in PATH", fpath.c_str());
+			    LogPrintf("Geth not found at %s, trying in PATH\n", fpath.c_str());
 			    argv[0] = (char*)"syscoin-geth";
 			    execvp(argv[0], &argv[0]);
 			    if (errno != 0) {
@@ -1312,11 +1312,11 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             execvp(argv[0], &argv[0]);
 	    if (errno != 0) {
-		    LogPrintf("Relayer not found at %s, trying in PATH", fpath.c_str());
+		    LogPrintf("Relayer not found at %s, trying in PATH\n", fpath.c_str());
 		    argv[0] = (char*)"syscoin-relayer";
 		    execvp(argv[0], &argv[0]);
 		    if (errno != 0) {
-			    LogPrintf("Relayer not found in PATH.  Relayer not started");
+			    LogPrintf("Relayer not found in PATH.  Relayer not started\n");
 	            }
 	    }
         }

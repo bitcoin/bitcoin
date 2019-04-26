@@ -345,7 +345,7 @@ bool FlushSyscoinDBs() {
                 arrivalTimesMap.clear();
             }
             if (!passetallocationmempooldb->Flush()) {
-                LogPrintf("Failed to write to asset allocation mempool database!");
+                LogPrintf("Failed to write to asset allocation mempool database!\n");
                 ret = false;
             }            
         }
@@ -354,11 +354,11 @@ bool FlushSyscoinDBs() {
      {
         if(!pethereumtxrootsdb->PruneTxRoots())
         {
-            LogPrintf("Failed to write to prune Ethereum TX Roots database!");
+            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
             ret = false;
         }
         if (!pethereumtxrootsdb->Flush()) {
-            LogPrintf("Failed to write to ethereum tx root database!");
+            LogPrintf("Failed to write to ethereum tx root database!\n");
             ret = false;
         } 
      }

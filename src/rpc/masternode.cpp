@@ -248,6 +248,7 @@ UniValue masternode(const JSONRPCRequest& request)
         for (const auto& mne : masternodeConfig.getEntries()) {
             std::string strError;
             uint32_t outputIndex;
+            bool fResult;
             if(!ParseUInt32(mne.getOutputIndex(), &outputIndex)){
                 strError = "Could not parse output index";
                 fResult = false;
