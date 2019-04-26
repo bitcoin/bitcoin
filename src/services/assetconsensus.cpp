@@ -63,7 +63,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     return true;       
 }
 
-bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
+bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     // unserialize assetallocation from txn, check for valid
@@ -266,7 +266,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();  
         if(!fJustCheck && !bSanity && !bMiner)     
-            passetallocationdb->WriteMintIndex(tx, mintSyscoin, nHeight);         
+            passetallocationdb->WriteMintIndex(tx, mintSyscoin, nHeight, blockhash);         
                                        
     }
     return true;
@@ -292,17 +292,17 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         if (IsAssetAllocationTx(tx.nVersion))
         {
             errorMessage.clear();
-            good = CheckAssetAllocationInputs(tx, inputs, fJustCheck, nHeight, mapAssetAllocations,errorMessage, bOverflow, bSanity, bMiner);
+            good = CheckAssetAllocationInputs(tx, inputs, fJustCheck, nHeight, uint256(), mapAssetAllocations,errorMessage, bOverflow, bSanity, bMiner);
         }
         else if (IsAssetTx(tx.nVersion))
         {
             errorMessage.clear();
-            good = CheckAssetInputs(tx, inputs, fJustCheck, nHeight, mapAssets, mapAssetAllocations, errorMessage, bSanity, bMiner);
+            good = CheckAssetInputs(tx, inputs, fJustCheck, nHeight, uint256(), mapAssets, mapAssetAllocations, errorMessage, bSanity, bMiner);
         }
         else if(IsSyscoinMintTx(tx.nVersion)) 
         {
             errorMessage.clear();
-            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, mapAssets, mapAssetAllocations);
+            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations);
         }
   
         if (!good || !errorMessage.empty())
@@ -331,18 +331,18 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             {
                 errorMessage.clear();
                 // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode
-                good = CheckAssetAllocationInputs(tx, inputs, false, nHeight, mapAssetAllocations, errorMessage, bOverflow, fJustCheck, bMiner);
+                good = CheckAssetAllocationInputs(tx, inputs, false, nHeight, blockHash, mapAssetAllocations, errorMessage, bOverflow, fJustCheck, bMiner);
 
             }
             else if (IsAssetTx(tx.nVersion))
             {
                 errorMessage.clear();
-                good = CheckAssetInputs(tx, inputs, false, nHeight, mapAssets, mapAssetAllocations, errorMessage, fJustCheck, bMiner);
+                good = CheckAssetInputs(tx, inputs, false, nHeight, blockHash, mapAssets, mapAssetAllocations, errorMessage, fJustCheck, bMiner);
             } 
             else if(IsSyscoinMintTx(tx.nVersion))
             {
                 errorMessage.clear();
-                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, mapAssets, mapAssetAllocations);
+                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations);
             }
              
                         
@@ -621,7 +621,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
     return true; 
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
+        bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
     const uint256 & txHash = tx.GetHash();
@@ -907,7 +907,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 
         if(!bMiner) {   
             // send notification on pow, for zdag transactions this is the second notification meaning the zdag tx has been confirmed
-            passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, true, nHeight);  
+            passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, nHeight, blockhash);  
             LogPrint(BCLog::SYS,"CONNECTED ASSET ALLOCATION: op=%s assetallocation=%s hash=%s height=%d fJustCheck=%d\n",
                 assetAllocationFromTx(tx.nVersion).c_str(),
                 senderTupleStr.c_str(),
@@ -924,9 +924,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             arrivalTimes[txHash] = GetTimeMillis();
         }
 
-        // only send a realtime notification on zdag, send another when pow happens (above)
+        // send a realtime notification on zdag, send another when pow happens (above)
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
-            passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, false, nHeight);
+            passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, nHeight, blockhash);
         {
             LOCK(cs_assetallocation);
             mapBalanceSender->second = std::move(mapBalanceSenderCopy);
@@ -1068,7 +1068,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
     return true;  
 }
 bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, string &errorMessage, const bool &bSanityCheck, const bool &bMiner) {
+        bool fJustCheck, int nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, string &errorMessage, const bool &bSanityCheck, const bool &bMiner) {
     if (passetdb == nullptr)
         return false;
     const uint256& txHash = tx.GetHash();
@@ -1294,7 +1294,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
             }
         }
         if (!bSanityCheck && !fJustCheck && !bMiner)
-            passetallocationdb->WriteAssetAllocationIndex(tx, storedSenderAssetRef, true, nHeight);  
+            passetallocationdb->WriteAssetAllocationIndex(tx, storedSenderAssetRef, nHeight, blockhash);  
     }
     else if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
     {         
@@ -1345,7 +1345,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     storedSenderAssetRef.txHash = txHash;
     // write asset, if asset send, only write on pow since asset -> asset allocation is not 0-conf compatible
     if (!bSanityCheck && !fJustCheck && !bMiner) {
-        passetdb->WriteAssetIndex(tx, storedSenderAssetRef, nHeight);
+        passetdb->WriteAssetIndex(tx, storedSenderAssetRef, nHeight, blockhash);
         LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s symbol=%d hash=%s height=%d fJustCheck=%d\n",
                 assetFromTx(tx.nVersion).c_str(),
                 nAsset,

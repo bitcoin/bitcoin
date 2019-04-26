@@ -23,7 +23,8 @@
 #include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
-
+// SYSCOIN
+#include <services/assetconsensus.h>
 static const size_t MAX_GETUTXOS_OUTPOINTS = 15; //allow a max of 15 outpoints to be queried at once
 
 enum class RetFormat {
@@ -345,14 +346,26 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     uint256 hash;
     if (!ParseHashStr(hashStr, hash))
         return RESTERR(req, HTTP_BAD_REQUEST, "Invalid hash: " + hashStr);
-
+    CBlockIndex* blockindex = nullptr;
+    uint256 hashBlock = uint256();
     if (g_txindex) {
         g_txindex->BlockUntilSyncedToCurrentChain();
     }
+    // SYSCOIN
+    else{
+        if(!pblockindexdb || !pblockindexdb->ReadBlockHash(hash, hashBlock)){
+            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
+        }
+        
+        blockindex = LookupBlockIndex(hashBlock);
+        if(!blockindex){
+            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
+        }
+    }
 
     CTransactionRef tx;
-    uint256 hashBlock = uint256();
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock))
+   
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, blockindex))
         return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
 
     switch (rf) {
