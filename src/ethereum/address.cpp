@@ -15,7 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <address.h>
+#include <ethereum/address.h>
 
 namespace dev
 {

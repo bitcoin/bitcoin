@@ -50,6 +50,10 @@
 #include <services/assetconsensus.h>
 #include <base58.h>
 #include <bech32.h>
+extern UniValue sentinelping(const JSONRPCRequest& request);
+extern  UniValue masternodebroadcast(const JSONRPCRequest& request);
+extern UniValue masternodelist(const JSONRPCRequest& request);
+extern UniValue masternode(const JSONRPCRequest& request);
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)

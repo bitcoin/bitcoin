@@ -6,11 +6,11 @@
 #include <qt/qrdialog.h>
 #include <qt/forms/ui_qrdialog.h>
 
-#include <syscoinunits.h>
-#include <guiconstants.h>
-#include <guiutil.h>
-#include <optionsmodel.h>
-#include <walletmodel.h>
+#include <qt/syscoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/walletmodel.h>
 
 #include <QClipboard>
 #include <QDrag>

@@ -6,7 +6,7 @@
 #ifndef SYSCOIN_QT_QRDIALOG_H
 #define SYSCOIN_QT_QRDIALOG_H
 
-#include <walletmodel.h>
+#include <qt/walletmodel.h>
 
 #include <QDialog>
 #include <QImage>

@@ -52,7 +52,7 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #pragma warning(pop)
 #pragma GCC diagnostic pop
-#include <vector_ref.h>
+#include <ethereum/vector_ref.h>
 // CryptoPP defines _byte in the global namespace, so must we.
 using _byte = uint8_t;
 

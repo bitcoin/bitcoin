@@ -30,7 +30,7 @@
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/tuple/tuple.hpp>
-#include <fixedhash.h>
+#include <ethereum/fixedhash.h>
 
 namespace dev
 {

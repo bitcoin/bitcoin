@@ -29,9 +29,9 @@
 #include <exception>
 #include <iosfwd>
 #include <iomanip>
-#include <vector_ref.h>
-#include <exceptions.h>
-#include <fixedhash.h>
+#include <ethereum/vector_ref.h>
+#include <ethereum/exceptions.h>
+#include <ethereum/fixedhash.h>
 
 namespace dev
 {

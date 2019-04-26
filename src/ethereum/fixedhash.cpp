@@ -15,7 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <fixedhash.h>
+#include <ethereum/fixedhash.h>
 #include <boost/algorithm/string.hpp>
 
 namespace dev
