@@ -21,7 +21,7 @@
 #ifndef SYSCOIN_ETHEREUM_ADDRESS_H
 #define SYSCOIN_ETHEREUM_ADDRESS_H
 
-#include <fixedhash.h>
+#include <ethereum/fixedhash.h>
 
 namespace dev
 {

@@ -2,17 +2,17 @@
 #include <qt/forms/ui_masternodelist.h>
 
 #include <activemasternode.h>
-#include <clientmodel.h>
+#include <qt/clientmodel.h>
 #include <clientversion.h>
 #include <init.h>
-#include <guiutil.h>
+#include <qt/guiutil.h>
 #include <masternodesync.h>
 #include <masternodeconfig.h>
 #include <masternodeman.h>
 #include <qt/qrdialog.h>
 #include <sync.h>
 #include <wallet/wallet.h>
-#include <walletmodel.h>
+#include <qt/walletmodel.h>
 
 #include <QTimer>
 #include <QMessageBox>

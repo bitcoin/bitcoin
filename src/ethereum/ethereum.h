@@ -6,8 +6,8 @@
 #define SYSCOIN_ETHEREUM_ETHEREUM_H
 
 #include <vector>
-#include <commondata.h>
-#include <rlp.h>
+#include <ethereum/commondata.h>
+#include <ethereum/rlp.h>
 #include <amount.h>
 class CWitnessAddress;
 

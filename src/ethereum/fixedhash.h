@@ -29,7 +29,7 @@
 #include <algorithm>
 #include <random>
 #include <boost/functional/hash.hpp>
-#include <commondata.h>
+#include <ethereum/commondata.h>
 
 namespace dev
 {

@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include <rlp.h>
+#include <ethereum/rlp.h>
 using namespace std;
 using namespace dev;
 
