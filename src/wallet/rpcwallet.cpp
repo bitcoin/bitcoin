@@ -3030,8 +3030,13 @@ static UniValue fundrawtransaction(const JSONRPCRequest& request)
                             "         \"CONSERVATIVE\""},
                         },
                         "options"},
-                    {"iswitness", RPCArg::Type::BOOL, /* default */ "depends on heuristic tests", "Whether the transaction hex is a serialized witness transaction \n"
-                            "                              If iswitness is not present, heuristic tests will be used in decoding"},
+                    {"iswitness", RPCArg::Type::BOOL, /* default */ "depends on heuristic tests", "Whether the transaction hex is a serialized witness transaction.\n"
+                        "If iswitness is not present, heuristic tests will be used in decoding.\n"
+                        "If true, only witness deserialization will be tried.\n"
+                        "If false, only non-witness deserialization will be tried.\n"
+                        "This boolean should reflect whether the transaction has inputs\n"
+                        "(e.g. fully valid, or on-chain transactions), if known by the caller."
+                    },
                 },
                 RPCResult{
                             "{\n"
