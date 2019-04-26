@@ -381,6 +381,9 @@ add_library(crown_platform
   platform/governance-approval-voting.cpp
   platform/governance.cpp
   platform/agent.cpp
+  platform/platform-utils.h
+  platform/platform-db.h
+  platform/platform-db.cpp
   platform/rpc/specialtx-rpc-utils.cpp
   platform/rpc/rpcagents.cpp
   platform/rpc/rpc-nf-token.cpp
@@ -390,11 +393,11 @@ add_library(crown_platform
   platform/nf-token/nf-token-tx-mem-pool-handler.cpp
   platform/nf-token/nf-token-reg-tx.cpp
   platform/nf-token/nf-token-protocol-reg-tx.cpp
-  platform/platform-utils.h)
-target_include_directories(crown_platform
-  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
-)
+  platform/nf-token/nf-token-index.h)
 
+target_include_directories(crown_platform
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE leveldb/include
+)
 
 add_executable(crownd
   crownd.cpp

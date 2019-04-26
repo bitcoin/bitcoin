@@ -21,8 +21,8 @@ add_executable(crown_test
   miner_tests.cpp 
   mruset_tests.cpp 
   multisig_tests.cpp 
-  netbase_tests.cpp 
-  pmt_tests.cpp 
+  netbase_tests.cpp
+  pmt_tests.cpp
   prevector_tests.cpp 
   rpc_tests.cpp 
   sanity_tests.cpp 
