@@ -503,7 +503,7 @@ Network
   rejected.
 
 - When fetching a transaction announced by multiple peers, previous
-  versions of Bitcoin Core would sequentially attempt to download the
+  versions of Bitcoin Core would sequentially attempt to download
   the transaction from each announcing peer until the transaction is
   received, in the order that those peers' announcements were received.
   In this release, the download logic has changed to randomize the fetch
