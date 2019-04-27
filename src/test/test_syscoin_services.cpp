@@ -105,7 +105,7 @@ void StopNodes()
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 {
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -daemon -server -debug=1 -concurrentprocessing=1 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -tpstest -daemon -server -debug=0 -concurrentprocessing=1 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (!extraArgs.empty())
@@ -455,9 +455,9 @@ string GetNewFundedAddress(const string &node) {
 	if (node == "node1")
 		sendnode = "node2";
 	else if (node == "node2")
-		sendnode = "node1";
+		sendnode = "node3";
 	else if (node == "node3")
-		sendnode = "node1";
+		sendnode = "node2";
     CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"10\"", false);
 	GenerateBlocks(10, sendnode);
 	GenerateBlocks(10, node);
