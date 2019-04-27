@@ -126,10 +126,10 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 	vchData = vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 
 }
-void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight){
+void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash){
     if (fZMQAssetAllocation || fAssetIndex) {
         UniValue output(UniValue::VOBJ);
-        if(AssetMintTxToJson(tx, mintSyscoin, nHeight, output)){
+        if(AssetMintTxToJson(tx, mintSyscoin, nHeight, blockhash, output)){
             if(fZMQAssetAllocation)
                 GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
             if(fAssetIndex)
@@ -137,11 +137,11 @@ void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSysco
         }
     }
 }
-void CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const bool& confirmed, int nHeight) {
+void CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash) {
 	if (fZMQAssetAllocation || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
         CAssetAllocation allocation;
-        if(AssetAllocationTxToJSON(tx, dbAsset, nHeight, confirmed, oName, allocation)){
+        if(AssetAllocationTxToJSON(tx, dbAsset, nHeight, blockhash, oName, allocation)){
             if(fZMQAssetAllocation)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetallocation");
             if(fAssetIndex)
@@ -339,9 +339,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 4 != params.size())
 		throw runtime_error(
-			"assetallocationburn <asset> <address> <amount> <ethereum_destination_address>\n"
+			"assetallocationburn <asset_guid> <address> <amount> <ethereum_destination_address>\n"
             "\nArguments:\n"
-			"1. <asset>                         (numeric, required) Asset guid.\n"
+			"1. <asset_guid>                    (numeric, required) Asset guid.\n"
 			"2. <address>                       (string, required) Address that owns this asset allocation.\n"
 			"3. <amount>                        (numeric, required) Amount of asset to burn to SYSX.\n"
             "4. <ethereum_destination_address>  (string, required) The 20 byte (40 character) hex string of the ethereum destination address.\n"
@@ -412,9 +412,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 9 != params.size())
         throw runtime_error(
-            "assetallocationmint <asset> <address> <amount> <blocknumber> <tx_hex> <txroot_hex> <txmerkleproof_hex> <txmerkleroofpath_hex> <witness>\n"
+            "assetallocationmint <asset_guid> <address> <amount> <blocknumber> <tx_hex> <txroot_hex> <txmerkleproof_hex> <txmerkleroofpath_hex> <witness>\n"
             "\nArguments:\n"
-            "1. <asset>                 (numeric, required) Asset guid.\n"
+            "1. <asset_guid>            (numeric, required) Asset guid.\n"
             "2. <address>               (string, required) Address that will get this minting.\n"
             "3. <amount>                (numeric, required) Amount of asset to mint. Note that fees will be taken from the owner address.\n"
             "4. <blocknumber>           (numeric, required) Block number of the block that included the burn transaction on Ethereum.\n"
@@ -475,10 +475,10 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 4)
         throw runtime_error(
-            "assetallocationsend <asset> <addressfrom> <addressTo> <amount>\n"
+            "assetallocationsend <asset_guid> <addressfrom> <addressTo> <amount>\n"
             "\nSend an asset allocation you own to another address.\n"
             "\nArguments:\n"
-            "1. \"asset\":       (numeric, required) The asset GUID\n"
+            "1. \"asset_guid\":       (numeric, required) The asset GUID\n"
             "2. \"addressfrom\": (string, required) The address to send the allocation from\n"
             "3. \"addressto\":   (string, required) The address to send the allocation to\n"
             "4. \"amount\":      (numeric, required) The quantity of asset to send\n"
@@ -509,10 +509,10 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
-			"assetallocationsendmany \"asset\" \"addressfrom\" \'[{\"address\":\"string\",\"amount\":amount},...]\' \"witness\"\n"
+			"assetallocationsendmany \"asset_guid\" \"addressfrom\" \'[{\"address\":\"string\",\"amount\":amount},...]\' \"witness\"\n"
 			"\nSend an asset allocation you own to another address. Maximimum recipients is 250.\n"
             "\nArguments:\n"
-            "1. \"asset\":         (numeric, required) The asset GUID\n"
+            "1. \"asset_guid\":    (numeric, required) The asset GUID\n"
             "2. \"addressfrom\":   (string, required) The address to send the allocation from\n"
             "3. \"amounts\":       (string, required) a json array of json objects\n"
             "   [\n"
@@ -534,6 +534,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
             + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\', \"\"")
             + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\", \"\"")
             );
+
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
 	string vchAddressFrom = params[1].get_str();
@@ -637,16 +638,16 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
-        throw runtime_error("assetallocationbalance <asset> <address>\n"
+        throw runtime_error("assetallocationbalance <asset_guid> <address>\n"
                 "Show stored balance of a single asset allocation.\n"
                 "\nArguments:\n"
-                "1. \"asset\"       (string, required) The guid of the asset\n"
+                "1. \"asset_guid\"     (string, required) The guid of the asset\n"
                 "2. \"address\"        (string, required) The address of the allocation owner\n"
                 "\nResult (for verbose = true):\n"
                 "\"balance\"        (numeric) The balance of a single asset allocation.\n"
                 "\nExamples:\n"
-                + HelpExampleCli("assetallocationbalance","\"<guid>\"")
-                + HelpExampleRpc("assetallocationbalance", "\"<guid>\"")
+                + HelpExampleCli("assetallocationbalance","\"asset_guid\" \"address\"")
+                + HelpExampleRpc("assetallocationbalance", "\"asset_guid\", \"address\"")
                 );
 
     const int &nAsset = params[0].get_int();
@@ -678,15 +679,15 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
 UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
-        throw runtime_error("assetallocationinfo <asset> <address>\n"
+        throw runtime_error("assetallocationinfo <asset_guid> <address>\n"
                 "\nShow stored values of a single asset allocation.\n"
                 "\nArguments:\n"
-                "1. \"asset\"     (string, required) The guid of the asset\n"
+                "1. \"asset_guid\"     (string, required) The guid of the asset\n"
                 "2. \"address\"   (string, required) The address of the owner\n"
                 "\nResult:\n"
                 "{\n"
                 "  \"_id\":           (string) The unique id of this allocation\n"
-                "  \"asset\":         (string) The guid of the asset\n"
+                "  \"asset_guid\":         (string) The guid of the asset\n"
                 "  \"address\":       (string) The address of the owner of this allocation\n"
                 "  \"balance\":       (numeric) The current balance\n"
                 "  \"balance_zdag\":  (numeric) The zdag balance\n"
@@ -802,8 +803,8 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 != params.size())
-		throw runtime_error("assetallocationsenderstatus <asset> <address> <txid>\n"
-			"\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
+		throw runtime_error("assetallocationsenderstatus <asset_guid> <address> <txid>\n"
+			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
 			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
 			"Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
 			"Level 0 means OK.\n"
@@ -862,8 +863,8 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
         if(mapIt != mempoolMapAssetBalances.end())
             nBalanceZDAG = mapIt->second;
     }
-    oAssetAllocation.pushKV("_id", allocationTupleStr);
-	oAssetAllocation.pushKV("asset", (int)assetallocation.assetAllocationTuple.nAsset);
+    oAssetAllocation.pushKV("asset_allocation", allocationTupleStr);
+	oAssetAllocation.pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
 	oAssetAllocation.pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
 	oAssetAllocation.pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
     oAssetAllocation.pushKV("balance_zdag", ValueFromAssetAmount(nBalanceZDAG, asset.nPrecision));
@@ -878,16 +879,20 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     CAsset dbAsset;
     GetAsset(assetallocation.assetAllocationTuple.nAsset, dbAsset);
     int nHeight = 0;
-    uint256 hash_block;
+    const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
-    CTransactionRef txRef;
-    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
-        nHeight = blockindex->nHeight; 
+    uint256 blockhash;
+    if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))  
+        blockindex = LookupBlockIndex(blockhash);
+    if(blockindex)
+    {
+        nHeight = blockindex->nHeight;
+    }
     entry.pushKV("txtype", assetAllocationFromTx(tx.nVersion));
-    entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
-    entry.pushKV("txid", tx.GetHash().GetHex());
+    entry.pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
+    entry.pushKV("txid", txHash.GetHex());
     entry.pushKV("height", nHeight);
-    entry.pushKV("asset", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
     entry.pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;  
@@ -903,19 +908,19 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     }
     entry.pushKV("allocations", oAssetAllocationReceiversArray);
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
-    entry.pushKV("confirmed", nHeight > 0);  
+    entry.pushKV("blockhash", blockhash.GetHex()); 
     return true;
 }
-bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const bool& confirmed, UniValue &entry, CAssetAllocation& assetallocation)
+bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
 {
     assetallocation = CAssetAllocation(tx);
     if(assetallocation.assetAllocationTuple.IsNull() || dbAsset.IsNull())
         return false;
     entry.pushKV("txtype", assetAllocationFromTx(tx.nVersion));
-    entry.pushKV("_id", assetallocation.assetAllocationTuple.ToString());
+    entry.pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("height", nHeight);
-    entry.pushKV("asset", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
     entry.pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
@@ -932,7 +937,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     }
     entry.pushKV("allocations", oAssetAllocationReceiversArray);
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
-    entry.pushKV("confirmed", confirmed);   
+    entry.pushKV("blockhash", blockhash.GetHex()); 
 
     return true;
 }
@@ -941,16 +946,21 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     CMintSyscoin mintsyscoin(tx);
     if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         int nHeight = 0;
-        uint256 hash_block;
-        CTransactionRef txRef;
+        const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
-        if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
-            nHeight = blockindex->nHeight; 
+        bool in_active_chain = false;
+        uint256 blockhash;
+        if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
+            blockindex = LookupBlockIndex(blockhash);
+        if(blockindex)
+        {
+            nHeight = blockindex->nHeight;
+        }
         entry.pushKV("txtype", "assetallocationmint");
-        entry.pushKV("_id", mintsyscoin.assetAllocationTuple.ToString());
-        entry.pushKV("txid", tx.GetHash().GetHex());
+        entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+        entry.pushKV("txid", txHash.GetHex());
         entry.pushKV("height", nHeight);
-        entry.pushKV("asset", (int)mintsyscoin.assetAllocationTuple.nAsset);
+        entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
         entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAsset dbAsset;
@@ -963,7 +973,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     
         entry.pushKV("allocations", oAssetAllocationReceiversArray); 
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.pushKV("confirmed", nHeight > 0);   
+        entry.pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.pushKV("value", HexStr(mintsyscoin.vchValue));   
         oSPVProofObj.pushKV("parentnodes", HexStr(mintsyscoin.vchParentNodes)); 
@@ -975,13 +985,13 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     } 
     return false;                   
 }
-bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, UniValue &entry){
+bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
     if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         entry.pushKV("txtype", "assetallocationmint");
-        entry.pushKV("_id", mintsyscoin.assetAllocationTuple.ToString());
+        entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
         entry.pushKV("txid", tx.GetHash().GetHex());
         entry.pushKV("height", nHeight);       
-        entry.pushKV("asset", (int)mintsyscoin.assetAllocationTuple.nAsset);
+        entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
         entry.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
         UniValue oAssetAllocationReceiversArray(UniValue::VARR);
         CAsset dbAsset;
@@ -994,7 +1004,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         
         entry.pushKV("allocations", oAssetAllocationReceiversArray);
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.pushKV("confirmed", true);  
+        entry.pushKV("blockhash", blockhash.GetHex()); 
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.pushKV("value", HexStr(mintsyscoin.vchValue));   
         oSPVProofObj.pushKV("parentnodes", HexStr(mintsyscoin.vchParentNodes)); 
@@ -1067,7 +1077,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	vector<CWitnessAddress> vecWitnessAddresses;
 	uint32_t nAsset = 0;
 	if (!oOptions.isNull()) {
-		const UniValue &assetObj = find_value(oOptions, "asset");
+		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if(assetObj.isNum()) {
 			nAsset = boost::lexical_cast<uint32_t>(assetObj.get_int());
 		}
@@ -1148,7 +1158,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 			"2. <from>           (numeric, optional, default=0) The number of results to skip.\n"
 			"3. <options>        (string, optional) A json object with options to filter results\n"
 			"    {\n"
-			"	   \"asset\":guid					(numeric) Asset GUID to filter.\n"
+			"	   \"asset_guid\":guid			    (number) Asset GUID to filter.\n"
 			"	   \"addresses\"					(array) a json array with addresses owning allocations\n"
 			"		[\n"
 			"			{\n"
@@ -1161,11 +1171,11 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
             "\nExamples:\n"
 			+ HelpExampleCli("listassetallocations", "0")
 			+ HelpExampleCli("listassetallocations", "10 10")
-			+ HelpExampleCli("listassetallocations", "0 0 '{\"asset\":92922}'")
+			+ HelpExampleCli("listassetallocations", "0 0 '{\"asset_guid\":92922}'")
 			+ HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 			+ HelpExampleRpc("listassetallocations", "0")
 			+ HelpExampleRpc("listassetallocations", "10, 10")
-			+ HelpExampleRpc("listassetallocations", "0, 0, '{\"asset\":92922}'")
+			+ HelpExampleRpc("listassetallocations", "0, 0, '{\"asset_guid\":92922}'")
 			+ HelpExampleRpc("listassetallocations", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
 		);
 	UniValue options;

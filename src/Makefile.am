@@ -414,6 +414,8 @@ libsyscoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
+  rpc/governance.cpp \
+  rpc/masternode.cpp \
   $(SYSCOIN_CORE_H)
 
 libsyscoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
