@@ -38,9 +38,17 @@ UniValue mnsync(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "mnsync [status|next|reset]\n"
-            "Returns the sync status, updates to the next step or resets it entirely.\n"
-        );
+            RPCHelpMan{"mnsync",
+                "\nReturns the sync status, updates to the next step or resets it entirely.\n",
+                {
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to issue (status|next|reset)"}
+                },
+                RPCResult{""},
+                RPCExamples{
+                    HelpExampleCli("mnsync", "status")
+                    + HelpExampleRpc("mnsync", "status")
+                }
+            }.ToString());
 
     std::string strMode = request.params[0].get_str();
 
@@ -100,24 +108,30 @@ UniValue spork(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 2) {
         // default help, for basic mode
         throw std::runtime_error(
-            "spork \"command\"\n"
-            "\nShows information about current state of sporks\n"
-            "\nArguments:\n"
-            "1. \"command\"                     (string, required) 'show' to show all current spork values, 'active' to show which sporks are active\n"
-            "\nResult:\n"
-            "For 'show':\n"
-            "{\n"
-            "  \"SPORK_NAME\" : spork_value,    (number) The value of the specific spork with the name SPORK_NAME\n"
-            "  ...\n"
-            "}\n"
-            "For 'active':\n"
-            "{\n"
-            "  \"SPORK_NAME\" : true|false,     (boolean) 'true' for time-based sporks if spork is active and 'false' otherwise\n"
-            "  ...\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("spork", "show")
-            + HelpExampleRpc("spork", "\"show\""));
+            RPCHelpMan{"spork",
+                "\nShows information about current state of sporks\n",
+                {
+                    {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "\"show\" to show all current spork values, \"active\" to show which sporks are active"}
+                },
+                {
+                    RPCResult{"for command = \"show\"",
+                        "{\n"
+                        "  \"SPORK_NAME\" : spork_value,    (number) The value of the specific spork with the name SPORK_NAME\n"
+                        "  ...\n"
+                        "}\n"
+                    },
+                    RPCResult{"for command = \"active\"",
+                        "{\n"
+                        "  \"SPORK_NAME\" : true|false,     (boolean) 'true' for time-based sporks if spork is active and 'false' otherwise\n"
+                        "  ...\n"
+                        "}\n"
+                    }
+                },
+                RPCExamples{
+                    HelpExampleCli("spork", "show")
+                    + HelpExampleRpc("spork", "\"show\"")
+                }
+            }.ToString());
     } else {
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
@@ -136,16 +150,20 @@ UniValue spork(const JSONRPCRequest& request)
             return "success";
         } else {
             throw std::runtime_error(
-                "spork \"name\" value\n"
-                "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n"
-                "\nArguments:\n"
-                "1. \"name\"              (string, required) The name of the spork to update\n"
-                "2. value               (number, required) The new desired value of the spork\n"
-                "\nResult:\n"
-                "  result               (string) \"success\" if spork value was updated or this help otherwise\n"
-                "\nExamples:\n"
-                + HelpExampleCli("spork", "SPORK_6_NEW_SIGS 4070908800")
-                + HelpExampleRpc("spork", "\"SPORK_6_NEW_SIGS\", 4070908800"));
+                RPCHelpMan{"spork",
+                    "\nUpdate the value of the specific spork. Requires \"-sporkkey\" to be set to sign the message.\n",
+                    {
+                        {"name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name of the spork to update"},
+                        {"value", RPCArg::Type::NUM, RPCArg::Optional::NO, "The new desired value of the spork"}
+                    },
+                    RPCResult{
+                "  result               (string) \"success\" if spork value was updated or this help otherwise"
+                    },
+                    RPCExamples{
+                        HelpExampleCli("spork", "SPORK_6_NEW_SIGS 4070908800")
+                        + HelpExampleRpc("spork", "\"SPORK_6_NEW_SIGS\", 4070908800")
+                    }
+                }.ToString());
         }
     }
 

@@ -428,12 +428,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 strMode != "rank" && strMode != "sentinel" && strMode != "status"))
     {
         throw std::runtime_error(
-                "masternodelist ( \"mode\" \"filter\" )\n"
-                "Get a list of masternodes in different modes\n"
-                "\nArguments:\n"
-                "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
-                "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
-                "                                    additional matches in some modes are also available\n"
+            RPCHelpMan{"masternodelist",    
+                "\nGet a list of masternodes in different modes\n"
                 "\nAvailable modes:\n"
                 "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
                 "                   (since latest issued \"masternode start/start-many/initialize\")\n"
@@ -454,8 +450,17 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 "  rank           - Print rank of a masternode based on current block\n"
                 "  sentinel       - Print sentinel version of a masternode (can be additionally filtered, exact match)\n"
                 "  status         - Print masternode status: PRE_ENABLED / ENABLED / NEW_START_REQUIRED /\n"
-                "                   UPDATE_REQUIRED / POSE_BAN / OUTPOINT_SPENT (can be additionally filtered, partial match)\n"
-                );
+                "                   UPDATE_REQUIRED / POSE_BAN / OUTPOINT_SPENT (can be additionally filtered, partial match)\n",
+                {
+                    {"mode", RPCArg::Type::STR, "json", "The mode to run list in"},
+                    {"filter", RPCArg::Type::STR, "", "FIlter results. Partial match by outpoint by default in all modes; additional matches in some modes are also available"} 
+                },
+                RPCResult{""},
+                RPCExamples{
+                    HelpExampleCli("masternodelist", "")
+                    + HelpExampleRpc("masternodelist", "")
+                }
+            }.ToString());
     }
     if (strMode == "full" || strMode == "json" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
         {
@@ -626,19 +631,25 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
             strCommand != "create-name" && strCommand != "create-all" &&
 #endif // ENABLE_WALLET
             strCommand != "decode" && strCommand != "relay"))
-        throw std::runtime_error(
-                "masternodebroadcast \"command\"...\n"
-                "Set of commands to create and relay masternode broadcast messages\n"
-                "\nArguments:\n"
-                "1. \"command\"        (string or set of strings, required) The command to execute\n"
+            throw std::runtime_error(
+                RPCHelpMan{"masternodebroadcast",
+                    "\nSet of commands to create and relay masternode broadcast messages\n"
                 "\nAvailable commands:\n"
 #ifdef ENABLE_WALLET
                 "  create-name  - Create single remote masternode broadcast message by assigned name configured in masternode.conf\n"
                 "  create-all    - Create remote masternode broadcast messages for all masternodes configured in masternode.conf\n"
 #endif // ENABLE_WALLET
                 "  decode        - Decode masternode broadcast message\n"
-                "  relay         - Relay masternode broadcast message to the network\n"
-                );
+                "  relay         - Relay masternode broadcast message to the network\n",
+                    {
+                        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to execute (create-name|create-all|decode|relay)"}
+                    },
+                    RPCResult{""},
+                    RPCExamples{
+                        HelpExampleCli("masternodebroadcast", "decode \"message\"")
+                        + HelpExampleRpc("masternodebroadcast", "decode, \"message\"")
+                    }
+                }.ToString());
 
 #ifdef ENABLE_WALLET
     if (strCommand == "create-name")
@@ -847,16 +858,19 @@ UniValue sentinelping(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
-            "sentinelping version\n"
-            "\nSentinel ping.\n"
-            "\nArguments:\n"
-            "1. version           (numeric, required) Sentinel version\n"
-            "\nResult:\n"
-            "state                (boolean) Ping result\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sentinelping", "1000000")
-            + HelpExampleRpc("sentinelping", "1000001")
-        );
+            RPCHelpMan{"sentinelping",
+                "sentinelping version\n",
+                {
+                    {"version", RPCArg::Type::NUM, RPCArg::Optional::NO, "Sentinel Version"}
+                },
+                RPCResult{
+                    "true|false      (boolean) Ping result\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("sentinelping", "1000000")
+                    + HelpExampleRpc("sentinelping", "1000001")
+                }
+            }.ToString());
     }
 
     activeMasternode.UpdateSentinelPing(request.params[0].get_int());
