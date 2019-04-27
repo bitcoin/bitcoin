@@ -636,7 +636,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                 "Show stored values of a single asset allocation.\n");
 
     const int &nAsset = params[0].get_int();
-	string strAddressFrom = params[1].get_str();
+    string strAddressFrom = params[1].get_str();
     string witnessProgramHex = "";
     unsigned char witnessVersion = 0;
     if(strAddressFrom != "burn"){
@@ -647,11 +647,12 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
         witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
         witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
     }
-	UniValue oAssetAllocation(UniValue::VOBJ);
-	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
-	CAssetAllocation txPos;
-	if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
+    UniValue oAssetAllocation(UniValue::VOBJ);
+    const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
+    CAssetAllocation txPos;
+    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
+
 
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
