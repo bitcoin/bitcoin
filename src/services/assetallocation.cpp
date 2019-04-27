@@ -344,7 +344,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 			"<asset_guid> Asset guid.\n"
 			"<address> Address that owns this asset allocation.\n"
 			"<amount> Amount of asset to burn to SYSX.\n"
-            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address.\n");
+            "<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn as normal without the bridge. If it is left empty this will process as a normal assetallocationsend to the burn address.\n");
 
 	const int &nAsset = params[0].get_int();
 	string strAddress = params[1].get_str();
@@ -380,12 +380,26 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
         
-    
-	CAmount amount = AssetAmountFromValueNonNeg(params[2], theAsset.nPrecision);
+    UniValue amountObj = params[2];
+	CAmount amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 	string ethAddress = params[3].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
-
-    
+    // if no eth address provided just send as a std asset allocation send but to burn address
+    if(ethAddress.empty()){
+        UniValue output(UniValue::VARR);
+        UniValue outputObj(UniValue::VOBJ);
+        outputObj.pushKV("address", "burn");
+        outputObj.pushKV("amount", ValueFromAssetAmount(amount, theAsset.nPrecision));
+        output.push_back(outputObj);
+        UniValue paramsFund(UniValue::VARR);
+        paramsFund.push_back(nAsset);
+        paramsFund.push_back(strAddress);
+        paramsFund.push_back(output);
+        paramsFund.push_back("");
+        JSONRPCRequest requestMany;
+        requestMany.params = paramsFund;
+        return assetallocationsendmany(requestMany);  
+    }
     // convert to hex string because otherwise cscript will push a cscriptnum which is 4 bytes but we want 8 byte hex representation of an int64 pushed
     const std::string amountHex = int_to_hex(amount);
     const std::string witnessVersionHex = int_to_hex(assetAllocationTuple.witnessAddress.nVersion);

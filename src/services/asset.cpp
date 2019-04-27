@@ -765,7 +765,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
 			"syscoinburn [funding_address] [amount] [ethereum_destination_address]\n"
             "<funding_address> Funding address to burn SYS from.\n"
 			"<amount> Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees.\n"
-			"<ethereum_destination_address> Include the ethereum destination address so the contract can mint through the SYSX bridge. Leave empty to burn as normal without the bridge.\n");
+			"<ethereum_destination_address> The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn as normal without the bridge.\n");
       
     string fundingAddress = params[0].get_str();      
 	CAmount nAmount = AmountFromValue(params[1]);
@@ -1521,19 +1521,6 @@ CAmount AssetAmountFromValue(UniValue& value, int precision)
 	if (value.isStr() && value.get_str() == "-1") {
 		value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
 	}
-	CAmount amount;
-	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-	if (!AssetRange(amount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-	return amount;
-}
-CAmount AssetAmountFromValueNonNeg(const UniValue& value, int precision)
-{
-	if (precision < 0 || precision > 8)
-		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	if (!value.isNum() && !value.isStr())
-		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
 	CAmount amount;
 	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");

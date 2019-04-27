@@ -350,7 +350,6 @@ bool GetAsset(const int &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
 CAmount AssetAmountFromValue(UniValue& value, int precision);
-CAmount AssetAmountFromValueNonNeg(const UniValue& value, int precision);
 bool AssetRange(const CAmount& amountIn, int precision);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
