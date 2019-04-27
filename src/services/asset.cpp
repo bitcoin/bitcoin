@@ -928,14 +928,18 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
     int nHeight = 0;
-    uint256 hash_block;
+    const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
-    CTransactionRef txRef;
-    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
-        nHeight = blockindex->nHeight; 
+    uint256 blockhash;
+    if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
+        blockindex = LookupBlockIndex(blockhash);
+    if(blockindex)
+    {
+        nHeight = blockindex->nHeight;
+    }
+
     entry.pushKV("txtype", "syscoinburn");
-    entry.pushKV("_id", tx.GetHash().GetHex());
-    entry.pushKV("txid", tx.GetHash().GetHex());
+    entry.pushKV("txid", txHash.GetHex());
     entry.pushKV("height", nHeight);
     UniValue oOutputArray(UniValue::VARR);
     for (const auto& txout : tx.vout){
@@ -951,7 +955,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     
     entry.pushKV("outputs", oOutputArray);
     entry.pushKV("total", ValueFromAmount(tx.GetValueOut()));
-    entry.pushKV("confirmed", nHeight > 0);  
+    entry.pushKV("blockhash", blockhash.GetHex()); 
     return true;
 }
 int GenerateSyscoinGuid()
@@ -1077,11 +1081,11 @@ void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
     if(!passetindexdb->WriteIndexTXIDs(nAsset, page, TXIDS))
         LogPrint(BCLog::SYS, "Failed to write asset index txids\n");
 }
-void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight) {
+void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash) {
 	if (fZMQAsset || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
         // assetsends write allocation indexes
-        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, dbAsset, nHeight, oName)){
+        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, dbAsset, nHeight, blockhash, oName)){
             if(fZMQAsset)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
@@ -1212,10 +1216,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 6)
         throw runtime_error(
-			"assetupdate <asset> <public value> <contract> <supply> <update_flags> <witness>\n"
+			"assetupdate <asset_guid> <public value> <contract> <supply> <update_flags> <witness>\n"
 			"\nPerform an update on an asset you control.\n"
             "\nArguments:\n"
-			"1. <asset>             (numeric, required) Asset guid.\n"
+			"1. <asset_guid>             (numeric, required) Asset guid.\n"
             "2. <public value>      (string, required) Public data, 256 characters max.\n"
             "3. <contract>          (string, required) Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge.\n"             
 		    "4. <supply>            (numeric, required) New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
@@ -1285,10 +1289,10 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
-			"assettransfer <asset> <address> <witness>\n"
+			"assettransfer <asset_guid> <address> <witness>\n"
 			"\nTransfer an asset you own to another address.\n"
             "\nArguments:\n"
-			"1. <asset>      (numeric, required) Asset guid.\n"
+			"1. <asset_guid>      (numeric, required) Asset guid.\n"
 			"2. <address>    (string, required) Address to transfer to.\n"
 			"3. <witness>    (string, optional) Witness address that will sign for web-of-trust notarization of this transaction.\n"
             "\nResult:\n"
@@ -1296,8 +1300,8 @@ UniValue assettransfer(const JSONRPCRequest& request) {
             "  \"hexstring\"    (string) Unfunded and unsigned transaction hexstring\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("assettransfer", "\"asset\" \"address\" \"\"")
-            + HelpExampleRpc("assettransfer", "\"asset\", \"address\", \"\"")
+            + HelpExampleCli("assettransfer", "\"asset_guid\" \"address\" \"\"")
+            + HelpExampleRpc("assettransfer", "\"asset_guid\", \"address\", \"\"")
             );
 
     // gather & validate inputs
@@ -1347,10 +1351,10 @@ UniValue assetsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
-            "assetsend <asset> <addressTo> <amount>\n"
+            "assetsend <asset_guid> <addressTo> <amount>\n"
             "\nSend an asset you own to another address.\n"
             "\nArguments:\n"
-            "1. \"asset\":        (numeric, required) The asset GUID\n"
+            "1. \"asset_guid\":   (numeric, required) The asset GUID\n"
             "2. \"addressto\":    (string, required) The address to send the asset (creates an asset allocation)\n"
             "3. \"amount\":       (numeric, required) the quantity of asset to send\n"
             "\nResult:\n"
@@ -1379,10 +1383,10 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
-			"assetsendmany \"asset\" \'[{\"address\":\"address\",\"amount\":amount},...]\' [witness]\n"
+			"assetsendmany \"asset_guid\" \'[{\"address\":\"address\",\"amount\":amount},...]\' [witness]\n"
 			"\nSend an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
             "\nArguments:\n"
-            "1. \"asset\":         (numeric, required) The asset GUID\n"
+            "1. \"asset_guid\":    (numeric, required) The asset GUID\n"
             "2. \"amounts\":       (string, required) a json array of json objects\n"
             "   [\n"
             "     {\n"
@@ -1468,10 +1472,10 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 UniValue assetinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
-        throw runtime_error("assetinfo <asset>\n"
+        throw runtime_error("assetinfo <asset_guid>\n"
                 "\nShow stored values of a single asset and its.\n"
                 "\nArguments:\n"
-                "1. \"asset\":       (numeric, required) The asset guid"
+                "1. \"asset_guid\":  (numeric, required) The asset guid"
                 "\nResult:\n"
                 "{\n"
                 "  \"_id\":          (numeric) The asset guid\n"
@@ -1503,7 +1507,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
 }
 bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
-    oAsset.pushKV("_id", (int)asset.nAsset);
+    oAsset.pushKV("asset_guid", (int)asset.nAsset);
     oAsset.pushKV("txid", asset.txHash.GetHex());
 	oAsset.pushKV("publicvalue", stringFromVch(asset.vchPubData));
 	oAsset.pushKV("address", asset.witnessAddress.ToString());
@@ -1526,16 +1530,20 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
         dbAsset.nPrecision = asset.nPrecision;
     
     int nHeight = 0;
-    uint256 hash_block;
+    const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
-    CTransactionRef txRef;
-    if (GetTransaction(tx.GetHash(), txRef, Params().GetConsensus(), hash_block, blockindex) && blockindex)
-        nHeight = blockindex->nHeight; 
+    uint256 blockhash;
+    if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
+        blockindex = LookupBlockIndex(blockhash);
+    if(blockindex)
+    {
+        nHeight = blockindex->nHeight;
+    }
         	
 
 	entry.pushKV("txtype", assetFromTx(tx.nVersion));
-	entry.pushKV("_id", (int)asset.nAsset);
-    entry.pushKV("txid", tx.GetHash().GetHex());
+	entry.pushKV("asset_guid", (int)asset.nAsset);
+    entry.pushKV("txid", txHash.GetHex());
     entry.pushKV("height", nHeight);
     
 	if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchPubData.empty() && dbAsset.vchPubData != asset.vchPubData))
@@ -1555,17 +1563,17 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
         entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
         entry.pushKV("precision", asset.nPrecision);  
-    }         
-     return true;
+    }       
+    entry.pushKV("blockhash", blockhash.GetHex());  
+    return true;
 }
-bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry)
+bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry)
 {
     CAsset asset(tx);
     if(asset.IsNull() || dbAsset.IsNull())
         return false;
-
     entry.pushKV("txtype", assetFromTx(tx.nVersion));
-    entry.pushKV("_id", (int)asset.nAsset);
+    entry.pushKV("asset_guid", (int)asset.nAsset);
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("height", nHeight);
 
@@ -1587,6 +1595,7 @@ bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHe
         entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
         entry.pushKV("precision", asset.nPrecision);  
     }  
+    entry.pushKV("blockhash", blockhash.GetHex()); 
     return true;
 }
 UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
@@ -1676,7 +1685,7 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 		if (txid.isStr()) {
 			strTxid = txid.get_str();
 		}
-		const UniValue &assetObj = find_value(oOptions, "asset");
+		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if (assetObj.isNum()) {
 			nAsset = boost::lexical_cast<uint32_t>(assetObj.get_int());
 		}
@@ -1753,7 +1762,7 @@ UniValue listassets(const JSONRPCRequest& request) {
 			"3. <options>        (object, optional) A json object with options to filter results\n"
 			"    {\n"
 			"      \"txid\":txid					(string) Transaction ID to filter results for\n"
-			"	   \"asset\":guid					(numeric) Asset GUID to filter.\n"
+            "	   \"asset_guid\":guid			    (number) Asset GUID to filter.\n"
 			"	   \"addresses\"			        (array) a json array with owners\n"
 			"		[\n"
 			"			{\n"
@@ -1767,9 +1776,9 @@ UniValue listassets(const JSONRPCRequest& request) {
 			+ HelpExampleCli("listassets", "0")
 			+ HelpExampleCli("listassets", "10 10")
 			+ HelpExampleCli("listassets", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-			+ HelpExampleCli("listassets", "0 0 '{\"asset\":3473733}'")
+			+ HelpExampleCli("listassets", "0 0 '{\"asset_guid\":3473733}'")
 			+ HelpExampleRpc("listassets", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-			+ HelpExampleRpc("listassets", "0, 0, '{\"asset\":3473733}'")
+			+ HelpExampleRpc("listassets", "0, 0, '{\"asset_guid\":3473733}'")
 		);
 	UniValue options;
 	int count = 10;
@@ -1804,7 +1813,7 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;
     if (!oOptions.isNull()) {
-        const UniValue &assetObj = find_value(oOptions, "asset");
+        const UniValue &assetObj = find_value(oOptions, "asset_guid");
         if (assetObj.isNum()) {
             nAsset = boost::lexical_cast<uint32_t>(assetObj.get_int());
         }
@@ -1855,10 +1864,10 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         if(!ReadPayload(txid, oObj))
             continue;
         if(pblockindexdb && pblockindexdb->ReadBlockHash(txid, block_hash)){
-            oObj.pushKV("block_hash", block_hash.GetHex());        
+            oObj.pushKV("blockhash", block_hash.GetHex());        
         }
         else
-            oObj.pushKV("block_hash", "");
+            oObj.pushKV("blockhash", "");
            
         oRes.push_back(oObj);
     }
@@ -1964,7 +1973,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
         JSONRPCRequest requestDecodeRPC;
         requestDecodeRPC.params = paramsDecode;
         UniValue resDecode = syscoindecoderawtransaction(requestDecodeRPC);
-        assetVal = find_value(resDecode.get_obj(), "asset"); 
+        assetVal = find_value(resDecode.get_obj(), "asset_guid"); 
     }
     catch(const runtime_error& e){
     }
@@ -1992,7 +2001,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             "1. <page>           (numeric, default=0) Return specific page number of transactions. Lower page number means more recent transactions.\n"
             "2. <options>        (array, required) A json object with options to filter results\n"
             "    {\n"
-            "      \"asset\":guid                   (numeric) Asset GUID to filter.\n"
+            "      \"asset_guid\":guid              (numeric) Asset GUID to filter.\n"
             "      \"address\":string               (string, optional) Address to filter. Leave empty to scan globally through asset.\n"
             "    }\n"
             + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
@@ -2047,7 +2056,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
         
     for(const uint32_t& guid: assetGuids){
         UniValue oObj(UniValue::VOBJ);
-        oObj.pushKV("asset", (int)guid);
+        oObj.pushKV("asset_guid", (int)guid);
         oRes.push_back(oObj);
     }
     return oRes;
