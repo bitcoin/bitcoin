@@ -1422,9 +1422,8 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
         
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
-        
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
-		entry.pushKV("address", asset.witnessAddress.ToString());
+
+    entry.pushKV("address", asset.witnessAddress.ToString());
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
 		entry.pushKV("update_flags", asset.nUpdateFlags);
