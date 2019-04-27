@@ -1777,92 +1777,91 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
 
     WalletLogPrintf("Rescan started from block %s...\n", start_block.ToString());
 
+    fAbortRescan = false;
+    ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
+    uint256 tip_hash;
+    // The way the 'block_height' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
+    Optional<int> block_height = MakeOptional(false, int());
+    double progress_begin;
+    double progress_end;
     {
-        fAbortRescan = false;
-        ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 0); // show rescan progress in GUI as dialog or on splashscreen, if -rescan on startup
-        uint256 tip_hash;
-        // The way the 'block_height' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
-        Optional<int> block_height = MakeOptional(false, int());
-        double progress_begin;
-        double progress_end;
-        {
-            auto locked_chain = chain().lock();
-            if (Optional<int> tip_height = locked_chain->getHeight()) {
-                tip_hash = locked_chain->getBlockHash(*tip_height);
-            }
-            block_height = locked_chain->getBlockHeight(block_hash);
-            progress_begin = chain().guessVerificationProgress(block_hash);
-            progress_end = chain().guessVerificationProgress(stop_block.IsNull() ? tip_hash : stop_block);
+        auto locked_chain = chain().lock();
+        if (Optional<int> tip_height = locked_chain->getHeight()) {
+            tip_hash = locked_chain->getBlockHash(*tip_height);
         }
-        double progress_current = progress_begin;
-        while (block_height && !fAbortRescan && !chain().shutdownRequested()) {
-            if (*block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
-                ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), std::max(1, std::min(99, (int)((progress_current - progress_begin) / (progress_end - progress_begin) * 100))));
-            }
-            if (GetTime() >= nNow + 60) {
-                nNow = GetTime();
-                WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", *block_height, progress_current);
-            }
+        block_height = locked_chain->getBlockHeight(block_hash);
+        progress_begin = chain().guessVerificationProgress(block_hash);
+        progress_end = chain().guessVerificationProgress(stop_block.IsNull() ? tip_hash : stop_block);
+    }
+    double progress_current = progress_begin;
+    while (block_height && !fAbortRescan && !chain().shutdownRequested()) {
+        if (*block_height % 100 == 0 && progress_end - progress_begin > 0.0) {
+            ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), std::max(1, std::min(99, (int)((progress_current - progress_begin) / (progress_end - progress_begin) * 100))));
+        }
+        if (GetTime() >= nNow + 60) {
+            nNow = GetTime();
+            WalletLogPrintf("Still rescanning. At block %d. Progress=%f\n", *block_height, progress_current);
+        }
 
-            CBlock block;
-            if (chain().findBlock(block_hash, &block) && !block.IsNull()) {
-                auto locked_chain = chain().lock();
-                LOCK(cs_wallet);
-                if (!locked_chain->getBlockHeight(block_hash)) {
-                    // Abort scan if current block is no longer active, to prevent
-                    // marking transactions as coming from the wrong block.
-                    // TODO: This should return success instead of failure, see
-                    // https://github.com/syscoin/syscoin/pull/14711#issuecomment-458342518
-                    result.last_failed_block = block_hash;
-                    result.status = ScanResult::FAILURE;
-                    break;
-                }
-                for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
-                    SyncTransaction(block.vtx[posInBlock], block_hash, posInBlock, fUpdate);
-                }
-                // scan succeeded, record block as most recent successfully scanned
-                result.last_scanned_block = block_hash;
-                result.last_scanned_height = *block_height;
-            } else {
-                // could not scan block, keep scanning but record this block as the most recent failure
+
+        CBlock block;
+        if (chain().findBlock(block_hash, &block) && !block.IsNull()) {
+            auto locked_chain = chain().lock();
+            LOCK(cs_wallet);
+            if (!locked_chain->getBlockHeight(block_hash)) {
+                // Abort scan if current block is no longer active, to prevent
+                // marking transactions as coming from the wrong block.
+                // TODO: This should return success instead of failure, see
+                // https://github.com/syscoin/syscoin/pull/14711#issuecomment-458342518
                 result.last_failed_block = block_hash;
                 result.status = ScanResult::FAILURE;
-            }
-            if (block_hash == stop_block) {
                 break;
             }
-            {
-                auto locked_chain = chain().lock();
-                Optional<int> tip_height = locked_chain->getHeight();
-                if (!tip_height || *tip_height <= block_height || !locked_chain->getBlockHeight(block_hash)) {
-                    // break successfully when rescan has reached the tip, or
-                    // previous block is no longer on the chain due to a reorg
-                    break;
-                }
+            for (size_t posInBlock = 0; posInBlock < block.vtx.size(); ++posInBlock) {
+                SyncTransaction(block.vtx[posInBlock], block_hash, posInBlock, fUpdate);
+            }
+            // scan succeeded, record block as most recent successfully scanned
+            result.last_scanned_block = block_hash;
+            result.last_scanned_height = *block_height;
+        } else {
+            // could not scan block, keep scanning but record this block as the most recent failure
+            result.last_failed_block = block_hash;
+            result.status = ScanResult::FAILURE;
+        }
+        if (block_hash == stop_block) {
+            break;
+        }
+        {
+            auto locked_chain = chain().lock();
+            Optional<int> tip_height = locked_chain->getHeight();
+            if (!tip_height || *tip_height <= block_height || !locked_chain->getBlockHeight(block_hash)) {
+                // break successfully when rescan has reached the tip, or
+                // previous block is no longer on the chain due to a reorg
+                break;
+            }
 
-                // increment block and verification progress
-                block_hash = locked_chain->getBlockHash(++*block_height);
-                progress_current = chain().guessVerificationProgress(block_hash);
+            // increment block and verification progress
+            block_hash = locked_chain->getBlockHash(++*block_height);
+            progress_current = chain().guessVerificationProgress(block_hash);
 
-                // handle updated tip hash
-                const uint256 prev_tip_hash = tip_hash;
-                tip_hash = locked_chain->getBlockHash(*tip_height);
-                if (stop_block.IsNull() && prev_tip_hash != tip_hash) {
-                    // in case the tip has changed, update progress max
-                    progress_end = chain().guessVerificationProgress(tip_hash);
-                }
+            // handle updated tip hash
+            const uint256 prev_tip_hash = tip_hash;
+            tip_hash = locked_chain->getBlockHash(*tip_height);
+            if (stop_block.IsNull() && prev_tip_hash != tip_hash) {
+                // in case the tip has changed, update progress max
+                progress_end = chain().guessVerificationProgress(tip_hash);
             }
         }
-        ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
-        if (block_height && fAbortRescan) {
-            WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", *block_height, progress_current);
-            result.status = ScanResult::USER_ABORT;
-        } else if (block_height && chain().shutdownRequested()) {
-            WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", *block_height, progress_current);
-            result.status = ScanResult::USER_ABORT;
-        } else {
-            WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - start_time);
-        }
+    }
+    ShowProgress(strprintf("%s " + _("Rescanning..."), GetDisplayName()), 100); // hide progress dialog in GUI
+    if (block_height && fAbortRescan) {
+        WalletLogPrintf("Rescan aborted at block %d. Progress=%f\n", *block_height, progress_current);
+        result.status = ScanResult::USER_ABORT;
+    } else if (block_height && chain().shutdownRequested()) {
+        WalletLogPrintf("Rescan interrupted by shutdown request at block %d. Progress=%f\n", *block_height, progress_current);
+        result.status = ScanResult::USER_ABORT;
+    } else {
+        WalletLogPrintf("Rescan completed in %15dms\n", GetTimeMillis() - start_time);
     }
     return result;
 }
