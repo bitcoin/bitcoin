@@ -120,11 +120,10 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 		return false;
 	return true;
 }
-bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation)
+bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress)
 {   
     if(!theAssetAllocation) 
         return false;  
-    std::vector<unsigned char> vchEthAddress;
     uint32_t nAssetFromScript;
     CAmount nAmountFromScript;
     CWitnessAddress burnWitnessAddress;
@@ -204,6 +203,35 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
     
 
     burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[4]);   
+    return true; 
+}
+// for standard syscoinburn txs that have eth destination provided
+bool GetSyscoinBurnData(const CTransaction &tx, std::vector<unsigned char> &vchEthAddress)
+{
+    if(tx.nVersion != SYSCOIN_TX_VERSION_BURN){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
+        return false;
+    }
+    int nOut = GetSyscoinDataOutput(tx);
+    if (nOut == -1){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Data index must be positive\n");
+        return false;
+    }
+
+    const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
+    std::vector<std::vector< unsigned char> > vvchArgs;
+    GetSyscoinBurnData(scriptPubKey, vvchArgs);
+    if(vvchArgs.size() != 1){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Wrong argument size %d\n", vvchArgs.size());
+        return false;
+    }
+            
+    if(vvchArgs[0].empty()){
+        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
+        return false;
+    }     
+    
+    vchEthAddress = vvchArgs[0];  
     return true; 
 }
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
@@ -732,39 +760,32 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 4 != params.size())
+	if (request.fHelp || 3 != params.size())
 		throw runtime_error(
-			"syscoinburn [funding_address] [amount] [burn_to_sysx] [ethereum_destination_address]\n"
+			"syscoinburn [funding_address] [amount] [ethereum_destination_address]\n"
             "<funding_address> Funding address to burn SYS from.\n"
 			"<amount> Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees.\n"
-			"<burn_to_sysx> Boolean. Set to true if you are provably burning SYS to go to SYSX. False if you are provably burning SYS forever.\n");
+			"<ethereum_destination_address> Include the ethereum destination address so the contract can mint through the SYSX bridge. Leave empty to burn as normal without the bridge.\n");
       
     string fundingAddress = params[0].get_str();      
 	CAmount nAmount = AmountFromValue(params[1]);
-	bool bBurnToSYSX = params[2].get_bool();
-    string ethAddress = params[3].get_str();
+    string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
 
    
 	vector<CRecipient> vecSend;
 	CScript scriptData;
 	scriptData << OP_RETURN;
-	if (bBurnToSYSX){
+	if (!ethAddress.empty()){
 		scriptData << ParseHex(ethAddress);
     }
-
-	CMutableTransaction txNew;
-    if(bBurnToSYSX)
-        txNew.nVersion = SYSCOIN_TX_VERSION_BURN;
-    
-    
     
     CRecipient burn;
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
     
-    UniValue res = syscointxfund_helper(fundingAddress, bBurnToSYSX? SYSCOIN_TX_VERSION_BURN: 0, "", vecSend);
+    UniValue res = syscointxfund_helper(fundingAddress, SYSCOIN_TX_VERSION_BURN, "", vecSend);
     return res;
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
@@ -881,6 +902,8 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
+    std::vector<unsigned char> vchEthAddress;
+    GetSyscoinBurnData(tx, vchEthAddress);
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
@@ -910,6 +933,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("outputs", oOutputArray);
     entry.pushKV("total", ValueFromAmount(tx.GetValueOut()));
     entry.pushKV("blockhash", blockhash.GetHex()); 
+    entry.pushKV("ethereum_destination", HexStr(vchEthAddress)); 
     return true;
 }
 int GenerateSyscoinGuid()
