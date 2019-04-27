@@ -469,6 +469,7 @@ public:
     bool IsWalletFlagSet(uint64_t flag) override { return m_wallet->IsWalletFlagSet(flag); }
     OutputType getDefaultAddressType() override { return m_wallet->m_default_address_type; }
     OutputType getDefaultChangeType() override { return m_wallet->m_default_change_type; }
+    CAmount getDefaultMaxTxFee() override { return m_wallet->m_default_max_tx_fee; }
     void remove() override
     {
         RemoveWallet(m_wallet);
