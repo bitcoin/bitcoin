@@ -146,9 +146,9 @@ Result CreateTotalBumpTransaction(const CWallet* wallet, const uint256& txid, co
     }
 
     // Check that in all cases the new fee doesn't violate maxTxFee
-     const CAmount max_tx_fee = wallet->chain().maxTxFee();
+     const CAmount max_tx_fee = wallet->m_default_max_tx_fee;
      if (new_fee > max_tx_fee) {
-         errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than maxTxFee %s)",
+         errors.push_back(strprintf("Specified or calculated fee %s is too high (cannot be higher than -maxtxfee %s)",
                                FormatMoney(new_fee), FormatMoney(max_tx_fee)));
          return Result::WALLET_ERROR;
      }

@@ -207,12 +207,6 @@ public:
     //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
     virtual CFeeRate relayDustFee() = 0;
 
-    //! Node max tx fee setting (-maxtxfee).
-    //! This could be replaced by a per-wallet max fee, as proposed at
-    //! https://github.com/syscoin/syscoin/issues/15355
-    //! But for the time being, wallets call this to access the node setting.
-    virtual CAmount maxTxFee() = 0;
-
     //! Check if pruning is enabled.
     virtual bool getPruneMode() = 0;
 
