@@ -4308,7 +4308,6 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request);
 UniValue getsuperblockbudget(const JSONRPCRequest& request);
 UniValue gobject(const JSONRPCRequest& request);
 UniValue voteraw(const JSONRPCRequest& request);
-UniValue convertaddress(const JSONRPCRequest& request);
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
