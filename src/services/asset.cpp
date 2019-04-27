@@ -1341,24 +1341,32 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 		if (!receiver.isObject())
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\", or \"amount\"}");
 
-		UniValue receiverObj = receiver.get_obj();
-		string toStr = find_value(receiverObj, "address").get_str();
-        CTxDestination dest = DecodeDestination(toStr);
-		if(!IsValidDestination(dest))
-			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2509 - " + _("Asset must be sent to a valid syscoin address"));
+		const UniValue &receiverObj = receiver.get_obj();
+		const std::string &toStr = find_value(receiverObj, "address").get_str();
+        CWitnessAddress recpt;
+        if(toStr != "burn"){
+            CTxDestination dest = DecodeDestination(toStr);
+            if(!IsValidDestination(dest))
+                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2509 - " + _("Asset must be sent to a valid syscoin address"));
 
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-        string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
-                		
+            UniValue detail = DescribeAddress(dest);
+            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+            unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
+            recpt.vchWitnessProgram = ParseHex(witnessProgramHex);
+            recpt.nVersion = witnessVersion;
+        } 
+        else{
+            recpt.vchWitnessProgram = vchFromString("burn");
+            recpt.nVersion = 0;
+        }         		
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum() || amountObj.isStr()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion,ParseHex(witnessProgramHex)), amount));
+			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(recpt.nVersion, recpt.vchWitnessProgram), amount));
 		}
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
