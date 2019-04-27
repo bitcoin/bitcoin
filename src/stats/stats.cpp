@@ -52,13 +52,12 @@ void CStats::addMempoolSample(int64_t txcount, int64_t dynUsage, int64_t current
         // check if we should cleanup the container
         if (m_mempool_stats.m_cleanup_counter >= CLEANUP_SAMPLES_THRESHOLD) {
             //check memory usage
-            int32_t memDelta = memusage::DynamicUsage(m_mempool_stats.m_samples) - maxStatsMemory;
-            if (memDelta > 0 && m_mempool_stats.m_samples.size()) {
+            if (memusage::DynamicUsage(m_mempool_stats.m_samples) > maxStatsMemory && m_mempool_stats.m_samples.size()) {
                 // only shrink if the vector.capacity() is > the target for performance reasons
                 m_mempool_stats.m_samples.shrink_to_fit();
-                int32_t memUsage = memusage::DynamicUsage(m_mempool_stats.m_samples);
+                const size_t memUsage = memusage::DynamicUsage(m_mempool_stats.m_samples);
                 // calculate the amount of samples we need to remove
-                size_t itemsToRemove = ceil((memUsage - maxStatsMemory) / sizeof(m_mempool_stats.m_samples[0]));
+                size_t itemsToRemove = (memUsage - maxStatsMemory + sizeof(m_mempool_stats.m_samples[0]) - 1) / sizeof(m_mempool_stats.m_samples[0]);
 
                 // make sure the vector contains more items then we'd like to remove
                 if (m_mempool_stats.m_samples.size() > itemsToRemove)
