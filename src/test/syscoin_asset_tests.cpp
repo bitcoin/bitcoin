@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
-
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -915,33 +914,34 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""));
 
 }
-
-
 BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
 {
+    UniValue r;
 	printf("Running generate_assettransfer_address...\n");
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
+	GenerateBlocks(15, "node1");
+	GenerateBlocks(15, "node2");
+	GenerateBlocks(15, "node3");
 	string newaddres1 = GetNewFundedAddress("node1");
-	string newaddres2 = GetNewFundedAddress("node2");
-	string newaddres3 = GetNewFundedAddress("node3");
-
+    string newaddres2 = GetNewFundedAddress("node2");
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+    string newaddres3 = r.get_str();
 	string guid1 = AssetNew("node1", newaddres1, "pubdata");
-	string guid2 = AssetNew("node1", newaddres1, "pubdata");
+	string guid2 = AssetNew("node2", newaddres2, "pubdata");
+    	
 	AssetUpdate("node1", guid1, "pub3");
-	UniValue r;
 	AssetTransfer("node1", "node2", guid1, newaddres2);
-	AssetTransfer("node1", "node3", guid2, newaddres3);
+
+	AssetTransfer("node2", "node3", guid2, newaddres3);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);
+
 	// xfer an asset that isn't yours
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres3 + " ''"));
 	UniValue arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + arr[0].get_str()));
     string hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""), runtime_error);
-    
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""));
+    BOOST_CHECK(!find_value(r.get_array()[0].get_obj(), "allowed").get_bool());     
     GenerateBlocks(5, "node1");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);

@@ -1268,12 +1268,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
 
-    CWitnessAddress fromWitnessAddress;
-    fromWitnessAddress.vchWitnessProgram = theAsset.witnessAddress.vchWitnessProgram;
-    fromWitnessAddress.nVersion = theAsset.witnessAddress.nVersion;
 	theAsset.ClearAsset();
     CScript scriptPubKey;
-	theAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
+	theAsset.witnessAddressTransfer = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
@@ -1287,7 +1284,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	return syscointxfund_helper(fromWitnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
+	return syscointxfund_helper(theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -1448,7 +1445,10 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
 
-    entry.pushKV("address", asset.witnessAddress.ToString());
+    entry.pushKV("sender", asset.witnessAddress.ToString());
+
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER)
+        entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
 		entry.pushKV("update_flags", asset.nUpdateFlags);
@@ -1479,7 +1479,10 @@ bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHe
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
         
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
-        entry.pushKV("address", asset.witnessAddress.ToString());
+        entry.pushKV("sender", asset.witnessAddress.ToString());
+
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER)
+        entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
 
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
         entry.pushKV("update_flags", asset.nUpdateFlags);

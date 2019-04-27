@@ -94,6 +94,7 @@ class CAsset {
 public:
 	uint32_t nAsset;
 	CWitnessAddress witnessAddress;
+    CWitnessAddress witnessAddressTransfer;
 	std::vector<unsigned char> vchContract;
     uint256 txHash;
     unsigned int nHeight;
@@ -103,6 +104,7 @@ public:
 	CAmount nMaxSupply;
 	unsigned char nPrecision;
 	unsigned char nUpdateFlags;
+    char nDumurrageOrInterest;
     CAsset() {
         SetNull();
         nAsset = 0;
@@ -121,6 +123,7 @@ public:
 		vchPubData.clear();
 		vchContract.clear();
         txHash.SetNull();
+        witnessAddressTransfer.SetNull();
 
 	}
 	ADD_SERIALIZE_METHODS;
@@ -130,13 +133,15 @@ public:
 		READWRITE(txHash);
 		READWRITE(nAsset);
 		READWRITE(witnessAddress);
+        READWRITE(witnessAddressTransfer);
 		READWRITE(nBalance);
 		READWRITE(nTotalSupply);
 		READWRITE(nMaxSupply);
         READWRITE(nHeight);
 		READWRITE(nUpdateFlags);
 		READWRITE(nPrecision);
-		READWRITE(vchContract);    
+		READWRITE(vchContract);   
+        READWRITE(nDumurrageOrInterest); 
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (

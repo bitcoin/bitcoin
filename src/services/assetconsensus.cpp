@@ -1134,7 +1134,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
             if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Invalid update flags");
                 return error(errorMessage.c_str());
-            }          
+            } 
+            if(!theAsset.witnessAddressTransfer.IsNull())   {
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot include transfer address upon activation");
+                return error(errorMessage.c_str());
+            }      
             break;
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
@@ -1155,6 +1159,10 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
             if(theAsset.nUpdateFlags > ASSET_UPDATE_ALL){
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Invalid update flags");
                 return error(errorMessage.c_str());
+            }  
+            if(!theAsset.witnessAddressTransfer.IsNull())   {
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot include transfer address upon update");
+                return error(errorMessage.c_str());
             }           
             break;
             
@@ -1169,8 +1177,16 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2021 - " + _("Too many receivers in one allocation send, maximum of 250 is allowed at once");
                 return error(errorMessage.c_str());
             }
+            if(!theAsset.witnessAddressTransfer.IsNull())   {
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Cannot include transfer address upon sending asset");
+                return error(errorMessage.c_str());
+            }  
             break;
         case SYSCOIN_TX_VERSION_ASSET_TRANSFER:
+            if(theAsset.witnessAddressTransfer.IsNull())   {
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Must include transfer address upon transferring asset");
+                return error(errorMessage.c_str());
+            } 
             break;
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2023 - " + _("Asset transaction has unknown op");
             return error(errorMessage.c_str());
@@ -1207,10 +1223,13 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Asset owner must sign off on this change");
             return error(errorMessage.c_str());
-        }           
+        } 
+        storedSenderAssetRef.witnessAddress = theAsset.witnessAddressTransfer;   
+        // sanity to ensure transfer field is never set on the actual asset in db  
+        storedSenderAssetRef.witnessAddressTransfer.SetNull();      
     }
 
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {
+    else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {
         if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
@@ -1236,9 +1255,35 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Total supply cannot exceed maximum supply");
             return error(errorMessage.c_str());
         }
-
+        if (!theAsset.vchPubData.empty())
+            storedSenderAssetRef.vchPubData = theAsset.vchPubData;
+        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
+            return error(errorMessage.c_str());
+        }
+                            
+        if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract burn method signature");
+            return error(errorMessage.c_str());
+        }
+        
+        if (!theAsset.vchContract.empty() && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_TRANSFER)
+            storedSenderAssetRef.vchContract = theAsset.vchContract;             
+        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract");
+            return error(errorMessage.c_str());
+        }    
+              
+        if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags && (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN)))) {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Insufficient privileges to update flags");
+            return error(errorMessage.c_str());
+        }
+        storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
     }      
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
+    else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
         if (storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
@@ -1296,41 +1341,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         if (!bSanityCheck && !fJustCheck && !bMiner)
             passetallocationdb->WriteAssetAllocationIndex(tx, storedSenderAssetRef, nHeight, blockhash);  
     }
-    else if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
-    {         
-        if (!theAsset.witnessAddress.IsNull())
-            storedSenderAssetRef.witnessAddress = theAsset.witnessAddress;
-        if (!theAsset.vchPubData.empty())
-            storedSenderAssetRef.vchPubData = theAsset.vchPubData;
-        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
-            return error(errorMessage.c_str());
-        }
-                            
-        if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract burn method signature");
-            return error(errorMessage.c_str());
-        }
-        
-        if (!theAsset.vchContract.empty() && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_TRANSFER)
-            storedSenderAssetRef.vchContract = theAsset.vchContract;             
-        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract");
-            return error(errorMessage.c_str());
-        }    
-              
-        if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags && (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN)))) {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Insufficient privileges to update flags");
-            return error(errorMessage.c_str());
-        }
-        storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
-
-
-    }
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
+    else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE)
     {
         if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
@@ -1353,7 +1364,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 nHeight,
                 fJustCheck ? 1 : 0);
     }
-    
     return true;
 }
 bool CBlockIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
