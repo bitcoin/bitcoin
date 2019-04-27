@@ -874,7 +874,6 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         int nHeight = 0;
         const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
-        bool in_active_chain = false;
         uint256 blockhash;
         if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
             blockindex = LookupBlockIndex(blockhash);
