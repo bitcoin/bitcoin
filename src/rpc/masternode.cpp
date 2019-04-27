@@ -24,11 +24,6 @@
 #include <rpc/util.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 
-bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException);
-#ifdef ENABLE_WALLET
-void EnsureWalletIsUnlocked(CWallet * const pwallet);
-#endif
-
 
 UniValue masternode(const JSONRPCRequest& request)
 {

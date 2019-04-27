@@ -62,7 +62,6 @@ bool IsAssetAllocationTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
-CWallet* GetDefaultWallet();
 
 int GenerateSyscoinGuid();
 

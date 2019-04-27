@@ -27,7 +27,6 @@
 #endif // ENABLE_WALLET
 #include <core_io.h>
 #include <rpc/util.h>
-bool EnsureWalletIsAvailable(bool avoidException);
 UniValue getgovernanceinfo(const JSONRPCRequest& request);
 UniValue getsuperblockbudget(const JSONRPCRequest& request);
 UniValue gobject(const JSONRPCRequest& request);
