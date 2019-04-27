@@ -509,7 +509,7 @@ UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, con
     Coin pcoin;
     if (GetUTXOCoin(addressOutpoint, pcoin) && !pcoin.IsSpent()){
         CTxIn txIn(addressOutpoint, pcoin.out.scriptPubKey);
-        // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs everytime we call this function
+        // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
         if(fTPSTest && fTPSTestEnabled){
             if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end()){
                 savedtxins.push_back(txIn);
@@ -590,7 +590,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	if (request.fHelp || 1 > params.size() || 3 < params.size())
 		throw runtime_error(
 			"syscointxfund\n"
-			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added everytime you call this function.\n"
+			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added every time you call this function.\n"
 			"\nArguments:\n"
 			"  \"hexstring\" (string, required) The raw syscoin transaction output given from rpc (ie: assetnew, assetupdate)\n"
 			"  \"address\"  (string, required) Address belonging to this asset transaction. \n"
@@ -689,7 +689,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			}
 			if (!IsOutpointMature(outPoint))
 				continue;
-            // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs everytime we call this function
+            // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
             if(fTPSTest && fTPSTestEnabled){
                 if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end())
                     savedtxins.push_back(txIn);
@@ -1292,7 +1292,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
 			"assetsend [asset_guid] ([{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
-			"Send an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n"
+			"Send an asset you own to another address/address as an asset allocation. Maximum recipients is 250.\n"
 			"<asset_guid> Asset guid.\n"
 			"<address> Address to transfer to.\n"
 			"<amount> Quantity of asset to send.\n"

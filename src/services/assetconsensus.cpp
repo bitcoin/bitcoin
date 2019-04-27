@@ -95,7 +95,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
    
     int32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
-    // validate that the block passed is commited to by the tx root he also passes in, then validate the spv proof to the tx root below  
+    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoot(mintSyscoin.nBlockNumber, vchTxRoot)){
         if(ethTxRootShouldExist){
@@ -112,7 +112,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
             return false;
         } 
         
-        // ensure that we wait atleast ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
+        // ensure that we wait at least ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
         if(fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
             return false;
@@ -397,7 +397,7 @@ void ResyncAssetAllocationStates(){
             for(auto& arrivalTime: arrivalTimes->second){
                 const uint256& txHash = arrivalTime.first;
                 const CTransactionRef txRef = mempool.get(txHash);
-                // if mempool doesnt have txid then remove from both arrivalTime and mempool balances
+                // if mempool doesn't have txid then remove from both arrivalTime and mempool balances
                 if (!txRef){
                     vecToRemoveArrivalTimes.push_back(txHash);
                 }

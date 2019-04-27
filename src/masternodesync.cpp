@@ -177,7 +177,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        // also skip syncing with nodes that are on an old unsupported verion or something like bitcoinj which doesn't support these messages
+        // also skip syncing with nodes that are on an old unsupported version or something like bitcoinj which doesn't support these messages
         if(pnode->nVersion < PROTOCOL_VERSION || pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
@@ -364,7 +364,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
                         ) {
                             // We already asked for all objects, waited for MASTERNODE_SYNC_TIMEOUT_SECONDS
                             // after that and less then 0.01% or MASTERNODE_SYNC_TICK_SECONDS
-                            // (i.e. 1 per second) votes were recieved during the last tick.
+                            // (i.e. 1 per second) votes were received during the last tick.
                             // We can be pretty sure that we are done syncing.
                             LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nRequestedMasternodeAssets %d -- asked for all objects, nothing to do\n", nTick, nRequestedMasternodeAssets);
                             // reset nTimeNoObjectsLeft to be able to use the same condition on resync

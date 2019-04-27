@@ -234,7 +234,7 @@ bool CNetAddr::IsLocal() const
  *          be used to refer to an actual host.
  *
  * @note A valid address may or may not be publicly routable on the global
- *       internet. As in, the set of valid addreses is a superset of the set of
+ *       internet. As in, the set of valid addresses is a superset of the set of
  *       publicly routable addresses.
  *
  * @see CNetAddr::IsRoutable()
@@ -282,7 +282,7 @@ bool CNetAddr::IsValid() const
  * @returns Whether or not this network address is publicly routable on the
  *          global internet.
  *
- * @note A routable address is always valid. As in, the set of routable addreses
+ * @note A routable address is always valid. As in, the set of routable addresses
  *       is a subset of the set of valid addresses.
  *
  * @see CNetAddr::IsValid()
