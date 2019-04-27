@@ -71,7 +71,7 @@ public:
     MPMCBoundedQueue(MPMCBoundedQueue&& rhs) noexcept;
 
     /**
-     * @brief Move assignment implementaion.
+     * @brief Move assignment implementation.
      */
     MPMCBoundedQueue& operator=(MPMCBoundedQueue&& rhs) noexcept;
 
@@ -86,7 +86,7 @@ public:
     /**
      * @brief pop Pop data from queue.
      * @param data Place to store popped data.
-     * @return true on sucess.
+     * @return true on success.
      */
     bool pop(T& data);
 

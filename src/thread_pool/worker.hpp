@@ -28,7 +28,7 @@ public:
     Worker(Worker&& rhs) noexcept;
 
     /**
-     * @brief Move assignment implementaion.
+     * @brief Move assignment implementation.
      */
     Worker& operator=(Worker&& rhs) noexcept;
 

@@ -490,7 +490,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
 			"assetallocationsend [asset_guid] [addressfrom] ([{\"address\":\"string\",\"amount\":amount},...] [witness]\n"
-			"Send an asset allocation you own to another address. Maximimum recipients is 250.\n"
+			"Send an asset allocation you own to another address. Maximum recipients is 250.\n"
 			"<asset_guid> Asset guid.\n"
 			"<addressfrom> Address that owns this asset allocation.\n"
 			"<address> Address to transfer to.\n"
@@ -691,7 +691,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		return elem1.second < elem2.second;
 	};
 
-	// Declaring a set that will store the pairs using above comparision logic
+	// Declaring a set that will store the pairs using above comparison logic
 	std::set<std::pair<uint256, int64_t>, Comparator> arrivalTimesSet(
 		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
 

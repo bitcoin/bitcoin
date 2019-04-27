@@ -486,7 +486,7 @@ void SetupServerArgs()
     gArgs.AddArg("-masternodeprivkey=<n>", "Set the masternode private key", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindex=<n>", strprintf("Index Syscoin Assets for historical information (0-1, default: 0)"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assetindexpagesize=<n>", strprintf("Page size of results for Asset index, should match the paging mechanism of the consuming client. (10-1000, default: 25). Used in conjunction with -assetindex=1."), false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma seperated. Used in conjunction with -assetindex=1. Leave empty for all."), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-assetindexguids=<guid>", strprintf("Whitelist Assets to index, comma separated. Used in conjunction with -assetindex=1. Leave empty for all."), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-tpstest", strprintf("TPSTest for unittest. Leave false"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-unittest", strprintf("Set by unit test suite. Leave false"), false, OptionsCategory::OPTIONS);
@@ -1942,12 +1942,12 @@ bool AppInitMain(InitInterfaces& interfaces)
         meminfo_t memInfo = parse_meminfo();
         LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
         if(memInfo.MemTotalMiB < 3800)
-            return InitError(_("Insufficient memory, you need atleast 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation."));
+            return InitError(_("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation."));
         if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
-            return InitError(_("Insufficient swap memory, you need atleast 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation."));           
+            return InitError(_("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation."));           
         LogPrintf("Total number of physical cores found %d\n", boost::thread::physical_concurrency());
         if(boost::thread::physical_concurrency() < 2)
-            return InitError(_("Insufficient CPU cores, you need atleast 2 cores to run a masternode. Please see documentation."));
+            return InitError(_("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation."));
             
         std::array<char, 128> buffer;
         std::string result;

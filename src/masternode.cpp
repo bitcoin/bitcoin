@@ -668,7 +668,7 @@ bool CMasternodeBroadcast::Update(CMasternode* pmn, int& nDos, CConnman& connman
         return false;
     }
 
-    // if ther was no masternode broadcast recently or if it matches our Masternode privkey...
+    // if there was no masternode broadcast recently or if it matches our Masternode privkey...
     if(!pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS) || (fMasternodeMode && pubKeyMasternode == activeMasternode.pubKeyMasternode)) {
         // take the newest entry
         LogPrint(BCLog::MN, "CMasternodeBroadcast::Update -- Got UPDATED Masternode entry: addr=%s\n", addr.ToString());
@@ -712,7 +712,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 		TRY_LOCK(cs_main, lockMain);
 		if (!lockMain) {
 			// not mnb fault, let it to be checked again later
-			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Failed to aquire lock, addr=%s\n", addr.ToString());
+			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Failed to acquire lock, addr=%s\n", addr.ToString());
 			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
 			return false;
 		}

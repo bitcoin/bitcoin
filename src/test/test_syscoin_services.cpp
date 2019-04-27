@@ -585,7 +585,7 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
     UniValue arr = r.get_array();
     CAmount nAmountBefore = AmountFromValue(arr[0]);
-    // ensure that block number you claim the burn is atleast 1 hour old
+    // ensure that block number you claim the burn is at least 1 hour old
     int heightPlus240 = height+ETHEREUM_CONFIRMS_REQUIRED;
     string headerStr = "\"[[" + boost::lexical_cast<string>(height) + ",\\\"" + txroot_hex + "\\\"]]\"";
  

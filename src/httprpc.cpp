@@ -164,7 +164,7 @@ static bool checkPreflight(HTTPRequest* req)
     // and terminate this set of steps.
     // Note: Always matching is acceptable since the list of origins can be
     // unbounded.
-    // Syscoin We are only satifying the OPTIONS request in this method in order to
+    // Syscoin We are only satisfying the OPTIONS request in this method in order to
     // allow localhost to localhost communications. If CORS is implemented origin
     // would be checked against an acceptable domain
     // if (origin.second != strRPCCORSDomain) {

@@ -150,7 +150,7 @@ BASE_SCRIPTS = [
     'feature_rbf.py',
     'mempool_packages.py',
     'rpc_createmultisig.py',
-    # FIXME: Reenable and possibly fix once the BIP9 mining is activated.
+    # FIXME: Re-enable and possibly fix once the BIP9 mining is activated.
     #'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',

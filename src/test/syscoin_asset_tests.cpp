@@ -796,7 +796,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
     BOOST_CHECK(!find_value(r.get_array()[0].get_obj(), "allowed").get_bool()); 
     
 	AssetUpdate("node1", guid, "pub1");
-	// shouldnt update data, just uses prev data because it hasnt changed
+	// shouldn't update data, just uses prev data because it hasn't changed
 	AssetUpdate("node1", guid);
 	// update supply, ensure balance gets updated properly, 5+1, 1 comes from the initial assetnew, 1 above doesn't actually get set because asset wasn't yours so total should be 6
 	AssetUpdate("node1", guid, "pub12", "5");
@@ -880,7 +880,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8), 10 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8), 20 * COIN);
 
-	// ensure receiver get's it
+	// ensure receiver gets it
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));
 
 	balance = find_value(r.get_obj(), "balance");
