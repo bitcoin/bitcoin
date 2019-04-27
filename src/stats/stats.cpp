@@ -52,16 +52,18 @@ void CStats::addMempoolSample(int64_t txcount, int64_t dynUsage, int64_t current
         // check if we should cleanup the container
         if (m_mempool_stats.m_cleanup_counter >= CLEANUP_SAMPLES_THRESHOLD) {
             //check memory usage
-            if (memusage::DynamicUsage(m_mempool_stats.m_samples) > maxStatsMemory && m_mempool_stats.m_samples.size()) {
+            if (memusage::DynamicUsage(m_mempool_stats.m_samples) > maxStatsMemory && m_mempool_stats.m_samples.size() > 1) {
                 // only shrink if the vector.capacity() is > the target for performance reasons
                 m_mempool_stats.m_samples.shrink_to_fit();
                 const size_t memUsage = memusage::DynamicUsage(m_mempool_stats.m_samples);
                 // calculate the amount of samples we need to remove
                 size_t itemsToRemove = (memUsage - maxStatsMemory + sizeof(m_mempool_stats.m_samples[0]) - 1) / sizeof(m_mempool_stats.m_samples[0]);
 
-                // make sure the vector contains more items then we'd like to remove
-                if (m_mempool_stats.m_samples.size() > itemsToRemove)
-                    m_mempool_stats.m_samples.erase(m_mempool_stats.m_samples.begin(), m_mempool_stats.m_samples.begin() + itemsToRemove);
+                // sanity check; always keep the most recent sample we just added
+                if (m_mempool_stats.m_samples.size() <= itemsToRemove) {
+                    itemsToRemove = m_mempool_stats.m_samples.size() - 1;
+                }
+                m_mempool_stats.m_samples.erase(m_mempool_stats.m_samples.begin(), m_mempool_stats.m_samples.begin() + itemsToRemove);
             }
             // shrink vector
             m_mempool_stats.m_samples.shrink_to_fit();
