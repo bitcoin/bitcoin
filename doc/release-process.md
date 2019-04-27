@@ -3,16 +3,18 @@ Release Process
 
 Before every release candidate:
 
+
 * Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/syscoin/syscoin/blob/master/doc/translation_process.md#synchronising-translations).
 
 * Update manpages, see [gen-manpages.sh](https://github.com/syscoin/syscoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`)
 
+
 Before every minor and major release:
 
 * Update [bips.md](bips.md) to account for changes since the last release.
-* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_IS_RELEASE` to `true`) (don't forget to set `CLIENT_VERSION_RC` to `0`)
-* Write release notes (see below)
+* Update version in `configure.ac` (don't forget to set `CLIENT_VERSION_RC` to `0`).
+* Write release notes (see below).
 * Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
 * Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
   - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
@@ -26,7 +28,13 @@ Before every major release:
 * Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
   [this pull request](https://github.com/syscoin/syscoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
-* Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release
+* Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release.
+* In `configure.ac` and `build_msvc/syscoin_config.h` on _the master branch_:
+  - update `CLIENT_VERSION_MINOR` version
+* In `configure.ac` and `build_msvc/syscoin_config.h` on _a new release branch_ (see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd972fca3dd4a33cfff90bf901b71a687e7)):
+  - update `CLIENT_VERSION_MINOR` version
+  - set `CLIENT_VERSION_REVISION` to `0`
+  - set `CLIENT_VERSION_IS_RELEASE` to `true`
 
 ### First time / New builders
 
