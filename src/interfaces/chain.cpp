@@ -325,7 +325,6 @@ public:
     CFeeRate relayMinFee() override { return ::minRelayTxFee; }
     CFeeRate relayIncrementalFee() override { return ::incrementalRelayFee; }
     CFeeRate relayDustFee() override { return ::dustRelayFee; }
-    CAmount maxTxFee() override { return ::maxTxFee; }
     bool getPruneMode() override { return ::fPruneMode; }
     bool p2pEnabled() override { return g_connman != nullptr; }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !IsInitialBlockDownload(); }
