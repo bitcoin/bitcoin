@@ -3176,7 +3176,14 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    return SignTransaction(pwallet->chain(), mtx, request.params[1], pwallet, false, request.params[2]);
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : mtx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    pwallet->chain().findCoins(coins);
+
+    return SignTransaction(mtx, request.params[1], pwallet, coins, false, request.params[2]);
 }
 
 static UniValue bumpfee(const JSONRPCRequest& request)
