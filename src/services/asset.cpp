@@ -785,7 +785,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
     
-    UniValue res = syscointxfund_helper(fundingAddress, SYSCOIN_TX_VERSION_BURN, "", vecSend);
+    UniValue res = syscointxfund_helper(fundingAddress, ethAddress.empty()? 0: SYSCOIN_TX_VERSION_BURN, "", vecSend);
     return res;
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
@@ -903,7 +903,8 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
     std::vector<unsigned char> vchEthAddress;
-    GetSyscoinBurnData(tx, vchEthAddress);
+    if(!GetSyscoinBurnData(tx, vchEthAddress))
+        return false;
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
