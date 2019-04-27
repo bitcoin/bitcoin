@@ -149,18 +149,8 @@ static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::
     vErrorsRet.push_back(entry);
 }
 
-// TODO(https://github.com/syscoin/syscoin/pull/10973#discussion_r267084237):
-// The dependency on interfaces::Chain should be removed, so
-// signrawtransactionwithkey doesn't need access to a Chain instance.
-UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore *keystore, bool is_temp_keystore, const UniValue& hashType)
+UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival, CBasicKeyStore* keystore, std::map<COutPoint, Coin>& coins, bool is_temp_keystore, const UniValue& hashType)
 {
-    // Fetch previous transactions (inputs):
-    std::map<COutPoint, Coin> coins;
-    for (const CTxIn& txin : mtx.vin) {
-        coins[txin.prevout]; // Create empty map entry keyed by prevout.
-    }
-    chain.findCoins(coins);
-
     // Add previous txouts given in the RPC call:
     if (!prevTxsUnival.isNull()) {
         UniValue prevTxs = prevTxsUnival.get_array();
