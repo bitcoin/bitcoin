@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
     printf("Running generate_burn_syscoin...\n");
     UniValue r;
     string newaddress = GetNewFundedAddress("node1");
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 9.9 true 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 9.9 0x931D387731bBbC988B312206c74F77D004D6B84b"));
     UniValue varray = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + varray[0].get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
     BOOST_CHECK(DecodeHexTx(txIn, hexStr, true, true));
     CTransaction tx(txIn);
     BOOST_CHECK(tx.vout[0].scriptPubKey.IsUnspendable());
-    BOOST_CHECK_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 0.1 true 0x931D387731bBbC988B312206c74F77D004D6B84b"), runtime_error);
+    BOOST_CHECK_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 0.1 0x931D387731bBbC988B312206c74F77D004D6B84b"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
@@ -936,11 +936,11 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);
 	// xfer an asset that isn't yours
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres2 + " ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres3 + " ''"));
 	UniValue arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + arr[0].get_str()));
     string hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""));
+    BOOST_CHECK_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""), runtime_error);
     
     GenerateBlocks(5, "node1");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));

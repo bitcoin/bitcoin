@@ -101,7 +101,8 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
 		return false;
 	}
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
-        if(!GetSyscoinBurnData(tx, this))
+        std::vector<unsigned char> vchEthAddress;
+        if(!GetSyscoinBurnData(tx, this, vchEthAddress))
         {
             SetNull();
             return false;
@@ -800,7 +801,17 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
 
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 {
-    CAssetAllocation assetallocation(tx);
+    CAssetAllocation assetallocation;
+    std::vector<unsigned char> vchEthAddress;
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
+        {
+            return false;
+        }
+    }
+    else
+        assetallocation = CAssetAllocation(tx);
+
     if(assetallocation.assetAllocationTuple.IsNull())
         return false;
     CAsset dbAsset;
@@ -836,11 +847,22 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("allocations", oAssetAllocationReceiversArray);
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.pushKV("blockhash", blockhash.GetHex()); 
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
+         entry.pushKV("ethereum_destination", HexStr(vchEthAddress)); 
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
 {
-    assetallocation = CAssetAllocation(tx);
+    std::vector<unsigned char> vchEthAddress;
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
+        {
+            return false;
+        }
+    }
+    else
+        assetallocation = CAssetAllocation(tx);
+
     if(assetallocation.assetAllocationTuple.IsNull() || dbAsset.IsNull())
         return false;
     entry.pushKV("txtype", assetAllocationFromTx(tx.nVersion));
@@ -865,7 +887,8 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     entry.pushKV("allocations", oAssetAllocationReceiversArray);
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.pushKV("blockhash", blockhash.GetHex()); 
-
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
+         entry.pushKV("ethereum_destination", HexStr(vchEthAddress)); 
     return true;
 }
 

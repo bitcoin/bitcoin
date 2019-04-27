@@ -170,7 +170,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "spork", 1, "value" },
     { "voteraw", 1, "tx_index" },
     { "voteraw", 5, "time" },
-    { "syscoinburn", 2, "burn_to_sysx"},
     { "syscoinmint", 2, "blocknumber" },
     { "syscointxfund", 2, "output_index" },
     { "assetallocationsend", 0, "asset_guid" },
