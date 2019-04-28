@@ -103,7 +103,7 @@ static bool BuildChain(const CBlockIndex* pindex, const CScript& coinbase_script
         CBlockHeader header = block->GetBlockHeader();
 
         BlockValidationState state;
-        if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex, nullptr)) {
+        if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex)) {
             return false;
         }
     }
