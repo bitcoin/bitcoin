@@ -425,9 +425,12 @@ my_bind_socket_with_handle(struct evhttp *http, const char *address, ev_uint16_t
     if (aitop) evutil_freeaddrinfo(aitop);
 
     bound = evhttp_accept_socket_with_handle(http, fd);
-    if (bound != nullptr) {
-        LogDebug(BCLog::LIBEVENT, "libevent: Bound to port %d - Awaiting connections ... \n", port);
+    if (bound == nullptr) {
+        evutil_closesocket(fd);
+        return nullptr;
     }
+
+    LogDebug(BCLog::LIBEVENT, "libevent: Bound to port %d - Awaiting connections ... \n", port);
     return bound;
 }
 
