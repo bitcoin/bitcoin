@@ -1836,14 +1836,13 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
         const CTransactionRef porphanTx = orphan_it->second.tx;
         const CTransaction& orphanTx = *porphanTx;
         NodeId fromPeer = orphan_it->second.fromPeer;
-        bool fMissingInputs2 = false;
         // Use a new TxValidationState because orphans come from different peers (and we call
         // MaybePunishNodeForTx based on the source peer from the orphan map, not based on the peer
         // that relayed the previous transaction).
         TxValidationState orphan_state;
 
         if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(mempool, orphan_state, porphanTx, &fMissingInputs2, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if (AcceptToMemoryPool(mempool, orphan_state, porphanTx, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, *connman);
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
@@ -1856,7 +1855,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
             }
             EraseOrphanTx(orphanHash);
             done = true;
-        } else if (!fMissingInputs2) {
+        } else if (orphan_state.GetResult() != TxValidationResult::TX_MISSING_INPUTS) {
             if (orphan_state.IsInvalid()) {
                 // Punish peer that gave us an invalid orphan tx
                 if (MaybePunishNodeForTx(fromPeer, orphan_state)) {
@@ -2492,7 +2491,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         LOCK2(cs_main, g_cs_orphans);
 
-        bool fMissingInputs = false;
         TxValidationState state;
 
         CNodeState* nodestate = State(pfrom->GetId());
@@ -2503,7 +2501,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::list<CTransactionRef> lRemovedTxn;
 
         if (!AlreadyHave(inv) &&
-            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+            AcceptToMemoryPool(mempool, state, ptx, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             mempool.check(&::ChainstateActive().CoinsTip());
             RelayTransaction(tx.GetHash(), *connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -2525,7 +2523,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // Recursively process any orphan transactions that depended on this one
             ProcessOrphanTx(connman, pfrom->orphan_work_set, lRemovedTxn);
         }
-        else if (fMissingInputs)
+        else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
         {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
             for (const CTxIn& txin : tx.vin) {
