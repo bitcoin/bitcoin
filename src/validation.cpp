@@ -2057,8 +2057,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         for (const auto& tx : block.vtx) {
             for (size_t o = 0; o < tx->vout.size(); o++) {
                 if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, error("ConnectBlock(): tried to overwrite transaction"),
-                                     "bad-txns-BIP30");
+                    LogPrintf("ERROR: ConnectBlock(): tried to overwrite transaction\n");
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "bad-txns-BIP30");
                 }
             }
         }
@@ -2105,8 +2105,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, error("%s: accumulated fee in the block out of range.", __func__),
-                                 "bad-txns-accumulated-fee-outofrange");
+                LogPrintf("ERROR: %s: accumulated fee in the block out of range.\n", __func__);
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "bad-txns-accumulated-fee-outofrange");
             }
 
             // Check that transaction is BIP68 final
@@ -2118,8 +2118,8 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
             }
 
             if (!SequenceLocks(tx, nLockTimeFlags, &prevheights, *pindex)) {
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, error("%s: contains a non-BIP68-final transaction", __func__),
-                                 "bad-txns-nonfinal");
+                LogPrintf("ERROR: %s: contains a non-BIP68-final transaction\n", __func__);
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "bad-txns-nonfinal");
             }
         }
 
@@ -2128,9 +2128,10 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         // * p2sh (when P2SH enabled in flags and excludes coinbase)
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
-        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
-            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, error("ConnectBlock(): too many sigops"),
-                             "bad-blk-sigops");
+        if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST) {
+            LogPrintf("ERROR: ConnectBlock(): too many sigops\n");
+            return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "bad-blk-sigops");
+        }
 
         txdata.emplace_back(tx);
         if (!tx.IsCoinBase())
@@ -2158,14 +2159,15 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
     CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
-    if (block.vtx[0]->GetValueOut() > blockReward)
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
-                         error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
-                               block.vtx[0]->GetValueOut(), blockReward),
-                               "bad-cb-amount");
+    if (block.vtx[0]->GetValueOut() > blockReward) {
+        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "bad-cb-amount");
+    }
 
-    if (!control.Wait())
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, error("%s: CheckQueue failed", __func__), "block-validation-failed");
+    if (!control.Wait()) {
+        LogPrintf("ERROR: %s: CheckQueue failed\n", __func__);
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, false, "block-validation-failed");
+    }
     int64_t nTime4 = GetTimeMicros(); nTimeVerify += nTime4 - nTime2;
     LogPrint(BCLog::BENCH, "    - Verify %u txins: %.2fms (%.3fms/txin) [%.2fs (%.2fms/blk)]\n", nInputs - 1, MILLI * (nTime4 - nTime2), nInputs <= 1 ? 0 : MILLI * (nTime4 - nTime2) / (nInputs-1), nTimeVerify * MICRO, nTimeVerify * MILLI / nBlocksTotal);
 
@@ -3417,8 +3419,10 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
         // g_blockman.m_block_index.
         CBlockIndex* pcheckpoint = GetLastCheckpoint(params.Checkpoints());
-        if (pcheckpoint && nHeight < pcheckpoint->nHeight)
-            return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight), "bad-fork-prior-to-checkpoint");
+        if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
+            LogPrintf("ERROR: %s: forked chain older than last checkpoint (height %d)\n", __func__, nHeight);
+            return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, false, "bad-fork-prior-to-checkpoint");
+        }
     }
 
     // Check timestamp against prev
@@ -3541,8 +3545,10 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
             pindex = miSelf->second;
             if (ppindex)
                 *ppindex = pindex;
-            if (pindex->nStatus & BLOCK_FAILED_MASK)
-                return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, error("%s: block %s is marked invalid", __func__, hash.ToString()), "duplicate");
+            if (pindex->nStatus & BLOCK_FAILED_MASK) {
+                LogPrintf("ERROR: %s: block %s is marked invalid\n", __func__, hash.ToString());
+                return state.Invalid(BlockValidationResult::BLOCK_CACHED_INVALID, false, "duplicate");
+            }
             return true;
         }
 
@@ -3552,11 +3558,15 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
         BlockMap::iterator mi = m_block_index.find(block.hashPrevBlock);
-        if (mi == m_block_index.end())
-            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, error("%s: prev block not found", __func__), "prev-blk-not-found");
+        if (mi == m_block_index.end()) {
+            LogPrintf("ERROR: %s: prev block not found\n", __func__);
+            return state.Invalid(BlockValidationResult::BLOCK_MISSING_PREV, false, "prev-blk-not-found");
+        }
         pindexPrev = (*mi).second;
-        if (pindexPrev->nStatus & BLOCK_FAILED_MASK)
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, error("%s: prev block invalid", __func__), "bad-prevblk");
+        if (pindexPrev->nStatus & BLOCK_FAILED_MASK) {
+            LogPrintf("ERROR: %s: prev block invalid\n", __func__);
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, false, "bad-prevblk");
+        }
         if (!ContextualCheckBlockHeader(block, state, chainparams, pindexPrev, GetAdjustedTime()))
             return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
@@ -3593,7 +3603,8 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
                         setDirtyBlockIndex.insert(invalid_walk);
                         invalid_walk = invalid_walk->pprev;
                     }
-                    return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, error("%s: prev block invalid", __func__), "bad-prevblk");
+                    LogPrintf("ERROR: %s: prev block invalid\n", __func__);
+                    return state.Invalid(BlockValidationResult::BLOCK_INVALID_PREV, false, "bad-prevblk");
                 }
             }
         }
