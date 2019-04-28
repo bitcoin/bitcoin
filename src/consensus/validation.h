@@ -121,13 +121,13 @@ class TxValidationState : public ValidationState {
 private:
     TxValidationResult m_result;
 public:
-    bool Invalid(TxValidationResult result, bool ret = false,
+    bool Invalid(TxValidationResult result,
                  const std::string &reject_reason="",
                  const std::string &debug_message="")
     {
         m_result = result;
         ValidationState::Invalid(reject_reason, debug_message);
-        return ret;
+        return false;
     }
     TxValidationResult GetResult() const { return m_result; }
 };
@@ -136,12 +136,12 @@ class BlockValidationState : public ValidationState {
 private:
     BlockValidationResult m_result;
 public:
-    bool Invalid(BlockValidationResult result, bool ret = false,
+    bool Invalid(BlockValidationResult result,
                  const std::string &reject_reason="",
                  const std::string &debug_message="") {
         m_result = result;
         ValidationState::Invalid(reject_reason, debug_message);
-        return ret;
+        return false;
     }
     BlockValidationResult GetResult() const { return m_result; }
 };
