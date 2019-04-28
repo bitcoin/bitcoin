@@ -27,12 +27,7 @@ enum class TxValidationResult {
      */
     TX_RECENT_CONSENSUS_CHANGE,
     TX_NOT_STANDARD,          //!< didn't meet our local policy rules
-    /**
-     * transaction was missing some of its inputs
-     * TODO: ATMP uses fMissingInputs and a valid ValidationState to indicate missing inputs.
-     *       Change ATMP to use TX_MISSING_INPUTS.
-     */
-    TX_MISSING_INPUTS,
+    TX_MISSING_INPUTS,        //!< transaction was missing some of its inputs
     TX_PREMATURE_SPEND,       //!< transaction spends a coinbase too early, or violates locktime/sequence locks
     /**
      * Transaction might be missing a witness, have a witness prior to SegWit
