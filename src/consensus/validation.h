@@ -85,42 +85,34 @@ private:
         MODE_VALID,   //!< everything ok
         MODE_INVALID, //!< network rule violation (DoS value may be set)
         MODE_ERROR,   //!< run-time error
-    } mode;
-    std::string strRejectReason;
-    std::string strDebugMessage;
+    } m_mode;
+    std::string m_reject_reason;
+    std::string m_debug_message;
 protected:
-    bool Invalid(bool ret = false,
-            const std::string &strRejectReasonIn="",
-            const std::string &strDebugMessageIn="") {
-        strRejectReason = strRejectReasonIn;
-        strDebugMessage = strDebugMessageIn;
-        if (mode == MODE_ERROR)
-            return ret;
-        mode = MODE_INVALID;
-        return ret;
+    void Invalid(const std::string &reject_reason="",
+                 const std::string &debug_message="")
+    {
+        m_reject_reason = reject_reason;
+        m_debug_message = debug_message;
+        if (m_mode != MODE_ERROR) m_mode = MODE_INVALID;
     }
 public:
     // ValidationState is abstract. Have a pure virtual destructor.
     virtual ~ValidationState() = 0;
 
-    ValidationState() : mode(MODE_VALID) {}
-    bool Error(const std::string& strRejectReasonIn) {
-        if (mode == MODE_VALID)
-            strRejectReason = strRejectReasonIn;
-        mode = MODE_ERROR;
+    ValidationState() : m_mode(MODE_VALID) {}
+    bool Error(const std::string& reject_reason)
+    {
+        if (m_mode == MODE_VALID)
+            m_reject_reason = reject_reason;
+        m_mode = MODE_ERROR;
         return false;
     }
-    bool IsValid() const {
-        return mode == MODE_VALID;
-    }
-    bool IsInvalid() const {
-        return mode == MODE_INVALID;
-    }
-    bool IsError() const {
-        return mode == MODE_ERROR;
-    }
-    std::string GetRejectReason() const { return strRejectReason; }
-    std::string GetDebugMessage() const { return strDebugMessage; }
+    bool IsValid() const { return m_mode == MODE_VALID; }
+    bool IsInvalid() const { return m_mode == MODE_INVALID; }
+    bool IsError() const { return m_mode == MODE_ERROR; }
+    std::string GetRejectReason() const { return m_reject_reason; }
+    std::string GetDebugMessage() const { return m_debug_message; }
 };
 
 inline ValidationState::~ValidationState() {};
@@ -130,10 +122,12 @@ private:
     TxValidationResult m_result;
 public:
     bool Invalid(TxValidationResult result, bool ret = false,
-                 const std::string &_strRejectReason="",
-                 const std::string &_strDebugMessage="") {
+                 const std::string &reject_reason="",
+                 const std::string &debug_message="")
+    {
         m_result = result;
-        return ValidationState::Invalid(ret, _strRejectReason, _strDebugMessage);
+        ValidationState::Invalid(reject_reason, debug_message);
+        return ret;
     }
     TxValidationResult GetResult() const { return m_result; }
 };
@@ -143,10 +137,11 @@ private:
     BlockValidationResult m_result;
 public:
     bool Invalid(BlockValidationResult result, bool ret = false,
-                 const std::string &_strRejectReason="",
-                 const std::string &_strDebugMessage="") {
+                 const std::string &reject_reason="",
+                 const std::string &debug_message="") {
         m_result = result;
-        return ValidationState::Invalid(ret, _strRejectReason, _strDebugMessage);
+        ValidationState::Invalid(reject_reason, debug_message);
+        return ret;
     }
     BlockValidationResult GetResult() const { return m_result; }
 };
