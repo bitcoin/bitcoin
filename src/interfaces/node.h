@@ -66,6 +66,11 @@ public:
     //! Choose network parameters.
     virtual void selectParams(const std::string& network) = 0;
 
+    //! Read and update <datadir>/settings.json file with saved settings. This
+    //! needs to be called after selectParams() because the settings file
+    //! location is network-specific.
+    virtual bool initSettings(std::string& error) = 0;
+
     //! Get the (assumed) blockchain size.
     virtual uint64_t getAssumedBlockchainSize() = 0;
 

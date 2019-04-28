@@ -13,12 +13,13 @@ namespace {
 enum class Source {
    FORCED,
    COMMAND_LINE,
+   RW_SETTINGS,
    CONFIG_FILE_NETWORK_SECTION,
    CONFIG_FILE_DEFAULT_SECTION
 };
 
 //! Merge settings from multiple sources in precedence order:
-//! Forced config > command line > config file network-specific section > config file default section
+//! Forced config > command line > read-write settings file > config file network-specific section > config file default section
 //!
 //! This function is provided with a callback function fn that contains
 //! specific logic for how to merge the sources.
@@ -32,6 +33,10 @@ static void MergeSettings(const Settings& settings, const std::string& section, 
     // Merge in the command-line options
     if (auto* values = FindKey(settings.command_line_options, name)) {
         fn(SettingsSpan(*values), Source::COMMAND_LINE);
+    }
+    // Merge in the read-write settings
+    if (const SettingsValue* value = FindKey(settings.rw_settings, name)) {
+        fn(SettingsSpan(*value), Source::RW_SETTINGS);
     }
     // Merge in the network-specific section of the config file
     if (!section.empty()) {
