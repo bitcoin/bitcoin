@@ -894,19 +894,20 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     result_0.pushKV("txid", tx_hash.GetHex());
 
     TxValidationState state;
-    bool missing_inputs;
     bool test_accept_res;
     {
         LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx), &missing_inputs,
+        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
             nullptr /* plTxnReplaced */, false /* bypass_limits */, max_raw_tx_fee, /* test_accept */ true);
     }
     result_0.pushKV("allowed", test_accept_res);
     if (!test_accept_res) {
         if (state.IsInvalid()) {
-            result_0.pushKV("reject-reason", strprintf("%s", state.GetRejectReason()));
-        } else if (missing_inputs) {
-            result_0.pushKV("reject-reason", "missing-inputs");
+            if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+                result_0.pushKV("reject-reason", "missing-inputs");
+            } else {
+                result_0.pushKV("reject-reason", strprintf("%s", state.GetRejectReason()));
+            }
         } else {
             result_0.pushKV("reject-reason", state.GetRejectReason());
         }
