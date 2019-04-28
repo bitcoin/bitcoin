@@ -290,7 +290,6 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
                     ::mempool,
                     state,
                     tx,
-                    /* pfMissingInputs */ &ignored,
                     &plTxnReplaced,
                     /* bypass_limits */ false,
                     /* nAbsurdFee */ 0));
