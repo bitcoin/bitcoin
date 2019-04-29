@@ -356,12 +356,20 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             string strAddress;
             ssKey >> strAddress;
+
+            // If the address is not depricated then the value won't be converted
+            strAddress = CBitcoinAddress::ConvertToNew(strAddress);
+
             ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].name;
         }
         else if (strType == "purpose")
         {
             string strAddress;
             ssKey >> strAddress;
+
+            // If the address is not depricated then the value won't be converted
+            strAddress = CBitcoinAddress::ConvertToNew(strAddress);
+
             ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()].purpose;
         }
         else if (strType == "tx")
