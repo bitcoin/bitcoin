@@ -1938,16 +1938,19 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "getblockhash txid\n"
-            "\nReturns hash of block in best-block-chain at txid provided.\n"
-            "\nArguments:\n"
-            "1. txid         (string, required) A transaction that is in the block\n"
-            "\nResult:\n"
-            "\"hash\"         (string) The block hash\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-            + HelpExampleRpc("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-        );
+            RPCHelpMan{"getblockhashbytxid",
+                "\nReturns hash of block in best-block-chain at txid provided.\n",
+                {
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block."}
+                },
+                RPCResult{
+                    "\"hash\"         (string) The block hash\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+                    + HelpExampleRpc("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+                }
+            }.ToString());
     LOCK(cs_main);
 
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
@@ -1967,17 +1970,20 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw std::runtime_error(
-            "syscoingetspvproof txid (blockhash) \n"
-            "\nReturns SPV proof for use with inter-chain transfers.\n"
-            "\nArguments:\n"
-            "1. txid         (string, required) A transaction that is in the block\n"
-            "1. blockhash    (string, not-required) Block containing txid\n"
-            "\nResult:\n"
-        "\"proof\"         (string) JSON representation of merkl/ nj   nk ne proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)\n"
-            "\nExamples:\n"
-            + HelpExampleCli("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-            + HelpExampleRpc("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
-        );
+            RPCHelpMan{"syscoingetspvproof",
+            "\nReturns SPV proof for use with inter-chain transfers.\n",
+            {
+                {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block"},
+                {"blockhash", RPCArg::Type::STR, "\"\"", "Block containing txid"}
+            },
+            RPCResult{
+            "\"proof\"         (string) JSON representation of merkl/ nj   nk ne proof (transaction index, siblings and block header and some other information useful for moving coins/assets to another chain)\n"
+            },
+            RPCExamples{
+                HelpExampleCli("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+                + HelpExampleRpc("syscoingetspvproof", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
+            }
+            }.ToString());
     LOCK(cs_main);
     UniValue res(UniValue::VOBJ);
     uint256 txhash = ParseHashV(request.params[0], "parameter 1");
@@ -2055,20 +2061,41 @@ UniValue listassetindex(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
         throw runtime_error(
-            "listassetindex <page> <options>\n"
-            "\nScan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n"
-            "\nArguments:\n"
-            "1. <page>           (numeric, default=0) Return specific page number of transactions. Lower page number means more recent transactions.\n"
-            "2. <options>        (array, required) A json object with options to filter results\n"
-            "    {\n"
-            "      \"asset_guid\":guid              (numeric) Asset GUID to filter.\n"
-            "      \"address\":string               (string, optional) Address to filter. Leave empty to scan globally through asset.\n"
-            "    }\n"
-            + HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
-            + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
-            + HelpExampleRpc("listassetindex", "0, '{\"asset\":92922}'")
-            + HelpExampleRpc("listassetindex", "2, '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
-        );
+            RPCHelpMan{"listassetindex",
+            "\nScan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n",
+            {
+                {"page", RPCArg::Type::NUM, "0", "Return specific page number of transactions. Lower page number means more recent transactions."},
+                {"options", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json object with options to filter results", 
+                    {
+                        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter."},
+                        {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter.  Leave empty to scan globally through asset"}
+                    }
+                }
+            },
+            RPCResult{
+                 "[\n"
+                 "  {\n"
+                 "    \"_id\":          (numeric) The asset guid\n"
+                 "    \"txid\":         (string) The transaction id that created this asset\n"
+                 "    \"publicvalue\":  (string) The public value attached to this asset\n"
+                 "    \"address\":      (string) The address that controls this address\n"
+                 "    \"contract\":     (string) The ethereum contract address\n"
+                 "    \"balance\":      (numeric) The current balance\n"
+                 "    \"total_supply\": (numeric) The total supply of this asset\n"
+                 "    \"max_supply\":   (numeric) The maximum supply of this asset\n"
+                 "    \"update_flag\":  (numeric) The flag in decimal \n"
+                 "    \"precision\":    (numeric) The precision of this asset \n"   
+                 "  },\n"
+                 "  ...\n"
+                 "]\n"
+            },
+            RPCExamples{
+                HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
+                + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
+                + HelpExampleRpc("listassetindex", "0, '{\"asset\":92922}'")
+                + HelpExampleRpc("listassetindex", "2, '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
+            }
+        }.ToString());
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
     }
@@ -2090,15 +2117,21 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
         throw runtime_error(
-            "listassetindexassets <address>\n"
-            "\nReturn a list of assets an address is associated with.\n"
-            "\nArguments:\n"
-            "1. <address>          (numeric, required) Address to find assets associated with.\n"
-            "\nResult:\n"
-            "\nExamples:\n"
-            + HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-            + HelpExampleRpc("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-        );
+            RPCHelpMan{"listassetindexassets",
+                "\nReturn a list of assets an address is associated with.\n",
+                {
+                    {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets assocaited with."}
+                },
+                RPCResult{
+                    "{\n"
+                    "    \"asset_guid\""
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+                    + HelpExampleRpc("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+                }
+            }.ToString());
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
     }       
@@ -2125,9 +2158,15 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 0 != params.size())
         throw runtime_error(
-            "syscoinstopgeth\n"
-            "\nStops Geth and the relayer from running.\n"
-            );
+            RPCHelpMan{"syscoinstopgeth",
+            "\nStops Geth and the relayer from running.\n",
+            {},
+            RPCResult{""},
+            RPCExamples{
+                HelpExampleCli("syscoinstopgeth", "")
+                + HelpExampleRpc("syscoinstopgeth", "")
+            }
+            }.ToString());
     if(!StopRelayerNode(relayerPID))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     if(!StopGethNode(gethPID))
@@ -2140,9 +2179,15 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 0 != params.size())
         throw runtime_error(
-            "syscoinstartgeth\n"
-            "\nStarts Geth and the relayer.\n"
-            );
+            RPCHelpMan{"syscoinstartgeth",
+            "\nStarts Geth and the relayer.\n",
+            {},
+            RPCResult{""},
+            RPCExamples{
+                HelpExampleCli("syscoinstartgeth", "")
+                + HelpExampleRpc("syscoinstartgeth", "")
+            }
+            }.ToString());
     
     StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
@@ -2164,18 +2209,20 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
         throw runtime_error(
-            "syscoinsetethstatus <syncing_status> <highestBlock>\n"
-            "\nSets ethereum syncing and network status for indication status of network sync.\n"
-            "\nArguments:\n"
-            "1. <syncing_status>    (string, required)  Syncing status either 'syncing' or 'synced'.\n"
-            "2. <highestBlock>      (numeric, require)  What the highest block height on Ethereum is found to be. Usually coupled with syncing_status of 'syncing'. Set to 0 if syncing_status is 'synced'.\n" 
-            "\nResult:\n"
-            "\nExamples:\n"
-            + HelpExampleCli("syscoinsetethstatus", "\"syncing\" 7000000")
-            + HelpExampleCli("syscoinsetethstatus", "\"synced\" 0")
-            + HelpExampleRpc("syscoinsetethstatus", "\"syncing\", 7000000")
-            + HelpExampleRpc("syscoinsetethstatus", "\"synced\", 0")
-            );
+            RPCHelpMan{"syscoinsetethstatus",
+                "\nSets ethereum syncing and network status for indication status of network sync.\n",
+                {
+                    {"syncing_status", RPCArg::Type::STR, RPCArg::Optional::NO, "Sycning status ether 'syncing' or 'synced'"},
+                    {"highest_block", RPCArg::Type::NUM, RPCArg::Optional::NO, "What the highest block height on Ethereum is found to be.  Usually coupled with syncing_status of 'syncing'.  Set to 0 if sync_status is 'synced'"}
+                },
+                RPCResult{""},
+                RPCExamples{
+                    HelpExampleCli("syscoinsetethstatus", "\"syncing\" 7000000")
+                    + HelpExampleCli("syscoinsetethstatus", "\"synced\" 0")
+                    + HelpExampleRpc("syscoinsetethstatus", "\"syncing\", 7000000")
+                    + HelpExampleRpc("syscoinsetethstatus", "\"synced\", 0")
+                }
+                }.ToString());
     string status = params[0].get_str();
     int highestBlock = params[1].get_int();
     
@@ -2195,15 +2242,27 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
         throw runtime_error(
-            "syscoinsetethheaders <headers>\n"
-            "\nSets Ethereum headers in Syscoin to validate transactions through the SYSX bridge.\n"
-            "\nArguments:\n"
-            "1. <headers>      (string, required)   A JSON objects representing an array of arrays (block number, tx root) from Ethereum blockchain.\n"
-            "\nResult:\n"
-            "\nExamples:\n"
-            + HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-            + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-            );  
+            RPCHelpMan{"syscoinsetethheaders",
+                "\nSets Ethereum headers in Syscoin to validate transactions through the SYSX bridge.\n",
+                {
+                    {"headers", RPCArg::Type::ARR, RPCArg::Optional::NO, "An array of arrays (block number, tx root) from Ethereum blockchain", 
+                        {
+                            {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of [block number, tx root] ",
+                                {
+                                    {"block_number", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The block height number"},
+                                    {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX root of the block height"}
+                                }
+                            }
+                        },
+                        "[block number, txroot] ..."
+                    }
+                },
+                RPCResult{""},
+                RPCExamples{
+                    HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+                    + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+                }
+            }.ToString());  
 
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
