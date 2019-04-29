@@ -344,7 +344,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address taht owns this asset allocation"},
-                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
                     {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address."}
                 },
                 RPCResult{""},
@@ -420,7 +420,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
-                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees will be taken from the owner address"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees will be taken from the owner address"},
                     {"blocknumer", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
                     {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Raw transaction hex of the burn transaction on Ethereum."},
                     {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
@@ -491,7 +491,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
                     {"addressfrom", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation from"},
                     {"addressto", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
-                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quantity of asset to send"}
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"}
                 },
                 RPCResult{
                     "[\n"
@@ -532,7 +532,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                             {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "The assetallocationsend object",
                                 {
                                     {"addressto", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The address to send the assetallocation to"},
-                                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The amount of asset allocation to send"}
+                                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "The amount of asset allocation to send"}
                                 }
                             },
                          },

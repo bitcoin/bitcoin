@@ -745,7 +745,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
             RPCHelpMan{"syscoinburn",
                 "\nBurns the syscoin for bridging to Ethereum token\n",
                 {
-                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees."},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees."},
                     {"burn_to_sysx", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Set to true if you are provably burning SYS to go to SYSX.  False if you are provably burning SYS forever"}
                 },
                 RPCResult{
@@ -795,7 +795,7 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
                 "\nMint syscoin to come back from the ethereum bridge\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
-                    {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "Amount of SYS to mint.  Note that fees are applied on top.  It is not inclusive of fees"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to mint.  Note that fees are applied on top.  It is not inclusive of fees"},
                     {"blocknumer", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
                     {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block."},
                     {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
@@ -1389,7 +1389,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
             {
                 {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
                 {"addressto", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
-                {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quantity of asset to send."}
+                {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send."}
             },
             RPCResult{
             "[\n"
@@ -1429,7 +1429,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
                         {"", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An assetsend obj",
                             {
                                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the assetallocation to"},
-                                {"amount", RPCArg::Type::NUM, RPCArg::Optional::NO, "The amount to send"}
+                                {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount to send"}
                             }
                         }
                     },
