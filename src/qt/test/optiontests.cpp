@@ -36,6 +36,8 @@ void OptionTests::migrateSettings()
     settings.setValue("nThreadsScriptVerif", 12);
     settings.setValue("fUseUPnP", false);
     settings.setValue("fListen", false);
+    settings.setValue("bPrune", true);
+    settings.setValue("nPruneSize", 3);
     settings.setValue("fUseProxy", true);
     settings.setValue("addrProxy", "proxy:123");
     settings.setValue("fUseSeparateProxyTor", true);
@@ -50,6 +52,8 @@ void OptionTests::migrateSettings()
     QVERIFY(!settings.contains("nThreadsScriptVerif"));
     QVERIFY(!settings.contains("fUseUPnP"));
     QVERIFY(!settings.contains("fListen"));
+    QVERIFY(!settings.contains("bPrune"));
+    QVERIFY(!settings.contains("nPruneSize"));
     QVERIFY(!settings.contains("fUseProxy"));
     QVERIFY(!settings.contains("addrProxy"));
     QVERIFY(!settings.contains("fUseSeparateProxyTor"));
@@ -61,7 +65,8 @@ void OptionTests::migrateSettings()
         "    \"listen\": false,\n"
         "    \"onion\": \"onion:234\",\n"
         "    \"par\": \"12\",\n"
-        "    \"proxy\": \"proxy:123\"\n"
+        "    \"proxy\": \"proxy:123\",\n"
+        "    \"prune\": \"2861\"\n"
         "}\n");
 }
 
