@@ -754,7 +754,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
                     "]\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinburn", "\funding_address\" "\"amount\" \"ethaddress\"")
+                    HelpExampleCli("syscoinburn", "\"funding_address\" \"amount\" \"ethaddress\"")
                     + HelpExampleRpc("syscoinburn", "\"funding_address\", \"amount\", \"ethaddress\"")
                 }
          }.ToString());
