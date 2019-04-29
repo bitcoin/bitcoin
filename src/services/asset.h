@@ -51,7 +51,6 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData);
 bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress);
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress);
-bool GetSyscoinBurnData(const CTransaction &tx, std::vector<unsigned char> &vchEthAddress);
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
@@ -68,7 +67,7 @@ int GenerateSyscoinGuid();
 
 
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
-bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry);
+bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry);
 std::string assetFromTx(const int &nVersion);
 /** Upper bound for mantissa.
 * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.

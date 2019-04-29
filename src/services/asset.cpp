@@ -205,35 +205,6 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
     burnWitnessAddress = CWitnessAddress(nWitnessVersion, vvchArgs[4]);   
     return true; 
 }
-// for standard syscoinburn txs that have eth destination provided
-bool GetSyscoinBurnData(const CTransaction &tx, std::vector<unsigned char> &vchEthAddress)
-{
-    if(tx.nVersion != SYSCOIN_TX_VERSION_BURN){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
-        return false;
-    }
-    int nOut = GetSyscoinDataOutput(tx);
-    if (nOut == -1){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Data index must be positive\n");
-        return false;
-    }
-
-    const CScript &scriptPubKey = tx.vout[nOut].scriptPubKey;
-    std::vector<std::vector< unsigned char> > vvchArgs;
-    GetSyscoinBurnData(scriptPubKey, vvchArgs);
-    if(vvchArgs.size() != 1){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Wrong argument size %d\n", vvchArgs.size());
-        return false;
-    }
-            
-    if(vvchArgs[0].empty()){
-        LogPrint(BCLog::SYS, "GetSyscoinBurnData: Witness address empty\n");
-        return false;
-    }     
-    
-    vchEthAddress = vvchArgs[0];  
-    return true; 
-}
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData)
 {
     CScript::const_iterator pc = scriptPubKey.begin();
@@ -902,9 +873,11 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
-    std::vector<unsigned char> vchEthAddress;
-    if(!GetSyscoinBurnData(tx, vchEthAddress))
-        return false;
+	std::vector<std::vector< unsigned char> > vvchArgs;
+	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address to us here in vvchArgs[0]
+	if (!GetSyscoinData(scriptPubKey, vvchArgs) || vvchArgs.size != 1 || vvchArgs[0].empty()) {
+		return false;
+	}
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
@@ -934,7 +907,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("outputs", oOutputArray);
     entry.pushKV("total", ValueFromAmount(tx.GetValueOut()));
     entry.pushKV("blockhash", blockhash.GetHex()); 
-    entry.pushKV("ethereum_destination", HexStr(vchEthAddress)); 
+    entry.pushKV("ethereum_destination", "0x" + HexStr(vvchArgs[0]));
     return true;
 }
 int GenerateSyscoinGuid()
@@ -1064,7 +1037,7 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
 	if (fZMQAsset || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
         // assetsends write allocation indexes
-        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, dbAsset, nHeight, blockhash, oName)){
+        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, nHeight, blockhash, oName)){
             if(fZMQAsset)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
@@ -1219,7 +1192,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract.clear();
 
 	theAsset.nBalance = nBalance;
-	theAsset.nUpdateFlags = nUpdateFlags;
+	if (theAsset.nUpdateFlags != nUpdateFlags)
+		theAsset.nUpdateFlags = nUpdateFlags;
+	else
+		theAsset.nUpdateFlags = 0;
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
@@ -1426,10 +1402,6 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 	if(asset.IsNull())
 		return false;
 
-	CAsset dbAsset;
-	if (!GetAsset(asset.nAsset, dbAsset))
-        dbAsset.nPrecision = asset.nPrecision;
-    
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
@@ -1447,58 +1419,61 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     entry.pushKV("txid", txHash.GetHex());
     entry.pushKV("height", nHeight);
     
-	if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchPubData.empty() && dbAsset.vchPubData != asset.vchPubData))
+	if (!asset.vchPubData.empty())
 		entry.pushKV("publicvalue", stringFromVch(asset.vchPubData));
-        
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
-        entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
 
-    entry.pushKV("sender", asset.witnessAddress.ToString());
+	if (!asset.vchContract.empty())
+		entry.pushKV("contract", "0x" + HexStr(asset.vchContract));
 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER)
-        entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
+	if (!asset.witnessAddress.IsNull())
+		entry.pushKV("sender", asset.witnessAddress.ToString());
 
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
+	if (!asset.witnessAddressTransfer.IsNull())
+		entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
+
+	if (asset.nUpdateFlags > 0)
 		entry.pushKV("update_flags", asset.nUpdateFlags);
-              
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nBalance != dbAsset.nBalance)
-		entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
-        entry.pushKV("precision", asset.nPrecision);  
-    }       
+
+	if (asset.nBalance > 0)
+		entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+
+	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+		entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+		entry.pushKV("precision", asset.nPrecision);
+	}
     entry.pushKV("blockhash", blockhash.GetHex());  
     return true;
 }
-bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry)
+bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry)
 {
     CAsset asset(tx);
-    if(asset.IsNull() || dbAsset.IsNull())
+    if(asset.IsNull())
         return false;
     entry.pushKV("txtype", assetFromTx(tx.nVersion));
     entry.pushKV("asset_guid", (int)asset.nAsset);
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("height", nHeight);
 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchPubData.empty() && dbAsset.vchPubData != asset.vchPubData))
+    if(!asset.vchPubData.empty())
         entry.pushKV("publicvalue", stringFromVch(asset.vchPubData));
         
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE|| (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
+    if(!asset.vchContract.empty())
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
         
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
+    if(!asset.witnessAddress.IsNull())
         entry.pushKV("sender", asset.witnessAddress.ToString());
 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER)
+    if(!asset.witnessAddressTransfer.IsNull())
         entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
 
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
+    if(asset.nUpdateFlags > 0)
         entry.pushKV("update_flags", asset.nUpdateFlags);
               
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nBalance != dbAsset.nBalance)
-        entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+    if (asset.nBalance > 0)
+        entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
+        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
         entry.pushKV("precision", asset.nPrecision);  
     }  
     entry.pushKV("blockhash", blockhash.GetHex()); 
