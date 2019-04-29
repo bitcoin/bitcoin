@@ -18,6 +18,8 @@
 #include "utilmoneystr.h"
 #include "validation.h"
 
+#include "llmq/quorums_instantsend.h"
+
 CPrivateSendServer privateSendServer;
 
 void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
@@ -217,7 +219,15 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
                 LogPrint("privatesend", "DSVIN -- txin=%s\n", txin.ToString());
 
                 Coin coin;
-                if (GetUTXOCoin(txin.prevout, coin)) {
+                auto mempoolTx = mempool.get(txin.prevout.hash);
+                if (mempoolTx != nullptr) {
+                    if (mempool.isSpent(txin.prevout) || !llmq::quorumInstantSendManager->IsLocked(txin.prevout.hash)) {
+                        LogPrintf("DSVIN -- spent or non-locked mempool input! txin=%s\n", txin.ToString());
+                        PushStatus(pfrom, STATUS_REJECTED, ERR_MISSING_TX, connman);
+                        return;
+                    }
+                    nValueIn += mempoolTx->vout[txin.prevout.n].nValue;
+                } else if (GetUTXOCoin(txin.prevout, coin)) {
                     nValueIn += coin.out.nValue;
                 } else {
                     LogPrintf("DSVIN -- missing input! txin=%s\n", txin.ToString());
