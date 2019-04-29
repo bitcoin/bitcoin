@@ -145,7 +145,7 @@ Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exc
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be `1` for `OMNI` or `2`for `TOMNI`)     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be `1` for `OMN` or `2`for `TOMN`)       |
 | `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
 | `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
 | `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
@@ -1408,7 +1408,7 @@ Get information and recipients of a send-to-owners transaction.
   "propertyid" : n,              // (number) the identifier of sent tokens
   "divisible" : true|false,      // (boolean) whether the sent tokens are divisible
   "amount" : "n.nnnnnnnn",       // (string) the number of tokens sent to owners
-  "totalstofee" : "n.nnnnnnnn",  // (string) the fee paid by the sender, nominated in OMNI or TOMNI
+  "totalstofee" : "n.nnnnnnnn",  // (string) the fee paid by the sender, nominated in OMN or TOMN
   "recipients": [                // (array of JSON objects) a list of recipients
     {
       "address" : "address",         // (string) the Bitcoin address of the recipient
@@ -2037,7 +2037,7 @@ Create a payload to place, update or cancel a sell offer on the traditional dist
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be 1 for OMNI or 2 for TOMNI)            |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be 1 for OMN or 2 for TOMN)              |
 | `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
 | `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
 | `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |

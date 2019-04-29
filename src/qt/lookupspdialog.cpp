@@ -298,7 +298,7 @@ void LookupSPDialog::updateDisplayedProperty()
     }
     else
     {
-       if (propertyId == 1) { tokenLabel = " OMNI"; } else { tokenLabel = " TOMNI"; }
+       if (propertyId == 1) { tokenLabel = " OMN"; } else { tokenLabel = " TOMN"; }
     }
     if (divisible) { strTotalTokens = FormatDivisibleMP(totalTokens); } else { strTotalTokens = FormatIndivisibleMP(totalTokens); }
     if (divisible) { strWalletTokens = FormatDivisibleMP(walletTokens); } else { strWalletTokens = FormatIndivisibleMP(walletTokens); }

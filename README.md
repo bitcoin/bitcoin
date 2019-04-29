@@ -12,7 +12,7 @@ http://www.omnilayer.org
 What is Omni Core
 -----------------
 
-Omni Core is a fast, portable Omni Layer implementation that is based off the Bitcoin Core codebase (currently 0.13). This implementation requires no external dependencies extraneous to Bitcoin Core, and is native to the Bitcoin network just like other Bitcoin nodes. It currently supports a wallet mode and is seamlessly available on three platforms: Windows, Linux and Mac OS. Omni Layer extensions are exposed via the JSON-RPC interface. Development has been consolidated on the Omni Core product, and it is the reference client for the Omni Layer.
+Omni Core is a fast, portable Omni Layer implementation that is based off the Bitcoin Core codebase (currently 0.13.2). This implementation requires no external dependencies extraneous to Bitcoin Core, and is native to the Bitcoin network just like other Bitcoin nodes. It currently supports a wallet mode and is seamlessly available on three platforms: Windows, Linux and Mac OS. Omni Layer extensions are exposed via the JSON-RPC interface. Development has been consolidated on the Omni Core product, and it is the reference client for the Omni Layer.
 
 Disclaimer, warning
 -------------------
@@ -35,7 +35,7 @@ Testnet mode allows Omni Core to be run on the Bitcoin testnet blockchain for sa
 
 1. To run Omni Core in testnet mode, run Omni Core with the following option in place: `-testnet`.
 
-2. To receive OMNI (and TOMNI) on testnet please send TBTC to `moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP`. For each 1 TBTC you will receive 100 OMNI and 100 TOMNI.
+2. To receive OMN (and TOMN) on testnet please send TBTC to `moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP`. For each 1 TBTC you will receive 100 OMN and 100 TOMN.
 
 Dependencies
 ------------

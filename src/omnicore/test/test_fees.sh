@@ -50,7 +50,7 @@ $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
 printf "   * Creating a divisible test property in the test ecosystem\n"
 $SRCDIR/omnicore-cli --regtest omni_sendissuancefixed $ADDR 2 2 0 "Z_TestCat" "Z_TestSubCat" "Z_DivisTestProperty" "Z_TestURL" "Z_TestData" 10000000 >$NUL
 $SRCDIR/omnicore-cli --regtest setgenerate true 1 >$NUL
-printf "   * Generating addresses to use as fee recipients (OMNI holders)\n"
+printf "   * Generating addresses to use as fee recipients (OMN holders)\n"
 ADDRESS=()
 for i in {1..6}
 do
@@ -887,4 +887,3 @@ printf "####################\n"
 printf "\n"
 
 $SRCDIR/omnicore-cli --regtest stop
-

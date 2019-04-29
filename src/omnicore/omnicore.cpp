@@ -170,9 +170,9 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
         switch (propertyId) {
             case OMNI_PROPERTY_BTC: str = "BTC";
                 break;
-            case OMNI_PROPERTY_MSC: str = "OMNI";
+            case OMNI_PROPERTY_MSC: str = "OMN";
                 break;
-            case OMNI_PROPERTY_TMSC: str = "TOMNI";
+            case OMNI_PROPERTY_TMSC: str = "TOMN";
                 break;
             default:
                 str = strprintf("SP token: %d", propertyId);
@@ -1748,7 +1748,7 @@ int mastercore_init()
         if (inconsistentDb) strReason = "INCONSISTENT DB DETECTED!\n"
                 "\n!!! WARNING !!!\n\n"
                 "IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS\n"
-                "ALL OMNI TRANSACTIONS TO AVOID INCONSISTENCIES!\n"
+                "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!\n"
                 "\n!!! WARNING !!!";
         PrintToConsole("Loading persistent state: NONE (%s)\n", strReason);
     }
@@ -1760,7 +1760,7 @@ int mastercore_init()
 
     if (inconsistentDb) {
         std::string strAlert("INCONSISTENT DB DETECTED! IF YOU ARE USING AN OVERLAY DB, YOU MAY NEED TO REPROCESS"
-                "ALL OMNI TRANSACTIONS TO AVOID INCONSISTENCIES!");
+                "ALL OMNI LAYER TRANSACTIONS TO AVOID INCONSISTENCIES!");
         AddAlert("omnicore", ALERT_CLIENT_VERSION_EXPIRY, std::numeric_limits<uint32_t>::max(), strAlert);
         AlertNotify(strAlert);
     }
