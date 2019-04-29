@@ -35,6 +35,7 @@ void OptionTests::migrateSettings()
     settings.setValue("nDatabaseCache", 600);
     settings.setValue("nThreadsScriptVerif", 12);
     settings.setValue("fUseUPnP", false);
+    settings.setValue("fListen", false);
 
     settings.sync();
 
@@ -44,10 +45,12 @@ void OptionTests::migrateSettings()
     QVERIFY(!settings.contains("nDatabaseCache"));
     QVERIFY(!settings.contains("nThreadsScriptVerif"));
     QVERIFY(!settings.contains("fUseUPnP"));
+    QVERIFY(!settings.contains("fListen"));
 
     std::ifstream file(gArgs.GetDataDirNet() / "settings.json");
     QCOMPARE(std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()).c_str(), "{\n"
         "    \"dbcache\": \"600\",\n"
+        "    \"listen\": false,\n"
         "    \"par\": \"12\"\n"
         "}\n");
 }
