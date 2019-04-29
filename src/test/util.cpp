@@ -22,7 +22,7 @@
 
 #include <boost/thread.hpp>
 // SYSCOIN
-const std::string ADDRESS_BCRT1_UNSPENDABLE = "sys1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
+const std::string ADDRESS_BCRT1_UNSPENDABLE = "sysrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj";
 
 #ifdef ENABLE_WALLET
 std::string getnewaddress(CWallet& w)
