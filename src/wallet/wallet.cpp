@@ -2590,6 +2590,12 @@ static void ApproximateBestSubset(std::vector<std::pair<CAmount, std::pair<const
     vfBest.assign(vValue.size(), true);
     nBest = nTotalLower;
 
+    if (!llmq::IsOldInstantSendEnabled()) {
+        // The new system does not require special handling for InstantSend as this is all done in CInstantSendManager.
+        // There is also no need for an extra fee anymore.
+        fUseInstantSend = false;
+    }
+
     FastRandomContext insecure_rand;
 
     for (int nRep = 0; nRep < iterations && nBest != nTargetValue; nRep++)
@@ -2661,6 +2667,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
 {
     setCoinsRet.clear();
     nValueRet = 0;
+
+    if (!llmq::IsOldInstantSendEnabled()) {
+        // The new system does not require special handling for InstantSend as this is all done in CInstantSendManager.
+        // There is also no need for an extra fee anymore.
+        fUseInstantSend = false;
+    }
 
     // List of values less than target
     std::pair<CAmount, std::pair<const CWalletTx*,unsigned int> > coinLowestLarger;
