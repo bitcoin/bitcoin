@@ -126,7 +126,7 @@ void EnsureWalletIsUnlocked(const CWallet* pwallet)
 
 static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& locked_chain, const CWalletTx& wtx, UniValue& entry)
 {
-    int confirms = wtx.GetDepthInMainChain(locked_chain);
+    int confirms = wtx.GetDepthInMainChain();
     entry.pushKV("confirmations", confirms);
     if (wtx.IsCoinBase())
         entry.pushKV("generated", true);
@@ -631,7 +631,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 
         for (const CTxOut& txout : wtx.tx->vout)
             if (txout.scriptPubKey == scriptPubKey)
-                if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
     }
 
@@ -697,7 +697,7 @@ static UniValue getreceivedbylabel(const JSONRPCRequest& request)
         {
             CTxDestination address;
             if (ExtractDestination(txout.scriptPubKey, address) && pwallet->IsMine(address) && setAddress.count(address)) {
-                if (wtx.GetDepthInMainChain(*locked_chain) >= nMinDepth)
+                if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
             }
         }
@@ -1057,7 +1057,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
             continue;
         }
 
-        int nDepth = wtx.GetDepthInMainChain(locked_chain);
+        int nDepth = wtx.GetDepthInMainChain();
         if (nDepth < nMinDepth)
             continue;
 
@@ -1314,8 +1314,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
     }
 
     // Received
-    if (listReceived.size() > 0 && wtx.GetDepthInMainChain(locked_chain) >= nMinDepth)
-    {
+    if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth) {
         for (const COutputEntry& r : listReceived)
         {
             std::string label;
@@ -1332,9 +1331,9 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             MaybePushAddress(entry, r.destination);
             if (wtx.IsCoinBase())
             {
-                if (wtx.GetDepthInMainChain(locked_chain) < 1)
+                if (wtx.GetDepthInMainChain() < 1)
                     entry.pushKV("category", "orphan");
-                else if (wtx.IsImmatureCoinBase(locked_chain))
+                else if (wtx.IsImmatureCoinBase())
                     entry.pushKV("category", "immature");
                 else
                     entry.pushKV("category", "generate");
@@ -1598,7 +1597,7 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
         CWalletTx tx = pairWtx.second;
 
-        if (depth == -1 || abs(tx.GetDepthInMainChain(*locked_chain)) < depth) {
+        if (depth == -1 || abs(tx.GetDepthInMainChain()) < depth) {
             ListTransactions(*locked_chain, pwallet, tx, 0, true, transactions, filter, nullptr /* filter_label */);
         }
     }
@@ -1715,7 +1714,7 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     }
     const CWalletTx& wtx = it->second;
 
-    CAmount nCredit = wtx.GetCredit(*locked_chain, filter);
+    CAmount nCredit = wtx.GetCredit(filter);
     CAmount nDebit = wtx.GetDebit(filter);
     CAmount nNet = nCredit - nDebit;
     CAmount nFee = (wtx.IsFromMe(filter) ? wtx.tx->GetValueOut() - nDebit : 0);
@@ -1779,7 +1778,7 @@ static UniValue abandontransaction(const JSONRPCRequest& request)
     if (!pwallet->mapWallet.count(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
     }
-    if (!pwallet->AbandonTransaction(*locked_chain, hash)) {
+    if (!pwallet->AbandonTransaction(hash)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not eligible for abandonment");
     }
 
@@ -2210,7 +2209,7 @@ static UniValue lockunspent(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, vout index out of bounds");
         }
 
-        if (pwallet->IsSpent(*locked_chain, outpt.hash, outpt.n)) {
+        if (pwallet->IsSpent(outpt.hash, outpt.n)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected unspent output");
         }
 
