@@ -655,17 +655,21 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
-        throw runtime_error("assetallocationbalance <asset_guid> <address>\n"
-                "Show stored balance of a single asset allocation.\n"
-                "\nArguments:\n"
-                "1. \"asset_guid\"     (string, required) The guid of the asset\n"
-                "2. \"address\"        (string, required) The address of the allocation owner\n"
-                "\nResult (for verbose = true):\n"
+        throw runtime_error(
+            RPCHelpMan{"assetallocationbalance",
+                "\nShow stored balance of a single asset allocation.\n",
+                {
+                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the allocation owner"}
+                },
+                RPCResult{
                 "\"balance\"        (numeric) The balance of a single asset allocation.\n"
-                "\nExamples:\n"
-                + HelpExampleCli("assetallocationbalance","\"asset_guid\" \"address\"")
-                + HelpExampleRpc("assetallocationbalance", "\"asset_guid\", \"address\"")
-                );
+                },
+                RPCExamples{
+                    HelpExampleCli("assetallocationbalance","\"asset_guid\" \"address\"")
+                    + HelpExampleRpc("assetallocationbalance", "\"asset_guid\", \"address\"")
+                }
+            }.ToString());
 
     const int &nAsset = params[0].get_int();
     string strAddressFrom = params[1].get_str();
@@ -696,23 +700,27 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
 UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
-        throw runtime_error("assetallocationinfo <asset_guid> <address>\n"
-                "\nShow stored values of a single asset allocation.\n"
-                "\nArguments:\n"
-                "1. \"asset_guid\"     (string, required) The guid of the asset\n"
-                "2. \"address\"   (string, required) The address of the owner\n"
-                "\nResult:\n"
-                "{\n"
-                "  \"_id\":           (string) The unique id of this allocation\n"
-                "  \"asset_guid\":         (string) The guid of the asset\n"
-                "  \"address\":       (string) The address of the owner of this allocation\n"
-                "  \"balance\":       (numeric) The current balance\n"
-                "  \"balance_zdag\":  (numeric) The zdag balance\n"
-                "}\n"
-                "\nExamples:\n"
-                + HelpExampleCli("assetallocationinfo", "\"assetguid\" \"address\"")
-                + HelpExampleRpc("assetallocationinfo", "\"assetguid\", \"address\"")
-                );
+        throw runtime_error(
+            RPCHelpMan{"assetallocationinfo",
+                "\nShow stored values of a single asset allocation.\n",
+                {
+                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The adress of the owner"}
+                },
+                RPCResult{
+                    "{\n"
+                    "  \"_id\":           (string) The unique id of this allocation\n"
+                    "  \"asset_guid\":         (string) The guid of the asset\n"
+                    "  \"address\":       (string) The address of the owner of this allocation\n"
+                    "  \"balance\":       (numeric) The current balance\n"
+                    "  \"balance_zdag\":  (numeric) The zdag balance\n"
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("assetallocationinfo", "\"assetguid\" \"address\"")
+                    + HelpExampleRpc("assetallocationinfo", "\"assetguid\", \"address\"")
+                }
+            }.ToString());
 
     const int &nAsset = params[0].get_int();
 	string strAddressFrom = params[1].get_str();

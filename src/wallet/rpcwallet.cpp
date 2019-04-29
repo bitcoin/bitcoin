@@ -3353,17 +3353,20 @@ UniValue generate(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2) {
         throw std::runtime_error(
-            "generate nblocks ( maxtries )\n"
-            "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n"
-            "\nArguments:\n"
-            "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
-            "2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
-            "\nResult:\n"
-            "[ blockhashes ]     (array) hashes of blocks generated\n"
-            "\nExamples:\n"
-            "\nGenerate 11 blocks\n"
-            + HelpExampleCli("generate", "11")
-        );
+            RPCHelpMan{"generate",
+                "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n",
+                {
+                    {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
+                    {"maxtries", RPCArg::Type::NUM, "100000", "How many iterations to try."}
+                },
+                RPCResult{
+                    "[ blockhashes ]     (array) hashes of blocks generated\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("generate", "11")
+                    + HelpExampleRpc("generate", "11")
+                }
+            }.ToString());
     }
 
     int num_generate = request.params[0].get_int();
@@ -3603,19 +3606,22 @@ UniValue convertaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
-            "convertaddress \"address\"\n"
-            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n"
-            "\nArguments:\n"
-            "1. \"address\"                    (string, required) The syscoin address to get the information of.\n"
-            "\nResult:\n"
-            "{\n"
-            "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
-            "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-            + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-        );
+            RPCHelpMan{"convertaddress",
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}
+            },
+            RPCResult{
+                "{\n"
+                "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
+                "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
+                "}\n"
+            },
+            RPCExamples{
+                HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+                + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+            }
+            }.ToString());
     }
 
     LOCK(pwallet->cs_wallet);
