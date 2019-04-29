@@ -749,9 +749,12 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_EQUAL(balance.getValStr(), "0.05000000");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress2));
     balance = find_value(r.get_obj(), "balance");
+	// depending on which one arrived first, the above 0.05 balance is good because that means that atleast 1 zdag transaction went through
     BOOST_CHECK(balance.getValStr() == "0.95000000" || balance.getValStr() == "0.15000000");
+	// if the send went through then burn should be invalid
 	if(balance.getValStr() == "0.95000000")
 		BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"), runtime_error);
+	// if the send didn't go through the burn should be valid
 	else if (balance.getValStr() == "0.15000000") {
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"));
 		balance = find_value(r.get_obj(), "balance");
