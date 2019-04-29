@@ -37,6 +37,7 @@ static const char* SettingName(OptionsModel::OptionID option)
 {
     switch (option) {
     case OptionsModel::DatabaseCache: return "dbcache";
+    case OptionsModel::ThreadsScriptVerif: return "par";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -44,7 +45,9 @@ static const char* SettingName(OptionsModel::OptionID option)
 /** Call node.updateRwSetting() with Bitcoin 22.x workaround. */
 static void UpdateRwSetting(interfaces::Node& node, OptionsModel::OptionID option, const util::SettingsValue& value)
 {
-    if (value.isNum() && option == OptionsModel::DatabaseCache) {
+    if (value.isNum() &&
+        (option == OptionsModel::DatabaseCache ||
+         option == OptionsModel::ThreadsScriptVerif)) {
         // Write certain old settings as strings, even though they are numbers,
         // because Bitcoin 22.x releases try to read these specific settings as
         // strings in addOverriddenOption() calls at startup, triggering
@@ -122,7 +125,7 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache}) {
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
@@ -147,12 +150,6 @@ bool OptionsModel::Init(bilingual_str& error)
     if (!settings.contains("nPruneSize"))
         settings.setValue("nPruneSize", DEFAULT_PRUNE_TARGET_GB);
     SetPruneEnabled(settings.value("bPrune").toBool());
-
-    if (!settings.contains("nThreadsScriptVerif"))
-        settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
-    if (!gArgs.SoftSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
-        addOverriddenOption("-par");
-
     if (!settings.contains("strDataDir"))
         settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
 
@@ -458,7 +455,7 @@ QVariant OptionsModel::getOption(OptionID option) const
     case DatabaseCache:
         return qlonglong(SettingToInt(setting(), nDefaultDbCache));
     case ThreadsScriptVerif:
-        return settings.value("nThreadsScriptVerif");
+        return qlonglong(SettingToInt(setting(), DEFAULT_SCRIPTCHECK_THREADS));
     case Listen:
         return settings.value("fListen");
     case Server:
@@ -619,8 +616,8 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
         }
         break;
     case ThreadsScriptVerif:
-        if (settings.value("nThreadsScriptVerif") != value) {
-            settings.setValue("nThreadsScriptVerif", value);
+        if (changed()) {
+            update(static_cast<int64_t>(value.toLongLong()));
             setRestartRequired(true);
         }
         break;
@@ -705,4 +702,5 @@ void OptionsModel::checkAndMigrate()
     };
 
     migrate_setting(DatabaseCache, "nDatabaseCache");
+    migrate_setting(ThreadsScriptVerif, "nThreadsScriptVerif");
 }
