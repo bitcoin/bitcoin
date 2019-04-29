@@ -400,8 +400,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
     if(memInfo.MemTotalMiB < 8000)
         throw JSONRPCError(RPC_MISC_ERROR, "Insufficient memory, you need at least 8GB RAM to mine syscoin and be running in a Unix OS. Please see documentation.");
-    LogPrintf("Total number of physical cores found %d\n", boost::thread::physical_concurrency());
-    if(boost::thread::physical_concurrency() < 4)
+    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
+    if(GetNumCores() < 4)
         throw JSONRPCError(RPC_MISC_ERROR, "Insufficient CPU cores, you need at least 4 cores to mine syscoin. Please see documentation.");
     LOCK(cs_main);
 

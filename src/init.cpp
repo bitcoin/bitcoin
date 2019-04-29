@@ -1945,8 +1945,8 @@ bool AppInitMain(InitInterfaces& interfaces)
             return InitError(_("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation."));
         if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
             return InitError(_("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation."));           
-        LogPrintf("Total number of physical cores found %d\n", boost::thread::physical_concurrency());
-        if(boost::thread::physical_concurrency() < 2)
+        LogPrintf("Total number of physical cores found %d\n", GetNumCores());
+        if(GetNumCores() < 2)
             return InitError(_("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation."));
             
         std::array<char, 128> buffer;
