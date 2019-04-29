@@ -87,8 +87,7 @@ static bool AppInit(int argc, char* argv[])
     util::Ref context{node};
     try
     {
-        if (!fs::is_directory(GetDataDir(false)))
-        {
+        if (!CheckDataDirOption()) {
             return InitError(Untranslated(strprintf("Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", ""))));
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
