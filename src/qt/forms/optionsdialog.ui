@@ -896,7 +896,7 @@
         <item>
          <widget class="QLabel" name="overriddenByCommandLineInfoLabel">
           <property name="text">
-           <string>Options set in this dialog are overridden by the command line or in the configuration file:</string>
+           <string>Options set in this dialog are overridden by the command line:</string>
           </property>
           <property name="textFormat">
            <enum>Qt::PlainText</enum>
