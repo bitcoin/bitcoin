@@ -877,7 +877,6 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 	int nOut;
 	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
 	if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
-		LogPrintf("SysBurnTxToJSON: GetSyscoinData failed %s\n", HexStr(vchEthAddress));
 		return false;
 	}
     int nHeight = 0;
