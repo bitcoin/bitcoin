@@ -9,7 +9,7 @@ from .util import hex_str_to_bytes
 
 from . import segwit_addr
 #// SYSCOIN
-ADDRESS_BCRT1_UNSPENDABLE = 'sysrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
+ADDRESS_BCRT1_UNSPENDABLE = 'sysrt1qa4vdyra69l8j30wg6g83kgksx3hnwzzte2z9af'
 
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
