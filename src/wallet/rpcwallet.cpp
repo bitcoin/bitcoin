@@ -1112,29 +1112,17 @@ static UniValue sweepprivkeys(const JSONRPCRequest& request)
     CTransactionRef final_tx(MakeTransactionRef(std::move(tx)));
     pwallet->SetAddressBook(keyID, label, "receive");
 
-    CValidationState state;
-    bool rv;
-    {
-        LOCK(cs_main);
-        rv = AcceptToMemoryPool(mempool, state, final_tx, nullptr /* fMissingInputs */, nullptr /* plTxnReplaced */, false /* bypass_limits */, maxTxFee /* nAbsurdFee */);
-    }
-    if (!rv) {
+    uint256 txid;
+    std::string err_string;
+    const TransactionError err = BroadcastTransaction(final_tx, txid, err_string, ::maxTxFee);
+    if (TransactionError::OK != err) {
         pwallet->DelAddressBook(keyID);
-        if (state.IsInvalid()) {
-            throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf("%i: %s", state.GetRejectCode(), state.GetRejectReason()));
-        } else {
-            throw JSONRPCError(RPC_TRANSACTION_ERROR, state.GetRejectReason());
-        }
+        throw JSONRPCTransactionError(err, err_string);
     }
+
     reservekey.KeepKey();
 
-    CInv inv(MSG_TX, final_tx->GetHash());
-    g_connman->ForEachNode([&inv](CNode* pnode)
-    {
-        pnode->PushInventory(inv);
-    });
-
-    return final_tx->GetHash().GetHex();
+    return txid.GetHex();
 }
 
 static UniValue addmultisigaddress(const JSONRPCRequest& request)
