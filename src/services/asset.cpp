@@ -854,7 +854,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_BURN){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
         found = SysTxToJSON(rawTx, output);
     }
     
