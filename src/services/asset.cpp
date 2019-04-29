@@ -1514,27 +1514,31 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 UniValue assetinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
     if (request.fHelp || 1 != params.size())
-        throw runtime_error("assetinfo <asset_guid>\n"
-                "\nShow stored values of a single asset and its.\n"
-                "\nArguments:\n"
-                "1. \"asset_guid\":  (numeric, required) The asset guid"
-                "\nResult:\n"
-                "{\n"
-                "  \"_id\":          (numeric) The asset guid\n"
-                "  \"txid\":         (string) The transaction id that created this asset\n"
-                "  \"publicvalue\":  (string) The public value attached to this asset\n"
-                "  \"address\":      (string) The address that controls this address\n"
-                "  \"contract\":     (string) The ethereum contract address\n"
-                "  \"balance\":      (numeric) The current balance\n"
-                "  \"total_supply\": (numeric) The total supply of this asset\n"
-                "  \"max_supply\":   (numeric) The maximum supply of this asset\n"
-                "  \"update_flag\":  (numeric) The flag in decimal \n"
-                "  \"precision\":    (numeric) The precision of this asset \n"   
-                "}\n"
-                "\nExamples:\n"
-                + HelpExampleCli("assetinfo", "\"assetguid\"")
-                + HelpExampleRpc("assetinfo", "\"assetguid\"")
-                );
+        throw runtime_error(
+            RPCHelpMan{"assetinfo",
+                "\nShow stored values of a single asset and its.\n",
+                {
+                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"}
+                },
+                RPCResult{
+                    "{\n"
+                    "  \"_id\":          (numeric) The asset guid\n"
+                    "  \"txid\":         (string) The transaction id that created this asset\n"
+                    "  \"publicvalue\":  (string) The public value attached to this asset\n"
+                    "  \"address\":      (string) The address that controls this address\n"
+                    "  \"contract\":     (string) The ethereum contract address\n"
+                    "  \"balance\":      (numeric) The current balance\n"
+                    "  \"total_supply\": (numeric) The total supply of this asset\n"
+                    "  \"max_supply\":   (numeric) The maximum supply of this asset\n"
+                    "  \"update_flag\":  (numeric) The flag in decimal \n"
+                    "  \"precision\":    (numeric) The precision of this asset \n"   
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("assetinfo", "\"assetguid\"")
+                    + HelpExampleRpc("assetinfo", "\"assetguid\"")
+                }
+            }.ToString());
 
     const int &nAsset = params[0].get_int();
 	UniValue oAsset(UniValue::VOBJ);
