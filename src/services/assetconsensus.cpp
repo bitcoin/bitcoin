@@ -17,6 +17,7 @@
 #include <ethereum/address.h>
 #include <ethereum/common.h>
 #include <ethereum/commondata.h>
+#include <boost/thread.hpp>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
