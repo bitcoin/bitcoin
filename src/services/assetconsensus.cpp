@@ -1218,24 +1218,33 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     }
     CAsset &storedSenderAssetRef = mapAsset->second;
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER) {
-    
-        if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+		
+        if (theAsset.nAsset != storedSenderAssetRef.nAsset || storedSenderAssetRef.witnessAddress != theAsset.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Asset owner must sign off on this change");
             return error(errorMessage.c_str());
         } 
+		if(theAsset.nPrecision != storedSenderAssetRef.nPrecision)
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Precision cannot be changed.");
+			return error(errorMessage.c_str());
+		}
         storedSenderAssetRef.witnessAddress = theAsset.witnessAddressTransfer;   
         // sanity to ensure transfer field is never set on the actual asset in db  
         storedSenderAssetRef.witnessAddressTransfer.SetNull();      
     }
 
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {
-        if (!FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+        if (theAsset.nAsset != storedSenderAssetRef.nAsset || storedSenderAssetRef.witnessAddress != theAsset.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Asset owner must sign off on this change");
             return error(errorMessage.c_str());
         }
-
+		if (theAsset.nPrecision != storedSenderAssetRef.nPrecision)
+		{
+			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Precision cannot be changed.");
+			return error(errorMessage.c_str());
+		}
         if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update supply");
@@ -1284,7 +1293,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
     }      
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
-        if (storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
+        if (storedSenderAssetRef.nAsset != theAssetAllocation.assetAllocationTuple.nAsset || storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset owner must sign off on this change");
             return error(errorMessage.c_str());

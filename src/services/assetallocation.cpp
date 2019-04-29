@@ -870,7 +870,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
-         entry.pushKV("ethereum_destination", HexStr(vchEthAddress)); 
+         entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
@@ -910,7 +910,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
-         entry.pushKV("ethereum_destination", HexStr(vchEthAddress)); 
+         entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 

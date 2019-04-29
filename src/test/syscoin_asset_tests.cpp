@@ -315,6 +315,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hexStr + "\\\"]\""));
     BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());     
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoindecoderawtransaction " + hexStr));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "syscoinburn");
     GenerateBlocks(5, "node1");
     CMutableTransaction txIn;
     BOOST_CHECK(DecodeHexTx(txIn, hexStr, true, true));
