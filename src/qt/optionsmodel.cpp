@@ -19,6 +19,7 @@
 #include <txdb.h>       // for -dbcache defaults
 #include <util/string.h>
 #include <validation.h> // For DEFAULT_SCRIPTCHECK_THREADS
+#include <wallet/wallet.h> // For DEFAULT_SPEND_ZEROCONF_CHANGE
 
 #include <QDebug>
 #include <QLatin1Char>
@@ -38,6 +39,8 @@ static const char* SettingName(OptionsModel::OptionID option)
     switch (option) {
     case OptionsModel::DatabaseCache: return "dbcache";
     case OptionsModel::ThreadsScriptVerif: return "par";
+    case OptionsModel::SpendZeroConfChange: return "spendzeroconfchange";
+    case OptionsModel::ExternalSignerPath: return "signer";
     default: throw std::logic_error(strprintf("GUI option %i has no corresponding node setting.", option));
     }
 }
@@ -125,7 +128,7 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
-    for (OptionID option : {DatabaseCache, ThreadsScriptVerif}) {
+    for (OptionID option : {DatabaseCache, ThreadsScriptVerif, SpendZeroConfChange, ExternalSignerPath}) {
         std::string setting = SettingName(option);
         if (node().isSettingIgnored(setting)) addOverriddenOption("-" + setting);
         try {
@@ -155,18 +158,6 @@ bool OptionsModel::Init(bilingual_str& error)
 
     // Wallet
 #ifdef ENABLE_WALLET
-    if (!settings.contains("bSpendZeroConfChange"))
-        settings.setValue("bSpendZeroConfChange", true);
-    if (!gArgs.SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
-        addOverriddenOption("-spendzeroconfchange");
-
-    if (!settings.contains("external_signer_path"))
-        settings.setValue("external_signer_path", "");
-
-    if (!gArgs.SoftSetArg("-signer", settings.value("external_signer_path").toString().toStdString())) {
-        addOverriddenOption("-signer");
-    }
-
     if (!settings.contains("SubFeeFromAmount")) {
         settings.setValue("SubFeeFromAmount", false);
     }
@@ -430,9 +421,9 @@ QVariant OptionsModel::getOption(OptionID option) const
 
 #ifdef ENABLE_WALLET
     case SpendZeroConfChange:
-        return settings.value("bSpendZeroConfChange");
+        return SettingToBool(setting(), wallet::DEFAULT_SPEND_ZEROCONF_CHANGE);
     case ExternalSignerPath:
-        return settings.value("external_signer_path");
+        return QString::fromStdString(SettingToString(setting(), ""));
     case SubFeeFromAmount:
         return m_sub_fee_from_amount;
 #endif
@@ -551,14 +542,14 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value)
 
 #ifdef ENABLE_WALLET
     case SpendZeroConfChange:
-        if (settings.value("bSpendZeroConfChange") != value) {
-            settings.setValue("bSpendZeroConfChange", value);
+        if (changed()) {
+            update(value.toBool());
             setRestartRequired(true);
         }
         break;
     case ExternalSignerPath:
-        if (settings.value("external_signer_path") != value.toString()) {
-            settings.setValue("external_signer_path", value.toString());
+        if (changed()) {
+            update(value.toString().toStdString());
             setRestartRequired(true);
         }
         break;
@@ -703,4 +694,8 @@ void OptionsModel::checkAndMigrate()
 
     migrate_setting(DatabaseCache, "nDatabaseCache");
     migrate_setting(ThreadsScriptVerif, "nThreadsScriptVerif");
+#ifdef ENABLE_WALLET
+    migrate_setting(SpendZeroConfChange, "bSpendZeroConfChange");
+    migrate_setting(ExternalSignerPath, "external_signer_path");
+#endif
 }
