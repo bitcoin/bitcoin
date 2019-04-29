@@ -624,7 +624,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew, const
 		nTotalRewardWithMasternodes  -= fee;
 		return true;
 	}
-    // if masternode chosen was NSR to local client, let this go through in the case where miner sees a valid masternode thats on the edge between enabled and NSR for the rest of the network and it has >= MNPAYMENTS_SIGNATURES_REQUIRED votes
+    // if masternode chosen was NSR to local client, let this go through in the case where miner sees a valid masternode that's on the edge between enabled and NSR for the rest of the network and it has >= MNPAYMENTS_SIGNATURES_REQUIRED votes
     if(!mnScript.empty()){
         masternode_info_t mnInfo;
         if(mnodeman.GetMasternodeInfo(mnScript, mnInfo)){

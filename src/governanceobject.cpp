@@ -678,7 +678,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     int nMnCount = mnodeman.CountEnabled();
     if(nMnCount == 0) return;
 
-    // CALCULATE THE MINUMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
+    // CALCULATE THE MINIMUM VOTE COUNT REQUIRED FOR FULL SIGNAL
 
     int nAbsVoteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, nMnCount / 10);
     int nAbsDeleteReq = std::max(Params().GetConsensus().nGovernanceMinQuorum, (2 * nMnCount) / 3);
@@ -690,7 +690,7 @@ void CGovernanceObject::UpdateSentinelVariables()
     fCachedEndorsed = false;
     fDirtyCache = false;
 
-    // SET SENTINEL FLAGS TO TRUE IF MIMIMUM SUPPORT LEVELS ARE REACHED
+    // SET SENTINEL FLAGS TO TRUE IF MINIMUM SUPPORT LEVELS ARE REACHED
     // ARE ANY OF THESE FLAGS CURRENTLY ACTIVATED?
 
     if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsVoteReq) fCachedFunding = true;

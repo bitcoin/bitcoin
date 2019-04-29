@@ -120,11 +120,10 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData)
 		return false;
 	return true;
 }
-bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation)
+bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress)
 {   
     if(!theAssetAllocation) 
         return false;  
-    std::vector<unsigned char> vchEthAddress;
     uint32_t nAssetFromScript;
     CAmount nAmountFromScript;
     CWitnessAddress burnWitnessAddress;
@@ -509,7 +508,7 @@ UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, con
     Coin pcoin;
     if (GetUTXOCoin(addressOutpoint, pcoin) && !pcoin.IsSpent()){
         CTxIn txIn(addressOutpoint, pcoin.out.scriptPubKey);
-        // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs everytime we call this function
+        // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
         if(fTPSTest && fTPSTestEnabled){
             if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end()){
                 savedtxins.push_back(txIn);
@@ -592,9 +591,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
             RPCHelpMan{"syscointxfund",
 			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added everytime you call this function.\n",
                 {
-                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw syscoin transaction output given from rpc (ie: assetnew, assetupdate)"},
+                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw syscoin transaction output given from rpc"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address belonging to this asset transaction."},
-                    {"output_index", RPCArg::Type::NUM, "", "Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction."}
+                    {"output_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction."}
                 },
                 RPCResult{
                     "[\n"
@@ -697,7 +696,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			}
 			if (!IsOutpointMature(outPoint))
 				continue;
-            // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs everytime we call this function
+            // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
             if(fTPSTest && fTPSTestEnabled){
                 if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end())
                     savedtxins.push_back(txIn);
@@ -740,13 +739,14 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 4 != params.size())
+	if (request.fHelp || 3 != params.size())
 		throw runtime_error(
             RPCHelpMan{"syscoinburn",
                 "\nBurns the syscoin for bridging to Ethereum token\n",
                 {
+                    {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Funding address to burn SYS from"},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees."},
-                    {"burn_to_sysx", RPCArg::Type::BOOL, RPCArg::Optional::NO, "Set to true if you are provably burning SYS to go to SYSX.  False if you are provably burning SYS forever"}
+                    {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 bytes (40 character) hex string of the ethereum destination address.  Leave empty to burn as normal without the bridge"}
                 },
                 RPCResult{
                     "[\n"
@@ -754,37 +754,30 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
                     "]\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinburn", "\"amount\" \"true\" \"ethaddress\"")
-                    + HelpExampleRpc("syscoinburn", "\"amount\", \"true\", \"ethaddress\"")
+                    HelpExampleCli("syscoinburn", "\funding_address\" "\"amount\" \"ethaddress\"")
+                    + HelpExampleRpc("syscoinburn", "\"funding_address\", \"amount\", \"ethaddress\"")
                 }
          }.ToString());
       
     string fundingAddress = params[0].get_str();      
 	CAmount nAmount = AmountFromValue(params[1]);
-	bool bBurnToSYSX = params[2].get_bool();
-    string ethAddress = params[3].get_str();
+    string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
 
    
 	vector<CRecipient> vecSend;
 	CScript scriptData;
 	scriptData << OP_RETURN;
-	if (bBurnToSYSX){
+	if (!ethAddress.empty()){
 		scriptData << ParseHex(ethAddress);
     }
-
-	CMutableTransaction txNew;
-    if(bBurnToSYSX)
-        txNew.nVersion = SYSCOIN_TX_VERSION_BURN;
-    
-    
     
     CRecipient burn;
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
     
-    UniValue res = syscointxfund_helper(fundingAddress, bBurnToSYSX? SYSCOIN_TX_VERSION_BURN: 0, "", vecSend);
+    UniValue res = syscointxfund_helper(fundingAddress, ethAddress.empty()? 0: SYSCOIN_TX_VERSION_BURN, "", vecSend);
     return res;
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
@@ -923,7 +916,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
         found = SysTxToJSON(rawTx, output);
     }
     
@@ -942,6 +935,12 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
+	std::vector< unsigned char> vchEthAddress;
+	int nOut;
+	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
+	if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
+		return false;
+	}
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
@@ -971,6 +970,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("outputs", oOutputArray);
     entry.pushKV("total", ValueFromAmount(tx.GetValueOut()));
     entry.pushKV("blockhash", blockhash.GetHex()); 
+    entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 int GenerateSyscoinGuid()
@@ -1103,7 +1103,7 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
 	if (fZMQAsset || fAssetIndex) {
 		UniValue oName(UniValue::VOBJ);
         // assetsends write allocation indexes
-        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, dbAsset, nHeight, blockhash, oName)){
+        if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, nHeight, blockhash, oName)){
             if(fZMQAsset)
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
@@ -1298,7 +1298,10 @@ UniValue assetupdate(const JSONRPCRequest& request) {
         theAsset.vchContract.clear();
 
 	theAsset.nBalance = nBalance;
-	theAsset.nUpdateFlags = nUpdateFlags;
+	if (theAsset.nUpdateFlags != nUpdateFlags)
+		theAsset.nUpdateFlags = nUpdateFlags;
+	else
+		theAsset.nUpdateFlags = 0;
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
@@ -1359,12 +1362,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
     unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
 
-    CWitnessAddress fromWitnessAddress;
-    fromWitnessAddress.vchWitnessProgram = theAsset.witnessAddress.vchWitnessProgram;
-    fromWitnessAddress.nVersion = theAsset.witnessAddress.nVersion;
 	theAsset.ClearAsset();
     CScript scriptPubKey;
-	theAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
+	theAsset.witnessAddressTransfer = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
 
 	vector<unsigned char> data;
 	theAsset.Serialize(data);
@@ -1378,7 +1378,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	return syscointxfund_helper(fromWitnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
+	return syscointxfund_helper(theAsset.witnessAddress.ToString(), SYSCOIN_TX_VERSION_ASSET_TRANSFER, vchWitness, vecSend);
 }
 UniValue assetsend(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -1421,21 +1421,21 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
             RPCHelpMan{"assetsendmany",
-			"\nSend an asset you own to another address/address as an asset allocation. Maximimum recipients is 250.\n",
+			"\nSend an asset you own to another address/addresses as an asset allocation. Maximimum recipients is 250.\n",
             {
-                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
+                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
                 {"array", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of asset send objects.",
                     {
                         {"", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An assetsend obj",
                             {
-                                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the assetallocation to"},
-                                {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount to send"}
+                                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to"},
+                                {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Quantity of asset to send"}
                             }
                         }
                     },
                     "[assetsendobjects,...]"
                 },
-                {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "The list of witnesses"}
+                {"witness", RPCArg::Type::STR, "\"\"", "Witnesses address that will sign for web-of-trust notarization of this transaction"}
             },
             RPCResult{
             "[\n"
@@ -1471,24 +1471,32 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 		if (!receiver.isObject())
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\", or \"amount\"}");
 
-		UniValue receiverObj = receiver.get_obj();
-		string toStr = find_value(receiverObj, "address").get_str();
-        CTxDestination dest = DecodeDestination(toStr);
-		if(!IsValidDestination(dest))
-			throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2509 - " + _("Asset must be sent to a valid syscoin address"));
+		const UniValue &receiverObj = receiver.get_obj();
+		const std::string &toStr = find_value(receiverObj, "address").get_str();
+        CWitnessAddress recpt;
+        if(toStr != "burn"){
+            CTxDestination dest = DecodeDestination(toStr);
+            if(!IsValidDestination(dest))
+                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2509 - " + _("Asset must be sent to a valid syscoin address"));
 
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-        string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
-                		
+            UniValue detail = DescribeAddress(dest);
+            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+            string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+            unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
+            recpt.vchWitnessProgram = ParseHex(witnessProgramHex);
+            recpt.nVersion = witnessVersion;
+        } 
+        else{
+            recpt.vchWitnessProgram = vchFromString("burn");
+            recpt.nVersion = 0;
+        }         		
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum() || amountObj.isStr()) {
 			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 			if (amount <= 0)
 				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion,ParseHex(witnessProgramHex)), amount));
+			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(recpt.nVersion, recpt.vchWitnessProgram), amount));
 		}
 		else
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
@@ -1571,10 +1579,6 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 	if(asset.IsNull())
 		return false;
 
-	CAsset dbAsset;
-	if (!GetAsset(asset.nAsset, dbAsset))
-        dbAsset.nPrecision = asset.nPrecision;
-    
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
@@ -1592,53 +1596,61 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     entry.pushKV("txid", txHash.GetHex());
     entry.pushKV("height", nHeight);
     
-	if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchPubData.empty() && dbAsset.vchPubData != asset.vchPubData))
+	if (!asset.vchPubData.empty())
 		entry.pushKV("publicvalue", stringFromVch(asset.vchPubData));
-        
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
-        entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
-        
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
-		entry.pushKV("address", asset.witnessAddress.ToString());
 
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
+	if (!asset.vchContract.empty())
+		entry.pushKV("contract", "0x" + HexStr(asset.vchContract));
+
+	if (!asset.witnessAddress.IsNull())
+		entry.pushKV("sender", asset.witnessAddress.ToString());
+
+	if (!asset.witnessAddressTransfer.IsNull())
+		entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
+
+	if (asset.nUpdateFlags > 0)
 		entry.pushKV("update_flags", asset.nUpdateFlags);
-              
-	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nBalance != dbAsset.nBalance)
-		entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
-        entry.pushKV("precision", asset.nPrecision);  
-    }       
+
+	if (asset.nBalance > 0)
+		entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+
+	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+		entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+		entry.pushKV("precision", asset.nPrecision);
+	}
     entry.pushKV("blockhash", blockhash.GetHex());  
     return true;
 }
-bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry)
+bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry)
 {
     CAsset asset(tx);
-    if(asset.IsNull() || dbAsset.IsNull())
+    if(asset.IsNull())
         return false;
     entry.pushKV("txtype", assetFromTx(tx.nVersion));
     entry.pushKV("asset_guid", (int)asset.nAsset);
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("height", nHeight);
 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.vchPubData.empty() && dbAsset.vchPubData != asset.vchPubData))
+    if(!asset.vchPubData.empty())
         entry.pushKV("publicvalue", stringFromVch(asset.vchPubData));
         
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE|| (!asset.vchContract.empty() && dbAsset.vchContract != asset.vchContract))
+    if(!asset.vchContract.empty())
         entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
         
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || (!asset.witnessAddress.IsNull() && dbAsset.witnessAddress != asset.witnessAddress))
-        entry.pushKV("address", asset.witnessAddress.ToString());
+    if(!asset.witnessAddress.IsNull())
+        entry.pushKV("sender", asset.witnessAddress.ToString());
 
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nUpdateFlags != dbAsset.nUpdateFlags)
+    if(!asset.witnessAddressTransfer.IsNull())
+        entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
+
+    if(asset.nUpdateFlags > 0)
         entry.pushKV("update_flags", asset.nUpdateFlags);
               
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || asset.nBalance != dbAsset.nBalance)
-        entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, dbAsset.nPrecision));
+    if (asset.nBalance > 0)
+        entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, dbAsset.nPrecision)); 
+        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
         entry.pushKV("precision", asset.nPrecision);  
     }  
     entry.pushKV("blockhash", blockhash.GetHex()); 
@@ -1673,19 +1685,6 @@ CAmount AssetAmountFromValue(UniValue& value, int precision)
 	if (value.isStr() && value.get_str() == "-1") {
 		value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
 	}
-	CAmount amount;
-	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-	if (!AssetRange(amount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-	return amount;
-}
-CAmount AssetAmountFromValueNonNeg(const UniValue& value, int precision)
-{
-	if (precision < 0 || precision > 8)
-		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	if (!value.isNum() && !value.isStr())
-		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
 	CAmount amount;
 	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
 		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
