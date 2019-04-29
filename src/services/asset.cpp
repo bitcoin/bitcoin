@@ -873,9 +873,10 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
-	std::vector<std::vector< unsigned char> > vvchArgs;
-	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address to us here in vvchArgs[0]
-	if (!GetSyscoinData(scriptPubKey, vvchArgs) || vvchArgs.size() != 1 || vvchArgs[0].empty()) {
+	std::vector< unsigned char> vchEthAddress;
+	int nOut;
+	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
+	if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
 		return false;
 	}
     int nHeight = 0;
@@ -907,7 +908,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("outputs", oOutputArray);
     entry.pushKV("total", ValueFromAmount(tx.GetValueOut()));
     entry.pushKV("blockhash", blockhash.GetHex()); 
-    entry.pushKV("ethereum_destination", "0x" + HexStr(vvchArgs[0]));
+    entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 int GenerateSyscoinGuid()
