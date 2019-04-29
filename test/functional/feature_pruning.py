@@ -35,16 +35,17 @@ def mine_large_blocks(node, n):
     # followed by 950k of OP_NOP. This would be non-standard in a non-coinbase
     # transaction but is consensus valid.
 
+    # Set the nTime if this is the first time this function has been called.
+    # A static variable ensures that time is monotonicly increasing and is therefore
+    # different for each block created => blockhash is unique.
+    if "nTimes" not in mine_large_blocks.__dict__:
+        mine_large_blocks.nTime = 0
+
     # Get the block parameters for the first block
     big_script = CScript([OP_RETURN] + [OP_NOP] * 950000)
     best_block = node.getblock(node.getbestblockhash())
     height = int(best_block["height"]) + 1
-    try:
-        # Static variable ensures that time is monotonicly increasing and is therefore
-        # different for each block created => blockhash is unique.
-        mine_large_blocks.nTime = min(mine_large_blocks.nTime, int(best_block["time"])) + 1
-    except AttributeError:
-        mine_large_blocks.nTime = int(best_block["time"]) + 1
+    mine_large_blocks.nTime = max(mine_large_blocks.nTime, int(best_block["time"])) + 1
     previousblockhash = int(best_block["hash"], 16)
 
     for _ in range(n):
