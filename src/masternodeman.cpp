@@ -179,7 +179,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
                 if(fAsk) {
                     // this mn is in a non-recoverable state and we haven't asked other nodes yet
                     std::set<CService> setRequested;
-                    // calulate only once and only when it's needed
+                    // calculate only once and only when it's needed
                     if(vecMasternodeRanks.empty()) {
                         int nRandomBlockHeight = GetRandInt(nCachedBlockHeight);
                         GetMasternodeRanks(vecMasternodeRanks, nRandomBlockHeight);
@@ -206,7 +206,7 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
             }
         }
 
-        // proces replies for MASTERNODE_NEW_START_REQUIRED masternodes
+        // process replies for MASTERNODE_NEW_START_REQUIRED masternodes
         LogPrint(BCLog::MN, "CMasternodeMan::CheckAndRemove -- mMnbRecoveryGoodReplies size=%d\n", (int)mMnbRecoveryGoodReplies.size());
         std::map<uint256, std::vector<CMasternodeBroadcast> >::iterator itMnbReplies = mMnbRecoveryGoodReplies.begin();
         while(itMnbReplies != mMnbRecoveryGoodReplies.end()){

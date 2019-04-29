@@ -5,15 +5,15 @@ Geth
 ----
 
 This folder contains the binaries for geth for different platforms
-The current version is Light Ball (v1.8.26)
+The current version is Punisher (v1.8.27)
 Downloaded from [Go Ethereum](https://geth.ethereum.org/downloads/)
 
 MD5 of the BIN are as the following:
 Linux (64-bit)
-`f9b27c2b636ef68d0eb53013b69a213b`
+`a5f95983e2ccd4ae19c2f051ed0c2bce`
 
 MacOS
-`f654bd2cb92a2f44a6e41aefa215f399`
+`078e642c966f222b829a53745482764c`
 
 Windows (64-bit)
-`9e0e5bd789123ff8bdef0e89a067505e`
+`c3c71acdcf9234970db37ee66feee6d7`

@@ -49,7 +49,7 @@ int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData);
-bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation);
+bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress);
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress);
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
@@ -67,7 +67,7 @@ int GenerateSyscoinGuid();
 
 
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
-bool AssetTxToJSON(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry);
+bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry);
 std::string assetFromTx(const int &nVersion);
 /** Upper bound for mantissa.
 * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
@@ -83,7 +83,7 @@ inline bool AssetRange(const CAmount& nValue) { return (nValue > 0 && nValue <= 
 enum {
     ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
     ASSET_UPDATE_DATA=2, // can you update pubic data field?
-    ASSET_UPDATE_CONTRACT=4, // can you update smart contract/burn method signature fields? If you modify this, any subsequent sysx mints will need to wait atleast 10 blocks
+    ASSET_UPDATE_CONTRACT=4, // can you update smart contract?
     ASSET_UPDATE_SUPPLY=8, // can you update supply?
     ASSET_UPDATE_FLAGS=16, // can you update flags? if you would set permanently disable this one and admin flag as well
     ASSET_UPDATE_ALL=31
@@ -93,6 +93,7 @@ class CAsset {
 public:
 	uint32_t nAsset;
 	CWitnessAddress witnessAddress;
+    CWitnessAddress witnessAddressTransfer;
 	std::vector<unsigned char> vchContract;
     uint256 txHash;
     unsigned int nHeight;
@@ -102,6 +103,7 @@ public:
 	CAmount nMaxSupply;
 	unsigned char nPrecision;
 	unsigned char nUpdateFlags;
+    char nDumurrageOrInterest;
     CAsset() {
         SetNull();
         nAsset = 0;
@@ -120,6 +122,7 @@ public:
 		vchPubData.clear();
 		vchContract.clear();
         txHash.SetNull();
+        witnessAddressTransfer.SetNull();
 
 	}
 	ADD_SERIALIZE_METHODS;
@@ -129,13 +132,15 @@ public:
 		READWRITE(txHash);
 		READWRITE(nAsset);
 		READWRITE(witnessAddress);
+        READWRITE(witnessAddressTransfer);
 		READWRITE(nBalance);
 		READWRITE(nTotalSupply);
 		READWRITE(nMaxSupply);
         READWRITE(nHeight);
 		READWRITE(nUpdateFlags);
 		READWRITE(nPrecision);
-		READWRITE(vchContract);    
+		READWRITE(vchContract);   
+        READWRITE(nDumurrageOrInterest); 
 	}
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
@@ -349,7 +354,6 @@ bool GetAsset(const int &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
 CAmount AssetAmountFromValue(UniValue& value, int precision);
-CAmount AssetAmountFromValueNonNeg(const UniValue& value, int precision);
 bool AssetRange(const CAmount& amountIn, int precision);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);

@@ -3176,7 +3176,14 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
 
-    return SignTransaction(pwallet->chain(), mtx, request.params[1], pwallet, false, request.params[2]);
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : mtx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    pwallet->chain().findCoins(coins);
+
+    return SignTransaction(mtx, request.params[1], pwallet, coins, false, request.params[2]);
 }
 
 static UniValue bumpfee(const JSONRPCRequest& request)
@@ -4374,7 +4381,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
    /* SYSCOIN rpc functions*/
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
-    { "syscoin",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","burn_to_sysx","ethereum_destination_address"} },
+    { "syscoin",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","ethereum_destination_address"} },
     { "syscoin",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleroofpath_hex","witness"} }, 
     { "syscoin",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoin",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleroofpath_hex","witness"} },     

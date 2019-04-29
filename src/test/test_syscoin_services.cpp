@@ -105,7 +105,7 @@ void StopNodes()
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs)
 {
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -daemon -server -debug=1 -concurrentprocessing=1 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -tpstest -daemon -server -debug=0 -concurrentprocessing=1 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (!extraArgs.empty())
@@ -455,9 +455,9 @@ string GetNewFundedAddress(const string &node) {
 	if (node == "node1")
 		sendnode = "node2";
 	else if (node == "node2")
-		sendnode = "node1";
+		sendnode = "node3";
 	else if (node == "node3")
-		sendnode = "node1";
+		sendnode = "node2";
     CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"10\"", false);
 	GenerateBlocks(10, sendnode);
 	GenerateBlocks(10, node);
@@ -585,7 +585,7 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
     UniValue arr = r.get_array();
     CAmount nAmountBefore = AmountFromValue(arr[0]);
-    // ensure that block number you claim the burn is atleast 1 hour old
+    // ensure that block number you claim the burn is at least 1 hour old
     int heightPlus240 = height+ETHEREUM_CONFIRMS_REQUIRED;
     string headerStr = "\"[[" + boost::lexical_cast<string>(height) + ",\\\"" + txroot_hex + "\\\"]]\"";
  
@@ -706,6 +706,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
 	string oldsupply = find_value(r.get_obj(), "total_supply").get_str();
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
+	int oldflags = find_value(r.get_obj(), "update_flags").get_int();
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 
 	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
@@ -719,10 +720,10 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
 	string newsupply = supply == "''" ? "0" : supply;
-
-
+	int newflags = updateflags == "''" ? oldflags : boost::lexical_cast<int>(updateflags);
+	string newflagsstr = boost::lexical_cast<string>(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + updateflags + " " +witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
 	// increase supply to new amount if we passed in a supply value
 	newsupply = supply == "''" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
     UniValue arr = r.get_array();
@@ -731,7 +732,12 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
     BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());     
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false)); 
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "decoderawtransaction " + hex_str + " true"));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
+	UniValue flagValue = find_value(r.get_obj(), "update_flags");
+	if(newflags != oldflags && newflags != 0)
+		BOOST_CHECK_EQUAL(flagValue.get_int(), newflags);
+	else
+		BOOST_CHECK(flagValue.isNull());
 
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
@@ -747,6 +753,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
 	
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
@@ -760,6 +767,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
 
 	}
 

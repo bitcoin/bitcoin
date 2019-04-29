@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
-
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -309,19 +308,21 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
     printf("Running generate_burn_syscoin...\n");
     UniValue r;
     string newaddress = GetNewFundedAddress("node1");
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 9.9 true 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 9.9 0x931D387731bBbC988B312206c74F77D004D6B84b"));
     UniValue varray = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + varray[0].get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hexStr + "\\\"]\""));
     BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());     
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoindecoderawtransaction " + hexStr));
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "syscoinburn");
     GenerateBlocks(5, "node1");
     CMutableTransaction txIn;
     BOOST_CHECK(DecodeHexTx(txIn, hexStr, true, true));
     CTransaction tx(txIn);
     BOOST_CHECK(tx.vout[0].scriptPubKey.IsUnspendable());
-    BOOST_CHECK_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 0.1 true 0x931D387731bBbC988B312206c74F77D004D6B84b"), runtime_error);
+    BOOST_CHECK_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 0.1 0x931D387731bBbC988B312206c74F77D004D6B84b"), runtime_error);
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
@@ -748,10 +749,17 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_EQUAL(balance.getValStr(), "0.05000000");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " " + useraddress2));
     balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(balance.getValStr(), "0.95000000");
-
-    BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"), runtime_error);
-
+	// depending on which one arrived first, the above 0.05 balance is good because that means that atleast 1 zdag transaction went through
+    BOOST_CHECK(balance.getValStr() == "0.95000000" || balance.getValStr() == "0.15000000");
+	// if the send went through then burn should be invalid
+	if(balance.getValStr() == "0.95000000")
+		BOOST_CHECK_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"), runtime_error);
+	// if the send didn't go through the burn should be valid
+	else if (balance.getValStr() == "0.15000000") {
+		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"));
+		balance = find_value(r.get_obj(), "balance");
+		BOOST_CHECK_EQUAL(balance.getValStr(), "0.80000000");
+	}
     // no zdag tx found after block
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + assetguid + " " + useraddress1 + " ''"));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
@@ -796,7 +804,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
     BOOST_CHECK(!find_value(r.get_array()[0].get_obj(), "allowed").get_bool()); 
     
 	AssetUpdate("node1", guid, "pub1");
-	// shouldnt update data, just uses prev data because it hasnt changed
+	// shouldn't update data, just uses prev data because it hasn't changed
 	AssetUpdate("node1", guid);
 	// update supply, ensure balance gets updated properly, 5+1, 1 comes from the initial assetnew, 1 above doesn't actually get set because asset wasn't yours so total should be 6
 	AssetUpdate("node1", guid, "pub12", "5");
@@ -880,7 +888,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, 8), 10 * COIN);
 	BOOST_CHECK_EQUAL(AssetAmountFromValue(maxsupply, 8), 20 * COIN);
 
-	// ensure receiver get's it
+	// ensure receiver gets it
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));
 
 	balance = find_value(r.get_obj(), "balance");
@@ -915,33 +923,34 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""));
 
 }
-
-
 BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
 {
+    UniValue r;
 	printf("Running generate_assettransfer_address...\n");
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node2");
-	GenerateBlocks(5, "node3");
+	GenerateBlocks(15, "node1");
+	GenerateBlocks(15, "node2");
+	GenerateBlocks(15, "node3");
 	string newaddres1 = GetNewFundedAddress("node1");
-	string newaddres2 = GetNewFundedAddress("node2");
-	string newaddres3 = GetNewFundedAddress("node3");
-
+    string newaddres2 = GetNewFundedAddress("node2");
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+    string newaddres3 = r.get_str();
 	string guid1 = AssetNew("node1", newaddres1, "pubdata");
-	string guid2 = AssetNew("node1", newaddres1, "pubdata");
+	string guid2 = AssetNew("node2", newaddres2, "pubdata");
+    	
 	AssetUpdate("node1", guid1, "pub3");
-	UniValue r;
 	AssetTransfer("node1", "node2", guid1, newaddres2);
-	AssetTransfer("node1", "node3", guid2, newaddres3);
+
+	AssetTransfer("node2", "node3", guid2, newaddres3);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);
+
 	// xfer an asset that isn't yours
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres2 + " ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres3 + " ''"));
 	UniValue arr = r.get_array();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + arr[0].get_str()));
     string hex = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""));
-    
+    BOOST_CHECK(!find_value(r.get_array()[0].get_obj(), "allowed").get_bool());     
     GenerateBlocks(5, "node1");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);

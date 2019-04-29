@@ -556,21 +556,12 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     def is_cli_compiled(self):
         """Checks whether syscoin-cli was compiled."""
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-
-        return config["components"].getboolean("ENABLE_CLI")
+        return self.config["components"].getboolean("ENABLE_CLI")
 
     def is_wallet_compiled(self):
         """Checks whether the wallet module was compiled."""
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-
-        return config["components"].getboolean("ENABLE_WALLET")
+        return self.config["components"].getboolean("ENABLE_WALLET")
 
     def is_zmq_compiled(self):
         """Checks whether the zmq module was compiled."""
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-
-        return config["components"].getboolean("ENABLE_ZMQ")
+        return self.config["components"].getboolean("ENABLE_ZMQ")

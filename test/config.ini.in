@@ -6,6 +6,7 @@
 # test/functional/test_runner.py and test/util/syscoin-util-test.py
 
 [environment]
+PACKAGE_NAME=@PACKAGE_NAME@
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
 EXEEXT=@EXEEXT@
