@@ -36,6 +36,10 @@ void OptionTests::migrateSettings()
     settings.setValue("nThreadsScriptVerif", 12);
     settings.setValue("fUseUPnP", false);
     settings.setValue("fListen", false);
+    settings.setValue("fUseProxy", true);
+    settings.setValue("addrProxy", "proxy:123");
+    settings.setValue("fUseSeparateProxyTor", true);
+    settings.setValue("addrSeparateProxyTor", "onion:234");
 
     settings.sync();
 
@@ -46,12 +50,18 @@ void OptionTests::migrateSettings()
     QVERIFY(!settings.contains("nThreadsScriptVerif"));
     QVERIFY(!settings.contains("fUseUPnP"));
     QVERIFY(!settings.contains("fListen"));
+    QVERIFY(!settings.contains("fUseProxy"));
+    QVERIFY(!settings.contains("addrProxy"));
+    QVERIFY(!settings.contains("fUseSeparateProxyTor"));
+    QVERIFY(!settings.contains("addrSeparateProxyTor"));
 
     std::ifstream file(gArgs.GetDataDirNet() / "settings.json");
     QCOMPARE(std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()).c_str(), "{\n"
         "    \"dbcache\": \"600\",\n"
         "    \"listen\": false,\n"
-        "    \"par\": \"12\"\n"
+        "    \"onion\": \"onion:234\",\n"
+        "    \"par\": \"12\",\n"
+        "    \"proxy\": \"proxy:123\"\n"
         "}\n");
 }
 
