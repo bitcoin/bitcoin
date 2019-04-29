@@ -33,17 +33,49 @@ public:
 
 void DummyWalletInit::AddWalletOptions() const
 {
-    std::vector<std::string> opts = {"-createwalletbackups=<n>", "-disablewallet", "-instantsendnotify=<cmd>",
-        "-keypool=<n>", "-rescan=<mode>", "-salvagewallet", "-spendzeroconfchange", "-upgradewallet",
-        "-wallet=<path>", "-walletbackupsdir=<dir>", "-walletbroadcast", "-walletdir=<dir>",
-        "-walletnotify=<cmd>", "-zapwallettxes=<mode>", "-discardfee=<amt>", "-fallbackfee=<amt>",
-        "-mintxfee=<amt>", "-paytxfee=<amt>", "-txconfirmtarget=<n>", "-hdseed=<hex>", "-mnemonic=<text>",
-        "-mnemonicpassphrase=<text>", "-usehd", "-keepass", "-keepassid=<id>", "-keepasskey=<key>",
-        "-keepassname=<name>", "-keepassport=<port>", "-enablecoinjoin", "-coinjoinamount=<n>",
-        "-coinjoinautostart", "-coinjoindenomsgoal=<n>", "-coinjoindenomshardcap=<n>", "-coinjoinmultisession",
-        "-coinjoinrounds=<n>", "-coinjoinsessions=<n>", "-dblogsize=<n>", "-flushwallet", "-privdb",
-        "-walletrejectlongchains"};
-    gArgs.AddHiddenArgs(opts);
+    gArgs.AddHiddenArgs({
+        "-avoidpartialspends",
+        "-createwalletbackups=<n>",
+        "-disablewallet",
+        "-instantsendnotify=<cmd>",
+        "-keypool=<n>",
+        "-rescan=<mode>",
+        "-salvagewallet",
+        "-spendzeroconfchange",
+        "-upgradewallet",
+        "-wallet=<path>",
+        "-walletbackupsdir=<dir>",
+        "-walletbroadcast",
+        "-walletdir=<dir>",
+        "-walletnotify=<cmd>",
+        "-zapwallettxes=<mode>",
+        "-discardfee=<amt>",
+        "-fallbackfee=<amt>",
+        "-mintxfee=<amt>",
+        "-paytxfee=<amt>",
+        "-txconfirmtarget=<n>",
+        "-hdseed=<hex>",
+        "-mnemonic=<text>",
+        "-mnemonicpassphrase=<text>",
+        "-usehd",
+        "-keepass",
+        "-keepassid=<id>",
+        "-keepasskey=<key>",
+        "-keepassname=<name>",
+        "-keepassport=<port>",
+        "-enablecoinjoin",
+        "-coinjoinamount=<n>",
+        "-coinjoinautostart",
+        "-coinjoindenomsgoal=<n>",
+        "-coinjoindenomshardcap=<n>",
+        "-coinjoinmultisession",
+        "-coinjoinrounds=<n>",
+        "-coinjoinsessions=<n>",
+        "-dblogsize=<n>",
+        "-flushwallet",
+        "-privdb",
+        "-walletrejectlongchains"
+    });
 }
 
 const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();
