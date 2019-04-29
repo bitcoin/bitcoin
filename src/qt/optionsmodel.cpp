@@ -74,8 +74,8 @@ OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
     }
 }
 
-OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
-    QAbstractListModel(parent)
+OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent, bool resetSettings) :
+    QAbstractListModel(parent), m_node{node}
 {
     Init(resetSettings);
 }

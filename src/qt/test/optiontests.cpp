@@ -14,8 +14,7 @@
 
 #include <univalue.h>
 
-//! Entry point for BitcoinApplication tests.
-void OptionTests::optionTests()
+void OptionTests::integerGetArgBug()
 {
     // Test regression https://github.com/bitcoin/bitcoin/issues/24457. Ensure
     // that setting integer prune value doesn't cause an exception to be thrown
@@ -25,7 +24,7 @@ void OptionTests::optionTests()
         settings.rw_settings["prune"] = 3814;
     });
     gArgs.WriteSettingsFile();
-    OptionsModel{};
+    OptionsModel{m_node};
     gArgs.LockSettings([&](util::Settings& settings) {
         settings.rw_settings.erase("prune");
     });
@@ -50,7 +49,7 @@ void OptionTests::parametersInteraction()
     QSettings settings;
     settings.setValue("fListen", false);
 
-    OptionsModel{};
+    OptionsModel{m_node};
 
     const bool expected{false};
 
