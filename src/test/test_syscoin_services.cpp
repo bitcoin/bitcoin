@@ -720,10 +720,10 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
 	string newsupply = supply == "''" ? "0" : supply;
-	int newflags = updateflags == "''" ? oldflags : updateflags;
-
+	int newflags = updateflags == "''" ? oldflags : boost::lexical_cast<int>(updateflags);
+	string newflagsstr = boost::lexical_cast<string>(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflags + " " +witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
 	// increase supply to new amount if we passed in a supply value
 	newsupply = supply == "''" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
     UniValue arr = r.get_array();
@@ -734,7 +734,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false)); 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
 	UniValue flagValue = find_value(r.get_obj(), "update_flags");
-	if(newflags != oldflags)
+	if(newflags != oldflags && newflags != 0)
 		BOOST_CHECK_EQUAL(flagValue.get_int(), newflags);
 	else
 		BOOST_CHECK(flagValue.isNull());
