@@ -875,7 +875,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
 	std::vector<std::vector< unsigned char> > vvchArgs;
 	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address to us here in vvchArgs[0]
-	if (!GetSyscoinData(scriptPubKey, vvchArgs) || vvchArgs.size != 1 || vvchArgs[0].empty()) {
+	if (!GetSyscoinData(scriptPubKey, vvchArgs) || vvchArgs.size() != 1 || vvchArgs[0].empty()) {
 		return false;
 	}
     int nHeight = 0;
