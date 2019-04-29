@@ -633,7 +633,7 @@ class P2PDataStore(P2PInterface):
 
         reject_reason = [reject_reason] if reject_reason else []
         with node.assert_debug_log(expected_msgs=reject_reason):
-            self.send_message(msg_headers([CBlockHeader(blocks[-1])]))
+            self.send_message(msg_headers([CBlockHeader(block) for block in blocks]))
 
             if request_block:
                 wait_until(lambda: blocks[-1].sha256 in self.getdata_requests, timeout=timeout, lock=mininode_lock)
