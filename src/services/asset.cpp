@@ -862,6 +862,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
 }
 bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 {
+	LogPrintf("SysTxToJSON tx.nVersion %d\n", tx.nVersion);
     bool found = false;
 	if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
 		found = AssetTxToJSON(tx, output);
