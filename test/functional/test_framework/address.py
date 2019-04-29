@@ -8,8 +8,8 @@ from .script import hash256, hash160, sha256, CScript, OP_0
 from .util import hex_str_to_bytes
 
 from . import segwit_addr
-
-ADDRESS_BCRT1_UNSPENDABLE = 'bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
+#// SYSCOIN
+ADDRESS_BCRT1_UNSPENDABLE = 'sys1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq3xueyj'
 
 chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
