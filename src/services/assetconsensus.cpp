@@ -1264,33 +1264,31 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2030 - " + _("Total supply cannot exceed maximum supply");
             return error(errorMessage.c_str());
         }
-        if (!theAsset.vchPubData.empty())
-            storedSenderAssetRef.vchPubData = theAsset.vchPubData;
-        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
-            return error(errorMessage.c_str());
-        }
-                            
-        if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract burn method signature");
-            return error(errorMessage.c_str());
-        }
-        
-        if (!theAsset.vchContract.empty() && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_TRANSFER)
-            storedSenderAssetRef.vchContract = theAsset.vchContract;             
-        else if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract");
-            return error(errorMessage.c_str());
-        }    
-              
-        if (theAsset.nUpdateFlags != storedSenderAssetRef.nUpdateFlags && (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN)))) {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Insufficient privileges to update flags");
-            return error(errorMessage.c_str());
-        }
-        storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
+		if (!theAsset.vchPubData.empty()) {
+			if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_DATA))
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update public data");
+				return error(errorMessage.c_str());
+			}
+			storedSenderAssetRef.vchPubData = theAsset.vchPubData;
+		}
+                                    
+		if (!theAsset.vchContract.empty() && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_TRANSFER) {
+			if (!(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_CONTRACT))
+			{
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update smart contract");
+				return error(errorMessage.c_str());
+			}
+			storedSenderAssetRef.vchContract = theAsset.vchContract;
+		}
+ 
+        if (theAsset.nUpdateFlags > 0) {
+			if (!(storedSenderAssetRef.nUpdateFlags & (ASSET_UPDATE_FLAGS | ASSET_UPDATE_ADMIN))) {
+				errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2040 - " + _("Insufficient privileges to update flags");
+				return error(errorMessage.c_str());
+			}
+			storedSenderAssetRef.nUpdateFlags = theAsset.nUpdateFlags;
+        } 
     }      
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
         if (storedSenderAssetRef.nAsset != theAssetAllocation.assetAllocationTuple.nAsset || storedSenderAssetRef.witnessAddress != theAssetAllocation.assetAllocationTuple.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
