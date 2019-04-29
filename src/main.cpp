@@ -3535,12 +3535,15 @@ bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, 
             return error("%s: Proof of stake check failed", __func__);
 
         // Check if this proof hash has been used to package other blocks
-        if (g_proofTracker->IsSuspicious(hashProofOfStake, pindex->GetBlockHash())) {
+        if (g_proofTracker->IsSuspicious(hashProofOfStake, pindex->GetBlockHash(), pindex->nHeight)) {
             //Stake has been packaged into many different blocks. At this point we wait until enough masternodes have approved
             //this block as on the main chain
             return state.Suspicious(strprintf("%s: hashProofOfStake has appeared in too many blocks, waiting for masternode approval for "
                          "block %s", __func__, pindex->GetBlockHash().GetHex()));
         }
+
+        // Remove any stale witnesses
+        g_proofTracker->EraseBeforeHeight(pindex->nHeight - Params().MaxReorganizationDepth());
     }
 
     int nHeight = pindex->nHeight;
