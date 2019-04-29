@@ -854,7 +854,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion)){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_BURN){
         found = SysTxToJSON(rawTx, output);
     }
     
@@ -862,7 +862,6 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
 }
 bool SysTxToJSON(const CTransaction& tx, UniValue& output)
 {
-	LogPrintf("SysTxToJSON tx.nVersion %d\n", tx.nVersion);
     bool found = false;
 	if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
 		found = AssetTxToJSON(tx, output);
@@ -876,7 +875,6 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 {
 	std::vector< unsigned char> vchEthAddress;
 	int nOut;
-	LogPrintf("SysBurnTxToJSON\n");
 	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
 	if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
 		LogPrintf("SysBurnTxToJSON: GetSyscoinData failed %s\n", HexStr(vchEthAddress));
