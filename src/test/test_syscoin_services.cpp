@@ -734,13 +734,10 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false)); 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hex_str));
 	UniValue flagValue = find_value(r.get_obj(), "update_flags");
-	printf("newflags %d oldflags %d\n", newflags, oldflags);
 	if (newflags != oldflags && newflags != 0) {
-		printf("shoudl exist\n");
 		BOOST_CHECK_EQUAL(flagValue.get_int(), newflags);
 	}
 	else {
-		printf("should not exist\n");
 		BOOST_CHECK(flagValue.isNull());
 	}
 
