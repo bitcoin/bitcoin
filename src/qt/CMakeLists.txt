@@ -100,6 +100,8 @@ add_library(bitcoinqt STATIC EXCLUDE_FROM_ALL
   peertablesortproxy.h
   platformstyle.cpp
   platformstyle.h
+  qrimagewidget.cpp
+  qrimagewidget.h
   qvalidatedlineedit.cpp
   qvalidatedlineedit.h
   qvaluecombobox.cpp

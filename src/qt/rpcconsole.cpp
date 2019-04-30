@@ -14,6 +14,7 @@
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/pairingpage.h>
 #include <qt/peertablesortproxy.h>
 #include <qt/platformstyle.h>
 #ifdef ENABLE_WALLET
@@ -677,6 +678,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
     }
 
     ui->trafficGraph->setClientModel(model);
+    if (m_tab_pairing) m_tab_pairing->setClientModel(model);
     if (model && clientModel->getPeerTableModel() && clientModel->getBanTableModel()) {
         // Keep up to date with client
         setNumConnections(model->getNumConnections());
@@ -794,6 +796,15 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         thread.quit();
         thread.wait();
     }
+}
+
+void RPCConsole::addPairingTab()
+{
+    assert(!m_tab_pairing);
+    m_tab_pairing = new PairingPage(this);
+    ui->tabWidget->insertTab(1, m_tab_pairing, tr("&Pairing"));
+    m_tabs[TabTypes::PAIRING] = m_tab_pairing;
+    if (clientModel) m_tab_pairing->setClientModel(clientModel);
 }
 
 #ifdef ENABLE_WALLET
@@ -1423,6 +1434,7 @@ QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const
     case TabTypes::INFO: return QKeySequence(tr("Ctrl+I"));
     case TabTypes::CONSOLE: return QKeySequence(tr("Ctrl+T"));
     case TabTypes::GRAPH: return QKeySequence(tr("Ctrl+N"));
+    case TabTypes::PAIRING: return QKeySequence(QStringLiteral("Alt+5"));  // Only used in disablewallet mode - matches wallet GUI's pairing shortcut
     case TabTypes::PEERS: return QKeySequence(tr("Ctrl+P"));
     } // no default case, so the compiler can warn about missing cases
 
