@@ -25,8 +25,8 @@ public:
 	bool ReadOutpoint(const COutPoint& outpoint, bool& locked) {
 		return Read(outpoint, locked);
 	}
-	bool FlushWrite(const std::vector<std::pair<COutPoint, bool> > &lockedOutpoints);
-	bool FlushErase(const std::vector<uint256> &vecTXIDs);
+	bool FlushWrite(const std::vector<COutPoint> &lockedOutpoints);
+	bool FlushErase(const std::vector<COutPoint> &lockedOutpoints);
 };
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 extern std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
