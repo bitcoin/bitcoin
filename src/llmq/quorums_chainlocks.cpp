@@ -9,6 +9,7 @@
 #include "quorums_utils.h"
 
 #include "chain.h"
+#include "masternode-sync.h"
 #include "net_processing.h"
 #include "scheduler.h"
 #include "spork.h"
@@ -232,15 +233,20 @@ void CChainLocksHandler::TrySignChainTip()
 {
     Cleanup();
 
+    if (!fMasternodeMode) {
+        return;
+    }
+
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
     const CBlockIndex* pindex;
     {
         LOCK(cs_main);
         pindex = chainActive.Tip();
     }
 
-    if (!fMasternodeMode) {
-        return;
-    }
     if (!pindex->pprev) {
         return;
     }
@@ -594,6 +600,10 @@ bool CChainLocksHandler::InternalHasConflictingChainLock(int nHeight, const uint
 
 void CChainLocksHandler::Cleanup()
 {
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
     {
         LOCK(cs);
         if (GetTimeMillis() - lastCleanupTime < CLEANUP_INTERVAL) {

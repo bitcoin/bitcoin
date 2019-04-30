@@ -15,6 +15,7 @@
 #include "activemasternode.h"
 #include "chainparams.h"
 #include "init.h"
+#include "masternode-sync.h"
 #include "univalue.h"
 #include "validation.h"
 
@@ -161,7 +162,7 @@ CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessi
 
 void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
-    if (fInitialDownload) {
+    if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
 
