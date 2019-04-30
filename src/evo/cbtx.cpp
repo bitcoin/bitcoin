@@ -55,10 +55,19 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
         return true;
     }
 
+    static int64_t nTimePayload = 0;
+    static int64_t nTimeMerkleMNL = 0;
+    static int64_t nTimeMerkleQuorum = 0;
+
+    int64_t nTime1 = GetTimeMicros();
+
     CCbTx cbTx;
     if (!GetTxPayload(*block.vtx[0], cbTx)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-payload");
     }
+
+    int64_t nTime2 = GetTimeMicros(); nTimePayload += nTime2 - nTime1;
+    LogPrint("bench", "          - GetTxPayload: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimePayload * 0.000001);
 
     if (pindex) {
         uint256 calculatedMerkleRoot;
@@ -68,6 +77,10 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
         if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
             return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-mnmerkleroot");
         }
+
+        int64_t nTime3 = GetTimeMicros(); nTimeMerkleMNL += nTime3 - nTime2;
+        LogPrint("bench", "          - CalcCbTxMerkleRootMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeMerkleMNL * 0.000001);
+
         if (cbTx.nVersion >= 2) {
             if (!CalcCbTxMerkleRootQuorums(block, pindex->pprev, calculatedMerkleRoot, state)) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-quorummerkleroot");
@@ -76,6 +89,10 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, CValid
                 return state.DoS(100, false, REJECT_INVALID, "bad-cbtx-quorummerkleroot");
             }
         }
+
+        int64_t nTime4 = GetTimeMicros(); nTimeMerkleQuorum += nTime4 - nTime3;
+        LogPrint("bench", "          - CalcCbTxMerkleRootQuorums: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkleQuorum * 0.000001);
+
     }
 
     return true;
@@ -85,23 +102,50 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 {
     LOCK(deterministicMNManager->cs);
 
+    static int64_t nTimeDMN = 0;
+    static int64_t nTimeSMNL = 0;
+    static int64_t nTimeMerkle = 0;
+
+    int64_t nTime1 = GetTimeMicros();
+
     CDeterministicMNList tmpMNList;
     if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, tmpMNList, false)) {
         return false;
     }
 
+    int64_t nTime2 = GetTimeMicros(); nTimeDMN += nTime2 - nTime1;
+    LogPrint("bench", "            - BuildNewListFromBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeDMN * 0.000001);
+
     CSimplifiedMNList sml(tmpMNList);
+
+    int64_t nTime3 = GetTimeMicros(); nTimeSMNL += nTime3 - nTime2;
+    LogPrint("bench", "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);
 
     bool mutated = false;
     merkleRootRet = sml.CalcMerkleRoot(&mutated);
+
+    int64_t nTime4 = GetTimeMicros(); nTimeMerkle += nTime4 - nTime3;
+    LogPrint("bench", "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkle * 0.000001);
+
     return !mutated;
 }
 
 bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, CValidationState& state)
 {
+    static int64_t nTimeMinedAndActive = 0;
+    static int64_t nTimeMined = 0;
+    static int64_t nTimeLoop = 0;
+    static int64_t nTimeMerkle = 0;
+
+    int64_t nTime1 = GetTimeMicros();
+
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
     std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
+
+    int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
+    LogPrint("bench", "            - GetMinedAndActiveCommitmentsUntilBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMinedAndActive * 0.000001);
+
     for (const auto& p : quorums) {
         auto& v = qcHashes[p.first];
         v.reserve(p.second.size());
@@ -114,6 +158,9 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             hashCount++;
         }
     }
+
+    int64_t nTime3 = GetTimeMicros(); nTimeMined += nTime3 - nTime2;
+    LogPrint("bench", "            - GetMinedCommitment: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeMined * 0.000001);
 
     // now add the commitments from the current block, which are not returned by GetMinedAndActiveCommitmentsUntilBlock
     // due to the use of pindexPrev (we don't have the tip index here)
@@ -150,8 +197,15 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     }
     std::sort(qcHashesVec.begin(), qcHashesVec.end());
 
+    int64_t nTime4 = GetTimeMicros(); nTimeLoop += nTime4 - nTime3;
+    LogPrint("bench", "            - Loop: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeLoop * 0.000001);
+
     bool mutated = false;
     merkleRootRet = ComputeMerkleRoot(qcHashesVec, &mutated);
+
+    int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
+    LogPrint("bench", "            - ComputeMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
+
     return !mutated;
 }
 
