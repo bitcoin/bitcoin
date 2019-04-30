@@ -729,7 +729,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                 "\nShow stored values of a single asset allocation.\n",
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The adress of the owner"}
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the owner"}
                 },
                 RPCResult{
                     "{\n"

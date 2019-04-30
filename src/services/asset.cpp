@@ -589,7 +589,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	if (request.fHelp || 1 > params.size() || 3 < params.size())
 		throw runtime_error(
             RPCHelpMan{"syscointxfund",
-			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added everytime you call this function.\n",
+			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added every time you call this function.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw syscoin transaction output given from rpc"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address belonging to this asset transaction."},
@@ -1244,7 +1244,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 			    "\nPerform an update on an asset you control.\n",
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                    {"pubic_value", RPCArg::Type::STR, RPCArg::Optional::NO, "Public data, 256 cahracters max."},
+                    {"pubic_value", RPCArg::Type::STR, RPCArg::Optional::NO, "Public data, 256 characters max."},
                     {"contract",  RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
                     {"supply", RPCArg::Type::NUM, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
                     {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
@@ -1421,7 +1421,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
             RPCHelpMan{"assetsendmany",
-			"\nSend an asset you own to another address/addresses as an asset allocation. Maximimum recipients is 250.\n",
+			"\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
             {
                 {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
                 {"array", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of asset send objects.",
@@ -2123,7 +2123,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
             RPCHelpMan{"listassetindexassets",
                 "\nReturn a list of assets an address is associated with.\n",
                 {
-                    {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets assocaited with."}
+                    {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
                 },
                 RPCResult{
                     "{\n"
