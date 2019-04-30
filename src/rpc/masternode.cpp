@@ -19,7 +19,7 @@
 #include "utilmoneystr.h"
 #include "txmempool.h"
 
-#include "wallet/rpcwallet.h" 
+#include "wallet/rpcwallet.h"
 
 #include "evo/specialtx.h"
 #include "evo/deterministicmns.h"
@@ -565,7 +565,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
             obj.push_back(Pair(strOutpoint, strInfo));
         } else if (strMode == "json") {
             std::ostringstream streamInfo;
-            streamInfo <<  dmn->pdmnState->addr.ToString() << " " <<
+            streamInfo <<  dmn->proTxHash.ToString() << " " <<
+                           dmn->pdmnState->addr.ToString() << " " <<
                            payeeStr << " " <<
                            dmnToStatus(dmn) << " " <<
                            dmnToLastPaidTime(dmn) << " " <<
@@ -578,6 +579,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
             UniValue objMN(UniValue::VOBJ);
+            objMN.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
             objMN.push_back(Pair("address", dmn->pdmnState->addr.ToString()));
             objMN.push_back(Pair("payee", payeeStr));
             objMN.push_back(Pair("status", dmnToStatus(dmn)));
