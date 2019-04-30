@@ -245,9 +245,11 @@ BITCOIN_QT_BASE_CPP = \
   qt/notificator.cpp \
   qt/optionsdialog.cpp \
   qt/optionsmodel.cpp \
+  qt/pairingpage.cpp \
   qt/peertablemodel.cpp \
   qt/peertablesortproxy.cpp \
   qt/platformstyle.cpp \
+  qt/qrimagewidget.cpp \
   qt/qvalidatedlineedit.cpp \
   qt/qvaluecombobox.cpp \
   qt/rpcconsole.cpp \
@@ -267,10 +269,8 @@ BITCOIN_QT_WALLET_CPP = \
   qt/editaddressdialog.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
-  qt/pairingpage.cpp \
   qt/paymentserver.cpp \
   qt/psbtoperationsdialog.cpp \
-  qt/qrimagewidget.cpp \
   qt/receivecoinsdialog.cpp \
   qt/receiverequestdialog.cpp \
   qt/recentrequeststablemodel.cpp \

@@ -125,6 +125,7 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
         /* When compiled without wallet or -disablewallet is provided,
          * the central widget is the rpc console.
          */
+        rpcConsole->addPairingTab();
         setCentralWidget(rpcConsole);
         Q_EMIT consoleShown(rpcConsole);
     }
