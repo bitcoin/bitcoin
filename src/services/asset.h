@@ -31,7 +31,7 @@ const int SYSCOIN_TX_VERSION_ASSET_SEND = 0x7405;
 const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT = 0x7406;
 const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN = 0x7407;
 const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND = 0x7408;
-
+const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK = 0x7409;
     
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
@@ -39,6 +39,7 @@ static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
 static const uint32_t MAX_ETHEREUM_TX_ROOTS = 40000;
 static const uint32_t ETHEREUM_CONFIRMS_REQUIRED = 240;
 static CCriticalSection cs_ethsyncheight;
+static COutpoint emptyOutPoint;
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
@@ -54,10 +55,11 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
-UniValue syscointxfund_helper(const std::string& strAddress, const int &nVersion, const std::string &vchWitness, std::vector<CRecipient> &vecSend);
+UniValue syscointxfund_helper(const std::string& strAddress, const int &nVersion, const std::string &vchWitness, const std::vector<CRecipient> &vecSend, const COutPoint& outpoint=emptyOutPoint);
 bool FlushSyscoinDBs();
 void LockMasternodesInDefaultWallet();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
+bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch, const COutPoint& lockedOutpoint);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);

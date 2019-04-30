@@ -21,6 +21,7 @@ CCriticalSection cs_assetallocationarrival;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 
+UniValue assetallocationlock(const JSONRPCRequest& request);
 UniValue assetallocationsend(const JSONRPCRequest& request);
 UniValue assetallocationsendmany(const JSONRPCRequest& request);
 UniValue assetallocationmint(const JSONRPCRequest& request);
@@ -77,7 +78,9 @@ string assetAllocationFromTx(const int &nVersion) {
 	case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:
 		return "assetallocationburn"; 
     case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT:
-        return "assetallocationmint";              
+        return "assetallocationmint";   
+	case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK:
+		return "assetallocationlock";
     default:
         return "<unknown assetallocation op>";
     }
@@ -620,6 +623,69 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 
 	return syscointxfund_helper(vchAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
 }
+
+UniValue assetallocationlock(const JSONRPCRequest& request) {
+	const UniValue &params = request.params;
+	if (request.fHelp || params.size() != 5)
+		throw runtime_error(
+			"assetallocationlock [asset_guid] [addressfrom] [txid] [output_index] [witness]\n"
+			"Lock an asset allocation to a specific UTXO (txid/output). This is useful for things such as hashlock and CLTV type operations where script checks are done on UTXO prior to spending which extend to an assetallocationsend.\n"
+			"<asset_guid> Asset guid.\n"
+			"<addressfrom> Address that owns this asset allocation.\n"
+			"<txid> Transaction hash.\n"
+			"<output_index> Output index inside the transaction output array.\n"
+			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
+
+	// gather & validate inputs
+	const int &nAsset = params[0].get_int();
+	string vchAddressFrom = params[1].get_str();
+	uint256 txid = uint256s(params[2].get_str());
+	int outputIndex = params[3].get_int();
+	vector<unsigned char> vchWitness;
+	string strWitness = params[4].get_str();
+	if (!valueTo.isArray())
+		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
+	string strAddressFrom;
+	const string &strAddress = vchAddressFrom;
+	CTxDestination addressFrom;
+	string witnessProgramHex;
+	unsigned char witnessVersion = 0;
+	if (strAddress != "burn") {
+		addressFrom = DecodeDestination(strAddress);
+		if (IsValidDestination(addressFrom)) {
+			strAddressFrom = strAddress;
+
+			UniValue detail = DescribeAddress(addressFrom);
+			if (find_value(detail.get_obj(), "iswitness").get_bool() == false)
+				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+			witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+			witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
+		}
+	}
+
+	CAssetAllocation theAssetAllocation;
+	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddress == "burn" ? vchFromString("burn") : ParseHex(witnessProgramHex)));
+	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
+
+	theAssetAllocation.SetNull();
+	theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
+	theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress);
+	theAssetAllocation.lockedOutpoint = COutPoint(txid, outputIndex);
+	vector<unsigned char> data;
+	theAssetAllocation.Serialize(data);
+
+	// send the asset pay txn
+	vector<CRecipient> vecSend;
+
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, fee);
+	vecSend.push_back(fee);
+
+	return syscointxfund_helper(vchAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK, strWitness, vecSend);
+}
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
@@ -842,7 +908,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))  
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash))  
         blockindex = LookupBlockIndex(blockhash);
     if(blockindex)
     {
@@ -871,6 +937,8 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
          entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+	else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+		entry.pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
@@ -921,7 +989,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
         uint256 blockhash;
-        if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
+        if(pblockindexdb->ReadBlockHash(txHash, blockhash))
             blockindex = LookupBlockIndex(blockhash);
         if(blockindex)
         {

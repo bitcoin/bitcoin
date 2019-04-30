@@ -1885,6 +1885,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
     std::vector<uint256> vecTXIDs;
+	std::vector<COutPoint> vecOutpoints;
     std::vector<uint256> vecBlocks;
     bool fClean = true;
 
@@ -1918,7 +1919,8 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 }
             }
         }
-
+		// SYSCOIN
+		vecTXIDs.emplace_back(std::move(hash));
         // restore inputs
         if (i > 0) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
@@ -1931,15 +1933,16 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
                 int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
                 if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
                 fClean = fClean && res != DISCONNECT_UNCLEAN;
+				vecOutpoints.emplace_back(std::move(out));
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations, vecTXIDs))
+        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations))
             fClean = false;
     } 
     // SYSCOIN 
-    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || (pblockindexdb && !pblockindexdb->FlushErase(vecTXIDs))){
+    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints)){
        error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
        return DISCONNECT_FAILED;
     }  

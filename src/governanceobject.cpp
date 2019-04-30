@@ -517,7 +517,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     uint256 hash_block;
     CTransactionRef txCollateral;
     uint256 blockhash;
-    if(!pblockindexdb || !pblockindexdb->ReadBlockHash(nCollateralHash, blockhash)){
+    if(!pblockindexdb->ReadBlockHash(nCollateralHash, blockhash){
         strError = strprintf("Can't find collateral blockhash %s in asset index", blockhash.ToString());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
         return false;   
