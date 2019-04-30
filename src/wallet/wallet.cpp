@@ -3051,7 +3051,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 	}
 	// ensure that the locked outpoint is being spent
 	else {
-		bool found = false;
+		
 		CAssetAllocation theAssetAllocation(myTx);
 		if (theAssetAllocation.assetAllocationTuple.IsNull()) {
 			return state.Invalid(false, REJECT_INVALID, "invalid-allocation");
@@ -3060,12 +3060,13 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 		if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB)) {
 			return state.Invalid(false, REJECT_INVALID, "non-existing-allocation");
 		}
+		bool found = assetAllocationDB.lockedOutpoint.IsNull();
 		for (unsigned int i = 1; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
 			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				if (assetAllocationDB.lockedOutpoint.IsNull()) {
+				if (found) {
 					return state.Invalid(false, REJECT_INVALID, "db-allocation-null-lockpoint");
 				}
 				if (assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout) {
