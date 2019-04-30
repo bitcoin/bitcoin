@@ -474,6 +474,12 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     platformStyle(_platformStyle)
 {
     ui->setupUi(this);
+
+    // Default tabs are identified by their UI index
+    for (int i = ui->tabWidget->count(); i--; ) {
+        m_tabs[TabTypes(i)] = ui->tabWidget->widget(i);
+    }
+
     QSettings settings;
 #ifdef ENABLE_WALLET
     if (WalletModel::isWalletEnabled()) {
@@ -1304,14 +1310,34 @@ void RPCConsole::showOrHideBanTableIfRequired()
     ui->banHeading->setVisible(visible);
 }
 
+std::vector<RPCConsole::TabTypes> RPCConsole::tabs() const
+{
+    std::vector<TabTypes> ret;
+    ret.reserve(m_tabs.size());
+
+    std::map<QWidget*, TabTypes> tabtype_map;
+    for (const auto& tab : m_tabs) {
+        tabtype_map[tab.second] = tab.first;
+    }
+
+    for (int i = 0; i < ui->tabWidget->count(); ++i) {
+        auto tabtype = tabtype_map.find(ui->tabWidget->widget(i));
+        if (tabtype != tabtype_map.end()) {
+            ret.push_back(tabtype->second);
+        }
+    }
+    return ret;
+}
+
 void RPCConsole::setTabFocus(enum TabTypes tabType)
 {
-    ui->tabWidget->setCurrentIndex(int(tabType));
+    ui->tabWidget->setCurrentWidget(m_tabs[tabType]);
 }
 
 QString RPCConsole::tabTitle(TabTypes tab_type) const
 {
-    return ui->tabWidget->tabText(int(tab_type));
+    const int tab_index = ui->tabWidget->indexOf(m_tabs.at(tab_type));
+    return ui->tabWidget->tabText(tab_index);
 }
 
 QKeySequence RPCConsole::tabShortcut(TabTypes tab_type) const

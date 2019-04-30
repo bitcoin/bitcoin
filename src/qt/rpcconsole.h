@@ -68,7 +68,7 @@ public:
         PEERS
     };
 
-    std::vector<TabTypes> tabs() const { return {TabTypes::INFO, TabTypes::CONSOLE, TabTypes::GRAPH, TabTypes::PEERS}; }
+    std::vector<TabTypes> tabs() const;
 
     QString tabTitle(TabTypes tab_type) const;
     QKeySequence tabShortcut(TabTypes tab_type) const;
@@ -156,6 +156,7 @@ private:
     interfaces::Node& m_node;
     Ui::RPCConsole* const ui;
     ClientModel *clientModel = nullptr;
+    std::map<TabTypes, QWidget*> m_tabs;
     GuiNetWatch *netwatch = nullptr;
     QStringList history;
     int historyPtr = 0;
