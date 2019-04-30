@@ -43,5 +43,6 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
 static CAssetAllocation emptyAllocation;
 bool ResetAssetAllocation(const std::string &senderStr, const uint256 &txHash, const bool &bMiner=false, const bool &bExpiryOnly=false);
 void ResyncAssetAllocationStates();
+bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& state);
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, std::string &errorMessage, bool& bOverflow, const bool &bSanityCheck = false, const bool &bMiner = false);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H

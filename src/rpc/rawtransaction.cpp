@@ -853,45 +853,11 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         max_raw_tx_fee = fr.GetFee((weight+3)/4);
     }
 	// SYSCOIN
-	const CTransaction &myTx = (*tx);
-	// if not an allocation send ensure the outpoint locked isn't being spent
-	if (myTx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND) {
-		for (unsigned int i = 1; i < myTx.vin.size(); i++)
-		{
-			bool locked = false;
-			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Cannot spend outpoint that is locked to an assetallocationsend");
-			}
-		}
-	}
-	// ensure that the locked outpoint is being spent
-	else {
-		
-		CAssetAllocation theAssetAllocation(myTx);
-		if(theAssetAllocation.assetAllocationTuple.IsNull())
-			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Invalid assetallocationsend");
-		CAssetAllocation assetAllocationDB;
-		if(!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB))
-			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Non-existing assetallocation");
-		bool found = assetAllocationDB.lockedOutpoint.IsNull();
-		for (unsigned int i = 1; i < myTx.vin.size(); i++)
-		{
-			bool locked = false;
-			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				if(found)
-					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Found locked outpoint but asset allocation is not locked to an outpoint");
-				if(assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout)
-					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Locked outpoint does not match outpoint in the asset allocation database");
-				found = true;
-				break;
-			}
-		}
-		if(!found)
-			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Cannot find outpoint that is locked to an assetallocationsend");
-	}
-    uint256 txid;
+	CValidationState state;
+	if (!CheckSyscoinLockedOutpoints(tx, state))
+		throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, state.GetRejectReason());
+	
+	uint256 txid;
     std::string err_string;
     const TransactionError err = BroadcastTransaction(tx, txid, err_string, max_raw_tx_fee);
     if (TransactionError::OK != err) {
