@@ -6,7 +6,6 @@
 #include <init.h>
 #include <validation.h>
 #include <core_io.h>
-#include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
 #include <chrono>
