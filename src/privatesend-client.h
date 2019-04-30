@@ -15,19 +15,21 @@ class CPrivateSendClientManager;
 class CConnman;
 class CNode;
 
-static const int DENOMS_COUNT_MAX = 100;
 
 static const int MIN_PRIVATESEND_SESSIONS = 1;
 static const int MIN_PRIVATESEND_ROUNDS = 2;
 static const int MIN_PRIVATESEND_AMOUNT = 2;
+static const int MIN_PRIVATESEND_DENOMS = 10;
 static const int MIN_PRIVATESEND_LIQUIDITY = 0;
 static const int MAX_PRIVATESEND_SESSIONS = 10;
 static const int MAX_PRIVATESEND_ROUNDS = 16;
+static const int MAX_PRIVATESEND_DENOMS = 100000;
 static const int MAX_PRIVATESEND_AMOUNT = MAX_MONEY / COIN;
 static const int MAX_PRIVATESEND_LIQUIDITY = 100;
 static const int DEFAULT_PRIVATESEND_SESSIONS = 4;
 static const int DEFAULT_PRIVATESEND_ROUNDS = 4;
 static const int DEFAULT_PRIVATESEND_AMOUNT = 1000;
+static const int DEFAULT_PRIVATESEND_DENOMS = 300;
 static const int DEFAULT_PRIVATESEND_LIQUIDITY = 0;
 
 static const bool DEFAULT_PRIVATESEND_MULTISESSION = false;
@@ -101,15 +103,15 @@ private:
     CKeyHolderStorage keyHolderStorage; // storage for keys used in PrepareDenominate
 
     /// Create denominations
-    bool CreateDenominated(CConnman& connman);
-    bool CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman);
+    bool CreateDenominated(CAmount nBalanceToDenominate, CConnman& connman);
+    bool CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman);
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts(CConnman& connman);
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
     bool JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
-    bool StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman);
+    bool StartNewQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman);
 
     /// step 0: select denominated inputs and txouts
     bool SelectDenominate(std::string& strErrorRet, std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet);
@@ -199,6 +201,7 @@ public:
     int nPrivateSendSessions;
     int nPrivateSendRounds;
     int nPrivateSendAmount;
+    int nPrivateSendDenoms;
     int nLiquidityProvider;
     bool fEnablePrivateSend;
     bool fPrivateSendMultiSession;
@@ -216,6 +219,7 @@ public:
         nCachedBlockHeight(0),
         nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
         nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
+        nPrivateSendDenoms(DEFAULT_PRIVATESEND_DENOMS),
         nLiquidityProvider(DEFAULT_PRIVATESEND_LIQUIDITY),
         fEnablePrivateSend(false),
         fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION),

@@ -814,7 +814,6 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
     }
 
     CAmount nBalanceNeedsAnonymized;
-    CAmount nValueMin = CPrivateSend::GetSmallestDenomination();
 
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -841,6 +840,18 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
             return false;
         }
 
+        // check if there is anything left to do
+        CAmount nBalanceAnonymized = pwalletMain->GetAnonymizedBalance();
+        nBalanceNeedsAnonymized = privateSendClient.nPrivateSendAmount*COIN - nBalanceAnonymized;
+
+        if (nBalanceNeedsAnonymized < 0) {
+            LogPrint("privatesend", "CPrivateSendClientSession::DoAutomaticDenominating -- Nothing to do\n");
+            // nothing to do, just keep it in idle mode
+            return false;
+        }
+
+        CAmount nValueMin = CPrivateSend::GetSmallestDenomination();
+
         // if there are no confirmed DS collateral inputs yet
         if (!pwalletMain->HasCollateralInputs()) {
             // should have some additional amount for them
@@ -848,10 +859,10 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         }
 
         // including denoms but applying some restrictions
-        nBalanceNeedsAnonymized = pwalletMain->GetNeedsToBeAnonymizedBalance(nValueMin);
+        CAmount nBalanceAnonymizable = pwalletMain->GetAnonymizableBalance();
 
         // anonymizable balance is way too small
-        if (nBalanceNeedsAnonymized < nValueMin) {
+        if (nBalanceAnonymizable < nValueMin) {
             LogPrintf("CPrivateSendClientSession::DoAutomaticDenominating -- Not enough funds to anonymize\n");
             strAutoDenomResult = _("Not enough funds to anonymize.");
             return false;
@@ -863,20 +874,41 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         CAmount nBalanceDenominatedConf = pwalletMain->GetDenominatedBalance();
         CAmount nBalanceDenominatedUnconf = pwalletMain->GetDenominatedBalance(true);
         CAmount nBalanceDenominated = nBalanceDenominatedConf + nBalanceDenominatedUnconf;
+        CAmount nBalanceToDenominate = privateSendClient.nPrivateSendAmount * COIN - nBalanceDenominated;
+
+        // adjust nBalanceNeedsAnonymized to consume final denom
+        if (nBalanceDenominated - nBalanceAnonymized > nBalanceNeedsAnonymized) {
+            auto denoms = CPrivateSend::GetStandardDenominations();
+            CAmount nAdditionalDenom{0};
+            for (const auto& denom : denoms) {
+                if (nBalanceNeedsAnonymized < denom) {
+                    nAdditionalDenom = denom;
+                } else {
+                    break;
+                }
+            }
+            nBalanceNeedsAnonymized += nAdditionalDenom;
+        }
 
         LogPrint("privatesend", "CPrivateSendClientSession::DoAutomaticDenominating -- current stats:\n"
             "    nValueMin: %s\n"
+            "    nBalanceAnonymizable: %s\n"
+            "    nBalanceAnonymized: %s\n"
             "    nBalanceNeedsAnonymized: %s\n"
             "    nBalanceAnonimizableNonDenom: %s\n"
             "    nBalanceDenominatedConf: %s\n"
             "    nBalanceDenominatedUnconf: %s\n"
             "    nBalanceDenominated: %s\n",
+            "    nBalanceToDenominate: %s\n",
             FormatMoney(nValueMin),
+            FormatMoney(nBalanceAnonymizable),
+            FormatMoney(nBalanceAnonymized),
             FormatMoney(nBalanceNeedsAnonymized),
             FormatMoney(nBalanceAnonimizableNonDenom),
             FormatMoney(nBalanceDenominatedConf),
             FormatMoney(nBalanceDenominatedUnconf),
-            FormatMoney(nBalanceDenominated)
+            FormatMoney(nBalanceDenominated),
+            FormatMoney(nBalanceToDenominate)
             );
 
         if (fDryRun) return true;
@@ -884,8 +916,9 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         // Check if we have should create more denominated inputs i.e.
         // there are funds to denominate and denominated balance does not exceed
         // max amount to mix yet.
-        if (nBalanceAnonimizableNonDenom >= nValueMin + CPrivateSend::GetCollateralAmount() && nBalanceDenominated < privateSendClient.nPrivateSendAmount * COIN)
-            return CreateDenominated(connman);
+        if (nBalanceAnonimizableNonDenom >= nValueMin + CPrivateSend::GetCollateralAmount() && nBalanceToDenominate > 0) {
+            CreateDenominated(nBalanceToDenominate, connman);
+        }
 
         //check if we have the collateral sized inputs
         if (!pwalletMain->HasCollateralInputs())
@@ -935,7 +968,7 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
     // do not initiate queue if we are a liquidity provider to avoid useless inter-mixing
     if (privateSendClient.nLiquidityProvider) return false;
 
-    if (StartNewQueue(nValueMin, nBalanceNeedsAnonymized, connman))
+    if (StartNewQueue(nBalanceNeedsAnonymized, connman))
         return true;
 
     strAutoDenomResult = _("No compatible Masternode found.");
@@ -1107,9 +1140,10 @@ bool CPrivateSendClientSession::JoinExistingQueue(CAmount nBalanceNeedsAnonymize
     return false;
 }
 
-bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsAnonymized, CConnman& connman)
+bool CPrivateSendClientSession::StartNewQueue(CAmount nBalanceNeedsAnonymized, CConnman& connman)
 {
     if (!pwalletMain) return false;
+    if (nBalanceNeedsAnonymized <= 0) return false;
 
     int nTries = 0;
     int nMnCount = deterministicMNManager->GetListAtChainTip().GetValidMNsCount();
@@ -1117,7 +1151,7 @@ bool CPrivateSendClientSession::StartNewQueue(CAmount nValueMin, CAmount nBalanc
     // ** find the coins we'll use
     std::vector<CTxIn> vecTxIn;
     CAmount nValueInTmp = 0;
-    if (!pwalletMain->SelectPrivateCoins(nValueMin, nBalanceNeedsAnonymized, vecTxIn, nValueInTmp, 0, privateSendClient.nPrivateSendRounds - 1)) {
+    if (!pwalletMain->SelectPrivateCoins(CPrivateSend::GetSmallestDenomination(), nBalanceNeedsAnonymized, vecTxIn, nValueInTmp, 0, privateSendClient.nPrivateSendRounds - 1)) {
         // this should never happen
         LogPrintf("CPrivateSendClientSession::StartNewQueue -- Can't mix: no compatible inputs found!\n");
         strAutoDenomResult = _("Can't mix: no compatible inputs found!");
@@ -1489,7 +1523,7 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& ta
 }
 
 // Create denominations by looping through inputs grouped by addresses
-bool CPrivateSendClientSession::CreateDenominated(CConnman& connman)
+bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, CConnman& connman)
 {
     if (!pwalletMain) return false;
 
@@ -1513,7 +1547,7 @@ bool CPrivateSendClientSession::CreateDenominated(CConnman& connman)
     bool fCreateMixingCollaterals = !pwalletMain->HasCollateralInputs();
 
     for (const auto& item : vecTally) {
-        if (!CreateDenominated(item, fCreateMixingCollaterals, connman)) continue;
+        if (!CreateDenominated(nBalanceToDenominate, item, fCreateMixingCollaterals, connman)) continue;
         return true;
     }
 
@@ -1522,7 +1556,7 @@ bool CPrivateSendClientSession::CreateDenominated(CConnman& connman)
 }
 
 // Create denominations
-bool CPrivateSendClientSession::CreateDenominated(const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman)
+bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, const CompactTallyItem& tallyItem, bool fCreateMixingCollaterals, CConnman& connman)
 {
     if (!pwalletMain) return false;
 
@@ -1532,7 +1566,7 @@ bool CPrivateSendClientSession::CreateDenominated(const CompactTallyItem& tallyI
     CAmount nValueLeft = tallyItem.nAmount;
     nValueLeft -= CPrivateSend::GetCollateralAmount(); // leave some room for fees
 
-    LogPrintf("CPrivateSendClientSession::CreateDenominated -- 0 - %s nValueLeft: %f\n", CBitcoinAddress(tallyItem.txdest).ToString(), (float)nValueLeft / COIN);
+    LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- 0 - %s nValueLeft: %f\n", CBitcoinAddress(tallyItem.txdest).ToString(), (float)nValueLeft / COIN);
 
     // ****** Add an output for mixing collaterals ************ /
 
@@ -1544,57 +1578,60 @@ bool CPrivateSendClientSession::CreateDenominated(const CompactTallyItem& tallyI
 
     // ****** Add outputs for denoms ************ /
 
-    // try few times - skipping smallest denoms first if there are too many of them already, if failed - use them too
     int nOutputsTotal = 0;
-    bool fSkip = true;
-    do {
-        std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
+    bool fAddFinal = true;
+    std::vector<CAmount> vecStandardDenoms = CPrivateSend::GetStandardDenominations();
 
-        for (auto it = vecStandardDenoms.rbegin(); it != vecStandardDenoms.rend(); ++it) {
-            CAmount nDenomValue = *it;
+    for (auto it = vecStandardDenoms.rbegin(); it != vecStandardDenoms.rend(); ++it) {
+        CAmount nDenomValue = *it;
 
-            if (fSkip) {
-                // Note: denoms are skipped if there are already DENOMS_COUNT_MAX of them
-                // and there are still larger denoms which can be used for mixing
+        // Note: denoms are skipped if there are already nPrivateSendDenoms of them
+        // and there are still larger denoms which can be used for mixing
 
-                // check skipped denoms
-                if (privateSendClient.IsDenomSkipped(nDenomValue)) {
-                    strAutoDenomResult = strprintf(_("Too many %f denominations, skipping."), (float)nDenomValue / COIN);
-                    LogPrintf("CPrivateSendClientSession::CreateDenominated -- %s\n", strAutoDenomResult);
-                    continue;
-                }
-
-                // find new denoms to skip if any (ignore the largest one)
-                if (nDenomValue != vecStandardDenoms.front() && pwalletMain->CountInputsWithAmount(nDenomValue) > DENOMS_COUNT_MAX) {
-                    strAutoDenomResult = strprintf(_("Too many %f denominations, removing."), (float)nDenomValue / COIN);
-                    LogPrintf("CPrivateSendClientSession::CreateDenominated -- %s\n", strAutoDenomResult);
-                    privateSendClient.AddSkippedDenom(nDenomValue);
-                    continue;
-                }
-            }
-
-            int nOutputs = 0;
-
-            // add each output up to 11 times until it can't be added again
-            while (nValueLeft - nDenomValue >= 0 && nOutputs <= 10) {
-                CScript scriptDenom = keyHolderStorageDenom.AddKey(pwalletMain);
-
-                vecSend.push_back((CRecipient){scriptDenom, nDenomValue, false});
-
-                //increment outputs and subtract denomination amount
-                nOutputs++;
-                nValueLeft -= nDenomValue;
-                LogPrintf("CPrivateSendClientSession::CreateDenominated -- 1 - totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f\n", nOutputsTotal + nOutputs, nOutputsTotal, nOutputs, (float)nValueLeft / COIN);
-            }
-
-            nOutputsTotal += nOutputs;
-            if (nValueLeft == 0) break;
+        // check skipped denoms
+        if (privateSendClient.IsDenomSkipped(nDenomValue)) {
+            strAutoDenomResult = strprintf(_("Too many %f denominations, skipping."), (float)nDenomValue / COIN);
+            LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- %s\n", strAutoDenomResult);
+            continue;
         }
-        LogPrintf("CPrivateSendClientSession::CreateDenominated -- 2 - nOutputsTotal: %d, nValueLeft: %f\n", nOutputsTotal, (float)nValueLeft / COIN);
-        // if there were no outputs added, start over without skipping
-        fSkip = !fSkip;
-    } while (nOutputsTotal == 0 && !fSkip);
-    LogPrintf("CPrivateSendClientSession::CreateDenominated -- 3 - nOutputsTotal: %d, nValueLeft: %f\n", nOutputsTotal, (float)nValueLeft / COIN);
+
+        // find new denoms to skip if any (ignore the largest one)
+        if (nDenomValue != vecStandardDenoms.front() && pwalletMain->CountInputsWithAmount(nDenomValue) > privateSendClient.nPrivateSendDenoms) {
+            strAutoDenomResult = strprintf(_("Too many %f denominations, removing."), (float)nDenomValue / COIN);
+            LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- %s\n", strAutoDenomResult);
+            privateSendClient.AddSkippedDenom(nDenomValue);
+            continue;
+        }
+
+        int nOutputs = 0;
+
+        auto needMoreOutputs = [&]() {
+            bool fRegular = (nValueLeft >= nDenomValue && nBalanceToDenominate >= nDenomValue);
+            bool fFinal = (fAddFinal
+                && nValueLeft >= nDenomValue
+                && nBalanceToDenominate > 0
+                && nBalanceToDenominate < nDenomValue);
+            fAddFinal = false; // add final denom only once, only the smalest possible one
+            return fRegular || fFinal;
+        };
+
+        // add each output up to 11 times until it can't be added again
+        while (needMoreOutputs() && nOutputs <= 10) {
+            CScript scriptDenom = keyHolderStorageDenom.AddKey(pwalletMain);
+
+            vecSend.push_back((CRecipient){scriptDenom, nDenomValue, false});
+
+            //increment outputs and subtract denomination amount
+            nOutputs++;
+            nValueLeft -= nDenomValue;
+            nBalanceToDenominate -= nDenomValue;
+            LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- 1 - totalOutputs: %d, nOutputsTotal: %d, nOutputs: %d, nValueLeft: %f\n", nOutputsTotal + nOutputs, nOutputsTotal, nOutputs, (float)nValueLeft / COIN);
+        }
+
+        nOutputsTotal += nOutputs;
+        if (nValueLeft == 0 || nBalanceToDenominate <= 0) break;
+    }
+    LogPrint("privatesend", "CPrivateSendClientSession::CreateDenominated -- 2 - nOutputsTotal: %d, nValueLeft: %f\n", nOutputsTotal, (float)nValueLeft / COIN);
 
     // No reasons to create mixing collaterals if we can't create denoms to mix
     if (nOutputsTotal == 0) return false;
