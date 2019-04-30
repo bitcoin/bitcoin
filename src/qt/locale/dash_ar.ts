@@ -438,14 +438,6 @@
         <translation>افتح ملف التهيئة</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>فتح ملف تكوين العقدة الرئيسية</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>افتح ملف تهيئة العقدة الرئيسية</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>عرض النسخ الاحتياطية التلقائية</translation>
     </message>
@@ -650,10 +642,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>المجموع: %1 (متوافق مع بس: %2 / ممكن: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>تنبيه الشبكة</translation>
@@ -990,8 +978,16 @@
         <translation>بما انه هذه اول مرة لانطلاق هذا البرنامج, فيمكنك ان تختار اين سيخزن %1 بياناته</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>سيعمل%1 على تنزيل نسخة من سلسلة كتلة داش وتخزينها. سيتم تخزين ما لا يقل عن %2 جيغابايت من البيانات في هذا الدليل ، وسيزداد بمرور الوقت. سيتم أيضًا تخزين المحفظة في هذا الدليل.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>عند النقر على "موافق" ، سيبدأ %1 في تنزيل ومعالجة سلسلة الكتل %4 الكاملة (%2 جيجابايت) بدءًا من المعاملات الأقدم في %3 عند تشغيل %4 في البداية.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>تُعد هذه المزامنة الأولية أمرًا شاقًا للغاية، وقد تعرض جهاز الكمبيوتر الخاص بك للمشاكل الذي لم يلاحظها أحد سابقًا. في كل مرة تقوم فيها بتشغيل %1، سيتابع التحميل من حيث تم التوقف.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>إذا كنت قد اخترت تقييد تخزين سلسلة الكتل (التجريد)، فيجب تحميل البيانات القديمة ومعالجتها، ولكن سيتم حذفها بعد ذلك للحفاظ على انخفاض استخدام القرص.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +996,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>استخدام دليل بيانات مخصص:</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>سيتم تخزين %1 جيجابايت على الأقل من البيانات في هذا الدليل، وستنمو مع الوقت.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>سيتم تخزين %1 جيجابايت تقريباً من البيانات في هذا الدليل.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>سيقوم %1 بتنزيل نسخة من سلسلة كتل بتكوين وتخزينها.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>سوف يتم تخزين المحفظة في هذا الدليل.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1037,20 @@
         <translation>نمودج</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>ماسترنود حقي</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>ملاحظة: من المحتمل أن تكون حالة رموزك في المحفظة المحلية غير صحيحة بعض الشيء.&lt;br /&gt;انتظر دائما للمحفظة لمزامنة بيانات إضافية ومن ثم تحقق مرة أخرى من عقدة أخرى&lt;br /&gt; إذا كان يجب تشغيل ماسترنود الخاص بك ولكنك لا تزال لا ترى "متاحة" في حقل "الحالة".</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>الاسم المستعار</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>عنوان</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>بروتوكول</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>الحالة.</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>نشيط</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>آخر زيارة</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>المستفيد</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>بدأ الإسم المستعار</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>بدأ الكل</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>بدأ المفقود</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>تحديث الحالة</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>عرض معلومات ماسترنود إضافية</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>إظهار المعلومات</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>سيتم تحديث الحالة تلقائيا خلال (تواني):</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>جميع ماسترنود</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1107,10 +1063,6 @@
     <message>
         <source>Node Count:</source>
         <translation>عدد نود</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ملاحظة: تمثل هذه القائمة قائمة ماسترنود القديمة وغير المحددة. وهو نشط فقط طالما أن DIP3 لم يتم تنشيطه بالكامل. بعد تنشيط SPORK15 ، ستكون هذه القائمة فارغة.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>DIP3 Masternodes</source>
@@ -1135,14 +1087,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>مكافأة المشغل</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ملاحظة: هذه القائمة ليست نشطة حتى الآن ولأغراض المعلومات فقط. لا تزال الشبكة قيد التشغيل في وضع التوافق ، مما يعني أن قائمة ماسترنود غير الحتمية لا تزال نشطة. فقط بعد تنشيط SPORK15 ، ستصبح هذه القائمة نشطة. أيضًا ، لا يتم استخدام القيم في الحقول المرتبطة بالدفع في الوقت الحالي ، ولكن لا تزال محدّثة لكل كتلة. يرجى تجاهل هذا حتى تفعيل SPORK15.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>بدأ الإسم المستعار</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,66 +1123,6 @@
     <message>
         <source>NONE</source>
         <translation>لا شيء</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>تأكيد بداية ماسترنود</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>تأكيد لبدأ كل ماسترنود</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>هل أنت متأكد أنك تريد أن تبدأ جميع ماسترنود؟</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>الأمر غير متاح الآن</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>لا يمكنك استخدام هذا الأمر حتى تتم مزامنة قائمة ماسترنود</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>تأكيد ماسترنود في عداد المفقودين تبدأ</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>هل أنت متأكد أنك تريد أن تبدأ ماسترنود مفقود؟</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>معلومات إضافية عن ماسترنود %1</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>مفتاح الخاص لماسترنود</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>مفتاح سري</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>جانبية</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>الإصدار</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>غير معرف</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>الحارس</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2002,16 +1886,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>جوهر الداش</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 لم يخرج بعد بأمان...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>خطأ في قراءة ملف تهيئة ماسترنود :%1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -3926,10 +3802,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تحذير: لا يبدو أننا نتفق تمامًا مع نظرائنا! قد تحتاج إلى الترقية ، أو قد تحتاج العقد الأخرى إلى الترقية.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>يجب عليك تحديد masternodeprivkey في التكوين. يرجى الاطلاع على الوثائق مساعدة.</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>قبول أوامر وحدة التحكم وأوامر JSON-RPC</translation>
     </message>
@@ -4048,10 +3920,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>ربط العنوان المعطى وأقرانه في القائمة البيضاء بالاتصال به. استخدم [host]: تدوين المنفذ لـ IPv6</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>ربط عنوان معين للاستماع إلى اتصالات JSON-RPC. استخدم [host]: تدوين المنفذ لـ IPv6. يمكن تحديد هذا الخيار عدة مرات (افتراضي: ربط لجميع جهة النعامل)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -4194,10 +4062,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>فشل تحميل ذاكرة التخزين المؤقتة من</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>أخفق تحميل ذاكرة التخزين المؤقت لمدفوعات ماسترنود من</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>العثور على عدد كافٍ من المستخدمين ، والتوقيع (الانتظار %s)</translation>
     </message>
@@ -4242,14 +4106,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>رصيد غير كاف.</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>عنوان - صالح غير صالح: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>عنوان البروكسي غير صحيح : '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>مبلغ غير صالح لـ -paytxfee = : '%s' &lt;amount&gt; (يجب أن يكون على الأقل %s)</translation>
     </message>
@@ -4286,16 +4142,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>جارٍ تحميل ذاكرة التخزين المؤقت في ماسترنود ...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>جارٍ تحميل ذاكرة التخزين المؤقت للدفع ماسترنود ...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>قفل بالفعل في المكان.</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>قفل ماسترنود من ملف تهيئة ماسترنود (الإعداد الافتراضي: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4332,10 +4180,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>فقط الاتصال بالعقد في الشبكة &lt;net&gt;  (ipv4, ipv6 or onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>Port: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4378,10 +4222,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تحديد مهلة الاتصال بالمللي ثانية (الحد الأدنى: 1 ، القيمة الافتراضية: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>تحديد ملف تهيئة ماسترنود (الإعداد الافتراضي: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>تحديد ملف pid (الافتراضي: %s)</translation>
     </message>
@@ -4390,20 +4230,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>اقضي على تغيير غير مؤكد عند إرسال المعاملات (القيمة الافتراضية: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>يتم إرسال الإدخالات التالية إلى ماسترنود : %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>تم إرساله إلى ماسترنود ، في انتظار المزيد من الإدخالات ( %u / %d) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>تم إرساله إلى ماسترنود ، في الانتظار في قائمة الانتظار %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>تزامن بلوكشين ...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4412,10 +4240,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>انتهى التزامن</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>تزامن ماسترنود...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4486,10 +4310,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>سيعيد المحاولة ...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>ماسترنود غير صحيح. يرجى الاطلاع على الوثائق</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>لا يمكن العثور على ماسترنود عشوائي.</translation>
     </message>
@@ -4498,16 +4318,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>لا يمكن الدمج  أثناء المزامنة قيد التقدم.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>لا يمكن تحليل masternode.conf</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>قناع الشبكة غير صالح محدد في-القائمة البيضاء: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>تم اكتشاف منفذ غير صالح في masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4686,16 +4498,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تحتاج إلى إعادة إنشاء قاعدة البيانات باستخدام -reindex للعودة إلى الوضعية الغير مجردة. هذا سوف يعيد تحميل سلسلة الكتل بأكملها</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d يمكن استخدامها فقط على mainnet)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(القيمة الافتراضية: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(يجب أن يكون %d لـ mainnet)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4778,10 +4582,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>فشل تحميل ذاكرة التخزين المؤقت</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>فشل تحليل المضيف: سلسلة المنفذ</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>الرسوم (في %s / kB) لإضافتها إلى المعاملات التي ترسلها (الافتراضي: %s)</translation>
     </message>
@@ -4810,16 +4610,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>آخر إجراء الإرسال المخفي ناجح كان حديث للغاية.</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>سطر: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>جارٍ تحميل ذاكرة التخزين المؤقت لبيانات الإرسال الفوري ...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>تحميل العنوان</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4848,10 +4640,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>إنتاج معاملات بث المحفظة</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>ذاكرة التخزين المؤقت ماسترنود فارغة ، وتخطي الدفعات وذاكرة التخزين المؤقت للحوكمة ...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -5142,14 +4930,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>لن تنشئ المحفظة المعاملات التي تنتهك حدود سلسلة mempool (القيمة الافتراضية: %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>تحذير: يتم تشغيل %d من %d ماسترنود على إصدار برنامج أحدث. يرجى التحقق من أحدث الإصدارات ، فقد تحتاج إلى التحديث أيضًا.</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>تحذير: يتم تشغيل كل ماسترنود (خارج %d المعروفة) على إصدار برنامج أحدث. يرجى التحقق من أحدث الإصدارات ، من المحتمل جدًا أنك فاتتك تحديثًا رئيسيًا / هامًا.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>تحذير: ملف المحفظة فاسد ، تم انقاذ البيانات! تم حفظ %s الأصلي ك %s في %s؛ إذا كان رصيدك أو كانت معاملاتك غير صحيحة، فيجب عليك الإستعادة من نسخة احتياطية.</translation>
     </message>
@@ -5246,6 +5026,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>الاحتفاظ بـ N داش مجهولة المصدر (%u-%u ، القيمة الافتراضية: %u)</translation>
     </message>
     <message>
+        <source>Loading P2P addresses...</source>
+        <translation>تحميل عناوين P2P...</translation>
+    </message>
+    <message>
         <source>Print this help message and exit</source>
         <translation>اطبع رسالة مساعدة هذه واخرج منها</translation>
     </message>
@@ -5294,10 +5078,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تعيين الحد الأقصى لحجم الفدرة بالبايت (الافتراضي: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>تعيين مفتاح خاص ماسترنود</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>عرض جميع خيارات التصحيح (الاستخدام: - مساعدة - تصحيح الأخطاء - تصحيح الأخطاء)</translation>
     </message>
@@ -5332,10 +5112,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>مزامنة كائنات الحوكمة ...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>تزامن المدفوعات ماسترنود ...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

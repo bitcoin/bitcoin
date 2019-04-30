@@ -438,14 +438,6 @@
         <translation>เปิดไฟล์การกำหนดค่า</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>เปิดไฟล์การกำหนดค่า Masternode</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>เปิดไฟล์การกำหนดค่า Masternode</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>แสดงการสำรองข้อมูลอัตโนมัติ</translation>
     </message>
@@ -650,10 +642,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>ทั้งหมด: %1 (รองรับ PS: %2 / เปิดใช้งาน: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>การแจ้งเตือนเครือข่าย</translation>
@@ -990,10 +978,6 @@
         <translation>นี่เป็นการรันโปรแกรมครั้งแรก ท่านสามารถเลือก ว่าจะเก็บข้อมูลไว้ที่ %1</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 จะดาวน์โหลดและเก็บสำเนาของ Dash block chain อย่างน้อย %2GB ของข้อมูลจะถูกเก็บไว้ในไดเรกทอรีนี้และจะเติบโตขึ้นเมื่อเวลาผ่านไป  Wallet จะถูกจัดเก็บไว้ในไดเรกทอรีนี้ </translation>
-    </message>
-    <message>
         <source>Use the default data directory</source>
         <translation>ใช้ไดเร็กทอรี่ข้อมูล ที่เป็นค่าเริ่มต้น</translation>
     </message>
@@ -1025,76 +1009,20 @@
         <translation>รูป</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>Masternodes ของฉัน</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>หมายเหตุ: สถานะของ Masternodes ของคุณใน Wallet ภายในประเทศอาจไม่ถูกต้องเล็กน้อย&lt;br /&gt;ต้องรอทุกครั้งให้ Wallet ซิงค์ข้อมูลเพิ่มเติมจากนั้นตรวจสอบอีกครั้งจากโหนดอื่น &lt;br /&gt; คุณจะเห็น Masternode ของคุณควรทำงานอยู่ แต่คุณยังไม่เห็น "เปิดการใช้งาน" ใน"สถานะ"</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>นามแฝง</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>ที่อยู่</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>โปรโตคอล</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>สถานะ</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>กำลังใช้งาน</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>เห็นครั้งสุดท้าย</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>ผู้รับเงิน</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>เริ่มนามแฝง</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>เริ่มต้นทั้งหมด</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>เริ่มต้น MISSING</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>อัพเดตสถานะ</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>แสดงข้อมูล Masternode เพิ่มเติม</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>แสดงข้อมูล</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>สถานะจะอัพเดตอัตโนมัติภายใน (วินาที) :</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>Masternodes ทั้งหมด</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1107,10 +1035,6 @@
     <message>
         <source>Node Count:</source>
         <translation>จำนวนโหนด:</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;หมายเหตุ: รายการนี้แสดงทรัพย์สินและรายการ masternode แบบไม่กำหนดค่า มันเปิดใช้งานได้ตราบใดที่ DIP3 ยังไม่ได้เปิดใช้งานอย่างสมบูรณ์  หลังจากเปิดใช้งาน SPORK15 รายการนี้จะว่างเปล่า &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>DIP3 Masternodes</source>
@@ -1135,14 +1059,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>รางวัลผู้ดำเนินการ</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;หมายเหตุ: รายการนี้ยังไม่เปิดใช้งานและมีวัตถุประสงค์เพื่อให้ข้อมูลเท่านั้น  เครือข่ายยังคงทำงานในโหมดสอดคล้องกันได้ซึ่งหมายความว่ารายการ masternode ที่ไม่ได้กำหนดค่ายังคงทำงานอยู่ หลังจากเปิดงาน SPORK15 แล้วรายการนี้จะเปิดใช้งาน นอกจากนี้ยังไม่ได้ใช้ค่าในฟิลด์ที่เกี่ยวข้องกับการชำระเงิน แต่ยังคงได้รับการอัปเดตสำหรับทุก ๆ บล็อก โปรดเพิกเฉยต่อสิ่งนี้จนกว่าจะเปิดใช้งาน SPORK15&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>เริ่มนามแฝง</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1095,6 @@
     <message>
         <source>NONE</source>
         <translation>ไม่มี</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>ยืนยันว่า Masternodes เริ่มทำงาน</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>คุณแน่ใจหรือไม่ว่าต้องการให้ masternode %1 เริ่มทำงาน?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>ยืนยันว่า Masternodes ทั้งหมดเริ่มทำงาน</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>คุณแน่ใจหรือไม่ว่าต้องการให้ masternode ทั้งหมดเริ่มทำงาน?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>คำสั่งไม่พร้อมใช้งานในขณะนี้</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>คุณไม่สามารถใช้คำสั่งนี้ได้จนกว่าจะมีการซิงค์รายการ masternode</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>ยืนยันการเริ่มต้น masternodes ที่หายไป</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>คุณแน่ใจหรือไม่ว่าต้องการเริ่มต้น masternodes ที่หายไป?</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>ข้อมูลเพิ่มเติมสำหรับ Masternode %1</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>Masternode Private Key</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>Private Key</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>ประกอบ</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>เวอร์ชั่น</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>ไม่ทราบ</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>Sentinel</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2006,16 +1858,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 ยังไม่สามารถออกจากระบบได้อย่างปลอดภัย ...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>เกิดข้อผิดพลาดในการอ่านไฟล์การกำหนดค่า masternode: %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -3930,10 +3774,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>คำเตือน: เราไม่ปรากฎกับ peer ของเรา! คุณอาจต้องอัพเกรดหรือโหนดอื่น ๆ อาจต้องอัพเกรด</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>คุณต้องระบุ masternodeprivkey ในการกำหนดค่า โปรดดูเอกสารประกอบการช่วยเหลือ</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>ยอมรับ command line และคำสั่ง JSON-RPC</translation>
     </message>
@@ -4052,10 +3892,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>เชื่อมโยงไปยังที่อยู่ที่กำหนดและ whitelist peers ที่เชื่อมต่ออยู่  ใช้ [โฮสต์]: สัญลักษณ์พอร์ตสำหรับ IPv6</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>เชื่อมโยงไปยังที่อยู่ที่กำหนดเพื่อรับฟังการเชื่อมต่อ JSON-RPC  ใช้  [host]:port  พอร์ตสำหรับ IPv6 ตัวเลือกนี้สามารถระบุได้หลายครั้ง (ค่าดีฟอลต์: ผูกกับอินเทอร์เฟซทั้งหมด)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -4202,10 +4038,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ไม่สามารถโหลดแคช masternode ได้</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>ไม่สามารถโหลดแคชการชำระเงิน masternode ได้จาก</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>พบผู้ใช้เพียงพอ, กำลังลงนาม...  ( กำลังรอ %s )</translation>
     </message>
@@ -4250,14 +4082,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>เงินทุนไม่เพียงพอ</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>ที่อยู่ - onion ไม่ถูกต้อง: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>ที่อยู่ - proxy ไม่ถูกต้อง: '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>จำนวนที่ไม่ถูกต้องสำหรับ -paytxfee = &lt;amount&gt;: '%s' (ต้องมีอย่างน้อย %s)</translation>
     </message>
@@ -4294,16 +4118,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>กำลังโหลดแคช masternode ...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>กำลังโหลดแคชการชำระเงิน masternode ...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>ล็อกอยู่ในตำแหน่งแล้ว</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>ล็อค masternodes จากไฟล์การกำหนดค่า masternode (ค่าดีฟอลต์: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4340,10 +4156,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>เชื่อมต่อกับโหนดในเครือข่ายเท่านั้น &lt;net&gt; (ipv4, ipv6 หรือ onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>พอร์ต: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4386,10 +4198,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ระบุระยะหมดเวลาการเชื่อมต่อเป็นมิลลิวินาที (ต่ำสุด: 1 ค่าเริ่มต้น: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>ระบุไฟล์การกำหนดค่า Masternode (ค่าดีฟอลต์: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>ระบุไฟล์ pid (ค่าดีฟอลต์: %s)</translation>
     </message>
@@ -4398,20 +4206,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ใช้การเปลี่ยนแปลงยกเลิกการยืนยันเมื่อกำลังส่งธุรกรรม (ค่าเริ่มต้น: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>ส่งรายการต่อไปนี้ไปยัง masternode: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>ส่งไปยัง Masternode รอรายการเพิ่มเติม (%u / %d) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>ส่งไปยัง masternode กำลังรอคิว %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>กำลังซิงโครไนซ์ Blockchain...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4420,10 +4216,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>การซิงโครไนซ์สิ้นเสร็จ</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>กำลังซิงโครไนซ์  Masternodes...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4494,10 +4286,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>จะลองใหม่ ...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>masternodeprivkey ไม่ถูกต้อง โปรดดูเอกสารประกอบ</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>ไม่พบ Masternode </translation>
     </message>
@@ -4506,16 +4294,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ไม่สามารถผสมระหว่างอยู่ในดำเนินการซิงค์ได้</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>ไม่สามารถวิเคราะห์ masternode.conf</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>netmask ไม่ถูกต้องที่ระบุใน -whitelist: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>ตรวจพบพอร์ตที่ไม่ถูกต้องใน masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4694,16 +4474,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>คุณจำเป็นต้องสร้างฐานข้อมูลโดยใช้ -reindex ที่จะกลับไปที่โหมด unpruned  และนี่จะดาวน์โหลด blockchain  ที่เหลือใหม่ทั้งหมด</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d สามารถใช้ได้เฉพาะกับ mainnet)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(ค่าเริ่มต้น: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(ต้องเป็น %d สำหรับ mainnet)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4786,10 +4558,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>โหลดแคช sporks ล้มเหลว</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>แยกวิเคราะห์ host:port  ล้มเหลว</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>ค่าธรรมเนียม (ใน %s / kB) เพื่อเพิ่มธุรกรรมที่คุณส่ง (ค่าเริ่มต้น: %s)</translation>
     </message>
@@ -4818,16 +4586,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>การกระทำ PrivateSend ที่ประสบความสำเร็จล่าสุดเป็นข้อมูลล่าสุด</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>Line: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>กำลังโหลดแคชข้อมูล InstantSend ...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>กำลังโหลดที่อยู่ ...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4856,10 +4616,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>ดำเนินการในการเผยแพร่ธุรกรรม wallet</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>แคช Masternode ว่างเปล่า  ละเว้นการชำระเงินและแคชการจัดการ...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -5150,14 +4906,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Wallet จะไม่สร้างธุรกรรมที่ละเมิดข้อจำกัดของ Mempool chain (ค่าเริ่มต้น: %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>คำเตือน: อย่างน้อย %d จาก %d masternodes กำลังทำงานอยู่ในเวอร์ชันซอฟต์แวร์ใหม่กว่า โปรดตรวจสอบเวอร์ชันล่าสุดคุณอาจต้องอัปเดตด้วย</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>คำเตือน: ทุก masternode (จาก %d คนที่รู้จัก) กำลังทำงานในเวอร์ชั่นซอฟต์แวร์ที่ใหม่กว่า โปรดตรวจสอบเวอร์ชันล่าสุด เป็นไปได้ที่คุณพลาดการอัปเดตที่สำคัญ</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>คำเตือน: ไฟล์ Wallet เสียหาย, ข้อมูลได้ถูกกู้! %s จากเดิมถูกบันทึกเป็น %s ใน %s; หากยอดคงเหลือหรือธุรกรรมของคุณไม่ถูกต้องคุณควรเรียกคืนจากสำเนาสำรอง</translation>
     </message>
@@ -5302,10 +5050,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>กำหนดขนาดบล็อกสูงสุดเป็นไบต์ (ค่าดีฟอลต์: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>ตั้งค่าคีย์ส่วนตัว Masternode</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>แสดงการแก้จุดบกพร่องทั้งหมด (การใช้งาน: --help - help-debug)</translation>
     </message>
@@ -5340,10 +5084,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>กำลังปรับเทียบออบเจคการกำกับ ...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>กำลังซิงค์การชำระเงิน Masternode ...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

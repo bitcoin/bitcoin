@@ -22,6 +22,14 @@
         <translation>复制(&amp;C)</translation>
     </message>
     <message>
+        <source>Show QR code for the currently selected address</source>
+        <translation>显示当前选中地址的二维码</translation>
+    </message>
+    <message>
+        <source>&amp;Show QR code</source>
+        <translation>&amp;显示二维码</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>从列表中删除选中的地址</translation>
     </message>
@@ -80,6 +88,14 @@
     <message>
         <source>&amp;Edit</source>
         <translation>编辑(&amp;E)</translation>
+    </message>
+    <message>
+        <source>&amp;Show address QR code</source>
+        <translation>&amp;显示地址二维码</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>二维码</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -438,14 +454,6 @@
         <translation>打开配置文件</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>打开主节点配置文件(&amp;M)</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>打开主节点配置文件</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>显示自动备份(&amp;B)</translation>
     </message>
@@ -650,10 +658,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>总计：%1 (匿名发送兼容：%2 / 可用：%3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>网络警报</translation>
@@ -990,8 +994,16 @@
         <translation>由于这是第一次启动此程序，您可以选择%1的数据所存储的位置</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 将会下载并存储达世币区块链。至少有 %2 GB的数据会保存到此路径下，并且随着时间增长。钱包文件也将存储到此路径下。</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>当你点击确认后，%1 将会在 %4 启动时从  %3 中最早的交易开始，下载并处理完整的 %4 区块链 (%2GB)。</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>最初的同步过程是非常吃力的，同时可能会暴露你电脑上的一些硬件方面的小毛病，尽管你可能之前没有注意过。你每跑%1，它就会继续从之前中断的地方下载</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>如果你选择限制区块链存储大小（区块链裁剪模式），程序依然会下载并处理全部历史数据，此后才会删除不必须的部分，占用最少的存储空间。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +1012,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>使用自定义的数据目录：</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>此目录中至少会保存 %1 GB 的数据，并且尺寸还会随着时间增长。</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>会在此目录中存储约 %1 GB 的数据。</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 将会下载并存储比特币区块链。</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>钱包也会被保存在这个目录中。</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1053,20 @@
         <translation>表单</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>我的主节点</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>注意：本地钱包中的主节点状态可能会稍有误差。&lt;br /&gt;总是等待钱包同步完额外的数据后再从另一个节点重新检查&lt;br /&gt;如果您的主节点应该已经运行，但您仍然在“状态”栏看不到“启用”的话。</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>别名</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>地址</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>协议</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>状态</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>工作中</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>最后在线</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>收款人</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>启动别名(&amp;T)</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>启动全部(&amp;A)</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>启动遗漏(&amp;M)</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>更新状态(&amp;U)</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>显示附加的主节点信息</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>显示 &amp;信息...</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>状态将在数秒后自动更新：</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>所有主节点</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1109,12 +1081,16 @@
         <translation>节点数：</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;注意: 本列表显示的是遗留的非确定性主节点列表，并仅在 DIP3 未完全激活时处于活动状态。在 SPORK15开启后，本列表将清空。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <source>DIP3 Masternodes</source>
         <translation>DIP3 主节点</translation>
+    </message>
+    <message>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>仅显示此钱包拥有私钥的主节点</translation>
+    </message>
+    <message>
+        <source>My masternodes only</source>
+        <translation>仅我的主节点</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1135,14 +1111,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>运行者奖励</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;注意: 本列表尚未激活，仅供参考。网络仍在以兼容模式运行，这意味着非确定性主节点列表仍然处于活动状态。只有在 SPORK15 开启后，本列表才会激活。另外，支付相关字段的值暂未使用，但依旧会逐块更新。请忽略此项直至 SPORK15 开启。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>启动别名</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1147,6 @@
     <message>
         <source>NONE</source>
         <translation>NONE</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>确认启动主节点</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>您确定要启动主节点%1吗？</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>确认启动所有的主节点</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>您确定要启动所有主节点吗？</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>命令目前不可使用</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>在主节点列表同步之前您无法使用此命令</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>确认启动遗漏的主节点</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>你确定要启动遗漏的主节点吗？</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>主节点 %1 的附加信息</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>主节点私钥</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>私钥</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>抵押</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>版本</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>未知</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>哨兵</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2006,16 +1910,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>达世币核心</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 尚未安全退出</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>读取主节点配置文件时出错：%1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2479,6 +2375,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Network activity disabled</source>
         <translation>网络活动已禁用</translation>
+    </message>
+    <message>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>总计: %1 (已激活的: %2)</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -3330,6 +3230,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>确认%1次</translation>
     </message>
     <message>
+        <source>locked via LLMQ based ChainLocks</source>
+        <translation>通过基于LLMQ的链锁功能锁定</translation>
+    </message>
+    <message>
+        <source>verified via LLMQ based InstantSend</source>
+        <translation>通过基于LLMQ的即时发送功能验证</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>经即时发送系统核实</translation>
     </message>
@@ -3755,6 +3663,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>显示交易详情</translation>
     </message>
     <message>
+        <source>Show address QR code</source>
+        <translation>显示地址二维码</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation>导出交易历史</translation>
     </message>
@@ -3805,6 +3717,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>交易历史已成功保存到 %1。</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>二维码</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -3930,10 +3846,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告: 我们和某些连线的节点对于区块链结的决定不同！你可能需要升级，或是需要等其它的节点升级。</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>您必须在配置中指定一个主节点密钥。请参阅文档以获得帮助。</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>接受命令行以及JSON-RPC命令</translation>
     </message>
@@ -4054,10 +3966,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>和指定的地址连接，並且将连接的节点放入白名单中。IPv6请用[host]:port格式</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>和指定的地址连接，监听JSON-RPC连接。IPv6请用[host]:port格式。此选项可以多次设定(默认：绑定所有界面)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>创建系统默认权限的文件，而不是 umask 077 (只在关闭钱包功能时有效) </translation>
     </message>
@@ -4154,6 +4062,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(默认：%s)</translation>
     </message>
     <message>
+        <source>-wallet parameter must only specify a filename (not a path)</source>
+        <translation>-wallet 参数必须仅指定文件名 (非路径)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>接受公开的REST请求(默认：%u)</translation>
     </message>
@@ -4202,10 +4114,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法加载主节点缓存</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>无法加载主节点付款缓存</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>用户数已满足，开始签名 (等待 %s)</translation>
     </message>
@@ -4250,14 +4158,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>余额不足。</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>无效-onion地址：'%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>无效 -proxy地址：'%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>设定 -paytxfee=&lt;金额&gt;  的金额无效：'%s' (至少要有%s)</translation>
     </message>
@@ -4294,16 +4194,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>正在读取主节点缓存...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>正在读取主节点付款缓存...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>已锁定。</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>根据主节点的配置文件锁定主节点(默认：%u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4340,10 +4232,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>在网络中只连接至节点 &lt;net&gt; (ipv4，ipv6 或 onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>端口：%d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4386,10 +4274,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>指定连接超时毫秒数 (最小值：1，默认：%d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>指定主节点配置文件 (默认：%s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>指定pid 文件 (默认：%s)</translation>
     </message>
@@ -4398,20 +4282,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>发送交易时花费未确认的费用(默认：%u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>己经提交下列条目到主节点：%u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>己经提交到主节点，正在等候更多条目（%u / %d）%s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>提交到主节点，在队列 %s 中等待</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>正在同步区块链...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4420,10 +4292,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>同步完成</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>正在同步主节点...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4494,10 +4362,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>即将重试...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>无效主节点私钥。请查阅文档。</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>无法找到随机主节点。</translation>
     </message>
@@ -4506,16 +4370,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法在同步过程中进行混合。</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>无法解析主节点配置文件</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>在 -whitelist中指定了无效的子网掩码：'%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>在主节点配置文件中检测到无效端口</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4540,6 +4396,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s 文件包含此钱包中的所有私钥。不要与任何人分享！</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>与指定的地址绑定, 监听JSON-RPC连接. 请忽略此选项, 除非-rpcallowip也被通过. 端口是可选的并且取代-rpcport. IPv6请用[host]:port格式. 此选项可以多次设定 (默认: 127.0.0.1 和 ::1 例如, localhost, 或 如果 -rpcallowip 已经被指定, 0.0.0.0 和 :: 例如, 所有地址)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4694,16 +4554,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>您需要使用 -reindex 重新构建数据库以返回未修剪的模式。这将重新下载整个区块链</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>（%d只可以在主网络上使用）</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(默认: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>（必须是%d用于主网）</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4786,10 +4638,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>从... 读取叉勺缓存失败</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>无法解析host:port字符串</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>为付款交易添加交易费 (%s/kB) (默认：%s) </translation>
     </message>
@@ -4818,16 +4666,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>距离上一次成功送出匿名发送的时间过短。</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>行：%d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>正在读取即时支付数据缓存...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>正在读取地址...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4856,10 +4696,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>使钱包广播交易</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>主节点缓存为空，跳过付款和治理缓存…</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -4956,6 +4792,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation>启动时重新扫描区块链以查找遗漏的钱包交易</translation>
+    </message>
+    <message>
+        <source>Submitted following entries to masternode: %u</source>
+        <translation>已提交下列条目到主节点: %u</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
+        <translation>已提到到主节点, 正在等待更多条目 ( %u ) %s</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation>正在同步区块链...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -5150,14 +4998,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>钱包软件不会产生违反内存池交易链限制的交易（默认：%u）</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>警告: 至少有 %d 分之 %d 的主节点正在运行新版本软件. 请检查最新版本, 您可能也需要更新.</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>警告: 每个主节点 ( %d 个已知的) 正在运行新版本软件. 请检查最新版本, 您很有可能错过了重大/关键更新.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>警告：钱包文件损坏，但数据被救回！原始的钱包文件%s已经重命名为%s并存储到%s目录下 。如果您的账户余额或者交易记录不正确，请使用您的钱包备份文件恢复。</translation>
     </message>
@@ -5242,8 +5082,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>初始化完整性检查失败。%s即将关闭。</translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>无效的 -onion 地址: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>无效的 -proxy 地址: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>无效的金额 -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid characters in -wallet filename</source>
+        <translation>-wallet文件名中含无效字符</translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
@@ -5252,6 +5104,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>保持 N 个匿名处理的达世币 (%u-%u, default: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>正在加载P2P地址...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5302,10 +5158,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>以字节为单位设置最大区块的大小(默认：%d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>设置主节点私钥</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>显示所有debug选项(用法：--help -help-debug)</translation>
     </message>
@@ -5340,10 +5192,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>正在同步治理对象…</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>正在同步主节点付款信息…</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

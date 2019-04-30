@@ -22,6 +22,14 @@
         <translation>&amp;Copier</translation>
     </message>
     <message>
+        <source>Show QR code for the currently selected address</source>
+        <translation>Voir le QR-code pour l'adresse actuellement sélectionnée</translation>
+    </message>
+    <message>
+        <source>&amp;Show QR code</source>
+        <translation>Voir le QR-code</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Effacer l'adresse actuellement sélectionnée de la liste</translation>
     </message>
@@ -80,6 +88,14 @@
     <message>
         <source>&amp;Edit</source>
         <translation>&amp;Modifier</translation>
+    </message>
+    <message>
+        <source>&amp;Show address QR code</source>
+        <translation>Voir le QR-code de l'adresse</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>QR-code</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -438,14 +454,6 @@
         <translation>Ouvrir le fichier de configuration</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>Ouvrir le fichier de configuration des &amp;masternodes</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>Ouvrir le fichier de configuration des masternodes</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>Afficher les sauvegardes automatiques</translation>
     </message>
@@ -650,10 +658,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Total : %1 (PS compatibles : %2 / activés : %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>Alerte réseau</translation>
@@ -990,8 +994,16 @@
         <translation>Puisque c’est la première fois que le logiciel est lancé, vous pouvez choisir où %1 stockera ses données.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 va maintenant télécharger et stocker une copie de la blockchain Dash.  Au moins %2GB de données seront stockés dans ce répertoire, et il grossira avec le temps. Le portefeuille sera également stocké dans ce répertoire.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>Quand vous cliquerez sur Valider, %1 commencera à télécharger et à traiter l’intégralité de la chaîne de blocs %4 (%2 Go) en débutant avec les transactions les plus anciennes de %3, quand %4 a été lancé initialement.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>La synchronisation initiale est très exigeante et pourrait exposer des problèmes matériels dans votre ordinateur passés inaperçus auparavant. Chaque fois que vous exécuterez %1, le téléchargement reprendra où il s’était arrêté.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Si vous avez choisi de limiter le stockage de la chaîne de blocs (élagage), les données historiques doivent quand même être téléchargées et traitées, mais seront supprimées par la suite pour minimiser l’utilisation de votre espace disque.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +1012,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Utiliser un répertoire de données personnalisé :</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Au moins %1 Go de données seront stockés dans ce répertoire et sa taille augmentera avec le temps.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Approximativement %1 Go de données seront stockés dans ce répertoire.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 téléchargera et stockera une copie de la chaîne de blocs Dash.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Le porte-monnaie sera aussi stocké dans ce répertoire.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1053,20 @@
         <translation>Formulaire</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>Mes masternodes</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>À noter : l'état de vos masternodes dans ce portefeuille local peut être légèrement erroné.&lt;br /&gt;Veuillez toujours attendre que votre portefeuille soit synchronisé au réseau, et vérifiez votre masternode depuis un autre nœud&lt;br /&gt;s'il est censé tourner mais que vous ne voyez toujours pas "ENABLED" dans le champ "État".</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>Alias</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>Adresse</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>Protocole</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>État</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Actif</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>Dernière vérification</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>Bénéficiaire</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>“S&amp;tart-alias”</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>“Start-&amp;all”</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>“Start-&amp;missing”</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>Rafraîchir l'état</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>Afficher des infos supplémentaires sur le masternode</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>Afficher des &amp;Informations...</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>L'état sera mis à jour automatiquement dans (sec.) :</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>Tous les masternodes</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1109,12 +1081,16 @@
         <translation>Nombre de nœuds :</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note : ceci est la liste des masternodes non-déterministes historiques. Elle restera active tant que la DIP3 n'aura pas été entièrement activée. Après l'activation SPORK15, cette liste sera vide.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <source>DIP3 Masternodes</source>
         <translation>Masternodes DIP3</translation>
+    </message>
+    <message>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>N'afficher que les masternodes dont les clés sont dans ce portefeuille</translation>
+    </message>
+    <message>
+        <source>My masternodes only</source>
+        <translation>Seulement mes masternodes</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1135,14 +1111,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>Récompense opérateur</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note : cette liste n'est pas encore active, elle n'est affichée qu'à titre informatif. Le réseau fonctionne encore en mode de compatibilité, ce qui signifie que la liste des masternodes non-déterministes est encore active. Ce n'est qu'après l'activation SPORK15 que cette liste deviendra la liste active. Par ailleurs, les valeurs des champs relatifs aux paiements ne sont pas encore utilisées, mais sont mises à jour avec chaque bloc. Veuillez ignorer cette liste avant l'activation SPORK15.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>Start-alias</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1147,6 @@
     <message>
         <source>NONE</source>
         <translation>AUCUN</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>Confirmer le démarrage du masternode</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>Êtes-vous certain de vouloir démarrer le masternode %1 ?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>Confirmer le démarrage de tous les masternodes</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>Êtes-vous certain de vouloir démarrer TOUS les masternodes ?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>Cette commande n'est pas immédiatement disponible.</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>Impossible d'utiliser cette commande avant que la liste des masternodes soit synchronisée.</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>Confirmer le démarrage des masternodes manquants</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>Êtes-vous certain de vouloir démarrer les masternodes MANQUANTS ?</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>Informations supplémentaires sur le masternode %1</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>Clé privée du masternode</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>Clé privée</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>Caution</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>Version</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>Inconnu</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>Sentinel</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2006,16 +1910,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 ne s’est pas encore arrêté en toute sécurité...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>Erreur de lecture du fichier de configuration du masternode : %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2479,6 +2375,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Network activity disabled</source>
         <translation>Activité réseau désactivée</translation>
+    </message>
+    <message>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Total : %1 (Activé : %2)</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -3330,6 +3230,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 confirmations</translation>
     </message>
     <message>
+        <source>locked via LLMQ based ChainLocks</source>
+        <translation>verrouillé par ChainLocks/LLMQ</translation>
+    </message>
+    <message>
+        <source>verified via LLMQ based InstantSend</source>
+        <translation>vérifié par InstantSend/LLMQ</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>vérifié via InstantSend</translation>
     </message>
@@ -3755,6 +3663,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Afficher les détails de la transaction</translation>
     </message>
     <message>
+        <source>Show address QR code</source>
+        <translation>Voir le QR-code de l'adresse</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation>Exporter l'historique des transactions</translation>
     </message>
@@ -3805,6 +3717,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>L'historique des transactions a été sauvegardée avec succès vers %1.</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>QR-code</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -3930,10 +3846,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Attention : nous ne semblons pas être en accord complet avec nos pairs ! Peut-être devez-vous faire une mise à jour, ou d'autres nœuds du réseau ont besoin de faire une mise à jour.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Vous devez définir "masternodeprivkey" dans la configuration. Veuillez consulter la documentation pour obtenir plus d'aide.</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accepter les commandes de JSON-RPC et de la ligne de commande</translation>
     </message>
@@ -4054,10 +3966,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Se lier à l'adresse donnée et mettre les pairs qui se connectent en liste blanche. Utilisez la notation [hôte]:port pour l'IPv6</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Se lier à l'adresse indiquée pour écouter des connections JSON-RPC. Utilisez la notation [hôte]:port pour l'IPv6. Ce paramètre peut être utilisée à plusieurs reprises (par défaut: se lie a toutes les interfaces)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Créer les nouveaux fichiers avec les permissions systèmes par défaut, au lieu du umask 077 (utile seulement si le portefeuille est désactivé)</translation>
     </message>
@@ -4154,6 +4062,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(par défaut: %s)</translation>
     </message>
     <message>
+        <source>-wallet parameter must only specify a filename (not a path)</source>
+        <translation>Le paramètre -wallet doit seulement indiquer un nom de fichier (pas un chemin)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Accepter les requetes REST publiques (par défaut: %u)</translation>
     </message>
@@ -4202,10 +4114,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Échec du chargement du cache des masternodes depuis</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>Échec du chargement du cache des paiements de masternode depuis</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Nombre suffisant d'utilisateurs trouvé, signature ( attente %s )</translation>
     </message>
@@ -4250,14 +4158,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Fonds insuffisants</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Adresse -onion invalide : « %s »</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Adresse -proxy invalide : « %s »</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>Montant invalide pour -paytxfee=&lt;montant&gt; : « %s » (minimum possible: %s)</translation>
     </message>
@@ -4294,16 +4194,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Chargement du cache de masternode...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Chargement du cache de paiement masternode...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Verrou déjà en place.</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Vérouiller les masternodes depuis le fichier de configuration masternode (par défaut : %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4340,10 +4232,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Se connecter uniquement aux nœuds du réseau &lt;net&gt; (IPv4, IPv6 ou onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>Port : %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4386,10 +4274,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Spécifier le délai d'expiration de la connexion en millisecondes (minimum : 1, par défaut : %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Définir le fichier de configuration du masternode (par défaut : %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Définir le fichier pid (défaut : %s)</translation>
     </message>
@@ -4398,20 +4282,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Dépenser la monnaie non confirmée lors de l'envoi de transactions (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Les entrées suivantes ont été envoyées au masternode: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Envoyé au masternode, en attente d'entrées supplémentaires ( %u / %d ) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Soumis au masternode, dans la file d'attente %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>Synchronisation de la chaîne de blocs...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4420,10 +4292,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>La synchronisation est terminée</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronisation des masternodes...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4494,10 +4362,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Va réessayer ...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>masternodeprivkey invalide. Veuillez vous référer à la documentation.</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>Masternode aléatoire introuvable.</translation>
     </message>
@@ -4506,16 +4370,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Impossible de mélanger pendant la synchronisation.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>Impossible d'analyser masternode.conf</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Masque de réseau inconnu spécifié sur -whitelist : « %s »</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Port invalide détecté dans masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4540,6 +4396,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>Le fichier %s contient toutes les clés privées de ce portefeuille. Ne le partagez avec personne !</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>Se lier à l'adresse indiquée pour écouter les connexions JSON-RPC. Cette option est ignorée sauf si -rpcallowip est également passée. Le port est facultatif et outrepasse -rpcport. Utilisez la notation [hôte]:port pour IPv6. Cette option peut être indiquée plusieurs fois (défaut : 127.0.0.1 et ::1 i.e., localhost, ou si -rpcallowip a été indiquée, 0.0.0.0 et :: i.e., toutes les adresses)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4694,16 +4554,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Vous devez reconstruire la base de données en utilisant -reindex pour retourner en mode non-élagué. Ceci aura pour effet de télécharger à nouveau la chaîne de blocs complète.</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d devraît être utilisée que sur mainnet)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(par défaut : %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(doit être %d pour mainnet)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4786,10 +4638,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Échec du chargement du cache des sporks depuis</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>L'analyse de la chaîne hôte:port a échoué</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Frais (en %s/ko) à ajouter aux transactions que vous envoyez (par défaut : %s)</translation>
     </message>
@@ -4818,16 +4666,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>La dernière action PrivateSend réussie est trop récente.</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>Ligne : %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>Chargement du cache de données d'InstantSend…</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Chargement des adresses...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4856,10 +4696,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Diffuser les transactions via le portefeuille</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Le cache de masternode est vide, omission du cache des paiements et de gouvernance...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -4956,6 +4792,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation>Réanalyser la chaîne de blocs au démarrage pour les transactions de portefeuille manquantes</translation>
+    </message>
+    <message>
+        <source>Submitted following entries to masternode: %u</source>
+        <translation>Soumission des entrées suivantes au masternode : %u</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
+        <translation>Soumis au masternode, en attente d'entrées supplémentaires ( %u ) %s</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation>Synchronisation de la blockchain…</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -5150,14 +4998,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Un porte-monnaie ne créera aucune transaction qui enfreint les limites de chaîne de la réserve de mémoire (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Avertissement : au moins %d masternodes sur %d tournent sur une version logicielle plus récente. Veuillez vérifier les dernières mises à jour, car vous pourriez aussi avoir besoin de les appliquer.</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>Avertissement : chaque masternode (sur un total de %d connus) tourne sur une version logicielle plus récente. Veuillez vérifier les dernières mises à jour, car il est très probable que vous ayez manqué une mise à jour majeure ou critique.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Avertissement : le fichier du porte-monnaie est corrompu, les données ont été récupérées ! Le fichier %s original a été enregistré en tant que %s dans %s ; si votre solde ou vos transactions sont incorrects, vous devriez restaurer une sauvegarde.</translation>
     </message>
@@ -5242,8 +5082,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>L’initialisation du test de cohérence a échoué. %s est en cours de fermeture. </translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Adresse ou nom d’hôte -onion invalide : « %s »</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Adresse ou nom d’hôte -proxy invalide : « %s »</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Montant invalide pour -%s=&lt;amount&gt; : « %s »</translation>
+    </message>
+    <message>
+        <source>Invalid characters in -wallet filename</source>
+        <translation>Caractères invalides dans le nom de fichier -wallet</translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
@@ -5252,6 +5104,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>Conserver N dashs anonymisés (%u-%u, par défaut : %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>Chargement des adresses P2P...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5302,10 +5158,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Définir la taille minimale de bloc en octets (par défaut : %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>Définir la clef privée du masternode</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Montrer toutes les options de débogage (utilisation : --help --help-debug)</translation>
     </message>
@@ -5340,10 +5192,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>Synchronisation des objets de gouvernance...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>Synchronisation du paiement des masternodes...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

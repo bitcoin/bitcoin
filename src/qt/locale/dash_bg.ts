@@ -22,6 +22,14 @@
         <translation>&amp;Копирай</translation>
     </message>
     <message>
+        <source>Show QR code for the currently selected address</source>
+        <translation>Покажи QR код за избраният адрес</translation>
+    </message>
+    <message>
+        <source>&amp;Show QR code</source>
+        <translation>&amp;Покажи QR код</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Изтрийте избрания адрес от списъка</translation>
     </message>
@@ -80,6 +88,14 @@
     <message>
         <source>&amp;Edit</source>
         <translation>&amp;Редактирай</translation>
+    </message>
+    <message>
+        <source>&amp;Show address QR code</source>
+        <translation>&amp;Покажи QR код на адреса</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>QR код</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -438,14 +454,6 @@
         <translation>Отвори конфигурационния файл</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>Отвори &amp;Masternode конфигурационен файл</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>Отвори Masternode конфигурационен файл</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>Покажи автоматичните &amp;Резервни копия</translation>
     </message>
@@ -650,10 +658,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Общо: %1 (PS съвместими: %2 / Включени: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>Предупреждение от мрежата</translation>
@@ -990,8 +994,16 @@
         <translation>Тъй като това е първият път, когато програмата се стартира, можете да изберете къде %1 да съхранява данните си.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 ще свали и съхрани копие на Dash регистъра на блокове. Най-малко %2GB от информацията ще се съхрани в тази директория и ще нараства с времето.  Портфейлът също ще бъде съхранен в тази директория. </translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>Когато изберете OK, %1 ще започне да изтегля и обработва %4 блок верига (%2GB) стартирайки с първите транзакции в %3 когато %4 е  пуснат първоначално.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Тази първоначална синхронизация изисква много ресурси и може да покаже хардуерните проблеми с компютъра, които преди това не сте забелязали. Всеки път, когато стартирате %1, той ще продължи да се изтегля там, където е спрял.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Ако сте избрали да ограничите пространството за съхранение на блок веригата(съкращаване), историческите данни ще трябва да се изтеглят и обработят, но след това ще бъдат изтрити, за да се запази използването на по-малко пространство на диска.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +1012,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Определете папка по ваш избор:</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Най малко %1 GB данни ще бъдат запаметени в тази директория, и ще нарастват през времето.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Около %1 GB данни ще бъдат запаметени в тази директория.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 ще изтегли и съхрани копие на  Dash блок веригата.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Портфейлът също ще бъде съхранен в тази директория.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1053,20 @@
         <translation>От</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>Моите Masternodes</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>Бележка: Статуса на вашите masternodes в портфейла ви може потенциално да бъде леко некоректен.&lt;br /&gt;Винаги изчаквайте портфейлът да синхронизира допълнителната информация и тогава направете двойна проверка от друг възел&lt;br /&gt;ако вашият masternode би трябвало да работи, но все още не виждате надпис "ENABLED" в полето "Статус".</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>Псевдоним</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>Адрес</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>Протокол</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>Статус</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Активен</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>Последно видян</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>Получател</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>Стартирай &amp;псевдоним</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>Стартирай &amp;всички</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>Стартирай &amp;ЛИПСВАЩ</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>&amp;Обнови статус</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>Покажи допълнителна Masternode информация</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>Показва &amp;информация...</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>Статуса ще бъде обновен автоматично след (сек):</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>Всички Masternodes</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1109,12 +1081,16 @@
         <translation>Брой възли:</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Бележка: Този списък представя наследения и недетерминистичен masternode списък . Той е активен само докато DIP3 не е напълно активиран. След активирането на SPORK15 този списък ще бъде празен.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <source>DIP3 Masternodes</source>
         <translation>DIP3 Masternodes</translation>
+    </message>
+    <message>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>Показване само на masternodes, чиито ключове притежава този портфейл.</translation>
+    </message>
+    <message>
+        <source>My masternodes only</source>
+        <translation>Само моите masternodes</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1135,14 +1111,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>Награда на оператора</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Забележка: Този списък все още не е активен и e само за информационни цели. Мрежата все още работи в режим на съвместимост, което означава, че недетерминистичният  masternode списък все още е активен. Само след активирането на SPORK15 този списък ще стане активен. Също така, стойностите в полетата, свързани с плащане, са неизползваеми в момента, но все пак се актуализират за всеки блок. Моля, игнорирайте това до активирането на SPORK15.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>Стартиране псевдоним</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1147,6 @@
     <message>
         <source>NONE</source>
         <translation>НИЩО</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>Потвърден старт на masternode</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>Сигурен ли сте, че искате да стартирате masternode %1?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>Потвърдено стартиране на всички masternodes</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>Сигурен ли сте, че искате стартирането на  ВСИЧКИ masternodes?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>Командата не е налична в момента</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>Не можете да използвате тази команда преди синхронизирането на masternode списъка</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>Потвърдено стартиране на липсващите masternodes</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>Сигурен ли сте, че искате стартирането на ЛИПСВАЩИТЕ masternodes? </translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>Допълнителна информация за Masternode %1</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>Masternode Личен ключ</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>Частен ключ</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>Обезпечаване</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>Версия</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>Неизвестен</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>Sentinel</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2006,16 +1910,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 все още не е излязъл безопастно...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>Грешка при четене конфигурационният файл на masternode : %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2479,6 +2375,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Network activity disabled</source>
         <translation>Мрежова активност изключена</translation>
+    </message>
+    <message>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Общо: %1 (Включено: %2)</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -3330,6 +3230,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>включена в %1 блока</translation>
     </message>
     <message>
+        <source>locked via LLMQ based ChainLocks</source>
+        <translation>заключена чрез LLMQ базирани ChainLocks</translation>
+    </message>
+    <message>
+        <source>verified via LLMQ based InstantSend</source>
+        <translation>потвърдена чрез LLMQ базиран InstantSend</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>потвърдено чрез InstantSend</translation>
     </message>
@@ -3755,6 +3663,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Подробности за транзакцията</translation>
     </message>
     <message>
+        <source>Show address QR code</source>
+        <translation>Покажи QR код</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation>Изнасяне историята на транзакциите</translation>
     </message>
@@ -3805,6 +3717,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Направените транзакции са запазени до %1.</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>QR код</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -3930,10 +3846,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Внимание: Не е намерена пълна съвместимост с останалите в мрежата ! Може би се нуждаете от обновяване , или някой от другите нодове се нуждае от обновяване .</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Трябва да посочите masternodeprivkey в конфигурацията. Моля прочетете документацията за помощ.</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Приемай команден ред и JSON-RPC команди</translation>
     </message>
@@ -4054,10 +3966,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Свързва се с посочения адрес и добави в whitelist свързаните към него пиъри. Използвайте [хост]:порт за изписване при IPv6</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Свързват с даден адрес, за да слушат за JSON-RPC връзки. Използвайте [host]: port нотация за IPv6. Тази опция може да бъде променяна многократно (по подразбиране: свързват с всички интерфейси)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Създаване на нови файлове с достъп по подразбиране , вместо umask 077 (в сила само при изключена функционалност на портфейла)</translation>
     </message>
@@ -4154,6 +4062,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(по подразбиране: %s)</translation>
     </message>
     <message>
+        <source>-wallet parameter must only specify a filename (not a path)</source>
+        <translation>-wallet трябва да показва само името на файла (не пътят)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Приема публични REST заявки (по подразбиране: %u)</translation>
     </message>
@@ -4202,10 +4114,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неуспешно зареждане на masternode кеша от</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>Неуспешно зареждане на кеша за masternode плащанията от</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Открити са достатъчно потребители, подписване ( изчаква %s )</translation>
     </message>
@@ -4250,14 +4158,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Недостатъчно средства.</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Невалиден -onion адрес: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Невалиден -proxy address: '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>Невалидна сума за -paytxfee=&lt;amount&gt;: '%s' (трябва да бъде най-малко %s)</translation>
     </message>
@@ -4294,16 +4194,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Зареждане на masternode кеш...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Зараждане на masternode кеш за плащане</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Заключването е вече налично.</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Заключване на masternodes от конфигурационния файл(по подразбиране: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4340,10 +4232,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Свързване само към точки от мрежата &lt;net&gt; (IPv4, IPv6 или onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>Порт: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4386,10 +4274,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Определете таймаут за свързване в милисекунди (минимум: 1, подразбиране: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Посочете конфигурационен файл (по подразбиране: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Посочете pid-файла (по подразбиране:  %s)</translation>
     </message>
@@ -4398,20 +4282,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Изхарчете непотвърденото ресто при изпращане на транзакциите (по подразбиране: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Изпратени са следните записи към masternode: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Изпратено към masternode, чака за още записи ( %u / %d ) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Изпратено към Мастернода, чака в опашката %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>Синхронизиране на блок-веригата...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4420,10 +4292,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>Синхронизацията е завършена</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Синхронизиране на masternodes ...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4494,10 +4362,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ще опита отново...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Невалиден частен ключ на Masternode. Моля вижте документацията.</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>Не можете да намери случаен Masternode.</translation>
     </message>
@@ -4506,16 +4370,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не може да се смесват, докато се синхронизира.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>Несъвместимост в masternode.conf</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Невалидна мрежова маска в -whitelist: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Открит е невалиден порт в masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4540,6 +4396,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>Файл %s  съдържа всички частни ключове от този портфейл. Не го споделяйте с никого!</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>Свържете с даден адрес за да слушате за JSON-RPC връзки. Тази опция се игнорира освен ако -rpcallowip също е преминал. Порта е опция и замества -rpcport. Използвай [host]:port нотация за IPv6. Тази опция може да бъде задавана многократно (по подразбиране: 127.0.0.1 и ::1 i.e., localhost, или ако -rpcallowip е посочен, 0.0.0.0 и:: т.е всички адреси)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4694,16 +4554,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Необходимо е повторно изграждане на базата данни използвайки -reindex за да се върнете в неизчистен режим.Това ще изтегли отново съществуващата блок-верига</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d може да бъде използвано само в основната мрежа)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(по подразбиране: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(трябва да бъде %d за основната мрежа)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4786,10 +4638,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неуспешно зареждане на кеша за sporks от</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>Неуспешен разбор на host:port стринг</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Такса (в %s/kB) за добавяне към транзакцията,която изпращате (default: %s)</translation>
     </message>
@@ -4818,16 +4666,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Последното успешно PrivateSend действие бе твърде скоро.</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>Линия: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>Зареждане на InstantSend кеш данни...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Зареждане на адреси...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4856,10 +4696,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Прави излъчващи транзакции от портфейла</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Masternode кеш е празен, пропускане на payments и governance кеш...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -4956,6 +4792,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation>Повторно сканиране на регистъра на блокове за липсващи в портфейла транзакции  при стартиране</translation>
+    </message>
+    <message>
+        <source>Submitted following entries to masternode: %u</source>
+        <translation>Изпратени за следните записи към masternode: %u</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
+        <translation>Изпратени към masternode, изчакване за още записи ( %u ) %s</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation>Синхронизиране на блок веригата...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -5150,14 +4998,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Портфейла няма да създава транзакции, които нарушават ограниченията на веригата на mempool (по подразбиране:%u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Внимание: Най-малко%d от %d masternodes работят на по-нова версия на софтуера. Моля, проверете последните версии, може да се наложи Вие също да актуализирате .</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>Внимание: Всеки masternode (извън %d познатите ни) работи на по-нова версия на софтуера. Моля проверете последните версии, напълно е възможно да сте пропуснали важен/критичен ъпдейт. </translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Внимание: Файла на портфейла  е повреден, данните са спасени! Оригиналния  %s е запазен като %s в %s; ако вашият баланс или транзакции са неверни трябва да възстановите от резервното копие/архив.</translation>
     </message>
@@ -5242,8 +5082,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Инициализирането на проверката за състоянието е неуспешно. %s се изключва.</translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Невалиден -onion адрес или хост: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Невалиден -proxy адрес или хост: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Невалидно количество за -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid characters in -wallet filename</source>
+        <translation>Невалиден символ в името на файла -wallet </translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
@@ -5252,6 +5104,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>Поддържай N DASH анонимизирани (%u-%u, по подразбиране: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>Зареждане на P2P адреси...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5302,10 +5158,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Определи максималния размер на блока в байтове (по подразбиране: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>Задаване на личен ключ на Masternode</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Покажи всички опции за откриване на грешки  (синтаксис: --help -help-debug)</translation>
     </message>
@@ -5340,10 +5192,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>Синхронизиране на governance обектите...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>Синхронизиране на masternodes плащанията...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

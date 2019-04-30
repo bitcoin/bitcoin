@@ -438,14 +438,6 @@
         <translation>Yapılandırma Dosyasını Aç</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>&amp;Ana Düğüm Ayar Dosyasını Aç</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>Ana düğüm ayar dosyasını aç</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>Otomatik &amp;Yedekleri Göster</translation>
     </message>
@@ -650,10 +642,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Toplam %1 (ÖG uyumlu: %2 / Etkin: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>Ağ Uyarısı</translation>
@@ -990,8 +978,12 @@
         <translation>Bu programın ilk kez başlatılmasından dolayı %1 yazılımının verilerini nerede saklayacağını seçebilirsiniz.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 Dash blok zincirinin bir kopyasını indirecek ve depolayacak. En az %2GB veri bu klasörde depolanacak ve zaman içinde büyüyecek. Cüzdan da aynı zamanda bu klasörde depolanacak.</translation>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Bu başlangıç senkronizasyonu çok zorlayıcıdır ve bilgisayarınızdaki daha önce fark edilmemiş olan donanım sorunlarını ortaya çıkarabilir. %1'i her çalıştırdığınızda, kaldığı yerden devam edecektir.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Blok zinciri saklamayı sınırlamayı seçtiyseniz (budama), geçmiş veriler yine de indirilmeli ve işlenmelidir, ancak disk kullanımınızı düşük tutmak için daha sonra silinmelidir.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +992,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Özel bir veri klasörü kullan:</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Bu dizinde en az %1 GB lık veri depolanacak ve zamanla büyüyecek.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Yaklaşık %1 GB veri bu dizinde depolanacak.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 lik Dash blok zinciri nin bir kopyasını indirecek ve depolayacak.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Cüzdan da bu dizinde depolanacaktır.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1033,20 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>Ana Düğümlerim</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>Not: Yerel cüzdanınızdaki ana düğüm durumları biraz yanlış olabilir.&lt;br /&gt;Eğer ana düğümünüz çalışıyor durumda olmalı ama "Durum" alanında "ETKİN" olarak görünmüyorsa&lt;br /&gt;her zaman cüzdanın ek bilgiyi eşleştirmesini bekleyip başka bir düğümü kontrol edin.</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>Adlar</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>Adres</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>Protokol</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>Durum</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Etkin</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>Son Görülme</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>Alacaklı</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>A&amp;d Başlat</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>&amp;Hepsini başlat</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>&amp;KAYIP başlat</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>&amp;Güncelleme durumu</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>Ek Ana düğüm bilgisi göster</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>&amp;Bilgi göster...</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>Şu kadar (san) içinde durum güncellenecek:</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>Tüm Ana Düğümler</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1107,10 +1059,6 @@
     <message>
         <source>Node Count:</source>
         <translation>Düğüm Sayısı:</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Not: Bu liste eski ve deterministik olmayan ana düğüm listesini gösterir. Bu liste sadece DIP3 tamamen etkinleştirilene kadar etkin olacaktır. SPORK15 etkinleştirmesinden sonra bu liste boş kalacaktır.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>DIP3 Masternodes</source>
@@ -1135,14 +1083,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>Operatör Ödülü</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Not: Bu liste henüz etkin değildir ve sadece bilgi amaçlıdır. Ağ hala uyumluluk modunda çalışıyor bu sebeple deterministik olmayan ana düğüm listesi hala etkin. SPORK15 etkinleştirmesinden sonra bu liste geçerli olacak. Ayrıca, ödemeyle ilgili alanlardaki değerler şu anda kullanımda değil ama yine de ger bloktan sonra güncelleniyor. Lütfen bu değerleri SPORK15 etkinleştirmesine kadar dikkate almayın.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>Ad başlat</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1119,6 @@
     <message>
         <source>NONE</source>
         <translation>YOK</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>Ana düğüm başlangıcını onayla</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>Ana düğüm %1 başlatmak istediğinize emin misiniz?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>Tüm ana düğüm başlatmalarını onayla</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>TÜM ana düğümleri başlatmak istediğinize emin misiniz?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>Komut şu an mevcut değil</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>Ana düğüm listesi eşleşene kadar bu komutu kullanamazsınız</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>Kayıp ana düğümleri başlatmayı onayla</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>KAYIP ana düğümleri başlatmak istediğinize emin misiniz?</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>Ana Düğüm %1 için ek bilgi</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>Ana  Düğüm Özel Anahtarı</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>Özel Anahtar</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>Teminat</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>Sürüm</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>Bilinmiyor</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>Sentinel</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2006,16 +1882,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1  henüz güvenli bir şekilde çıkış yapmamıştır...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>Ana düğüm ayar dosyası okuma hatası: %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -3930,10 +3798,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Uyarı: eşlerimizle tamamen mutabık değiliz gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Ayarlarda bir masternodeprivkey belirtmelisiniz. Lütfen yardım almak için dökümantasyona göz atın.</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Komut satırı ve JSON-RPC komutlarını kabul et</translation>
     </message>
@@ -4052,10 +3916,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>Belirtilen adrese bağlan ve ona bağlanan eşleri beyaz listeye al. IPv6 için [makine]:port imlasını kullanınız</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>JSON-RPC bağlantılarını dinlemek için verilen adrese bağla. IPv6 için [host]:port formatını kullanın. Bu seçenek birden fazla defa belirtilebilir (varsayılan: tüm arayüzlere bağla)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -4202,10 +4062,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Şuradan ana düğüm önbelleği yüklemesi başarısız:</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>Şuradan ana düğüm ödemeleri önbelleği yüklemesi başarısız:</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Yeterli kullanıcı bulundu, imzalanıyor ( %s bekleniyor )</translation>
     </message>
@@ -4250,14 +4106,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Yetersiz bakiye.</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Geçersiz -onion adresi: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Geçersiz -proxy adresi: '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>-paytxfee=&lt;tutar&gt;:'%s' unsurunda geçersiz tutar (asgari %s olması lazımdır)</translation>
     </message>
@@ -4294,16 +4142,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ana düğüm önbelleği yükleniyor...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Ana düğüm ödeme önbelleği yükleniyor...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Kilit zaten yerinde.</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Ana düğüm ayar dosyasından ana düğümleri kilitle (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4340,10 +4180,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Sadece &lt;net&gt; ağındaki düğümlere bağlan (ipv4, ipv6 veya onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>Port: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4386,10 +4222,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bağlantı zaman aşım süresini milisaniye olarak belirt (en düşüki: 1, varsayılan: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Ana düğüm ayar dosyasını belirt (varsayılan: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Pid dosyası belirtiniz (varsayılan: %s)</translation>
     </message>
@@ -4398,20 +4230,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Gönderme işlemlerinde doğrulanmamış para üstünü harca (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Ana düğüme şu girdiler gönderildi: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Ana düğüme gönderildi, daha fazla girdi bekleniyor ( %u / %d ) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Ana düğüme gönderildi, kuyrukta bekleniyor %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>Blok zinciri eşleniyor...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4420,10 +4240,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>Eşleme bitti</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Ana düğümler eşleniyor...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4494,10 +4310,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tekrar denenecek...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Geçersiz anadüğümözelanahtarı. Lütfen dökümantasyona göz atın.</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>Rastgele Ana düğüm bulunamıyor.</translation>
     </message>
@@ -4506,16 +4318,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Eşleme sürerken karıştırılamaz.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>masternode.conf okunamıyor</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>-whitelist: '%s' unsurunda geçersiz bir ağ maskesi belirtildi</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>masternode.conf dosyasında geçersiz port tespit edildi</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4694,16 +4498,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d sadece mainnet'te kullanılabilir)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(mainnet için %d olmalı)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4786,10 +4582,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Şuradan spork önbelleği yüklemesi başarısız:</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>host:port metni okunamıyor</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Yolladığınız işlemlere eklenecek ücret (%s/kB olarak) (varsayılan: %s)</translation>
     </message>
@@ -4818,16 +4610,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Son başarılı Özel Gönder eylemi çok yakında yapıldı.</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>Hat: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>Anında Gönder verisi önbelleği yükleniyor...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Adresler yükleniyor...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4856,10 +4640,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Cüzdanın işlemleri yayınlamasını sağla</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Ana düğüm önbelleği boş, ödeme ve yönetim önbellekleri atlanıyor...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -5150,14 +4930,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cüzdan, zincir bellek alanı limitlerini ihlal eden işlem oluşturmayacak. (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Uyarı: En az %d / %d ana düğüm yeni bir yazılım sürümüyle çalışıyor. Lütfen son sürümleri kontrol edin, sizin de güncellemeye ihtiyacınız olabilir.</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>Uyarı her ana düğüm (%d bilinen arasında) daha yeni bir yazılım sürümüyle çalışıyor. Lütfen son sürümleri kontrol edin, büyük/kritik bir güncellemeyi atlamış olmanız yüksek ihtimal dahilinde.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Uyarı: wallet.dat bozuk, veriler geri kazanıldı! Özgün %s, %s olarak %s klasörüne kaydedildi; bakiyeniz ya da işlemleriniz yanlışsa bir yedeklemeden tekrar yüklemeniz gerekir.</translation>
     </message>
@@ -5242,6 +5014,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Başlatma sınaması başarısız oldu. %s kapatılıyor.</translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Geçersiz -onion adresi veya ana makine adı: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Geçersiz -proxy adresi veya ana makine adı: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>-%s=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
     </message>
@@ -5252,6 +5032,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>N DASH'i anonim tut (%u-%u, varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>P2P adresleri yükleniyor...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5302,10 +5086,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Azami blok boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>Ana düğüm özel anahtarubu belirle</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Tüm hata ayıklama seçeneklerini göster (kullanımı: --help -help-debug)</translation>
     </message>
@@ -5340,10 +5120,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>Yönetim nesneleri eşleniyor...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>Ana düğüm ödemeleri eşleniyor...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

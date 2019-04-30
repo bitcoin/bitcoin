@@ -438,14 +438,6 @@
         <translation>Mở tệp cấu hình</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>Mở file cấu hình &amp;Masternode</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>Mở file cấu hình Masternode</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>Hiển thị chế độ Tự động &amp;Sao lưu</translation>
     </message>
@@ -650,10 +642,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Tổng số: %1 (Tương thích PS: %2 / Sẵn sàng: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>Cảnh báo mạng</translation>
@@ -990,8 +978,16 @@
         <translation>Đây là lần đầu chương trình khởi chạy, bạn có thể chọn nơi %1 sẽ lưu trữ data.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 sẽ tải và lưu một bản của block chain của Dash. Có ít nhất %2GB dữ liệu sẽ được lưu vào trong thư mục này, và nó sẽ tăng lên theo thời gian. Ví của bạn cũng sẽ được lưu trong thư mục này.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>Khi bạn click OK, %1 sẽ bắt đầu download và process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Đồng bộ hóa ban đầu này rất đòi hỏi, và có thể phơi bày các sự cố về phần cứng với máy tính của bạn trước đó đã không được chú ý. Mỗi khi bạn chạy %1, nó sẽ tiếp tục tải về nơi nó dừng lại.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Nếu bạn đã chọn giới hạn block chain lưu trữ (pruning),dữ liệu lịch sử vẫn phải được tải xuống và xử lý, nhưng sẽ bị xóa sau đó để giữ cho việc sử dụng đĩa của bạn ở mức usage thấp.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +996,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Sử dụng thư mục dữ liệu tuỳ chọn:</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Ít nhất %1 GB data sẽ được trữ tại danh mục này, và nó sẽ lớn theo thời gian.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Gần đúng %1 GB of data sẽ được lưu giữ trong danh mục này.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 sẽ download và lưu trữ một bản copy của Dash block chain.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>Wallet sẽ cùng được lưu giữ trong danh mục này.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1037,20 @@
         <translation>Từ</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>Các Masternode của tôi</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>Chú ý: Trạng thái của các masternode của bạn ở ví cục bộ có thể có tiềm năng hơi không chính xác. &lt;br /&gt;Luôn luôn đợi ví của bạn đồng bộ dữ liệu thêm và sau đó kiểm tra kém nút khác&lt;br /&gt;nếu masternode của bạn đang chạy nhưng bạn vẫn không thấy nó "ENABLED" trong trường "Trạng thái".</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>Bí danh</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>Địa chỉ</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>Giao thức</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>Trạng thái</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Hoạt động</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>Lần cuối thấy</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>Người nhận</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>Khởi động bí danh</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>Khởi động tất cả</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>Khởi động masternode THIẾU</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>Cập nhật trạng thái</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>Hiển thị thông tin thêm về Masternode</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>Hiển thị &amp;Thông tin...</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>Trạng thái sẽ được cập nhật tự động trong vòng (giây):</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>Tất cả các masternode</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1109,12 +1065,16 @@
         <translation>Số lượng các nút:</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Chú ý: Danh sách này liệt kê danh sách các masternode và không phải loại xác định trước. Nó chỉ hoạt động khi mà DIP3 không được kích hoạt một cách đầy đủ. Sau khi SPORK15 được kích hoạt, danh sách này sẽ bị trống.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <source>DIP3 Masternodes</source>
         <translation>DIP3 Masternodes</translation>
+    </message>
+    <message>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>Chỉ hiển thị masternode mà có khoá trong ví này.</translation>
+    </message>
+    <message>
+        <source>My masternodes only</source>
+        <translation>Chỉ các masternode của tôi</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1135,14 +1095,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>Phần thưởng cho người vận hành</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Chú ý: Danh sách này chưa được kích hoạt và chỉ có mục tiêu cung cấp thông tin. Mạng vẫn đang được chạy trong chế độ tương thích, điều đó có nghĩa là danh sách các masternode không xác định trước vẫn đang hoạt động. Chỉ sau khi SPORK15 được kích hoạt, danh sách này mới sẽ được hoạt động. Như vậy, các giá trị trong các trường liên quan đến giao dịch là hiện tại chưa được sử dụng, nhưng sẽ được cập nhật cho mỗi khối. Hãy bỏ qua điều này cho đến khi SPORK15 được kích hoạt.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>Khởi động bí danh</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1131,6 @@
     <message>
         <source>NONE</source>
         <translation>KHÔNG</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>Xác nhận khởi động masternode</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>Bạn có chắc muốn khởi động masternode %1?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>Xác nhận khởi động tất cả các masternode</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>Bạn có chắc là bạn muốn khởi động TẤT CẢ các masternode?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>Lệnh này chưa sẵn sàng bây giờ</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>Bạn không thể sử dụng lệnh này đến tận khi danh sách masternode được đồng bộ</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>Xác nhận khởi động các masternode còn thiếu</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>Bạn có chắc là bạn muốn khởi động những masternode CÒN THIẾU?</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>Thông tin thêm về Masternode %1</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>Khoá riêng của Masternode</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>Khoá riêng</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>Đặt cọc</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>Phiên bản</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>Không biết</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>Lính canh</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2006,16 +1894,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 vẫn chưa thoát an toàn...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>Lỗi khi đọc file cấu hình masternode: %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -3930,10 +3810,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cảnh báo: Chúng ta có vẻ không được sự đồng ý một cách đầy đủ từ các đối tác ngang hàng! Bạn cần nâng cấp hoặc các nút khác cần nâng cấp.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>Bạn cần chỉ rõ masternodeprivkey trong tệp cấu hình. Hãy xem tài liệu để có hướng dẫn.</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Chấp nhận dòng lệnh và các lệnh JSON-RPC</translation>
     </message>
@@ -4054,10 +3930,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Liên kết với địa chỉ cụ thể và đưa nó vào danh sách chấp nhận của các đối tác kết nối vào nó. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Liên kết với địa chỉ cụ thể để lắng nghe các kết nối JSON-RPC. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6. Tùy chọn này có thể được chỉ định nhiều lần (ngầm định: bind cho tất cả các giao diện)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Tạo tệp mới với các quyền hệ thống ngầm định, thay vì umask 077 (chỉ có tác dụng với chức năng ví được tắt)</translation>
     </message>
@@ -4154,6 +4026,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(ngầm định: %s)</translation>
     </message>
     <message>
+        <source>-wallet parameter must only specify a filename (not a path)</source>
+        <translation>Tham số -wallet chỉ được có tên file (không phải gồm cả đường dẫn)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Chấp nhận các yêu cầu REST công khai (ngầm định: %u)</translation>
     </message>
@@ -4202,10 +4078,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không thể tải cache dữ liệu về masternode từ</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>Không thể tải được cache dữ liệu về các giao dịch từ</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Đã tìm đủ người dùng, đang ký (vui lòng đợi %s)</translation>
     </message>
@@ -4250,14 +4122,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không đủ tiền.</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Địa chỉ -onion không hợp lệ: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Địa chỉ proxy không hợp lệ: '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>Số tiền không hợp lệ cho -paytxfee=&lt;số tiền&gt;: '%s' (ít nhất phải bằng %s)</translation>
     </message>
@@ -4294,16 +4158,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đang tải cache cho masternode...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Đang tải bộ đệm thanh toán cho masternode...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Khoá đã sẵn sàng.</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Khoá các masternode từ tệp cấu hình masternode (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4340,10 +4196,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Chỉ kết nối với các nút trong mạng &lt;net&gt; (IPv4, IPv6 hoặc onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>Cổng: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4386,10 +4238,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Hãy xác định thời gian hết hạn tính theo milli giây (tối thiểu: 1, ngầm định: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Hãy chỉ ra tệp cấu hình masternode (ngầm định: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Hãy chỉ rõ tệp pid (ngầm định: %s)</translation>
     </message>
@@ -4398,20 +4246,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tiên các khoản trả lại chưa được xác nhận khi gửi các giao dịch (ngầm định: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Đã gửi các những thành phần sau tới masternode: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Đã gửi đến masternode, đang đợi các đầu vào khác nữa (%u / %d) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Đã được gửi cho masternode, đang đợi trong hàng đợi %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>Đang đồng bộ chuỗi khối...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4420,10 +4256,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>Đồng bộ đã hoàn thành</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Đang đồng bộ các masternode...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4494,10 +4326,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Sẽ thử lại...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Masternodeprivkey không hợp lệ. Hãy xem lại tài liệu.</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>Không tìm thấy Masternode ngẫu nhiên.</translation>
     </message>
@@ -4506,16 +4334,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Không thể trộn trong quá trình đồng bộ.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>Không hiểu được tệp masternode.conf</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Lỗi netmask được chỉ ra trong -whitelist: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Phát hiện thấy cổng không hợp lệ trong tệp masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4540,6 +4360,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>File %s có chứa tất cả các khoá riêng từ ví này. Không nên chia sẻ nó với bất cứ ai.</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>Ràng buộc với địa chỉ được cho để lắng nghe cho các kết nối JSON-RPC. Tuỳ chọn này được bỏ qua trừ khi tham số -rpcport được cung cấp. Cổng là tuỳ chọn và được thay thế bởi -rpcport. Sử dụng cách viết [host]:port cho IPv6. Tham số này có thể sử dụng nhiều lần (ngầm định: 127.0.0.1 và ::1 cho localhost, hoặc nếu tham số -rpcallowip được xác định, 0.0.0.0 và :: cho tất cả các địa chỉ)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4694,16 +4518,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bạn cần tái lập lại cơ sở dữ liệu sử dụng -reindex để quay trở lại chế độ không bị xén tỉa. Điều này sẽ làm tải lại toàn bộ blockchain</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d chỉ có thể sử dụng ở trên mạng chính thức)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(ngầm định: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(phải là %d cho mạng chính)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4786,10 +4602,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Thất bại việc tải dữ liệu sporks cache từ</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>Không diễn dịch được thông tin địa chỉ máy:cổng</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Phí (theo %s/kB) để thêm vào giao dịch mà bạn gửi (ngầm định: %s)</translation>
     </message>
@@ -4818,16 +4630,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>PrivateSend mới nhất được thực hiện quá gần đây.</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>Dòng: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>Đang tải dữ liệu cache của InstantSend...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Nạp các địa chỉ...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4856,10 +4660,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Làm cho ví truyền rộng các giao dịch</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Bộ đệm Masternode đang trống, bỏ qua các bộ đệm thanh toán và bộ đệm quản trị...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -4956,6 +4756,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation>Quét lại block chain để tìm ra những giao dịch mà ví còn thiếu khi khởi động</translation>
+    </message>
+    <message>
+        <source>Submitted following entries to masternode: %u</source>
+        <translation>Đã gửi các đầu vào sau đây cho masternode: %u</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
+        <translation>Đã được gửi cho masternode, đang đợi có thêm các đầu vào (%u) %s</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation>Đang đồng bộ blockchain...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -5150,14 +4962,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Wallet will not create transactions that violate mempool chain limits (default: %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Cảnh báo: Có ít nhất %d của %d các masternode đang chạy trên phiên bản phần mềm mới hơn. Hãy kiểm tra lại phiên bản mới ra nhất, bạn có thể cũng cần phải update.</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>Cảnh báo: Mỗi một masternode (trong số %d được biết) đang chạy trên phiên bản phần mềm mới hơn. Hãy kiểm tra lại phiên bản phần mềm mới nhất, có vẻ như bạn đã bỏ sót một đợt nâng cấp chính/nâng cấp quan trọng.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
     </message>
@@ -5242,8 +5046,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Initialization sanity check failed. %s is shutting down.</translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Invalid -onion address or hostname: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Invalid -proxy address or hostname: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Invalid amount for -%s=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid characters in -wallet filename</source>
+        <translation>Có ký tự không hợp lệ trong tên file ở tham số -wallet</translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
@@ -5252,6 +5068,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>Giữ N Dash ẩn danh (%u-%u, ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>Loading P2P addresses...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5302,10 +5122,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Thiết lập kích thước khối tối đa theo bytes (ngầm định: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>Thiết lập khoá riêng cho masternode</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Hiển thị tất cả các tuỳ chọn gỡ rối (cách sử dụng: --help -help-debug)</translation>
     </message>
@@ -5340,10 +5156,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>Đang đồng bộ các đối tượng quản trị...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>Đang đồng bộ các giao dịch masternode...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

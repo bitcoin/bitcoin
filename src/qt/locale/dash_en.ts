@@ -30,6 +30,16 @@
     </message>
     <message>
         <location line="+10"/>
+        <source>Show QR code for the currently selected address</source>
+        <translation>Show QR code for the currently selected address</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>&amp;Show QR code</source>
+        <translation>&amp;Show QR code</translation>
+    </message>
+    <message>
+        <location line="+10"/>
         <source>Delete the currently selected address from the list</source>
         <translation>Delete the currently selected address from the list</translation>
     </message>
@@ -54,7 +64,7 @@
         <translation>C&amp;lose</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="+51"/>
+        <location filename="../addressbookpage.cpp" line="+54"/>
         <source>Choose the address to send coins to</source>
         <translation>Choose the address to send coins to</translation>
     </message>
@@ -104,7 +114,17 @@
         <translation>&amp;Edit</translation>
     </message>
     <message>
-        <location line="+193"/>
+        <location line="+1"/>
+        <source>&amp;Show address QR code</source>
+        <translation>&amp;Show address QR code</translation>
+    </message>
+    <message>
+        <location line="+148"/>
+        <source>QR code</source>
+        <translation>QR code</translation>
+    </message>
+    <message>
+        <location line="+66"/>
         <source>Export Address List</source>
         <translation>Export Address List</translation>
     </message>
@@ -312,17 +332,17 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../dash.cpp" line="+558"/>
+        <location filename="../dash.cpp" line="+551"/>
         <source>A fatal error occurred. Dash Core can no longer continue safely and will quit.</source>
         <translation>A fatal error occurred. Dash Core can no longer continue safely and will quit.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="+1129"/>
+        <location filename="../bitcoingui.cpp" line="+1119"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-986"/>
+        <location line="-976"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -558,16 +578,6 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>Open &amp;Masternode Configuration File</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Open Masternode configuration file</source>
-        <translation>Open Masternode configuration file</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Show Automatic &amp;Backups</source>
         <translation>Show Automatic &amp;Backups</translation>
     </message>
@@ -617,12 +627,12 @@
         <translation>Show the %1 help message to get a list with possible Dash command-line options</translation>
     </message>
     <message>
-        <location line="+290"/>
+        <location line="+288"/>
         <source>%1 client</source>
         <translation>%1 client</translation>
     </message>
     <message>
-        <location line="-288"/>
+        <location line="-286"/>
         <source>&amp;PrivateSend information</source>
         <translation>&amp;PrivateSend information</translation>
     </message>
@@ -632,7 +642,7 @@
         <translation>Show the PrivateSend basic information</translation>
     </message>
     <message>
-        <location line="+62"/>
+        <location line="+61"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
@@ -647,7 +657,7 @@
         <translation>&amp;Tools</translation>
     </message>
     <message>
-        <location line="+12"/>
+        <location line="+11"/>
         <source>&amp;Help</source>
         <translation>&amp;Help</translation>
     </message>
@@ -657,7 +667,7 @@
         <translation>Tabs toolbar</translation>
     </message>
     <message numerus="yes">
-        <location line="+372"/>
+        <location line="+366"/>
         <source>%n active connection(s) to Dash network</source>
         <translation>
             <numerusform>%n active connection to Dash network</numerusform>
@@ -826,12 +836,7 @@
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="+86"/>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Total: %1 (PS compatible: %2 / Enabled: %3)</translation>
-    </message>
-    <message>
-        <location line="+126"/>
+        <location filename="../clientmodel.cpp" line="+203"/>
         <source>Network Alert</source>
         <translation>Network Alert</translation>
     </message>
@@ -1015,7 +1020,7 @@
         <translation>(%1 locked)</translation>
     </message>
     <message>
-        <location line="+177"/>
+        <location line="+159"/>
         <source>yes</source>
         <translation>yes</translation>
     </message>
@@ -1249,12 +1254,22 @@
         <translation>As this is the first time the program is launched, you can choose where %1 will store its data.</translation>
     </message>
     <message>
-        <location line="+10"/>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</translation>
+        <location line="+157"/>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</translation>
     </message>
     <message>
         <location line="+10"/>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</translation>
+    </message>
+    <message>
+        <location line="+10"/>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</translation>
+    </message>
+    <message>
+        <location line="-160"/>
         <source>Use the default data directory</source>
         <translation>Use the default data directory</translation>
     </message>
@@ -1264,7 +1279,27 @@
         <translation>Use a custom data directory:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="+96"/>
+        <location filename="../intro.cpp" line="+26"/>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>At least %1 GB of data will be stored in this directory, and it will grow over time.</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Approximately %1 GB of data will be stored in this directory.</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 will download and store a copy of the Dash block chain.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>The wallet will also be stored in this directory.</translation>
+    </message>
+    <message>
+        <location line="+73"/>
         <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
         <translation>Error: Specified data directory &quot;%1&quot; cannot be created.</translation>
     </message>
@@ -1292,142 +1327,57 @@
         <translation>Form</translation>
     </message>
     <message>
-        <location line="+40"/>
-        <source>My Masternodes</source>
-        <translation>My Masternodes</translation>
-    </message>
-    <message>
-        <location line="+16"/>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see &quot;ENABLED&quot; in &quot;Status&quot; field.</source>
-        <translation>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see &quot;ENABLED&quot; in &quot;Status&quot; field.</translation>
-    </message>
-    <message>
-        <location line="+34"/>
-        <location filename="../masternodelist.cpp" line="+682"/>
-        <source>Alias</source>
-        <translation>Alias</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <location line="+181"/>
-        <location line="+120"/>
+        <location line="+123"/>
         <source>Address</source>
         <translation>Address</translation>
     </message>
     <message>
-        <location line="-296"/>
-        <location line="+181"/>
-        <location filename="../masternodelist.cpp" line="+5"/>
-        <source>Protocol</source>
-        <translation>Protocol</translation>
-    </message>
-    <message>
-        <location line="-176"/>
-        <location line="+181"/>
-        <location line="+115"/>
-        <location filename="../masternodelist.cpp" line="+3"/>
+        <location line="+5"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location line="-291"/>
-        <location line="+181"/>
-        <location filename="../masternodelist.cpp" line="+2"/>
-        <source>Active</source>
-        <translation>Active</translation>
-    </message>
-    <message>
-        <location line="-176"/>
-        <location line="+181"/>
-        <location filename="../masternodelist.cpp" line="+1"/>
-        <source>Last Seen</source>
-        <translation>Last Seen</translation>
-    </message>
-    <message>
-        <location line="-176"/>
-        <location line="+181"/>
-        <location line="+125"/>
-        <location filename="../masternodelist.cpp" line="-2"/>
+        <location line="+25"/>
         <source>Payee</source>
         <translation>Payee</translation>
     </message>
     <message>
-        <location line="-293"/>
-        <source>S&amp;tart alias</source>
-        <translation>S&amp;tart alias</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Start &amp;all</source>
-        <translation>Start &amp;all</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Start &amp;MISSING</source>
-        <translation>Start &amp;MISSING</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>&amp;Update status</source>
-        <translation>&amp;Update status</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Show additional Masternode information</source>
-        <translation>Show additional Masternode information</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Show &amp;Info...</source>
-        <translation>Show &amp;Info...</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>Status will be updated automatically in (sec):</translation>
-    </message>
-    <message>
-        <location line="+7"/>
-        <location line="+70"/>
-        <location line="+120"/>
+        <location line="-58"/>
         <source>0</source>
         <translation>0</translation>
     </message>
     <message>
-        <location line="-165"/>
-        <source>All Masternodes</source>
-        <translation>All Masternodes</translation>
-    </message>
-    <message>
-        <location line="+11"/>
-        <location line="+120"/>
+        <location line="-44"/>
         <source>Filter List:</source>
         <translation>Filter List:</translation>
     </message>
     <message>
-        <location line="-113"/>
-        <location line="+120"/>
+        <location line="+7"/>
         <source>Filter masternode list</source>
         <translation>Filter masternode list</translation>
     </message>
     <message>
-        <location line="-100"/>
-        <location line="+120"/>
+        <location line="+30"/>
         <source>Node Count:</source>
         <translation>Node Count:</translation>
     </message>
     <message>
-        <location line="-52"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location line="+14"/>
+        <location line="-48"/>
         <source>DIP3 Masternodes</source>
         <translation>DIP3 Masternodes</translation>
     </message>
     <message>
-        <location line="+83"/>
+        <location line="+25"/>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>Show only masternodes this wallet has keys for.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>My masternodes only</source>
+        <translation>My masternodes only</translation>
+    </message>
+    <message>
+        <location line="+65"/>
         <source>PoSe Score</source>
         <translation>PoSe Score</translation>
     </message>
@@ -1452,17 +1402,7 @@
         <translation>Operator Reward</translation>
     </message>
     <message>
-        <location line="+8"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <location filename="../masternodelist.cpp" line="-602"/>
-        <source>Start alias</source>
-        <translation>Start alias</translation>
-    </message>
-    <message>
-        <location line="+7"/>
+        <location filename="../masternodelist.cpp" line="+67"/>
         <source>Copy ProTx Hash</source>
         <translation>Copy ProTx Hash</translation>
     </message>
@@ -1472,7 +1412,7 @@
         <translation>Copy Collateral Outpoint</translation>
     </message>
     <message>
-        <location line="+352"/>
+        <location line="+106"/>
         <source>ENABLED</source>
         <translation>ENABLED</translation>
     </message>
@@ -1509,88 +1449,7 @@
         <translation>NONE</translation>
     </message>
     <message>
-        <location line="+67"/>
-        <source>Confirm masternode start</source>
-        <translation>Confirm masternode start</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>Are you sure you want to start masternode %1?</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Confirm all masternodes start</source>
-        <translation>Confirm all masternodes start</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>Are you sure you want to start ALL masternodes?</translation>
-    </message>
-    <message>
-        <location line="+23"/>
-        <source>Command is not available right now</source>
-        <translation>Command is not available right now</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>You can&apos;t use this command until masternode list is synced</source>
-        <translation>You can&apos;t use this command until masternode list is synced</translation>
-    </message>
-    <message>
-        <location line="+6"/>
-        <source>Confirm missing masternodes start</source>
-        <translation>Confirm missing masternodes start</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>Are you sure you want to start MISSING masternodes?</translation>
-    </message>
-    <message>
-        <location line="+73"/>
-        <source>Additional information for Masternode %1</source>
-        <translation>Additional information for Masternode %1</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Masternode Private Key</source>
-        <translation>Masternode Private Key</translation>
-    </message>
-    <message>
-        <location line="+5"/>
-        <source>Private Key</source>
-        <translation>Private Key</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Collateral</source>
-        <translation>Collateral</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Version</source>
-        <translation>Version</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <location line="+1"/>
-        <source>Unknown</source>
-        <translation>Unknown</translation>
-    </message>
-    <message>
-        <location line="+0"/>
-        <source>Sentinel</source>
-        <translation>Sentinel</translation>
-    </message>
-    <message>
-        <location line="+49"/>
+        <location line="+87"/>
         <source>Additional information for DIP3 Masternode %1</source>
         <translation>Additional information for DIP3 Masternode %1</translation>
     </message>
@@ -2589,19 +2448,9 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../dash.cpp" line="+132"/>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
-        <location line="+49"/>
+        <location filename="../dash.cpp" line="+176"/>
         <source>%1 didn&apos;t yet exit safely...</source>
         <translation>%1 didn&apos;t yet exit safely...</translation>
-    </message>
-    <message>
-        <location line="-48"/>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>Error reading masternode configuration file: %1</translation>
     </message>
     <message>
         <location filename="../bitcoinunits.cpp" line="+233"/>
@@ -2609,12 +2458,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="+137"/>
+        <location filename="../guiutil.cpp" line="+133"/>
         <source>Enter a Dash address (e.g. %1)</source>
         <translation>Enter a Dash address (e.g. %1)</translation>
     </message>
     <message>
-        <location line="+859"/>
+        <location line="+837"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
@@ -2712,7 +2561,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject::QObject</name>
     <message>
-        <location filename="../dash.cpp" line="-41"/>
+        <location filename="../dash.cpp" line="-81"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation>Error: Specified data directory &quot;%1&quot; does not exist.</translation>
     </message>
@@ -2745,7 +2594,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Save Image...</translation>
     </message>
     <message>
-        <location filename="../qrdialog.cpp" line="+149"/>
+        <location filename="../qrdialog.cpp" line="+153"/>
         <source>Error creating QR Code.</source>
         <translation>Error creating QR Code.</translation>
     </message>
@@ -2753,7 +2602,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QRGeneralImageWidget</name>
     <message>
-        <location line="-113"/>
+        <location line="-117"/>
         <source>&amp;Save Image...</source>
         <translation>&amp;Save Image...</translation>
     </message>
@@ -2972,7 +2821,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location line="+62"/>
         <location filename="../rpcconsole.cpp" line="+484"/>
-        <location line="+788"/>
+        <location line="+795"/>
         <source>Select a peer to view detailed information.</source>
         <translation>Select a peer to view detailed information.</translation>
     </message>
@@ -3163,7 +3012,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-reindex: Rebuild block chain index from current blk000??.dat files.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="-692"/>
+        <location filename="../rpcconsole.cpp" line="-699"/>
         <source>&amp;Disconnect</source>
         <translation>&amp;Disconnect</translation>
     </message>
@@ -3236,7 +3085,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Network activity disabled</translation>
     </message>
     <message>
-        <location line="+153"/>
+        <location line="+33"/>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Total: %1 (Enabled: %2)</translation>
+    </message>
+    <message>
+        <location line="+127"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
@@ -4291,7 +4145,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>conflicted</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>%1/offline</source>
         <translation>%1/offline</translation>
     </message>
@@ -4326,7 +4180,17 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 confirmations</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+2"/>
+        <source>locked via LLMQ based ChainLocks</source>
+        <translation>locked via LLMQ based ChainLocks</translation>
+    </message>
+    <message>
+        <location line="+6"/>
+        <source>verified via LLMQ based InstantSend</source>
+        <translation>verified via LLMQ based InstantSend</translation>
+    </message>
+    <message>
+        <location line="+11"/>
         <source>verified via InstantSend</source>
         <translation>verified via InstantSend</translation>
     </message>
@@ -4723,7 +4587,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="+69"/>
+        <location filename="../transactionview.cpp" line="+70"/>
         <location line="+11"/>
         <location line="+17"/>
         <source>All</source>
@@ -4880,7 +4744,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Show transaction details</translation>
     </message>
     <message>
-        <location line="+221"/>
+        <location line="+1"/>
+        <source>Show address QR code</source>
+        <translation>Show address QR code</translation>
+    </message>
+    <message>
+        <location line="+223"/>
         <source>Export Transaction History</source>
         <translation>Export Transaction History</translation>
     </message>
@@ -4945,7 +4814,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>The transaction history was successfully saved to %1.</translation>
     </message>
     <message>
-        <location line="+169"/>
+        <location line="+143"/>
+        <source>QR code</source>
+        <translation>QR code</translation>
+    </message>
+    <message>
+        <location line="+43"/>
         <source>Range:</source>
         <translation>Range:</translation>
     </message>
@@ -4974,7 +4848,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="+299"/>
+        <location filename="../walletmodel.cpp" line="+300"/>
         <location line="+31"/>
         <location line="+5"/>
         <location line="+11"/>
@@ -4996,7 +4870,7 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletView</name>
     <message>
-        <location filename="../walletview.cpp" line="+50"/>
+        <location filename="../walletview.cpp" line="+49"/>
         <source>&amp;Export</source>
         <translation>&amp;Export</translation>
     </message>
@@ -5049,7 +4923,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bind to given address and always listen on it. Use [host]:port notation for IPv6</translation>
     </message>
     <message>
-        <location line="+52"/>
+        <location line="+54"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Error: Listening for incoming connections failed (listen returned error %s)</translation>
     </message>
@@ -5089,7 +4963,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+65"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</translation>
     </message>
@@ -5099,12 +4973,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</translation>
-    </message>
-    <message>
-        <location line="+24"/>
+        <location line="+31"/>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accept command line and JSON-RPC commands</translation>
     </message>
@@ -5159,7 +5028,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Corrupted block database detected</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Debugging/Testing options:</source>
         <translation>Debugging/Testing options:</translation>
     </message>
@@ -5224,7 +5093,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Failed to listen on any port. Use -listen=0 if you want this.</translation>
     </message>
     <message>
-        <location line="-401"/>
+        <location line="-391"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</translation>
     </message>
@@ -5254,12 +5123,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</translation>
-    </message>
-    <message>
-        <location line="+9"/>
+        <location line="+14"/>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</translation>
     </message>
@@ -5359,12 +5223,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</translation>
     </message>
     <message>
-        <location line="+40"/>
+        <location line="+33"/>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+8"/>
         <source>You need to rebuild the database using -reindex-chainstate to change -txindex</source>
         <translation>You need to rebuild the database using -reindex-chainstate to change -txindex</translation>
     </message>
@@ -5374,12 +5238,17 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>You should specify a masternodeblsprivkey in the configuration. Please see documentation for help.</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>(default: %s)</source>
         <translation>(default: %s)</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+7"/>
+        <source>-wallet parameter must only specify a filename (not a path)</source>
+        <translation>-wallet parameter must only specify a filename (not a path)</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Accept public REST requests (default: %u)</translation>
     </message>
@@ -5409,7 +5278,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+18"/>
         <source>Enable the client to act as a masternode (0-1, default: %u)</source>
         <translation>Enable the client to act as a masternode (0-1, default: %u)</translation>
     </message>
@@ -5439,12 +5308,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Failed to load masternode cache from</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>Failed to load masternode payments cache from</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Found enough users, signing ( waiting %s )</translation>
     </message>
@@ -5499,37 +5363,27 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Insufficient funds.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation>Invalid -onion address: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Invalid -proxy address: &apos;%s&apos;</source>
-        <translation>Invalid -proxy address: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+3"/>
+        <location line="+5"/>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</source>
         <translation>Invalid amount for -paytxfee=&lt;amount&gt;: &apos;%s&apos; (must be at least %s)</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Invalid masternodeblsprivkey. Please see documenation.</source>
         <translation>Invalid masternodeblsprivkey. Please see documenation.</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Invalid minimum number of spork signers specified with -minsporkkeys</source>
         <translation>Invalid minimum number of spork signers specified with -minsporkkeys</translation>
     </message>
     <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Keypool ran out, please call keypoolrefill first</source>
         <translation>Keypool ran out, please call keypoolrefill first</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</translation>
     </message>
@@ -5554,22 +5408,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Loading masternode cache...</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Loading masternode payment cache...</source>
-        <translation>Loading masternode payment cache...</translation>
-    </message>
-    <message>
         <location line="+5"/>
         <source>Lock is already in place.</source>
         <translation>Lock is already in place.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Lock masternodes from masternode configuration file (default: %u)</translation>
-    </message>
-    <message>
-        <location line="+6"/>
+        <location line="+5"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</translation>
     </message>
@@ -5615,11 +5459,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+3"/>
-        <source>Port: %d</source>
-        <translation>Port: %d</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Prepend debug output with timestamp (default: %u)</translation>
     </message>
@@ -5654,7 +5493,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Set the masternode BLS private key</translation>
     </message>
     <message>
-        <location line="+2"/>
+        <location line="+1"/>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>Set the number of threads to service RPC calls (default: %d)</translation>
     </message>
@@ -5670,11 +5509,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+2"/>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Specify masternode configuration file (default: %s)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Specify pid file (default: %s)</source>
         <translation>Specify pid file (default: %s)</translation>
     </message>
@@ -5684,24 +5518,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Spend unconfirmed change when sending transactions (default: %u)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>Submitted following entries to masternode: %u / %d</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Submitted to masternode, waiting for more entries ( %u / %d ) %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Submitted to masternode, waiting in queue %s</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Synchroning blockchain...</source>
-        <translation>Synchroning blockchain...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5714,12 +5533,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Synchronization finished</translation>
     </message>
     <message>
-        <location line="+4"/>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronizing masternodes...</translation>
-    </message>
-    <message>
-        <location line="+5"/>
+        <location line="+8"/>
         <source>This is not a Masternode.</source>
         <translation>This is not a Masternode.</translation>
     </message>
@@ -5804,12 +5618,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Will retry...</translation>
     </message>
     <message>
-        <location line="-165"/>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Invalid masternodeprivkey. Please see documenation.</translation>
-    </message>
-    <message>
-        <location line="-79"/>
+        <location line="-231"/>
         <source>Can&apos;t find random Masternode.</source>
         <translation>Can&apos;t find random Masternode.</translation>
     </message>
@@ -5819,19 +5628,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Can&apos;t mix while sync in progress.</translation>
     </message>
     <message>
-        <location line="+14"/>
-        <source>Could not parse masternode.conf</source>
-        <translation>Could not parse masternode.conf</translation>
-    </message>
-    <message>
-        <location line="+66"/>
+        <location line="+77"/>
         <source>Invalid netmask specified in -whitelist: &apos;%s&apos;</source>
         <translation>Invalid netmask specified in -whitelist: &apos;%s&apos;</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Invalid port detected in masternode.conf</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5854,17 +5653,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</translation>
     </message>
     <message>
-        <location line="-400"/>
+        <location line="-385"/>
         <source>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</source>
         <translation>Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)</translation>
     </message>
     <message>
-        <location line="-43"/>
+        <location line="-45"/>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s file contains all private keys from this wallet. Do not share it with anyone!</translation>
     </message>
     <message>
-        <location line="+46"/>
+        <location line="+28"/>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</translation>
+    </message>
+    <message>
+        <location line="+20"/>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
         <translation>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</translation>
     </message>
@@ -6039,7 +5843,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Wallet is locked, can&apos;t replenish keypool! Automatic backups and mixing are disabled, please unlock your wallet to replenish keypool.</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+9"/>
         <source>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</source>
         <translation>Warning: Unknown block versions being mined! It&apos;s possible unknown rules are in effect</translation>
     </message>
@@ -6049,24 +5853,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>You are starting in lite mode, all Dash-specific functionality is disabled.</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+2"/>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
     </message>
     <message>
-        <location line="+11"/>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d could be used only on mainnet)</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+12"/>
         <source>(default: %u)</source>
         <translation>(default: %u)</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>(must be %d for mainnet)</source>
-        <translation>(must be %d for mainnet)</translation>
     </message>
     <message>
         <location line="+3"/>
@@ -6074,7 +5868,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-maxmempool must be at least %d MB</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; can be:</translation>
     </message>
@@ -6094,7 +5888,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Automatically create Tor hidden service (default: %d)</translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+21"/>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>ERROR! Failed to create automatic backup</translation>
     </message>
@@ -6164,14 +5958,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Failed to load InstantSend data cache from</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+4"/>
         <source>Failed to load sporks cache from</source>
         <translation>Failed to load sporks cache from</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Failed to parse host:port string</source>
-        <translation>Failed to parse host:port string</translation>
     </message>
     <message>
         <location line="+2"/>
@@ -6194,7 +5983,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Invalid amount for -fallbackfee=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+12"/>
         <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
         <translation>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</translation>
     </message>
@@ -6209,22 +5998,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Last successful PrivateSend action was too recent.</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Line: %d</source>
-        <translation>Line: %d</translation>
-    </message>
-    <message>
         <location line="+3"/>
         <source>Loading InstantSend data cache...</source>
         <translation>Loading InstantSend data cache...</translation>
     </message>
     <message>
-        <location line="+1"/>
-        <source>Loading addresses...</source>
-        <translation>Loading addresses...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Loading block index...</source>
         <translation>Loading block index...</translation>
     </message>
@@ -6234,7 +6013,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Loading governance cache...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Loading sporks cache...</source>
         <translation>Loading sporks cache...</translation>
     </message>
@@ -6254,14 +6033,9 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Location of the auth cookie (default: data dir)</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Make the wallet broadcast transactions</source>
         <translation>Make the wallet broadcast transactions</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Masternode cache is empty, skipping payments and governance cache...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -6339,7 +6113,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Password for JSON-RPC connections</translation>
     </message>
     <message>
-        <location line="+4"/>
+        <location line="+3"/>
         <source>Print version and exit</source>
         <translation>Print version and exit</translation>
     </message>
@@ -6384,7 +6158,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Rescan the block chain for missing wallet transactions on startup</translation>
     </message>
     <message>
-        <location line="+38"/>
+        <location line="+24"/>
+        <source>Submitted following entries to masternode: %u</source>
+        <translation>Submitted following entries to masternode: %u</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
+        <translation>Submitted to masternode, waiting for more entries ( %u ) %s</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Synchronizing blockchain...</source>
+        <translation>Synchronizing blockchain...</translation>
+    </message>
+    <message>
+        <location line="+4"/>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>The wallet will avoid paying less than the minimum relay fee.</translation>
     </message>
@@ -6489,12 +6278,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>see debug.log for details.</translation>
     </message>
     <message>
-        <location line="-104"/>
+        <location line="-100"/>
         <source>RPC server options:</source>
         <translation>RPC server options:</translation>
     </message>
     <message>
-        <location line="-504"/>
+        <location line="-486"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
@@ -6509,7 +6298,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+22"/>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Cannot obtain a lock on data directory %s. %s is probably already running.</translation>
     </message>
@@ -6624,17 +6413,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Wallet will not create transactions that violate mempool chain limits (default: %u)</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it&apos;s very likely that you missed a major/critical update.</source>
-        <translation>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it&apos;s very likely that you missed a major/critical update.</translation>
-    </message>
-    <message>
-        <location line="+10"/>
+        <location line="+9"/>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</translation>
     </message>
@@ -6644,7 +6423,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</translation>
     </message>
     <message>
-        <location line="+19"/>
+        <location line="+16"/>
         <source>%s corrupt, salvage failed</source>
         <translation>%s corrupt, salvage failed</translation>
     </message>
@@ -6659,7 +6438,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s is set very high!</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
         <source>(press q to shutdown and continue later)</source>
         <translation>(press q to shutdown and continue later)</translation>
     </message>
@@ -6679,7 +6458,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-rpcport must be specified when -devnet and -server are specified</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+7"/>
         <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
         <translation>Allow RFC1918 addresses to be relayed and connected to (default: %u)</translation>
     </message>
@@ -6704,7 +6483,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Copyright (C)</translation>
     </message>
     <message>
-        <location line="+21"/>
+        <location line="+20"/>
         <source>Error loading %s</source>
         <translation>Error loading %s</translation>
     </message>
@@ -6729,7 +6508,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Failed to find mixing queue to join</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+7"/>
         <source>Failed to start a new mixing queue</source>
         <translation>Failed to start a new mixing queue</translation>
     </message>
@@ -6739,12 +6518,27 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Initialization sanity check failed. %s is shutting down.</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+4"/>
+        <source>Invalid -onion address or hostname: &apos;%s&apos;</source>
+        <translation>Invalid -onion address or hostname: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Invalid -proxy address or hostname: &apos;%s&apos;</source>
+        <translation>Invalid -proxy address or hostname: &apos;%s&apos;</translation>
+    </message>
+    <message>
+        <location line="+1"/>
         <source>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</source>
         <translation>Invalid amount for -%s=&lt;amount&gt;: &apos;%s&apos;</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+3"/>
+        <source>Invalid characters in -wallet filename</source>
+        <translation>Invalid characters in -wallet filename</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>Invalid spork address specified with -sporkaddr</source>
         <translation>Invalid spork address specified with -sporkaddr</translation>
     </message>
@@ -6754,7 +6548,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Keep N DASH anonymized (%u-%u, default: %u)</translation>
     </message>
     <message>
-        <location line="+51"/>
+        <location line="+9"/>
+        <source>Loading P2P addresses...</source>
+        <translation>Loading P2P addresses...</translation>
+    </message>
+    <message>
+        <location line="+37"/>
         <source>Print this help message and exit</source>
         <translation>Print this help message and exit</translation>
     </message>
@@ -6814,12 +6613,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Set maximum block size in bytes (default: %d)</translation>
     </message>
     <message>
-        <location line="+2"/>
-        <source>Set the masternode private key</source>
-        <translation>Set the masternode private key</translation>
-    </message>
-    <message>
-        <location line="+2"/>
+        <location line="+3"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Show all debugging options (usage: --help -help-debug)</translation>
     </message>
@@ -6839,7 +6633,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Specify data directory</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+2"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Specify wallet file (within data directory)</translation>
     </message>
@@ -6854,22 +6648,17 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Starting network threads...</translation>
     </message>
     <message>
-        <location line="+7"/>
+        <location line="+6"/>
         <source>Synchronization pending...</source>
         <translation>Synchronization pending...</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Synchronizing governance objects...</source>
         <translation>Synchronizing governance objects...</translation>
     </message>
     <message>
         <location line="+1"/>
-        <source>Synchronizing masternode payments...</source>
-        <translation>Synchronizing masternode payments...</translation>
-    </message>
-    <message>
-        <location line="+2"/>
         <source>The source code is available from %s.</source>
         <translation>The source code is available from %s.</translation>
     </message>

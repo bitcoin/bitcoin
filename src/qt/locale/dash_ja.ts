@@ -438,14 +438,6 @@
         <translation>設定ファイルを開く</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>マスターノード設定ファイルを開く(&amp;M)</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>マスターノード設定ファイルを開く</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>自動バックアップを表示(&amp;B)</translation>
     </message>
@@ -650,10 +642,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>合計: %1 (PS 互換: %2 / 有効: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>ネットワーク警告</translation>
@@ -991,8 +979,16 @@
         <translation>これは本プログラムの最初の起動です。%1 がデータを保存する場所を選択して下さい。</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1はDashブロックチェーンのデータのコピーをダウンロードして保存します。 少なくとも%2GBのデータがこのディレクトリに保存され、時間の経過とともに容量が増加します。 ウォレットもこのディレクトリに保存されます。</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>OKをクリックすると、%1は完全な%4ブロックチェーン (%2GB) のダウンロードおよび処理を%4が開始された時点の%3から開始します。</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>この初期同期には多大なリソースを消費し、あなたのコンピュータでこれまで見つからなかったハードウェア上の問題が発生する場合があります。%1 を実行する度に、中断された時点からダウンロードを再開します。</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>ブロックチェーンの保存容量に制限を設けることを選択した場合 (剪定) にも、過去のデータのダウンロードおよび処理が必要になります。しかし、これらのデータはディスク使用量を低く抑えるために、後で削除されます。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1001,6 +997,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>任意のデータディレクトリを使用：</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>少なくとも%1GBのデータをこのディレクトリに保存する必要があります。またこのデータは時間とともに増加していきます。</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>おおむね%1GBのデータがこのディレクトリに保存されます。</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1はDashのブロックチェーンの複製をダウンロードし保存します。</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>ウォレットもこのディレクトリに保存されます。</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1026,76 +1038,20 @@
         <translation>フォーム</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>私のマスターノード</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>注：ローカルウォレットのマスターノードのステータスは、若干正しくない可能性があります。&lt;br /&gt;ウォレットが新しいデータを同期するのを常に待って、他のノードからダブルチェックを行います。&lt;br /&gt;あなたのマスターノードが動作していても、"ステータス"フィールドに "ENABLED"が表示されていない場合があります。</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>エイリアス</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>アドレス</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>プロトコル</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>ステータス</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>アクティブ</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>最終更新</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>受取人</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>エイリアスの開始(&amp;T)</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>すべて開始(&amp;A)</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>ミッシングマスターノードの開始(&amp;M)</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>ステータスアップデート(&amp;U)</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>追加のマスターノード情報を表示</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>情報の表示(&amp;I)</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>ステータスは自動でアップデートされます(秒):</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>すべてのマスターノード</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1108,10 +1064,6 @@
     <message>
         <source>Node Count:</source>
         <translation>ノード数:</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;注：このリストは、従来の非決定論的マスターノードリストを表します。 DIP3が完全にアクティブ化されていない限り有効です。 SPORK15の有効化後、このリストは空になります。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>DIP3 Masternodes</source>
@@ -1136,14 +1088,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>オペレーター報酬</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;注：このリストはまだアクティブではなく、情報提供のみを目的としています。 ネットワークはまだ互換モードで実行されています。つまり、非決定論的マスターノードリストはまだアクティブです。 SPORK15のアクティブ化後に初めて、このリストがアクティブになります。 また、支払い関連フィールドの値は現時点では使用されていませんが、ブロックごとに更新されています。 SPORK15のアクティブ化までこれを無視してください。&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>エイリアス開始</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1180,70 +1124,6 @@
     <message>
         <source>NONE</source>
         <translation>無し</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>マスターノードの開始を確認</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>本当にマスターノード %1 を開始したいですか?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>すべてのマスターノードの開始を確認</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>本当にすべてのマスターノードを開始したいですか?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>コマンドは現在利用できません。</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>このコマンドはマスターノードのリストが同期されるまで使用できません。</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>ミッシングマスターノードの開始を確認</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>本当に不明なマスターノードを開始したいですか?</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>マスターノード %1 の追加情報</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>マスターノードプライベートキー</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>プライベートキー</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>コラテラル</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IPアドレス</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>バージョン</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>不明</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>センチネル</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2007,16 +1887,8 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dashコア</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 はまだ安全に終了していません</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>マスターノード設定ファイルの読み込みエラー: %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -3931,10 +3803,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告： ピアと完全に同意しないようです！あなたはアップグレードする必要があるかもしれません。または他のノードがアップグレードする必要があるかもしれません。</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation> masternodeprivkeyを設定で指定する必要があります。ドキュメントを参照してください。</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>コマンドラインと JSON-RPC コマンドを許可</translation>
     </message>
@@ -4053,10 +3921,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>指定されたアドレスおよび、そこに接続を行ってきたホワイトリストのピアに対してバインドを行います。IPv6の場合には [host]:port 表記を使用してください</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>指定されたアドレスに対して JSON-RPC 接続をリッスンしするようバインドします。IPv6の場合には [host]:port 表記を使用してください。このオプションは複数回指定することが可能です (初期設定：すべてのインターフェースに対してバインドする)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -4203,10 +4067,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>マスターノードキャッシュの読み込み失敗：</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>マスターノードペイメントキャッシュの読み込み失敗：</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>充分なユーザーを発見しました、サインしています ( 待機中 %s )</translation>
     </message>
@@ -4251,14 +4111,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>残高が不足しています</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>無効な -onion アドレス：'%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>無効な -proxy アドレス： '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>-paytxfee=&lt;amount&gt; に対する無効な数量です： '%s' (少なくとも %s でなければいけません)</translation>
     </message>
@@ -4295,16 +4147,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>マスターノードキャッシュを読み込んでいます...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>マスターノードペイメントキャッシュを読み込んでいます...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>すでにロックされています</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>マスターノード設定ファイルからマスターノードをロック(初期設定: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4341,10 +4185,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>&lt;net&gt; (ipv4, ipv6 または onion) ネットワーク内のノードだけに接続する</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>ポート: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4387,10 +4227,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>接続のタイムアウトをミリ秒単位で指定 (最小値： 1, 初期設定：: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>マスターノード設定ファイルを指定 (初期設定: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>pid ファイルの指定 (初期設定： %s)</translation>
     </message>
@@ -4399,20 +4235,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>トランザクション送信時に未検証のチェンジを使用する (初期設定： %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>以下のエントリーをマスターノードにサブミット: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>マスターノードにサブミット完了、追加のエントリーのために待機中 ( %u / %d ) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>マスターノードにサブミット、待機中 %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>ブロックに同期中...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4421,10 +4245,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronization finished</source>
         <translation>同期完了</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>マスターノード同期中...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4495,10 +4315,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>再試行...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>無効な masternodeprivkey、ドキュメントを参照してください。</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>ランダムなマスターノードを発見できません</translation>
     </message>
@@ -4507,16 +4323,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>同期中はミキシングできません</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>masternode.confをパースできません</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>-whitelist で指定された無効なネットマスク： '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>無効なポートがmasternode.confで検出されました</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4695,16 +4503,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>非剪定モードに戻るためには-reindexオプションを使用してデータベースを再構築する必要があります。これによりブロックチェーン全体の再ダウンロードが行われます。</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d はメインネットのみで使用が可能です)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(初期値: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(メインネット用に常時 %d )</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4787,10 +4587,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>スポークキャッシュの読み込み失敗：</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>host:port 文字列のパース失敗</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>送信するトランザクションに付加する手数料 (%s/kB単位) (初期値: %s)</translation>
     </message>
@@ -4819,16 +4615,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>最後の成功したプライベートセンドを実行してから充分な時間が経っていません。</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>ライン: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>インスタントセンドデータキャッシュを読み込み中...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>アドレスを読み込んでいます…</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4857,10 +4645,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>ウォレットにトランザクションをブロードキャストさせる</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>マスターノードキャッシュが空です、ペイメントとガバナンスキャッシュをスキップしています...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -5151,14 +4935,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>ウォレットがmempoolチェーン制限数を超えてトランザクションを作らないようにする (初期値: %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>警告:少なくとも%d ／ %d マスターノードは最新のソフトウェアを運用しています。最新のリリースをチェックしてください。アップデートが必要になるかもしれません。</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>警告: すべてのマスターノード (%dのうち ) 最新のバージョンのソフトウェアを運用しています。最新のリリースをチェックしてください。重要なアップデートを見落とした可能性があります。</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>警告: ウォレットファイルが破損していましたのでデータを復旧しました！元の %s は %s として %s に保存されました; 残高やトランザクションが正しくない場合にはバックアップから復元してください。</translation>
     </message>
@@ -5243,6 +5019,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>初期化時の健全性チェックに失敗しました。%s を終了します。</translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>無効な -onion アドレスまたはホスト名: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>無効な -proxy アドレスまたはホスト名: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>無効な額 -%s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -5253,6 +5037,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>匿名化された N DASH を保持 (%u-%u, 初期設定: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>P2Pアドレスを読み込んでいます...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5303,10 +5091,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>最大ブロックサイズをバイトで設定 (初期設定： %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>マスターノードプライベートセンドキーを設定</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>すべてのデバッグオプションを表示する (使い方： --help -help-debug)</translation>
     </message>
@@ -5341,10 +5125,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>ガバナンスオブジェクトを同期中...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>マスターノードペイメント同期中...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>

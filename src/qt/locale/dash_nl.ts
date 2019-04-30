@@ -22,6 +22,14 @@
         <translation>&amp;Kopiëren</translation>
     </message>
     <message>
+        <source>Show QR code for the currently selected address</source>
+        <translation>Toon QR-code voor het momenteel geselecteerde adres</translation>
+    </message>
+    <message>
+        <source>&amp;Show QR code</source>
+        <translation>Toon QR-Code</translation>
+    </message>
+    <message>
         <source>Delete the currently selected address from the list</source>
         <translation>Verwijder het geselecteerde adres van de lijst</translation>
     </message>
@@ -80,6 +88,14 @@
     <message>
         <source>&amp;Edit</source>
         <translation>&amp;Bewerken</translation>
+    </message>
+    <message>
+        <source>&amp;Show address QR code</source>
+        <translation>Toon adres QR-code</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>QR-code</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -438,14 +454,6 @@
         <translation>Open configuratie bestand</translation>
     </message>
     <message>
-        <source>Open &amp;Masternode Configuration File</source>
-        <translation>Open &amp;Masternode configuratie bestand</translation>
-    </message>
-    <message>
-        <source>Open Masternode configuration file</source>
-        <translation>Open Masternode configuratie bestand</translation>
-    </message>
-    <message>
         <source>Show Automatic &amp;Backups</source>
         <translation>Toon automatische &amp;backups</translation>
     </message>
@@ -650,10 +658,6 @@
 </context>
 <context>
     <name>ClientModel</name>
-    <message>
-        <source>Total: %1 (PS compatible: %2 / Enabled: %3)</source>
-        <translation>Totaal: %1 (PS compatibel: %2 / ingeschakeld: %3)</translation>
-    </message>
     <message>
         <source>Network Alert</source>
         <translation>Netwerkwaarschuwing</translation>
@@ -990,8 +994,16 @@
         <translation>Omdat dit de eerste keer is dat het programma gestart is, kunt u nu kiezen waar %1 de data moet opslaan.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the Dash block chain. At least %2GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>%1 zal een kopie van de Dash-blockchain downloaden en opslaan. Ten minste %2GB aan data zal worden opgeslagen in deze folder, dit zal toenemen in de toekomst. De portemonnee zal ook in deze folder worden opgeslagen.</translation>
+        <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
+        <translation>Als u op OK klikt, dan zal %1 beginnen met downloaden en verwerken van de volledige %4 blokketen (%2GB) startend met de eerste transacties in %3 toen %4 initeel werd gestart.</translation>
+    </message>
+    <message>
+        <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
+        <translation>Deze initiële synchronisatie is heel veeleisend, en kan hardware problemen met uw computer blootleggen die voorheen onopgemerkt bleven. Elke keer dat %1 gebruikt word, zal verdergegaan worden waar gebleven is.</translation>
+    </message>
+    <message>
+        <source>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</source>
+        <translation>Als u gekozen heeft om de blokketenopslag te beperken (pruning), dan moet de historische data nog steeds gedownload en verwerkt worden, maar zal verwijderd worden naderhand om schijf gebruik zo laag mogelijk te houden.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1000,6 +1012,22 @@
     <message>
         <source>Use a custom data directory:</source>
         <translation>Gebruik een persoonlijke gegevensmap:</translation>
+    </message>
+    <message>
+        <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
+        <translation>Tenminste %1 GB aan data zal worden opgeslagen in deze map, en dit zal naarmate de tijd voortschrijdt groeien.</translation>
+    </message>
+    <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>Gemiddeld %1 GB aan data zal worden opgeslagen in deze map.</translation>
+    </message>
+    <message>
+        <source>%1 will download and store a copy of the Dash block chain.</source>
+        <translation>%1 zal een kopie van de blokketen van Dash downloaden en opslaan.</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>De portemonnee wordt ook in deze map opgeslagen.</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1025,76 +1053,20 @@
         <translation>Formulier</translation>
     </message>
     <message>
-        <source>My Masternodes</source>
-        <translation>Mijn Masternodes</translation>
-    </message>
-    <message>
-        <source>Note: Status of your masternodes in local wallet can potentially be slightly incorrect.&lt;br /&gt;Always wait for wallet to sync additional data and then double check from another node&lt;br /&gt;if your masternode should be running but you still do not see "ENABLED" in "Status" field.</source>
-        <translation>Opmerking: Status van uw masternodes in de lokale portemonnee kan mogelijk licht afwijkend zijn.&lt;br /&gt;Wacht steeds tot de portemonnee extra gegevens synchroniseert en controleer daarna een ander knooppunt&lt;br /&gt;Als jouw masternode moet werken, maar je ziet nog steeds niet 'Ingeschakeld' in het 'Status' veld.</translation>
-    </message>
-    <message>
-        <source>Alias</source>
-        <translation>Alias</translation>
-    </message>
-    <message>
         <source>Address</source>
         <translation>Adres</translation>
-    </message>
-    <message>
-        <source>Protocol</source>
-        <translation>Protocol</translation>
     </message>
     <message>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <source>Active</source>
-        <translation>Actief</translation>
-    </message>
-    <message>
-        <source>Last Seen</source>
-        <translation>Laatst gezien</translation>
-    </message>
-    <message>
         <source>Payee</source>
         <translation>Begunstigde</translation>
     </message>
     <message>
-        <source>S&amp;tart alias</source>
-        <translation>S&amp;tart alias</translation>
-    </message>
-    <message>
-        <source>Start &amp;all</source>
-        <translation>Start &amp;alle</translation>
-    </message>
-    <message>
-        <source>Start &amp;MISSING</source>
-        <translation>Start &amp;ONTBREKEND</translation>
-    </message>
-    <message>
-        <source>&amp;Update status</source>
-        <translation>&amp;Vernieuw status</translation>
-    </message>
-    <message>
-        <source>Show additional Masternode information</source>
-        <translation>Toon aanvullende Masternode informatie</translation>
-    </message>
-    <message>
-        <source>Show &amp;Info...</source>
-        <translation>Toon &amp;Info...</translation>
-    </message>
-    <message>
-        <source>Status will be updated automatically in (sec):</source>
-        <translation>Status wordt automatisch bijgewerkt in (sec):</translation>
-    </message>
-    <message>
         <source>0</source>
         <translation>0</translation>
-    </message>
-    <message>
-        <source>All Masternodes</source>
-        <translation>Alle Masternodes</translation>
     </message>
     <message>
         <source>Filter List:</source>
@@ -1109,12 +1081,16 @@
         <translation>Aantal Nodes:</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list represents the legacy and non-deterministic masternode list. It is only active as long as DIP3 has not been fully activated. After SPORK15 activation, this list will be empty.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opmerking: Deze lijst vertegenwoordigt de verouderde non-deterministische masternode lijst. Deze is actief zolang DIP3 nog niet volledig geactiveerd is. Na de activatie van SPORK15 zal deze lijst leeg zijn.&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
         <source>DIP3 Masternodes</source>
         <translation>DIP3 Masternodes</translation>
+    </message>
+    <message>
+        <source>Show only masternodes this wallet has keys for.</source>
+        <translation>Toon alleen masternodes waar deze portemonnee sleutels voor heeft.</translation>
+    </message>
+    <message>
+        <source>My masternodes only</source>
+        <translation>Alleen mijn masternodes</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -1135,14 +1111,6 @@
     <message>
         <source>Operator Reward</source>
         <translation>Vergoeding voor Bediener</translation>
-    </message>
-    <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Note: This list is not active yet and only for informational purposes. The network is still running in compatibility mode, which means that the non-deterministic masternode list is still active. Only after SPORK15 activation, this list will become the active one. Also, the values in the payment related fields are not used at the moment, but still updated for every block. Please ignore this until SPORK15 activation.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opmerking: Deze lijst is nog niet actief en is alleen voor informatieve doeleinden. Het netwerk draait nog steeds in compatibliteitsmodus, wat betekent dat de non-deterministische masternode lijst nog steeds actief is. Pas na de activatie van SPORK15 zal deze lijst de actieve worden. Tevens worden de waardes in de betalingsgerelateerde velden op het moment niet gebruikt, maar worden geüpdatet bij elk blok. Negeer dit tot dat SPORK15 actief is.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
-    </message>
-    <message>
-        <source>Start alias</source>
-        <translation>Start alias</translation>
     </message>
     <message>
         <source>Copy ProTx Hash</source>
@@ -1179,70 +1147,6 @@
     <message>
         <source>NONE</source>
         <translation>GEEN</translation>
-    </message>
-    <message>
-        <source>Confirm masternode start</source>
-        <translation>Bevestig opstarten van Masternode</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start masternode %1?</source>
-        <translation>Weet u zeker dat u Masternode %1 wenst op te starten?</translation>
-    </message>
-    <message>
-        <source>Confirm all masternodes start</source>
-        <translation>Bevestig het opstarten van alle Masternodes</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start ALL masternodes?</source>
-        <translation>Weet u zeker dat u ALLE masternodes wenst te starten?</translation>
-    </message>
-    <message>
-        <source>Command is not available right now</source>
-        <translation>Dit commando is momenteel niet beschikbaar</translation>
-    </message>
-    <message>
-        <source>You can't use this command until masternode list is synced</source>
-        <translation>U kunt dit commando niet gebruiken totdat de Masternode lijst is gesynchroniseerd</translation>
-    </message>
-    <message>
-        <source>Confirm missing masternodes start</source>
-        <translation>Bevestig starten van ontbrekende masternodes</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to start MISSING masternodes?</source>
-        <translation>Weet u zeker dat u de ONTBREKENDE masternodes wenst te starten?</translation>
-    </message>
-    <message>
-        <source>Additional information for Masternode %1</source>
-        <translation>Aanvullende informatie voor Masternode %1</translation>
-    </message>
-    <message>
-        <source>Masternode Private Key</source>
-        <translation>Geheime sleutel van de Masternode</translation>
-    </message>
-    <message>
-        <source>Private Key</source>
-        <translation>Geheime sleutel</translation>
-    </message>
-    <message>
-        <source>Collateral</source>
-        <translation>Onderpand</translation>
-    </message>
-    <message>
-        <source>IP</source>
-        <translation>IP</translation>
-    </message>
-    <message>
-        <source>Version</source>
-        <translation>Versie</translation>
-    </message>
-    <message>
-        <source>Unknown</source>
-        <translation>Onbekend</translation>
-    </message>
-    <message>
-        <source>Sentinel</source>
-        <translation>Sentinel</translation>
     </message>
     <message>
         <source>Additional information for DIP3 Masternode %1</source>
@@ -2009,16 +1913,8 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
 <context>
     <name>QObject</name>
     <message>
-        <source>Dash Core</source>
-        <translation>Dash Core</translation>
-    </message>
-    <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 sloot nog niet veilig af...</translation>
-    </message>
-    <message>
-        <source>Error reading masternode configuration file: %1</source>
-        <translation>Fout in het lezen van masternode configuratie bestand: %1</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2482,6 +2378,10 @@ Om te mixen moeten andere gebruikers exact dezelfde denominaties inbrengen.</tra
     <message>
         <source>Network activity disabled</source>
         <translation>Netwerkactiviteit uitgeschakeld</translation>
+    </message>
+    <message>
+        <source>Total: %1 (Enabled: %2)</source>
+        <translation>Totaal: %1 (Ingeschakeld: %2)</translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -3336,6 +3236,14 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>%1 bevestigingen</translation>
     </message>
     <message>
+        <source>locked via LLMQ based ChainLocks</source>
+        <translation>vergrendeld door LLMQ-gebaseerde ChainLocks</translation>
+    </message>
+    <message>
+        <source>verified via LLMQ based InstantSend</source>
+        <translation>vergrendeld door LLMQ-gebaseerde InstandSend</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>geverifieerd met InstantSend</translation>
     </message>
@@ -3761,6 +3669,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Toon transactiedetails</translation>
     </message>
     <message>
+        <source>Show address QR code</source>
+        <translation>Toon adres QR-code</translation>
+    </message>
+    <message>
         <source>Export Transaction History</source>
         <translation>Exporteer transactiegeschiedenis</translation>
     </message>
@@ -3811,6 +3723,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>De transactiegeschiedenis was succesvol bewaard in %1.</translation>
+    </message>
+    <message>
+        <source>QR code</source>
+        <translation>QR code</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -3936,10 +3852,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Waarschuwing: Het lijkt erop dat we geen consensus kunnen vinden met onze peers! Mogelijk dient u te upgraden, of andere nodes moeten wellicht upgraden.</translation>
     </message>
     <message>
-        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation>U moet een geheime sleutel van een Masternode invoeren. Raadpleeg de documentatie voor hulp.</translation>
-    </message>
-    <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Ontvang command-lijn en JSON-RPC commando's.</translation>
     </message>
@@ -4060,10 +3972,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Bind aan opgegeven adres en keur peers die ermee verbinden goed. Gebruik [host]:poort notatie voor IPv6</translation>
     </message>
     <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
-        <translation>Bind aan opgegeven adres om te luisteren naar JSON-RPC connecties. Gebruik [host]:port notatie voor IPv6. Deze instelling kan meerdere keren worden opgegeven (standaard: bind aan alle interfaces)</translation>
-    </message>
-    <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
         <translation>Creër nieuwe bestanden met standaard systeem bestandsrechten in plaats van umask 077 (alleen effectief met uitgeschakelde portemonnee functionaliteit)</translation>
     </message>
@@ -4160,6 +4068,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>(standaard: %s)</translation>
     </message>
     <message>
+        <source>-wallet parameter must only specify a filename (not a path)</source>
+        <translation>-wallet parameter mag alleen een bestandsnaam zijn (niet een pad)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Laat publiek REST vragen toe (standaard %u)</translation>
     </message>
@@ -4208,10 +4120,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Fout bij het inladen van de masternode cache uit</translation>
     </message>
     <message>
-        <source>Failed to load masternode payments cache from</source>
-        <translation>Fout bij het inladen van de masternode betalingen cache uit</translation>
-    </message>
-    <message>
         <source>Found enough users, signing ( waiting %s )</source>
         <translation>Voldoende gebruikers gevonden, aan het ondertekenen ( wacht %s )</translation>
     </message>
@@ -4256,14 +4164,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Ontoereikend saldo.</translation>
     </message>
     <message>
-        <source>Invalid -onion address: '%s'</source>
-        <translation>Ongeldig -onion adres: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid -proxy address: '%s'</source>
-        <translation>Ongeldig -proxy adres: '%s'</translation>
-    </message>
-    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
         <translation>Ongeldig bedrag voor -paytxfee=&lt;bedrag&gt;: '%s' (Minimum %s)</translation>
     </message>
@@ -4300,16 +4200,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Laden masternode cache...</translation>
     </message>
     <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Laden masternode payment cache...</translation>
-    </message>
-    <message>
         <source>Lock is already in place.</source>
         <translation>Vergrendeling is al op zijn plaats.</translation>
-    </message>
-    <message>
-        <source>Lock masternodes from masternode configuration file (default: %u)</source>
-        <translation>Vergrendel masternodes vanuit het masternode configuratiebestand (standaard: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4346,10 +4238,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
         <translation>Verbind alleen met nodes in netwerk &lt;net&gt; (ipv4, ipv6 of onion)</translation>
-    </message>
-    <message>
-        <source>Port: %d</source>
-        <translation>Poort: %d</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -4392,10 +4280,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Specificeer de time-out tijd in milliseconden (minimum: 1, standaard: %d)</translation>
     </message>
     <message>
-        <source>Specify masternode configuration file (default: %s)</source>
-        <translation>Kies masternodeconfiguratiebeastand (standaard: %s)</translation>
-    </message>
-    <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Specificeer pid-bestand (standaard: %s)</translation>
     </message>
@@ -4404,20 +4288,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Besteed onbevestigd wisselgeld bij het doen van transacties (standaard: %u)</translation>
     </message>
     <message>
-        <source>Submitted following entries to masternode: %u / %d</source>
-        <translation>De volgende gegevens zijn ingediend bij masternode: %u / %d</translation>
-    </message>
-    <message>
-        <source>Submitted to masternode, waiting for more entries ( %u / %d ) %s</source>
-        <translation>Ingediend bij masternode, wachtende op meer gegevens (%u / %d ) %s</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Ingediend bij masternode, wachten in de wachtrij %s</translation>
-    </message>
-    <message>
-        <source>Synchroning blockchain...</source>
-        <translation>Blockchain synchroniseren...</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4426,10 +4298,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Synchronization finished</source>
         <translation>Synchronisatie voltooid</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Masternodes synchroniseren...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4500,10 +4368,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Opnieuw aan het proberen...</translation>
     </message>
     <message>
-        <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation>Ongeldige geheime sleutel voor de masternode. Raadpleeg de documentatie alstublieft.</translation>
-    </message>
-    <message>
         <source>Can't find random Masternode.</source>
         <translation>Kan Masternode niet vinden.</translation>
     </message>
@@ -4512,16 +4376,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Kan niet Mixen tijdens het synchroniseren.</translation>
     </message>
     <message>
-        <source>Could not parse masternode.conf</source>
-        <translation>Kan masternode.conf niet lezen</translation>
-    </message>
-    <message>
         <source>Invalid netmask specified in -whitelist: '%s'</source>
         <translation>Ongeldig netmask gespecificeerd in -whitelist: '%s'</translation>
-    </message>
-    <message>
-        <source>Invalid port detected in masternode.conf</source>
-        <translation>Ongeldige poort gevonden in masternode.conf</translation>
     </message>
     <message>
         <source>Invalid script detected.</source>
@@ -4546,6 +4402,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s bestand bevat alle persoonlijke sleutel van deze portemonnee. Deel deze met niemand!</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
+        <translation>Bind met opgegeven address om te luisteren voor JSON-RPC-connections. Deze optie wordt genegeerd behalve als -rpcallowip ook opgegeven is. Poort is optioneel en overschrijft -rpcport. Gebruik [host]:port notatie voor IPv6. Deze optie kan meerdere keren worden meegegeven (standaard: 127.0.0.1 en ::1 bijvoobeeld, localhost, of als -rpcallowip is opgegeven, 0.0.0.0 en :: bijvoorbeeld, alle adressen)</translation>
     </message>
     <message>
         <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
@@ -4700,16 +4560,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>U moet de database herbouwen met -reindex om terug te gaan naar de niet-prune modus. Dit zal de gehele blockchain opnieuw downloaden.</translation>
     </message>
     <message>
-        <source>(%d could be used only on mainnet)</source>
-        <translation>(%d kan alleen gebruikt worden op mainnet)</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(default: %u)</translation>
-    </message>
-    <message>
-        <source>(must be %d for mainnet)</source>
-        <translation>(moet %d zijn voor mainnet)</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -4792,10 +4644,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Fout bij het inladen van de sporks cache uit</translation>
     </message>
     <message>
-        <source>Failed to parse host:port string</source>
-        <translation>Inlezen van de host:poort string is mislukt</translation>
-    </message>
-    <message>
         <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
         <translation>Transactievergoeding (in %s/kB) toevoegen aan transacties die u doet (standaard: %s)</translation>
     </message>
@@ -4824,16 +4672,8 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Vorige succesvolle PrivateSend actie is te recent.</translation>
     </message>
     <message>
-        <source>Line: %d</source>
-        <translation>Lijn: %d</translation>
-    </message>
-    <message>
         <source>Loading InstantSend data cache...</source>
         <translation>Laden van InstantSend data cache...</translation>
-    </message>
-    <message>
-        <source>Loading addresses...</source>
-        <translation>Laden adresen...</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4862,10 +4702,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Make the wallet broadcast transactions</source>
         <translation>Laat de portemonnee transacties uitsturen</translation>
-    </message>
-    <message>
-        <source>Masternode cache is empty, skipping payments and governance cache...</source>
-        <translation>Masternode cache is leeg, betalings- en governancecache worden overgeslagen...</translation>
     </message>
     <message>
         <source>Masternode options:</source>
@@ -4962,6 +4798,18 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Rescan the block chain for missing wallet transactions on startup</source>
         <translation>Herscan de blokketen voor missende portemonneetransacties bij opstarten</translation>
+    </message>
+    <message>
+        <source>Submitted following entries to masternode: %u</source>
+        <translation>Volgende masternode entries zijn ingediend: %u</translation>
+    </message>
+    <message>
+        <source>Submitted to masternode, waiting for more entries ( %u ) %s</source>
+        <translation>Ingediend bij masternode, wachtende op meer entries ( %u ) %s</translation>
+    </message>
+    <message>
+        <source>Synchronizing blockchain...</source>
+        <translation>Blokketen aan het synchronizeren...</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -5156,14 +5004,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Portemonnee creëert geen transacties die mempool-ketenlimieten schenden (standaard: %u)</translation>
     </message>
     <message>
-        <source>Warning: At least %d of %d masternodes are running on a newer software version. Please check latest releases, you might need to update too.</source>
-        <translation>Waarschuwing: Ten minste %d van de %d masternodes werken met een nieuwere softwareversie. Controleer alstublieft de nieuwste releases, misschien moet u ook updaten.</translation>
-    </message>
-    <message>
-        <source>Warning: Every masternode (out of %d known ones) is running on a newer software version. Please check latest releases, it's very likely that you missed a major/critical update.</source>
-        <translation>Waarschuwing: Alle masternodes (van de %d bekende) werken met een nieuwere softwareversie. Controleer alstublieft de nieuwste releases, het is zeer waarschijnlijk dat u een belangrijke/kritische update mist.</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Waarschuwing: portemonnee bestand is corrupt, data is veiliggesteld! Originele %s is opgeslagen als %s in %s; als uw balans of transacties incorrect zijn dient u een backup terug te zetten.</translation>
     </message>
@@ -5248,8 +5088,20 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Initialisatie sanity check mislukt. %s is aan het afsluiten.</translation>
     </message>
     <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>Ongeldig -onion adress of hostnaam: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>Ongeldig -proxy adress of hostnaam: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Ongeldig bedrag voor -%s=&lt;bedrag&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid characters in -wallet filename</source>
+        <translation>Ongeldige karakters in -wallet bestandsnaam</translation>
     </message>
     <message>
         <source>Invalid spork address specified with -sporkaddr</source>
@@ -5258,6 +5110,10 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Keep N DASH anonymized (%u-%u, default: %u)</source>
         <translation>Hou N Dash geanonimiseerd (%u-%u, standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Loading P2P addresses...</source>
+        <translation>P2P-adressen aan het laden...</translation>
     </message>
     <message>
         <source>Print this help message and exit</source>
@@ -5308,10 +5164,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
         <translation>Stel de maximale blok grootte in bytes in (standaard: %d)</translation>
     </message>
     <message>
-        <source>Set the masternode private key</source>
-        <translation>Stel de masternode private key in</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Toon alle foutopsporingsopties (gebruik: --help -help-debug)</translation>
     </message>
@@ -5346,10 +5198,6 @@ Nota: Het bericht zal niet verzonden worden met de betaling over het Dash netwer
     <message>
         <source>Synchronizing governance objects...</source>
         <translation>Synchroniseren governance objecten...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode payments...</source>
-        <translation>Synchroniseren masternode betalingen...</translation>
     </message>
     <message>
         <source>The source code is available from %s.</source>
