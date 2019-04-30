@@ -867,19 +867,20 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 	}
 	// ensure that the locked outpoint is being spent
 	else {
-		bool found = false;
+		
 		CAssetAllocation theAssetAllocation(myTx);
 		if(theAssetAllocation.assetAllocationTuple.IsNull())
 			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Invalid assetallocationsend");
 		CAssetAllocation assetAllocationDB;
 		if(!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB))
 			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Non-existing assetallocation");
+		bool found = assetAllocationDB.lockedOutpoint.IsNull();
 		for (unsigned int i = 1; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
 			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				if(assetAllocationDB.lockedOutpoint.IsNull())
+				if(found)
 					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Found locked outpoint but asset allocation is not locked to an outpoint");
 				if(assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout)
 					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Locked outpoint does not match outpoint in the asset allocation database");
