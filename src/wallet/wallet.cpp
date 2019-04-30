@@ -3044,7 +3044,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
+			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				return state.Invalid(false, REJECT_INVALID, "non-allocation-input");
 			}
 		}
@@ -3065,7 +3065,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
+			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				if (found) {
 					return state.Invalid(false, REJECT_INVALID, "db-allocation-null-lockpoint");
 				}
