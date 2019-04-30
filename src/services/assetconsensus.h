@@ -23,7 +23,7 @@ public:
 	CLockedOutpointsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "lockedoutpoints", nCacheSize, fMemory, fWipe) {}
 
 	bool ReadOutpoint(const COutPoint& outpoint, bool& locked) {
-		return Read(outpoint, block_hash);
+		return Read(outpoint, locked);
 	}
 	bool FlushWrite(const std::vector<std::pair<COutPoint, bool> > &lockedOutpoints);
 	bool FlushErase(const std::vector<uint256> &vecTXIDs);
