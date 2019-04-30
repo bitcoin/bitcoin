@@ -860,7 +860,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
 			if (plockedoutpointsdb->ReadOutpoint(tx.vin[i].prevout, locked) && locked) {
-				throw JSONRPCTransactionError(err, "Cannot spend outpoint that is locked to an assetallocationsend");
+				throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Cannot spend outpoint that is locked to an assetallocationsend");
 			}
 		}
 	}
@@ -868,26 +868,26 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 	else {
 		bool found = false;
 		CAssetAllocation theAssetAllocation(tx);
-		if(theAssetAllocation.IsNull())
-			throw JSONRPCTransactionError(err, "Invalid assetallocationsend");
+		if(theAssetAllocation.assetAllocationTuple.IsNull())
+			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Invalid assetallocationsend");
 		CAssetAllocation assetAllocationDB;
 		if(!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB))
-			throw JSONRPCTransactionError(err, "Non-existing assetallocation");
+			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Non-existing assetallocation");
 		for (unsigned int i = 1; i < tx.vin.size(); i++)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
 			if (plockedoutpointsdb->ReadOutpoint(tx.vin[i].prevout, locked) && locked) {
 				if(assetAllocationDB.lockedOutpoint.IsNull())
-					throw JSONRPCTransactionError(err, "Found locked outpoint but asset allocation is not locked to an outpoint");
+					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Found locked outpoint but asset allocation is not locked to an outpoint");
 				if(assetAllocationDB.lockedOutpoint != tx.vin[i].prevout)
-					throw JSONRPCTransactionError(err, "Locked outpoint does not match outpoint in the asset allocation database");
+					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Locked outpoint does not match outpoint in the asset allocation database");
 				found = true;
 				break;
 			}
 		}
 		if(!found)
-			throw JSONRPCTransactionError(err, "Cannot find outpoint that is locked to an assetallocationsend");
+			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Cannot find outpoint that is locked to an assetallocationsend");
 	}
     uint256 txid;
     std::string err_string;
