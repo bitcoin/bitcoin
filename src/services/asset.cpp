@@ -705,6 +705,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			}
 			if (!IsOutpointMature(outPoint))
 				continue;
+			bool locked = false;
 			// spending while using a locked outpoint should be invalid
 			if (plockedoutpointsdb->ReadOutpoint(outPoint, locked) && locked)
 				continue;
