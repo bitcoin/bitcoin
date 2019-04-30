@@ -16,6 +16,9 @@
 #include <script/standard.h>
 #include <shutdown.h>
 #include <key_io.h>
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif // ENABLE_WALLET
 #include <boost/lexical_cast.hpp>
 #include <outputtype.h>
 #include <rpc/util.h>
