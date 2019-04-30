@@ -656,7 +656,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:       
             break;  
 		case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK:
-			if (theAssetAllocation.lockOutpoints.IsNull())
+			if (theAssetAllocation.lockedOutpoint.IsNull())
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Asset allocation lock must include outpoint information");
 				return error(errorMessage.c_str());
@@ -814,7 +814,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bMiner && !bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
 			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
-			vecLockedOutpoints.emplace_back(std::move(emptyOutpoint));
+			vecLockedOutpoints.emplace_back(std::move(emptyOutPoint));
 			storedSenderAllocationRef.lockedOutpoint.SetNull();
 		}
         // check balance is sufficient on sender
@@ -1435,7 +1435,7 @@ bool CLockedOutpointsDB::FlushWrite(const std::vector<COutPoint> &lockedOutpoint
 		if(outpoint.IsNull())
 			batch.Erase(outpoint);
 		else
-			batch.Write(std::make_pair(outpoint, true));
+			batch.Write(outpoint, true);
 	}
 	LogPrint(BCLog::SYS, "Flush writing %d locked outpoints\n", lockedOutpoints.size());
 	return WriteBatch(batch);
