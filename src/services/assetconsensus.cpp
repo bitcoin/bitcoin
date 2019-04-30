@@ -21,20 +21,20 @@
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
+std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
 using namespace std::chrono;
 using namespace std;
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<uint256> & vecTXIDs)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations)
 {
     if(tx.IsCoinBase())
         return true;
 
     if (!IsSyscoinTx(tx.nVersion))
         return true;
-    if(fAssetIndex)
-        vecTXIDs.push_back(tx.GetHash());    
+    
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
         if(!DisconnectMintAsset(tx, mapAssetAllocations))
             return false;       
@@ -275,24 +275,22 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
-  
+	std::vector<COutPoint> vecLockedOutpoints;
     if (nHeight == 0)
         nHeight = chainActive.Height()+1;   
     std::string errorMessage;
     bool good = true;
 
     bOverflow=false;
-    if (block.vtx.empty()) {
-        if(!IsSyscoinTx(tx.nVersion))
-            return true;
-        
+    if (block.vtx.empty()) {  
         if(tx.IsCoinBase())
             return true;
-       
+		if (!IsSyscoinTx(tx.nVersion))
+			return true;
         if (IsAssetAllocationTx(tx.nVersion))
         {
             errorMessage.clear();
-            good = CheckAssetAllocationInputs(tx, inputs, fJustCheck, nHeight, uint256(), mapAssetAllocations,errorMessage, bOverflow, bSanity, bMiner);
+            good = CheckAssetAllocationInputs(tx, inputs, fJustCheck, nHeight, uint256(), mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanity, bMiner);
         }
         else if (IsAssetTx(tx.nVersion))
         {
@@ -318,20 +316,20 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
 
             good = true;
             const CTransaction &tx = *(block.vtx[i]);    
-            
             if(!bMiner && !fJustCheck && !bSanity){
                 const uint256& txHash = tx.GetHash(); 
                 blockIndex.push_back(std::make_pair(txHash, blockHash));
             }  
             if(tx.IsCoinBase()) 
-                continue;                 
+                continue;
+
             if(!IsSyscoinTx(tx.nVersion))
                 continue;      
             if (IsAssetAllocationTx(tx.nVersion))
             {
                 errorMessage.clear();
                 // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode
-                good = CheckAssetAllocationInputs(tx, inputs, false, nHeight, blockHash, mapAssetAllocations, errorMessage, bOverflow, fJustCheck, bMiner);
+                good = CheckAssetAllocationInputs(tx, inputs, false, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, fJustCheck, bMiner);
 
             }
             else if (IsAssetTx(tx.nVersion))
@@ -363,7 +361,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
                         
         if(!bSanity && !fJustCheck){
             if(!bMiner){
-                if((pblockindexdb && !pblockindexdb->FlushWrite(blockIndex)) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets)){
+                if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints)){
                     good = false;
                     errorMessage = "Error flushing to asset dbs";
                 }
@@ -621,7 +619,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
     return true; 
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
+        bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
     const uint256 & txHash = tx.GetHash();
@@ -656,7 +654,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             }
             break; 
         case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:       
-            break;     
+            break;  
+		case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK:
+			if (theAssetAllocation.lockOutpoints.IsNull())
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Asset allocation lock must include outpoint information");
+				return error(errorMessage.c_str());
+			}
+			break;
         default:
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1009 - " + _("Asset transaction has unknown op");
             return error(errorMessage.c_str());
@@ -788,14 +793,30 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             assetAllocationConflicts.insert(senderTupleStr);
         }
     }
+	else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+	{
+		if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1))
+		{
+			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015a - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+			return error(errorMessage.c_str());
+		}
+		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
+		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND transaction
+		vecLockedOutpoints.emplace_back(std::move(theAssetAllocation.lockedOutpoint));
+	}
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
-    {
-        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1))
+	{
+        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
         {
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015a - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
             return error(errorMessage.c_str());
         }       
-        
+		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
+		if (!bMiner && !bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
+			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
+			vecLockedOutpoints.emplace_back(std::move(emptyOutpoint));
+			storedSenderAllocationRef.lockedOutpoint.SetNull();
+		}
         // check balance is sufficient on sender
         CAmount nTotal = 0;
         for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
@@ -896,7 +917,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     // write assetallocation  
     // asset sends are the only ones confirming without PoW
     if(!fJustCheck){
-        if (!bSanityCheck) {
+        if (!bSanityCheck && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK) {
             ResetAssetAllocation(senderTupleStr, txHash, bMiner);
            
         } 
@@ -918,6 +939,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     
     }
     else if(!bSanityCheck){
+		if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
         {
             LOCK(cs_assetallocationarrival);
             ArrivalTimesMap &arrivalTimes = arrivalTimesMap[senderTupleStr];
@@ -1393,4 +1415,28 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint256> > &
     }
     LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());
     return WriteBatch(batch);
+}
+bool CLockedOutpointsDB::FlushErase(const std::vector<COutPoint> &vecOutpoints) {
+	if (vecTXIDs.empty())
+		return true;
+
+	CDBBatch batch(*this);
+	for (const auto &outpoint : vecOutpoints) {
+		batch.Erase(outpoint);
+	}
+	LogPrint(BCLog::SYS, "Flushing %d locked outpoints removals\n", vecOutpoints.size());
+	return WriteBatch(batch);
+}
+bool CLockedOutpointsDB::FlushWrite(const std::vector<COutPoint> &lockedOutpoints) {
+	if (lockedOutpoints.empty())
+		return true;
+	CDBBatch batch(*this);
+	for (const auto &outpoint : lockedOutpoints) {
+		if(outpoint.IsNull())
+			batch.Erase(outpoint);
+		else
+			batch.Write(std::make_pair(outpoint, true));
+	}
+	LogPrint(BCLog::SYS, "Flush writing %d locked outpoints\n", lockedOutpoints.size());
+	return WriteBatch(batch);
 }

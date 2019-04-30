@@ -353,7 +353,7 @@ static bool rest_tx(HTTPRequest* req, const std::string& strURIPart)
     }
     // SYSCOIN
     else{
-        if(!pblockindexdb || !pblockindexdb->ReadBlockHash(hash, hashBlock)){
+        if(!pblockindexdb->ReadBlockHash(hash, hashBlock)){
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found"); 
         }
         

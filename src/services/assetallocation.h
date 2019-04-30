@@ -88,11 +88,13 @@ public:
 	CAssetAllocationTuple assetAllocationTuple;
 	RangeAmountTuples listSendingAllocationAmounts;
 	CAmount nBalance;
+	COutPoint lockedOutpoint;
 	template <typename Stream, typename Operation>
 	inline void SerializationOp(Stream& s, Operation ser_action) {
 		READWRITE(assetAllocationTuple);
 		READWRITE(listSendingAllocationAmounts);
 		READWRITE(nBalance);
+		READWRITE(lockedOutpoint);
 	}
 	CAssetAllocation() {
 		SetNull();

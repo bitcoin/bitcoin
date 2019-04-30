@@ -18,8 +18,19 @@ public:
     bool FlushWrite(const std::vector<std::pair<uint256, uint256> > &blockIndex);
     bool FlushErase(const std::vector<uint256> &vecTXIDs);
 };
+class CLockedOutpointsDB : public CDBWrapper {
+public:
+	CLockedOutpointsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "lockedoutpoints", nCacheSize, fMemory, fWipe) {}
+
+	bool ReadOutpoint(const COutPoint& outpoint, bool& locked) {
+		return Read(outpoint, block_hash);
+	}
+	bool FlushWrite(const std::vector<std::pair<COutPoint, bool> > &lockedOutpoints);
+	bool FlushErase(const std::vector<uint256> &vecTXIDs);
+};
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<uint256> & vecTXIDs);
+extern std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets);
@@ -32,5 +43,5 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
 static CAssetAllocation emptyAllocation;
 bool ResetAssetAllocation(const std::string &senderStr, const uint256 &txHash, const bool &bMiner=false, const bool &bExpiryOnly=false);
 void ResyncAssetAllocationStates();
-bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::string &errorMessage, bool& bOverflow, const bool &bSanityCheck = false, const bool &bMiner = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, std::string &errorMessage, bool& bOverflow, const bool &bSanityCheck = false, const bool &bMiner = false);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H
