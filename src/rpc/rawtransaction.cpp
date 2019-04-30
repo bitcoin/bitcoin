@@ -860,7 +860,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
+			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Cannot spend outpoint that is locked to an assetallocationsend");
 			}
 		}
@@ -879,7 +879,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
+			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				if(found)
 					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Found locked outpoint but asset allocation is not locked to an outpoint");
 				if(assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout)
