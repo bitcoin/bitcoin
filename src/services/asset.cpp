@@ -395,6 +395,8 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 	return false;
 }
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch, const COutPoint& lockedOutpoint) {
+	if (lockedOutpoint.IsNull())
+		return FindAssetOwnerInTx(inputs, tx, witnessAddressToMatch);
 	CTxDestination dest;
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
