@@ -589,7 +589,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	if (request.fHelp || 1 > params.size() || 3 < params.size())
 		throw runtime_error(
             RPCHelpMan{"syscointxfund",
-			"\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added every time you call this function.\n",
+                "\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added every time you call this function.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw syscoin transaction output given from rpc"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address belonging to this asset transaction."},
@@ -1421,7 +1421,7 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 3)
 		throw runtime_error(
             RPCHelpMan{"assetsendmany",
-			"\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
+            "\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
             {
                 {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
                 {"array", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of asset send objects.",

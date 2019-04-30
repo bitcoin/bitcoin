@@ -538,7 +538,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	if (request.fHelp || params.size() != 4)
 		throw runtime_error(
             RPCHelpMan{"assetallocationsendmany",
-			    "\nSend an asset allocation you own to another address. Maximimum recipients is 250.\n",
+                "\nSend an asset allocation you own to another address. Maximum recipients is 250.\n",
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                     {"addressfrom", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
