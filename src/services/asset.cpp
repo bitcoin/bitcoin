@@ -864,7 +864,7 @@ bool IsAssetTx(const int &nVersion){
 }
 bool IsAssetAllocationTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN || 
-        nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND || SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK;
+        nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK;
 }
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
