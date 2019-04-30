@@ -121,11 +121,24 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
     int64_t nTime3 = GetTimeMicros(); nTimeSMNL += nTime3 - nTime2;
     LogPrint("bench", "            - CSimplifiedMNList: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeSMNL * 0.000001);
 
+    static CSimplifiedMNList smlCached;
+    static uint256 merkleRootCached;
+    static bool mutatedCached{false};
+
+    if (sml.mnList == smlCached.mnList) {
+        merkleRootRet = merkleRootCached;
+        return !mutatedCached;
+    }
+
     bool mutated = false;
     merkleRootRet = sml.CalcMerkleRoot(&mutated);
 
     int64_t nTime4 = GetTimeMicros(); nTimeMerkle += nTime4 - nTime3;
     LogPrint("bench", "            - CalcMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeMerkle * 0.000001);
+
+    smlCached = std::move(sml);
+    merkleRootCached = merkleRootRet;
+    mutatedCached = mutated;
 
     return !mutated;
 }
@@ -139,6 +152,9 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
 
     int64_t nTime1 = GetTimeMicros();
 
+    static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorumsCached;
+    static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashesCached;
+
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
     std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
@@ -146,17 +162,23 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     int64_t nTime2 = GetTimeMicros(); nTimeMinedAndActive += nTime2 - nTime1;
     LogPrint("bench", "            - GetMinedAndActiveCommitmentsUntilBlock: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeMinedAndActive * 0.000001);
 
-    for (const auto& p : quorums) {
-        auto& v = qcHashes[p.first];
-        v.reserve(p.second.size());
-        for (const auto& p2 : p.second) {
-            llmq::CFinalCommitment qc;
-            uint256 minedBlockHash;
-            bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
-            assert(found);
-            v.emplace_back(::SerializeHash(qc));
-            hashCount++;
+    if (quorums == quorumsCached) {
+        qcHashes = qcHashesCached;
+    } else {
+        for (const auto& p : quorums) {
+            auto& v = qcHashes[p.first];
+            v.reserve(p.second.size());
+            for (const auto& p2 : p.second) {
+                llmq::CFinalCommitment qc;
+                uint256 minedBlockHash;
+                bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
+                assert(found);
+                v.emplace_back(::SerializeHash(qc));
+                hashCount++;
+            }
         }
+        quorumsCached = quorums;
+        qcHashesCached = qcHashes;
     }
 
     int64_t nTime3 = GetTimeMicros(); nTimeMined += nTime3 - nTime2;
