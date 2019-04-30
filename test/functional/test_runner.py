@@ -72,6 +72,7 @@ BASE_SCRIPTS = [
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_block_reward_reallocation.py',
     'feature_llmq_data_recovery.py',
+    'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     'feature_fee_estimation.py',
     'wallet_hd.py',
     'wallet_backup.py',
@@ -230,7 +231,6 @@ BASE_SCRIPTS = [
 EXTENDED_SCRIPTS = [
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
-    'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     'feature_dbcrash.py',
 ]
 
