@@ -6,6 +6,9 @@
 #include <validation.h>
 #include <txmempool.h>
 #include <core_io.h>
+#ifdef ENABLE_WALLET
+#include <wallet/wallet.h>
+#endif // ENABLE_WALLET
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
 #include <boost/lexical_cast.hpp>
