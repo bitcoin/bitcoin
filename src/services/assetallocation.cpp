@@ -639,12 +639,11 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
 	string vchAddressFrom = params[1].get_str();
-	uint256 txid = uint256s(params[2].get_str());
+	uint256 txid = uint256S(params[2].get_str());
 	int outputIndex = params[3].get_int();
 	vector<unsigned char> vchWitness;
 	string strWitness = params[4].get_str();
-	if (!valueTo.isArray())
-		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
+
 	string strAddressFrom;
 	const string &strAddress = vchAddressFrom;
 	CTxDestination addressFrom;

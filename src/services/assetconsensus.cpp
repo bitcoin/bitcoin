@@ -1416,15 +1416,15 @@ bool CBlockIndexDB::FlushWrite(const std::vector<std::pair<uint256, uint256> > &
     LogPrint(BCLog::SYS, "Flush writing %d block indexes\n", blockIndex.size());
     return WriteBatch(batch);
 }
-bool CLockedOutpointsDB::FlushErase(const std::vector<COutPoint> &vecOutpoints) {
-	if (vecTXIDs.empty())
+bool CLockedOutpointsDB::FlushErase(const std::vector<COutPoint> &lockedOutpoints) {
+	if (lockedOutpoints.empty())
 		return true;
 
 	CDBBatch batch(*this);
-	for (const auto &outpoint : vecOutpoints) {
+	for (const auto &outpoint : lockedOutpoints) {
 		batch.Erase(outpoint);
 	}
-	LogPrint(BCLog::SYS, "Flushing %d locked outpoints removals\n", vecOutpoints.size());
+	LogPrint(BCLog::SYS, "Flushing %d locked outpoints removals\n", lockedOutpoints.size());
 	return WriteBatch(batch);
 }
 bool CLockedOutpointsDB::FlushWrite(const std::vector<COutPoint> &lockedOutpoints) {
