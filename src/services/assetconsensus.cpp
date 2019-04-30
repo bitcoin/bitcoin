@@ -360,7 +360,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         }
                         
         if(!bSanity && !fJustCheck){
-            if(!bMiner){
+            if(!bMiner && pblockindexdb){
                 if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints)){
                     good = false;
                     errorMessage = "Error flushing to asset dbs";
