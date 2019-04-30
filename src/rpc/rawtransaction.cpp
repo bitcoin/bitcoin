@@ -189,7 +189,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     }else {      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!pblockindexdb->ReadBlockHash(hash, blockhash)
+        if(!pblockindexdb->ReadBlockHash(hash, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
         blockindex = LookupBlockIndex(blockhash);
         if (!blockindex) {
@@ -282,7 +282,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     } else if(setTxids.size() == 1){      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!pblockindexdb->ReadBlockHash(oneTxid, blockhash)
+        if(!pblockindexdb->ReadBlockHash(oneTxid, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
         pblockindex = LookupBlockIndex(blockhash);     
     }else {
@@ -839,7 +839,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (!DecodeHexTx(mtx, request.params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-
+	
     CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE;
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
@@ -853,13 +853,14 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         max_raw_tx_fee = fr.GetFee((weight+3)/4);
     }
 	// SYSCOIN
+	const CTransaction &myTx = (*tx);
 	// if not an allocation send ensure the outpoint locked isn't being spent
-	if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND) {
-		for (unsigned int i = 1; i < tx.vin.size(); i++)
+	if (myTx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND) {
+		for (unsigned int i = 1; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(tx.vin[i].prevout, locked) && locked) {
+			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Cannot spend outpoint that is locked to an assetallocationsend");
 			}
 		}
@@ -867,20 +868,20 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 	// ensure that the locked outpoint is being spent
 	else {
 		bool found = false;
-		CAssetAllocation theAssetAllocation(tx);
+		CAssetAllocation theAssetAllocation(myTx);
 		if(theAssetAllocation.assetAllocationTuple.IsNull())
 			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Invalid assetallocationsend");
 		CAssetAllocation assetAllocationDB;
 		if(!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB))
 			throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Non-existing assetallocation");
-		for (unsigned int i = 1; i < tx.vin.size(); i++)
+		for (unsigned int i = 1; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(tx.vin[i].prevout, locked) && locked) {
+			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				if(assetAllocationDB.lockedOutpoint.IsNull())
 					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Found locked outpoint but asset allocation is not locked to an outpoint");
-				if(assetAllocationDB.lockedOutpoint != tx.vin[i].prevout)
+				if(assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout)
 					throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, "Locked outpoint does not match outpoint in the asset allocation database");
 				found = true;
 				break;
