@@ -7,10 +7,10 @@
 #include <clientversion.h>
 #include <primitives/transaction.h>
 #include <sync.h>
-#include <test/util.h>
-#include <util/strencodings.h>
-#include <util/moneystr.h>
 #include <test/setup_common.h>
+#include <test/util.h>
+#include <util/moneystr.h>
+#include <util/strencodings.h>
 
 #include <stdint.h>
 #include <vector>
@@ -121,6 +121,27 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     );
 }
 
+BOOST_AUTO_TEST_CASE(tinyformat_throw)
+{
+    const std::string fmt{"%s"};
+    for (const bool use_c_str : {true, false}) {
+        // format_no_throw does not throw
+        BOOST_CHECK_EQUAL(use_c_str ?
+                              tfm::format_no_throw(fmt.c_str(), 1, 2) :
+                              tfm::format_no_throw(fmt, 1, 2),
+            "Error \"tinyformat: Not enough conversion specifiers in format string\" while formatting message: %s");
+
+        // format might throw
+        try {
+            use_c_str ?
+                tfm::format(fmt.c_str(), 1, 2) :
+                tfm::format(fmt, 1, 2);
+            BOOST_REQUIRE(false);
+        } catch (const tfm::format_error& e) {
+            BOOST_CHECK_EQUAL(std::string(e.what()), "tinyformat: Not enough conversion specifiers in format string");
+        }
+    }
+}
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
 {

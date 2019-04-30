@@ -1056,12 +1056,25 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 // Bitcoin Core specific patches
 // Underlying tinyformat is up to date as of upstream commit
 // https://raw.githubusercontent.com/c42f/tinyformat/689695cf58700e6defe3741829564cd682d5ae57/tinyformat.h
-template<typename... Args>
-std::string format(const std::string &fmt, const Args&... args)
+template <typename... Args>
+std::string format(const std::string& fmt, const Args&... args)
 {
-    std::ostringstream oss;
-    format(oss, fmt.c_str(), args...);
-    return oss.str();
+    return format(fmt.c_str(), args...);
+}
+
+/**
+ * Bitcoin Core specific
+ * Wraps format() to return an error string instead of throwing tinyformat::format_error.
+ */
+template <typename... Args>
+std::string format_no_throw(const std::string& fmt, const Args&... args)
+{
+    try {
+        return format(fmt, args...);
+    } catch (const format_error& fmterr) {
+        /* Original format string will have newline so don't add one here */
+        return "Error \"" + std::string(fmterr.what()) + "\" while formatting message: " + fmt;
+    }
 }
 
 } // namespace tinyformat

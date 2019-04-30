@@ -135,14 +135,7 @@ template <typename... Args>
 static inline void LogPrintf(const char* fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
-        std::string log_msg;
-        try {
-            log_msg = tfm::format(fmt, args...);
-        } catch (tinyformat::format_error& fmterr) {
-            /* Original format string will have newline so don't add one here */
-            log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
-        }
-        LogInstance().LogPrintStr(log_msg);
+        LogInstance().LogPrintStr(tfm::format_no_throw(fmt, args...));
     }
 }
 
