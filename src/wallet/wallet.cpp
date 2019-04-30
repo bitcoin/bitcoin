@@ -40,7 +40,8 @@
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>
-
+// SYSCOIN
+#include <services/assetconsensus.h>
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
@@ -3035,6 +3036,49 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
  */
 bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CReserveKey& reservekey, CValidationState& state)
 {
+	// SYSCOIN
+	const CTransaction &myTx = (*tx);
+	// if not an allocation send ensure the outpoint locked isn't being spent
+	if (myTx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND) {
+		for (unsigned int i = 1; i < myTx.vin.size(); i++)
+		{
+			bool locked = false;
+			// spending as non allocation send while using a locked outpoint should be invalid
+			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
+				return state.Invalid(false, REJECT_INVALID, "non-allocation-input");
+			}
+		}
+	}
+	// ensure that the locked outpoint is being spent
+	else {
+		bool found = false;
+		CAssetAllocation theAssetAllocation(myTx);
+		if (theAssetAllocation.assetAllocationTuple.IsNull()) {
+			return state.Invalid(false, REJECT_INVALID, "invalid-allocation");
+		}
+		CAssetAllocation assetAllocationDB;
+		if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB)) {
+			return state.Invalid(false, REJECT_INVALID, "non-existing-allocation");
+		}
+		for (unsigned int i = 1; i < myTx.vin.size(); i++)
+		{
+			bool locked = false;
+			// spending as non allocation send while using a locked outpoint should be invalid
+			if (plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
+				if (assetAllocationDB.lockedOutpoint.IsNull()) {
+					return state.Invalid(false, REJECT_INVALID, "db-allocation-null-lockpoint");
+				}
+				if (assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout) {
+					return state.Invalid(false, REJECT_INVALID, "allocation-lockpoint-mismatch");
+				}
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return state.Invalid(false, REJECT_INVALID, "missing-lockpoint");
+		}
+	}
     {
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);
