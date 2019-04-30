@@ -495,14 +495,14 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         std::string strOutpoint = masternodeOutpoint.ToStringShort();
         auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
         if (!dmn) {
-            strError = "Failed to find Masternode by UTXO, missing masternode=" + strOutpoint + "\n";
+            strError = "Failed to find Masternode by UTXO, missing masternode=" + strOutpoint;
             return false;
         }
         if (!mnList.IsMNValid(dmn)) {
             if (mnList.IsMNPoSeBanned(dmn)) {
-                strError = "Masternode is POSE_BANNED, masternode=" + strOutpoint + "\n";
+                strError = "Masternode is POSE_BANNED, masternode=" + strOutpoint;
             } else {
-                strError = "Masternode is invalid for unknown reason, masternode=" + strOutpoint + "\n";
+                strError = "Masternode is invalid for unknown reason, masternode=" + strOutpoint;
             }
             return false;
         }

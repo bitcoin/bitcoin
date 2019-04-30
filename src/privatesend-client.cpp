@@ -864,13 +864,20 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         CAmount nBalanceDenominatedUnconf = pwalletMain->GetDenominatedBalance(true);
         CAmount nBalanceDenominated = nBalanceDenominatedConf + nBalanceDenominatedUnconf;
 
-        LogPrint("privatesend", "CPrivateSendClientSession::DoAutomaticDenominating -- nValueMin: %f, nBalanceNeedsAnonymized: %f, nBalanceAnonimizableNonDenom: %f, nBalanceDenominatedConf: %f, nBalanceDenominatedUnconf: %f, nBalanceDenominated: %f\n",
-            (float)nValueMin / COIN,
-            (float)nBalanceNeedsAnonymized / COIN,
-            (float)nBalanceAnonimizableNonDenom / COIN,
-            (float)nBalanceDenominatedConf / COIN,
-            (float)nBalanceDenominatedUnconf / COIN,
-            (float)nBalanceDenominated / COIN);
+        LogPrint("privatesend", "CPrivateSendClientSession::DoAutomaticDenominating -- current stats:\n"
+            "    nValueMin: %s\n"
+            "    nBalanceNeedsAnonymized: %s\n"
+            "    nBalanceAnonimizableNonDenom: %s\n"
+            "    nBalanceDenominatedConf: %s\n"
+            "    nBalanceDenominatedUnconf: %s\n"
+            "    nBalanceDenominated: %s\n",
+            FormatMoney(nValueMin),
+            FormatMoney(nBalanceNeedsAnonymized),
+            FormatMoney(nBalanceAnonimizableNonDenom),
+            FormatMoney(nBalanceDenominatedConf),
+            FormatMoney(nBalanceDenominatedUnconf),
+            FormatMoney(nBalanceDenominated)
+            );
 
         if (fDryRun) return true;
 

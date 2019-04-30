@@ -329,7 +329,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx, int numISLocks, int c
             if (wtx.isAbandoned())
                 status.status = TransactionStatus::Abandoned;
         }
-        else if (!wtx.IsChainLocked() && status.depth < RecommendedNumConfirmations)
+        else if (status.depth < RecommendedNumConfirmations && !wtx.IsChainLocked())
         {
             status.status = TransactionStatus::Confirming;
         }

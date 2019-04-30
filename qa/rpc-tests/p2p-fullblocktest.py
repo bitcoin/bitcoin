@@ -1245,7 +1245,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield rejected()
 
 
-        #  Test re-org of a week's worth of blocks (1088 blocks)
+        #  Test re-org of a ~2 days' worth of blocks (1088 blocks)
         #  This test takes a minute or two and can be accomplished in memory
         #
         if self.options.runbarelyexpensive:

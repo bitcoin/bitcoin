@@ -136,6 +136,8 @@ void quorum_dkgstatus_help()
 {
     throw std::runtime_error(
             "quorum dkgstatus (\"proTxHash\" detail_level)\n"
+            "Return the status of the current DKG process.\n"
+            "Works only when SPORK_17_QUORUM_DKG_ENABLED and SPORK_18_QUORUM_DEBUG_ENABLED sporks are ON.\n"
             "\nArguments:\n"
             "1. \"proTxHash\"          (string, optional, default=\"\") ProTxHash of masternode to show status for.\n"
             "                        If set to an empty string, the local status is shown.\n"

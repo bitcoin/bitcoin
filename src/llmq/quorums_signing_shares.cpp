@@ -1347,7 +1347,7 @@ void CSigSharesManager::WorkThreadMain()
     int64_t lastSendTime = 0;
 
     while (!workInterrupt) {
-        if (!quorumSigningManager || !g_connman || !quorumSigningManager) {
+        if (!quorumSigningManager || !g_connman) {
             if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
                 return;
             }

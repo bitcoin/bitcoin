@@ -53,7 +53,7 @@ public:
     void StartMessageHandlerPool();
     void StopMessageHandlerPool();
 
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
     bool AlreadyHave(const CInv& inv) const;

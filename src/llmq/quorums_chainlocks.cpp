@@ -184,7 +184,7 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
     }
 }
 
-void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork)
+void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     // don't call TrySignChainTip directly but instead let the scheduler call it. This way we ensure that cs_main is
     // never locked and TrySignChainTip is not called twice in parallel. Also avoids recursive calls due to
@@ -301,7 +301,7 @@ void CChainLocksHandler::TrySignChainTip()
                 auto it = blockTxs.find(pindexWalk->GetBlockHash());
                 if (it == blockTxs.end()) {
                     // this should actually not happen as NewPoWValidBlock should have been called before
-                    LogPrintf("CChainLocksHandler::%s -- blockTxs for %s not found\n", __func__,
+                    LogPrint("chainlocks", "CChainLocksHandler::%s -- blockTxs for %s not found\n", __func__,
                               pindexWalk->GetBlockHash().ToString());
                     return;
                 }

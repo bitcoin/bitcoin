@@ -60,7 +60,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         return;
 
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
-    llmq::chainLocksHandler->UpdatedBlockTip(pindexNew, pindexFork);
+    llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
 
     CPrivateSend::UpdatedBlockTip(pindexNew);
 #ifdef ENABLE_WALLET
@@ -68,8 +68,8 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 #endif // ENABLE_WALLET
     instantsend.UpdatedBlockTip(pindexNew);
     governance.UpdatedBlockTip(pindexNew, connman);
-    llmq::quorumManager->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
-    llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
+    llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
+    llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)

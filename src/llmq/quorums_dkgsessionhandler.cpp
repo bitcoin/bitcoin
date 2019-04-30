@@ -108,7 +108,7 @@ CDKGSessionHandler::~CDKGSessionHandler()
     }
 }
 
-void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
+void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
     LOCK(cs);
 

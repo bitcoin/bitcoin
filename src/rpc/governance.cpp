@@ -562,7 +562,7 @@ UniValue gobject_vote_many(const JSONRPCRequest& request)
 void gobject_vote_alias_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
-                "gobject vote-alias <governance-hash> <vote> <vote-outcome> <alias-name>\n"
+                "gobject vote-alias <governance-hash> <vote> <vote-outcome> <protx-hash>\n"
                 "Vote on a governance object by masternode's voting key (if present in local wallet)\n"
                 + HelpRequiringPassphrase(pwallet) + "\n"
                 "\nArguments:\n"
@@ -887,7 +887,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  list               - List governance objects (can be filtered by signal and/or object type)\n"
             "  diff               - List differences since last diff\n"
 #ifdef ENABLE_WALLET
-            "  vote-alias         - Vote on a governance object by masternode alias/proTxHash\n"
+            "  vote-alias         - Vote on a governance object by masternode proTxHash\n"
 #endif // ENABLE_WALLET
             "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
 #ifdef ENABLE_WALLET

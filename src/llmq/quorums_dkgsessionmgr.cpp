@@ -48,7 +48,7 @@ void CDKGSessionManager::StopMessageHandlerPool()
     messageHandlerPool.stop(true);
 }
 
-void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
+void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
     const auto& consensus = Params().GetConsensus();
 
@@ -62,7 +62,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, const CBl
         return;
 
     for (auto& qt : dkgSessionHandlers) {
-        qt.second.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
+        qt.second.UpdatedBlockTip(pindexNew);
     }
 }
 
