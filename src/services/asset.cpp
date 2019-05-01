@@ -404,8 +404,9 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 		if (prevCoins.IsSpent() || prevCoins.IsCoinBase()) {
 			continue;
 		}
-        if (lockedOutpoint == tx.vin[i].prevout && prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion)
+        if (lockedOutpoint == tx.vin[i].prevout && prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion){
             return true;
+        }
 	}
 	return false;
 }
@@ -618,9 +619,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			+ HelpRequiringPassphrase(pwallet));
 	const string &hexstring = params[0].get_str();
     const string &strAddress = params[1].get_str();
-	CMutableTransaction tx;
+	CMutableTransaction txIn, tx;
     // decode as non-witness
-	if (!DecodeHexTx(tx, hexstring, true, false))
+	if (!DecodeHexTx(txIn, hexstring, true, false))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5500 - " + _("Could not send raw transaction: Cannot decode transaction from hex string: ") + hexstring);
 
 	UniValue addressArray(UniValue::VARR);	
@@ -633,7 +634,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     addressArray.push_back("addr(" + strAddress + ")"); 
     
     
-    CTransaction txIn_t(tx);    
+    CTransaction txIn_t(txIn);    
     LOCK(cs_main);
     CCoinsViewCache view(pcoinsTip.get());
     
@@ -646,13 +647,21 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 
     FeeCalculation fee_calc;
     CCoinControl coin_control;
-
+    tx = txIn;
+    tx.vin.clear();
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
-    for (auto& vin : tx.vin) {
+    for (auto& vin : txIn.vin) {
         Coin coin;
-        if (!GetUTXOCoin(vin.prevout, coin))
+        if (!GetUTXOCoin(vin.prevout, coin))    
             continue;
+        {
+            LOCK(pwallet->cs_wallet);
+            if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n)){
+                continue;
+            }
+        }
+        tx.vin.push_back(vin);
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
         nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);

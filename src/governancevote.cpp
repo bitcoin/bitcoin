@@ -9,7 +9,6 @@
 #include <masternodeman.h>
 #include <messagesigner.h>
 
-#include <boost/lexical_cast.hpp>
 
 std::string CGovernanceVoting::ConvertOutcomeToString(vote_outcome_enum_t nOutcome)
 {
