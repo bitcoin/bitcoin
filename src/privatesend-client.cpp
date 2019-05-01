@@ -898,7 +898,7 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
             "    nBalanceAnonimizableNonDenom: %s\n"
             "    nBalanceDenominatedConf: %s\n"
             "    nBalanceDenominatedUnconf: %s\n"
-            "    nBalanceDenominated: %s\n",
+            "    nBalanceDenominated: %s\n"
             "    nBalanceToDenominate: %s\n",
             FormatMoney(nValueMin),
             FormatMoney(nBalanceAnonymizable),
