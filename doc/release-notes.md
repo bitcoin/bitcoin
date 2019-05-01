@@ -61,6 +61,15 @@ platform.
 Notable changes
 ===============
 
+New RPCs
+--------
+
+- `getbalances` returns an object with all balances (`mine`,
+  `untrusted_pending` and `immature`). Please refer to the RPC help of
+  `getbalances` for details. The new RPC is intended to replace
+  `getunconfirmedbalance` and the balance fields in `getwalletinfo`, as well as
+  `getbalance`. The old calls may be removed in a future version.
+
 Updated RPCs
 ------------
 
