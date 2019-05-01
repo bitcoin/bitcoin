@@ -49,6 +49,7 @@
 
 #include <future>
 #include <sstream>
+#include <string>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
@@ -285,7 +286,6 @@ uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
-CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
 CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
@@ -618,9 +618,9 @@ static CuckooCache::cache<uint256, SignatureCacheHasher> scriptExecutionCache;
 static uint256 scriptExecutionCacheNonce(GetRandHash());
 static CCheckQueue<CScriptCheck> scriptcheckqueue(128);
 
-void ThreadScriptCheck() {
-    RenameThread("syscoin-scriptch");
-    scriptcheckqueue.Thread();
+void ThreadScriptCheck(int worker_num) {
+	util::ThreadRename(strprintf("scriptch.%i", worker_num));
+	scriptcheckqueue.Thread();
 }
 /**
  * @param[out] coins_to_uncache   Return any outpoints which were not previously present in the
@@ -1988,7 +1988,6 @@ static bool WriteUndoDataForBlock(const CBlockUndo& blockundo, CValidationState&
 
     return true;
 }
-
 
 VersionBitsCache versionbitscache GUARDED_BY(cs_main);
 

@@ -247,6 +247,9 @@ public:
     // Get default change type.
     virtual OutputType getDefaultChangeType() = 0;
 
+    //! Get max tx fee.
+    virtual CAmount getDefaultMaxTxFee() = 0;
+
     // Remove wallet.
     virtual void remove() = 0;
 
