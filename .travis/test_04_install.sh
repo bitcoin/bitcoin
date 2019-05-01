@@ -29,10 +29,6 @@ DOCKER_EXEC () {
   docker exec $DOCKER_ID bash -c "cd $PWD && $*"
 }
 
-if [ -n "$DPKG_ADD_ARCH" ]; then
-  DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH"
-fi
-
 travis_retry DOCKER_EXEC apt-get update
 travis_retry DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
 
