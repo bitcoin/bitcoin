@@ -467,6 +467,31 @@ string GetNewFundedAddress(const string &node) {
     BOOST_CHECK_EQUAL(nAmount, 10*COIN);
 	return newaddress;
 }
+string GetNewFundedAddress(const string &node, string& txid) {
+    UniValue r;
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(node, "getnewaddress"));
+    string newaddress = r.get_str();
+    string sendnode = "";
+    if (node == "node1")
+        sendnode = "node2";
+    else if (node == "node2")
+        sendnode = "node3";
+    else if (node == "node3")
+        sendnode = "node2";
+    r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
+    r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
+    r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
+    r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
+    r = CallExtRPC(sendnode, "sendtoaddress", "\"" + newaddress + "\",\"5\"");
+    txid = r.get_str();
+    GenerateBlocks(10, sendnode);
+    GenerateBlocks(10, node);
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + newaddress));
+    UniValue arr = r.get_array();
+    CAmount nAmount = AmountFromValue(arr[0]);
+    BOOST_CHECK_EQUAL(nAmount, 25*COIN);
+    return newaddress;
+}
 void SleepFor(const int& milliseconds, bool actualSleep) {
 	if (actualSleep)
 		MilliSleep(milliseconds);
@@ -921,6 +946,24 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
     	UniValue balance = find_value(r.get_obj(), "balance");
     	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+(0.5 * COIN));
     }
+}
+void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid, const string &index){
+    UniValue r;
+    string outpointStr = txid+"-"+index;
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationlock " + guid + " " + address + " " + txid + " " + index + " ''"));
+    UniValue arr = r.get_array();
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + arr[0].get_str()));
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hexStr + "\\\"]\""));
+    BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());     
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hexStr, true, false));  
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoindecoderawtransaction " + hexStr));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetallocationlock");
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locked_outpoint").get_str() , outpointStr);  
+
+    GenerateBlocks(5, "node1");
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " " + address));
+    BOOST_CHECK_EQUAL(find_value(r.get_obj(), "locked_outpoint").get_str() , outpointStr);  
 }
 string AssetSend(const string& node, const string& guid, const string& inputs, const string& memo, const string& witness, bool completetx)
 {

@@ -673,10 +673,21 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
 	theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress);
 	theAssetAllocation.lockedOutpoint = COutPoint(txid, outputIndex);
-	vector<unsigned char> data;
-	theAssetAllocation.Serialize(data);
-
-	// send the asset pay txn
+    if(!IsOutpointMature(theAssetAllocation.lockedOutpoint))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint not mature"));
+    Coin pcoin;
+    GetUTXOCoin(theAssetAllocation.lockedOutpoint, pcoin);
+    CTxDestination address;
+    if (!ExtractDestination(pcoin.out.scriptPubKey, address))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not extract destination from outpoint"));
+        
+    const string& strAddressDest = EncodeDestination(address);
+    LogPrintf("strAddressFrom %s vs strAddressDest %s\n", strAddressFrom, strAddressDest);
+    if(strAddressFrom != strAddressDest)    
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
+    
+    vector<unsigned char> data;
+    theAssetAllocation.Serialize(data);    
 	vector<CRecipient> vecSend;
 
 	CScript scriptData;
@@ -685,7 +696,7 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(vchAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK, strWitness, vecSend);
+	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK, strWitness, vecSend);
 }
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
@@ -885,6 +896,8 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
 	oAssetAllocation.pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
 	oAssetAllocation.pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
     oAssetAllocation.pushKV("balance_zdag", ValueFromAssetAmount(nBalanceZDAG, asset.nPrecision));
+    if(!assetallocation.lockedOutpoint.IsNull())
+        oAssetAllocation.pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
 	return true;
 }
 
