@@ -634,16 +634,10 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     addressArray.push_back("addr(" + strAddress + ")"); 
     
     
-    CTransaction txIn_t(txIn);    
+    
     LOCK(cs_main);
     CCoinsViewCache view(pcoinsTip.get());
-    
-    // add total output amount of transaction to desired amount
-    CAmount nDesiredAmount = txIn_t.GetValueOut();
-    // mint transactions should start with 0 because the output is minted based on spv proof
-    if(txIn_t.nVersion == SYSCOIN_TX_VERSION_MINT) 
-        nDesiredAmount = 0;
-    CAmount nCurrentAmount = view.GetValueIn(txIn_t);
+   
 
     FeeCalculation fee_calc;
     CCoinControl coin_control;
@@ -658,6 +652,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
         {
             LOCK(pwallet->cs_wallet);
             if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n)){
+                LogPrintf("locked coin skipping...\n");
                 continue;
             }
         }
@@ -666,6 +661,15 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
         nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
     }
+    txIn = tx;
+    CTransaction txIn_t(txIn);
+    CAmount nCurrentAmount = view.GetValueIn(txIn_t);   
+    // add total output amount of transaction to desired amount
+    CAmount nDesiredAmount = txIn_t.GetValueOut();
+    // mint transactions should start with 0 because the output is minted based on spv proof
+    if(txIn_t.nVersion == SYSCOIN_TX_VERSION_MINT) 
+        nDesiredAmount = 0;
+   
     for (auto& vout : tx.vout) {
         const unsigned int nBytes = ::GetSerializeSize(vout, PROTOCOL_VERSION);
         nFees += GetMinimumFee(*pwallet, nBytes, coin_control, &fee_calc);
