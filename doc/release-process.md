@@ -253,8 +253,6 @@ syscoin-${VERSION}-x86_64-linux-gnu.tar.gz
 syscoin-${VERSION}-osx64.tar.gz
 syscoin-${VERSION}-osx.dmg
 syscoin-${VERSION}.tar.gz
-syscoin-${VERSION}-win32-setup.exe
-syscoin-${VERSION}-win32.zip
 syscoin-${VERSION}-win64-setup.exe
 syscoin-${VERSION}-win64.zip
 ```
