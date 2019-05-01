@@ -250,8 +250,6 @@ bitcoin-${VERSION}-x86_64-linux-gnu.tar.gz
 bitcoin-${VERSION}-osx64.tar.gz
 bitcoin-${VERSION}-osx.dmg
 bitcoin-${VERSION}.tar.gz
-bitcoin-${VERSION}-win32-setup.exe
-bitcoin-${VERSION}-win32.zip
 bitcoin-${VERSION}-win64-setup.exe
 bitcoin-${VERSION}-win64.zip
 ```
