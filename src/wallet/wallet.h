@@ -598,11 +598,8 @@ class CWallet final : public CCryptoKeyStore, private interfaces::Chain::Notific
 private:
     std::atomic<bool> fAbortRescan{false};
     std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
-<<<<<<< HEAD
-=======
     std::atomic<int64_t> m_scanning_start{0};
     std::atomic<double> m_scanning_progress{0};
->>>>>>> 90e27abe3... wallet: Track current scanning progress
     std::mutex mutexScanning;
     friend class WalletRescanReserver;
 
@@ -828,11 +825,8 @@ public:
     void AbortRescan() { fAbortRescan = true; }
     bool IsAbortingRescan() { return fAbortRescan; }
     bool IsScanning() { return fScanningWallet; }
-<<<<<<< HEAD
-=======
     int64_t ScanningDuration() const { return fScanningWallet ? GetTimeMillis() - m_scanning_start : 0; }
     double ScanningProgress() const { return fScanningWallet ? (double) m_scanning_progress : 0; }
->>>>>>> 90e27abe3... wallet: Track current scanning progress
 
     /**
      * keystore implementation
@@ -1256,11 +1250,8 @@ public:
         if (m_wallet->fScanningWallet) {
             return false;
         }
-<<<<<<< HEAD
-=======
         m_wallet->m_scanning_start = GetTimeMillis();
         m_wallet->m_scanning_progress = 0;
->>>>>>> 90e27abe3... wallet: Track current scanning progress
         m_wallet->fScanningWallet = true;
         m_could_reserve = true;
         return true;
