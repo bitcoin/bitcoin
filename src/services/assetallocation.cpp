@@ -686,14 +686,26 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || params.size() != 5)
 		throw runtime_error(
-			"assetallocationlock [asset_guid] [addressfrom] [txid] [output_index] [witness]\n"
-			"Lock an asset allocation to a specific UTXO (txid/output). This is useful for things such as hashlock and CLTV type operations where script checks are done on UTXO prior to spending which extend to an assetallocationsend.\n"
-			"<asset_guid> Asset guid.\n"
-			"<addressfrom> Address that owns this asset allocation.\n"
-			"<txid> Transaction hash.\n"
-			"<output_index> Output index inside the transaction output array.\n"
-			"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n");
-
+            RPCHelpMan{"assetallocationlock",
+            "\nLock an asset allocation to a specific UTXO (txid/output). This is useful for things such as hashlock and CLTV type operations where script checks are done on UTXO prior to spending which extend to an assetallocationsend.\n",
+            {
+                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+                {"addressfrom", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
+                {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "Transaction hash"},
+                {"output_index", RPCArg::Type::NUM, RPCArg::Optional::NO, "Output index inside the transaction output array"},
+                {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
+            },
+            RPCResult{
+            "[\n"
+            "    \"hexstring\"        (hexstring) unsigned transaction hexstring\n"
+            "]\n"
+            },
+            RPCExamples{
+            HelpExampleCli("assetallocationlock", "\"asset_guid\" \"addressfrom\" \"txid\" \"output_index\" \"\"")
+            + HelpExampleRpc("assetallocationlock", "\"asset_guid\",\"addressfrom\",\"txid\",\"output_index\",\"\"")
+            }
+            }.ToString()); 
+            
 	// gather & validate inputs
 	const int &nAsset = params[0].get_int();
 	string vchAddressFrom = params[1].get_str();
