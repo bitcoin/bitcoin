@@ -241,8 +241,8 @@ void Shutdown(InitInterfaces& interfaces)
     g_txindex.reset();
     DestroyAllBlockFilterIndexes();
 
-    if (g_is_mempool_loaded && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        DumpMempool();
+    if (::mempool.IsLoaded() && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+        DumpMempool(::mempool);
     }
 
     if (fFeeEstimatesInitialized)
@@ -735,9 +735,9 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
     }
     } // End scope of CImportingNow
     if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
-        LoadMempool();
+        LoadMempool(::mempool);
     }
-    g_is_mempool_loaded = !ShutdownRequested();
+    ::mempool.SetIsLoaded(!ShutdownRequested());
 }
 
 /** Sanity checks

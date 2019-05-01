@@ -256,7 +256,6 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
-std::atomic_bool g_is_mempool_loaded{false};
 
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
@@ -4735,7 +4734,7 @@ int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::D
 
 static const uint64_t MEMPOOL_DUMP_VERSION = 1;
 
-bool LoadMempool()
+bool LoadMempool(CTxMemPool& pool)
 {
     const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
@@ -4770,12 +4769,12 @@ bool LoadMempool()
 
             CAmount amountdelta = nFeeDelta;
             if (amountdelta) {
-                mempool.PrioritiseTransaction(tx->GetHash(), amountdelta);
+                pool.PrioritiseTransaction(tx->GetHash(), amountdelta);
             }
             CValidationState state;
             if (nTime + nExpiryTimeout > nNow) {
                 LOCK(cs_main);
-                AcceptToMemoryPoolWithTime(chainparams, mempool, state, tx, nullptr /* pfMissingInputs */, nTime,
+                AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nullptr /* pfMissingInputs */, nTime,
                                            nullptr /* plTxnReplaced */, false /* bypass_limits */, 0 /* nAbsurdFee */,
                                            false /* test_accept */);
                 if (state.IsValid()) {
@@ -4785,7 +4784,7 @@ bool LoadMempool()
                     // wallet(s) having loaded it while we were processing
                     // mempool transactions; consider these as valid, instead of
                     // failed, but mark them as 'already there'
-                    if (mempool.exists(tx->GetHash())) {
+                    if (pool.exists(tx->GetHash())) {
                         ++already_there;
                     } else {
                         ++failed;
@@ -4801,7 +4800,7 @@ bool LoadMempool()
         file >> mapDeltas;
 
         for (const auto& i : mapDeltas) {
-            mempool.PrioritiseTransaction(i.first, i.second);
+            pool.PrioritiseTransaction(i.first, i.second);
         }
     } catch (const std::exception& e) {
         LogPrintf("Failed to deserialize mempool data on disk: %s. Continuing anyway.\n", e.what());
@@ -4812,7 +4811,7 @@ bool LoadMempool()
     return true;
 }
 
-bool DumpMempool()
+bool DumpMempool(const CTxMemPool& pool)
 {
     int64_t start = GetTimeMicros();
 
@@ -4823,11 +4822,11 @@ bool DumpMempool()
     LOCK(dump_mutex);
 
     {
-        LOCK(mempool.cs);
-        for (const auto &i : mempool.mapDeltas) {
+        LOCK(pool.cs);
+        for (const auto &i : pool.mapDeltas) {
             mapDeltas[i.first] = i.second;
         }
-        vinfo = mempool.infoAll();
+        vinfo = pool.infoAll();
     }
 
     int64_t mid = GetTimeMicros();
