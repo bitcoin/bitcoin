@@ -20,6 +20,14 @@ PairingPage::PairingPage(QWidget *parent) :
 {
     QVBoxLayout *layout = new QVBoxLayout(this);
 
+    QLabel *label_experimental = new QLabel(this);
+    label_experimental->setStyleSheet("QLabel { background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #F0D0A0, stop:1 #F8D488); color:#000000; }");
+    label_experimental->setMargin(3);
+    label_experimental->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    label_experimental->setWordWrap(true);
+    label_experimental->setText(tr("Pairing is an experimental feature that currently only works when Tor is enabled. It is expected that the pairing address below will change with future updates, and you may need to re-pair after upgrading."));
+    layout->addWidget(label_experimental);
+
     QLabel *label_summary = new QLabel(this);
     label_summary->setText(tr("Below you will find information to pair other software or devices with this node:"));
     layout->addWidget(label_summary);
