@@ -173,7 +173,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "syscoinmint", 2, "blocknumber" },
     { "syscointxfund", 2, "output_index" },
     { "assetallocationlock", 0, "asset_guid" },
-	{ "assetallocationlock", 3, "output_index" },
+    { "assetallocationlock", 3, "output_index" },
     { "assetallocationsend", 0, "asset_guid" },
     { "assetallocationsendmany", 0, "asset_guid" },
     { "assetallocationsendmany", 2, "inputs" },
