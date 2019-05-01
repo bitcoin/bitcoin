@@ -531,7 +531,7 @@ class P2PDataStore(P2PInterface):
                 for b in blocks:
                     self.send_message(msg_block(block=b))
             else:
-                self.send_message(msg_headers([CBlockHeader(blocks[-1])]))
+                self.send_message(msg_headers([CBlockHeader(block) for block in blocks]))
                 wait_until(lambda: blocks[-1].sha256 in self.getdata_requests, timeout=timeout, lock=mininode_lock)
 
             if expect_disconnect:

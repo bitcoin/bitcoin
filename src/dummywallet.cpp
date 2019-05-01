@@ -23,11 +23,33 @@ public:
 
 void DummyWalletInit::AddWalletOptions() const
 {
-    std::vector<std::string> opts = {"-addresstype", "-changetype", "-disablewallet", "-discardfee=<amt>", "-fallbackfee=<amt>",
-        "-keypool=<n>", "-mintxfee=<amt>", "-paytxfee=<amt>", "-rescan", "-salvagewallet", "-spendzeroconfchange",  "-txconfirmtarget=<n>",
-        "-upgradewallet", "-wallet=<path>", "-walletbroadcast", "-walletdir=<dir>", "-walletnotify=<cmd>", "-walletrbf", "-zapwallettxes=<mode>",
-        "-dblogsize=<n>", "-flushwallet", "-privdb", "-walletrejectlongchains"};
-    gArgs.AddHiddenArgs(opts);
+    gArgs.AddHiddenArgs({
+        "-addresstype",
+        "-avoidpartialspends",
+        "-changetype",
+        "-disablewallet",
+        "-discardfee=<amt>",
+        "-fallbackfee=<amt>",
+        "-keypool=<n>",
+        "-maxtxfee=<amt>",
+        "-mintxfee=<amt>",
+        "-paytxfee=<amt>",
+        "-rescan",
+        "-salvagewallet",
+        "-spendzeroconfchange",
+        "-txconfirmtarget=<n>",
+        "-upgradewallet",
+        "-wallet=<path>",
+        "-walletbroadcast",
+        "-walletdir=<dir>",
+        "-walletnotify=<cmd>",
+        "-walletrbf",
+        "-zapwallettxes=<mode>",
+        "-dblogsize=<n>",
+        "-flushwallet",
+        "-privdb",
+        "-walletrejectlongchains",
+    });
 }
 
 const WalletInitInterface& g_wallet_init_interface = DummyWalletInit();

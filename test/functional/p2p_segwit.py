@@ -1125,7 +1125,8 @@ class SegWitTest(SyscoinTestFramework):
     def test_segwit_versions(self):
         """Test validity of future segwit version transactions.
 
-        Future segwit version transactions are non-standard, but valid in blocks.
+        Future segwit versions are non-standard to spend, but valid in blocks.
+        Sending to future segwit versions is always allowed.
         Can run this before and after segwit activation."""
 
         NUM_SEGWIT_VERSIONS = 17  # will test OP_0, OP1, ..., OP_16
@@ -1165,7 +1166,7 @@ class SegWitTest(SyscoinTestFramework):
         assert len(self.nodes[0].getrawmempool()) == 0
 
         # Finally, verify that version 0 -> version 1 transactions
-        # are non-standard
+        # are standard
         script_pubkey = CScript([CScriptOp(OP_1), witness_hash])
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(tx.sha256, 0), b"")]
@@ -1173,10 +1174,9 @@ class SegWitTest(SyscoinTestFramework):
         tx2.wit.vtxinwit.append(CTxInWitness())
         tx2.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         tx2.rehash()
-        # Gets accepted to test_node, because standardness of outputs isn't
-        # checked with fRequireStandard
+        # Gets accepted to both policy-enforcing nodes and others.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx2, with_witness=True, accepted=True)
-        test_transaction_acceptance(self.nodes[1], self.std_node, tx2, with_witness=True, accepted=False)
+        test_transaction_acceptance(self.nodes[1], self.std_node, tx2, with_witness=True, accepted=True)
         temp_utxo.pop()  # last entry in temp_utxo was the output we just spent
         temp_utxo.append(UTXO(tx2.sha256, 0, tx2.vout[0].nValue))
 
