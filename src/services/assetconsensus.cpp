@@ -365,8 +365,6 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
                     errorMessage = "Error flushing to asset dbs";
                 }
             }
-            mapAssetAllocations.clear();
-            mapAssets.clear();
         }        
         if (!good || !errorMessage.empty())
             return state.DoS(bOverflow? 10: 100, false, REJECT_INVALID, errorMessage);
@@ -799,9 +797,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015a - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return error(errorMessage.c_str());
 		}
-		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
-		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND transaction
-		vecLockedOutpoints.emplace_back(std::move(theAssetAllocation.lockedOutpoint));
+        if (!bMiner && !bSanityCheck && !fJustCheck){
+    		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
+    		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND transaction
+    		vecLockedOutpoints.emplace_back(std::move(theAssetAllocation.lockedOutpoint));
+        }
 	}
     else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
 	{

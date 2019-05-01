@@ -15,6 +15,39 @@
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_allocation_tests, BasicSyscoinTestingSetup)
+BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
+{
+    UniValue r;
+    printf("Running generate_asset_allocation_lock...\n");
+    GenerateBlocks(5);
+    string txid;
+    string newaddress = GetNewFundedAddress("node1", txid);
+    string guid = AssetNew("node1", newaddress, "data","''", "8", "1", "100000");
+
+    AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress ));
+    UniValue balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 1 * COIN);
+    
+    LockAssetAllocation("node1", guid, newaddress, txid, "0");
+    
+    string newaddress1 = GetNewFundedAddress("node1");
+    string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);  
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid0 + " true" ));
+    UniValue vinArray = find_value(r.get_obj(), "vin");
+    bool found = false;
+    for(unsigned int i = 0;i<vinArray.size();i++){  
+        if(find_value(vinArray[i].get_obj(), "txid").get_str() == txid && find_value(vinArray[i].get_obj(), "vout").get_int() == 0){
+            found = true;
+            break;
+        }
+    }
+    BOOST_CHECK(found);
+    
+}
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 {
 	UniValue r;
