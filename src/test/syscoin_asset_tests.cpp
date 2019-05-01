@@ -17,6 +17,7 @@
 #include <math.h>
 #include <key_io.h>
 #include <univalue.h>
+#include <util/strencodings.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 
@@ -48,41 +49,6 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
-}
-BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
-{
-    UniValue r;
-    printf("Running generate_asset_allocation_lock...\n");
-    GenerateBlocks(5);
-    string txid;
-    string newaddress = GetNewFundedAddress("node1", txid);
-    // lock outpoint so other txs can't spend through wallet auto-selection 
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent false \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":0}]\"" ));
-    string newaddress1 = GetNewFundedAddress("node2");
-    string guid = AssetNew("node1", newaddress, "data","''", "8", "1", "100000");
-
-    AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"");
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress ));
-    UniValue balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 1 * COIN);
-    
-    LockAssetAllocation("node1", guid, newaddress, txid, "0");
-       
-    string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));
-    balance = find_value(r.get_obj(), "balance");
-    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);  
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid0 + " true" ));
-    UniValue vinArray = find_value(r.get_obj(), "vin");
-    bool found = false;
-    for(unsigned int i = 0;i<vinArray.size();i++){  
-        if(find_value(vinArray[i].get_obj(), "txid").get_str() == txid && find_value(vinArray[i].get_obj(), "vout").get_int() == 0){
-            found = true;
-            break;
-        }
-    }
-    BOOST_CHECK(found);
-    
 }
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {

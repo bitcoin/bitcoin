@@ -70,7 +70,6 @@
 
 #include <thread>
 // SYSCOIN only features
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 #include <signal.h>
 #include <rpc/server.h>

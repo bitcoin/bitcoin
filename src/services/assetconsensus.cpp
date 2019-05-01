@@ -1454,7 +1454,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 	const CTransaction &myTx = (*tx);
 	// if not an allocation send ensure the outpoint locked isn't being spent
 	if (myTx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND) {
-		for (unsigned int i = 1; i < myTx.vin.size(); i++)
+		for (unsigned int i = 0; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
@@ -1475,17 +1475,15 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 			return state.Invalid(false, REJECT_INVALID, "non-existing-allocation");
 		}
 		bool found = assetAllocationDB.lockedOutpoint.IsNull();
-		for (unsigned int i = 1; i < myTx.vin.size(); i++)
+        
+		for (unsigned int i = 0; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;
+            if(!found)
+                LogPrintf("found %d out match %d\n", found? 1: 0, assetAllocationDB.lockedOutpoint == myTx.vin[i].prevout? 1: 0);
+            
 			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				if (found) {
-					return state.Invalid(false, REJECT_INVALID, "db-allocation-null-lockpoint");
-				}
-				if (assetAllocationDB.lockedOutpoint != myTx.vin[i].prevout) {
-					return state.Invalid(false, REJECT_INVALID, "allocation-lockpoint-mismatch");
-				}
+			if (!found && assetAllocationDB.lockedOutpoint == myTx.vin[i].prevout && plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
 				found = true;
 				break;
 			}

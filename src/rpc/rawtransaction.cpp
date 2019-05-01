@@ -916,10 +916,12 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     if (request.params[0].get_array().size() != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
     }
-
+    // SYSCOIN
     CMutableTransaction mtx;
-    if (!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    if(!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str(), false, true)){
+        if(!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str(), true, true)){
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+        }
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     const uint256& tx_hash = tx->GetHash();
