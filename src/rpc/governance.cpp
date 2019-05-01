@@ -73,7 +73,7 @@ UniValue gobject(const JSONRPCRequest& request)
          strCommand != "deserialize" && strCommand != "get" && strCommand != "getvotes" && strCommand != "getcurrentvotes" && strCommand != "list" && strCommand != "diff" &&
          strCommand != "check" ))
         throw std::runtime_error(
-                "gobject \"command\"...\n"
+                RPCHelpMan{"gobject",
                 "Manage governance objects\n"
                 "\nAvailable commands:\n"
                 "  check              - Validate governance object data (proposal only)\n"
@@ -90,8 +90,16 @@ UniValue gobject(const JSONRPCRequest& request)
                 "  diff               - List differences since last diff\n"
                 "  vote-name         - Vote on a governance object by masternode name (using masternode.conf setup)\n"
                 "  vote-conf          - Vote on a governance object by masternode configured in syscoin.conf\n"
-                "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n"
-                );
+                "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n",
+                    {
+                        {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "command to call (check|prepare|submit|deserialize|count|get|getvotes|getcurrentvotes|list|diff|vote-name|vote-conf|vote-many)"}
+                    },
+                    RPCResult{""},
+                    RPCExamples{
+                        HelpExampleCli("gobject", "list")
+                        + HelpExampleRpc("gobject", "list")
+                    }
+                }.ToString());
 
 
     if(strCommand == "count") {
@@ -903,9 +911,23 @@ UniValue voteraw(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 7)
         throw std::runtime_error(
-                "voteraw <masternode-tx-hash> <masternode-tx-index> <governancehash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
-                "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
-                );
+                RPCHelpMan{"voteraw",
+                    "\nCompile and relay a governance vote with provided external signature instead of signing vote internally\n",
+                    {
+                        {"masaternode-tx-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The masternode transaction hash"},
+                        {"masternode-tx-index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The masterndoe transaction index"},
+                        {"governancehash", RPCArg::Type::STR, RPCArg::Optional::NO, "The governance gobject hash"},
+                        {"vote-signal", RPCArg::Type::STR, RPCArg::Optional::NO, "The vote-signal (funding|valid|delete|endorsed)"},
+                        {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "The vote (yes|no|abstain)"},
+                        {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "The linux epoche time"},
+                        {"vote-sig", RPCArg::Type::STR, RPCArg::Optional::NO, "The external signature of the vote"}
+                    },
+                    RPCResult{""},
+                    RPCExamples{
+                        HelpExampleCli("voteraw", "\"tx-hash\" \"tx-index\" \"gov-hash\" \"funding\" \"yes\" \"time\" \"vote-sig\"")
+                        + HelpExampleRpc("voteraw", "\"tx-hash\", \"tx-index\", \"gov-hash\", \"funding\", \"yes\", \"time\", \"vote-sig\"")
+                        }
+                }.ToString());
 
     uint256 hashMnTx = ParseHashV(request.params[0], "mn tx hash");
     int nMnTxIndex = request.params[1].get_int();
@@ -964,9 +986,10 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-            "getgovernanceinfo\n"
-            "Returns an object containing governance parameters.\n"
-            "\nResult:\n"
+                RPCHelpMan{"getgovernanceinfo",
+                    "\nReturns an object containing governance parameters.\n",
+                    {},
+                    RPCResult{
             "{\n"
             "  \"governanceminquorum\": xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
             "  \"masternodewatchdogmaxseconds\": xxxxx,  (numeric) sentinel watchdog expiration time in seconds (DEPRECATED)\n"
@@ -976,11 +999,12 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
             "  \"lastsuperblock\": xxxxx,                (numeric) the block number of the last superblock\n"
             "  \"nextsuperblock\": xxxxx,                (numeric) the block number of the next superblock\n"
             "  \"maxgovobjdatasize\": xxxxx,             (numeric) maximum governance object data size in bytes\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getgovernanceinfo", "")
-            + HelpExampleRpc("getgovernanceinfo", "")
-            );
+                "}\n"},
+                    RPCExamples{
+                        HelpExampleCli("getgovernanceinfo", "")
+                        + HelpExampleRpc("getgovernanceinfo", "")
+                    }
+            }.ToString());
     }
 
 
@@ -1011,16 +1035,19 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
-            "getsuperblockbudget index\n"
-            "\nReturns the absolute maximum sum of superblock payments allowed.\n"
-            "\nArguments:\n"
-            "1. index         (numeric, required) The block index\n"
-            "\nResult:\n"
+            RPCHelpMan{"getsuperblockbudget",
+                "\nReturns the absolute maximum sum of superblock payments allowed.\n",
+                {
+                    {"index", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block index"}
+                },
+                RPCResult{
             "n                (numeric) The absolute maximum sum of superblock payments allowed, in " + CURRENCY_UNIT + "\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getsuperblockbudget", "1000")
-            + HelpExampleRpc("getsuperblockbudget", "1000")
-        );
+                },
+                RPCExamples{
+                    HelpExampleCli("getsuperblockbudget", "1000")
+                    + HelpExampleRpc("getsuperblockbudget", "1000")
+                }    
+             }.ToString());
     }
 
     int nBlockHeight = request.params[0].get_int();
