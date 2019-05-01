@@ -649,8 +649,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1005 - " + _("Too many receivers in one allocation send, maximum of 250 is allowed at once");
                 return error(errorMessage.c_str());
             }
+			if (!theAssetAllocation.lockedOutpoint.IsNull())
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Cannot include locked outpoint information for allocation send");
+				return error(errorMessage.c_str());
+			}
             break; 
-        case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:       
+        case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:
+			if (!theAssetAllocation.lockedOutpoint.IsNull())
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Cannot include locked outpoint information for allocation burn");
+				return error(errorMessage.c_str());
+			}
             break;  
 		case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK:
 			if (theAssetAllocation.lockedOutpoint.IsNull())

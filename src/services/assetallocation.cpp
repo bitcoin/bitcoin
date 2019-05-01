@@ -551,7 +551,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
-
+	const COutPoint& lockedOutpoint = theAssetAllocation.lockedOutpoint;
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
     theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress); 
@@ -623,7 +623,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(vchAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
+	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend, lockedOutpoint);
 }
 
 UniValue assetallocationlock(const JSONRPCRequest& request) {
