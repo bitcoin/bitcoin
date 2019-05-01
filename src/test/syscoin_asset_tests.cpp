@@ -17,6 +17,7 @@
 #include <math.h>
 #include <key_io.h>
 #include <univalue.h>
+#include <util/strencodings.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 

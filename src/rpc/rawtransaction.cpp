@@ -189,7 +189,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     }else {      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!pblockindexdb || !pblockindexdb->ReadBlockHash(hash, blockhash))
+        if(!pblockindexdb->ReadBlockHash(hash, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
         blockindex = LookupBlockIndex(blockhash);
         if (!blockindex) {
@@ -282,7 +282,7 @@ UniValue gettxoutproof(const JSONRPCRequest& request)
     } else if(setTxids.size() == 1){      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!pblockindexdb || !pblockindexdb->ReadBlockHash(oneTxid, blockhash))
+        if(!pblockindexdb->ReadBlockHash(oneTxid, blockhash))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
         pblockindex = LookupBlockIndex(blockhash);     
     }else {
@@ -839,7 +839,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (!DecodeHexTx(mtx, request.params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-
+	
     CAmount max_raw_tx_fee = DEFAULT_MAX_RAW_TX_FEE;
     // TODO: temporary migration code for old clients. Remove in v0.20
     if (request.params[1].isBool()) {
@@ -852,8 +852,12 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
         // (see GetVirtualTransactionSize)
         max_raw_tx_fee = fr.GetFee((weight+3)/4);
     }
-
-    uint256 txid;
+	// SYSCOIN
+	CValidationState state;
+	if (!CheckSyscoinLockedOutpoints(tx, state))
+		throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, state.GetRejectReason());
+	
+	uint256 txid;
     std::string err_string;
     const TransactionError err = BroadcastTransaction(tx, txid, err_string, max_raw_tx_fee);
     if (TransactionError::OK != err) {
@@ -912,10 +916,12 @@ static UniValue testmempoolaccept(const JSONRPCRequest& request)
     if (request.params[0].get_array().size() != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
     }
-
+    // SYSCOIN
     CMutableTransaction mtx;
-    if (!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+    if(!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str(), false, true)){
+        if(!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str(), true, true)){
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
+        }
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     const uint256& tx_hash = tx->GetHash();

@@ -4,7 +4,6 @@
 
 #include <validation.h>
 #include <core_io.h>
-#include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
 #include <boost/lexical_cast.hpp>
@@ -380,18 +379,34 @@ void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){
     if(count > 0)
          LogPrint(BCLog::SYS, "removeExpiredMempoolBalances removed %d expired asset allocation transactions from mempool balances\n", count);  
 }
-
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch) {
+	CTxDestination dest;
+	int witnessversion;
+	std::vector<unsigned char> witnessprogram;
+	for (unsigned int i = 0; i < tx.vin.size(); i++) {
+		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
+		if (prevCoins.IsSpent() || prevCoins.IsCoinBase()) {
+			continue;
+		}
+		if (prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion)
+			return true;
+	}
+	return false;
+}
+bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress &witnessAddressToMatch, const COutPoint& lockedOutpoint) {
+	if (lockedOutpoint.IsNull())
+		return FindAssetOwnerInTx(inputs, tx, witnessAddressToMatch);
 	CTxDestination dest;
     int witnessversion;
     std::vector<unsigned char> witnessprogram;
 	for (unsigned int i = 0; i < tx.vin.size(); i++) {
 		const Coin& prevCoins = inputs.AccessCoin(tx.vin[i].prevout);
-		if (prevCoins.IsSpent()) {
+		if (prevCoins.IsSpent() || prevCoins.IsCoinBase()) {
 			continue;
 		}
-        if (prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion)
+        if (lockedOutpoint == tx.vin[i].prevout && prevCoins.out.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram) && witnessAddressToMatch.vchWitnessProgram == witnessprogram && witnessAddressToMatch.nVersion == (unsigned char)witnessversion){
             return true;
+        }
 	}
 	return false;
 }
@@ -481,7 +496,7 @@ UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, b
 	}
 	return ret;
 }
-UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, vector<CRecipient> &vecSend) {
+UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, const vector<CRecipient> &vecSend, const COutPoint& outpoint) {
 	CMutableTransaction txNew;
     if(nVersion > 0)
 	    txNew.nVersion = nVersion;
@@ -492,21 +507,25 @@ UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, con
 		string strWitnessAddress;
 		strWitnessAddress = vchWitness;
 		addressunspent(strWitnessAddress, witnessOutpoint);
-		if (witnessOutpoint.IsNull())
+		if (witnessOutpoint.IsNull() || !IsOutpointMature(witnessOutpoint))
 		{
 			throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("This transaction requires a witness but no enough outputs found for witness address: ") + strWitnessAddress);
 		}
 		Coin pcoinW;
-		if (GetUTXOCoin(witnessOutpoint, pcoinW) && !pcoinW.IsSpent())
+		if (GetUTXOCoin(witnessOutpoint, pcoinW))
 			txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
 	}
     addressunspent(strAddress, addressOutpoint);
-    if (addressOutpoint.IsNull())
+
+	if (!outpoint.IsNull())
+		addressOutpoint = outpoint;
+
+    if (addressOutpoint.IsNull() || !IsOutpointMature(addressOutpoint))
     {
         throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Not enough outputs found for address: ") + strAddress);
     }
     Coin pcoin;
-    if (GetUTXOCoin(addressOutpoint, pcoin) && !pcoin.IsSpent()){
+    if (GetUTXOCoin(addressOutpoint, pcoin)){
         CTxIn txIn(addressOutpoint, pcoin.out.scriptPubKey);
         // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
         if(fTPSTest && fTPSTestEnabled){
@@ -600,9 +619,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 			+ HelpRequiringPassphrase(pwallet));
 	const string &hexstring = params[0].get_str();
     const string &strAddress = params[1].get_str();
-	CMutableTransaction tx;
+	CMutableTransaction txIn, tx;
     // decode as non-witness
-	if (!DecodeHexTx(tx, hexstring, true, false))
+	if (!DecodeHexTx(txIn, hexstring, true, false))
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5500 - " + _("Could not send raw transaction: Cannot decode transaction from hex string: ") + hexstring);
 
 	UniValue addressArray(UniValue::VARR);	
@@ -615,30 +634,42 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     addressArray.push_back("addr(" + strAddress + ")"); 
     
     
-    CTransaction txIn_t(tx);    
+    
     LOCK(cs_main);
     CCoinsViewCache view(pcoinsTip.get());
-    
+   
+
+    FeeCalculation fee_calc;
+    CCoinControl coin_control;
+    tx = txIn;
+    tx.vin.clear();
+    // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
+    CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
+    for (auto& vin : txIn.vin) {
+        Coin coin;
+        if (!GetUTXOCoin(vin.prevout, coin))    
+            continue;
+        {
+            LOCK(pwallet->cs_wallet);
+            if (pwallet->IsLockedCoin(vin.prevout.hash, vin.prevout.n)){
+                LogPrintf("locked coin skipping...\n");
+                continue;
+            }
+        }
+        tx.vin.push_back(vin);
+        int numSigs = 0;
+        CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
+        nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
+    }
+    txIn = tx;
+    CTransaction txIn_t(txIn);
+    CAmount nCurrentAmount = view.GetValueIn(txIn_t);   
     // add total output amount of transaction to desired amount
     CAmount nDesiredAmount = txIn_t.GetValueOut();
     // mint transactions should start with 0 because the output is minted based on spv proof
     if(txIn_t.nVersion == SYSCOIN_TX_VERSION_MINT) 
         nDesiredAmount = 0;
-    CAmount nCurrentAmount = view.GetValueIn(txIn_t);
-
-    FeeCalculation fee_calc;
-    CCoinControl coin_control;
-
-    // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
-    CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
-    for (auto& vin : tx.vin) {
-        Coin coin;
-        if (!GetUTXOCoin(vin.prevout, coin))
-            continue;
-        int numSigs = 0;
-        CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);
-        nFees += GetMinimumFee(*pwallet, numSigs * 200, coin_control, &fee_calc);
-    }
+   
     for (auto& vout : tx.vout) {
         const unsigned int nBytes = ::GetSerializeSize(vout, PROTOCOL_VERSION);
         nFees += GetMinimumFee(*pwallet, nBytes, coin_control, &fee_calc);
@@ -687,6 +718,10 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 					continue;
 			}
 			if (!IsOutpointMature(outPoint))
+				continue;
+			bool locked = false;
+			// spending while using a locked outpoint should be invalid
+			if (plockedoutpointsdb->ReadOutpoint(outPoint, locked) && locked)
 				continue;
             // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
             if(fTPSTest && fTPSTestEnabled){
@@ -843,7 +878,7 @@ bool IsAssetTx(const int &nVersion){
 }
 bool IsAssetAllocationTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN || 
-        nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND ;
+        nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK;
 }
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
@@ -883,7 +918,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash))
         blockindex = LookupBlockIndex(blockhash);
     if(blockindex)
     {
@@ -948,7 +983,10 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 			const int& nOut = find_value(utxoObj, "vout").get_int();
 
 			const COutPoint &outPointToCheck = COutPoint(txid, nOut);
-
+			bool locked = false;
+			// spending as non allocation send while using a locked outpoint should be invalid
+			if (plockedoutpointsdb->ReadOutpoint(outPointToCheck, locked) && locked)
+				continue;
 			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
 				continue;
 			if (outpoint.IsNull())
@@ -989,12 +1027,9 @@ bool IsOutpointMature(const COutPoint& outpoint)
 {
 	Coin coin;
 	GetUTXOCoin(outpoint, coin);
-	if (coin.IsSpent())
+	if (coin.IsSpent() || coin.IsCoinBase())
 		return false;
 	int numConfirmationsNeeded = 0;
-	if (coin.IsCoinBase())
-		numConfirmationsNeeded = COINBASE_MATURITY - 1;
-
 	if (coin.nHeight > -1 && chainActive.Tip())
 		return (chainActive.Height() - coin.nHeight) >= numConfirmationsNeeded;
 
@@ -1407,7 +1442,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb && pblockindexdb->ReadBlockHash(txHash, blockhash))
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash))
         blockindex = LookupBlockIndex(blockhash);
     if(blockindex)
     {
@@ -1535,14 +1570,20 @@ bool AssetRange(const CAmount& amount, int precision)
 bool CAssetDB::Flush(const AssetMap &mapAssets){
     if(mapAssets.empty())
         return true;
+	int write = 0;
+	int erase = 0;
     CDBBatch batch(*this);
     for (const auto &key : mapAssets) {
-        if(key.second.IsNull())
-            batch.Erase(key.first);
-        else
-            batch.Write(key.first, key.second);
+		if (key.second.IsNull()) {
+			erase++;
+			batch.Erase(key.first);
+		}
+		else {
+			write++;
+			batch.Write(key.first, key.second);
+		}
     }
-    LogPrint(BCLog::SYS, "Flushing %d assets\n", mapAssets.size());
+    LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
 }
 bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
@@ -1671,8 +1712,6 @@ UniValue listassets(const JSONRPCRequest& request) {
 	return oRes;
 }
 bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniValue& oRes) {
-    if(!pblockindexdb)
-        return false;
     CAssetAllocationTuple assetTuple;
     uint32_t nAsset = 0;
     if (!oOptions.isNull()) {
@@ -1726,7 +1765,7 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         UniValue oObj(UniValue::VOBJ);
         if(!ReadPayload(txid, oObj))
             continue;
-        if(pblockindexdb && pblockindexdb->ReadBlockHash(txid, block_hash)){
+        if(pblockindexdb->ReadBlockHash(txid, block_hash)){
             oObj.pushKV("blockhash", block_hash.GetHex());        
         }
         else
@@ -1756,7 +1795,7 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
 
     uint256 blockhash;
-    if(!pblockindexdb || !pblockindexdb->ReadBlockHash(hash, blockhash))
+    if(!pblockindexdb->ReadBlockHash(hash, blockhash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
 
     const CBlockIndex* pblockindex = LookupBlockIndex(blockhash);
@@ -1787,7 +1826,7 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     uint256 blockhash;
     if(request.params.size() > 1)
         blockhash = ParseHashV(request.params[1], "parameter 2");
-    if(!pblockindexdb || !pblockindexdb->ReadBlockHash(txhash, blockhash))
+    if(!pblockindexdb->ReadBlockHash(txhash, blockhash))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
     
     CBlockIndex* pblockindex = LookupBlockIndex(blockhash);

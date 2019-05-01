@@ -22,6 +22,7 @@ void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
 void GenerateSpendableCoins();
 string GetNewFundedAddress(const string &node);
+string GetNewFundedAddress(const string &node, string& txid);
 void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
 void SetSysMocktime(const int64_t& expiryTime);
@@ -32,6 +33,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 void AssetUpdate(const string& node, const string& guid, const string& pubdata = "''", const string& supply = "''",  const string& updateflags = "31", const string& witness = "''");
 void AssetTransfer(const string& node, const string &tonode, const string& gid, const string& toaddress, const string& witness = "''");
 void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm=true);
+void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid,const string &index);
 string AssetSend(const string& node, const string& name, const string& inputs, const string& memo = "''", const string& witness = "''", bool completetx=true);
 string AssetAllocationTransfer(const bool usezdag, const string& node, const string& name, const string& fromaddress, const string& inputs, const string& witness = "''");
 

@@ -19,7 +19,6 @@
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif // ENABLE_WALLET
-#include <boost/lexical_cast.hpp>
 #include <outputtype.h>
 #include <rpc/util.h>
 CMasternode::CMasternode() :

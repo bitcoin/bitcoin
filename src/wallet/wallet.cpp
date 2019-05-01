@@ -40,7 +40,8 @@
 #include <future>
 
 #include <boost/algorithm/string/replace.hpp>
-
+// SYSCOIN
+#include <services/assetconsensus.h>
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
@@ -3035,6 +3036,8 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
  */
 bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CReserveKey& reservekey, CValidationState& state)
 {
+	if (!CheckSyscoinLockedOutpoints(tx, state))
+		return false;
     {
         auto locked_chain = chain().lock();
         LOCK(cs_wallet);

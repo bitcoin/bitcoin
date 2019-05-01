@@ -328,6 +328,7 @@ void Shutdown(InitInterfaces& interfaces)
     pethereumtxrootsdb.reset();
     passetindexdb.reset();
     pblockindexdb.reset();
+	plockedoutpointsdb.reset();
     if (threadpool)
         delete threadpool;
     threadpool = NULL;
@@ -1651,7 +1652,9 @@ bool AppInitMain(InitInterfaces& interfaces)
                 pethereumtxrootsdb.reset();
                 passetindexdb.reset();
                 pblockindexdb.reset();
-                
+				plockedoutpointsdb.reset();
+
+				plockedoutpointsdb.reset(new CLockedOutpointsDB(nCoinDBCache * 16, false, fReset));
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset));
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset));
                 passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset));
