@@ -29,7 +29,7 @@ void InitLLMQSystem(CEvoDB& evoDb, CScheduler* scheduler, bool unitTests, bool f
     llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
-    quorumDKGDebugManager = new CDKGDebugManager(scheduler);
+    quorumDKGDebugManager = new CDKGDebugManager();
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb);
     quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker);
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
@@ -69,9 +69,6 @@ void StartLLMQSystem()
 
     if (blsWorker) {
         blsWorker->Start();
-    }
-    if (quorumDKGDebugManager) {
-        quorumDKGDebugManager->StartScheduler();
     }
     if (quorumDKGSessionManager) {
         quorumDKGSessionManager->StartMessageHandlerPool();

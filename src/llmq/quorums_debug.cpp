@@ -4,14 +4,7 @@
 
 #include "quorums_debug.h"
 
-#include "activemasternode.h"
-#include "bls/bls_batchverifier.h"
 #include "chainparams.h"
-#include "net.h"
-#include "net_processing.h"
-#include "scheduler.h"
-#include "spork.h"
-#include "validation.h"
 
 #include "evo/deterministicmns.h"
 #include "quorums_utils.h"
@@ -108,182 +101,14 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
     return ret;
 }
 
-CDKGDebugManager::CDKGDebugManager(CScheduler* _scheduler) :
-    scheduler(_scheduler)
+CDKGDebugManager::CDKGDebugManager()
 {
-}
-
-void CDKGDebugManager::StartScheduler()
-{
-    if (scheduler) {
-        scheduler->scheduleEvery([&]() {
-            SendLocalStatus();
-        }, 10 * 1000);
-    }
-}
-
-void CDKGDebugManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
-{
-    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
-        return;
-    }
-
-    if (strCommand == NetMsgType::QDEBUGSTATUS) {
-        CDKGDebugStatus status;
-        vRecv >> status;
-
-        uint256 hash = ::SerializeHash(status);
-
-        {
-            LOCK(cs_main);
-            connman.RemoveAskFor(hash);
-        }
-
-        bool ban = false;
-        if (!PreVerifyDebugStatusMessage(hash, status, ban)) {
-            if (ban) {
-                LOCK(cs_main);
-                Misbehaving(pfrom->id, 10);
-                return;
-            }
-        }
-
-        LOCK(cs);
-
-        pendingIncomingStatuses.emplace(hash, std::make_pair(std::move(status), pfrom->id));
-
-        ScheduleProcessPending();
-    }
-}
-
-bool CDKGDebugManager::PreVerifyDebugStatusMessage(const uint256& hash, llmq::CDKGDebugStatus& status, bool& retBan)
-{
-    retBan = false;
-
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(status.proTxHash);
-    if (!dmn) {
-        retBan = true;
-        return false;
-    }
-
-    {
-        LOCK(cs);
-
-        if (!seenStatuses.emplace(hash, GetTimeMillis()).second) {
-            return false;
-        }
-
-        auto it = statusesForMasternodes.find(status.proTxHash);
-        if (it != statusesForMasternodes.end()) {
-            if (statuses[it->second].nTime >= status.nTime) {
-                // we know a more recent status already
-                return false;
-            }
-        }
-    }
-
-    // check if all present LLMQ types are valid
-    for (const auto& p : status.sessions) {
-        if (!Params().GetConsensus().llmqs.count((Consensus::LLMQType)p.first)) {
-            retBan = true;
-            return false;
-        }
-        const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)p.first);
-        if (p.second.llmqType != p.first || p.second.members.size() != (size_t)params.size) {
-            retBan = true;
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void CDKGDebugManager::ScheduleProcessPending()
-{
-    AssertLockHeld(cs);
-
-    if (hasScheduledProcessPending) {
-        return;
-    }
-
-    scheduler->schedule([&] {
-        ProcessPending();
-    }, boost::chrono::system_clock::now() + boost::chrono::milliseconds(100));
-}
-
-void CDKGDebugManager::ProcessPending()
-{
-    decltype(pendingIncomingStatuses) pend;
-
-    {
-        LOCK(cs);
-        hasScheduledProcessPending = false;
-        pend = std::move(pendingIncomingStatuses);
-    }
-
-    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
-        return;
-    }
-
-    CBLSBatchVerifier<NodeId, uint256> batchVerifier(true, true, 8);
-    for (const auto& p : pend) {
-        const auto& hash = p.first;
-        const auto& status = p.second.first;
-        auto nodeId = p.second.second;
-        auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(status.proTxHash);
-        if (!dmn) {
-            continue;
-        }
-        batchVerifier.PushMessage(nodeId, hash, status.GetSignHash(), status.sig, dmn->pdmnState->pubKeyOperator);
-    }
-
-    batchVerifier.Verify();
-
-    if (!batchVerifier.badSources.empty()) {
-        LOCK(cs_main);
-        for (auto& nodeId : batchVerifier.badSources) {
-            Misbehaving(nodeId, 100);
-        }
-    }
-    for (const auto& p : pend) {
-        const auto& hash = p.first;
-        const auto& status = p.second.first;
-        auto nodeId = p.second.second;
-        if (batchVerifier.badMessages.count(p.first)) {
-            continue;
-        }
-
-        ProcessDebugStatusMessage(hash, status);
-    }
-}
-
-// status must have a validated signature
-void CDKGDebugManager::ProcessDebugStatusMessage(const uint256& hash, const llmq::CDKGDebugStatus& status)
-{
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(status.proTxHash);
-    if (!dmn) {
-        return;
-    }
-
-    LOCK(cs);
-    auto it = statusesForMasternodes.find(status.proTxHash);
-    if (it != statusesForMasternodes.end()) {
-        statuses.erase(it->second);
-        statusesForMasternodes.erase(it);
-    }
-
-    statuses[hash] = status;
-    statusesForMasternodes[status.proTxHash] = hash;
-
-    CInv inv(MSG_QUORUM_DEBUG_STATUS, hash);
-    g_connman->RelayInv(inv, DMN_PROTO_VERSION);
 }
 
 UniValue CDKGDebugStatus::ToJson(int detailLevel) const
 {
     UniValue ret(UniValue::VOBJ);
 
-    ret.push_back(Pair("proTxHash", proTxHash.ToString()));
     ret.push_back(Pair("time", nTime));
     ret.push_back(Pair("timeStr", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTime)));
 
@@ -301,44 +126,10 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
     return ret;
 }
 
-bool CDKGDebugManager::AlreadyHave(const CInv& inv)
-{
-    LOCK(cs);
-
-    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
-        return true;
-    }
-
-    return statuses.count(inv.hash) != 0 || seenStatuses.count(inv.hash) != 0;
-}
-
-bool CDKGDebugManager::GetDebugStatus(const uint256& hash, llmq::CDKGDebugStatus& ret)
-{
-    LOCK(cs);
-    auto it = statuses.find(hash);
-    if (it == statuses.end()) {
-        return false;
-    }
-    ret = it->second;
-    return true;
-}
-
-bool CDKGDebugManager::GetDebugStatusForMasternode(const uint256& proTxHash, llmq::CDKGDebugStatus& ret)
-{
-    LOCK(cs);
-    auto it = statusesForMasternodes.find(proTxHash);
-    if (it == statusesForMasternodes.end()) {
-        return false;
-    }
-    ret = statuses.at(it->second);
-    return true;
-}
-
 void CDKGDebugManager::GetLocalDebugStatus(llmq::CDKGDebugStatus& ret)
 {
     LOCK(cs);
     ret = localStatus;
-    ret.proTxHash = activeMasternodeInfo.proTxHash;
 }
 
 void CDKGDebugManager::ResetLocalSessionStatus(Consensus::LLMQType llmqType)
@@ -408,41 +199,6 @@ void CDKGDebugManager::UpdateLocalMemberStatus(Consensus::LLMQType llmqType, siz
     if (func(it->second.members.at(memberIdx))) {
         localStatus.nTime = GetAdjustedTime();
     }
-}
-
-void CDKGDebugManager::SendLocalStatus()
-{
-    if (!fMasternodeMode) {
-        return;
-    }
-    if (activeMasternodeInfo.proTxHash.IsNull()) {
-        return;
-    }
-    if (!sporkManager.IsSporkActive(SPORK_18_QUORUM_DEBUG_ENABLED)) {
-        return;
-    }
-
-    CDKGDebugStatus status;
-    {
-        LOCK(cs);
-        status = localStatus;
-    }
-
-    int64_t nTime = status.nTime;
-    status.proTxHash = activeMasternodeInfo.proTxHash;
-    status.nTime = 0;
-    status.sig = CBLSSignature();
-
-    uint256 newHash = ::SerializeHash(status);
-    if (newHash == lastStatusHash) {
-        return;
-    }
-    lastStatusHash = newHash;
-
-    status.nTime = nTime;
-    status.sig = activeMasternodeInfo.blsKeyOperator->Sign(status.GetSignHash());
-
-    ProcessDebugStatusMessage(newHash, status);
 }
 
 }

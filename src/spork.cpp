@@ -27,7 +27,6 @@ std::map<int, int64_t> mapSporkDefaults = {
     {SPORK_15_DETERMINISTIC_MNS_ENABLED,     4070908800ULL}, // OFF
     {SPORK_16_INSTANTSEND_AUTOLOCKS,         4070908800ULL}, // OFF
     {SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL}, // OFF
-    {SPORK_18_QUORUM_DEBUG_ENABLED,          4070908800ULL}, // OFF
     {SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL}, // OFF
     {SPORK_20_INSTANTSEND_LLMQ_BASED,        4070908800ULL}, // OFF
 };
@@ -290,7 +289,6 @@ int CSporkManager::GetSporkIDByName(const std::string& strName)
     if (strName == "SPORK_15_DETERMINISTIC_MNS_ENABLED")        return SPORK_15_DETERMINISTIC_MNS_ENABLED;
     if (strName == "SPORK_16_INSTANTSEND_AUTOLOCKS")            return SPORK_16_INSTANTSEND_AUTOLOCKS;
     if (strName == "SPORK_17_QUORUM_DKG_ENABLED")               return SPORK_17_QUORUM_DKG_ENABLED;
-    if (strName == "SPORK_18_QUORUM_DEBUG_ENABLED")             return SPORK_18_QUORUM_DEBUG_ENABLED;
     if (strName == "SPORK_19_CHAINLOCKS_ENABLED")               return SPORK_19_CHAINLOCKS_ENABLED;
     if (strName == "SPORK_20_INSTANTSEND_LLMQ_BASED")           return SPORK_20_INSTANTSEND_LLMQ_BASED;
 
@@ -310,7 +308,6 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
         case SPORK_15_DETERMINISTIC_MNS_ENABLED:        return "SPORK_15_DETERMINISTIC_MNS_ENABLED";
         case SPORK_16_INSTANTSEND_AUTOLOCKS:            return "SPORK_16_INSTANTSEND_AUTOLOCKS";
         case SPORK_17_QUORUM_DKG_ENABLED:               return "SPORK_17_QUORUM_DKG_ENABLED";
-        case SPORK_18_QUORUM_DEBUG_ENABLED:             return "SPORK_18_QUORUM_DEBUG_ENABLED";
         case SPORK_19_CHAINLOCKS_ENABLED:               return "SPORK_19_CHAINLOCKS_ENABLED";
         case SPORK_20_INSTANTSEND_LLMQ_BASED:           return "SPORK_20_INSTANTSEND_LLMQ_BASED";
         default:

@@ -66,7 +66,6 @@ const char *QCOMPLAINT="qcomplaint";
 const char *QJUSTIFICATION="qjustify";
 const char *QPCOMMITMENT="qpcommit";
 const char *QWATCH="qwatch";
-const char *QDEBUGSTATUS="qdebugstatus";
 const char *QSIGSESANN="qsigsesann";
 const char *QSIGSHARESINV="qsigsinv";
 const char *QGETSIGSHARES="qgetsigs";
@@ -108,7 +107,7 @@ static const char* ppszTypeName[] =
     NetMsgType::QCOMPLAINT,
     NetMsgType::QJUSTIFICATION,
     NetMsgType::QPCOMMITMENT,
-    NetMsgType::QDEBUGSTATUS,
+    "qdebugstatus", // was only shortly used on testnet
     NetMsgType::QSIGREC,
     NetMsgType::CLSIG,
     NetMsgType::ISLOCK,
@@ -172,7 +171,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::QJUSTIFICATION,
     NetMsgType::QPCOMMITMENT,
     NetMsgType::QWATCH,
-    NetMsgType::QDEBUGSTATUS,
     NetMsgType::QSIGSESANN,
     NetMsgType::QSIGSHARESINV,
     NetMsgType::QGETSIGSHARES,

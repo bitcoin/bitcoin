@@ -135,44 +135,31 @@ UniValue quorum_info(const JSONRPCRequest& request)
 void quorum_dkgstatus_help()
 {
     throw std::runtime_error(
-            "quorum dkgstatus (\"proTxHash\" detail_level)\n"
+            "quorum dkgstatus ( detail_level )\n"
             "Return the status of the current DKG process.\n"
-            "Works only when SPORK_17_QUORUM_DKG_ENABLED and SPORK_18_QUORUM_DEBUG_ENABLED sporks are ON.\n"
+            "Works only when SPORK_17_QUORUM_DKG_ENABLED spork is ON.\n"
             "\nArguments:\n"
-            "1. \"proTxHash\"          (string, optional, default=\"\") ProTxHash of masternode to show status for.\n"
-            "                        If set to an empty string, the local status is shown.\n"
-            "2. detail_level         (number, optional, default=0) Detail level of output.\n"
+            "1. detail_level         (number, optional, default=0) Detail level of output.\n"
             "                        0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n"
     );
 }
 
 UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 {
-    if (request.fHelp || (request.params.size() < 1 || request.params.size() > 3)) {
+    if (request.fHelp || (request.params.size() < 1 || request.params.size() > 2)) {
         quorum_dkgstatus_help();
     }
 
-    uint256 proTxHash;
-    if (request.params.size() > 1 && request.params[1].get_str() != "") {
-        proTxHash = ParseHashV(request.params[1], "proTxHash");
-    }
-
     int detailLevel = 0;
-    if (request.params.size() > 2) {
-        detailLevel = ParseInt32V(request.params[2], "detail_level");
+    if (request.params.size() > 1) {
+        detailLevel = ParseInt32V(request.params[1], "detail_level");
         if (detailLevel < 0 || detailLevel > 2) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid detail_level");
         }
     }
 
     llmq::CDKGDebugStatus status;
-    if (proTxHash.IsNull()) {
-        llmq::quorumDKGDebugManager->GetLocalDebugStatus(status);
-    } else {
-        if (!llmq::quorumDKGDebugManager->GetDebugStatusForMasternode(proTxHash, status)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("no status for %s found", proTxHash.ToString()));
-        }
-    }
+    llmq::quorumDKGDebugManager->GetLocalDebugStatus(status);
 
     auto ret = status.ToJson(detailLevel);
 

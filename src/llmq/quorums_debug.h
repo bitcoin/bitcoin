@@ -6,11 +6,10 @@
 #define DASH_QUORUMS_DEBUG_H
 
 #include "consensus/params.h"
-#include "serialize.h"
-#include "bls/bls.h"
 #include "sync.h"
 #include "univalue.h"
-#include "net.h"
+
+#include <set>
 
 class CDataStream;
 class CInv;
@@ -43,16 +42,6 @@ public:
 
 public:
     CDKGDebugMemberStatus() : statusBitset(0) {}
-
-public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(statusBitset);
-        READWRITE(complaintsFromMembers);
-    }
 };
 
 class CDKGDebugSessionStatus
@@ -82,93 +71,29 @@ public:
 public:
     CDKGDebugSessionStatus() : statusBitset(0) {}
 
-public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(quorumHeight);
-        READWRITE(phase);
-        READWRITE(statusBitset);
-        READWRITE(members);
-    }
-
     UniValue ToJson(int detailLevel) const;
 };
 
 class CDKGDebugStatus
 {
 public:
-    uint256 proTxHash;
     int64_t nTime{0};
 
     std::map<uint8_t, CDKGDebugSessionStatus> sessions;
 
-    CBLSSignature sig;
-
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOpWithoutSig(Stream& s, Operation ser_action)
-    {
-        READWRITE(proTxHash);
-        READWRITE(nTime);
-        READWRITE(sessions);
-    }
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        SerializationOpWithoutSig(s, ser_action);
-        READWRITE(sig);
-    }
-
-    uint256 GetSignHash() const
-    {
-        CHashWriter hw(SER_GETHASH, 0);
-        NCONST_PTR(this)->SerializationOpWithoutSig(hw, CSerActionSerialize());
-        hw << CBLSSignature();
-        return hw.GetHash();
-    }
-
     UniValue ToJson(int detailLevel) const;
 };
 
 class CDKGDebugManager
 {
 private:
-    CScheduler* scheduler;
-
     CCriticalSection cs;
-
-    std::map<uint256, int64_t> seenStatuses;
-    std::multimap<uint256, std::pair<CDKGDebugStatus, NodeId>> pendingIncomingStatuses;
-    bool hasScheduledProcessPending{false};
-
-    std::map<uint256, CDKGDebugStatus> statuses;
-    std::map<uint256, uint256> statusesForMasternodes;
-
     CDKGDebugStatus localStatus;
-    uint256 lastStatusHash;
 
 public:
-    CDKGDebugManager(CScheduler* _scheduler);
+    CDKGDebugManager();
 
-    void StartScheduler();
-
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    bool PreVerifyDebugStatusMessage(const uint256& hash, CDKGDebugStatus& status, bool& retBan);
-    void ScheduleProcessPending();
-    void ProcessPending();
-    void ProcessDebugStatusMessage(const uint256& hash, const CDKGDebugStatus& status);
-
-    bool AlreadyHave(const CInv& inv);
-    bool GetDebugStatus(const uint256& hash, CDKGDebugStatus& ret);
-    bool GetDebugStatusForMasternode(const uint256& proTxHash, CDKGDebugStatus& ret);
     void GetLocalDebugStatus(CDKGDebugStatus& ret);
 
     void ResetLocalSessionStatus(Consensus::LLMQType llmqType);
@@ -177,8 +102,6 @@ public:
     void UpdateLocalStatus(std::function<bool(CDKGDebugStatus& status)>&& func);
     void UpdateLocalSessionStatus(Consensus::LLMQType llmqType, std::function<bool(CDKGDebugSessionStatus& status)>&& func);
     void UpdateLocalMemberStatus(Consensus::LLMQType llmqType, size_t memberIdx, std::function<bool(CDKGDebugMemberStatus& status)>&& func);
-
-    void SendLocalStatus();
 };
 
 extern CDKGDebugManager* quorumDKGDebugManager;
