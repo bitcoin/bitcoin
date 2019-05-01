@@ -4399,7 +4399,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","inputs"}},
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
-	{ "syscoin",            "assetallocationlock",              &assetallocationlock,			{"asset_guid","addressfrom","txid","output_index","witness"}},
+    { "syscoin",            "assetallocationlock",              &assetallocationlock,           {"asset_guid","addressfrom","txid","output_index","witness"}},
     { "syscoin",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","addressfrom","addressTo","amount"}},
     { "syscoin",            "assetallocationsendmany",          &assetallocationsendmany,       {"asset_guid","addressfrom","inputs","witness"}},
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
