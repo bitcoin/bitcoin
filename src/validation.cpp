@@ -220,7 +220,11 @@ private:
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 } g_chainstate;
 
-CChain& ChainActive() { return g_chainstate.m_chain; }
+const CChain& ChainActive() { return g_chainstate.m_chain; }
+CChain& MutableChainActive() { return g_chainstate.m_chain; }
+
+const BlockMap& BlockIndex() { return g_chainstate.mapBlockIndex; }
+BlockMap& MutableBlockIndex() { return g_chainstate.mapBlockIndex; }
 
 /**
  * Mutex to guard access to validation specific variables, such as reading
@@ -234,7 +238,6 @@ CChain& ChainActive() { return g_chainstate.m_chain; }
  */
 RecursiveMutex cs_main;
 
-BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
 CBlockIndex *pindexBestHeader = nullptr;
 Mutex g_best_block_mutex;
 std::condition_variable g_best_block_cv;
@@ -265,6 +268,7 @@ CScript COINBASE_FLAGS;
 
 // Internal stuff
 namespace {
+    BlockMap& mapBlockIndex = g_chainstate.mapBlockIndex;
     CBlockIndex *&pindexBestInvalid = g_chainstate.pindexBestInvalid;
 
     /** All pairs A->B, where A (or one of its ancestors) misses transactions, but B has transactions.
@@ -3262,7 +3266,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     if (fCheckpointsEnabled) {
         // Don't accept any forks from the main chain prior to last checkpoint.
         // GetLastCheckpoint finds the last checkpoint in MapCheckpoints that's in our
-        // MapBlockIndex.
+        // BlockIndex.
         CBlockIndex* pcheckpoint = GetLastCheckpoint(params.Checkpoints());
         if (pcheckpoint && nHeight < pcheckpoint->nHeight)
             return state.Invalid(ValidationInvalidReason::BLOCK_CHECKPOINT, error("%s: forked chain older than last checkpoint (height %d)", __func__, nHeight), REJECT_CHECKPOINT, "bad-fork-prior-to-checkpoint");
@@ -3970,7 +3974,7 @@ bool LoadChainTip(const CChainParams& chainparams)
     if (!pindex) {
         return false;
     }
-    ::ChainActive().SetTip(pindex);
+    ::MutableChainActive().SetTip(pindex);
 
     g_chainstate.PruneBlockIndexCandidates();
 
@@ -4342,7 +4346,7 @@ void CChainState::UnloadBlockIndex() {
 void UnloadBlockIndex()
 {
     LOCK(cs_main);
-    ::ChainActive().SetTip(nullptr);
+    ::MutableChainActive().SetTip(nullptr);
     pindexBestInvalid = nullptr;
     pindexBestHeader = nullptr;
     mempool.clear();

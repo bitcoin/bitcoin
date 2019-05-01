@@ -12,12 +12,12 @@
 
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
+#include <policy/policy.h>
 #include <rpc/server.h>
 #include <test/setup_common.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/test/wallet_test_fixture.h>
-#include <policy/policy.h>
 
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
@@ -272,7 +272,7 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     if (blockTime > 0) {
         LockAnnotation lock(::cs_main);
         auto locked_chain = wallet.chain().lock();
-        auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
+        auto inserted = MutableBlockIndex().emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
         block = inserted.first->second;

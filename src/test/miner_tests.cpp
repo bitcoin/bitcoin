@@ -8,15 +8,15 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <validation.h>
 #include <miner.h>
 #include <policy/policy.h>
 #include <pubkey.h>
 #include <script/standard.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+#include <validation.h>
 
 #include <test/setup_common.h>
 
@@ -377,7 +377,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
-        ::ChainActive().SetTip(next);
+        MutableChainActive().SetTip(next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
     // Extend to a 210000-long block chain.
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         next->pprev = prev;
         next->nHeight = prev->nHeight + 1;
         next->BuildSkip();
-        ::ChainActive().SetTip(next);
+        MutableChainActive().SetTip(next);
     }
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Delete the dummy blocks again.
     while (::ChainActive().Tip()->nHeight > nHeight) {
         CBlockIndex* del = ::ChainActive().Tip();
-        ::ChainActive().SetTip(del->pprev);
+        ::MutableChainActive().SetTip(del->pprev);
         pcoinsTip->SetBestBlock(del->pprev->GetBlockHash());
         delete del->phashBlock;
         delete del;
