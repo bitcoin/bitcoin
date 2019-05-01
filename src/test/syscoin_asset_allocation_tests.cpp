@@ -45,6 +45,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     printf("Running generate_asset_allocation_lock...\n");
     GenerateBlocks(5);
     string txid;
+    string newaddress1 = GetNewFundedAddress("node2");
     string newaddress = GetNewFundedAddress("node1", txid);
     
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid + " true" ));
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     // lock outpoint so other txs can't spend through wallet auto-selection 
     BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent false \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\"" ));
     
-    string newaddress1 = GetNewFundedAddress("node2");
+    
     string guid = AssetNew("node1", newaddress, "data","''", "8", "1", "100000");
 
     AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"");
