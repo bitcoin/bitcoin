@@ -12,8 +12,7 @@ namespace Platform
     /*static*/ const char PlatformDb::DB_NFT = 'n';
 
     PlatformDb::PlatformDb(size_t nCacheSize, bool fMemory, bool fWipe)
-    : m_db(GetDataDir() / "platform", nCacheSize, fMemory, fWipe)
-    , m_dbTransaction(m_db)
+    : TransactionLevelDBWrapper("platform", nCacheSize, fMemory, fWipe)
     {
     }
 

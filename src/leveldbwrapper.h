@@ -10,6 +10,7 @@
 #include "streams.h"
 #include "util.h"
 #include "version.h"
+#include "sync.h"
 
 #include <typeindex>
 
@@ -385,6 +386,55 @@ public:
     void SetRollbackHandler(const std::function<void ()> &h) {
         rollbackHandler = h;
     }
+};
+
+class TransactionLevelDBWrapper
+{
+public:
+    TransactionLevelDBWrapper(const std::string & dbName, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+
+    std::unique_ptr<CScopedDBTransaction> BeginTransaction()
+    {
+        LOCK(m_cs);
+        auto t = CScopedDBTransaction::Begin(m_dbTransaction);
+        return t;
+    }
+
+    template<typename K, typename V>
+    bool Read(const K& key, V& value)
+    {
+        LOCK(m_cs);
+        return m_dbTransaction.Read(key, value);
+    }
+
+
+    template<typename K, typename V>
+    void Write(const K& key, const V& value)
+    {
+        LOCK(m_cs);
+        m_dbTransaction.Write(key, value);
+    }
+
+    template <typename K>
+    bool Exists(const K& key)
+    {
+        LOCK(m_cs);
+        return m_dbTransaction.Exists(key);
+    }
+
+    template <typename K>
+    void Erase(const K& key)
+    {
+        LOCK(m_cs);
+        m_dbTransaction.Erase(key);
+    }
+
+    CLevelDBWrapper& GetRawDB() { return m_db; }
+
+protected:
+    CCriticalSection m_cs;
+    CLevelDBWrapper m_db;
+    CDBTransaction m_dbTransaction;
 };
 
 #endif // BITCOIN_LEVELDBWRAPPER_H
