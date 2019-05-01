@@ -9,12 +9,12 @@
 #include <base58.h>
 #include <chainparams.h>
 #include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iterator>
 #include <key.h>
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_allocation_tests, BasicSyscoinTestingSetup)
+
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 {
 	UniValue r;
@@ -38,6 +38,58 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetallocationinfo " + guid + " " + newaddressreceiver ));
 	balance = find_value(r.get_obj(), "balance");
 
+}
+BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
+{
+    UniValue r;
+    printf("Running generate_asset_allocation_lock...\n");
+    GenerateBlocks(5);
+    string txid;
+    string newaddress1 = GetNewFundedAddress("node2");
+    string newaddress = GetNewFundedAddress("node1", txid);
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid + " true" ));
+    UniValue voutArray = find_value(r.get_obj(), "vout");
+    int vout = 0;
+    for(unsigned int i = 0;i<voutArray.size();i++){  
+        UniValue scriptObj = find_value(voutArray[i].get_obj(), "scriptPubKey").get_obj();
+        UniValue addressesArray = find_value(scriptObj, "addresses");
+        for(unsigned int j = 0;j<addressesArray.size();j++){ 
+            if(addressesArray[j].get_str() == newaddress)
+                vout = i;
+        }      
+    }
+    string voutstr = itostr(vout);
+    // lock outpoint so other txs can't spend through wallet auto-selection 
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent false \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\"" ));
+    
+    
+    string guid = AssetNew("node1", newaddress, "data","''", "8", "1", "100000");
+
+    AssetSend("node1", guid, "\"[{\\\"address\\\":\\\"" + newaddress + "\\\",\\\"amount\\\":1}]\"");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress ));
+    UniValue balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 1 * COIN);
+    
+    LockAssetAllocation("node1", guid, newaddress, txid, voutstr);
+
+    // unlock now to test spending
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent true \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\"" ));
+    string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1 ));
+    balance = find_value(r.get_obj(), "balance");
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);  
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid0 + " true" ));
+    UniValue vinArray = find_value(r.get_obj(), "vin");
+    bool found = false;
+    for(unsigned int i = 0;i<vinArray.size();i++){  
+        if(find_value(vinArray[i].get_obj(), "txid").get_str() == txid && find_value(vinArray[i].get_obj(), "vout").get_int() == vout){
+            found = true;
+            break;
+        }
+    }
+    BOOST_CHECK(found);
+    
 }
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 {

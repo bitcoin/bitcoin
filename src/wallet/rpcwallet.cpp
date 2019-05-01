@@ -4287,6 +4287,7 @@ UniValue assetsend(const JSONRPCRequest& request);
 UniValue assetsendmany(const JSONRPCRequest& request);
 UniValue assetinfo(const JSONRPCRequest& request);
 UniValue listassets(const JSONRPCRequest& request);
+UniValue assetallocationlock(const JSONRPCRequest& request);
 UniValue assetallocationsend(const JSONRPCRequest& request);
 UniValue assetallocationsendmany(const JSONRPCRequest& request);
 UniValue assetallocationmint(const JSONRPCRequest& request);
@@ -4392,6 +4393,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","inputs"}},
     { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
+	{ "syscoin",            "assetallocationlock",              &assetallocationlock,			{"asset_guid","addressFrom","txid","output_index","witness"}},
     { "syscoin",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","addressFrom","addressTo","amount"}},
     { "syscoin",            "assetallocationsendmany",          &assetallocationsendmany,       {"asset_guid","addressFrom","inputs","witness"}},
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
