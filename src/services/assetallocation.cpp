@@ -1113,15 +1113,19 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
     if(mapAssetAllocations.empty())
         return true;
     CDBBatch batch(*this);
+	int write = 0;
+	int erase = 0;
     for (const auto &key : mapAssetAllocations) {
         if(key.second.nBalance <= 0){
+			erase++;
             batch.Erase(key.second.assetAllocationTuple);
         }
         else{
+			write++;
             batch.Write(key.second.assetAllocationTuple, key.second);
         }
     }
-    LogPrint(BCLog::SYS, "Flushing %d asset allocations\n", mapAssetAllocations.size());
+	LogPrint(BCLog::SYS, "Flushing %d assets allocations (erased %d, written %d)\n", mapAssetAllocations.size(), erase, write);
     return WriteBatch(batch);
 }
 bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {

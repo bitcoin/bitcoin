@@ -1440,13 +1440,19 @@ bool CLockedOutpointsDB::FlushWrite(const std::vector<COutPoint> &lockedOutpoint
 	if (lockedOutpoints.empty())
 		return true;
 	CDBBatch batch(*this);
+	int write = 0;
+	int erase = 0;
 	for (const auto &outpoint : lockedOutpoints) {
-		if(outpoint.IsNull())
+		if (outpoint.IsNull()) {
+			erase++;
 			batch.Erase(outpoint);
-		else
+		}
+		else {
+			write++;
 			batch.Write(outpoint, true);
+		}
 	}
-	LogPrint(BCLog::SYS, "Flush writing %d locked outpoints\n", lockedOutpoints.size());
+	LogPrint(BCLog::SYS, "Flushing %d locked outpoints (erased %d, written %d)\n", lockedOutpoints.size(), erase, write);
 	return WriteBatch(batch);
 }
 bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& state) {
