@@ -106,6 +106,7 @@ public:
 	inline void ClearAssetAllocation()
 	{
 		listSendingAllocationAmounts.clear();
+		lockedOutpoint.SetNull();
 	}
 	ADD_SERIALIZE_METHODS;
 
