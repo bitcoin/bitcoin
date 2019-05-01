@@ -161,17 +161,17 @@ namespace Platform
             bool AddNfToken(const NfToken & nfToken, const CTransaction & tx, const CBlockIndex * pindex);
 
             /// Checks the existence of a specified nf-token
-            bool Contains(const uint64_t & protocolId, const uint256 & tokenId) const;
+            bool Contains(const uint64_t & protocolId, const uint256 & tokenId);
             /// Checks the existence of a specified nf-token at a specified height
-            bool Contains(const uint64_t & protocolId, const uint256 & tokenId, int height) const;
+            bool Contains(const uint64_t & protocolId, const uint256 & tokenId, int height);
 
             /// Retrieve a specified nf-token index, may be null
-            NfTokenIndex GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const;
+            NfTokenIndex GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId);
             /// Retrieve a specified nf-token
-            std::weak_ptr<const NfToken> GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const;
+            std::weak_ptr<const NfToken> GetNfToken(const uint64_t & protocolId, const uint256 & tokenId);
 
             /// Owner of a specified nf-token
-            CKeyID OwnerOf(const uint64_t & protocolId, const uint256 & tokenId) const;
+            CKeyID OwnerOf(const uint64_t & protocolId, const uint256 & tokenId);
 
             /// Amount of all nf-tokens belonging to a specified owner within a protocol
             std::size_t BalanceOf(const uint64_t & protocolId, const CKeyID & ownerId) const;

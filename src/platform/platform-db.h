@@ -12,6 +12,12 @@
 
 namespace Platform
 {
+    enum class PlatformOpt
+    {
+        OptSpeed,
+        OptRam
+    };
+
     class PlatformDb
     {
     public:
@@ -32,6 +38,9 @@ namespace Platform
             return *s_instance;
         }
 
+        static NfTokenIndex NftDiskIndexToNftMemIndex(const NfTokenDiskIndex &nftDiskIndex);
+
+    public:
         std::unique_ptr<CScopedDBTransaction> BeginTransaction()
         {
             LOCK(m_cs);
@@ -39,9 +48,6 @@ namespace Platform
             return t;
         }
 
-        static NfTokenIndex NftDiskIndexToNftMemIndex(const NfTokenDiskIndex &nftDiskIndex);
-
-    public:
         template<typename K, typename V>
         bool Read(const K& key, V& value)
         {
@@ -71,25 +77,28 @@ namespace Platform
             m_dbTransaction.Erase(key);
         }
 
-        CLevelDBWrapper& GetRawDB()
-        {
-            return m_db;
-        }
+        CLevelDBWrapper& GetRawDB() { return m_db; }
 
-        bool LoadNftIndexGuts(std::function<bool(NfTokenIndex)> nftIndexHandler);
+        bool OptimizeRam() const { return m_optSetting == PlatformOpt::OptRam; }
+        bool OptimizeSpeed() const { return m_optSetting == PlatformOpt::OptSpeed; }
+
+        bool ProcessNftIndexGuts(std::function<bool(NfTokenIndex)> nftIndexHandler);
+
         void WriteNftDiskIndex(const NfTokenDiskIndex & nftDiskIndex);
+        void EraseNftDiskIndex(const uint64_t &protocolId, const uint256 &tokenId);
         NfTokenIndex ReadNftIndex(const uint64_t &protocolId, const uint256 &tokenId);
+
+    private:
+        explicit PlatformDb(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     public:
         static const char DB_NFT;
 
     private:
-        explicit PlatformDb(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-
-    private:
         CCriticalSection m_cs;
         CLevelDBWrapper m_db;
         CDBTransaction m_dbTransaction;
+        PlatformOpt m_optSetting = PlatformOpt::OptSpeed;
 
         static std::unique_ptr<PlatformDb> s_instance;
     };

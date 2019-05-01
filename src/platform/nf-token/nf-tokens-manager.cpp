@@ -19,10 +19,13 @@ namespace Platform
 
     NfTokensManager::NfTokensManager()
     {
-        PlatformDb::Instance().LoadNftIndexGuts([this](NfTokenIndex nftIndex) -> bool
+        if (PlatformDb::Instance().OptimizeSpeed())
         {
-            return m_nfTokensIndexSet.emplace(std::move(nftIndex)).second;
-        });
+            PlatformDb::Instance().ProcessNftIndexGuts([this](NfTokenIndex nftIndex) -> bool
+            {
+                return m_nfTokensIndexSet.emplace(std::move(nftIndex)).second;
+            });
+        }
     }
 
     bool NfTokensManager::AddNfToken(const NfToken & nfToken, const CTransaction & tx, const CBlockIndex * pindex)
@@ -46,7 +49,7 @@ namespace Platform
         return itRes.second;
     }
 
-    NfTokenIndex NfTokensManager::GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId) const
+    NfTokenIndex NfTokensManager::GetNfTokenIndex(const uint64_t & protocolId, const uint256 & tokenId)
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
@@ -56,26 +59,25 @@ namespace Platform
         {
             return *it;
         }
-
-        return NfTokenIndex();//TODO: read when needed GetNftIndexFromDb(protocolId, tokenId);
+        /// Should be called only when RAM optimization is on
+        return GetNftIndexFromDb(protocolId, tokenId);
     }
 
-    std::weak_ptr<const NfToken> NfTokensManager::GetNfToken(const uint64_t & protocolId, const uint256 & tokenId) const
+    std::weak_ptr<const NfToken> NfTokensManager::GetNfToken(const uint64_t & protocolId, const uint256 & tokenId)
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
 
         NfTokensIndexSet::const_iterator it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        //TODO: read from db if not found
-
         if (it != m_nfTokensIndexSet.end())
         {
             return it->NfTokenPtr();
         }
-        return std::weak_ptr<const NfToken>();
+        /// Should be called only when RAM optimization is on
+        return GetNftIndexFromDb(protocolId, tokenId).NfTokenPtr();
     }
 
-    bool NfTokensManager::Contains(const uint64_t &protocolId, const uint256 &tokenId, int height) const
+    bool NfTokensManager::Contains(const uint64_t &protocolId, const uint256 &tokenId, int height)
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
@@ -87,23 +89,25 @@ namespace Platform
         return false;
     }
 
-    bool NfTokensManager::Contains(const uint64_t & protocolId, const uint256 & tokenId) const
+    bool NfTokensManager::Contains(const uint64_t & protocolId, const uint256 & tokenId)
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
-
-        return m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId)) != m_nfTokensIndexSet.end();
-        //TODO: read from db if not found
+        return this->Contains(protocolId, tokenId, m_tipHeight);
     }
 
-    CKeyID NfTokensManager::OwnerOf(const uint64_t & protocolId, const uint256 & tokenId) const
+    CKeyID NfTokensManager::OwnerOf(const uint64_t & protocolId, const uint256 & tokenId)
     {
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
 
         NfTokensIndexSet::const_iterator it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        //TODO: read from db if not found
-        return it->NfTokenPtr()->tokenOwnerKeyId;
+        if (it != m_nfTokensIndexSet.end())
+        {
+            return it->NfTokenPtr()->tokenOwnerKeyId;
+        }
+        /// Should be called only when RAM optimization is on
+        return GetNftIndexFromDb(protocolId, tokenId).NfTokenPtr()->tokenOwnerKeyId;
     }
 
     std::size_t NfTokensManager::BalanceOf(const uint64_t & protocolId, const CKeyID & ownerId) const
@@ -111,16 +115,45 @@ namespace Platform
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
 
-        const NftIndexByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
-        return protocolOwnerIndex.count(std::make_tuple(protocolId, ownerId));
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            const NftIndexByProtocolAndOwnerId & protocolOwnerIndex = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>();
+            return protocolOwnerIndex.count(std::make_tuple(protocolId, ownerId));
+        }
+        else /// (PlatformDb::Instance().OptimizeRam())
+        {
+            std::size_t count = 0;
+            PlatformDb::Instance().ProcessNftIndexGuts([&](NfTokenIndex nftIndex) -> bool
+            {
+                if (nftIndex.NfTokenPtr()->tokenProtocolId == protocolId &&
+                    nftIndex.NfTokenPtr()->tokenOwnerKeyId == ownerId)
+                {
+                    count++;
+                }
+            });
+            return count;
+        }
     }
 
     std::size_t NfTokensManager::BalanceOf(const CKeyID & ownerId) const
     {
         assert(!ownerId.IsNull());
 
-        const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
-        return ownerIndex.count(ownerId);
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
+            return ownerIndex.count(ownerId);
+        }
+        else /// (PlatformDb::Instance().OptimizeRam())
+        {
+            std::size_t count = 0;
+            PlatformDb::Instance().ProcessNftIndexGuts([&](NfTokenIndex nftIndex) -> bool
+            {
+                if (nftIndex.NfTokenPtr()->tokenOwnerKeyId == ownerId)
+                    count++;
+            });
+            return count;
+        }
     }
 
     std::vector<std::weak_ptr<const NfToken> > NfTokensManager::NfTokensOf(const uint64_t & protocolId, const CKeyID & ownerId) const
@@ -132,7 +165,7 @@ namespace Platform
         const auto range = protocolOwnerIndex.equal_range(std::make_tuple(protocolId, ownerId));
 
         std::vector<std::weak_ptr<const NfToken> > nfTokens;
-        //nfTokens.reserve(std::distance(range.first, range.second));
+        nfTokens.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
             nfTokens.emplace_back(nfTokenIdx.NfTokenPtr());
@@ -149,7 +182,7 @@ namespace Platform
         const auto range = ownerIndex.equal_range(ownerId);
 
         std::vector<std::weak_ptr<const NfToken> > nfTokens;
-        //nfTokens.reserve(std::distance(range.first, range.second));
+        nfTokens.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
             nfTokens.emplace_back(nfTokenIdx.NfTokenPtr());
@@ -167,7 +200,7 @@ namespace Platform
         const auto range = protocolOwnerIndex.equal_range(std::make_tuple(protocolId, ownerId));
 
         std::vector<uint256> nfTokenIds;
-        //nfTokenIds.reserve(std::distance(range.first, range.second));
+        nfTokenIds.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
             nfTokenIds.emplace_back(nfTokenIdx.NfTokenPtr()->tokenId);
@@ -183,7 +216,7 @@ namespace Platform
         const auto range = ownerIndex.equal_range(ownerId);
 
         std::vector<uint256> nfTokenIds;
-        //nfTokenIds.reserve(std::distance(range.first, range.second));
+        nfTokenIds.reserve(std::distance(range.first, range.second));
         std::for_each(range.first, range.second, [&](const NfTokenIndex & nfTokenIdx)
         {
             nfTokenIds.emplace_back(nfTokenIdx.NfTokenPtr()->tokenId);
@@ -206,11 +239,13 @@ namespace Platform
 
     NfTokensManager::NftIndexRange NfTokensManager::FullNftIndexRange() const
     {
+        //TODO: read from the db if optimized by RAM
         return m_nfTokensIndexSet;
     }
 
     NfTokensManager::NftIndexRange NfTokensManager::NftIndexRangeByHeight(int height) const
     {
+        //TODO: read from the db if optimized by RAM
         return m_nfTokensIndexSet.get<Tags::Height>().range(
                     bmx::unbounded,
                     [&](int curHeight) { return curHeight <= height; }
@@ -224,7 +259,6 @@ namespace Platform
 
     bool NfTokensManager::Delete(const uint64_t & protocolId, const uint256 & tokenId, int height)
     {
-        //TODO: delete from the db
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
         assert(height >= 0);
@@ -233,6 +267,7 @@ namespace Platform
         if (it != m_nfTokensIndexSet.end() && it->BlockIndex()->nHeight <= height)
         {
             m_nfTokensIndexSet.erase(it);
+            PlatformDb::Instance().EraseNftDiskIndex(protocolId, tokenId);
             return true;
         }
         return false;

@@ -17,10 +17,8 @@ namespace Platform
     {
     }
 
-    bool PlatformDb::LoadNftIndexGuts(std::function<bool(NfTokenIndex)> nftIndexHandler)
+    bool PlatformDb::ProcessNftIndexGuts(std::function<bool(NfTokenIndex)> nftIndexHandler)
     {
-        // Read NFTs from the DB to cache
-        // if load the whole DB -> skip reading on read requests
         std::unique_ptr<leveldb::Iterator> dbIt(m_db.NewIterator());
 
         for (dbIt->SeekToFirst(); dbIt->Valid(); dbIt->Next())
@@ -52,17 +50,22 @@ namespace Platform
 
     void PlatformDb::WriteNftDiskIndex(const NfTokenDiskIndex & nftDiskIndex)
     {
-        Write(std::make_tuple(PlatformDb::DB_NFT,
+        Write(std::make_tuple(DB_NFT,
               nftDiskIndex.NfTokenPtr()->tokenProtocolId,
               nftDiskIndex.NfTokenPtr()->tokenId),
               nftDiskIndex
               );
     }
 
+    void PlatformDb::EraseNftDiskIndex(const uint64_t &protocolId, const uint256 &tokenId)
+    {
+        Erase(std::make_tuple(DB_NFT, protocolId, tokenId));
+    }
+
     NfTokenIndex PlatformDb::ReadNftIndex(const uint64_t &protocolId, const uint256 &tokenId)
     {
         NfTokenDiskIndex nftDiskIndex;
-        bool readRes = Read(std::make_tuple(PlatformDb::DB_NFT, protocolId, tokenId), nftDiskIndex);
+        bool readRes = Read(std::make_tuple(DB_NFT, protocolId, tokenId), nftDiskIndex);
         if (readRes)
         {
             return NftDiskIndexToNftMemIndex(nftDiskIndex);
