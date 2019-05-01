@@ -1094,4 +1094,16 @@ void CTxMemPool::GetTransactionAncestry(const uint256& txid, size_t& ancestors, 
     }
 }
 
+bool CTxMemPool::IsLoaded() const
+{
+    LOCK(cs);
+    return m_is_loaded;
+}
+
+void CTxMemPool::SetIsLoaded(bool loaded)
+{
+    LOCK(cs);
+    m_is_loaded = loaded;
+}
+
 SaltedTxidHasher::SaltedTxidHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}

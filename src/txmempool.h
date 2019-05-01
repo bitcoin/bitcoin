@@ -457,6 +457,8 @@ private:
 
     void trackPackageRemoved(const CFeeRate& rate) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    bool m_is_loaded GUARDED_BY(cs){false};
+
 public:
 
     static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
@@ -674,6 +676,12 @@ public:
      * The counts include the transaction itself.
      */
     void GetTransactionAncestry(const uint256& txid, size_t& ancestors, size_t& descendants) const;
+
+    /** @returns true if the mempool is fully loaded */
+    bool IsLoaded() const;
+
+    /** Sets the current loaded state */
+    void SetIsLoaded(bool loaded);
 
     unsigned long size() const
     {
