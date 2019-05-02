@@ -67,34 +67,34 @@ static std::map<int, unsigned int> mapStakeModifierTestnetCheckpoints =
 // Whether the given coinstake is subject to new v0.3 protocol
 bool IsProtocolV03(unsigned int nTimeCoinStake)
 {
-    return (nTimeCoinStake >= (Params().NetworkIDString() == CBaseChainParams::TESTNET ? nProtocolV03TestSwitchTime : nProtocolV03SwitchTime));
+    return (nTimeCoinStake >= (Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV03TestSwitchTime : nProtocolV03SwitchTime));
 }
 
 // Whether the given block is subject to new v0.4 protocol
 bool IsProtocolV04(unsigned int nTimeBlock)
 {
-    return (nTimeBlock >= (Params().NetworkIDString() == CBaseChainParams::TESTNET ? nProtocolV04TestSwitchTime : nProtocolV04SwitchTime));
+    return (nTimeBlock >= (Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV04TestSwitchTime : nProtocolV04SwitchTime));
 }
 
 // Whether the given transaction is subject to new v0.5 protocol
 bool IsProtocolV05(unsigned int nTimeTx)
 {
-    return (nTimeTx >= (Params().NetworkIDString() == CBaseChainParams::TESTNET ? nProtocolV05TestSwitchTime : nProtocolV05SwitchTime));
+    return (nTimeTx >= (Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV05TestSwitchTime : nProtocolV05SwitchTime));
 }
 
 // Whether a given block is subject to new v0.6 protocol
 // Test against previous block index! (always available)
 bool IsProtocolV06(const CBlockIndex* pindexPrev)
 {
-  if (pindexPrev->nTime < (Params().NetworkIDString() == CBaseChainParams::TESTNET ? nProtocolV06TestSwitchTime : nProtocolV06SwitchTime))
+  if (pindexPrev->nTime < (Params().NetworkIDString() != CBaseChainParams::MAIN ? nProtocolV06TestSwitchTime : nProtocolV06SwitchTime))
     return false;
 
   // if 900 of the last 1,000 blocks are version 2 or greater (90/100 if testnet):
   // Soft-forking PoS can be dangerous if the super majority is too low
   // The stake majority will decrease after the fork
   // since only coindays of updated nodes will get destroyed.
-  if ((Params().NetworkIDString() != CBaseChainParams::TESTNET && IsSuperMajority(2, pindexPrev, 900, 1000)) ||
-      (Params().NetworkIDString() == CBaseChainParams::TESTNET && IsSuperMajority(2, pindexPrev, 90, 100)))
+  if ((Params().NetworkIDString() == CBaseChainParams::MAIN && IsSuperMajority(2, pindexPrev, 900, 1000)) ||
+      (Params().NetworkIDString() != CBaseChainParams::MAIN && IsSuperMajority(2, pindexPrev, 90, 100)))
     return true;
 
   return false;
@@ -103,13 +103,13 @@ bool IsProtocolV06(const CBlockIndex* pindexPrev)
 // Whether a given transaction is subject to new v0.7 protocol
 bool IsProtocolV07(unsigned int nTimeTx)
 {
-    bool fTestNet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
+    bool fTestNet = Params().NetworkIDString() != CBaseChainParams::MAIN;
     return (nTimeTx >= (fTestNet? nProtocolV07TestSwitchTime : nProtocolV07SwitchTime));
 }
 
 bool IsBTC16BIPsEnabled(uint32_t nTimeTx)
 {
-    bool fTestNet = Params().NetworkIDString() == CBaseChainParams::TESTNET;
+    bool fTestNet = Params().NetworkIDString() != CBaseChainParams::MAIN;
     return (nTimeTx >= (fTestNet? nBTC16BIPsTestSwitchTime : nBTC16BIPsSwitchTime));
 }
 
