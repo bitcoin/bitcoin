@@ -49,6 +49,42 @@ void CMPSPInfo::Entry::print() const
             category, subcategory, url, data);
 }
 
+/**
+ * Stores a new issuer in the DB.
+ *
+ * @param block  The block of the update
+ * @param idx    The position within the block of the update
+ * @param newIssuer  The new issuer
+ */
+void CMPSPInfo::Entry::updateIssuer(int block, int idx, const std::string& newIssuer)
+{
+    historicalIssuers[std::make_pair(block, idx)] = newIssuer;
+}
+
+/**
+ * Returns the issuer for the given block.
+ *
+ * @param block  The block to check
+ * @return The issuer of that block
+ */
+std::string CMPSPInfo::Entry::getIssuer(int block) const
+{
+    std::string _issuer = issuer;
+
+    for (auto const& entry : historicalIssuers) {
+        int currentBlock = entry.first.first;
+        std::string currentIssuer = entry.second;
+
+        if (currentBlock > block) {
+            break;
+        }
+
+        _issuer = currentIssuer;
+    }
+
+    return _issuer;
+}
+
 CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
 {
     leveldb::Status status = Open(path, fWipe);
@@ -56,6 +92,7 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
 
     // special cases for constant SPs OMN and TOMN
     implied_omni.issuer = ExodusAddress().ToString();
+    implied_omni.updateIssuer(0, 0, implied_omni.issuer);
     implied_omni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_omni.num_tokens = 700000;
     implied_omni.category = "N/A";
@@ -63,7 +100,9 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     implied_omni.name = "Omni tokens";
     implied_omni.url = "http://www.omnilayer.org";
     implied_omni.data = "Omni tokens serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer.";
+
     implied_tomni.issuer = ExodusAddress().ToString();
+    implied_tomni.updateIssuer(0, 0, implied_tomni.issuer);
     implied_tomni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
     implied_tomni.num_tokens = 700000;
     implied_tomni.category = "N/A";
