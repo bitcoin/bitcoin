@@ -3,6 +3,7 @@ OMNICORE_TEST_H = \
 
 OMNICORE_TEST_CPP = \
   omnicore/test/alert_tests.cpp \
+  omnicore/test/change_issuer_tests.cpp \
   omnicore/test/checkpoint_tests.cpp \
   omnicore/test/create_payload_tests.cpp \
   omnicore/test/create_tx_tests.cpp \
