@@ -2203,7 +2203,11 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
             RPCHelpMan{"syscoinstopgeth",
             "\nStops Geth and the relayer from running.\n",
             {},
-            RPCResult{""},
+            RPCResult{
+            "{\n"
+            "    \"status\": xx     (string) Result\n"
+            "}\n"
+            },
             RPCExamples{
                 HelpExampleCli("syscoinstopgeth", "")
                 + HelpExampleRpc("syscoinstopgeth", "")
@@ -2224,7 +2228,11 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
             RPCHelpMan{"syscoinstartgeth",
             "\nStarts Geth and the relayer.\n",
             {},
-            RPCResult{""},
+            RPCResult{
+            "{\n"
+            "    \"status\": xx     (string) Result\n"
+            "}\n"
+            },
             RPCExamples{
                 HelpExampleCli("syscoinstartgeth", "")
                 + HelpExampleRpc("syscoinstartgeth", "")
@@ -2257,7 +2265,11 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
                     {"syncing_status", RPCArg::Type::STR, RPCArg::Optional::NO, "Sycning status ether 'syncing' or 'synced'"},
                     {"highest_block", RPCArg::Type::NUM, RPCArg::Optional::NO, "What the highest block height on Ethereum is found to be.  Usually coupled with syncing_status of 'syncing'.  Set to 0 if sync_status is 'synced'"}
                 },
-                RPCResult{""},
+                RPCResult{
+                "{\n"
+                "    \"status\": xx     (string) Result\n"
+                "}\n"
+                },
                 RPCExamples{
                     HelpExampleCli("syscoinsetethstatus", "\"syncing\" 7000000")
                     + HelpExampleCli("syscoinsetethstatus", "\"synced\" 0")
@@ -2299,7 +2311,11 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
                         "[block number, txroot] ..."
                     }
                 },
-                RPCResult{""},
+                RPCResult{
+                "{\n"
+                "    \"status\": xx     (string) Result\n"
+                "}\n"
+                },
                 RPCExamples{
                     HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
                     + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")

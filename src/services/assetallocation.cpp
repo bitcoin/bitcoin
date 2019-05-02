@@ -353,7 +353,11 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
                     {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn as normal without the bridge.  If it is left empty this will process as a normal assetallocationsend to the burn address"}
                 },
-                RPCResult{""},
+                RPCResult{
+                    "[\n"
+                    "  \"hexstring\"                 (string) The unsigned transaction"
+                    "]\n"
+                },
                 RPCExamples{
                     HelpExampleCli("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
                     + HelpExampleRpc("assetallocationburn", "\"asset\", \"address\", \"amount\", \"ethereum_destination_address\"")
@@ -1405,7 +1409,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
                         }
                      }
                 },
-                RPCResult{""},
+                RPCResults{},
                 RPCExamples{
                     HelpExampleCli("listassetallocationmempoolbalances", "0")
                     + HelpExampleCli("listassetallocationmempoolbalances", "10 10")
