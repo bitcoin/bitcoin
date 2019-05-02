@@ -2186,8 +2186,8 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     }
     return balance;
 }
-
-void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth) const
+// SYSCOIN
+void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<COutput> &vCoins, bool fOnlySafe, const CCoinControl *coinControl, const CAmount &nMinimumAmount, const CAmount &nMaximumAmount, const CAmount &nMinimumSumAmount, const uint64_t nMaximumCount, const int nMinDepth, const int nMaxDepth, const bool bIncludeLocked) const
 {
     AssertLockHeld(cs_wallet);
 
@@ -2261,8 +2261,8 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
 
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
                 continue;
-
-            if (IsLockedCoin(entry.first, i))
+            // SYSCOIN
+            if (!bIncludeLocked && IsLockedCoin(entry.first, i))
                 continue;
 
             if (IsSpent(locked_chain, wtxid, i))
