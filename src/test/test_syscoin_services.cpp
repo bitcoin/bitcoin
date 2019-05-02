@@ -219,15 +219,12 @@ UniValue CallExtRPC(const string &node, const string& command, const string& arg
 	string url = LookupURL(node);
 	BOOST_CHECK(!url.empty());
 	UniValue val;
-	string curlcmd;
-	if(command == "signrawtransactionwithwallet")
-	curlcmd = "curl -v --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
-	else
-		curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
+	string curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
+
     string rawJson = CallExternal(curlcmd);
 
 	val.read(rawJson);
-
+  
     if(!readJson)
         return val;
 	if (val.isNull())

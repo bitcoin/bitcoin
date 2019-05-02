@@ -90,7 +90,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":0.01}]\"", true, false));
 
 	string rawTx = r.get_str();
-	BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "signrawtransactionwithwallet", rawTx));
+	rawTx.erase(std::remove(rawTx.begin(), rawTx.end(), '\n'), rawTx.end());
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + rawTx));
 
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
