@@ -414,7 +414,7 @@ bool GetMasternodeOutpointAndKeys(interfaces::Wallet& wallet, COutPoint& outpoin
     COutPoint outpoint(txHash, nOutputIndex);
    
     Coin coin;
-    if(GetUTXOCoin(outpoint, coin)){
+    if(GetUTXOCoin(outpoint, coin) && !coin.IsSpent() && !coin.IsCoinBase()){
         outpointRet = outpoint;
         return GetOutpointAndKeysFromOutput(wallet, coin, pubKeyRet, keyRet);
     }
@@ -461,7 +461,7 @@ bool GetMasternodeOutpointAndKeys(CWallet* const pwallet, COutPoint& outpointRet
     COutPoint outpoint(txHash, nOutputIndex);
    
     Coin coin;
-    if(GetUTXOCoin(outpoint, coin)){
+    if(GetUTXOCoin(outpoint, coin) && !coin.IsSpent() && !coin.IsCoinBase()){
         outpointRet = outpoint;
         return GetOutpointAndKeysFromOutput(pwallet, coin, pubKeyRet, keyRet);
     }
