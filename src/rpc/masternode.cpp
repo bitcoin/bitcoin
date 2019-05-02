@@ -338,7 +338,7 @@ UniValue masternode(const JSONRPCRequest& request)
         // Find possible candidates
         std::vector<COutput> vPossibleCoins;
         auto locked_chain = pwallet->chain().lock();
-        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 1, 100000, 100000, 0, 0, 9999999, true);
+        pwallet->AvailableCoins(*locked_chain, vPossibleCoins, true, nullptr, 100000, 100000, MAX_MONEY, 0, 0, 9999999, true);
    
         UniValue obj(UniValue::VOBJ);
         for (const auto& out : vPossibleCoins) {
