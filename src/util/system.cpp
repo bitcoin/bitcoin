@@ -1130,11 +1130,22 @@ void runCommand(const std::string& strCommand)
     if (strCommand.empty()) return;
 #ifndef WIN32
     int nErr = ::system(strCommand.c_str());
-#else
-    int nErr = ::_wsystem(std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>,wchar_t>().from_bytes(strCommand).c_str());
-#endif
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
+#else
+    SHELLEXECUTEINFOA ShExecInfo;
+    ShExecInfo.cbSize = sizeof(SHELLEXECUTEINFOA);
+    ShExecInfo.fMask = 0;
+    ShExecInfo.hwnd = NULL;
+    ShExecInfo.lpVerb = NULL; // == action "open"
+    ShExecInfo.lpFile = strCommand.c_str();
+    ShExecInfo.lpParameters = NULL;
+    ShExecInfo.lpDirectory = NULL;
+    ShExecInfo.nShow = SW_HIDE;
+    ShExecInfo.hInstApp = NULL;
+    if (!ShellExecuteExA(&ShExecInfo))
+        LogPrintf("runCommand error: ShellExecute(%s) returned %d\n", strCommand, GetLastError());
+#endif
 }
 
 void RenameThread(const char* name)
