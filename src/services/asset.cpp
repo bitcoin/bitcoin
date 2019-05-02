@@ -4,7 +4,6 @@
 
 #include <validation.h>
 #include <core_io.h>
-#include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
 #include <boost/lexical_cast.hpp>
@@ -21,7 +20,6 @@
 #include <services/assetconsensus.h>
 #include <util/system.h>
 #include <masternodeconfig.h>
-#include <validationinterface.h>
 extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
 
 extern AssetBalanceMap mempoolMapAssetBalances;
