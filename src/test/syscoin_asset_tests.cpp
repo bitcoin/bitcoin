@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
 	BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
 	printf("sendraw %s\n", r.write().c_str());
 	string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
