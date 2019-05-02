@@ -153,7 +153,7 @@ jobs:
         PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libprotobuf-dev protobuf-compiler libqrencode-dev"
         NO_DEPENDS=1
         GOAL="install"
-        SYSCOIN_CONFIG="--enable-zmq --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
+        SYSCOIN_CONFIG="--with-incompatible-bdb --enable-zmq --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
@@ -164,17 +164,6 @@ jobs:
         GOAL="install"
         SYSCOIN_CONFIG="--enable-zmq --with-incompatible-bdb --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=address,integer,undefined CC=clang CXX=clang++"
 
-    - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no depends, only system libs, sanitizers: fuzzer,address]'
-      env: >-
-        HOST=x86_64-unknown-linux-gnu
-        PACKAGES="clang llvm python3 libssl1.0-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev"
-        NO_DEPENDS=1
-        RUN_UNIT_TESTS=false
-        RUN_FUNCTIONAL_TESTS=false
-        RUN_FUZZ_TESTS=true
-        GOAL="install"
-        SYSCOIN_CONFIG="--disable-bench --with-utils=no --with-daemon=no --with-libs=no --with-gui=no --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
 
     - stage: test
       name: 'macOS 10.10  [GOAL: deploy] [no functional tests]'
