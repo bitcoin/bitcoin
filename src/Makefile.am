@@ -282,7 +282,8 @@ obj/build.h: FORCE
 libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
  # ethereum
- ethereum_libethereum_a_CPPFLAGS = $(SYSCOIN_INCLUDES)
+ ethereum_libethereum_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+ ethereum_libethereum_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
  ethereum_libethereum_a_SOURCES = \
   ethereum/address.cpp \
   ethereum/address.h \
