@@ -143,7 +143,7 @@ void CMasternode::Check(bool fForce)
     	TRY_LOCK(cs_main, lockMain);
     	if (!lockMain) return;
         Coin coin;
-        if(!GetUTXOCoin(outpoint, coin)) {
+        if(!GetUTXOCoin(outpoint, coin) || coin.IsSpent() || coin.IsCoinBase()) {
             nActiveState = MASTERNODE_OUTPOINT_SPENT;
             LogPrint(BCLog::MN, "CMasternode::Check -- Failed to find Masternode UTXO, masternode=%s\n", outpoint.ToStringShort());
             return;
