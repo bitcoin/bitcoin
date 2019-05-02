@@ -4,16 +4,16 @@
 
 #include <crypto/aes.h>
 #include <crypto/chacha20.h>
+#include <crypto/hmac_sha256.h>
+#include <crypto/hmac_sha512.h>
 #include <crypto/poly1305.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
 #include <crypto/sha512.h>
-#include <crypto/hmac_sha256.h>
-#include <crypto/hmac_sha512.h>
 #include <random.h>
-#include <util/strencodings.h>
 #include <test/setup_common.h>
+#include <util/strencodings.h>
 
 #include <vector>
 
@@ -552,6 +552,9 @@ BOOST_AUTO_TEST_CASE(sha256d64)
         }
         SHA256D64(out2, in, i);
         BOOST_CHECK(memcmp(out1, out2, 32 * i) == 0);
+        const auto str1 = HexStr(std::vector<unsigned char>{out1, out1 + 32 * i});
+        const auto str2 = HexStr(std::vector<unsigned char>{out2, out2 + 32 * i});
+        BOOST_CHECK_EQUAL(str1, str2);
     }
 }
 
