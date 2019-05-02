@@ -76,10 +76,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     // unlock now to test spending
     BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent true \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\""));
     // cannot spend as normal through sendrawtransaction
-	UniValue rawresult;
-    BOOST_CHECK_NO_THROW(rawresult = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":0.01}]\"", true, false));
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + rawresult.get_str()));
-	printf("get hex\n");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":0.01}]\"", true, false));
+	
+	string rawTx = r.get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + rawTx));
+
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
     BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
