@@ -223,7 +223,7 @@ UniValue CallExtRPC(const string &node, const string& command, const string& arg
 	if(command == "signrawtransactionwithwallet")
 	curlcmd = "curl  --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
 	else
-		curlcmd = "curl -s --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
+		curlcmd = "curl -v --user u:p --data-binary '{\"jsonrpc\":\"1.0\",\"id\":\"unittest\",\"method\":\"" + command + "\",\"params\":[" + args + "]}' -H 'content-type:text/plain;' " + url;
     string rawJson = CallExternal(curlcmd);
 
 	val.read(rawJson);
