@@ -1023,9 +1023,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     if (args.GetArg("-prune", 0)) {
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
-        if (!g_enabled_filter_types.empty()) {
-            return InitError(_("Prune mode is incompatible with -blockfilterindex."));
-        }
     }
 
     // -bind and -whitebind can't be set when not listening
