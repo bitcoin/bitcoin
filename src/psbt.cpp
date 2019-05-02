@@ -303,7 +303,9 @@ std::string PSBTRoleName(PSBTRole role) {
     case PSBTRole::SIGNER: return "signer";
     case PSBTRole::FINALIZER: return "finalizer";
     case PSBTRole::EXTRACTOR: return "extractor";
+        // no default case, so the compiler can warn about missing cases
     }
+    assert(false);
 }
 
 PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx)
