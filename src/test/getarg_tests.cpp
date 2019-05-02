@@ -1,9 +1,10 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <util.h>
-#include <test/test_bitcoin.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <test/setup_common.h>
 
 #include <string>
 #include <vector>
@@ -17,7 +18,7 @@ static void ResetArgs(const std::string& strArg)
 {
     std::vector<std::string> vecArg;
     if (strArg.size())
-      boost::split(vecArg, strArg, boost::is_space(), boost::token_compress_on);
+      boost::split(vecArg, strArg, IsSpace, boost::token_compress_on);
 
     // Insert dummy executable name:
     vecArg.insert(vecArg.begin(), "testbitcoin");
@@ -28,7 +29,7 @@ static void ResetArgs(const std::string& strArg)
         vecChar.push_back(s.c_str());
 
     std::string error;
-    gArgs.ParseParameters(vecChar.size(), vecChar.data(), error);
+    BOOST_CHECK(gArgs.ParseParameters(vecChar.size(), vecChar.data(), error));
 }
 
 static void SetupArgs(const std::vector<std::string>& args)

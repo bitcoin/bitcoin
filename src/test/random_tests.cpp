@@ -1,10 +1,10 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <random.h>
 
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,9 +21,14 @@ BOOST_AUTO_TEST_CASE(osrandom_tests)
 BOOST_AUTO_TEST_CASE(fastrandom_tests)
 {
     // Check that deterministic FastRandomContexts are deterministic
+    g_mock_deterministic_tests = true;
     FastRandomContext ctx1(true);
     FastRandomContext ctx2(true);
 
+    for (int i = 10; i > 0; --i) {
+        BOOST_CHECK_EQUAL(GetRand(std::numeric_limits<uint64_t>::max()), uint64_t{10393729187455219830U});
+        BOOST_CHECK_EQUAL(GetRandInt(std::numeric_limits<int>::max()), int{769702006});
+    }
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
     BOOST_CHECK_EQUAL(ctx1.rand32(), ctx2.rand32());
     BOOST_CHECK_EQUAL(ctx1.rand64(), ctx2.rand64());
@@ -38,11 +43,23 @@ BOOST_AUTO_TEST_CASE(fastrandom_tests)
     BOOST_CHECK(ctx1.randbytes(50) == ctx2.randbytes(50));
 
     // Check that a nondeterministic ones are not
-    FastRandomContext ctx3;
-    FastRandomContext ctx4;
-    BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal
-    BOOST_CHECK(ctx3.rand256() != ctx4.rand256());
-    BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    g_mock_deterministic_tests = false;
+    for (int i = 10; i > 0; --i) {
+        BOOST_CHECK(GetRand(std::numeric_limits<uint64_t>::max()) != uint64_t{10393729187455219830U});
+        BOOST_CHECK(GetRandInt(std::numeric_limits<int>::max()) != int{769702006});
+    }
+    {
+        FastRandomContext ctx3, ctx4;
+        BOOST_CHECK(ctx3.rand64() != ctx4.rand64()); // extremely unlikely to be equal
+    }
+    {
+        FastRandomContext ctx3, ctx4;
+        BOOST_CHECK(ctx3.rand256() != ctx4.rand256());
+    }
+    {
+        FastRandomContext ctx3, ctx4;
+        BOOST_CHECK(ctx3.randbytes(7) != ctx4.randbytes(7));
+    }
 }
 
 BOOST_AUTO_TEST_CASE(fastrandom_randbits)
@@ -75,8 +92,42 @@ BOOST_AUTO_TEST_CASE(stdrandom_test)
         for (int j = 1; j <= 10; ++j) {
             BOOST_CHECK(std::find(test.begin(), test.end(), j) != test.end());
         }
+        Shuffle(test.begin(), test.end(), ctx);
+        for (int j = 1; j <= 10; ++j) {
+            BOOST_CHECK(std::find(test.begin(), test.end(), j) != test.end());
+        }
     }
 
+}
+
+/** Test that Shuffle reaches every permutation with equal probability. */
+BOOST_AUTO_TEST_CASE(shuffle_stat_test)
+{
+    FastRandomContext ctx(true);
+    uint32_t counts[5 * 5 * 5 * 5 * 5] = {0};
+    for (int i = 0; i < 12000; ++i) {
+        int data[5] = {0, 1, 2, 3, 4};
+        Shuffle(std::begin(data), std::end(data), ctx);
+        int pos = data[0] + data[1] * 5 + data[2] * 25 + data[3] * 125 + data[4] * 625;
+        ++counts[pos];
+    }
+    unsigned int sum = 0;
+    double chi_score = 0.0;
+    for (int i = 0; i < 5 * 5 * 5 * 5 * 5; ++i) {
+        int i1 = i % 5, i2 = (i / 5) % 5, i3 = (i / 25) % 5, i4 = (i / 125) % 5, i5 = i / 625;
+        uint32_t count = counts[i];
+        if (i1 == i2 || i1 == i3 || i1 == i4 || i1 == i5 || i2 == i3 || i2 == i4 || i2 == i5 || i3 == i4 || i3 == i5 || i4 == i5) {
+            BOOST_CHECK(count == 0);
+        } else {
+            chi_score += ((count - 100.0) * (count - 100.0)) / 100.0;
+            BOOST_CHECK(count > 50);
+            BOOST_CHECK(count < 150);
+            sum += count;
+        }
+    }
+    BOOST_CHECK(chi_score > 58.1411); // 99.9999% confidence interval
+    BOOST_CHECK(chi_score < 210.275);
+    BOOST_CHECK_EQUAL(sum, 12000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

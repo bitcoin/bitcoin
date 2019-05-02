@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,9 +7,9 @@
 #include <key_io.h>
 #include <script/script.h>
 #include <uint256.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <test/test_bitcoin.h>
+#include <util/system.h>
+#include <util/strencodings.h>
+#include <test/setup_common.h>
 
 #include <string>
 #include <vector>
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
 
     for (int i = 1; i <=20; ++i) {
         sig.clear();
-        key.Sign(msg_hash, sig, false, i);
+        BOOST_CHECK(key.Sign(msg_hash, sig, false, i));
         found = sig[3] == 0x21 && sig[4] == 0x00;
         if (found) {
             break;
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
         sig.clear();
         std::string msg = "A message to be signed" + std::to_string(i);
         msg_hash = Hash(msg.begin(), msg.end());
-        key.Sign(msg_hash, sig);
+        BOOST_CHECK(key.Sign(msg_hash, sig));
         found = sig[3] == 0x20;
         BOOST_CHECK(sig.size() <= 70);
         found_small |= sig.size() < 70;

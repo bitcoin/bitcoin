@@ -6,6 +6,7 @@
 #ifndef BITCOIN_OUTPUTTYPE_H
 #define BITCOIN_OUTPUTTYPE_H
 
+#include <attributes.h>
 #include <keystore.h>
 #include <script/standard.h>
 
@@ -26,7 +27,7 @@ enum class OutputType {
     CHANGE_AUTO,
 };
 
-bool ParseOutputType(const std::string& str, OutputType& output_type);
+NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
 
 /**

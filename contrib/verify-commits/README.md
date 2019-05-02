@@ -3,7 +3,7 @@ Tooling for verification of PGP signed commits
 
 This is an incomplete work in progress, but currently includes a pre-push hook
 script (`pre-push-hook.sh`) for maintainers to ensure that their own commits
-are PGP signed (nearly always merge commits), as well as a script to verify
+are PGP signed (nearly always merge commits), as well as a Python 3 script to verify
 commits against a trusted keys list.
 
 
@@ -17,9 +17,11 @@ be backdoored. Instead, you need to use a trusted version of verify-commits
 prior to checkout to make sure you're checking out only code signed by trusted
 keys:
 
-    git fetch origin && \
-      ./contrib/verify-commits/verify-commits.py origin/master && \
-      git checkout origin/master
+ ```sh
+ git fetch origin && \
+ ./contrib/verify-commits/verify-commits.py origin/master && \
+ git checkout origin/master
+ ```
 
 Note that the above isn't a good UI/UX yet, and needs significant improvements
 to make it more convenient and reduce the chance of errors; pull-reqs
@@ -32,6 +34,14 @@ Configuration files
 * `trusted-sha512-root-commit`: This file should contain a single git commit hash which is the first commit without a SHA512 root commitment.
 * `trusted-keys`: This file should contain a \n-delimited list of all PGP fingerprints of authorized commit signers (primary, not subkeys).
 * `allow-revsig-commits`: This file should contain a \n-delimited list of git commit hashes. See next section for more info.
+
+Import trusted keys
+-------------------
+In order to check the commit signatures, you must add the trusted PGP keys to your machine. [GnuPG](https://gnupg.org/) may be used to import the trusted keys by running the following command:
+
+```sh
+gpg --recv-keys $(<contrib/verify-commits/trusted-keys)
+```
 
 Key expiry/revocation
 ---------------------

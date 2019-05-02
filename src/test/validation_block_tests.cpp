@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
 #include <miner.h>
 #include <pow.h>
 #include <random.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <validation.h>
 #include <validationinterface.h>
 
@@ -54,7 +54,7 @@ std::shared_ptr<CBlock> Block(const uint256& prev_hash)
     CScript pubKey;
     pubKey << i++ << OP_TRUE;
 
-    auto ptemplate = BlockAssembler(Params()).CreateNewBlock(pubKey, false);
+    auto ptemplate = BlockAssembler(Params()).CreateNewBlock(pubKey);
     auto pblock = std::make_shared<CBlock>(ptemplate->block);
     pblock->hashPrevBlock = prev_hash;
     pblock->nTime = ++time;
@@ -104,8 +104,8 @@ void BuildChain(const uint256& root, int height, const unsigned int invalid_rate
 {
     if (height <= 0 || blocks.size() >= max_size) return;
 
-    bool gen_invalid = GetRand(100) < invalid_rate;
-    bool gen_fork = GetRand(100) < branch_rate;
+    bool gen_invalid = InsecureRandRange(100) < invalid_rate;
+    bool gen_fork = InsecureRandRange(100) < branch_rate;
 
     const std::shared_ptr<const CBlock> pblock = gen_invalid ? BadBlock(root) : GoodBlock(root);
     blocks.push_back(pblock);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     BOOST_CHECK(ProcessNewBlockHeaders(headers, state, Params()));
 
     // Connect the genesis block and drain any outstanding events
-    ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored);
+    BOOST_CHECK(ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored));
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -152,12 +152,13 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     // create a bunch of threads that repeatedly process a block generated above at random
     // this will create parallelism and randomness inside validation - the ValidationInterface
     // will subscribe to events generated during block validation and assert on ordering invariance
-    boost::thread_group threads;
+    std::vector<std::thread> threads;
     for (int i = 0; i < 10; i++) {
-        threads.create_thread([&blocks]() {
+        threads.emplace_back([&blocks]() {
             bool ignored;
+            FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
-                auto block = blocks[GetRand(blocks.size() - 1)];
+                auto block = blocks[insecure.randrange(blocks.size() - 1)];
                 ProcessNewBlock(Params(), block, true, &ignored);
             }
 
@@ -171,7 +172,9 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         });
     }
 
-    threads.join_all();
+    for (auto& t : threads) {
+        t.join();
+    }
     while (GetMainSignals().CallbacksPending() > 0) {
         MilliSleep(100);
     }

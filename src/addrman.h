@@ -11,7 +11,7 @@
 #include <random.h>
 #include <sync.h>
 #include <timedata.h>
-#include <util.h>
+#include <util/system.h>
 
 #include <map>
 #include <set>
@@ -23,33 +23,31 @@
  */
 class CAddrInfo : public CAddress
 {
-
-
 public:
     //! last try whatsoever by us (memory only)
-    int64_t nLastTry;
+    int64_t nLastTry{0};
 
     //! last counted attempt (memory only)
-    int64_t nLastCountAttempt;
+    int64_t nLastCountAttempt{0};
 
 private:
     //! where knowledge about this address first came from
     CNetAddr source;
 
     //! last successful connection by us
-    int64_t nLastSuccess;
+    int64_t nLastSuccess{0};
 
     //! connection attempts since last successful attempt
-    int nAttempts;
+    int nAttempts{0};
 
     //! reference count in new sets (memory only)
-    int nRefCount;
+    int nRefCount{0};
 
     //! in tried set? (memory only)
-    bool fInTried;
+    bool fInTried{false};
 
     //! position in vRandom
-    int nRandomPos;
+    int nRandomPos{-1};
 
     friend class CAddrMan;
 
@@ -65,25 +63,12 @@ public:
         READWRITE(nAttempts);
     }
 
-    void Init()
-    {
-        nLastSuccess = 0;
-        nLastTry = 0;
-        nLastCountAttempt = 0;
-        nAttempts = 0;
-        nRefCount = 0;
-        fInTried = false;
-        nRandomPos = -1;
-    }
-
     CAddrInfo(const CAddress &addrIn, const CNetAddr &addrSource) : CAddress(addrIn), source(addrSource)
     {
-        Init();
     }
 
     CAddrInfo() : CAddress(), source()
     {
-        Init();
     }
 
     //! Calculate in which "tried" bucket this entry belongs
@@ -106,7 +91,6 @@ public:
 
     //! Calculate the relative chance this entry should be given when selecting nodes to connect to
     double GetChance(int64_t nNow = GetAdjustedTime()) const;
-
 };
 
 /** Stochastic address manager
@@ -182,41 +166,45 @@ public:
 //! the maximum number of tried addr collisions to store
 #define ADDRMAN_SET_TRIED_COLLISION_SIZE 10
 
+//! the maximum time we'll spend trying to resolve a tried table collision, in seconds
+static const int64_t ADDRMAN_TEST_WINDOW = 40*60; // 40 minutes
+
 /**
  * Stochastical (IP) address manager
  */
 class CAddrMan
 {
-private:
+protected:
     //! critical section to protect the inner data structures
     mutable CCriticalSection cs;
 
+private:
     //! last used nId
-    int nIdCount;
+    int nIdCount GUARDED_BY(cs);
 
     //! table with information about all nIds
-    std::map<int, CAddrInfo> mapInfo;
+    std::map<int, CAddrInfo> mapInfo GUARDED_BY(cs);
 
     //! find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CNetAddr, int> mapAddr GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom;
+    std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
-    int nTried;
+    int nTried GUARDED_BY(cs);
 
     //! list of "tried" buckets
-    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+    int vvTried[ADDRMAN_TRIED_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! number of (unique) "new" entries
-    int nNew;
+    int nNew GUARDED_BY(cs);
 
     //! list of "new" buckets
-    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE];
+    int vvNew[ADDRMAN_NEW_BUCKET_COUNT][ADDRMAN_BUCKET_SIZE] GUARDED_BY(cs);
 
     //! last time Good was called (memory only)
-    int64_t nLastGood;
+    int64_t nLastGood GUARDED_BY(cs);
 
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
@@ -229,58 +217,55 @@ protected:
     FastRandomContext insecure_rand;
 
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr);
+    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Move an entry from the "new" table(s) to the "tried" table
-    void MakeTried(CAddrInfo& info, int nId);
+    void MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Delete an entry. It must not be in tried, and have refcount 0.
-    void Delete(int nId);
+    void Delete(int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Clear a position in a "new" table. This is the only place where entries are actually deleted.
-    void ClearNew(int nUBucket, int nUBucketPos);
+    void ClearNew(int nUBucket, int nUBucketPos) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Mark an entry "good", possibly moving it from "new" to "tried".
-    void Good_(const CService &addr, bool test_before_evict, int64_t time);
+    void Good_(const CService &addr, bool test_before_evict, int64_t time) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Add an entry to the "new" table.
-    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty);
+    bool Add_(const CAddress &addr, const CNetAddr& source, int64_t nTimePenalty) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Mark an entry as attempted to connect.
-    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime);
+    void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
-    CAddrInfo Select_(bool newOnly);
+    CAddrInfo Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
-    void ResolveCollisions_();
+    void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Return a random to-be-evicted tried table address.
-    CAddrInfo SelectTriedCollision_();
-
-    //! Wraps GetRandInt to allow tests to override RandomInt and make it determinismistic.
-    virtual int RandomInt(int nMax);
+    CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
-    int Check_();
+    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr);
+    void GetAddr_(std::vector<CAddress> &vAddr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Mark an entry as currently-connected-to.
-    void Connected_(const CService &addr, int64_t nTime);
+    void Connected_(const CService &addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Update an entry's service bits.
-    void SetServices_(const CService &addr, ServiceFlags nServices);
+    void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
 public:
     /**
@@ -472,7 +457,7 @@ public:
     {
         LOCK(cs);
         std::vector<int>().swap(vRandom);
-        nKey = GetRandHash();
+        nKey = insecure_rand.rand256();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
             for (size_t entry = 0; entry < ADDRMAN_BUCKET_SIZE; entry++) {
                 vvNew[bucket][entry] = -1;

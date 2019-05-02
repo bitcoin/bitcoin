@@ -32,6 +32,10 @@ struct Descriptor {
     /** Whether the expansion of this descriptor depends on the position. */
     virtual bool IsRange() const = 0;
 
+    /** Whether this descriptor has all information about signing ignoring lack of private keys.
+     *  This is true for all descriptors except ones that use `raw` or `addr` constructions. */
+    virtual bool IsSolvable() const = 0;
+
     /** Convert the descriptor back to a string, undoing parsing. */
     virtual std::string ToString() const = 0;
 
@@ -44,12 +48,44 @@ struct Descriptor {
      * provider: the provider to query for private keys in case of hardened derivation.
      * output_script: the expanded scriptPubKeys will be put here.
      * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
+     * cache: vector which will be overwritten with cache data necessary to-evaluate the descriptor at this point without access to private keys.
      */
-    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
+    virtual bool Expand(int pos, const SigningProvider& provider, std::vector<CScript>& output_scripts, FlatSigningProvider& out, std::vector<unsigned char>* cache = nullptr) const = 0;
+
+    /** Expand a descriptor at a specified position using cached expansion data.
+     *
+     * pos: the position at which to expand the descriptor. If IsRange() is false, this is ignored.
+     * cache: vector from which cached expansion data will be read.
+     * output_script: the expanded scriptPubKeys will be put here.
+     * out: scripts and public keys necessary for solving the expanded scriptPubKeys will be put here (may be equal to provider).
+     */
+    virtual bool ExpandFromCache(int pos, const std::vector<unsigned char>& cache, std::vector<CScript>& output_scripts, FlatSigningProvider& out) const = 0;
 };
 
-/** Parse a descriptor string. Included private keys are put in out. Returns nullptr if parsing fails. */
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out);
+/** Parse a descriptor string. Included private keys are put in out.
+ *
+ * If the descriptor has a checksum, it must be valid. If require_checksum
+ * is set, the checksum is mandatory - otherwise it is optional.
+ *
+ * If a parse error occurs, or the checksum is missing/invalid, or anything
+ * else is wrong, nullptr is returned.
+ */
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum = false);
+
+/** Find a descriptor for the specified script, using information from provider where possible.
+ *
+ * A non-ranged descriptor which only generates the specified script will be returned in all
+ * circumstances.
+ *
+ * For public keys with key origin information, this information will be preserved in the returned
+ * descriptor.
+ *
+ * - If all information for solving `script` is present in `provider`, a descriptor will be returned
+ *   which is `IsSolvable()` and encapsulates said information.
+ * - Failing that, if `script` corresponds to a known address type, an "addr()" descriptor will be
+ *   returned (which is not `IsSolvable()`).
+ * - Failing that, a "raw()" descriptor is returned.
+ */
+std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
 
 #endif // BITCOIN_SCRIPT_DESCRIPTOR_H
-

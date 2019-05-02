@@ -402,7 +402,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>10</number>
+      <number>6</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>

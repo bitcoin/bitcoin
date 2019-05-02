@@ -8,6 +8,7 @@
 #include <qt/walletmodel.h>
 
 #include <memory>
+#include <amount.h>
 
 #include <QObject>
 

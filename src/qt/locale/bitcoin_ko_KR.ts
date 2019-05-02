@@ -3108,7 +3108,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Could not commit transaction</source>
-        <translation>트랜잭션을 커밋 할 수 없습니다.</translation>
+        <translation>거래를 커밋 할 수 없습니다.</translation>
     </message>
 </context>
 <context>
@@ -3337,6 +3337,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>유효하지 않은 금액 -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>디렉토리 "%s"에 지정한 블록들이 존재하지 않습니다.</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>txindex 데이터베이스 업테이트중</translation>
     </message>
@@ -3487,11 +3491,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>애러: 지정한 지갑 폴더 "%s"은 디렉토리가 아닙니다.</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>지정한 블록 폴더 "%s"는 존재하지 않습니다.</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

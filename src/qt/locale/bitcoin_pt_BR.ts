@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Clique com o botão direito para editar o endereço ou rótulo</translation>
+        <translation>Clique com o botão direito para editar o endereço ou rótulo </translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -3336,6 +3336,11 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
         <translation>Quantidade inválida para -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>
+Diretório de blocos especificados "%s" não existe.</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Atualizando banco de dados txindex</translation>
     </message>
@@ -3486,12 +3491,6 @@ Nota:  Como a taxa é calculada por byte, uma taxa de "100 satoshis por kB" por 
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>O -walletdir "%s" especificado não é um diretório</translation>
-    </message>
-    <message>
-        <source>Specified blocks directory "%s" does not exist.
-</source>
-        <translation>O diretório de blocos especificado "%s" não existe.
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

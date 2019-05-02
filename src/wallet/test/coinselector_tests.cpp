@@ -8,7 +8,7 @@
 #include <amount.h>
 #include <primitives/transaction.h>
 #include <random.h>
-#include <test/test_bitcoin.h>
+#include <test/setup_common.h>
 #include <wallet/test/wallet_test_fixture.h>
 
 #include <boost/test/unit_test.hpp>
@@ -28,7 +28,8 @@ std::vector<std::unique_ptr<CWalletTx>> wtxn;
 typedef std::set<CInputCoin> CoinSet;
 
 static std::vector<COutput> vCoins;
-static CWallet testWallet("dummy", WalletDatabase::CreateDummy());
+static auto testChain = interfaces::MakeChain();
+static CWallet testWallet(testChain.get(), WalletLocation(), WalletDatabase::CreateDummy());
 static CAmount balance = 0;
 
 CoinEligibilityFilter filter_standard(1, 6, 0);
@@ -65,11 +66,10 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    std::unique_ptr<CWalletTx> wtx(new CWalletTx(&testWallet, MakeTransactionRef(std::move(tx))));
+    std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&testWallet, MakeTransactionRef(std::move(tx)));
     if (fIsFromMe)
     {
-        wtx->fDebitCached = true;
-        wtx->nDebitCached = 1;
+        wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
     }
     COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
@@ -114,7 +114,7 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
 {
     static std::vector<OutputGroup> static_groups;
     static_groups.clear();
-    for (auto& coin : coins) static_groups.emplace_back(coin.GetInputCoin(), coin.nDepth, coin.tx->fDebitCached && coin.tx->nDebitCached == 1 /* HACK: we can't figure out the is_me flag so we use the conditions defined above; perhaps set safe to false for !fIsFromMe in add_coin() */, 0, 0);
+    for (auto& coin : coins) static_groups.emplace_back(coin.GetInputCoin(), coin.nDepth, coin.tx->m_amounts[CWalletTx::DEBIT].m_cached[ISMINE_SPENDABLE] && coin.tx->m_amounts[CWalletTx::DEBIT].m_value[ISMINE_SPENDABLE] == 1 /* HACK: we can't figure out the is_me flag so we use the conditions defined above; perhaps set safe to false for !fIsFromMe in add_coin() */, 0, 0);
     return static_groups;
 }
 
@@ -134,7 +134,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     /////////////////////////
     // Known Outcome tests //
     /////////////////////////
-    BOOST_TEST_MESSAGE("Testing known outcomes");
 
     // Empty utxo pool
     BOOST_CHECK(!SelectCoinsBnB(GroupCoins(utxo_pool), 1 * CENT, 0.5 * CENT, selection, value_ret, not_input_fees));
@@ -462,14 +461,19 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK(testWallet.SelectCoinsMinConf(MIN_CHANGE * 9990 / 100, filter_confirmed, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
         BOOST_CHECK_EQUAL(nValueRet, 101 * MIN_CHANGE);
         BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+      }
 
-        // test with many inputs
-        for (CAmount amt=1500; amt < COIN; amt*=10) {
-             empty_wallet();
-             // Create 676 inputs (=  (old MAX_STANDARD_TX_SIZE == 100000)  / 148 bytes per input)
-             for (uint16_t j = 0; j < 676; j++)
-                 add_coin(amt);
+      // test with many inputs
+      for (CAmount amt=1500; amt < COIN; amt*=10) {
+           empty_wallet();
+           // Create 676 inputs (=  (old MAX_STANDARD_TX_SIZE == 100000)  / 148 bytes per input)
+           for (uint16_t j = 0; j < 676; j++)
+               add_coin(amt);
+
+           // We only create the wallet once to save time, but we still run the coin selection RUN_TESTS times.
+           for (int i = 0; i < RUN_TESTS; i++) {
              BOOST_CHECK(testWallet.SelectCoinsMinConf(2000, filter_confirmed, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
+
              if (amt - 2000 < MIN_CHANGE) {
                  // needs more than one input:
                  uint16_t returnSize = std::ceil((2000.0 + MIN_CHANGE)/amt);
@@ -481,14 +485,17 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
                  BOOST_CHECK_EQUAL(nValueRet, amt);
                  BOOST_CHECK_EQUAL(setCoinsRet.size(), 1U);
              }
-        }
+           }
+      }
 
-        // test randomness
-        {
-            empty_wallet();
-            for (int i2 = 0; i2 < 100; i2++)
-                add_coin(COIN);
+      // test randomness
+      {
+          empty_wallet();
+          for (int i2 = 0; i2 < 100; i2++)
+              add_coin(COIN);
 
+          // Again, we only create the wallet once to save time, but we still run the coin selection RUN_TESTS times.
+          for (int i = 0; i < RUN_TESTS; i++) {
             // picking 50 from 100 coins doesn't depend on the shuffle,
             // but does depend on randomness in the stochastic approximation code
             BOOST_CHECK(testWallet.SelectCoinsMinConf(50 * COIN, filter_standard, GroupCoins(vCoins), setCoinsRet , nValueRet, coin_selection_params, bnb_used));
@@ -506,17 +513,19 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
                     fails++;
             }
             BOOST_CHECK_NE(fails, RANDOM_REPEATS);
+          }
 
-            // add 75 cents in small change.  not enough to make 90 cents,
-            // then try making 90 cents.  there are multiple competing "smallest bigger" coins,
-            // one of which should be picked at random
-            add_coin(5 * CENT);
-            add_coin(10 * CENT);
-            add_coin(15 * CENT);
-            add_coin(20 * CENT);
-            add_coin(25 * CENT);
+          // add 75 cents in small change.  not enough to make 90 cents,
+          // then try making 90 cents.  there are multiple competing "smallest bigger" coins,
+          // one of which should be picked at random
+          add_coin(5 * CENT);
+          add_coin(10 * CENT);
+          add_coin(15 * CENT);
+          add_coin(20 * CENT);
+          add_coin(25 * CENT);
 
-            fails = 0;
+          for (int i = 0; i < RUN_TESTS; i++) {
+            int fails = 0;
             for (int j = 0; j < RANDOM_REPEATS; j++)
             {
                 // selecting 1 from 100 identical coins depends on the shuffle; this test will fail 1% of the time
@@ -527,8 +536,9 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
                     fails++;
             }
             BOOST_CHECK_NE(fails, RANDOM_REPEATS);
-        }
-    }
+          }
+      }
+
     empty_wallet();
 }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2018 The Bitcoin Core developers
+# Copyright (c) 2010-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin P2P network half-a-node.
@@ -21,7 +21,38 @@ import struct
 import sys
 import threading
 
-from test_framework.messages import CBlockHeader, MIN_VERSION_SUPPORTED, msg_addr, msg_block, MSG_BLOCK, msg_blocktxn, msg_cmpctblock, msg_feefilter, msg_getaddr, msg_getblocks, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_mempool, msg_ping, msg_pong, msg_reject, msg_sendcmpct, msg_sendheaders, msg_tx, MSG_TX, MSG_TYPE_MASK, msg_verack, msg_version, NODE_NETWORK, NODE_WITNESS, sha256
+from test_framework.messages import (
+    CBlockHeader,
+    MIN_VERSION_SUPPORTED,
+    msg_addr,
+    msg_block,
+    MSG_BLOCK,
+    msg_blocktxn,
+    msg_cmpctblock,
+    msg_feefilter,
+    msg_getaddr,
+    msg_getblocks,
+    msg_getblocktxn,
+    msg_getdata,
+    msg_getheaders,
+    msg_headers,
+    msg_inv,
+    msg_mempool,
+    msg_notfound,
+    msg_ping,
+    msg_pong,
+    msg_reject,
+    msg_sendcmpct,
+    msg_sendheaders,
+    msg_tx,
+    MSG_TX,
+    MSG_TYPE_MASK,
+    msg_verack,
+    msg_version,
+    NODE_NETWORK,
+    NODE_WITNESS,
+    sha256,
+)
 from test_framework.util import wait_until
 
 logger = logging.getLogger("TestFramework.mininode")
@@ -40,6 +71,7 @@ MESSAGEMAP = {
     b"headers": msg_headers,
     b"inv": msg_inv,
     b"mempool": msg_mempool,
+    b"notfound": msg_notfound,
     b"ping": msg_ping,
     b"pong": msg_pong,
     b"reject": msg_reject,
@@ -86,7 +118,7 @@ class P2PConnection(asyncio.Protocol):
         # The initial message to send after the connection was made:
         self.on_connection_send_msg = None
         self.recvbuf = b""
-        self.network = net
+        self.magic_bytes = MAGIC_BYTES[net]
         logger.debug('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
 
         loop = NetworkThread.network_event_loop
@@ -138,8 +170,8 @@ class P2PConnection(asyncio.Protocol):
             while True:
                 if len(self.recvbuf) < 4:
                     return
-                if self.recvbuf[:4] != MAGIC_BYTES[self.network]:
-                    raise ValueError("got garbage %s" % repr(self.recvbuf))
+                if self.recvbuf[:4] != self.magic_bytes:
+                    raise ValueError("magic bytes mismatch: {} != {}".format(repr(self.magic_bytes), repr(self.recvbuf)))
                 if len(self.recvbuf) < 4 + 12 + 4 + 4:
                     return
                 command = self.recvbuf[4:4+12].split(b"\x00", 1)[0]
@@ -175,29 +207,29 @@ class P2PConnection(asyncio.Protocol):
 
         This method takes a P2P payload, builds the P2P header and adds
         the message to the send buffer to be sent over the socket."""
+        tmsg = self.build_message(message)
+        self._log_message("send", message)
+        return self.send_raw_message(tmsg)
+
+    def send_raw_message(self, raw_message_bytes):
         if not self.is_connected:
             raise IOError('Not connected')
-        self._log_message("send", message)
-        tmsg = self._build_message(message)
 
         def maybe_write():
             if not self._transport:
                 return
-            # Python <3.4.4 does not have is_closing, so we have to check for
-            # its existence explicitly as long as Bitcoin Core supports all
-            # Python 3.4 versions.
-            if hasattr(self._transport, 'is_closing') and self._transport.is_closing():
+            if self._transport.is_closing():
                 return
-            self._transport.write(tmsg)
+            self._transport.write(raw_message_bytes)
         NetworkThread.network_event_loop.call_soon_threadsafe(maybe_write)
 
     # Class utility methods
 
-    def _build_message(self, message):
+    def build_message(self, message):
         """Build a serialized P2P message"""
         command = message.command
         data = message.serialize()
-        tmsg = MAGIC_BYTES[self.network]
+        tmsg = self.magic_bytes
         tmsg += command
         tmsg += b"\x00" * (12 - len(command))
         tmsg += struct.pack("<I", len(data))
@@ -295,6 +327,7 @@ class P2PInterface(P2PConnection):
     def on_getheaders(self, message): pass
     def on_headers(self, message): pass
     def on_mempool(self, message): pass
+    def on_notfound(self, message): pass
     def on_pong(self, message): pass
     def on_reject(self, message): pass
     def on_sendcmpct(self, message): pass
@@ -313,7 +346,7 @@ class P2PInterface(P2PConnection):
         self.send_message(msg_pong(message.nonce))
 
     def on_verack(self, message):
-        self.verack_received = True
+        pass
 
     def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
@@ -376,9 +409,9 @@ class P2PInterface(P2PConnection):
 
     # Message sending helper functions
 
-    def send_and_ping(self, message):
+    def send_and_ping(self, message, timeout=60):
         self.send_message(message)
-        self.sync_with_ping()
+        self.sync_with_ping(timeout=timeout)
 
     # Sync up with the node
     def sync_with_ping(self, timeout=60):
@@ -475,14 +508,14 @@ class P2PDataStore(P2PInterface):
         if response is not None:
             self.send_message(response)
 
-    def send_blocks_and_test(self, blocks, node, *, success=True, request_block=True, reject_reason=None, expect_disconnect=False, timeout=60):
+    def send_blocks_and_test(self, blocks, node, *, success=True, force_send=False, reject_reason=None, expect_disconnect=False, timeout=60):
         """Send blocks to test node and test whether the tip advances.
 
          - add all blocks to our block_store
          - send a headers message for the final block
          - the on_getheaders handler will ensure that any getheaders are responded to
-         - if request_block is True: wait for getdata for each of the blocks. The on_getdata handler will
-           ensure that any getdata messages are responded to
+         - if force_send is False: wait for getdata for each of the blocks. The on_getdata handler will
+           ensure that any getdata messages are responded to. Otherwise send the full block unsolicited.
          - if success is True: assert that the node's tip advances to the most recent block
          - if success is False: assert that the node's tip doesn't advance
          - if reject_reason is set: assert that the correct reject message is logged"""
@@ -494,15 +527,17 @@ class P2PDataStore(P2PInterface):
 
         reject_reason = [reject_reason] if reject_reason else []
         with node.assert_debug_log(expected_msgs=reject_reason):
-            self.send_message(msg_headers([CBlockHeader(blocks[-1])]))
-
-            if request_block:
+            if force_send:
+                for b in blocks:
+                    self.send_message(msg_block(block=b))
+            else:
+                self.send_message(msg_headers([CBlockHeader(block) for block in blocks]))
                 wait_until(lambda: blocks[-1].sha256 in self.getdata_requests, timeout=timeout, lock=mininode_lock)
 
             if expect_disconnect:
-                self.wait_for_disconnect()
+                self.wait_for_disconnect(timeout=timeout)
             else:
-                self.sync_with_ping()
+                self.sync_with_ping(timeout=timeout)
 
             if success:
                 wait_until(lambda: node.getbestblockhash() == blocks[-1].hash, timeout=timeout)

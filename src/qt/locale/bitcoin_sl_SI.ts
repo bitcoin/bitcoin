@@ -1874,6 +1874,10 @@
         <translation>Brišem vse transakcije iz denarnice ...</translation>
     </message>
     <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>Transakcija mora imeti vsaj enega prejemnika.</translation>
+    </message>
+    <message>
         <source>Unknown network specified in -onlynet: '%s'</source>
         <translation>Neznano omrežje določeno v -onlynet: '%s'.</translation>
     </message>

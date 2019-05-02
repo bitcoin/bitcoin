@@ -36,6 +36,8 @@ public:
     bool m_avoid_partial_spends;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
+    //! Minimum chain depth value for coin availability
+    int m_min_depth{0};
 
     CCoinControl()
     {

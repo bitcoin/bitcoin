@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -12,18 +12,18 @@ export LC_ALL=C
 while getopts "?" opt; do
   case $opt in
     ?)
-      echo "Usage: .lint-whitespace.sh [N]"
-      echo "       TRAVIS_COMMIT_RANGE='<commit range>' .lint-whitespace.sh"
-      echo "       .lint-whitespace.sh -?"
+      echo "Usage: $0 [N]"
+      echo "       TRAVIS_COMMIT_RANGE='<commit range>' $0"
+      echo "       $0 -?"
       echo "Checks unstaged changes, the previous N commits, or a commit range."
-      echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' .lint-whitespace.sh"
+      echo "TRAVIS_COMMIT_RANGE='47ba2c3...ee50c9e' $0"
       exit 0
     ;;
   esac
 done
 
 if [ -z "${TRAVIS_COMMIT_RANGE}" ]; then
-  if [ "$1" ]; then
+  if [ -n "$1" ]; then
     TRAVIS_COMMIT_RANGE="HEAD~$1...HEAD"
   else
     TRAVIS_COMMIT_RANGE="HEAD"

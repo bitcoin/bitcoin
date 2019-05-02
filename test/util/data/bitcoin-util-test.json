@@ -105,6 +105,30 @@
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
+     "in=Z897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input txid",
+    "description": "Tests the check for an invalid txid invalid hex"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6:0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input txid",
+    "description": "Tests the check for an invalid txid valid hex but too short"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f12:0"],
+    "return_code": 1,
+    "error_txt": "error: invalid TX input txid",
+    "description": "Tests the check for an invalid txid valid hex but too long"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "replaceable=0foo"],
     "return_code": 1,
@@ -279,6 +303,42 @@
     "return_code": 1,
     "error_txt": "error: prevtxs internal object typecheck fail",
     "description": "Tests the check for invalid vout index in prevtxs for sign"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"Zd49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59412\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: txid must be hexadecimal string (not 'Zd49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59412')",
+    "description": "Tests the check for invalid txid due to invalid hex"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc594\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: txid must be hexadecimal string (not '4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc594')",
+    "description": "Tests the check for invalid txid valid hex, but too short"
+  },
+  { "exec": "./bitcoin-tx",
+    "args":
+    ["-create",
+      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
+      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc5948512\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "sign=ALL",
+      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+    "return_code": 1,
+    "error_txt": "error: txid must be hexadecimal string (not '4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc5948512')",
+    "description": "Tests the check for invalid txid valid hex, but too long"
   },
   { "exec": "./bitcoin-tx",
     "args":

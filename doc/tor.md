@@ -16,7 +16,7 @@ outgoing connections, but more is possible.
 
 	-onion=ip:port  Set the proxy server to use for Tor hidden services. You do not
 	                need to set this if it's the same as -proxy. You can use -noonion
-	                to explicitly disable access to hidden service.
+	                to explicitly disable access to hidden services.
 
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run a hidden service (see next section), you'll need to enable
@@ -26,6 +26,11 @@ outgoing connections, but more is possible.
 	-addnode=X      of IP addresses or hostnames in these parameters. It requires
 	-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
 	                other P2P nodes.
+
+	-onlynet=onion  Make outgoing connections only to .onion addresses. Incoming
+	                connections are not affected by this option. This option can be
+	                specified multiple times to allow multiple network types, e.g.
+	                ipv4, ipv6, or onion.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
@@ -109,9 +114,13 @@ preconfigured and the creation of a hidden service is automatic. If permission p
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
 the user running bitcoind to the same group and setting permissions appropriately. On
 Debian-based systems the user running bitcoind can be added to the debian-tor group,
-which has the appropriate permissions. An alternative authentication method is the use
-of the `-torpassword` flag and a `hash-password` which can be enabled and specified in
-Tor configuration.
+which has the appropriate permissions.
+
+An alternative authentication method is the use
+of the `-torpassword=password` option. The `password` is the clear text form that
+was used when generating the hashed password for the `HashedControlPassword` option
+in the tor configuration file. The hashed password can be obtained with the command
+`tor --hash-password password` (read the tor manual for more details).
 
 ## 4. Privacy recommendations
 

@@ -7,6 +7,8 @@
 export LC_ALL=C.UTF-8
 
 PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+# Add llvm-symbolizer directory to PATH. Needed to get symbolized stack traces from the sanitizers.
+PATH=$PATH:/usr/lib/llvm-6.0/bin/
 export PATH
 
 BEGIN_FOLD () {

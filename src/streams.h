@@ -64,12 +64,6 @@ public:
     size_t size() const { return stream->size(); }
 };
 
-template<typename S>
-OverrideStream<S> WithOrVersion(S* s, int nVersionFlag)
-{
-    return OverrideStream<S>(s, s->GetType(), s->GetVersion() | nVersionFlag);
-}
-
 /* Minimal stream for overwriting and/or appending to an existing byte vector
  *
  * The referenced vector will grow as necessary
@@ -126,12 +120,6 @@ class CVectorWriter
     {
         return nType;
     }
-    void seek(size_t nSize)
-    {
-        nPos += nSize;
-        if(nPos > vchData.size())
-            vchData.resize(nPos);
-    }
 private:
     const int nType;
     const int nVersion;
@@ -151,19 +139,21 @@ private:
 
 public:
 
-    /*
+    /**
      * @param[in]  type Serialization Type
      * @param[in]  version Serialization Version (including any flags)
      * @param[in]  data Referenced byte vector to overwrite/append
      * @param[in]  pos Starting position. Vector index where reads should start.
      */
     VectorReader(int type, int version, const std::vector<unsigned char>& data, size_t pos)
-        : m_type(type), m_version(version), m_data(data)
+        : m_type(type), m_version(version), m_data(data), m_pos(pos)
     {
-        seek(pos);
+        if (m_pos > m_data.size()) {
+            throw std::ios_base::failure("VectorReader(...): end of data (m_pos > m_data.size())");
+        }
     }
 
-    /*
+    /**
      * (other params same as above)
      * @param[in]  args  A list of items to deserialize starting at pos.
      */
@@ -202,14 +192,6 @@ public:
         }
         memcpy(dst, m_data.data() + m_pos, n);
         m_pos = pos_next;
-    }
-
-    void seek(size_t n)
-    {
-        m_pos += n;
-        if (m_pos > m_data.size()) {
-            throw std::ios_base::failure("VectorReader::seek(): end of data");
-        }
     }
 };
 
@@ -733,15 +715,15 @@ private:
     const int nType;
     const int nVersion;
 
-    FILE *src;            // source file
-    uint64_t nSrcPos;     // how many bytes have been read from source
-    uint64_t nReadPos;    // how many bytes have been read from this
-    uint64_t nReadLimit;  // up to which position we're allowed to read
-    uint64_t nRewind;     // how many bytes we guarantee to rewind
-    std::vector<char> vchBuf; // the buffer
+    FILE *src;            //!< source file
+    uint64_t nSrcPos;     //!< how many bytes have been read from source
+    uint64_t nReadPos;    //!< how many bytes have been read from this
+    uint64_t nReadLimit;  //!< up to which position we're allowed to read
+    uint64_t nRewind;     //!< how many bytes we guarantee to rewind
+    std::vector<char> vchBuf; //!< the buffer
 
 protected:
-    // read data from the source to fill the buffer
+    //! read data from the source to fill the buffer
     bool Fill() {
         unsigned int pos = nSrcPos % vchBuf.size();
         unsigned int readNow = vchBuf.size() - pos;
@@ -761,7 +743,7 @@ protected:
 
 public:
     CBufferedFile(FILE *fileIn, uint64_t nBufSize, uint64_t nRewindIn, int nTypeIn, int nVersionIn) :
-        nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), nReadPos(0), nReadLimit((uint64_t)(-1)), nRewind(nRewindIn), vchBuf(nBufSize, 0)
+        nType(nTypeIn), nVersion(nVersionIn), nSrcPos(0), nReadPos(0), nReadLimit(std::numeric_limits<uint64_t>::max()), nRewind(nRewindIn), vchBuf(nBufSize, 0)
     {
         src = fileIn;
     }
@@ -786,12 +768,12 @@ public:
         }
     }
 
-    // check whether we're at the end of the source file
+    //! check whether we're at the end of the source file
     bool eof() const {
         return nReadPos == nSrcPos && feof(src);
     }
 
-    // read a number of bytes
+    //! read a number of bytes
     void read(char *pch, size_t nSize) {
         if (nSize + nReadPos > nReadLimit)
             throw std::ios_base::failure("Read attempted past buffer limit");
@@ -813,12 +795,12 @@ public:
         }
     }
 
-    // return the current reading position
+    //! return the current reading position
     uint64_t GetPos() const {
         return nReadPos;
     }
 
-    // rewind to a given reading position
+    //! rewind to a given reading position
     bool SetPos(uint64_t nPos) {
         nReadPos = nPos;
         if (nReadPos + nRewind < nSrcPos) {
@@ -844,9 +826,9 @@ public:
         return true;
     }
 
-    // prevent reading beyond a certain position
-    // no argument removes the limit
-    bool SetLimit(uint64_t nPos = (uint64_t)(-1)) {
+    //! prevent reading beyond a certain position
+    //! no argument removes the limit
+    bool SetLimit(uint64_t nPos = std::numeric_limits<uint64_t>::max()) {
         if (nPos < nReadPos)
             return false;
         nReadLimit = nPos;
@@ -860,7 +842,7 @@ public:
         return (*this);
     }
 
-    // search for a given byte in the stream, and remain positioned on it
+    //! search for a given byte in the stream, and remain positioned on it
     void FindByte(char ch) {
         while (true) {
             if (nReadPos == nSrcPos)

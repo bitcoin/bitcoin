@@ -22,7 +22,7 @@ Configuration
 
 At a bare minimum, bitcoind requires that the rpcpassword setting be set
 when running as a daemon.  If the configuration file does not exist or this
-setting is not set, bitcoind will shutdown promptly after startup.
+setting is not set, bitcoind will shut down promptly after startup.
 
 This password does not have to be remembered or typed as it is mostly used
 as a fixed token that bitcoind and client programs read from the configuration
@@ -56,7 +56,7 @@ All three configurations assume several paths that might need to be adjusted.
 Binary:              `/usr/bin/bitcoind`  
 Configuration file:  `/etc/bitcoin/bitcoin.conf`  
 Data directory:      `/var/lib/bitcoind`  
-PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/var/lib/bitcoind/bitcoind.pid` (systemd)  
+PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/run/bitcoind/bitcoind.pid` (systemd)
 Lock file:           `/var/lock/subsys/bitcoind` (CentOS)  
 
 The configuration file, PID directory (if applicable) and data directory
@@ -64,6 +64,22 @@ should all be owned by the bitcoin user and group.  It is advised for security
 reasons to make the configuration file and data directory only readable by the
 bitcoin user and group.  Access to bitcoin-cli and other bitcoind rpc clients
 can then be controlled by group membership.
+
+NOTE: When using the systemd .service file, the creation of the aforementioned
+directories and the setting of their permissions is automatically handled by
+systemd. Directories are given a permission of 710, giving the bitcoin group
+access to files under it _if_ the files themselves give permission to the
+bitcoin group to do so (e.g. when `-sysperms` is specified). This does not allow
+for the listing of files under the directory.
+
+NOTE: It is not currently possible to override `datadir` in
+`/etc/bitcoin/bitcoin.conf` with the current systemd, OpenRC, and Upstart init
+files out-of-the-box. This is because the command line options specified in the
+init files take precedence over the configurations in
+`/etc/bitcoin/bitcoin.conf`. However, some init systems have their own
+configuration mechanisms that would allow for overriding the command line
+options specified in the init files (e.g. setting `BITCOIND_DATADIR` for
+OpenRC).
 
 ### macOS
 

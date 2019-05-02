@@ -6,18 +6,15 @@
 
 #include <rpc/server.h>
 #include <wallet/db.h>
+#include <wallet/rpcwallet.h>
 
-WalletTestingSetup::WalletTestingSetup(const std::string& chainName):
-    TestingSetup(chainName), m_wallet("mock", WalletDatabase::CreateMock())
+WalletTestingSetup::WalletTestingSetup(const std::string& chainName)
+    : TestingSetup(chainName),
+      m_wallet(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock())
 {
     bool fFirstRun;
     m_wallet.LoadWallet(fFirstRun);
-    RegisterValidationInterface(&m_wallet);
+    m_wallet.handleNotifications();
 
-    RegisterWalletRPCCommands(tableRPC);
-}
-
-WalletTestingSetup::~WalletTestingSetup()
-{
-    UnregisterValidationInterface(&m_wallet);
+    m_chain_client->registerRpcs();
 }
