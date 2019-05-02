@@ -77,6 +77,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent true \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\""));
     // cannot spend as normal through sendrawtransaction
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":0.01}]\"", true, false));
+	printf("createraw %s\n", r.write().c_str());
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + r.get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
