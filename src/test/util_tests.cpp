@@ -580,7 +580,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 
 // Test different ways settings can be merged, and verify results. This test can
 // be used to confirm that updates to settings code don't change behavior
-// unintentially.
+// unintentionally.
 //
 // The test covers:
 //
