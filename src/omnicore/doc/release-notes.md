@@ -1,30 +1,30 @@
-Omni Core v0.4.0
+Omni Core v0.5.0
 ================
 
-v0.4.0 is a major release and consensus critical in terms of the Omni Layer protocol rules. An upgrade is mandatory, and highly recommended. Prior releases may not be compatible with new behaviour in this release.
+v0.5.0 is a major release and consensus critical in terms of the Omni Layer protocol rules. An upgrade is mandatory, and highly recommended. Prior releases may not be compatible with new behaviour in this release.
+
+**Note: the first time you run this version, all Omni Layer transactions are reprocessed due to an database update, which may take 30 minutes up to several hours.**
 
 Please report bugs using the issue tracker on GitHub:
 
   https://github.com/OmniLayer/omnicore/issues
 
+
 Table of contents
 =================
 
-- [Omni Core v0.4.0](#omni-core-v040)
+- [Omni Core v0.5.0](#omni-core-v050)
 - [Upgrading and downgrading](#upgrading-and-downgrading)
   - [How to upgrade](#how-to-upgrade)
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
 - [Notable changes](#notable-changes)
-  - [Add new RPC: "omni_listblockstransactions"](#add-new-rpc-omni_listblockstransactions)
-  - [Fix RPC edge case of not identifying crowdsale purchase](#fix-rpc-edge-case-of-not-identifying-crowdsale-purchase)
-  - [Show "ecosystem" = "all", when all tokens are moved](#show-ecosystem--all-when-all-tokens-are-moved)
-  - [Log failures when trying to restore state](#log-failures-when-trying-to-restore-state)
-  - [Add system for random database consistency checks](#add-system-for-random-database-consistency-checks)
-  - [Add checkpoint for block 562708](#add-checkpoint-for-block-562708)
-  - [Internal database related code improvements](#internal-database-related-code-improvements)
+  - [Fix startup issue of Omni Core](#fix-startup-issue-of-omni-core)
+  - [Speed up RPC omni_listpendingtransactions](#speed-up-rpc-omni_listpendingtransactions)
+  - [Rename OMNI and TOMNI to OMN and TOMN](#rename-omni-and-tomni-to-omn-and-tomn)
 - [Change log](#change-log)
 - [Credits](#credits)
+
 
 Upgrading and downgrading
 =========================
@@ -52,113 +52,57 @@ Downgrading to a Bitcoin Core version prior to 0.12 may not be supported due to 
 
 Downgrading to a Bitcoin Core version prior to 0.10 is not supported due to the new headers-first synchronization.
 
+
 Notable changes
 ===============
 
-Add new RPC: "omni_listblockstransactions"
------------------------------------------
+Fix startup issue of Omni Core
+------------------------------
 
-The new RPC "omni_listblockstransactions" can be used to retrieve an unordered list of Omni transactions within a range of blocks:
+During startup, when reloading the effect of freeze transactions, it is checked, whether the sender of a freeze transaction is the issuer of that token and thus allowed to freeze tokens. However, if the issuer of the token has been changed in the meantime, that check fails. Such a fail is interpreted as state inconsistency, which is critical and causes a shutdown of the client.
 
----
+With this change, historical issuers are persisted and can be accessed for any given block. When there is an issuer check, it now checks against the issuer at that point, resolving the startup issue.
 
-### omni_listblockstransactions
+Please note: the internal database of Omni Core is upgraded, which triggers a reparse of Omni Layer transactions the first time this version is started. This can take between 30 minutes and a few hours of processing time, during which Omni Core is unusable!
 
-Lists all Omni transactions in a given range of blocks.
+Speed up RPC "omni_listpendingtransactions"
+-------------------------------------------
 
-Note: the list of transactions is unordered and can contain invalid transactions!
+When adding a transaction to the mempool, a quick and unsafe check for any Omni Layer markers is done without checking transaction validity or whether it's malformed, to identify potential Omni Layer transactions.
 
-**Arguments:**
+If the transaction has a potential marker, then it's added to a new cache. If the transaction is removed from the mempool, it's also removed from the cache.
 
-| Name                | Type    | Presence | Description                                                                                  |
-|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `firstblock`        | number  | required | the index of the first block to consider                                                     |
-| `lastblock`         | number  | required | the index of the last block to consider                                                      |
+This speeds up the RPC "omni_listpendingtransactions" significantly, which can be used to list pending Omni Layer transactions.
 
-**Result:**
-```js
-[      // (array of string)
-  "hash",  // (string) the hash of the transaction
-  ...
-]
-```
+Rename OMNI and TOMNI to OMN and TOMN
+-------------------------------------
 
-**Example:**
+To be more algined with other symbols and tickers the following changes in wording are made:
 
-```bash
-$ omnicore-cli "omni_omni_listblocktransactions" 279007 300000
-```
+- "Omni", referring to the native tokens of the Omni Layer protocol, becomes "Omni tokens"
+- "Test Omni", referring to the native test tokens of the Omni Layer protocol, becomes "Test Omni tokens"
+- "OMNI", referring to the symbol of Omni tokens, becomes "OMN"
+- "TOMNI", referring to the symbol of Test Omni tokens, becomes "TOMN"
 
----
-
-
-Fix RPC edge case of not identifying crowdsale purchase
------------------------------------------
-
-When a "Simple Send" transaction is also a "Crowdsale Purchase", always return "Crowdsale Purchase" for "type", when using "omni_gettransaction".
-
-
-Show "ecosystem" = "all", when all tokens are moved
------------------------------------------
-
-When moving all tokens with the "Send All" transaction and no specific ecosystem is selected, show "all" for "ecosystem", when getting information about such a transaction with "omni_gettransaction".
-
-
-Log failures when trying to restore state
------------------------------------------
-
-When, due to whatever reason, a rescan of Omni Layer transactions is triggered during a start, the reason for the rescan is written to the log file.
-
-
-Add system for random database consistency checks
------------------------------------------
-
-During startup, the existence of a collection of historical transactions is checked to detect DB inconsistencies. In this case, all Omni Layer transcations are rescaned during the start.
-
-
-Add checkpoint for block 562708
------------------------------------------
-
-To further ensure consensus consistency, a more up-to-date checkpoint was added:
-
-```
-{
-  "block": 562710,
-  "blockhash": "0000000000000000001673ef66bfbc02946c1ff7f42e8aef72d875ab7044de1e",
-  "consensushash": "0be8eadf798cc595db247b85617815c936a1e607ac8faab6dec44b2ee585bd51"
-}
-```
-
-
-Internal database related code improvements
------------------------------------------
-
-Pointer names of all databases were renamed and unified to match actual database names.
+While this is change is mostly cosmetic - in particular it changes the code documentation, RPC help messages and RPC documentation - it also has an effect of the RPCS "omni_getproperty 1" and "omni_getproperty 2", which now return a text with the updated token and symbol names.
 
 
 Change log
 ==========
 
 The following list includes relevant pull requests merged into this release:
+
 ```
-- #773 Log failures when trying to restore state
-- #769 Don't create two similar outputs, when funding transactions
-- #768 Update version to 0.3.1.99 to indicate development
-- #779 Refine documentation of new funding RPCs
-- #835 Add new RPC: omni_listblockstransactions
-- #848 Fix RPC edge case of not identifying crowdsale purchase
-- #851 Unify pointer names of internal DBs
-- #874 Fix log incompability of invalid datetime
-- #878 Show "ecosystem" = "all", when all tokens are moved
-- #879 Bump version to Omni Core 0.4.0
-- #881 Add consensus hash for block 562708
-- #882 Add system to check existence of historical transactions
-- #884 Remove two transactions from probing
-- #885 Rename Mastercoin to Omni Layer in error message
-- #883 Add release notes for Omni Core 0.4.0
+- #907 Update version to 0.4.0.99 to indicate development
+- #910 Add marker cache to speed up omni_listpendingtransactions
+- #925 Store historical issuers and use that data
+- #908 Rename OMNI and TOMNI to OMN and TOMN
+- #931 Bump version to Omni Core 0.5.0
+- #932 Add release notes for Omni Core 0.5.0
 ```
+
 
 Credits
 =======
 
-Thanks to everyone who contributed to this release, and especially Dmitry Petukhov from @Simplexum for his valuable contributions!
+Thanks to everyone who contributed to this release!
