@@ -70,14 +70,14 @@ std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& reques
     return wallets.size() == 1 || (request.fHelp && wallets.size() > 0) ? wallets[0] : nullptr;
 }
 
-std::string HelpRequiringPassphrase(CWallet * const pwallet)
+std::string HelpRequiringPassphrase(const CWallet* pwallet)
 {
     return pwallet && pwallet->IsCrypted()
         ? "\nRequires wallet passphrase to be set with walletpassphrase call."
         : "";
 }
 
-bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException)
+bool EnsureWalletIsAvailable(const CWallet* pwallet, bool avoidException)
 {
     if (pwallet) return true;
     if (avoidException) return false;
@@ -89,7 +89,7 @@ bool EnsureWalletIsAvailable(CWallet * const pwallet, bool avoidException)
         "Wallet file not specified (must request wallet RPC through /wallet/<filename> uri-path).");
 }
 
-void EnsureWalletIsUnlocked(CWallet * const pwallet)
+void EnsureWalletIsUnlocked(const CWallet* pwallet)
 {
     if (pwallet->IsLocked()) {
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
