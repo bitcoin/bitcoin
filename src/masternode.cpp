@@ -108,7 +108,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
     AssertLockHeld(cs_main);
 
     Coin coin;
-    if(!GetUTXOCoin(outpoint, coin)) {
+    if(!GetUTXOCoin(outpoint, coin) || coin.IsSpent() || coin.IsCoinBase()) {
         return COLLATERAL_UTXO_NOT_FOUND;
     }
 
