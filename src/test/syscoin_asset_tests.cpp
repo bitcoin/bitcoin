@@ -61,15 +61,22 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid + " true"));
 	UniValue voutArray = find_value(r.get_obj(), "vout");
-	int vout = 0;
+	int vout = 0; 
+	CAmount nAmount = 0;
 	for (unsigned int i = 0; i<voutArray.size(); i++) {
+		nAmount = AmountFromValue(find_value(voutArray[i].get_obj(), "value"));
 		UniValue scriptObj = find_value(voutArray[i].get_obj(), "scriptPubKey").get_obj();
 		UniValue addressesArray = find_value(scriptObj, "addresses");
 		for (unsigned int j = 0; j<addressesArray.size(); j++) {
-			if (addressesArray[j].get_str() == newaddress)
+			if (addressesArray[j].get_str() == newaddress) {
 				vout = i;
+				nAmount = AmountFromValue(find_value(voutArray[i].get_obj(), "value"));
+			}
 		}
 	}
+	// for fees;
+	nAmount -= 10000;
+	string strAmount = ValueFromAmount(nAmount).write();
 	string voutstr = itostr(vout);
 	// lock outpoint so other txs can't spend through wallet auto-selection 
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent false \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\""));
@@ -87,7 +94,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 	// unlock now to test spending
 	BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent true \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\""));
 	// cannot spend as normal through sendrawtransaction
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":4.9999}]\"", true, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":" + strAmount + "}]\"", true, false));
 
 	string rawTx = r.get_str();
 	rawTx.erase(std::remove(rawTx.begin(), rawTx.end(), '\n'), rawTx.end());
@@ -96,8 +103,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
 	BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
-	BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false), runtime_error);
-
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false), runtime_error);
+	printf("sendraw %s\n", r.write().c_str());
 	string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
 	balance = find_value(r.get_obj(), "balance");
