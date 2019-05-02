@@ -12,6 +12,7 @@
 #include <iterator>
 #include <key.h>
 #include <rpc/util.h>
+#include <core_io.h>
 using namespace std;
 BOOST_GLOBAL_FIXTURE( SyscoinTestingSetup );
 BOOST_FIXTURE_TEST_SUITE(syscoin_asset_allocation_tests, BasicSyscoinTestingSetup)
