@@ -6,9 +6,7 @@
 #include <validation.h>
 #include <txmempool.h>
 #include <core_io.h>
-#ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
-#endif // ENABLE_WALLET
 #include <wallet/rpcwallet.h>
 #include <chainparams.h>
 #include <boost/lexical_cast.hpp>
@@ -18,6 +16,7 @@
 #include <future>
 #include <rpc/util.h>
 #include <services/assetconsensus.h>
+#include <validationinterface.h>
 CCriticalSection cs_assetallocation;
 CCriticalSection cs_assetallocationarrival;
 // SYSCOIN service rpc functions
