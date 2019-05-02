@@ -43,7 +43,9 @@ UniValue mnsync(const JSONRPCRequest& request)
                 {
                     {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to issue (status|next|reset)"}
                 },
-                RPCResult{""},
+                RPCResult{
+                "\"result\"           (string) Result"
+                },
                 RPCExamples{
                     HelpExampleCli("mnsync", "status")
                     + HelpExampleRpc("mnsync", "status")
