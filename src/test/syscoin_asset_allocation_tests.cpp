@@ -97,8 +97,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
     string res = r.get_str();
     res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
-	printf("%s\n", r.write().c_str());
-    BOOST_CHECK(r.write().empty());
+    BOOST_CHECK(res.empty());
     string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
 	balance = find_value(r.get_obj(), "balance");
