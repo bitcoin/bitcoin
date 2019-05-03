@@ -80,6 +80,9 @@ class TestNode():
         # For those callers that need more flexibility, they can just set the args property directly.
         # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
+        # Configuration for logging is set as command-line args rather than in the bitcoin.conf file.
+        # This means that starting a bitcoind using the temp dir to debug a failed test won't
+        # spam debug.log.
         self.args = [
             self.binary,
             "-datadir=" + self.datadir,
