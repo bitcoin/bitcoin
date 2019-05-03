@@ -759,8 +759,6 @@ static void CleanupBlockRevFiles()
 static void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-	// SYSCOIN
-	fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
     util::ThreadRename("loadblk");
     ScheduleBatchPriority();
 
@@ -1343,6 +1341,8 @@ bool AppInitLockDataDirectory()
 bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
+    // SYSCOIN
+	fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
@@ -1889,7 +1889,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         }
         block_notify_genesis_wait_connection.disconnect();
     }
-    // SYSCOIN
+	// SYSCOIN
     fUnitTest = gArgs.GetBoolArg("-unittest", false);
     // if unit test then make sure geth is shown as synced as well
     fGethSynced = fUnitTest;
