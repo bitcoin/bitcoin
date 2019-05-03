@@ -1946,6 +1946,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             result += buffer.data();
         }
         int resultInt = 0;
+        result.erase(std::remove(result.begin(), result.end(), '\n'), result.end());
         if(!result.empty() && !ParseInt32(result, &resultInt))
             return InitError("Could not parse result from pidof");
 
