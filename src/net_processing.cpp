@@ -345,7 +345,8 @@ struct CNodeState {
         /* Track when to attempt download of announced transactions (process
          * time in micros -> txid)
          */
-        std::multimap<int64_t, uint256> m_tx_process_time;
+        // SYSCOIN
+        std::multimap<int64_t, CInv> m_tx_process_time;
 
         //! Store all the transactions a peer has recently announced
         std::set<uint256> m_tx_announced;
@@ -697,18 +698,19 @@ void UpdateTxRequestTime(const uint256& txid, int64_t request_time) EXCLUSIVE_LO
         g_already_asked_for.update(it, request_time);
     }
 }
-void RequestTx(CNodeState* state, const uint256& txid, int64_t nNow) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+// SYSCOIN
+void RequestTx(CNodeState* state, const CInv& inv, int64_t nNow) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     CNodeState::TxDownloadState& peer_download_state = state->m_tx_download;
-    if (peer_download_state.m_tx_announced.size() >= MAX_PEER_TX_ANNOUNCEMENTS || peer_download_state.m_tx_announced.count(txid)) {
+    if (peer_download_state.m_tx_announced.size() >= MAX_PEER_TX_ANNOUNCEMENTS || peer_download_state.m_tx_announced.count(inv.hash)) {
         // Too many queued announcements from this peer, or we already have
         // this announcement
         return;
     }
-    peer_download_state.m_tx_announced.insert(txid);
+    peer_download_state.m_tx_announced.insert(inv.hash);
 
     int64_t process_time;
-    int64_t last_request_time = GetTxRequestTime(txid);
+    int64_t last_request_time = GetTxRequestTime(inv.hash);
     // First time requesting this tx
     if (last_request_time == 0) {
         process_time = nNow;
@@ -721,7 +723,7 @@ void RequestTx(CNodeState* state, const uint256& txid, int64_t nNow) EXCLUSIVE_L
     // We delay processing announcements from non-preferred (eg inbound) peers
     if (!state->fPreferredDownload) process_time += INBOUND_PEER_TX_DELAY;
 
-    peer_download_state.m_tx_process_time.emplace(process_time, txid);
+    peer_download_state.m_tx_process_time.emplace(process_time, inv);
 }  
 } // namespace
 /// SYSCOIN
@@ -738,7 +740,7 @@ bool IsAnnouncementAllowed(const CNode* pfrom, const int requestedAnnouncements,
 }
 void RequestInv(const CNode* pfrom, const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    RequestTx(State(pfrom->GetId()), inv.hash, GetTimeMicros());
+    RequestTx(State(pfrom->GetId()), inv, GetTimeMicros());
 } 
 // This function is used for testing the stale tip eviction logic, see
 // denialofservice_tests.cpp
@@ -2337,7 +2339,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 if (fBlocksOnly) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->GetId());
                 } else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload()) {
-                    RequestTx(State(pfrom->GetId()), inv.hash, nNow);
+                    // SYSCOIN
+                    RequestTx(State(pfrom->GetId()), inv, nNow);
                 }
             }
         }
@@ -2638,7 +2641,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 for (const CTxIn& txin : tx.vin) {
                     CInv _inv(MSG_TX | nFetchFlags, txin.prevout.hash);
                     pfrom->AddInventoryKnown(_inv);
-                    if (!AlreadyHave(_inv)) RequestTx(State(pfrom->GetId()), _inv.hash, nNow);
+                    // SYSCOIN
+                    if (!AlreadyHave(_inv)) RequestTx(State(pfrom->GetId()), _inv, nNow);
                 }
                 AddOrphanTx(ptx, pfrom->GetId());
 
@@ -4123,8 +4127,9 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         //
         auto& tx_process_time = state.m_tx_download.m_tx_process_time;
         while (!tx_process_time.empty() && tx_process_time.begin()->first <= nNow && state.m_tx_download.m_tx_in_flight.size() < MAX_PEER_TX_IN_FLIGHT) {
-            const uint256& txid = tx_process_time.begin()->second;
-            CInv inv(MSG_TX | GetFetchFlags(pto), txid);
+            // SYSCOIN
+            const CInv& inv = tx_process_time.begin()->second;
+            //CInv inv(MSG_TX | GetFetchFlags(pto), txid);
             if (!AlreadyHave(inv)) {
                 // If this transaction was last requested more than 1 minute ago,
                 // then request.
@@ -4143,7 +4148,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     // up processing to happen after the download times out
                     // (with a slight delay for inbound peers, to prefer
                     // requests to outbound peers).
-                    RequestTx(&state, txid, nNow);
+                    // SYSCOIN
+                    RequestTx(&state, inv, nNow);
                 }
             } else {
                 // We have already seen this transaction, no need to download.
