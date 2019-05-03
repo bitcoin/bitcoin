@@ -97,7 +97,7 @@ public:
     {
         LogPrintf("minting updateWallet %s %i\n", hash.ToString(), status);
         {
-            LOCK(wallet->cs_wallet);
+            LOCK2(cs_main, wallet->cs_wallet);
 
             // Find transaction in wallet
             std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
@@ -234,6 +234,31 @@ public:
 
 };
 
+struct TransactionNotification
+{
+public:
+    TransactionNotification() {}
+    TransactionNotification(uint256 _hash, ChangeType _status):
+        hash(_hash), status(_status) {}
+
+    void invoke(QObject *ttm)
+    {
+        QString strHash = QString::fromStdString(hash.GetHex());
+        QMetaObject::invokeMethod(ttm, "updateTransaction", Qt::QueuedConnection,
+                                  Q_ARG(QString, strHash),
+                                  Q_ARG(int, status));
+    }
+private:
+    uint256 hash;
+    ChangeType status;
+};
+
+static void NotifyTransactionChanged(MintingTableModel *ttm, CWallet *wallet, const uint256 &hash, ChangeType status)
+{
+    TransactionNotification notification(hash, status);
+    notification.invoke(ttm);
+}
+
 MintingTableModel::MintingTableModel(CWallet* wallet, WalletModel *parent) :
         QAbstractTableModel(parent),
         wallet(wallet),
@@ -251,10 +276,12 @@ MintingTableModel::MintingTableModel(CWallet* wallet, WalletModel *parent) :
     timer->start(MODEL_UPDATE_DELAY);
 
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+    wallet->NotifyTransactionChanged.connect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
 }
 
 MintingTableModel::~MintingTableModel()
 {
+    wallet->NotifyTransactionChanged.disconnect(boost::bind(NotifyTransactionChanged, this, _1, _2, _3));
     delete priv;
 }
 
