@@ -139,10 +139,10 @@ NODISCARD static bool CreatePidFile()
             if(pidFile && pidFile != getpid()){
                 try{
                     KillProcess(pidFile);
-                    LogPrintf("%s: Geth successfully exited from pid %d(from geth.pid)\n", __func__, pidFile);
+                    LogPrintf("%s: Syscoind successfully exited from pid %d(from syscoind.pid)\n", __func__, pidFile);
                 }
                 catch(...){
-                    LogPrintf("%s: Geth failed to exit from pid %d(from geth.pid)\n", __func__, pidFile);
+                    LogPrintf("%s: Syscoind failed to exit from pid %d(from syscoind.pid)\n", __func__, pidFile);
                 }
             } 
         } 
@@ -1946,7 +1946,7 @@ bool AppInitMain(InitInterfaces& interfaces)
             result += buffer.data();
         }
         int resultInt = 0;
-        if(!ParseInt32(result, &resultInt))
+        if(!result.empty() && !ParseInt32(result, &resultInt))
             return InitError("Could not parse result from pidof");
 
         if(resultInt != 1)   
