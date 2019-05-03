@@ -66,13 +66,19 @@ if os.name != 'nt' or sys.getwindowsversion() >= (10, 0, 14393):
 TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
+EXTENDED_SCRIPTS = [
+    # These tests are not run by default.
+    # Longest test should go first, to favor running tests in parallel
+    'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
+    'feature_dbcrash.py',
+]
+
 BASE_SCRIPTS = [
     # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_dip3_deterministicmns.py', # NOTE: needs dash_hash to pass
     'feature_block_reward_reallocation.py',
     'feature_llmq_data_recovery.py',
-    'feature_pruning.py', # NOTE: Prune mode is incompatible with -txindex, should work with governance validation disabled though.
     'feature_fee_estimation.py',
     'wallet_hd.py',
     'wallet_backup.py',
@@ -226,12 +232,6 @@ BASE_SCRIPTS = [
     'feature_help.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
-]
-
-EXTENDED_SCRIPTS = [
-    # These tests are not run by default.
-    # Longest test should go first, to favor running tests in parallel
-    'feature_dbcrash.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
