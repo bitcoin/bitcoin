@@ -1249,40 +1249,35 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
 //
 bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
 {
-    // SYSCOIN
-    const uint256& blockHash = block.GetHash();
-    const bool& isGenesis = blockHash == params.hashGenesisBlock;
-    /* Ensure that the chain ID is correct. */
-    if (!isGenesis && params.fStrictChainId
+    /* Except for legacy blocks with full version 1, ensure that
+       the chain ID is correct.  Legacy blocks are not allowed since
+       the merge-mining start, which is checked in AcceptBlockHeader
+       where the height is known.  */
+    if (!block.IsLegacy() && params.fStrictChainId
         && block.GetChainId() != params.nAuxpowChainId)
         return error("%s : block does not have our chain ID"
                      " (got %d, expected %d, full nVersion %d)",
                      __func__, block.GetChainId(),
                      params.nAuxpowChainId, block.nVersion);
 
-    /* If there is no auxpow, error.  */
+    /* If there is no auxpow, just check the block hash.  */
     if (!block.auxpow)
     {
-        if(Params().NetworkIDString() != CBaseChainParams::MAIN)
-        {
-            if (block.IsAuxpow())
-                return error("%s : no auxpow on block with auxpow version", 
-                             __func__);
-            if (!CheckProofOfWork(blockHash, block.nBits, params))
-                return error("%s : non-AUX proof of work failed", __func__);
-                
-            return true;
-        }
-        if(isGenesis)
-            return true;
-        return error("%s : block does not have auxpow information", __func__);
+        if (block.IsAuxpow())
+            return error("%s : no auxpow on block with auxpow version",
+                         __func__);
+
+        if (!CheckProofOfWork(block.GetHash(), block.nBits, params))
+            return error("%s : non-AUX proof of work failed", __func__);
+
+        return true;
     }
 
     /* We have auxpow.  Check it.  */
     if (!block.IsAuxpow())
         return error("%s : auxpow on block with non-auxpow version", __func__);
 
-    if (!block.auxpow->check(blockHash, block.GetChainId(), params))
+    if (!block.auxpow->check(block.GetHash(), block.GetChainId(), params))
         return error("%s : AUX POW is not valid", __func__);
     if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits, params))
         return error("%s : AUX proof of work failed", __func__);
