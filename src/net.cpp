@@ -1022,6 +1022,8 @@ void CConnman::DisconnectNodes()
 
                 // release outbound grant (if any)
                 pnode->grantOutbound.Release();
+                // SYSCOIN
+                pnode->grantMasternodeOutbound.Release();
 
                 // close socket and cleanup
                 pnode->CloseSocketDisconnect();
@@ -2436,6 +2438,8 @@ void CConnman::Stop()
     vhListenSocket.clear();
     semOutbound.reset();
     semAddnode.reset();
+    // SYSCOIN
+    semMasternodeOutbound.reset();
 }
 
 void CConnman::DeleteNode(CNode* pnode)
