@@ -82,26 +82,28 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 
 	LockAssetAllocation("node1", guid, newaddress, txid, voutstr);
 
-	// unlock now to test spending
-	BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent true \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\""));
-	// cannot spend as normal through sendrawtransaction
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":" + strAmount + "}]\"", true, false));
+    // unlock now to test spending
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "lockunspent true \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\""));
+    // cannot spend as normal through sendrawtransaction
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "createrawtransaction \"[{\\\"txid\\\":\\\"" + txid + "\\\",\\\"vout\\\":" + voutstr + "}]\" \"[{\\\"" + newaddress1 + "\\\":" + strAmount + "}]\"", true, false));
 
-	string rawTx = r.get_str();
-	rawTx.erase(std::remove(rawTx.begin(), rawTx.end(), '\n'), rawTx.end());
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + rawTx));
+    string rawTx = r.get_str();
+    rawTx.erase(std::remove(rawTx.begin(), rawTx.end(), '\n'), rawTx.end());
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + rawTx));
 
-	string hex_str = find_value(r.get_obj(), "hex").get_str();
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
-	BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
+    string hex_str = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
+    BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
+    string res = r.get_str();
+    res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
 	printf("%s\n", r.write().c_str());
-	BOOST_CHECK(r.write().empty());
-	string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
+    BOOST_CHECK(r.write().empty());
+    string txid0 = AssetAllocationTransfer(false, "node1", guid, newaddress, "\"[{\\\"address\\\":\\\"" + newaddress1 + "\\\",\\\"amount\\\":0.11}]\"");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + guid + " " + newaddress1));
 	balance = find_value(r.get_obj(), "balance");
-	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid0 + " true"));
+    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), 0.11 * COIN);
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getrawtransaction " + txid0 + " true"));
 	UniValue vinArray = find_value(r.get_obj(), "vin");
 	bool found = false;
 	for (unsigned int i = 0; i<vinArray.size(); i++) {
