@@ -92,15 +92,15 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
-        consensus.nSubsidyHalvingInterval = 60*24*7; // should be 525600
+        consensus.nSubsidyHalvingInterval = 525600; 
         // 35% increase after 1 year, 100% increase after 2.5 years
-        consensus.nSeniorityHeight1 = 6000; // should be 525600
+        consensus.nSeniorityHeight1 = 525600; 
         consensus.nSeniorityLevel1 = 0.35;
-        consensus.nSeniorityHeight2 = 12000; // should be 525600*2.5
+        consensus.nSeniorityHeight2 = 525600 * 2.5; 
         consensus.nSeniorityLevel2 = 1.0;        
         consensus.nSuperblockStartBlock = 1;
-        consensus.nSuperblockCycle = 60;  // should be 43800
-        consensus.nGovernanceMinQuorum = 1; // should be 10
+        consensus.nSuperblockCycle = 43800;
+        consensus.nGovernanceMinQuorum = 10; 
         consensus.nGovernanceFilterElements = 20000;
         consensus.nMasternodeMinimumConfirmations = 15;
         
