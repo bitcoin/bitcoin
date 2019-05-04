@@ -418,8 +418,7 @@ BOOST_FIXTURE_TEST_CASE (auxpow_pow, BasicTestingSetup)
 
   block.nVersion = 1;
   mineBlock (block, true);
-  // SYSCOIN AUXPOW ENFORCED
-  BOOST_CHECK (!CheckProofOfWork (block, params));
+  BOOST_CHECK (CheckProofOfWork (block, params));
 
   block.nVersion = 2;
   mineBlock (block, true);
