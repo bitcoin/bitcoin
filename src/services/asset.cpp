@@ -2165,9 +2165,9 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                     {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
                 },
                 RPCResult{
-                    "{\n"
+                    "[{\n"
                     "    \"asset_guid\""
-                    "}\n"
+                    "}]\n"
                 },
                 RPCExamples{
                     HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
@@ -2186,8 +2186,8 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
  
     UniValue oRes(UniValue::VARR);
     std::vector<uint32_t> assetGuids;
-    if (!passetindexdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids))
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Lookup failed"));
+    passetindexdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids);
+    
         
     for(const uint32_t& guid: assetGuids){
         UniValue oObj(UniValue::VOBJ);
