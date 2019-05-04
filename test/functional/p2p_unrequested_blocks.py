@@ -301,6 +301,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         block_293.solve()
         headers_message = msg_headers()
         headers_message.headers.append(CBlockHeader(block_293))
+        assert_raises_rpc_error(-25, 'bad-prevblk-desc', lambda: self.nodes[0].submitheader(CBlockHeader(block_293).serialize().hex()))
         test_node.send_message(headers_message)
         test_node.wait_for_disconnect()
 
