@@ -1437,11 +1437,13 @@ UniValue assetsend(const JSONRPCRequest& request) {
                 }
 
             }.ToString());
-
+    CAmount nAmount = AmountFromValue(request.params[2]);
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.pushKV("address", params[1].get_str());
-    outputObj.pushKV("amount", params[2].get_str());
+    outputObj.pushKV("amount", ValueFromAmount(nAmount));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0].get_int());
