@@ -2170,8 +2170,8 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                     "}]\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-                    + HelpExampleRpc("listassetindex", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+                    HelpExampleCli("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+                    + HelpExampleRpc("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
                 }
             }.ToString());
     if(!fAssetIndex){
