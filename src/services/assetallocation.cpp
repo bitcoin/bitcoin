@@ -527,10 +527,13 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
                     + HelpExampleRpc("assetallocationsend", "\"assetguid\", \"addressfrom\", \"addressto\", \"amount\"")
                 }
             }.ToString());
+    CAmount nAmount = AmountFromValue(params[3]);
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.pushKV("address", params[2].get_str());
-    outputObj.pushKV("amount", params[3].get_str());
+    outputObj.pushKV("amount", ValueFromAmount(nAmount));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0].get_int());
