@@ -1751,14 +1751,48 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 	int write = 0;
 	int erase = 0;
     CDBBatch batch(*this);
+    std::map<CWitnessAddress, std::vector<uint32_t> > mapGuids;
+    if(fAssetIndex){
+        for (const auto &key : mapAssets) {
+            auto it = mapGuids.find(key.second.witnessAddress);
+            auto &assetGuids = it->second;
+            if(assetGuids.empty())
+                ReadAssetsByAddress(key.second.witnessAddress, assetGuids);
+            // erase asset address association
+            if (key.second.IsNull()) {
+                auto it = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
+                if(it != assetGuids.end())
+                    assetGuids.erase(it);                   
+            }
+            else{
+                // add asset address association
+                auto it = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
+                if(it == assetGuids.end())
+                    assetGuids.emplace_back(key.first);         
+            }      
+        }
+    }
     for (const auto &key : mapAssets) {
 		if (key.second.IsNull()) {
 			erase++;
 			batch.Erase(key.first);
+            if(fAssetIndex){
+                auto it = mapGuids.find(key.second.witnessAddress);
+                const std::vector<uint32_t>& assetGuids = it->second;
+                if(assetGuids.empty())
+                    batch.Erase(key.second.witnessAddress);   
+                else
+                    batch.Write(key.second.witnessAddress, assetGuids);         
+            }
 		}
 		else {
 			write++;
 			batch.Write(key.first, key.second);
+            if(fAssetIndex){
+                auto it = mapGuids.find(key.second.witnessAddress);
+                const std::vector<uint32_t>& assetGuids = it->second;
+                batch.Write(key.second.witnessAddress, assetGuids);         
+            }
 		}
     }
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
@@ -2168,7 +2202,16 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                 },
                 RPCResult{
                     "[{\n"
-                    "    \"asset_guid\""
+                    "  \"_id\":          (numeric) The asset guid\n"
+                    "  \"txid\":         (string) The transaction id that created this asset\n"
+                    "  \"publicvalue\":  (string) The public value attached to this asset\n"
+                    "  \"address\":      (string) The address that controls this address\n"
+                    "  \"contract\":     (string) The ethereum contract address\n"
+                    "  \"balance\":      (numeric) The current balance\n"
+                    "  \"total_supply\": (numeric) The total supply of this asset\n"
+                    "  \"max_supply\":   (numeric) The maximum supply of this asset\n"
+                    "  \"update_flag\":  (numeric) The flag in decimal \n"
+                    "  \"precision\":    (numeric) The precision of this asset \n"   
                     "}]\n"
                 },
                 RPCExamples{
@@ -2177,7 +2220,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                 }
             }.ToString());
     if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must start syscoin with -assetindex enabled"));
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
     }       
     const CTxDestination &dest = DecodeDestination(params[0].get_str());
     UniValue detail = DescribeAddress(dest);
@@ -2188,21 +2231,17 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
  
     UniValue oRes(UniValue::VARR);
     std::vector<uint32_t> assetGuids;
-    passetindexdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids);
+    const CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
+    passetdb->ReadAssetsByAddress(witnessAddress, assetGuids);
     
-    CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
     for(const uint32_t& guid: assetGuids){
-        UniValue oAssetAllocation(UniValue::VOBJ);
-        const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
-        CAssetAllocation txPos;
-        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-            continue;
+        UniValue oAsset(UniValue::VOBJ);
         CAsset theAsset;
         if (!GetAsset(guid, theAsset))
            continue;
-
-        if(BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation)){
-            oRes.push_back(oAssetAllocation);
+        // equality: catch case where asset is transferred
+        if(theAsset.witnessAddress == witnessAddress && BuildAssetJson(theAsset, oAsset)){
+            oRes.push_back(oAsset);
         }
     }
     return oRes;
