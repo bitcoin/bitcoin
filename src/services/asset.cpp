@@ -1751,24 +1751,34 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 	int write = 0;
 	int erase = 0;
     CDBBatch batch(*this);
-    std::map<CWitnessAddress, std::vector<uint32_t> > mapGuids;
+    std::map<std::string, std::vector<uint32_t> > mapGuids;
+    std::vector<uint32_t> emptyVec;
     if(fAssetIndex){
         for (const auto &key : mapAssets) {
-            auto it = mapGuids.find(key.second.witnessAddress);
-            auto &assetGuids = it->second;
-            if(assetGuids.empty())
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
+            std::vector<uint32_t> &assetGuids = it.first->second;
+            // if wasn't found and was added to the map
+            if(it.second)
                 ReadAssetsByAddress(key.second.witnessAddress, assetGuids);
             // erase asset address association
             if (key.second.IsNull()) {
-                auto it = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
-                if(it != assetGuids.end())
-                    assetGuids.erase(it);                   
+                auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
+                if(itVec != assetGuids.end()){
+                    assetGuids.erase(itVec);  
+                    // ensure we erase only the ones that are actually being cleared
+                    if(assetGuids.empty())
+                        assetGuids.emplace_back(0);
+                }
             }
             else{
                 // add asset address association
-                auto it = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
-                if(it == assetGuids.end())
-                    assetGuids.emplace_back(key.first);         
+                auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
+                if(itVec == assetGuids.end()){
+                    // if we had the sepcial erase flag we remove that and add the real guid
+                    if(assetGuids.size() == 1 && assetGuids[0] == 0)
+                        assetGuids.clear();
+                    assetGuids.emplace_back(key.first);
+                }
             }      
         }
     }
@@ -1776,24 +1786,24 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 		if (key.second.IsNull()) {
 			erase++;
 			batch.Erase(key.first);
-            if(fAssetIndex){
-                auto it = mapGuids.find(key.second.witnessAddress);
-                const std::vector<uint32_t>& assetGuids = it->second;
-                if(assetGuids.empty())
-                    batch.Erase(key.second.witnessAddress);   
-                else
-                    batch.Write(key.second.witnessAddress, assetGuids);         
-            }
 		}
 		else {
 			write++;
 			batch.Write(key.first, key.second);
-            if(fAssetIndex){
-                auto it = mapGuids.find(key.second.witnessAddress);
-                const std::vector<uint32_t>& assetGuids = it->second;
-                batch.Write(key.second.witnessAddress, assetGuids);         
-            }
 		}
+        if(fAssetIndex){
+            auto it = mapGuids.find(key.second.witnessAddress.ToString());
+            if(it == mapGuids.end())
+                continue;
+            const std::vector<uint32_t>& assetGuids = it->second;
+            // check for special clearing flag before batch erase
+            if(assetGuids.size() == 1 && assetGuids[0] == 0)
+                batch.Erase(key.second.witnessAddress);   
+            else
+                batch.Write(key.second.witnessAddress, assetGuids); 
+            // we have processed this address so don't process again
+            mapGuids.erase(it);        
+        }
     }
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
     return WriteBatch(batch);
@@ -1832,13 +1842,18 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 	boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 	pcursor->SeekToFirst();
 	CAsset txPos;
-	uint32_t key;
+	uint32_t key = 0;
 	int index = 0;
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
-			if (pcursor->GetKey(key) && (nAsset == 0 || nAsset != key)) {
+            key = 0;
+			if (pcursor->GetKey(key) && key != 0 && (nAsset == 0 || nAsset != key)) {
 				pcursor->GetValue(txPos);
+                if(txPos.IsNull()){
+                    pcursor->Next();
+                    continue;
+                }
 				if (!strTxid.empty() && strTxid != txPos.txHash.GetHex())
 				{
 					pcursor->Next();

@@ -1288,24 +1288,34 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
     CDBBatch batch(*this);
 	int write = 0;
 	int erase = 0;
-    std::map<CWitnessAddress, std::vector<uint32_t> > mapGuids;
+    std::map<std::string, std::vector<uint32_t> > mapGuids;
+    std::vector<uint32_t> emptyVec;
     if(fAssetIndex){
         for (const auto &key : mapAssetAllocations) {
-            auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress);
-            auto &assetGuids = it->second;
-            if(assetGuids.empty())
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.assetAllocationTuple.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
+            std::vector<uint32_t> &assetGuids = it.first->second;
+            // if wasn't found and was added to the map
+            if(it.second)
                 ReadAssetsByAddress(key.second.assetAllocationTuple.witnessAddress, assetGuids);
             // erase asset address association
             if(key.second.nBalance <= 0){
                 auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.second.assetAllocationTuple.nAsset);
-                if(itVec != assetGuids.end())
-                    assetGuids.erase(itVec);                   
+                if(itVec != assetGuids.end()){
+                    assetGuids.erase(itVec);  
+                    // ensure we erase only the ones that are actually being cleared
+                    if(assetGuids.empty())
+                        assetGuids.emplace_back(0);
+                }
             }
             else{
                 // add asset address association
                 auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.second.assetAllocationTuple.nAsset);
-                if(itVec == assetGuids.end())
-                    assetGuids.emplace_back(key.second.assetAllocationTuple.nAsset);         
+                if(itVec == assetGuids.end()){
+                    // if we had the sepcial erase flag we remove that and add the real guid
+                    if(assetGuids.size() == 1 && assetGuids[0] == 0)
+                        assetGuids.clear();
+                    assetGuids.emplace_back(key.second.assetAllocationTuple.nAsset);
+                }
             }      
         }
     }
@@ -1313,25 +1323,23 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
         if(key.second.nBalance <= 0){
 			erase++;
             batch.Erase(key.second.assetAllocationTuple);
-            // erase asset address association
-            if(fAssetIndex){
-                auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress);
-                const std::vector<uint32_t>& assetGuids = it->second;
-                if(assetGuids.empty())
-                    batch.Erase(key.second.assetAllocationTuple.witnessAddress);   
-                else
-                    batch.Write(key.second.assetAllocationTuple.witnessAddress, assetGuids);         
-            }
         }
         else{
 			write++;
             batch.Write(key.second.assetAllocationTuple, key.second);
-            // add asset address association
-            if(fAssetIndex){
-                auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress);
-                const std::vector<uint32_t>& assetGuids = it->second;
-                batch.Write(key.second.assetAllocationTuple.witnessAddress, assetGuids);         
-            }
+        }
+        if(fAssetIndex){
+            auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress.ToString());
+            if(it == mapGuids.end())
+                continue;
+            const std::vector<uint32_t>& assetGuids = it->second;
+            // check for special clearing flag before batch erase
+            if(assetGuids.size() == 1 && assetGuids[0] == 0)
+                batch.Erase(key.second.assetAllocationTuple.witnessAddress);   
+            else
+                batch.Write(key.second.assetAllocationTuple.witnessAddress, assetGuids); 
+            // we have processed this address so don't process again
+            mapGuids.erase(it);        
         }
     }
 	LogPrint(BCLog::SYS, "Flushing %d assets allocations (erased %d, written %d)\n", mapAssetAllocations.size(), erase, write);
@@ -1375,8 +1383,13 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	while (pcursor->Valid()) {
 		boost::this_thread::interruption_point();
 		try {
-			if (pcursor->GetKey(key) && (nAsset == 0 || nAsset == key.nAsset)) {
-				pcursor->GetValue(txPos);              
+            key.SetNull();
+			if (pcursor->GetKey(key) && !key.IsNull() && (nAsset == 0 || nAsset == key.nAsset)) {
+				pcursor->GetValue(txPos); 
+                if(txPos.assetAllocationTuple.IsNull()){
+                    pcursor->Next();
+                    continue;
+                }      
 				if (!vecWitnessAddresses.empty() && std::find(vecWitnessAddresses.begin(), vecWitnessAddresses.end(), txPos.assetAllocationTuple.witnessAddress) == vecWitnessAddresses.end())
 				{
 					pcursor->Next();
