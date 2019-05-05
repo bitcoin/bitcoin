@@ -4305,6 +4305,7 @@ UniValue listassetallocations(const JSONRPCRequest& request);
 UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request);
 UniValue listassetindex(const JSONRPCRequest& request);
 UniValue listassetindexassets(const JSONRPCRequest& request);
+UniValue listassetindexallocations(const JSONRPCRequest& request);
 UniValue getblockhashbytxid(const JSONRPCRequest& request);
 UniValue syscoingetspvproof(const JSONRPCRequest& request);
 
@@ -4409,6 +4410,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
     { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },
     { "syscoin",            "listassetindexassets",             &listassetindexassets,          {"address"} },
+    { "syscoin",            "listassetindexallocations",        &listassetindexallocations,     {"address"} },
     { "syscoin",            "tpstestinfo",                      &tpstestinfo,                   {} },
     { "syscoin",            "tpstestadd",                       &tpstestadd,                    {"starttime","rawtxs"} },
     { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },

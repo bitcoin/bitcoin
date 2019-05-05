@@ -143,6 +143,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     printf("sending assets with assetsend...\n");
     // PHASE 5:  SEND ASSETS TO NEW ALLOCATIONS
     for(int i =0;i<numAssets;i++){
+        BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
+        UniValue indexArray = r.get_array();
+        BOOST_CHECK_EQUAL(indexArray.size(), 1);
+        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_int();
+        uint32_t nAssetStored;
+        ParseUInt32(vecAssets[i], &nAssetStored);
+        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetsendmany " + vecAssets[i] + " \"[{\\\"address\\\":\\\"" + vecFundedAddresses[i] + "\\\",\\\"amount\\\":250}]\" ''"));
         UniValue arr = r.get_array();
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + arr[0].get_str()));
@@ -180,6 +187,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         string hex_str = find_value(r.get_obj(), "hex").get_str();
         rawSignedAssetAllocationSends.push_back(hex_str);
     }
+
     BOOST_CHECK(assetAllocationSendMany.empty());
 
     // PHASE 7:  DISTRIBUTE LOAD AMONG SENDERS
@@ -288,9 +296,36 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     const int64_t &startblock = GetTimeMicros();
     printf("creating %d blocks\n", (numAssets/(93*4)) + 2);
     GenerateBlocks((numAssets/(93*4)) + 2, receivers[0]);
+
     const int64_t &endblock = GetTimeMicros();
     printf("elapsed time in block creation: %lld\n", endblock-startblock);
     printf("elapsed time in seconds: %lld\n", end-start);
+    printf("checking indexes...\n");
+    unfoundedAccountIndex = 0;
+    for(int i =0;i<numAssets;i++){
+        uint32_t nAssetStored;
+        ParseUInt32(vecAssets[i], &nAssetStored);
+        // send asset to numberOfAssetSendsPerBlock addresses
+        string assetAllocationSendMany = "";
+        // +1 to account for change output
+        for (int j = 0; j < numberOfAssetSendsPerBlock; j++) {
+            if(assetAllocationSendMany != "")
+                assetAllocationSendMany += ",";
+            assetAllocationSendMany += "{\\\"address\\\":\\\"" + unfundedAccounts[unfoundedAccountIndex++] + "\\\",\\\"amount\\\":1}";
+            BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexallocations " + unfundedAccounts[unfoundedAccountIndex-1]));
+            UniValue indexArray = r.get_array();
+            BOOST_CHECK_EQUAL(indexArray.size(), 10);       
+            if(unfoundedAccountIndex >= unfundedAccounts.size())
+                unfoundedAccountIndex = 0;
+
+        }
+
+        BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
+        UniValue indexArray = r.get_array();
+        BOOST_CHECK_EQUAL(indexArray.size(), 1);
+        uint32_t nAsset = find_value(indexArray[0].get_obj(), "asset_guid").get_int();
+        BOOST_CHECK_EQUAL(nAsset, nAssetStored);
+    }
 }
 BOOST_AUTO_TEST_CASE(generate_syscoinmint)
 {
