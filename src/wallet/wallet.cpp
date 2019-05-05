@@ -841,6 +841,23 @@ void CWallet::AddToSpends(const uint256& wtxid)
         AddToSpends(txin.prevout, wtxid);
 }
 
+void CWallet::AddToAddressBloomFilter(const CWalletTx& wtx)
+{
+    for (const auto& output : wtx.tx->vout) {
+        m_address_bloom_filter.insert(ToByteVector(output.scriptPubKey));
+    }
+}
+
+void CWallet::BuildAddressBloomFilter()
+{
+    m_address_bloom_filter_elems = std::max<size_t>(100, mapWallet.size() * 2);
+    m_address_bloom_filter = CBloomFilter(m_address_bloom_filter_elems, 0.000001, 0, BLOOM_UPDATE_ALL);
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        AddToAddressBloomFilter(wtx);
+    }
+}
+
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 {
     if (IsCrypted())
@@ -1102,6 +1119,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         wtx.m_it_wtxOrdered = wtxOrdered.insert(std::make_pair(wtx.nOrderPos, &wtx));
         wtx.nTimeSmart = ComputeTimeSmart(wtx);
         AddToSpends(hash);
+        AddToAddressBloomFilter(wtx);
     }
 
     bool fUpdated = false;
@@ -3357,6 +3375,8 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
 
     if (nLoadWalletRet != DBErrors::LOAD_OK)
         return nLoadWalletRet;
+
+    BuildAddressBloomFilter();
 
     return DBErrors::LOAD_OK;
 }
