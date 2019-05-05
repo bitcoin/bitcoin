@@ -2190,11 +2190,20 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
     std::vector<uint32_t> assetGuids;
     passetindexdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids);
     
-        
+    CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
     for(const uint32_t& guid: assetGuids){
-        UniValue oObj(UniValue::VOBJ);
-        oObj.pushKV("asset_guid", (int)guid);
-        oRes.push_back(oObj);
+        UniValue oAssetAllocation(UniValue::VOBJ);
+        const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
+        CAssetAllocation txPos;
+        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+            continue;
+        CAsset theAsset;
+        if (!GetAsset(guid, theAsset))
+           continue;
+
+        if(BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation)){
+            oRes.push_back(oAssetAllocation);
+        }
     }
     return oRes;
 }
