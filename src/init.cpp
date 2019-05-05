@@ -695,20 +695,6 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
         LoadGenesisBlock(chainparams);
     }
 
-    // hardcoded $DATADIR/bootstrap.dat
-    fs::path pathBootstrap = GetDataDir() / "bootstrap.dat";
-    if (fs::exists(pathBootstrap)) {
-        FILE *file = fsbridge::fopen(pathBootstrap, "rb");
-        if (file) {
-            fs::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
-            LogPrintf("Importing bootstrap.dat...\n");
-            LoadExternalBlockFile(chainparams, file);
-            RenameOver(pathBootstrap, pathBootstrapOld);
-        } else {
-            LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
-        }
-    }
-
     // -loadblock=
     for (const fs::path& path : vImportFiles) {
         FILE *file = fsbridge::fopen(path, "rb");
@@ -1728,12 +1714,20 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (gArgs.IsArgSet("-blocknotify"))
         uiInterface.NotifyBlockTip_connect(BlockNotifyCallback);
 
-    std::vector<fs::path> vImportFiles;
-    for (const std::string& strFile : gArgs.GetArgs("-loadblock")) {
-        vImportFiles.push_back(strFile);
-    }
+    if (gArgs.IsArgSet("-loadblock")) {
+        const std::vector<std::string> vLoadBlockArgs = gArgs.GetArgs("-loadblock");
 
-    threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+        // Regard the '-noloadblock' argument
+        if (!vLoadBlockArgs.empty()) {
+            std::vector<fs::path> vImportFiles;
+            for (const std::string& strFile : vLoadBlockArgs) {
+                vImportFiles.push_back(AbsPathForConfigVal(strFile));
+            }
+
+            // Spawn 'loadblk' thread to run ThreadImport()
+            threadGroup.create_thread(std::bind(&ThreadImport, vImportFiles));
+        }
+    }
 
     // Wait for genesis block to be processed
     {
