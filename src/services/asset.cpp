@@ -897,10 +897,9 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
             RPCResult{
             "{\n"
             "  \"txtype\" : \"txtype\",         (string) The syscoin transaction type\n"
-            "  \"_id\" : \"id\",                (string) The identifier\n"
             "  \"txid\" : \"id\",               (string) The transaction id\n"
             "  \"height\" : n,                (numeric) The blockheight of the transaction \n"
-            "  \"asset\" : n,                 (numeric) The asset guid\n"
+            "  \"asset_guid\" : n,                 (numeric) The asset guid\n"
             "  \"sender\" : \"address\",        (string) The address of the sender\n"
             "  \"allocations\" : [            (array of json objects)\n"
             "    {\n"
@@ -1567,7 +1566,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
                 },
                 RPCResult{
                     "{\n"
-                    "  \"_id\":          (numeric) The asset guid\n"
+                    "  \"asset_guid\":          (numeric) The asset guid\n"
                     "  \"txid\":         (string) The transaction id that created this asset\n"
                     "  \"publicvalue\":  (string) The public value attached to this asset\n"
                     "  \"address\":      (string) The address that controls this address\n"
@@ -1912,7 +1911,7 @@ UniValue listassets(const JSONRPCRequest& request) {
                  RPCResult{
                  "[\n"
                  "  {\n"
-                 "    \"_id\":          (numeric) The asset guid\n"
+                 "    \"asset_guid\":          (numeric) The asset guid\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
                  "    \"publicvalue\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
@@ -2168,7 +2167,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             RPCResult{
                  "[\n"
                  "  {\n"
-                 "    \"_id\":          (numeric) The asset guid\n"
+                 "    \"asset_guid\":          (numeric) The asset guid\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
                  "    \"publicvalue\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
@@ -2217,7 +2216,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                 },
                 RPCResult{
                     "[{\n"
-                    "  \"_id\":          (numeric) The asset guid\n"
+                    "  \"asset_guid\":          (numeric) The asset guid\n"
                     "  \"txid\":         (string) The transaction id that created this asset\n"
                     "  \"publicvalue\":  (string) The public value attached to this asset\n"
                     "  \"address\":      (string) The address that controls this address\n"

@@ -829,11 +829,12 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                 },
                 RPCResult{
                     "{\n"
-                    "  \"_id\":           (string) The unique id of this allocation\n"
-                    "  \"asset_guid\":    (string) The guid of the asset\n"
-                    "  \"address\":       (string) The address of the owner of this allocation\n"
-                    "  \"balance\":       (numeric) The current balance\n"
-                    "  \"balance_zdag\":  (numeric) The zdag balance\n"
+                 "    \"asset_allocation\":   (string) The unique key for this allocation\n"
+                 "    \"asset_guid\":         (string) The guid of the asset\n"
+                 "    \"address\":       (string) The address of the owner of this allocation\n"
+                 "    \"balance\":       (numeric) The current balance\n"
+                 "    \"balance_zdag\":  (numeric) The zdag balance\n"
+                 "    \"locked_outpoint\":  (string) The locked UTXO if applicable for this allocation\n"
                     "}\n"
                 },
                 RPCExamples{
@@ -881,11 +882,12 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
                 },
                 RPCResult{
                     "[{\n"
-                    "  \"_id\":           (string) The unique id of this allocation\n"
-                    "  \"asset_guid\":    (string) The guid of the asset\n"
-                    "  \"address\":       (string) The address of the owner of this allocation\n"
-                    "  \"balance\":       (numeric) The current balance\n"
-                    "  \"balance_zdag\":  (numeric) The zdag balance\n"
+                    "    \"asset_allocation\":   (string) The unique key for this allocation\n"
+                    "    \"asset_guid\":         (string) The guid of the asset\n"
+                    "    \"address\":       (string) The address of the owner of this allocation\n"
+                    "    \"balance\":       (numeric) The current balance\n"
+                    "    \"balance_zdag\":  (numeric) The zdag balance\n"
+                    "    \"locked_outpoint\":  (string) The locked UTXO if applicable for this allocation\n"
                     "}]\n"
                 },
                 RPCExamples{
@@ -1449,11 +1451,12 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
                  RPCResult{
                  "[\n"
                  "  {\n"
-                 "    \"_id\":           (string) The unique id of this allocation\n"
+                 "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                  "    \"asset_guid\":         (string) The guid of the asset\n"
                  "    \"address\":       (string) The address of the owner of this allocation\n"
                  "    \"balance\":       (numeric) The current balance\n"
                  "    \"balance_zdag\":  (numeric) The zdag balance\n"
+                 "    \"locked_outpoint\":  (string) The locked UTXO if applicable for this allocation\n"
                  "  }\n"
                  " ...\n"
                  "]\n"
