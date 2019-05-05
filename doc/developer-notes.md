@@ -385,7 +385,7 @@ Threads
 
 - ThreadScriptCheck : Verifies block scripts.
 
-- ThreadImport : Loads blocks from blk*.dat files or bootstrap.dat.
+- ThreadImport : Loads blocks from `blk*.dat` files or `-loadblock=<file>`.
 
 - StartNode : Starts other threads.
 
