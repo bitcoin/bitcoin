@@ -45,6 +45,9 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
 
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
+static const unsigned int ADDR_BLOOM_FILTER_TX_TO_ELEMENTS_FACTOR = 3 /* outputs */ * 2 /* room to grow */;
+static const double ADDR_BLOOM_FILTER_FP_RATE = 0.000001;
+
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
 
@@ -850,12 +853,47 @@ void CWallet::AddToAddressBloomFilter(const CWalletTx& wtx)
 
 void CWallet::BuildAddressBloomFilter()
 {
-    m_address_bloom_filter_elems = std::max<size_t>(100, mapWallet.size() * 2);
-    m_address_bloom_filter = CBloomFilter(m_address_bloom_filter_elems, 0.000001, 0, BLOOM_UPDATE_ALL);
+    if (m_address_bloom_filter_elems < 100) m_address_bloom_filter_elems = 100;
+    m_address_bloom_filter_elems = std::max<size_t>(m_address_bloom_filter_elems, mapWallet.size() * ADDR_BLOOM_FILTER_TX_TO_ELEMENTS_FACTOR);
+    m_address_bloom_filter = CBloomFilter(m_address_bloom_filter_elems, ADDR_BLOOM_FILTER_FP_RATE, 0, BLOOM_UPDATE_ALL);
     for (const auto& entry : mapWallet) {
         const CWalletTx& wtx = entry.second;
         AddToAddressBloomFilter(wtx);
     }
+}
+
+bool CWallet::FindScriptPubKeyUsed(const std::set<CScript>& keys, const boost::variant<boost::blank, std::function<void(const CWalletTx&)>, std::function<void(const CWalletTx&, uint32_t)>>& callback) const
+{
+    bool found_any = false;
+    for (const auto& key : keys) {
+        if (m_address_bloom_filter.contains(ToByteVector(key))) {
+            found_any = true;
+            break;
+        }
+    }
+    if (!found_any) {
+        return false;
+    }
+
+    found_any = false;
+    for (const auto& entry : mapWallet) {
+        const CWalletTx& wtx = entry.second;
+        for (uint32_t i = 0; i < wtx.tx->vout.size(); ++i) {
+            const auto& output = wtx.tx->vout[i];
+            if (keys.count(output.scriptPubKey)) {
+                const auto callback_type = callback.which();
+                if (callback_type == 0) return true;
+                found_any = true;
+                if (callback_type == 1) {
+                    boost::get<std::function<void(const CWalletTx&)>>(callback)(wtx);
+                    break;
+                }
+                boost::get<std::function<void(const CWalletTx&, uint32_t)>>(callback)(wtx, i);
+            }
+        }
+    }
+
+    return found_any;
 }
 
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
