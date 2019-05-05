@@ -135,6 +135,9 @@ public:
     bool ReadAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple, CAssetAllocation& assetallocation) {
         return Read(assetAllocationTuple, assetallocation);
     }
+    bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){
+        return Read(address, assetGuids);
+    }
     bool Flush(const AssetAllocationMap &mapAssetAllocations);
 	void WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash);
     void WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash);

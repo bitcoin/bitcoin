@@ -230,6 +230,9 @@ public:
     bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
     } 
+    bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){
+        return Read(address, assetGuids);
+    }
 	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
 	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);
@@ -321,13 +324,7 @@ public:
             return res && WriteAssetPage(page);
         }
         return Write(std::make_pair(assetGuid, page), TXIDS);
-    }
-    bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){
-        return Read(address, assetGuids);
-    }
-    bool WriteAssetsByAddress(const CWitnessAddress &address, const std::vector<uint32_t> &assetGuids) {
-        return Write(address, assetGuids);
-    }      
+    }    
     bool ReadAssetPage(int64_t& page) {
         return Read(assetindexpage, page);
     }

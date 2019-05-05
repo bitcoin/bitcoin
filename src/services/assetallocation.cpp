@@ -830,7 +830,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                 RPCResult{
                     "{\n"
                     "  \"_id\":           (string) The unique id of this allocation\n"
-                    "  \"asset_guid\":         (string) The guid of the asset\n"
+                    "  \"asset_guid\":    (string) The guid of the asset\n"
                     "  \"address\":       (string) The address of the owner of this allocation\n"
                     "  \"balance\":       (numeric) The current balance\n"
                     "  \"balance_zdag\":  (numeric) The zdag balance\n"
@@ -869,6 +869,60 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
 	if(!BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation))
 		oAssetAllocation.clear();
     return oAssetAllocation;
+}
+UniValue listassetindexallocations(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 1 != params.size())
+        throw runtime_error(
+            RPCHelpMan{"listassetindexallocations",
+                "\nReturn a list of asset allocations an address is associated with.\n",
+                {
+                    {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
+                },
+                RPCResult{
+                    "[{\n"
+                    "  \"_id\":           (string) The unique id of this allocation\n"
+                    "  \"asset_guid\":    (string) The guid of the asset\n"
+                    "  \"address\":       (string) The address of the owner of this allocation\n"
+                    "  \"balance\":       (numeric) The current balance\n"
+                    "  \"balance_zdag\":  (numeric) The zdag balance\n"
+                    "}]\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+                    + HelpExampleRpc("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
+                }
+            }.ToString());
+    if(!fAssetIndex){
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
+    }       
+    const CTxDestination &dest = DecodeDestination(params[0].get_str());
+    UniValue detail = DescribeAddress(dest);
+    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
+ 
+    UniValue oRes(UniValue::VARR);
+    std::vector<uint32_t> assetGuids;
+    passetallocationdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids);
+    
+    CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
+    for(const uint32_t& guid: assetGuids){
+        UniValue oAssetAllocation(UniValue::VOBJ);
+        const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
+        CAssetAllocation txPos;
+        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+            continue;
+        CAsset theAsset;
+        if (!GetAsset(guid, theAsset))
+           continue;
+
+        if(BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation)){
+            oRes.push_back(oAssetAllocation);
+        }
+    }
+    return oRes;
 }
 int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) {
     LOCK(cs_assetallocationarrival);
@@ -1234,14 +1288,50 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
     CDBBatch batch(*this);
 	int write = 0;
 	int erase = 0;
+    std::map<CWitnessAddress, std::vector<uint32_t> > mapGuids;
+    if(fAssetIndex){
+        for (const auto &key : mapAssetAllocations) {
+            auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress);
+            auto &assetGuids = it->second;
+            if(assetGuids.empty())
+                ReadAssetsByAddress(key.second.assetAllocationTuple.witnessAddress, assetGuids);
+            // erase asset address association
+            if(key.second.nBalance <= 0){
+                auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.second.assetAllocationTuple.nAsset);
+                if(itVec != assetGuids.end())
+                    assetGuids.erase(itVec);                   
+            }
+            else{
+                // add asset address association
+                auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.second.assetAllocationTuple.nAsset);
+                if(itVec == assetGuids.end())
+                    assetGuids.emplace_back(key.second.assetAllocationTuple.nAsset);         
+            }      
+        }
+    }
     for (const auto &key : mapAssetAllocations) {
         if(key.second.nBalance <= 0){
 			erase++;
             batch.Erase(key.second.assetAllocationTuple);
+            // erase asset address association
+            if(fAssetIndex){
+                auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress);
+                const std::vector<uint32_t>& assetGuids = it->second;
+                if(assetGuids.empty())
+                    batch.Erase(key.second.assetAllocationTuple.witnessAddress);   
+                else
+                    batch.Write(key.second.assetAllocationTuple.witnessAddress, assetGuids);         
+            }
         }
         else{
 			write++;
             batch.Write(key.second.assetAllocationTuple, key.second);
+            // add asset address association
+            if(fAssetIndex){
+                auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress);
+                const std::vector<uint32_t>& assetGuids = it->second;
+                batch.Write(key.second.assetAllocationTuple.witnessAddress, assetGuids);         
+            }
         }
     }
 	LogPrint(BCLog::SYS, "Flushing %d assets allocations (erased %d, written %d)\n", mapAssetAllocations.size(), erase, write);

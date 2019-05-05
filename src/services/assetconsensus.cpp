@@ -221,14 +221,6 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
             if (receiverAllocation.assetAllocationTuple.IsNull()) {           
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
-                if(fAssetIndex && !fJustCheck && !bSanity && !bMiner){
-                    std::vector<uint32_t> assetGuids;
-                    passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
-                    if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
-                        assetGuids.push_back(receiverAllocation.assetAllocationTuple.nAsset);
-                    
-                    passetindexdb->WriteAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
-                } 
             }
             mapAssetAllocation->second = std::move(receiverAllocation);              
         }
@@ -781,15 +773,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 CAssetAllocation dbAssetAllocationReceiver;
                 if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                    dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress); 
-                    if(fAssetIndex && !bMiner){
-                        std::vector<uint32_t> assetGuids;
-                        passetindexdb->ReadAssetsByAddress(dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress, assetGuids);
-                        if(std::find(assetGuids.begin(), assetGuids.end(), dbAssetAllocationReceiver.assetAllocationTuple.nAsset) == assetGuids.end())
-                            assetGuids.push_back(dbAssetAllocationReceiver.assetAllocationTuple.nAsset);
-                        
-                        passetindexdb->WriteAssetsByAddress(dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress, assetGuids);
-                    }              
+                    dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);              
                 }
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                   
             } 
@@ -903,15 +887,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     CAssetAllocation receiverAllocation;
                     if (!GetAssetAllocation(receiverAllocationTuple, receiverAllocation)) {                   
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                        receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress); 
-                        if(fAssetIndex && !bMiner){
-                            std::vector<uint32_t> assetGuids;
-                            passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
-                            if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
-                                assetGuids.push_back(receiverAllocation.assetAllocationTuple.nAsset);
-                            
-                            passetindexdb->WriteAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
-                        }                       
+                        receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
                     }
                     mapBalanceReceiverBlock->second = std::move(receiverAllocation);   
                 }
@@ -1355,15 +1331,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                     GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
                     if (receiverAllocation.assetAllocationTuple.IsNull()) {
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
-                        receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
-                        if(fAssetIndex && !fJustCheck && !bMiner){
-                            std::vector<uint32_t> assetGuids;
-                            passetindexdb->ReadAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
-                            if(std::find(assetGuids.begin(), assetGuids.end(), receiverAllocation.assetAllocationTuple.nAsset) == assetGuids.end())
-                                assetGuids.push_back(receiverAllocation.assetAllocationTuple.nAsset);
-                            
-                            passetindexdb->WriteAssetsByAddress(receiverAllocation.assetAllocationTuple.witnessAddress, assetGuids);
-                        }                        
+                        receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
                     } 
                     mapAssetAllocation->second = std::move(receiverAllocation);                
                 }
