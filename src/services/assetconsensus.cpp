@@ -295,7 +295,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         }
   
         if (!good || !errorMessage.empty())
-            return state.DoS(100, false, REJECT_INVALID, errorMessage);
+            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, errorMessage);
       
         return true;
     }
@@ -359,7 +359,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             }
         }        
         if (!good || !errorMessage.empty())
-            return state.DoS(bOverflow? 10: 100, false, REJECT_INVALID, errorMessage);
+            return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
     }
     return true;
 }
@@ -1433,7 +1433,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 			bool locked = false;
 			// spending as non allocation send while using a locked outpoint should be invalid
 			if (plockedoutpointsdb && plockedoutpointsdb->ReadOutpoint(myTx.vin[i].prevout, locked) && locked) {
-				return state.Invalid(false, REJECT_INVALID, "non-allocation-input");
+				return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "non-allocation-input");
 			}
 		}
 	}
@@ -1442,11 +1442,11 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 
 		CAssetAllocation theAssetAllocation(myTx);
 		if (theAssetAllocation.assetAllocationTuple.IsNull()) {
-			return state.Invalid(false, REJECT_INVALID, "invalid-allocation");
+			return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "invalid-allocation");
 		}
 		CAssetAllocation assetAllocationDB;
 		if (!GetAssetAllocation(theAssetAllocation.assetAllocationTuple, assetAllocationDB)) {
-			return state.Invalid(false, REJECT_INVALID, "non-existing-allocation");
+			return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "non-existing-allocation");
 		}
 		bool found = assetAllocationDB.lockedOutpoint.IsNull();
         
@@ -1463,7 +1463,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 			}
 		}
 		if (!found) {
-			return state.Invalid(false, REJECT_INVALID, "missing-lockpoint");
+			return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "missing-lockpoint");
 		}
 	}
 	return true;

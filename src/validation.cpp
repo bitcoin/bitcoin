@@ -1146,7 +1146,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             }
             if (!isThreadPosted)
             {
-                return state.DoS(0, false, REJECT_INVALID, "threadpool-full", false, "AcceptToMemoryPoolWorker: thread pool queue is full");
+                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, "threadpool-full", "AcceptToMemoryPoolWorker: thread pool queue is full");
             }
         }
     }
@@ -3539,7 +3539,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     // Disallow legacy blocks after merge-mining start.
     const Consensus::Params& consensusParams = params.GetConsensus();
      if (!consensusParams.AllowLegacyBlocks(nHeight) && block.IsLegacy())
-        return state.DoS(100, error("%s : legacy block after auxpow start",
+        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, error("%s : legacy block after auxpow start",
                                     __func__),
                          REJECT_INVALID, "late-legacy-block");
 
@@ -3569,7 +3569,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationSta
     // check for version 2, 3 and 4 upgrades
     // SYSCOIN
     if(block.GetBaseVersion() < 4)
-            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion), false,
+            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
     return true;

@@ -45,7 +45,7 @@ enum class ValidationInvalidReason {
     BLOCK_MUTATED,           //!< the block's data didn't match the data committed to by the PoW
     BLOCK_MISSING_PREV,      //!< We don't have the previous block the checked one is built on
     BLOCK_INVALID_PREV,      //!< A block this one builds on is invalid
-    BLOCK_TIME_FUTURE,          //!< block timestamp was > 2 hours in the future (or our clock is bad)
+    BLOCK_TIME_FUTURE,          //!< block timestamp was > 2 hours in tFvhe future (or our clock is bad)
     BLOCK_CHECKPOINT,        //!< the block failed to meet one of our checkpoints
     // Only loose txn:
     TX_NOT_STANDARD,          //!< didn't meet our local policy rules
