@@ -261,6 +261,10 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
 {
     std::map<int, std::string> mapPayments;
 
+    if (nStartHeight < 1) {
+        nStartHeight = 1;
+    }
+
     LOCK(cs_main);
     int nChainTipHeight = chainActive.Height();
 
