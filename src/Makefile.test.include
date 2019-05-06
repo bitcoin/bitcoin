@@ -95,7 +95,6 @@ SYSCOIN_TESTS =\
   test/addrman_tests.cpp \
   test/amount_tests.cpp \
   test/allocator_tests.cpp \
-  test/auxpow_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
@@ -131,13 +130,13 @@ SYSCOIN_TESTS =\
   test/policyestimator_tests.cpp \
   test/pow_tests.cpp \
   test/prevector_tests.cpp \
-  test/script_p2sh_tests.cpp \
   test/raii_event_tests.cpp \
   test/random_tests.cpp \
   test/reverselock_tests.cpp \
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
+  test/script_p2sh_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
@@ -153,11 +152,13 @@ SYSCOIN_TESTS =\
   test/transaction_tests.cpp \
   test/txindex_tests.cpp \
   test/txvalidation_tests.cpp \
+  test/txvalidationcache_tests.cpp \
   test/uint256_tests.cpp \
   test/util_tests.cpp \
-  test/versionbits_tests.cpp
+  test/versionbits_tests.cpp \
+  test/validation_block_tests.cpp
 # FIXME: Update and re-enable these tests:
-#   miner_tests txvalidationcache_tests validation_block_tests key_io_tests
+#   miner_tests validation_test key_io_tests
 
 if ENABLE_PROPERTY_TESTS
 SYSCOIN_TESTS += \
