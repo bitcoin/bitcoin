@@ -1590,6 +1590,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 // It both disconnects blocks based on chainActive, and drops block data in
                 // mapBlockIndex based on lack of available witness data.
                 uiInterface.InitMessage(_("Rewinding blocks..."));
+                LOCK(cs_main);
                 if (!RewindBlockIndex(chainparams)) {
                     strLoadError = _("Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain");
                     break;
