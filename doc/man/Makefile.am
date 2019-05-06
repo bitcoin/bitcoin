@@ -17,7 +17,7 @@ if BUILD_SYSCOIN_TX
 endif
 
 if ENABLE_WALLET
-if BUILD_BITCOIN_WALLET
-  dist_man1_MANS+=bitcoin-wallet.1
+if BUILD_SYSCOIN_WALLET
+  dist_man1_MANS+=syscoin-wallet.1
 endif
 endif
