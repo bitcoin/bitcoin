@@ -169,14 +169,13 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     for (const CNode *node : vNodes) {
         BOOST_CHECK(node->fDisconnect == false);
     }
-
-    SetMockTime(GetTime() + 3*consensusParams.nPowTargetSpacing + 1);
+    // SYSCOIN we increased stale time to 10x bitcoin's because our target spacing is 1 min vs 10 min
+    SetMockTime(GetTime() + 30*consensusParams.nPowTargetSpacing + 1);
 
     // Now tip should definitely be stale, and we should look for an extra
     // outbound peer
     peerLogic->CheckForStaleTipAndEvictPeers(consensusParams);
-    // SYSCOIN
-    //BOOST_CHECK(connman->GetTryNewOutboundPeer());
+    BOOST_CHECK(connman->GetTryNewOutboundPeer());
 
     // Still no peers should be marked for disconnection
     for (const CNode *node : vNodes) {

@@ -571,12 +571,14 @@ static bool TipMayBeStale(const Consensus::Params &consensusParams) EXCLUSIVE_LO
     if (g_last_tip_update == 0) {
         g_last_tip_update = GetTime();
     }
-    return g_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 3 && mapBlocksInFlight.empty();
+    // SYSCOIN
+    return g_last_tip_update < GetTime() - consensusParams.nPowTargetSpacing * 30 && mapBlocksInFlight.empty();
 }
 
 static bool CanDirectFetch(const Consensus::Params &consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 20;
+    // SYSCOIN
+    return chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - consensusParams.nPowTargetSpacing * 200;
 }
 
 static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1047,7 +1049,6 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
-
     g_last_tip_update = GetTime();
 }
 
@@ -3610,7 +3611,6 @@ void PeerLogicValidation::CheckForStaleTipAndEvictPeers(const Consensus::Params 
     int64_t time_in_seconds = GetTime();
 
     EvictExtraOutboundPeers(time_in_seconds);
-
     if (time_in_seconds > m_stale_tip_check_time) {
         // Check whether our tip is stale, and if so, allow using an extra
         // outbound peer
