@@ -227,10 +227,11 @@ public:
         consensus.nGovernanceFilterElements = 500;
         consensus.nMasternodeMinimumConfirmations = 1;
         consensus.BIP16Height = 1;
-        consensus.BIP34Height = 1;
+        consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
         consensus.BIP34Hash = uint256();
-        consensus.BIP65Height = 1; 
-        consensus.BIP66Height = 1;
+        consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in functional tests)
+        consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in functional tests)
+        
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
@@ -384,7 +385,7 @@ public:
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
         fDefaultConsistencyChecks = false;
-        fRequireStandard = true;
+        fRequireStandard = false;
         fMineBlocksOnDemand = true;
         // privKey: cPPpaK9LCXjGGXVJUqcrtEMVQw5tALMuN3WsVuPCWFf9tswYYDvY
         strSporkAddress = "TCSJVL68KFq9FdbfxB2KhTcWp6rHD7vePs";
