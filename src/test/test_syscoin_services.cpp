@@ -644,6 +644,16 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     BOOST_CHECK(abs((nAmountBefore+AmountFromValue(amount)) -  nAmountAfter) < 0.1*COIN);
     return hex_str;
 }
+bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){
+	UniValue arrayVal = results.get_array();
+	for(unsigned i = 0;i<arrayVal.size();i++){
+		UniValue r = arrayVal[i];
+		if(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid)
+			return true;
+	}
+	return false;
+}
+	
 string AssetNew(const string& node, const string& address, const string& pubdata, const string& contract, const string& precision, const string& supply, const string& maxsupply, const string& updateflags, const string& witness)
 {
 	string otherNode1, otherNode2;
@@ -685,6 +695,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 
 	BOOST_CHECK(update_flags == paramUpdateFlags);
 
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + address ));
+	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 
 	GenerateBlocks(6, node);
 	if (!otherNode1.empty())
@@ -702,6 +714,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
         int paramUpdateFlags;
 		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
+		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "listassetindexassets " + address ));
+		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
 	if (!otherNode2.empty())
 	{
@@ -719,6 +733,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
         int paramUpdateFlags;
 		ParseInt32(updateflags, &paramUpdateFlags);
         BOOST_CHECK(update_flags == paramUpdateFlags);
+		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "listassetindexassets " + address ));
+		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
 	return guid;
 }
@@ -774,6 +790,9 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + oldaddress ));
+	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	GenerateBlocks(6, node);
 	if (!otherNode1.empty())
 	{
@@ -785,7 +804,8 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
-
+		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "listassetindexassets " + oldaddress ));
+		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
 	if (!otherNode2.empty())
 	{
@@ -796,7 +816,8 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
-
+		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "listassetindexassets " + oldaddress ));
+		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
 
 }
@@ -827,6 +848,11 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "assetinfo " + guid));
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == toaddress);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + toaddress ));
+	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + oldaddress ));
+	BOOST_CHECK(!FindAssetGUIDFromAssetIndexResults(r, guid));
 
 
 }
@@ -917,8 +943,25 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
         else
 		    BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision), newfromamount);
     }
-    else if(!usezdag)
+    else if(!usezdag){
         BOOST_CHECK_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " " + fromaddress), runtime_error);
+	
+		for (unsigned int idx = 0; idx < receivers.size(); idx++) {
+			const UniValue& receiver = receivers[idx];
+			BOOST_CHECK(receiver.isObject());
+		
+			UniValue receiverObj = receiver.get_obj();
+			string strAddress = find_value(receiverObj, "address").get_str();
+			
+			BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexallocations " + strAddress ));
+			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
+		}
+		if(newfromamount > 0){
+			BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexallocations " + fromaddress ));
+			BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
+		}	
+	}
+
 	return txid;
 }
 void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm){
@@ -1053,6 +1096,23 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "assetsend");
 	if (!theAssetAllocation.listSendingAllocationAmounts.empty())
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "allocations").get_array().size(), theAssetAllocation.listSendingAllocationAmounts.size());
+	
+	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
+		const UniValue& receiver = receivers[idx];
+		BOOST_CHECK(receiver.isObject());
+      
+		UniValue receiverObj = receiver.get_obj();
+        string strAddress = find_value(receiverObj, "address").get_str();
+        
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexallocations " + strAddress ));
+		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
+
+
+	}
+	if(newfromamount > 0){
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + fromAddress ));
+		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
+	}		
 	return hex_str;
 
 }
