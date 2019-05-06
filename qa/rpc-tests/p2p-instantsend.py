@@ -52,8 +52,8 @@ class InstantSendTest(DashTestFramework):
 
         # create doublespending transaction, but don't relay it
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
-        # stop one node to isolate it from network
-        isolated.setnetworkactive(False)
+        # isolate one node from network
+        isolate_node(isolated)
         # instantsend to receiver
         receiver_addr = receiver.getnewaddress()
         is_id = sender.instantsendtoaddress(receiver_addr, 0.9)
@@ -68,9 +68,7 @@ class InstantSendTest(DashTestFramework):
         isolated.generate(1)
         wrong_block = isolated.getbestblockhash()
         # connect isolated block to network
-        isolated.setnetworkactive(True)
-        for i in range(0, self.isolated_idx):
-            connect_nodes(self.nodes[i], self.isolated_idx)
+        reconnect_isolated_node(isolated, 0)
         # check doublespend block is rejected by other nodes
         timeout = 10
         for i in range(0, self.num_nodes):
@@ -102,14 +100,12 @@ class InstantSendTest(DashTestFramework):
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
         dblspnd_txid = bytes_to_hex_str(hash256(hex_str_to_bytes(dblspnd_tx['hex']))[::-1])
         # isolate one node from network
-        isolated.setnetworkactive(False)
+        isolate_node(isolated)
         # send doublespend transaction to isolated node
         isolated.sendrawtransaction(dblspnd_tx['hex'])
         # let isolated node rejoin the network
         # The previously isolated node should NOT relay the doublespending TX
-        isolated.setnetworkactive(True)
-        for i in range(0, self.isolated_idx):
-            connect_nodes(self.nodes[i], self.isolated_idx)
+        reconnect_isolated_node(isolated, 0)
         for node in self.nodes:
             if node is not isolated:
                 assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, dblspnd_txid)

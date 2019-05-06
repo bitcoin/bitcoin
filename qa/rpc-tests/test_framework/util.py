@@ -455,6 +455,19 @@ def connect_nodes_bi(nodes, a, b):
     connect_nodes(nodes[a], b)
     connect_nodes(nodes[b], a)
 
+def isolate_node(node, timeout=5):
+    node.setnetworkactive(False)
+    st = time.time()
+    while time.time() < st + timeout:
+        if node.getconnectioncount() == 0:
+            return
+        time.sleep(0.5)
+    raise AssertionError("disconnect_node timed out")
+
+def reconnect_isolated_node(node, node_num):
+    node.setnetworkactive(True)
+    connect_nodes(node, node_num)
+
 def find_output(node, txid, amount):
     """
     Return index to output of txid with value amount

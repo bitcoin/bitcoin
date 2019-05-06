@@ -46,25 +46,23 @@ class LLMQChainLocksTest(DashTestFramework):
             assert(block['chainlock'])
 
         # Isolate node, mine on another, and reconnect
-        self.nodes[0].setnetworkactive(False)
+        isolate_node(self.nodes[0])
         node0_tip = self.nodes[0].getbestblockhash()
         self.nodes[1].generate(5)
         self.wait_for_chainlock_tip(self.nodes[1])
         assert(self.nodes[0].getbestblockhash() == node0_tip)
-        self.nodes[0].setnetworkactive(True)
-        connect_nodes(self.nodes[0], 1)
+        reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generate(1)
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
 
         # Isolate node, mine on both parts of the network, and reconnect
-        self.nodes[0].setnetworkactive(False)
+        isolate_node(self.nodes[0])
         self.nodes[0].generate(5)
         self.nodes[1].generate(1)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlock_tip(self.nodes[1])
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
-        self.nodes[0].setnetworkactive(True)
-        connect_nodes(self.nodes[0], 1)
+        reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generate(1)
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
@@ -97,7 +95,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         # Isolate a node and let it create some transactions which won't get IS locked
-        self.nodes[0].setnetworkactive(False)
+        isolate_node(self.nodes[0])
         txs = []
         for i in range(3):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
@@ -120,8 +118,7 @@ class LLMQChainLocksTest(DashTestFramework):
             assert("confirmations" in tx and tx["confirmations"] > 0)
         # Enable network on first node again, which will cause the blocks to propagate and IS locks to happen retroactively
         # for the mined TXs, which will then allow the network to create a CLSIG
-        self.nodes[0].setnetworkactive(True)
-        connect_nodes(self.nodes[0], 1)
+        reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlock(self.nodes[0], self.nodes[1].getbestblockhash())
 
     def wait_for_chainlock_tip_all_nodes(self):
