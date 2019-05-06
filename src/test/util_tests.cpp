@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <primitives/transaction.h>
 #include <sync.h>
+#include <test/util.h>
 #include <util/strencodings.h>
 #include <util/moneystr.h>
 #include <test/setup_common.h>
@@ -605,15 +606,17 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
     //! debugging to make test results easier to understand.
     static constexpr int MAX_ACTIONS = 3;
 
-    enum Action { SET = 0, NEGATE, SECTION_SET, SECTION_NEGATE, END };
+    enum Action { NONE, SET, NEGATE, SECTION_SET, SECTION_NEGATE };
     using ActionList = Action[MAX_ACTIONS];
 
     //! Enumerate all possible test configurations.
     template <typename Fn>
     void ForEachMergeSetup(Fn&& fn)
     {
-        ForEachActionList([&](const ActionList& arg_actions) {
-            ForEachActionList([&](const ActionList& conf_actions) {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, SET, SECTION_NEGATE, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, SET, SECTION_NEGATE, [&] {
                 for (bool soft_set : {false, true}) {
                     for (bool force_set : {false, true}) {
                         for (const std::string& section : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET}) {
@@ -629,36 +632,6 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
         });
     }
 
-    //! Enumerate interesting combinations of actions.
-    template <typename Fn>
-    void ForEachActionList(Fn&& fn)
-    {
-        ActionList actions = {SET};
-        for (bool done = false; !done;) {
-            int prev_action = -1;
-            bool skip_actions = false;
-            for (Action action : actions) {
-                if ((prev_action == END && action != END) || (prev_action != END && action == prev_action)) {
-                    // To cut down list of enumerated settings, skip enumerating
-                    // settings with ignored actions after an END, and settings that
-                    // repeat the same action twice in a row.
-                    skip_actions = true;
-                    break;
-                }
-                prev_action = action;
-            }
-            if (!skip_actions) fn(actions);
-            done = true;
-            for (Action& action : actions) {
-                action = Action(action < END ? action + 1 : 0);
-                if (action) {
-                    done = false;
-                    break;
-                }
-            }
-        }
-    }
-
     //! Translate actions into a list of <key>=<value> setting strings.
     std::vector<std::string> GetValues(const ActionList& actions,
         const std::string& section,
@@ -668,7 +641,7 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
         std::vector<std::string> values;
         int suffix = 0;
         for (Action action : actions) {
-            if (action == END) break;
+            if (action == NONE) break;
             std::string prefix;
             if (action == SECTION_SET || action == SECTION_NEGATE) prefix = section + ".";
             if (action == SET || action == SECTION_SET) {
@@ -801,7 +774,7 @@ BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "f4281d9bff4c0b398ff118386e3a40caa6bac7645e17b296d6a10b95bff632ae");
+    BOOST_CHECK_EQUAL(out_sha_hex, "b835eef5977d69114eb039a976201f8c7121f34fe2b7ea2b73cafb516e5c9dc8");
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
