@@ -541,9 +541,9 @@ BOOST_AUTO_TEST_CASE(countbits_tests)
 
 BOOST_AUTO_TEST_CASE(sha256d64)
 {
+    unsigned char in[64 * 32];
+    unsigned char out1[32 * 32], out2[32 * 32];
     for (int i = 0; i <= 32; ++i) {
-        unsigned char in[64 * 32];
-        unsigned char out1[32 * 32], out2[32 * 32];
         for (int j = 0; j < 64 * i; ++j) {
             in[j] = InsecureRandBits(8);
         }
