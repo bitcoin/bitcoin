@@ -1001,25 +1001,56 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock)
 {
-    LOCK(mempool.cs);
-
     std::unordered_map<uint256, CTransactionRef> toDelete;
 
-    for (auto& in : islock.inputs) {
-        auto it = mempool.mapNextTx.find(in);
-        if (it == mempool.mapNextTx.end()) {
-            continue;
-        }
-        if (it->second->GetHash() != islock.txid) {
-            toDelete.emplace(it->second->GetHash(), mempool.get(it->second->GetHash()));
+    {
+        LOCK(mempool.cs);
 
-            LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: mempool TX %s with input %s conflicts with islock\n", __func__,
-                     islock.txid.ToString(), hash.ToString(), it->second->GetHash().ToString(), in.ToStringShort());
+        for (auto& in : islock.inputs) {
+            auto it = mempool.mapNextTx.find(in);
+            if (it == mempool.mapNextTx.end()) {
+                continue;
+            }
+            if (it->second->GetHash() != islock.txid) {
+                toDelete.emplace(it->second->GetHash(), mempool.get(it->second->GetHash()));
+
+                LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: mempool TX %s with input %s conflicts with islock\n", __func__,
+                         islock.txid.ToString(), hash.ToString(), it->second->GetHash().ToString(), in.ToStringShort());
+            }
+        }
+
+        for (auto& p : toDelete) {
+            mempool.removeRecursive(*p.second, MemPoolRemovalReason::CONFLICT);
         }
     }
 
-    for (auto& p : toDelete) {
-        mempool.removeRecursive(*p.second, MemPoolRemovalReason::CONFLICT);
+    if (!toDelete.empty()) {
+        AskNodesForLockedTx(islock.txid);
+    }
+}
+
+void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
+{
+    std::vector<CNode*> nodesToAskFor;
+    g_connman->ForEachNode([&](CNode* pnode) {
+        LOCK(pnode->cs_filter);
+        if (pnode->filterInventoryKnown.contains(txid)) {
+            pnode->AddRef();
+            nodesToAskFor.emplace_back(pnode);
+        }
+    });
+    {
+        LOCK(cs_main);
+        for (CNode* pnode : nodesToAskFor) {
+            LogPrintf("CInstantSendManager::%s -- txid=%s: asking other peer %d for correct TX\n", __func__,
+                      txid.ToString(), pnode->id);
+
+            CInv inv(MSG_TX, txid);
+            pnode->AskFor(inv);
+        }
+    }
+    for (CNode* pnode : nodesToAskFor) {
+        pnode->Release();
     }
 }
 

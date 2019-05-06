@@ -26,7 +26,7 @@ class InstantSendTest(DashTestFramework):
         self.mine_quorum()
 
         self.log.info("Test old InstantSend")
-        self.test_doublespend()
+        self.test_block_doublespend()
 
         # Generate 6 block to avoid retroactive signing overloading Travis
         self.nodes[0].generate(6)
@@ -36,23 +36,21 @@ class InstantSendTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         self.log.info("Test new InstantSend")
-        self.test_doublespend()
+        self.test_mempool_doublespend()
+        self.test_block_doublespend()
 
-    def test_doublespend(self, new_is = False):
+    def test_block_doublespend(self):
         sender = self.nodes[self.sender_idx]
         receiver = self.nodes[self.receiver_idx]
         isolated = self.nodes[self.isolated_idx]
+
         # feed the sender with some balance
         sender_addr = sender.getnewaddress()
         self.nodes[0].sendtoaddress(sender_addr, 1)
-        # make sender funds mature for InstantSend
-        for i in range(0, 2):
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
-            self.nodes[0].generate(1)
+        self.nodes[0].generate(2)
         self.sync_all()
 
-        # create doublepending transaction,  but don't relay it
+        # create doublespending transaction, but don't relay it
         dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
         # stop one node to isolate it from network
         isolated.setnetworkactive(False)
@@ -88,6 +86,40 @@ class InstantSendTest(DashTestFramework):
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)
         self.sync_all()
+
+    def test_mempool_doublespend(self):
+        sender = self.nodes[self.sender_idx]
+        receiver = self.nodes[self.receiver_idx]
+        isolated = self.nodes[self.isolated_idx]
+
+        # feed the sender with some balance
+        sender_addr = sender.getnewaddress()
+        self.nodes[0].sendtoaddress(sender_addr, 1)
+        self.nodes[0].generate(2)
+        self.sync_all()
+
+        # create doublespending transaction, but don't relay it
+        dblspnd_tx = self.create_raw_tx(sender, isolated, 0.5, 1, 100)
+        dblspnd_txid = bytes_to_hex_str(hash256(hex_str_to_bytes(dblspnd_tx['hex']))[::-1])
+        # isolate one node from network
+        isolated.setnetworkactive(False)
+        # send doublespend transaction to isolated node
+        isolated.sendrawtransaction(dblspnd_tx['hex'])
+        # let isolated node rejoin the network
+        # The previously isolated node should NOT relay the doublespending TX
+        isolated.setnetworkactive(True)
+        for i in range(0, self.isolated_idx):
+            connect_nodes(self.nodes[i], self.isolated_idx)
+        for node in self.nodes:
+            if node is not isolated:
+                assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", node.getrawtransaction, dblspnd_txid)
+        # instantsend to receiver. The previously isolated node should prune the doublespend TX and request the correct
+        # TX from other nodes.
+        receiver_addr = receiver.getnewaddress()
+        is_id = sender.instantsendtoaddress(receiver_addr, 0.9)
+        for node in self.nodes:
+            self.wait_for_instantlock(is_id, node)
+        assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)
 
 if __name__ == '__main__':
     InstantSendTest().main()
