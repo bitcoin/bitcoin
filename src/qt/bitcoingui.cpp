@@ -370,9 +370,18 @@ void BitcoinGUI::createActions()
         connect(openAction, &QAction::triggered, this, &BitcoinGUI::openClicked);
         connect(m_open_wallet_action->menu(), &QMenu::aboutToShow, [this] {
             m_open_wallet_action->menu()->clear();
-            for (std::string path : m_wallet_controller->getWalletsAvailableToOpen()) {
+            std::vector<std::string> available_wallets = m_wallet_controller->getWalletsAvailableToOpen();
+            std::vector<std::string> wallets = m_node.listWalletDir();
+            for (const auto& path : wallets) {
                 QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
                 QAction* action = m_open_wallet_action->menu()->addAction(name);
+
+                if (std::find(available_wallets.begin(), available_wallets.end(), path) == available_wallets.end()) {
+                    // This wallet is already loaded
+                    action->setEnabled(false);
+                    continue;
+                }
+
                 connect(action, &QAction::triggered, [this, name, path] {
                     OpenWalletActivity* activity = m_wallet_controller->openWallet(path);
 
@@ -399,6 +408,10 @@ void BitcoinGUI::createActions()
                     bool invoked = QMetaObject::invokeMethod(activity, "open");
                     assert(invoked);
                 });
+            }
+            if (wallets.empty()) {
+                QAction* action = m_open_wallet_action->menu()->addAction(tr("No wallets available"));
+                action->setEnabled(false);
             }
         });
         connect(m_close_wallet_action, &QAction::triggered, [this] {
