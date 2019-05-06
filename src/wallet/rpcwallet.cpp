@@ -2462,6 +2462,11 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
             "  \"paytxfee\": x.xxxx,                (numeric) the transaction fee configuration, set in " + CURRENCY_UNIT + "/kB\n"
             "  \"hdseedid\": \"<hash160>\"            (string, optional) the Hash160 of the HD seed (only present when HD is enabled)\n"
             "  \"private_keys_enabled\": true|false (boolean) false if privatekeys are disabled for this wallet (enforced watch-only wallet)\n"
+            "  \"scanning\":                        (json object) current scanning details, or false if no scan is in progress\n"
+            "    {\n"
+            "      \"duration\" : xxxx              (numeric) elapsed seconds since scan start\n"
+            "      \"progress\" : x.xxxx,           (numeric) scanning progress percentage [0.0, 1.0]\n"
+            "    }\n"
             "}\n"
                 },
                 RPCExamples{
@@ -2505,6 +2510,14 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("hdseedid", seed_id.GetHex());
     }
     obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    if (pwallet->IsScanning()) {
+        UniValue scanning(UniValue::VOBJ);
+        scanning.pushKV("duration", pwallet->ScanningDuration() / 1000);
+        scanning.pushKV("progress", pwallet->ScanningProgress());
+        obj.pushKV("scanning", scanning);
+    } else {
+        obj.pushKV("scanning", false);
+    }
     return obj;
 }
 
