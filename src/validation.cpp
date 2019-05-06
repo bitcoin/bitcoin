@@ -973,8 +973,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 return false;
             bool bOverflow = false;
             if (!CheckSyscoinInputs(false, tx, state, view, true, bOverflow, chainActive.Height(), CBlock(), test_accept)) {
-                LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error (single-threaded)", hash.ToString());
-                return false;
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-syscoin-inputs-check-failed (%s)", "CheckSyscoinInputs Error (single-threaded)"));
             }
         } 
         if (test_accept) {
