@@ -16,9 +16,12 @@ class QValidatedLineEdit : public QLineEdit
 
 public:
     explicit QValidatedLineEdit(QWidget *parent);
+    ~QValidatedLineEdit();
     void clear();
     void setCheckValidator(const QValidator *v);
     bool isValid();
+    void setWarningValidator(const QValidator *);
+    bool hasWarning() const;
 
 protected:
     void focusInEvent(QFocusEvent *evt);
@@ -27,9 +30,11 @@ protected:
 private:
     bool valid;
     const QValidator *checkValidator;
+    bool m_has_warning{false};
+    const QValidator *m_warning_validator{nullptr};
 
 public Q_SLOTS:
-    void setValid(bool valid);
+    void setValid(bool valid, bool with_warning=false);
     void setEnabled(bool enabled);
 
 Q_SIGNALS:
@@ -38,6 +43,7 @@ Q_SIGNALS:
 private Q_SLOTS:
     void markValid();
     void checkValidity();
+    bool checkWarning() const;
 };
 
 #endif // BITCOIN_QT_QVALIDATEDLINEEDIT_H
