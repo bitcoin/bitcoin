@@ -2212,7 +2212,7 @@ UniValue scantxoutset(const JSONRPCRequest& request)
             // no scan in progress
             return NullUniValue;
         }
-        result.pushKV("progress", g_scan_progress);
+        result.pushKV("progress", g_scan_progress.load());
         return result;
     } else if (request.params[0].get_str() == "abort") {
         CoinsViewScanReserver reserver;
