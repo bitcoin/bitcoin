@@ -110,7 +110,7 @@
     "error_txt": "error: invalid TX input txid",
     "description": "Tests the check for an invalid txid invalid hex"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6:0"],
@@ -118,7 +118,7 @@
     "error_txt": "error: invalid TX input txid",
     "description": "Tests the check for an invalid txid valid hex but too short"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f12:0"],
@@ -126,7 +126,7 @@
     "error_txt": "error: invalid TX input txid",
     "description": "Tests the check for an invalid txid valid hex but too long"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -347,40 +347,40 @@
   { "exec": "./bitcoin-tx",
     "args":
     ["-create",
-      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
-      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "in=6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7:0",
+      "set=privatekeys:[\"T3Eyvg7Me8fuajt2RJvQaRokRabBweiyBWVJiQG8P1bwDUEXPhqv\"]",
       "set=prevtxs:[{\"txid\":\"Zd49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59412\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
       "sign=ALL",
-      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+      "outaddr=0.001:LXC44cQhuRufFtaDhDYv4q8nxQJBkUAsXp"],
     "return_code": 1,
     "error_txt": "error: txid must be hexadecimal string (not 'Zd49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59412')",
     "description": "Tests the check for invalid txid due to invalid hex"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
-      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
-      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
-      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc594\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "in=6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7:0",
+      "set=privatekeys:[\"T3Eyvg7Me8fuajt2RJvQaRokRabBweiyBWVJiQG8P1bwDUEXPhqv\"]",
+      "set=prevtxs:[{\"txid\":\"6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07b\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
       "sign=ALL",
-      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+      "outaddr=0.001:LXC44cQhuRufFtaDhDYv4q8nxQJBkUAsXp"],
     "return_code": 1,
-    "error_txt": "error: txid must be hexadecimal string (not '4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc594')",
+    "error_txt": "error: txid must be hexadecimal string (not '6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07b')",
     "description": "Tests the check for invalid txid valid hex, but too short"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create",
-      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
-      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
-      "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc5948512\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
+      "in=6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7:0",
+      "set=privatekeys:[\"T3Eyvg7Me8fuajt2RJvQaRokRabBweiyBWVJiQG8P1bwDUEXPhqv\"]",
+      "set=prevtxs:[{\"txid\":\"6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf712\",\"vout\":0,\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
       "sign=ALL",
-      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+      "outaddr=0.001:LXC44cQhuRufFtaDhDYv4q8nxQJBkUAsXp"],
     "return_code": 1,
-    "error_txt": "error: txid must be hexadecimal string (not '4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc5948512')",
+    "error_txt": "error: txid must be hexadecimal string (not '6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf712')",
     "description": "Tests the check for invalid txid valid hex, but too long"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create", "outpubkey=0:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397", "nversion=1"],
     "output_cmp": "txcreateoutpubkey1.hex",

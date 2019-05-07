@@ -839,11 +839,11 @@ class ImportMultiTest(BitcoinTestFramework):
         assert_equal(wrpc.getwalletinfo()["private_keys_enabled"], False)
         xpub = "tpubDAXcJ7s7ZwicqjprRaEWdPoHKrCS215qxGYxpusRLLmJuT69ZSicuGdSfyvyKpvUNYBW1s2U3NSrT6vrCYB9e6nZUEvrqnwXPF8ArTCRXMY"
         addresses = [
-            'bcrt1qtmp74ayg7p24uslctssvjm06q5phz4yrxucgnv', # m/0'/0'/0
-            'bcrt1q8vprchan07gzagd5e6v9wd7azyucksq2xc76k8', # m/0'/0'/1
-            'bcrt1qtuqdtha7zmqgcrr26n2rqxztv5y8rafjp9lulu', # m/0'/0'/2
-            'bcrt1qau64272ymawq26t90md6an0ps99qkrse58m640', # m/0'/0'/3
-            'bcrt1qsg97266hrh6cpmutqen8s4s962aryy77jp0fg0', # m/0'/0'/4
+            'rltc1qtmp74ayg7p24uslctssvjm06q5phz4yrc3zpyj', # m/0'/0'/0
+            'rltc1q8vprchan07gzagd5e6v9wd7azyucksq2c4ynpe', # m/0'/0'/1
+            'rltc1qtuqdtha7zmqgcrr26n2rqxztv5y8rafjlg94gz', # m/0'/0'/2
+            'rltc1qau64272ymawq26t90md6an0ps99qkrse22pnz3', # m/0'/0'/3
+            'rltc1qsg97266hrh6cpmutqen8s4s962aryy77vv4ql3', # m/0'/0'/4
         ]
         result = wrpc.importmulti(
             [{
