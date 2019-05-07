@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
             assetAllocationSendMany += "{\\\"address\\\":\\\"" + unfundedAccounts[unfoundedAccountIndex++] + "\\\",\\\"amount\\\":1}";
             BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexallocations " + unfundedAccounts[unfoundedAccountIndex-1]));
             UniValue indexArray = r.get_array();
-            BOOST_CHECK_EQUAL(indexArray.size(), 10);       
+            BOOST_CHECK_EQUAL(indexArray.size(), numAssets);       
             if(unfoundedAccountIndex >= unfundedAccounts.size())
                 unfoundedAccountIndex = 0;
 
