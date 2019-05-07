@@ -147,6 +147,22 @@ bool WalletModel::validateAddress(const QString &address)
     return IsValidDestinationString(address.toStdString());
 }
 
+bool WalletModel::checkAddressForUsage(const std::vector<std::string>& addresses) const
+{
+    return m_wallet->checkAddressForUsage(addresses);
+}
+
+bool WalletModel::findAddressUsage(const QStringList& addresses, std::function<void(const QString&, const interfaces::WalletTx&, uint32_t)> callback) const
+{
+    std::vector<std::string> std_addresses;
+    for (const auto& address : addresses) {
+        std_addresses.push_back(address.toStdString());
+    }
+    return m_wallet->findAddressUsage(std_addresses, [&callback](const std::string& address, const interfaces::WalletTx& wtx, uint32_t output_index){
+        callback(QString::fromStdString(address), wtx, output_index);
+    });
+}
+
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl& coinControl)
 {
     CAmount total = 0;
