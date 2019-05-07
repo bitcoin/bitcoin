@@ -90,7 +90,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
 
     JSONRPCRequest jreq(helpreq);
     jreq.fHelp = true;
-    jreq.params = UniValue();
+    jreq.params = NullUniValue;
 
     for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
     {
@@ -342,7 +342,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     id = find_value(request, "id");
 
     // Parse method
-    UniValue valMethod = find_value(request, "method");
+    const UniValue& valMethod = find_value(request, "method");
     if (valMethod.isNull())
         throw JSONRPCError(RPC_INVALID_REQUEST, "Missing method");
     if (!valMethod.isStr())
@@ -355,7 +355,7 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
         LogPrint(BCLog::RPC, "ThreadRPCServer method=%s user=%s\n", SanitizeString(strMethod), this->authUser);
 
     // Parse params
-    UniValue valParams = find_value(request, "params");
+    const UniValue& valParams = find_value(request, "params");
     if (valParams.isArray() || valParams.isObject())
         params = valParams;
     else if (valParams.isNull())
@@ -436,7 +436,7 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
                 // Fill hole between specified parameters with JSON nulls,
                 // but not at the end (for backwards compatibility with calls
                 // that act based on number of specified parameters).
-                out.params.push_back(UniValue());
+                out.params.push_back(NullUniValue);
             }
             hole = 0;
             out.params.push_back(*fr->second);

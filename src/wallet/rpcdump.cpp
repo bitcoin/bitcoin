@@ -994,8 +994,8 @@ static UniValue ProcessImportLegacy(ImportData& import_data, std::map<CKeyID, CP
     // Optional fields.
     const std::string& strRedeemScript = data.exists("redeemscript") ? data["redeemscript"].get_str() : "";
     const std::string& witness_script_hex = data.exists("witnessscript") ? data["witnessscript"].get_str() : "";
-    const UniValue& pubKeys = data.exists("pubkeys") ? data["pubkeys"].get_array() : UniValue();
-    const UniValue& keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
+    const UniValue& pubKeys = data.exists("pubkeys") ? data["pubkeys"].get_array() : NullUniValue;
+    const UniValue& keys = data.exists("keys") ? data["keys"].get_array() : NullUniValue;
     const bool internal = data.exists("internal") ? data["internal"].get_bool() : false;
     const bool watchOnly = data.exists("watchonly") ? data["watchonly"].get_bool() : false;
 
@@ -1152,7 +1152,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         }
     }
 
-    const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
+    const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : NullUniValue;
 
     // Expand all descriptors to get public keys and scripts.
     // TODO: get private keys from descriptors too

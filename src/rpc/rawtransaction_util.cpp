@@ -205,7 +205,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                         {"redeemScript", UniValueType(UniValue::VSTR)},
                         {"witnessScript", UniValueType(UniValue::VSTR)},
                     }, true);
-                UniValue rs = find_value(prevOut, "redeemScript");
+                const UniValue& rs = find_value(prevOut, "redeemScript");
                 if (!rs.isNull()) {
                     std::vector<unsigned char> rsData(ParseHexV(rs, "redeemScript"));
                     CScript redeemScript(rsData.begin(), rsData.end());
@@ -214,7 +214,7 @@ UniValue SignTransaction(CMutableTransaction& mtx, const UniValue& prevTxsUnival
                     // This is only for compatibility, it is encouraged to use the explicit witnessScript field instead.
                     keystore->AddCScript(GetScriptForWitness(redeemScript));
                 }
-                UniValue ws = find_value(prevOut, "witnessScript");
+                const UniValue& ws = find_value(prevOut, "witnessScript");
                 if (!ws.isNull()) {
                     std::vector<unsigned char> wsData(ParseHexV(ws, "witnessScript"));
                     CScript witnessScript(wsData.begin(), wsData.end());

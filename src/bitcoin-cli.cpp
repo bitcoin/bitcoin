@@ -443,7 +443,7 @@ static int CommandLineRPC(int argc, char *argv[])
 
                 // Parse reply
                 const UniValue& result = find_value(reply, "result");
-                const UniValue& error  = find_value(reply, "error");
+                const UniValue& error = find_value(reply, "error");
 
                 if (!error.isNull()) {
                     // Error
@@ -454,8 +454,8 @@ static int CommandLineRPC(int argc, char *argv[])
                     nRet = abs(code);
                     if (error.isObject())
                     {
-                        UniValue errCode = find_value(error, "code");
-                        UniValue errMsg  = find_value(error, "message");
+                        const UniValue& errCode = find_value(error, "code");
+                        const UniValue& errMsg  = find_value(error, "message");
                         strPrint = errCode.isNull() ? "" : "error code: "+errCode.getValStr()+"\n";
 
                         if (errMsg.isStr())

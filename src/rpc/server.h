@@ -33,12 +33,11 @@ public:
     UniValue id;
     std::string strMethod;
     UniValue params;
-    bool fHelp;
+    bool fHelp{false};
     std::string URI;
     std::string authUser;
     std::string peerAddr;
 
-    JSONRPCRequest() : id(NullUniValue), params(NullUniValue), fHelp(false) {}
     void parse(const UniValue& valRequest);
 };
 

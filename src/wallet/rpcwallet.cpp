@@ -3490,7 +3490,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     }
     UniValue response(UniValue::VOBJ);
     response.pushKV("start_height", start_height);
-    response.pushKV("stop_height", result.last_scanned_height ? *result.last_scanned_height : UniValue());
+    response.pushKV("stop_height", result.last_scanned_height ? *result.last_scanned_height : NullUniValue);
     return response;
 }
 
