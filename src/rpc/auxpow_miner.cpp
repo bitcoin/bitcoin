@@ -39,7 +39,7 @@ void auxMiningCheck()
   {
     LOCK (cs_main);
     const auto auxpowStart = Params ().GetConsensus ().nAuxpowStartHeight;
-    if (chainActive.Height () + 1 < auxpowStart)
+    if (::ChainActive().Height () + 1 < auxpowStart)
       throw std::runtime_error ("mining auxblock method is not yet available");
   }
 }
@@ -53,11 +53,11 @@ AuxpowMiner::getCurrentBlock (const CScript& scriptPubKey, uint256& target)
 
   {
     LOCK (cs_main);
-    if (pindexPrev != chainActive.Tip ()
+    if (pindexPrev != ::ChainActive().Tip ()
         || (mempool.GetTransactionsUpdated () != txUpdatedLast
             && GetTime () - startTime > 60))
       {
-        if (pindexPrev != chainActive.Tip ())
+        if (pindexPrev != ::ChainActive().Tip ())
           {
             /* Clear old blocks since they're obsolete now.  */
             blocks.clear ();
@@ -73,7 +73,7 @@ AuxpowMiner::getCurrentBlock (const CScript& scriptPubKey, uint256& target)
 
         /* Update state only when CreateNewBlock succeeded.  */
         txUpdatedLast = mempool.GetTransactionsUpdated ();
-        pindexPrev = chainActive.Tip ();
+        pindexPrev = ::ChainActive().Tip ();
         startTime = GetTime ();
 
         /* Finalise it by setting the version and building the merkle root.  */
@@ -89,7 +89,7 @@ AuxpowMiner::getCurrentBlock (const CScript& scriptPubKey, uint256& target)
 
   /* At this point, pblockCur is always initialised:  If we make it here
      without creating a new block above, it means that, in particular,
-     pindexPrev == chainActive.Tip().  But for that to happen, we must
+     pindexPrev == ::ChainActive().Tip().  But for that to happen, we must
      already have created a pblockCur in a previous call, as pindexPrev is
      initialised only when pblockCur is.  */
   assert (pblockCur);

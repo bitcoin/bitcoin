@@ -178,13 +178,13 @@ public:
     int getNumBlocks() override
     {
         LOCK(::cs_main);
-        return ::chainActive.Height();
+        return ::ChainActive().Height();
     }
     int64_t getLastBlockTime() override
     {
         LOCK(::cs_main);
-        if (::chainActive.Tip()) {
-            return ::chainActive.Tip()->GetBlockTime();
+        if (::ChainActive().Tip()) {
+            return ::ChainActive().Tip()->GetBlockTime();
         }
         return Params().GenesisBlock().GetBlockTime(); // Genesis block's time of current network
     }
@@ -193,7 +193,7 @@ public:
         const CBlockIndex* tip;
         {
             LOCK(::cs_main);
-            tip = ::chainActive.Tip();
+            tip = ::ChainActive().Tip();
         }
         return GuessVerificationProgress(Params().TxData(), tip);
     }

@@ -981,7 +981,7 @@ void CMasternodePayments::RequestLowDataPaymentBlocks(CNode* pnode, CConnman& co
     std::vector<CInv> vToFetch;
     int nLimit = GetStorageLimit();
 
-    const CBlockIndex *pindex = chainActive.Tip();
+    const CBlockIndex *pindex = ::ChainActive().Tip();
 
     while(nCachedBlockHeight - pindex->nHeight < nLimit) {
         const auto it = mapMasternodeBlocks.find(pindex->nHeight);

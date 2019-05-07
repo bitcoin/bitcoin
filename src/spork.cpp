@@ -40,8 +40,8 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         {
             LOCK(cs_main);
             EraseInvRequest(pfrom, hash);
-            if(!chainActive.Tip()) return;
-            strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, chainActive.Height(), pfrom->GetId());
+            if(!::ChainActive().Tip()) return;
+            strLogMsg = strprintf("SPORK -- hash: %s id: %d value: %10d bestHeight: %d peer=%d", hash.ToString(), spork.nSporkID, spork.nValue, ::ChainActive().Height(), pfrom->GetId());
         }
 
         if(mapSporksActive.count(spork.nSporkID)) {
