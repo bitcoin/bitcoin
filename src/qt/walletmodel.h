@@ -6,12 +6,14 @@
 #define BITCOIN_QT_WALLETMODEL_H
 
 #include <key.h>
+#include <primitives/transaction.h>
 
 #include <qt/walletmodeltransaction.h>
 
 #include <interfaces/wallet.h>
 #include <support/allocators/secure.h>
 
+#include <string>
 #include <vector>
 
 #include <QObject>
@@ -81,6 +83,8 @@ public:
 
     // Check address for validity
     bool validateAddress(const QString& address) const;
+    bool checkAddressForUsage(const std::vector<std::string>& addresses) const;
+    bool findAddressUsage(const QStringList& addresses, std::function<void(const QString&, const interfaces::WalletTx&, uint32_t)> callback) const;
 
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
