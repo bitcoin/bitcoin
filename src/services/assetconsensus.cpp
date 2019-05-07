@@ -268,7 +268,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     AssetMap mapAssets;
 	std::vector<COutPoint> vecLockedOutpoints;
     if (nHeight == 0)
-        nHeight = chainActive.Height()+1;   
+        nHeight = ::ChainActive().Height()+1;   
     std::string errorMessage;
     bool good = true;
 
@@ -388,7 +388,7 @@ void ResyncAssetAllocationStates(){
                 if (!txRef){
                     vecToRemoveArrivalTimes.push_back(txHash);
                 }
-                else if(!arrivalTime.first.IsNull() && ((chainActive.Tip()->GetMedianTimePast()*1000) - arrivalTime.second) > 1800000){
+                else if(!arrivalTime.first.IsNull() && ((::ChainActive().Tip()->GetMedianTimePast()*1000) - arrivalTime.second) > 1800000){
                     vecToRemoveArrivalTimes.push_back(txHash);
                 }
             }
@@ -434,7 +434,7 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
                     // ensure mempool has the tx and its less than 30 mins old
                     if(bCheckExpiryOnly && !mempool.get(arrivalTime.first))
                         continue;
-                    if(!arrivalTime.first.IsNull() && ((chainActive.Tip()->GetMedianTimePast()*1000) - arrivalTime.second) <= 1800000){
+                    if(!arrivalTime.first.IsNull() && ((::ChainActive().Tip()->GetMedianTimePast()*1000) - arrivalTime.second) <= 1800000){
                         removeAllConflicts = false;
                         break;
                     }
@@ -614,7 +614,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     const uint256 & txHash = tx.GetHash();
     if (!bSanityCheck)
         LogPrint(BCLog::SYS,"*** ASSET ALLOCATION %d %d %s %s\n", nHeight,
-            chainActive.Tip()->nHeight, txHash.ToString().c_str(),
+            ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK");
             
 
@@ -1081,7 +1081,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     const uint256& txHash = tx.GetHash();
     if (!bSanityCheck)
         LogPrint(BCLog::SYS, "*** ASSET %d %d %s %s\n", nHeight,
-            chainActive.Tip()->nHeight, txHash.ToString().c_str(),
+            ::ChainActive().Tip()->nHeight, txHash.ToString().c_str(),
             fJustCheck ? "JUSTCHECK" : "BLOCK");
 
     // unserialize asset from txn, check for valid

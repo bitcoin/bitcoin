@@ -150,7 +150,7 @@ void CMasternode::Check(bool fForce)
         }
     }
     const int nActiveStatePrev = nActiveState;
-    int nHeight = chainActive.Height();
+    int nHeight = ::ChainActive().Height();
     
 
     if(IsPoSeBanned()) {
@@ -234,8 +234,8 @@ void CMasternode::Check(bool fForce)
                 {
                     LOCK(cs_mapMasternodeBlocks);
                     for (int i = -10; i < 20; i++) {
-                        if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                          mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnScript, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
+                        if(mnpayments.mapMasternodeBlocks.count(::ChainActive().Height()+i) &&
+                          mnpayments.mapMasternodeBlocks[::ChainActive().Height()+i].HasPayeeWithVotes(mnScript, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
                         {
                             foundPayee = true;
                             break;
@@ -715,7 +715,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
 			return false;
 		}
-		if (chainActive.Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
+		if (::ChainActive().Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
 			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
 				Params().GetConsensus().nMasternodeMinimumConfirmations, outpoint.ToStringShort());
 			// UTXO is legit but has not enough confirmations.
@@ -730,7 +730,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
     // Verify that sig time is legit, should be at least not earlier than the timestamp of the block
     // at which collateral became nMasternodeMinimumConfirmations blocks deep.
     // NOTE: this is not accurate because block timestamp is NOT guaranteed to be 100% correct one.
-    CBlockIndex* pRequiredConfIndex = chainActive[nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
+    CBlockIndex* pRequiredConfIndex = ::ChainActive()[nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
     if(pRequiredConfIndex->GetBlockTime() > sigTime) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Bad sigTime %d (%d conf block is at %d) for Masternode %s %s\n",
                   sigTime, Params().GetConsensus().nMasternodeMinimumConfirmations, pRequiredConfIndex->GetBlockTime(), outpoint.ToStringShort(), addr.ToString());
@@ -832,10 +832,10 @@ uint256 CMasternodePing::GetSignatureHash() const
 CMasternodePing::CMasternodePing(const COutPoint& outpoint)
 {
     LOCK(cs_main);
-    if (!chainActive.Tip() || chainActive.Height() < 12) return;
+    if (!::ChainActive().Tip() || ::ChainActive().Height() < 12) return;
 
     masternodeOutpoint = outpoint;
-    blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
+    blockHash = ::ChainActive()[::ChainActive().Height() - 12]->GetBlockHash();
     sigTime = GetAdjustedTime();
     nDaemonVersion = CLIENT_MASTERNODE_VERSION;
 }
@@ -931,16 +931,16 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
             CMasternodePayee payee;  
             // only allow ping if MNPAYMENTS_SIGNATURES_REQUIRED votes are on this masternode in last 10 blocks of winners list and 20 blocks into future (match default of masternode winners)     
             for (int i = -10; i < 20; i++) {
-                if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                      mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
+                if(mnpayments.mapMasternodeBlocks.count(::ChainActive().Height()+i) &&
+                      mnpayments.mapMasternodeBlocks[::ChainActive().Height()+i].HasPayeeWithVotes(mnpayee, MNPAYMENTS_SIGNATURES_REQUIRED, payee))
                 {
                     foundPayee = true;
                     break;
                 }
             }
            for (int i = -10; i < 20; i++) {
-                if(mnpayments.mapMasternodeBlocks.count(chainActive.Height()+i) &&
-                      mnpayments.mapMasternodeBlocks[chainActive.Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
+                if(mnpayments.mapMasternodeBlocks.count(::ChainActive().Height()+i) &&
+                      mnpayments.mapMasternodeBlocks[::ChainActive().Height()+i].HasPayeeWithVotes(mnpayee, 0, payee))
                 {
                     foundPayeeInWinnersList = true;
                     break;
@@ -973,7 +973,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     {
 		LOCK(cs_main);
         BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-        if ((*mi).second && (*mi).second->nHeight < chainActive.Height() - 24) {
+        if ((*mi).second && (*mi).second->nHeight < ::ChainActive().Height() - 24) {
             LogPrint(BCLog::MN, "CMasternodePing::CheckAndUpdate -- Masternode ping is invalid, block hash is too old: masternode=%s  blockHash=%s\n", masternodeOutpoint.ToStringShort(), blockHash.ToString());
             // nDos = 1;
             return false;

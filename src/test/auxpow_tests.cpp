@@ -523,7 +523,7 @@ BOOST_FIXTURE_TEST_CASE (auxpow_miner_blockRegeneration, TestChain100Setup)
   /* We use mocktime so that we can control GetTime() as it is used in the
      logic that determines whether or not to reconstruct a block.  The "base"
      time is set such that the blocks we have from the fixture are fresh.  */
-  const int64_t baseTime = chainActive.Tip ()->GetMedianTimePast () + 1;
+  const int64_t baseTime = ::ChainActive().Tip ()->GetMedianTimePast () + 1;
   SetMockTime (baseTime);
 
   /* Construct a first block.  */
