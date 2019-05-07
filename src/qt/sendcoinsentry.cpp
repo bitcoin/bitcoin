@@ -85,6 +85,12 @@ void SendCoinsEntry::setModel(WalletModel *_model)
 {
     this->model = _model;
 
+    if (_model) {
+        ui->payTo->setWarningValidator(new BitcoinAddressUnusedInWalletValidator(*_model));
+    } else {
+        ui->payTo->setWarningValidator(nullptr);
+    }
+
     if (_model && _model->getOptionsModel())
         connect(_model->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &SendCoinsEntry::updateDisplayUnit);
 
