@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     const CBlockIndex* initial_tip = nullptr;
     {
         LOCK(cs_main);
-        initial_tip = chainActive.Tip();
+        initial_tip = ::ChainActive().Tip();
     }
     TestSubscriber sub(initial_tip->GetBlockHash());
     RegisterValidationInterface(&sub);
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 
     UnregisterValidationInterface(&sub);
 
-    BOOST_CHECK_EQUAL(sub.m_expected_tip, chainActive.Tip()->GetBlockHash());
+    BOOST_CHECK_EQUAL(sub.m_expected_tip, ::ChainActive().Tip()->GetBlockHash());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
