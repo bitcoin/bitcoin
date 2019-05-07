@@ -620,3 +620,18 @@ bool WalletModel::isMultiwallet()
 {
     return m_node.getWallets().size() > 1;
 }
+
+BitcoinAddressUnusedInWalletValidator::BitcoinAddressUnusedInWalletValidator(const WalletModel& wallet_model, QObject *parent) :
+    QValidator(parent),
+    m_wallet_model(wallet_model)
+{
+}
+
+QValidator::State BitcoinAddressUnusedInWalletValidator::validate(QString &input, int &pos) const
+{
+    Q_UNUSED(pos);
+    if (m_wallet_model.checkAddressForUsage(std::vector<std::string>{input.toStdString()})) {
+        return QValidator::Invalid;
+    }
+    return QValidator::Acceptable;
+}
