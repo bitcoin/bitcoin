@@ -690,9 +690,10 @@ syscoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREAD
 
 # syscoin bench #
 syscoinbench_SOURCES = syscoinbench.cpp
-syscoinbench_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoinbench_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS)
 syscoinbench_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoinbench_LDFLAGS = $(BOOST_LIBS) $(RELDFLAGS) $(AM_LDFLAGS)
+syscoinbench_LDFLAGS = $(BOOST_LIBS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
 syscoinbench_LDADD = \
   $(LIBSYSCOIN_COMMON) \
   $(LIBSYSCOIN_CONSENSUS) \
