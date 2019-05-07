@@ -515,7 +515,10 @@ class DashTestFramework(BitcoinTestFramework):
         outputs[receiver_address] = satoshi_round(amount)
         outputs[change_address] = satoshi_round(in_amount - amount - fee)
         rawtx = node_from.createrawtransaction(inputs, outputs)
-        return node_from.signrawtransaction(rawtx)
+        ret = node_from.signrawtransaction(rawtx)
+        decoded = node_from.decoderawtransaction(ret['hex'])
+        ret = {**decoded, **ret}
+        return ret
 
     # sends regular instantsend with high fee
     def send_regular_instantsend(self, sender, receiver, check_fee = True):

@@ -58,6 +58,7 @@ public:
 
     void WriteInstantSendLockMined(const uint256& hash, int nHeight);
     void RemoveInstantSendLockMined(const uint256& hash, int nHeight);
+    void WriteInstantSendLockArchived(CDBBatch& batch, const uint256& hash, int nHeight);
     std::unordered_map<uint256, CInstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight);
     void RemoveArchivedInstantSendLocks(int nUntilHeight);
     bool HasArchivedInstantSendLock(const uint256& islockHash);
@@ -66,6 +67,9 @@ public:
     uint256 GetInstantSendLockHashByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
     CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint);
+
+    std::vector<uint256> GetInstantSendLocksByParent(const uint256& parent);
+    std::vector<uint256> RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight);
 };
 
 class CInstantSendManager : public CRecoveredSigsListener
@@ -103,6 +107,7 @@ private:
         std::unordered_set<uint256, StaticSaltedHasher> children;
     };
     std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs;
+    std::unordered_multimap<uint256, std::pair<uint32_t, uint256>> nonLockedTxsByInputs;
 
     std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
 
@@ -120,7 +125,7 @@ public:
     bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params);
     bool IsLocked(const uint256& txHash);
     bool IsConflicted(const CTransaction& tx);
-    bool GetConflictingTx(const CTransaction& tx, uint256& retConflictTxHash);
+    CInstantSendLockPtr GetConflictingLock(const CTransaction& tx);
 
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
@@ -137,7 +142,8 @@ public:
 
     void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
     void AddNonLockedTx(const CTransactionRef& tx);
-    void RemoveNonLockedTx(const uint256& txid);
+    void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
+    void RemoveConflictedTx(const CTransaction& tx);
 
     void NotifyChainLock(const CBlockIndex* pindexChainLock);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
@@ -145,6 +151,8 @@ public:
     void HandleFullyConfirmedBlock(const CBlockIndex* pindex);
 
     void RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock);
+    void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
+    void RemoveChainLockConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
     void AskNodesForLockedTx(const uint256& txid);
     bool ProcessPendingRetryLockTxs();
 

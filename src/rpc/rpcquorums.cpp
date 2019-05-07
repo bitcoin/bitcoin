@@ -204,6 +204,17 @@ void quorum_hasrecsig_help()
     );
 }
 
+void quorum_getrecsig_help()
+{
+    throw std::runtime_error(
+            "quorum getrecsig llmqType \"id\" \"msgHash\"\n"
+            "\nArguments:\n"
+            "1. llmqType              (int, required) LLMQ type.\n"
+            "2. \"id\"                  (string, required) Request id.\n"
+            "3. \"msgHash\"             (string, required) Message hash.\n"
+    );
+}
+
 void quorum_isconflicting_help()
 {
     throw std::runtime_error(
@@ -223,6 +234,8 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             quorum_sign_help();
         } else if (cmd == "hasrecsig") {
             quorum_hasrecsig_help();
+        } else if (cmd == "getrecsig") {
+            quorum_getrecsig_help();
         } else if (cmd == "isconflicting") {
             quorum_isconflicting_help();
         } else {
@@ -243,6 +256,15 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
         return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash);
     } else if (cmd == "hasrecsig") {
         return llmq::quorumSigningManager->HasRecoveredSig(llmqType, id, msgHash);
+    } else if (cmd == "getrecsig") {
+        llmq::CRecoveredSig recSig;
+        if (!llmq::quorumSigningManager->GetRecoveredSigForId(llmqType, id, recSig)) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
+        }
+        if (recSig.msgHash != msgHash) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "recovered signature not found");
+        }
+        return recSig.ToJson();
     } else if (cmd == "isconflicting") {
         return llmq::quorumSigningManager->IsConflicting(llmqType, id, msgHash);
     } else {
@@ -265,6 +287,7 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             "  dkgstatus         - Return the status of the current DKG process\n"
             "  sign              - Threshold-sign a message\n"
             "  hasrecsig         - Test if a valid recovered signature is present\n"
+            "  getrecsig         - Get a recovered signature\n"
             "  isconflicting     - Test if a conflict exists\n"
     );
 }
@@ -286,7 +309,7 @@ UniValue quorum(const JSONRPCRequest& request)
         return quorum_info(request);
     } else if (command == "dkgstatus") {
         return quorum_dkgstatus(request);
-    } else if (command == "sign" || command == "hasrecsig" || command == "isconflicting") {
+    } else if (command == "sign" || command == "hasrecsig" || command == "getrecsig" || command == "isconflicting") {
         return quorum_sigs_cmd(request);
     } else {
         quorum_help();

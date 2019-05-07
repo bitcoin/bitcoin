@@ -24,6 +24,18 @@ namespace llmq
 
 CSigningManager* quorumSigningManager;
 
+UniValue CRecoveredSig::ToJson() const
+{
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("llmqType", (int)llmqType));
+    ret.push_back(Pair("quorumHash", quorumHash.ToString()));
+    ret.push_back(Pair("id", id.ToString()));
+    ret.push_back(Pair("msgHash", msgHash.ToString()));
+    ret.push_back(Pair("sig", sig.GetSig().ToString()));
+    ret.push_back(Pair("hash", sig.GetSig().GetHash().ToString()));
+    return ret;
+}
+
 CRecoveredSigsDb::CRecoveredSigsDb(CDBWrapper& _db) :
     db(_db)
 {
@@ -635,6 +647,14 @@ bool CSigningManager::HasRecoveredSigForId(Consensus::LLMQType llmqType, const u
 bool CSigningManager::HasRecoveredSigForSession(const uint256& signHash)
 {
     return db.HasRecoveredSigForSession(signHash);
+}
+
+bool CSigningManager::GetRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id, llmq::CRecoveredSig& retRecSig)
+{
+    if (!db.GetRecoveredSigById(llmqType, id, retRecSig)) {
+        return false;
+    }
+    return true;
 }
 
 bool CSigningManager::IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)

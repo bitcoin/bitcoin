@@ -10,6 +10,7 @@
 #include "net.h"
 #include "chainparams.h"
 #include "saltedhasher.h"
+#include "univalue.h"
 #include "unordered_lru_cache.h"
 
 #include <unordered_map>
@@ -56,6 +57,8 @@ public:
         assert(!hash.IsNull());
         return hash;
     }
+
+    UniValue ToJson() const;
 };
 
 class CRecoveredSigsDb
@@ -157,6 +160,7 @@ public:
     bool HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
+    bool GetRecoveredSigForId(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& retRecSig);
     bool IsConflicting(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash);
 
     bool HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id);
