@@ -5319,28 +5319,26 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         //sometimes we will be sent their most recent block and its not the one we want, in that case tell where we are
         if (!inChain && mapBlockIndex.count(block.hashPrevBlock) && mapBlockIndex.at(block.hashPrevBlock)->nChainTx) {
-            if (chainActive.Contains(mapBlockIndex.at(block.hashPrevBlock))) {
-                pfrom->AddInventoryKnown(inv);
-                CValidationState state;
-                ProcessNewBlock(state, pfrom, &block);
-                int nDoS;
-                if (state.IsInvalid(nDoS)) {
-                    pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
-                                       state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-                    if (nDoS > 0) {
-                        TRY_LOCK(cs_main, lockMain);
-                        if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
-                    }
+            pfrom->AddInventoryKnown(inv);
+            CValidationState state;
+            ProcessNewBlock(state, pfrom, &block);
+            int nDoS;
+            if (state.IsInvalid(nDoS)) {
+                pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+                        state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                if (nDoS > 0) {
+                    TRY_LOCK(cs_main, lockMain);
+                    if (lockMain) Misbehaving(pfrom->GetId(), nDoS);
                 }
-                if (state.IsSuspicious()) {
-                    //Tell the peer we consider this block suspicious
-                    pfrom->PushMessage("reject", strCommand, 0, std::string("block-suspicious"), inv.hash);
-                }
-            } else {
-                //ask to sync up to this block
-                if (!fSentGetBlocks)
-                    pfrom->PushMessage("getblocks", chainActive.GetLocator(), inv.hash);
             }
+            if (state.IsSuspicious()) {
+                //Tell the peer we consider this block suspicious
+                pfrom->PushMessage("reject", strCommand, 0, std::string("block-suspicious"), inv.hash);
+            }
+        } else {
+            //ask to sync up to this block
+            if (!fSentGetBlocks)
+                pfrom->PushMessage("getblocks", chainActive.GetLocator(), inv.hash);
         }
     }
 
