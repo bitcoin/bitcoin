@@ -2349,7 +2349,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         fGethSyncHeight = highestBlock;
     }
     fGethSyncStatus = status; 
-    if(!fGethSynced && fGethCurrentHeight >= fGethSyncHeight)       
+    if(!fGethSynced && fGethCurrentHeight >= fGethSyncHeight && fGethSyncHeight > 0)       
         fGethSynced = fGethSyncStatus == "synced";
 
     UniValue ret(UniValue::VOBJ);
