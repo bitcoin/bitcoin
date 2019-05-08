@@ -2349,8 +2349,8 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         fGethSyncHeight = highestBlock;
     }
     fGethSyncStatus = status; 
-    if(!fGethSynced && fGethCurrentHeight >= fGethSyncHeight)       
-        fGethSynced = fGethSyncStatus == "synced";
+    if(!fGethSynced && fGethSyncStatus == "synced")       
+        fGethSynced = true;
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
