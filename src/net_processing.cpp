@@ -2189,12 +2189,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return false;
         }
 
-        bool fBlocksOnly = !fRelayTxes;
-
-        // Allow whitelisted peers to send data other than blocks in blocks only mode if whitelistrelay is true
-        if (pfrom->fWhitelisted && gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY))
-            fBlocksOnly = false;
-
         LOCK(cs_main);
 
         uint32_t nFetchFlags = GetFetchFlags(pfrom);
@@ -2227,7 +2221,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             else
             {
                 pfrom->AddInventoryKnown(inv);
-                if (fBlocksOnly) {
+                // Stop processing the inv if
+                // we are in blocks only mode and the peer is not whitelisted.
+                if (!fRelayTxes && !pfrom->fWhitelisted) {
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol peer=%d\n", inv.hash.ToString(), pfrom->GetId());
                 } else if (!fAlreadyHave && !fImporting && !fReindex && !IsInitialBlockDownload()) {
                     RequestTx(State(pfrom->GetId()), inv.hash, nNow);
@@ -2444,9 +2440,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
     if (strCommand == NetMsgType::TX) {
         // Stop processing the transaction early if
-        // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
-        if (!fRelayTxes && (!pfrom->fWhitelisted || !gArgs.GetBoolArg("-whitelistrelay", DEFAULT_WHITELISTRELAY)))
-        {
+        // we are in blocks only mode and the peer is not whitelisted.
+        if (!fRelayTxes && !pfrom->fWhitelisted) {
             LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom->GetId());
             return true;
         }
