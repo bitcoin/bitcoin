@@ -123,6 +123,7 @@ Q_SIGNALS:
 
 
 #define SEND_CONFIRM_DELAY   3
+#define ADDRESS_REUSE_OVERRIDE_DELAY   10
 
 class SendConfirmationDialog : public QMessageBox
 {
@@ -130,6 +131,7 @@ class SendConfirmationDialog : public QMessageBox
 
 public:
     bool m_delete_on_close{false};
+    QString confirmButtonText{tr("Send")};
     QMessageBox::StandardButton m_yes_button{QMessageBox::Yes};
     QMessageBox::StandardButton m_cancel_button{QMessageBox::Cancel};
 
@@ -147,7 +149,6 @@ private:
     QAbstractButton *m_psbt_button;
     QTimer countDownTimer;
     int secDelay;
-    QString confirmButtonText{tr("Send")};
     bool m_enable_save;
     bool m_enable_send;
     QString m_psbt_button_text{tr("Create Unsigned")};
