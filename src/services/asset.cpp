@@ -1094,8 +1094,8 @@ bool IsOutpointMature(const COutPoint& outpoint)
 	if (coin.IsSpent() || coin.IsCoinBase())
 		return false;
 	int numConfirmationsNeeded = 0;
-	if (coin.nHeight > -1 && ::ChainActive().Tip())
-		return (::ChainActive().Height() - coin.nHeight) >= numConfirmationsNeeded;
+    if (coin.nHeight > -1 && ::ChainActive().Tip())
+        return (::ChainActive().Height() - coin.nHeight) >= numConfirmationsNeeded;
 
 	// don't have chainActive or coin height is neg 1 or less
 	return false;
