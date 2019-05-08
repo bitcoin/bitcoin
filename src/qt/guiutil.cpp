@@ -81,7 +81,7 @@ QString dateTimeStr(const QDateTime &date)
 
 QString dateTimeStr(qint64 nTime)
 {
-    return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
+    return dateTimeStr(QDateTime::fromMSecsSinceEpoch(nTime*1000));
 }
 
 QFont fixedPitchFont(bool use_embedded_font)
