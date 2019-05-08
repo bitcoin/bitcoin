@@ -998,25 +998,24 @@ bool AppInitParameterInteraction()
     }
 
     // Make sure enough file descriptors are available
-    int nBind = std::max(nUserBind, size_t(1));
     nUserMaxConnections = gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
+    int nBind = std::max(nUserBind, size_t(1));
+    int nRpcThreads = std::max(gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    int nFDMin = MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS + nBind + nRpcThreads;
 
-    // Trim requested connection counts, to fit into system limitations
-    // <int> in std::min<int>(...) to work around FreeBSD compilation issue described in #2695
-    nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS + MAX_ADDNODE_CONNECTIONS);
-#ifdef USE_POLL
-    int fd_max = nFD;
-#else
-    int fd_max = FD_SETSIZE;
-#endif
-    nMaxConnections = std::max(std::min<int>(nMaxConnections, fd_max - nBind - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS), 0);
-    if (nFD < MIN_CORE_FILEDESCRIPTORS)
-        return InitError(_("Not enough file descriptors available."));
-    nMaxConnections = std::min(nFD - MIN_CORE_FILEDESCRIPTORS - MAX_ADDNODE_CONNECTIONS, nMaxConnections);
+    // Optimistically enforce minimum file descriptors
+    nFD = RaiseFileDescriptorLimit(nFDMin + nUserMaxConnections);
+    if (nFD < nFDMin)
+        return InitError(strprintf(_("Not enough file descriptors available. %d available, %d required."), nFD, nFDMin));
 
+    // Calculate new -maxconnection count. Note: std::min<int>(...) to work around FreeBSD compilation issue described in #2695
+    nMaxConnections = std::max(std::min<int>(nMaxConnections, nFD - nFDMin), 0);
+    LogPrintf("There are %d file descriptors available, %d required, %d reserved, and %d requested.\n", nFD, nFDMin, nFDMin + nMaxConnections, nFDMin + nUserMaxConnections);
+
+    // Display a warning if the number of total maximum connections was lowered
     if (nMaxConnections < nUserMaxConnections)
-        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
+        InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of file descriptor limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
     if (gArgs.IsArgSet("-debug")) {
@@ -1778,7 +1777,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     connOptions.nMaxConnections = nMaxConnections;
     connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
     connOptions.nMaxAddnode = MAX_ADDNODE_CONNECTIONS;
-    connOptions.nMaxFeeler = 1;
+    connOptions.nMaxFeeler = NUM_FEELER_CONNECTIONS;
     connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = g_banman.get();
