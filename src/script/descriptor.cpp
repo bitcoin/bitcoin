@@ -910,22 +910,29 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
 } // namespace
 
+/** Check a descriptor checksum, and update desc to be the checksum-less part. */
+bool CheckChecksum(Span<const char>& sp, bool require_checksum, std::string* out_checksum = nullptr)
+{
+    auto check_split = Split(sp, '#');
+    if (check_split.size() > 2) return false; // Multiple '#' symbols
+    if (check_split.size() == 1 && require_checksum) return false; // Missing checksum
+    if (check_split.size() == 2) {
+        if (check_split[1].size() != 8) return false; // Unexpected length for checksum
+    }
+    auto checksum = DescriptorChecksum(check_split[0]);
+    if (checksum.empty()) return false; // Invalid characters in payload
+    if (check_split.size() == 2) {
+        if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) return false; // Checksum mismatch
+    }
+    if (out_checksum) *out_checksum = std::move(checksum);
+    sp = check_split[0];
+    return true;
+}
+
 std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum)
 {
     Span<const char> sp(descriptor.data(), descriptor.size());
-
-    // Checksum checks
-    auto check_split = Split(sp, '#');
-    if (check_split.size() > 2) return nullptr; // Multiple '#' symbols
-    if (check_split.size() == 1 && require_checksum) return nullptr; // Missing checksum
-    if (check_split.size() == 2) {
-        if (check_split[1].size() != 8) return nullptr; // Unexpected length for checksum
-        auto checksum = DescriptorChecksum(check_split[0]);
-        if (checksum.empty()) return nullptr; // Invalid characters in payload
-        if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) return nullptr; // Checksum mismatch
-    }
-    sp = check_split[0];
-
+    if (!CheckChecksum(sp, require_checksum)) return nullptr;
     auto ret = ParseScript(sp, ParseScriptContext::TOP, out);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
     return nullptr;
