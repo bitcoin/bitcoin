@@ -715,7 +715,7 @@ bool CMasternodeBroadcast::CheckOutpoint(int& nDos)
 			mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
 			return false;
 		}
-		if (::ChainActive().Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
+        if (::ChainActive().Height() - nHeight + 1 < Params().GetConsensus().nMasternodeMinimumConfirmations) {
 			LogPrint(BCLog::MN, "CMasternodeBroadcast::CheckOutpoint -- Masternode UTXO must have at least %d confirmations, masternode=%s\n",
 				Params().GetConsensus().nMasternodeMinimumConfirmations, outpoint.ToStringShort());
 			// UTXO is legit but has not enough confirmations.

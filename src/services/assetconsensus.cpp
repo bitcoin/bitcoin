@@ -268,7 +268,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     AssetMap mapAssets;
 	std::vector<COutPoint> vecLockedOutpoints;
     if (nHeight == 0)
-        nHeight = ::ChainActive().Height()+1;   
+        nHeight = ::ChainActive().Height()+1;
     std::string errorMessage;
     bool good = true;
 
