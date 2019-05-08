@@ -847,7 +847,7 @@ fs::path GetConfigFile(const std::string& confPath)
 fs::path GetMasternodeConfigFile()
 {
     fs::path pathConfigFile(gArgs.GetArg("-mnconf", "masternode.conf"));
-    if (!pathConfigFile.is_complete())
+    if (!pathConfigFile.is_absolute())
         pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }
