@@ -56,18 +56,20 @@ the command line or in the configuration file.
 
 Currently, the following notifications are supported:
 
+    -zmqpubhashblock=address
+    -zmqpubhashchainlock=address
     -zmqpubhashtx=address
     -zmqpubhashtxlock=address
-    -zmqpubhashblock=address
-    -zmqpubrawblock=address
-    -zmqpubrawtx=address
-    -zmqpubrawtxlock=address
     -zmqpubhashgovernancevote=address
     -zmqpubhashgovernanceobject=address
-    -zmqpubrawgovernancevote=address
-    -zmqpubhashgovernanceobject=address
-    -zmqpubrawinstantsenddoublespend=address
     -zmqpubhashinstantsenddoublespend=address
+    -zmqpubrawblock=address
+    -zmqpubrawchainlock=address
+    -zmqpubrawtx=address
+    -zmqpubrawtxlock=address
+    -zmqpubrawgovernancevote=address
+    -zmqpubrawgovernanceobject=address
+    -zmqpubrawinstantsenddoublespend=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.

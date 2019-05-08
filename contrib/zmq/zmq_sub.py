@@ -43,12 +43,14 @@ class ZMQHandler():
 
         self.zmqSubSocket = self.zmqContext.socket(zmq.SUB)
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashblock")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashchainlock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashtxlock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashgovernancevote")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashgovernanceobject")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "hashinstantsenddoublespend")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawblock")
+        self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawchainlock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtx")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawtxlock")
         self.zmqSubSocket.setsockopt_string(zmq.SUBSCRIBE, "rawgovernancevote")
@@ -69,23 +71,14 @@ class ZMQHandler():
         if topic == b"hashblock":
             print('- HASH BLOCK ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"hashchainlock":
+            print('- HASH CHAINLOCK ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
         elif topic == b"hashtx":
             print ('- HASH TX ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
         elif topic == b"hashtxlock":
             print('- HASH TX LOCK ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
-        elif topic == b"rawblock":
-            print('- RAW BLOCK HEADER ('+sequence+') -')
-            print(binascii.hexlify(body[:80]).decode("utf-8"))
-        elif topic == b"rawtx":
-            print('- RAW TX ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
-        elif topic == b"rawtxlock":
-            print('- RAW TX LOCK ('+sequence+') -')
-            print(binascii.hexlify(body).decode("utf-8"))
-        elif topic == b"rawinstantsenddoublespend":
-            print('- RAW IS DOUBLE SPEND ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
         elif topic == b"hashgovernancevote":
             print('- HASH GOVERNANCE VOTE ('+sequence+') -')
@@ -93,14 +86,29 @@ class ZMQHandler():
         elif topic == b"hashgovernanceobject":
             print('- HASH GOVERNANCE OBJECT ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"hashinstantsenddoublespend":
+            print('- HASH IS DOUBLE SPEND ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"rawblock":
+            print('- RAW BLOCK HEADER ('+sequence+') -')
+            print(binascii.hexlify(body[:80]).decode("utf-8"))
+        elif topic == b"rawchainlock":
+            print('- RAW CHAINLOCK ('+sequence+') -')
+            print(binascii.hexlify(body[:80]).decode("utf-8"))
+        elif topic == b"rawtx":
+            print('- RAW TX ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
+        elif topic == b"rawtxlock":
+            print('- RAW TX LOCK ('+sequence+') -')
+            print(binascii.hexlify(body).decode("utf-8"))
         elif topic == b"rawgovernancevote":
             print('- RAW GOVERNANCE VOTE ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
         elif topic == b"rawgovernanceobject":
             print('- RAW GOVERNANCE OBJECT ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
-        elif topic == b"hashinstantsenddoublespend":
-            print('- HASH IS DOUBLE SPEND ('+sequence+') -')
+        elif topic == b"rawinstantsenddoublespend":
+            print('- RAW IS DOUBLE SPEND ('+sequence+') -')
             print(binascii.hexlify(body).decode("utf-8"))
         # schedule ourselves to receive the next message
         asyncio.ensure_future(self.handle())
