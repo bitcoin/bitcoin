@@ -1655,7 +1655,7 @@ static bool WriteUndoDataForBlock(const CBlockUndo& blockundo, CValidationState&
     if (pindex->GetUndoPos().IsNull()) {
         FlatFilePos _pos;
         if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, CLIENT_VERSION) + 40))
-            return error("ConnectBlock(): FindUndoPos failed");
+            return error("%s: FindUndoPos failed", __func__);
         if (!UndoWriteToDisk(blockundo, _pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart()))
             return AbortNode(state, "Failed to write undo data");
 
