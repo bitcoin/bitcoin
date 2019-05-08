@@ -38,7 +38,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
             t = time()
             while (not self.check_punished(mn) or not self.check_banned(mn)) and (time() - t) < 120:
-                self.mine_quorum(expected_valid_count=i-1)
+                self.mine_quorum(expected_contributions=i-1, expected_complaints=i-1, expected_commitments=i-1)
 
             assert(self.check_punished(mn) and self.check_banned(mn))
 

@@ -25,13 +25,39 @@
 namespace llmq
 {
 
-double contributionOmitRate = 0;
-double contributionLieRate = 0;
-double complainLieRate = 0;
-double justifyOmitRate = 0;
-double justifyLieRate = 0;
-double commitOmitRate = 0;
-double commitLieRate = 0;
+// Supported error types:
+// - contribution-omit
+// - contribution-lie
+// - complain-lie
+// - justify-lie
+// - justify-omit
+// - commit-omit
+// - commit-lie
+
+static CCriticalSection cs_simDkgError;
+static std::map<std::string, double> simDkgErrorMap;
+
+void SetSimulatedDKGErrorRate(const std::string& type, double rate)
+{
+    LOCK(cs_simDkgError);
+    simDkgErrorMap[type] = rate;
+}
+
+static double GetSimulatedErrorRate(const std::string& type)
+{
+    LOCK(cs_simDkgError);
+    auto it = simDkgErrorMap.find(type);
+    if (it != simDkgErrorMap.end()) {
+        return it->second;
+    }
+    return 0;
+}
+
+static bool ShouldSimulateError(const std::string& type)
+{
+    double rate = GetSimulatedErrorRate(type);
+    return GetRandBool(rate);
+}
 
 CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) :
     CDKGLogger(_quorumDkg.params.type, _quorumDkg.quorumHash, _quorumDkg.height, _quorumDkg.AreWeMember(), _func)
@@ -137,7 +163,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 
     logger.Batch("sending contributions");
 
-    if (GetRandBool(contributionOmitRate)) {
+    if (ShouldSimulateError("contribution-omit")) {
         logger.Batch("omitting");
         return;
     }
@@ -156,7 +182,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
         auto& m = members[i];
         CBLSSecretKey skContrib = skContributions[i];
 
-        if (GetRandBool(contributionLieRate)) {
+        if (i != myIdx && ShouldSimulateError("contribution-lie")) {
             logger.Batch("lying for %s", m->dmn->proTxHash.ToString());
             skContrib.MakeNewKey();
         }
@@ -297,7 +323,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
     if (!qc.contributions->Decrypt(myIdx, *activeMasternodeInfo.blsKeyOperator, skContribution, PROTOCOL_VERSION)) {
         logger.Batch("contribution from %s could not be decrypted", member->dmn->proTxHash.ToString());
         complain = true;
-    } else if (GetRandBool(complainLieRate)) {
+    } else if (member->idx != myIdx && ShouldSimulateError("complain-lie")) {
         logger.Batch("lying/complaining for %s", member->dmn->proTxHash.ToString());
         complain = true;
     }
@@ -630,7 +656,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
 
         CBLSSecretKey skContribution = skContributions[i];
 
-        if (GetRandBool(justifyLieRate)) {
+        if (i != myIdx && ShouldSimulateError("justify-lie")) {
             logger.Batch("lying for %s", m->dmn->proTxHash.ToString());
             skContribution.MakeNewKey();
         }
@@ -638,7 +664,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
         qj.contributions.emplace_back(i, skContribution);
     }
 
-    if (GetRandBool(justifyOmitRate)) {
+    if (ShouldSimulateError("justify-omit")) {
         logger.Batch("omitting");
         return;
     }
@@ -888,7 +914,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
         return;
     }
 
-    if (GetRandBool(commitOmitRate)) {
+    if (ShouldSimulateError("commit-omit")) {
         logger.Batch("omitting");
         return;
     }
@@ -926,7 +952,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     qc.quorumVvecHash = ::SerializeHash(*vvec);
 
     int lieType = -1;
-    if (GetRandBool(commitLieRate)) {
+    if (ShouldSimulateError("commit-lie")) {
         lieType = GetRandInt(5);
         logger.Batch("lying on commitment. lieType=%d", lieType);
     }

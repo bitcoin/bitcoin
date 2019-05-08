@@ -341,6 +341,8 @@ public:
     CDKGMember* GetMember(const uint256& proTxHash) const;
 };
 
+void SetSimulatedDKGErrorRate(const std::string& type, double rate);
+
 }
 
 #endif //DASH_QUORUMS_DKGSESSION_H

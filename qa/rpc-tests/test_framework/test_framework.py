@@ -622,7 +622,7 @@ class DashTestFramework(BitcoinTestFramework):
             sleep(0.1)
         raise AssertionError("wait_for_quorum_commitment timed out")
 
-    def mine_quorum(self, expected_valid_count=5):
+    def mine_quorum(self, expected_contributions=5, expected_complaints=0, expected_justifications=0, expected_commitments=5):
         quorums = self.nodes[0].quorum("list")
 
         # move forward to next DKG
@@ -643,28 +643,28 @@ class DashTestFramework(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 2 (contribute) and received all contributions
-        self.wait_for_quorum_phase(2, "receivedContributions", expected_valid_count)
+        self.wait_for_quorum_phase(2, "receivedContributions", expected_contributions)
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 3 (complain) and received all complaints
-        self.wait_for_quorum_phase(3, "receivedComplaints" if expected_valid_count != 5 else None, expected_valid_count)
+        self.wait_for_quorum_phase(3, "receivedComplaints", expected_complaints)
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 4 (justify)
-        self.wait_for_quorum_phase(4, None, 0)
+        self.wait_for_quorum_phase(4, "receivedJustifications", expected_justifications)
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)
         sync_blocks(self.nodes)
 
         # Make sure all reached phase 5 (commit)
-        self.wait_for_quorum_phase(5, "receivedPrematureCommitments", expected_valid_count)
+        self.wait_for_quorum_phase(5, "receivedPrematureCommitments", expected_commitments)
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)

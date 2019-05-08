@@ -273,6 +273,38 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
     }
 }
 
+void quorum_dkgsimerror_help()
+{
+    throw std::runtime_error(
+            "quorum dkgsimerror \"type\" rate\n"
+            "This enables simulation of errors and malicious behaviour in the DKG. Do NOT use this on mainnet\n"
+            "as you will get yourself very likely PoSe banned for this.\n"
+            "\nArguments:\n"
+            "1. \"type\"                (string, required) Error type.\n"
+            "2. rate                  (number, required) Rate at which to simulate this error type.\n"
+    );
+}
+
+UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
+{
+    auto cmd = request.params[0].get_str();
+    if (request.fHelp || (request.params.size() != 3)) {
+        quorum_dkgsimerror_help();
+    }
+
+    std::string type = request.params[1].get_str();
+    double rate = ParseDoubleV(request.params[2], "rate");
+
+    if (rate < 0 || rate > 1) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid rate. Must be between 0 and 1");
+    }
+
+    llmq::SetSimulatedDKGErrorRate(type, rate);
+
+    return UniValue();
+}
+
+
 [[ noreturn ]] void quorum_help()
 {
     throw std::runtime_error(
@@ -284,6 +316,7 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             "\nAvailable commands:\n"
             "  list              - List of on-chain quorums\n"
             "  info              - Return information about a quorum\n"
+            "  dkgsimerror       - Simulates DKG errors and malicious behavior.\n"
             "  dkgstatus         - Return the status of the current DKG process\n"
             "  sign              - Threshold-sign a message\n"
             "  hasrecsig         - Test if a valid recovered signature is present\n"
@@ -311,6 +344,8 @@ UniValue quorum(const JSONRPCRequest& request)
         return quorum_dkgstatus(request);
     } else if (command == "sign" || command == "hasrecsig" || command == "getrecsig" || command == "isconflicting") {
         return quorum_sigs_cmd(request);
+    } else if (command == "dkgsimerror") {
+        return quorum_dkgsimerror(request);
     } else {
         quorum_help();
     }
