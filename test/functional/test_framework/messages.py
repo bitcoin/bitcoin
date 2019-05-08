@@ -1155,7 +1155,7 @@ class msg_generic:
 class msg_witness_block(msg_block):
     __slots__ = ()
     def serialize(self):
-        r = self.block.serialize(with_witness=True)
+        r = self.block.serialize()
         return r
 
 
@@ -1454,5 +1454,5 @@ class msg_witness_blocktxn(msg_blocktxn):
 
     def serialize(self):
         r = b""
-        r += self.block_transactions.serialize(with_witness=True)
+        r += self.block_transactions.serialize()
         return r
