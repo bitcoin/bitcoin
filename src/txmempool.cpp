@@ -841,7 +841,7 @@ void CTxMemPool::PrioritiseTransaction(const uint256& hash, const CAmount& nFeeD
             ++nTransactionsUpdated;
         }
     }
-    LogPrintf("PrioritiseTransaction: %s feerate += %s\n", hash.ToString(), FormatMoney(nFeeDelta));
+    LogPrintf("CTxMemPool::%s: %s feerate += %s\n", __func__, hash.ToString(), FormatMoney(nFeeDelta));
 }
 
 void CTxMemPool::ApplyDelta(const uint256 hash, CAmount &nFeeDelta) const

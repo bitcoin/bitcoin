@@ -1682,8 +1682,8 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
 
         if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
         {
-            pwallet->WalletLogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
-                                    this->GetHash().ToString());
+            pwallet->WalletLogPrintf("CWalletTx::%s: Unknown transaction type found, txid %s\n",
+                                    __func__, this->GetHash().ToString());
             address = CNoDestination();
         }
 

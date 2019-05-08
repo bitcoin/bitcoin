@@ -139,7 +139,7 @@ void BerkeleyEnvironment::Close()
 
     int ret = dbenv->close(0);
     if (ret != 0)
-        LogPrintf("BerkeleyEnvironment::Close: Error %d closing database environment: %s\n", ret, DbEnv::strerror(ret));
+        LogPrintf("BerkeleyEnvironment::%s: Error %d closing database environment: %s\n", __func__, ret, DbEnv::strerror(ret));
     if (!fMockDb)
         DbEnv((u_int32_t)0).remove(strPath.c_str(), 0);
 
@@ -184,7 +184,7 @@ bool BerkeleyEnvironment::Open(bool retry)
     fs::path pathLogDir = pathIn / "database";
     TryCreateDirectories(pathLogDir);
     fs::path pathErrorFile = pathIn / "db.log";
-    LogPrintf("BerkeleyEnvironment::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
+    LogPrintf("BerkeleyEnvironment::%s: LogDir=%s ErrorFile=%s\n", __func__, pathLogDir.string(), pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
     if (gArgs.GetBoolArg("-privdb", DEFAULT_WALLET_PRIVDB))
@@ -211,10 +211,10 @@ bool BerkeleyEnvironment::Open(bool retry)
                              nEnvFlags,
                          S_IRUSR | S_IWUSR);
     if (ret != 0) {
-        LogPrintf("BerkeleyEnvironment::Open: Error %d opening database environment: %s\n", ret, DbEnv::strerror(ret));
+        LogPrintf("BerkeleyEnvironment::%s: Error %d opening database environment: %s\n", __func__, ret, DbEnv::strerror(ret));
         int ret2 = dbenv->close(0);
         if (ret2 != 0) {
-            LogPrintf("BerkeleyEnvironment::Open: Error %d closing failed database environment: %s\n", ret2, DbEnv::strerror(ret2));
+            LogPrintf("BerkeleyEnvironment::%s: Error %d closing failed database environment: %s\n", __func__, ret2, DbEnv::strerror(ret2));
         }
         Reset();
         if (retry) {
@@ -248,7 +248,7 @@ BerkeleyEnvironment::BerkeleyEnvironment()
 
     boost::this_thread::interruption_point();
 
-    LogPrint(BCLog::DB, "BerkeleyEnvironment::MakeMock\n");
+    LogPrint(BCLog::DB, "BerkeleyEnvironment::%s\n", __func__);
 
     dbenv->set_cachesize(1, 0, 1);
     dbenv->set_lg_bsize(10485760 * 4);
@@ -267,7 +267,7 @@ BerkeleyEnvironment::BerkeleyEnvironment()
                              DB_PRIVATE,
                          S_IRUSR | S_IWUSR);
     if (ret > 0)
-        throw std::runtime_error(strprintf("BerkeleyEnvironment::MakeMock: Error %d opening database environment.", ret));
+        throw std::runtime_error(strprintf("BerkeleyEnvironment::%s: Error %d opening database environment.", __func__, ret));
 
     fDbEnvInit = true;
     fMockDb = true;
@@ -469,14 +469,14 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
     Db db(dbenv.get(), 0);
     int result = db.verify(strFile.c_str(), nullptr, &strDump, flags);
     if (result == DB_VERIFY_BAD) {
-        LogPrintf("BerkeleyEnvironment::Salvage: Database salvage found errors, all data may not be recoverable.\n");
+        LogPrintf("BerkeleyEnvironment::%s: Database salvage found errors, all data may not be recoverable.\n", __func__);
         if (!fAggressive) {
-            LogPrintf("BerkeleyEnvironment::Salvage: Rerun with aggressive mode to ignore errors and continue.\n");
+            LogPrintf("BerkeleyEnvironment::%s: Rerun with aggressive mode to ignore errors and continue.\n", __func__);
             return false;
         }
     }
     if (result != 0 && result != DB_VERIFY_BAD) {
-        LogPrintf("BerkeleyEnvironment::Salvage: Database salvage failed with result %d.\n", result);
+        LogPrintf("BerkeleyEnvironment::%s: Database salvage failed with result %d.\n", __func__, result);
         return false;
     }
 
@@ -500,7 +500,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
                 break;
             getline(strDump, valueHex);
             if (valueHex == DATA_END) {
-                LogPrintf("BerkeleyEnvironment::Salvage: WARNING: Number of keys in data does not match number of values.\n");
+                LogPrintf("BerkeleyEnvironment::%s: WARNING: Number of keys in data does not match number of values.\n", __func__);
                 break;
             }
             vResult.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
@@ -508,7 +508,7 @@ bool BerkeleyEnvironment::Salvage(const std::string& strFile, bool fAggressive, 
     }
 
     if (keyHex != DATA_END) {
-        LogPrintf("BerkeleyEnvironment::Salvage: WARNING: Unexpected end of file while reading salvage output.\n");
+        LogPrintf("BerkeleyEnvironment::%s: WARNING: Unexpected end of file while reading salvage output.\n", __func__);
         return false;
     }
 
@@ -775,7 +775,7 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
 {
     int64_t nStart = GetTimeMillis();
     // Flush log data to the actual data file on all files that are not in use
-    LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: [%s] Flush(%s)%s\n", strPath, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
+    LogPrint(BCLog::DB, "BerkeleyEnvironment::%s: [%s] Flush(%s)%s\n", __func__, strPath, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started");
     if (!fDbEnvInit)
         return;
     {
@@ -784,21 +784,21 @@ void BerkeleyEnvironment::Flush(bool fShutdown)
         while (mi != mapFileUseCount.end()) {
             std::string strFile = (*mi).first;
             int nRefCount = (*mi).second;
-            LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: Flushing %s (refcount = %d)...\n", strFile, nRefCount);
+            LogPrint(BCLog::DB, "BerkeleyEnvironment::%s: Flushing %s (refcount = %d)...\n", __func__, strFile, nRefCount);
             if (nRefCount == 0) {
                 // Move log data to the dat file
                 CloseDb(strFile);
-                LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: %s checkpoint\n", strFile);
+                LogPrint(BCLog::DB, "BerkeleyEnvironment::%s: %s checkpoint\n", __func__, strFile);
                 dbenv->txn_checkpoint(0, 0, 0);
-                LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: %s detach\n", strFile);
+                LogPrint(BCLog::DB, "BerkeleyEnvironment::%s: %s detach\n", __func__, strFile);
                 if (!fMockDb)
                     dbenv->lsn_reset(strFile.c_str(), 0);
-                LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: %s closed\n", strFile);
+                LogPrint(BCLog::DB, "BerkeleyEnvironment::%s: %s closed\n", __func__, strFile);
                 mapFileUseCount.erase(mi++);
             } else
                 mi++;
         }
-        LogPrint(BCLog::DB, "BerkeleyEnvironment::Flush: Flush(%s)%s took %15dms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
+        LogPrint(BCLog::DB, "BerkeleyEnvironment::%s: Flush(%s)%s took %15dms\n", __func__, fShutdown ? "true" : "false", fDbEnvInit ? "" : " database not started", GetTimeMillis() - nStart);
         if (fShutdown) {
             char** listp;
             if (mapFileUseCount.empty()) {

@@ -895,7 +895,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         int nVersionRequired, nVersionThatWrote;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
-            return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
+            return error("CBlockPolicyEstimator::%s: up-version (%d) fee estimate file", __func__, nVersionRequired);
 
         // Read fee estimates file into temporary variables so existing data
         // structures aren't corrupted if there is an exception.
@@ -942,7 +942,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         }
     }
     catch (const std::exception& e) {
-        LogPrintf("CBlockPolicyEstimator::Read(): unable to read policy estimator data (non-fatal): %s\n",e.what());
+        LogPrintf("CBlockPolicyEstimator::%s: unable to read policy estimator data (non-fatal): %s\n", __func__, e.what());
         return false;
     }
     return true;

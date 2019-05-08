@@ -1053,7 +1053,7 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
     // Open history file to append
     CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull())
-        return error("WriteBlockToDisk: OpenBlockFile failed");
+        return error("%s: OpenBlockFile failed", __func__);
 
     // Write index header
     unsigned int nSize = GetSerializeSize(block, fileout.GetVersion());
@@ -1062,7 +1062,7 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
     // Write block
     long fileOutPos = ftell(fileout.Get());
     if (fileOutPos < 0)
-        return error("WriteBlockToDisk: ftell failed");
+        return error("%s: ftell failed", __func__);
     pos.nPos = (unsigned int)fileOutPos;
     fileout << block;
 
@@ -1076,7 +1076,7 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
     // Open history file to read
     CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
     if (filein.IsNull())
-        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+        return error("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
 
     // Read block
     try {
@@ -1088,7 +1088,7 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+        return error("%s: Errors in block header at %s", __func__, pos.ToString());
 
     return true;
 }
@@ -1104,8 +1104,8 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
     if (!ReadBlockFromDisk(block, blockPos, consensusParams))
         return false;
     if (block.GetHash() != pindex->GetBlockHash())
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
-                pindex->ToString(), pindex->GetBlockPos().ToString());
+        return error("%s: GetHash() doesn't match index for %s at %s",
+                __func__, pindex->ToString(), pindex->GetBlockPos().ToString());
     return true;
 }
 
@@ -1581,12 +1581,12 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
 
     CBlockUndo blockUndo;
     if (!UndoReadFromDisk(blockUndo, pindex)) {
-        error("DisconnectBlock(): failure reading undo data");
+        error("CChainState::%s: failure reading undo data", __func__);
         return DISCONNECT_FAILED;
     }
 
     if (blockUndo.vtxundo.size() + 1 != block.vtx.size()) {
-        error("DisconnectBlock(): block and undo data inconsistent");
+        error("CChainState::%s: block and undo data inconsistent", __func__);
         return DISCONNECT_FAILED;
     }
 
@@ -1613,7 +1613,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
         if (i > 0) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
             if (txundo.vprevout.size() != tx.vin.size()) {
-                error("DisconnectBlock(): transaction and undo data inconsistent");
+                error("CChainState::%s: transaction and undo data inconsistent", __func__);
                 return DISCONNECT_FAILED;
             }
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
@@ -1655,7 +1655,7 @@ static bool WriteUndoDataForBlock(const CBlockUndo& blockundo, CValidationState&
     if (pindex->GetUndoPos().IsNull()) {
         FlatFilePos _pos;
         if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, CLIENT_VERSION) + 40))
-            return error("ConnectBlock(): FindUndoPos failed");
+            return error("%s: FindUndoPos failed", __func__);
         if (!UndoWriteToDisk(blockundo, _pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart()))
             return AbortNode(state, "Failed to write undo data");
 
@@ -1943,7 +1943,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         for (const auto& tx : block.vtx) {
             for (size_t o = 0; o < tx->vout.size(); o++) {
                 if (view.HaveCoin(COutPoint(tx->GetHash(), o))) {
-                    return state.Invalid(ValidationInvalidReason::CONSENSUS, error("ConnectBlock(): tried to overwrite transaction"),
+                    return state.Invalid(ValidationInvalidReason::CONSENSUS, error("CChainState::%s: tried to overwrite transaction", __func__),
                                      REJECT_INVALID, "bad-txns-BIP30");
                 }
             }
@@ -1991,7 +1991,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     state.Invalid(ValidationInvalidReason::CONSENSUS, false,
                             state.GetRejectCode(), state.GetRejectReason(), state.GetDebugMessage());
                 }
-                return error("%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
+                return error("CChainState::%s: Consensus::CheckTxInputs: %s, %s", __func__, tx.GetHash().ToString(), FormatStateMessage(state));
             }
             nFees += txfee;
             if (!MoneyRange(nFees)) {
@@ -2019,7 +2019,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         // * witness (when witness enabled in flags and excludes coinbase)
         nSigOpsCost += GetTransactionSigOpCost(tx, view, flags);
         if (nSigOpsCost > MAX_BLOCK_SIGOPS_COST)
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, error("ConnectBlock(): too many sigops"),
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, error("CChainState::%s: too many sigops", __func__),
                              REJECT_INVALID, "bad-blk-sigops");
 
         txdata.emplace_back(tx);
@@ -2313,7 +2313,7 @@ bool CChainState::DisconnectTip(CValidationState& state, const CChainParams& cha
         CCoinsViewCache view(pcoinsTip.get());
         assert(view.GetBestBlock() == pindexDelete->GetBlockHash());
         if (DisconnectBlock(block, pindexDelete, view) != DISCONNECT_OK)
-            return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
+            return error("CChainState::%s: DisconnectBlock %s failed", __func__, pindexDelete->GetBlockHash().ToString());
         bool flushed = view.Flush();
         assert(flushed);
     }
@@ -4028,7 +4028,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
         CBlock block;
         // check level 0: read from disk
         if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
-            return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+            return error("CVerifyDB::%s: *** ReadBlockFromDisk failed at %d, hash=%s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
         if (nCheckLevel >= 1 && !CheckBlock(block, state, chainparams.GetConsensus()))
             return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__,
@@ -4038,7 +4038,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             CBlockUndo undo;
             if (!pindex->GetUndoPos().IsNull()) {
                 if (!UndoReadFromDisk(undo, pindex)) {
-                    return error("VerifyDB(): *** found bad undo data at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
+                    return error("CVerifyDB::%s: *** found bad undo data at %d, hash=%s\n", __func__, pindex->nHeight, pindex->GetBlockHash().ToString());
                 }
             }
         }
@@ -4047,7 +4047,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
             DisconnectResult res = g_chainstate.DisconnectBlock(block, pindex, coins);
             if (res == DISCONNECT_FAILED) {
-                return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+                return error("CVerifyDB::%s: *** irrecoverable inconsistency in block data at %d, hash=%s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString());
             }
             if (res == DISCONNECT_UNCLEAN) {
                 nGoodTransactions = 0;
@@ -4060,7 +4060,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             return true;
     }
     if (pindexFailure)
-        return error("VerifyDB(): *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", ::ChainActive().Height() - pindexFailure->nHeight + 1, nGoodTransactions);
+        return error("CVerifyDB::%s: *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", __func__, ::ChainActive().Height() - pindexFailure->nHeight + 1, nGoodTransactions);
 
     // store block count as we move pindex at check level >= 4
     int block_count = ::ChainActive().Height() - pindex->nHeight;
@@ -4079,9 +4079,9 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             pindex = ::ChainActive().Next(pindex);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
-                return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+                return error("CVerifyDB::%s: *** ReadBlockFromDisk failed at %d, hash=%s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString());
             if (!g_chainstate.ConnectBlock(block, state, pindex, coins, chainparams))
-                return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+                return error("CVerifyDB::%s: *** found unconnectable block at %d, hash=%s (%s)", __func__, pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         }
     }
 
@@ -4097,7 +4097,7 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     // TODO: merge with ConnectBlock
     CBlock block;
     if (!ReadBlockFromDisk(block, pindex, params.GetConsensus())) {
-        return error("ReplayBlock(): ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
+        return error("CChainState::%s: ReadBlockFromDisk failed at %d, hash=%s", __func__, pindex->nHeight, pindex->GetBlockHash().ToString());
     }
 
     for (const CTransactionRef& tx : block.vtx) {
@@ -4130,13 +4130,13 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
     const CBlockIndex* pindexFork = nullptr; // Latest block common to both the old and the new tip.
 
     if (mapBlockIndex.count(hashHeads[0]) == 0) {
-        return error("ReplayBlocks(): reorganization to unknown block requested");
+        return error("CChainState::%s: reorganization to unknown block requested", __func__);
     }
     pindexNew = mapBlockIndex[hashHeads[0]];
 
     if (!hashHeads[1].IsNull()) { // The old tip is allowed to be 0, indicating it's the first flush.
         if (mapBlockIndex.count(hashHeads[1]) == 0) {
-            return error("ReplayBlocks(): reorganization from unknown block requested");
+            return error("CChainState::%s: reorganization from unknown block requested", __func__);
         }
         pindexOld = mapBlockIndex[hashHeads[1]];
         pindexFork = LastCommonAncestor(pindexOld, pindexNew);
@@ -4148,12 +4148,12 @@ bool CChainState::ReplayBlocks(const CChainParams& params, CCoinsView* view)
         if (pindexOld->nHeight > 0) { // Never disconnect the genesis block.
             CBlock block;
             if (!ReadBlockFromDisk(block, pindexOld, params.GetConsensus())) {
-                return error("RollbackBlock(): ReadBlockFromDisk() failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+                return error("CChainState::%s: ReadBlockFromDisk() failed at %d, hash=%s", __func__, pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
             LogPrintf("Rolling back %s (%i)\n", pindexOld->GetBlockHash().ToString(), pindexOld->nHeight);
             DisconnectResult res = DisconnectBlock(block, pindexOld, cache);
             if (res == DISCONNECT_FAILED) {
-                return error("RollbackBlock(): DisconnectBlock failed at %d, hash=%s", pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
+                return error("CChainState::%s: DisconnectBlock failed at %d, hash=%s", __func__, pindexOld->nHeight, pindexOld->GetBlockHash().ToString());
             }
             // If DISCONNECT_UNCLEAN is returned, it means a non-existing UTXO was deleted, or an existing UTXO was
             // overwritten. It corresponds to cases where the block-to-be-disconnect never had all its operations
@@ -4272,7 +4272,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
 
             // Disconnect block
             if (!DisconnectTip(state, params, nullptr)) {
-                return error("RewindBlockIndex: unable to disconnect block at height %i (%s)", tip->nHeight, FormatStateMessage(state));
+                return error("CChainState::%s: unable to disconnect block at height %i (%s)", __func__, tip->nHeight, FormatStateMessage(state));
             }
 
             // Reduce validity flag and have-data flags.
@@ -4292,7 +4292,7 @@ bool CChainState::RewindBlockIndex(const CChainParams& params)
 
         // Occasionally flush state to disk.
         if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", FormatStateMessage(state));
+            LogPrintf("CChainState::%s: unable to flush state to disk (%s)\n", __func__, FormatStateMessage(state));
             return false;
         }
     }
@@ -4322,7 +4322,7 @@ bool RewindBlockIndex(const CChainParams& params) {
         // it'll get called a bunch real soon.
         CValidationState state;
         if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", FormatStateMessage(state));
+            LogPrintf("%s: unable to flush state to disk (%s)\n", __func__, FormatStateMessage(state));
             return false;
         }
     }
