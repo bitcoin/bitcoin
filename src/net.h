@@ -14,6 +14,7 @@
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
+#include <logging.h>
 #include <netaddress.h>
 #include <policy/feerate.h>
 #include <protocol.h>
@@ -848,6 +849,9 @@ public:
             }
         } else if (inv.type == MSG_BLOCK) {
             vInventoryBlockToSend.push_back(inv.hash);
+        } else {
+            LogPrint(BCLog::NET, "%s: Unknown CInv type:%s\n", __func__, inv.ToString());
+            assert(false); // Should never happen in Bitcoin, only MSG_TX/MSG_BLOCK expected.
         }
     }
 
