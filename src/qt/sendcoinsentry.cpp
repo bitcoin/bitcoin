@@ -170,6 +170,11 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
     return retval;
 }
 
+bool SendCoinsEntry::hasPaytoWarning() const
+{
+    return ui->payTo->hasWarning();
+}
+
 SendCoinsRecipient SendCoinsEntry::getValue()
 {
     recipient.address = ui->payTo->text();

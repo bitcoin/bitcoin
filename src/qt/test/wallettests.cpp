@@ -41,10 +41,8 @@
 
 namespace
 {
-//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
-void ConfirmSend(QString* text = nullptr, bool cancel = false)
+void ConfirmSendAttempt(QString* text, bool cancel)
 {
-    QTimer::singleShot(0, [text, cancel]() {
         for (QWidget* widget : QApplication::topLevelWidgets()) {
             if (widget->inherits("SendConfirmationDialog")) {
                 SendConfirmationDialog* dialog = qobject_cast<SendConfirmationDialog*>(widget);
@@ -59,8 +57,21 @@ void ConfirmSend(QString* text = nullptr, bool cancel = false)
                 }
                 button->setEnabled(true);
                 button->click();
+                if (!button->text().startsWith("Override")) return;
             }
         }
+
+    // Try again
+    QTimer::singleShot(0, [text, cancel]{
+        ConfirmSendAttempt(text, cancel);
+    });
+}
+
+//! Press "Yes" or "Cancel" buttons in modal send confirmation dialog.
+void ConfirmSend(QString* text = nullptr, bool cancel = false)
+{
+    QTimer::singleShot(0, [text, cancel]{
+        ConfirmSendAttempt(text, cancel);
     });
 }
 
