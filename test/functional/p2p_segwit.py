@@ -25,12 +25,12 @@ from test_framework.messages import (
     MSG_WITNESS_FLAG,
     NODE_NETWORK,
     NODE_WITNESS,
-    msg_block,
+    msg_no_witness_block,
     msg_getdata,
     msg_headers,
     msg_inv,
     msg_tx,
-    msg_witness_block,
+    msg_block,
     msg_witness_tx,
     ser_uint256,
     ser_vector,
@@ -134,7 +134,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
     - use the getbestblockhash rpc to check for acceptance."""
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
-        p2p.send_message(msg_witness_block(block) if with_witness else msg_block(block))
+        p2p.send_message(msg_block(block) if with_witness else msg_no_witness_block(block))
         p2p.sync_with_ping()
         assert_equal(node.getbestblockhash() == block.hash, accepted)
 
@@ -298,7 +298,7 @@ class SegWitTest(BitcoinTestFramework):
 
         block = self.build_next_block(version=1)
         block.solve()
-        self.test_node.send_message(msg_block(block))
+        self.test_node.send_message(msg_no_witness_block(block))
         self.test_node.sync_with_ping()  # make sure the block was processed
         txid = block.vtx[0].sha256
 
@@ -345,7 +345,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # But it should not be permanently marked bad...
         # Resend without witness information.
-        self.test_node.send_message(msg_block(block))
+        self.test_node.send_message(msg_no_witness_block(block))
         self.test_node.sync_with_ping()
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
@@ -791,7 +791,7 @@ class SegWitTest(BitcoinTestFramework):
         block.solve()
 
         # Test the test -- witness serialization should be different
-        assert msg_witness_block(block).serialize() != msg_block(block).serialize()
+        assert msg_block(block).serialize() != msg_no_witness_block(block).serialize()
 
         # This empty block should be valid.
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
