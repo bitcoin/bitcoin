@@ -240,7 +240,7 @@ bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::P
  * May not be called with cs_main held. May not be called in a
  * validationinterface callback.
  */
-bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>());
+bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>()) LOCKS_EXCLUDED(cs_main);
 
 double ConvertBitsToDouble(unsigned int nBits);
 CAmount GetBlockSubsidy(int nBits, int nHeight, const Consensus::Params& consensusParams, bool fSuperblockPartOnly = false);
@@ -463,7 +463,6 @@ public:
         CBlockTreeDB& blocktree,
         std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
     /** Clear all data members. */
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -679,7 +678,7 @@ public:
     bool ActivateBestChain(
         CValidationState& state,
         const CChainParams& chainparams,
-        std::shared_ptr<const CBlock> pblock);
+        std::shared_ptr<const CBlock> pblock) LOCKS_EXCLUDED(cs_main);
 
     bool AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -692,7 +691,7 @@ public:
 
     // Manual block validity manipulation:
     bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
-    bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex);
+    bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     void EnforceBlock(CValidationState& state, const CChainParams& chainparams, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -755,7 +754,7 @@ private:
 bool PreciousBlock(CValidationState& state, const CChainParams& params, CBlockIndex *pindex) LOCKS_EXCLUDED(cs_main);
 
 /** Mark a block as invalid. */
-bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex);
+bool InvalidateBlock(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
 
 /** Enforce a block marking all the other chains as conflicting. */
 void EnforceBlock(CValidationState& state, const CChainParams& chainparams, const CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
