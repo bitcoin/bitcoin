@@ -193,6 +193,7 @@ In general, all pull requests must:
   - Not break the existing test suite;
   - Where bugs are fixed, where possible, there should be unit tests
     demonstrating the bug and also proving the fix. This helps prevent regression.
+  - Change relevant comments and documentation when behaviour of code changes.
 
 Patches that change Dash consensus rules are considerably more involved than
 normal because they affect the entire ecosystem and so must be preceded by
