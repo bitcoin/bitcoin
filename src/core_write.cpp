@@ -215,9 +215,9 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                     in.pushKV("value", ValueFromAmount(spentInfo.satoshis));
                     in.pushKV("valueSat", spentInfo.satoshis);
                     if (spentInfo.addressType == 1) {
-                        in.pushKV("address", EncodeDestination(CKeyID(spentInfo.addressHash)));
+                        in.pushKV("address", EncodeDestination(PKHash(spentInfo.addressHash)));
                     } else if (spentInfo.addressType == 2) {
-                        in.pushKV("address", EncodeDestination(CScriptID(spentInfo.addressHash)));
+                        in.pushKV("address", EncodeDestination(ScriptHash(spentInfo.addressHash)));
                     }
                 }
             }

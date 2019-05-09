@@ -184,7 +184,7 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    const CScriptID *scriptID = std::get_if<CScriptID>(&dest);
+    const ScriptHash *scriptID = std::get_if<ScriptHash>(&dest);
     if (!fAllowScript && scriptID) {
         strErrorMessages += "script addresses are not supported;";
         return false;

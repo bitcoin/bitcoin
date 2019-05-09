@@ -283,12 +283,12 @@ bool CSporkManager::SetSporkAddress(const std::string& strAddress)
 {
     LOCK(cs);
     CTxDestination dest = DecodeDestination(strAddress);
-    const CKeyID* keyID = std::get_if<CKeyID>(&dest);
-    if (!keyID) {
+    const PKHash* pkhash = std::get_if<PKHash>(&dest);
+    if (!pkhash) {
         LogPrintf("CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
         return false;
     }
-    setSporkPubKeyIDs.insert(*keyID);
+    setSporkPubKeyIDs.insert(CKeyID(*pkhash));
     return true;
 }
 

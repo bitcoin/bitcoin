@@ -137,7 +137,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         secret.MakeNewKey(pwallet->CanSupportFeature(FEATURE_COMPRPUBKEY));
         CPubKey dummyPubkey = secret.GetPubKey();
         dummyBatch.TxnAbort();
-        dummyScript = ::GetScriptForDestination(dummyPubkey.GetID());
+        dummyScript = ::GetScriptForDestination(PKHash(dummyPubkey));
         // Calculate required bytes for the dummy signed tx with tallyItem's inputs only
         nBytesBase = CalculateMaximumSignedTxSize(CTransaction(dummyTx), pwallet.get(), false);
     }

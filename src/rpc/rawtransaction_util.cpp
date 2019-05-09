@@ -194,7 +194,7 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                 keystore->AddCScript(script);
 
                 if (is_p2sh) {
-                    const CTxDestination p2sh{CScriptID(script)};
+                    const CTxDestination p2sh{ScriptHash(script)};
                     if (scriptPubKey == GetScriptForDestination(p2sh)) {
                         // traditional p2sh; arguably an error if
                         // we got here with rs.IsNull(), because

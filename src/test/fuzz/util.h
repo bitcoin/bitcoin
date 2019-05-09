@@ -163,11 +163,11 @@ template <typename T>
         break;
     }
     case 1: {
-        tx_destination = CKeyID{ConsumeUInt160(fuzzed_data_provider)};
+        tx_destination = PKHash{ConsumeUInt160(fuzzed_data_provider)};
         break;
     }
     case 2: {
-        tx_destination = CScriptID{ConsumeUInt160(fuzzed_data_provider)};
+        tx_destination = ScriptHash{ConsumeUInt160(fuzzed_data_provider)};
         break;
     }
     }

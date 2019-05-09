@@ -654,8 +654,8 @@ static UniValue masternodelist(const JSONRPCRequest& request)
                            dmn.pdmnState->nPoSePenalty << " " <<
                            dmnToLastPaidTime(dmn) << " " <<
                            dmn.pdmnState->nLastPaidHeight << " " <<
-                           EncodeDestination(dmn.pdmnState->keyIDOwner) << " " <<
-                           EncodeDestination(dmn.pdmnState->keyIDVoting) << " " <<
+                           EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)) << " " <<
+                           EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)) << " " <<
                            collateralAddressStr << " " <<
                            dmn.pdmnState->pubKeyOperator.Get().ToString();
             std::string strInfo = streamInfo.str();
@@ -669,8 +669,8 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             objMN.pushKV("pospenaltyscore", dmn.pdmnState->nPoSePenalty);
             objMN.pushKV("lastpaidtime", dmnToLastPaidTime(dmn));
             objMN.pushKV("lastpaidblock", dmn.pdmnState->nLastPaidHeight);
-            objMN.pushKV("owneraddress", EncodeDestination(dmn.pdmnState->keyIDOwner));
-            objMN.pushKV("votingaddress", EncodeDestination(dmn.pdmnState->keyIDVoting));
+            objMN.pushKV("owneraddress", EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));
+            objMN.pushKV("votingaddress", EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)));
             objMN.pushKV("collateraladdress", collateralAddressStr);
             objMN.pushKV("pubkeyoperator", dmn.pdmnState->pubKeyOperator.Get().ToString());
             obj.pushKV(strOutpoint, objMN);
@@ -686,7 +686,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             obj.pushKV(strOutpoint, payeeStr);
         } else if (strMode == "owneraddress") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
-            obj.pushKV(strOutpoint, EncodeDestination(dmn.pdmnState->keyIDOwner));
+            obj.pushKV(strOutpoint, EncodeDestination(PKHash(dmn.pdmnState->keyIDOwner)));
         } else if (strMode == "pubkeyoperator") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
             obj.pushKV(strOutpoint, dmn.pdmnState->pubKeyOperator.Get().ToString());
@@ -697,7 +697,7 @@ static UniValue masternodelist(const JSONRPCRequest& request)
             obj.pushKV(strOutpoint, strStatus);
         } else if (strMode == "votingaddress") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
-            obj.pushKV(strOutpoint, EncodeDestination(dmn.pdmnState->keyIDVoting));
+            obj.pushKV(strOutpoint, EncodeDestination(PKHash(dmn.pdmnState->keyIDVoting)));
         }
     });
 

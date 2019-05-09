@@ -153,7 +153,7 @@ FUZZ_TARGET_INIT(key, initialize_key)
         assert(v_solutions_ret_tx_multisig[1].size() == 33);
         assert(v_solutions_ret_tx_multisig[2].size() == 1);
 
-        const CTxDestination tx_destination = pubkey.GetID();
+        const CTxDestination tx_destination = PKHash(pubkey);
         const CScript script_for_destination = GetScriptForDestination(tx_destination);
         assert(script_for_destination.size() == 25);
 

@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         LOCK(keystore.cs_wallet);
-        scriptPubKey = GetScriptForDestination(pubkeys[0].GetID());
+        scriptPubKey = GetScriptForDestination(PKHash(pubkeys[0]));
 
         // Keystore does not have key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     {
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         LOCK(keystore.cs_wallet);
-        scriptPubKey = GetScriptForDestination(uncompressedPubkey.GetID());
+        scriptPubKey = GetScriptForDestination(PKHash(uncompressedPubkey));
 
         // Keystore does not have key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
@@ -102,8 +102,8 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         LOCK(keystore.cs_wallet);
 
-        CScript redeemScript = GetScriptForDestination(pubkeys[0].GetID());
-        scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
+        CScript redeemScript = GetScriptForDestination(PKHash(pubkeys[0]));
+        scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
 
         // Keystore does not have redeemScript or key
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         LOCK(keystore.cs_wallet);
 
-        CScript redeemscript_inner = GetScriptForDestination(pubkeys[0].GetID());
-        CScript redeemscript = GetScriptForDestination(CScriptID(redeemscript_inner));
-        scriptPubKey = GetScriptForDestination(CScriptID(redeemscript));
+        CScript redeemscript_inner = GetScriptForDestination(PKHash(pubkeys[0]));
+        CScript redeemscript = GetScriptForDestination(ScriptHash(redeemscript_inner));
+        scriptPubKey = GetScriptForDestination(ScriptHash(redeemscript));
 
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemscript));
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(redeemscript_inner));
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[1]));
 
         CScript redeemScript = GetScriptForMultisig(2, {uncompressedPubkey, pubkeys[1]});
-        scriptPubKey = GetScriptForDestination(CScriptID(redeemScript));
+        scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
 
         // Keystore has no redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);

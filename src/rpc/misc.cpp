@@ -283,7 +283,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
     CScriptID innerID(inner);
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("address", EncodeDestination(innerID));
+    result.pushKV("address", EncodeDestination(ScriptHash(innerID)));
     result.pushKV("redeemScript", HexStr(inner));
 
     return result;
@@ -571,9 +571,9 @@ static UniValue mnauth(const JSONRPCRequest& request)
 static bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
 {
     if (type == 2) {
-        address = EncodeDestination(CScriptID(hash));
+        address = EncodeDestination(ScriptHash(hash));
     } else if (type == 1) {
-        address = EncodeDestination(CKeyID(hash));
+        address = EncodeDestination(PKHash(hash));
     } else {
         return false;
     }
@@ -587,10 +587,10 @@ static bool getIndexKey(const std::string& str, uint160& hashBytes, int& type)
         type = 0;
         return false;
     }
-    const CKeyID *keyID = std::get_if<CKeyID>(&dest);
-    const CScriptID *scriptID = std::get_if<CScriptID>(&dest);
-    type = keyID ? 1 : 2;
-    hashBytes = keyID ? *keyID : *scriptID;
+    const PKHash *pkhash = std::get_if<PKHash>(&dest);
+    const ScriptHash *scriptID = std::get_if<ScriptHash>(&dest);
+    type = pkhash ? 1 : 2;
+    hashBytes = pkhash ? uint160(*pkhash) : uint160(*scriptID);
     return true;
 }
 

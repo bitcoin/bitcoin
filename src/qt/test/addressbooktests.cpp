@@ -66,7 +66,7 @@ void TestAddAddressesToSendBook(interfaces::Node& node)
     auto build_address = [wallet]() {
         CKey key;
         key.MakeNewKey(true);
-        CTxDestination dest = key.GetPubKey().GetID();
+        CTxDestination dest = PKHash(key.GetPubKey());
 
         return std::make_pair(dest, QString::fromStdString(EncodeDestination(dest)));
     };
