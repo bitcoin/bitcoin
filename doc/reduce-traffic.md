@@ -35,3 +35,16 @@ blocks and transactions to fewer nodes.
 Reducing the maximum connected nodes to a minimum could be desirable if traffic
 limits are tiny. Keep in mind that bitcoin's trustless model works best if you are
 connected to a handful of nodes.
+
+## 4. Turn off transaction relay (`-blocksonly`)
+
+Forwarding transactions to peers increases the P2P traffic. To only sync blocks
+with other peers, you can disable transaction relay.
+
+Be reminded of the effects of this setting.
+
+- Fee estimation will no longer work.
+- Not relaying other's transactions could hurt your privacy if used while a
+  wallet is loaded or if you use the node to broadcast transactions.
+- It makes block propagation slower because compact block relay can only be
+  used when transaction relay is enabled.
