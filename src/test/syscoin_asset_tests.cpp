@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     vector<string> unfundedAccounts;
     vector<string> rawSignedAssetAllocationSends;
     vector<string> vecFundedAddresses;
-    GenerateBlocks((numAssets+1)/250);
+    GenerateBlocks((numAssets+1)/ numberOfAssetSendsPerBlock);
     // PHASE 1:  GENERATE UNFUNDED ADDRESSES FOR RECIPIENTS TO ASSETALLOCATIONSEND
     printf("Throughput test: Total transaction count: %d, Receivers Per Asset Allocation Transfer %d, Total Number of Assets needed %d\n\n", numberOfTransactionToSend, numberOfAssetSendsPerBlock, numAssets);
     printf("creating %d unfunded addresses...\n", numberOfAssetSendsPerBlock);
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     // create address for funding
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
     string fundedAccount = r.get_str();
-    printf("creating %d funded accounts for using with assetsend/assetallocationsend in subsequent steps...\n", numAssets*250);
+    printf("creating %d funded accounts for using with assetsend/assetallocationsend in subsequent steps...\n", numAssets*numberOfAssetSendsPerBlock);
     string sendManyString = "";
     for(int i =0;i<numAssets;i++){
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
@@ -104,8 +104,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         if(sendManyString != "")
             sendManyString += ",";
         sendManyString += "\"" + fundedAccount + "\":1";
-        if(((i+1)%250)==0){
-            printf("Sending funds to batch of 250 funded accounts, approx. %d batches remaining\n", (numAssets-i)/250);
+        if(((i+1)% numberOfAssetSendsPerBlock)==0){
+            printf("Sending funds to batch of %d funded accounts, approx. %d batches remaining\n", numberOfAssetSendsPerBlock, (numAssets-i)/ numberOfAssetSendsPerBlock);
             std::string strSendMany = "sendmany \"\" {" + sendManyString + "}";
             CallExtRPC("node1", "sendmany", "\"\",{" + sendManyString + "}");
             sendManyString = "";

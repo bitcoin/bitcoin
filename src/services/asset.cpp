@@ -1186,8 +1186,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             "]\n"
             },
             RPCExamples{
-            HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31")
-            + HelpExampleRpc("assetnew", "\"myaddress\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31")
+            HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 \"\"")
+            + HelpExampleRpc("assetnew", "\"myaddress\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, \"\"")
             }
             }.ToString());
 	string vchAddress = params[0].get_str();
