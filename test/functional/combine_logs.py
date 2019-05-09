@@ -23,7 +23,7 @@ import tempfile
 # without the parent module installed.
 
 # Should match same symbol in `test_framework.test_framework`.
-TMPDIR_PREFIX = "bitcoin_func_test_"
+TMPDIR_PREFIX = "litecoin_func_test_"
 
 # Matches on the date format at the start of the log event
 TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?Z")

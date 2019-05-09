@@ -432,7 +432,7 @@ class TestNode():
 
         if not test_success('readelf -S {} | grep .debug_str'.format(shlex.quote(self.binary))):
             self.log.warning(
-                "perf output won't be very useful without debug symbols compiled into bitcoind")
+                "perf output won't be very useful without debug symbols compiled into litecoind")
 
         output_path = tempfile.NamedTemporaryFile(
             dir=self.datadir,
