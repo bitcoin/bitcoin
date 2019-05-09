@@ -166,7 +166,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
         LOCK(cs_main);
         tip = ::ChainActive().Tip();
     }
-    CScript coinbase_script_pub_key = GetScriptForDestination(coinbaseKey.GetPubKey().GetID());
+    CScript coinbase_script_pub_key = GetScriptForDestination(PKHash(coinbaseKey.GetPubKey()));
     std::vector<std::shared_ptr<CBlock>> chainA, chainB;
     BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key, 10, chainA));
     BOOST_REQUIRE(BuildChain(tip, coinbase_script_pub_key, 10, chainB));
