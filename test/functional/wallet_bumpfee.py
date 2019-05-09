@@ -37,6 +37,7 @@ class BumpFeeTest(BitcoinTestFramework):
         self.extra_args = [[
             "-walletrbf={}".format(i),
             "-mintxfee=0.00002",
+            "-deprecatedrpc=totalFee",
         ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
