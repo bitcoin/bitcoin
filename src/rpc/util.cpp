@@ -7,6 +7,7 @@
 #include <rpc/util.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <util/system.h>
 
 #include <tuple>
 
@@ -684,4 +685,11 @@ std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Range is too large");
     }
     return {low, high};
+}
+
+bool IsDeprecatedRPCEnabled(const std::string& method)
+{
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+
+    return find(enabled_methods.begin(), enabled_methods.end(), method) != enabled_methods.end();
 }

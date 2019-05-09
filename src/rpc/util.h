@@ -245,4 +245,6 @@ private:
     const RPCExamples m_examples;
 };
 
+bool IsDeprecatedRPCEnabled(const std::string& method);
+
 #endif // BITCOIN_RPC_UTIL_H

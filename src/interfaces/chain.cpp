@@ -19,6 +19,7 @@
 #include <protocol.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <threadsafety.h>
