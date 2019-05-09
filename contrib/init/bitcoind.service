@@ -38,7 +38,7 @@ RuntimeDirectoryMode=0710
 
 # /etc/bitcoin
 ConfigurationDirectory=bitcoin
-ConfigurationDirectoryMode=0710
+ConfigurationDirectoryMode=0755
 
 # /var/lib/bitcoind
 StateDirectory=bitcoind
@@ -63,6 +63,9 @@ PrivateDevices=true
 
 # Deny the creation of writable and executable memory mappings.
 MemoryDenyWriteExecute=true
+
+# Deny access to /home
+ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target
