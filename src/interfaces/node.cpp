@@ -190,12 +190,8 @@ public:
     }
     double getVerificationProgress() override
     {
-        const CBlockIndex* tip;
-        {
-            LOCK(::cs_main);
-            tip = ::ChainActive().Tip();
-        }
-        return GuessVerificationProgress(Params().TxData(), tip);
+        LOCK(::cs_main);
+        return GuessVerificationProgress(Params().TxData(), ::ChainActive().Tip());
     }
     bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
     bool isAddressTypeSet() override { return !::gArgs.GetArg("-addresstype", "").empty(); }
@@ -297,16 +293,24 @@ public:
     std::unique_ptr<Handler> handleNotifyBlockTip(NotifyBlockTipFn fn) override
     {
         return MakeHandler(::uiInterface.NotifyBlockTip_connect([fn](bool initial_download, const CBlockIndex* block) {
-            fn(initial_download, block->nHeight, block->GetBlockTime(),
-                GuessVerificationProgress(Params().TxData(), block));
+            double verification_progress;
+            {
+                LOCK(::cs_main);
+                verification_progress = GuessVerificationProgress(Params().TxData(), block);
+            }
+            fn(initial_download, block->nHeight, block->GetBlockTime(), verification_progress);
         }));
     }
     std::unique_ptr<Handler> handleNotifyHeaderTip(NotifyHeaderTipFn fn) override
     {
         return MakeHandler(
             ::uiInterface.NotifyHeaderTip_connect([fn](bool initial_download, const CBlockIndex* block) {
-                fn(initial_download, block->nHeight, block->GetBlockTime(),
-                    GuessVerificationProgress(Params().TxData(), block));
+                double verification_progress;
+                {
+                    LOCK(::cs_main);
+                    verification_progress = GuessVerificationProgress(Params().TxData(), block);
+                }
+                fn(initial_download, block->nHeight, block->GetBlockTime(), verification_progress);
             }));
     }
     InitInterfaces m_interfaces;
