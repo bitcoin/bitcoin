@@ -3263,12 +3263,12 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                 "\nBumps the fee of an opt-in-RBF transaction T, replacing it with a new transaction B.\n"
                 "An opt-in RBF transaction with the given txid must be in the wallet.\n"
                 "The command will pay the additional fee by reducing change outputs or adding inputs when necessary. It may add a new change output if one does not already exist.\n"
-                "If `totalFee` is given, adding inputs is not supported, so there must be a single change output that is big enough or it will fail.\n"
+                "If `totalFee` (DEPRECATED) is given, adding inputs is not supported, so there must be a single change output that is big enough or it will fail.\n"
                 "All inputs in the original transaction will be included in the replacement transaction.\n"
                 "The command will fail if the wallet or mempool contains a transaction that spends one of T's outputs.\n"
                 "By default, the new fee will be calculated automatically using estimatesmartfee.\n"
                 "The user can specify a confirmation target for estimatesmartfee.\n"
-                "Alternatively, the user can specify totalFee, or use RPC settxfee to set a higher fee rate.\n"
+                "Alternatively, the user can specify totalFee (DEPRECATED), or use RPC settxfee to set a higher fee rate.\n"
                 "At a minimum, the new fee rate must be high enough to pay an additional new relay fee (incrementalfee\n"
                 "returned by getnetworkinfo) to enter the node's mempool.\n",
                 {
@@ -3276,7 +3276,7 @@ static UniValue bumpfee(const JSONRPCRequest& request)
                     {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
                         {
                             {"confTarget", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
-                            {"totalFee", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in satoshis.\n"
+                            {"totalFee", RPCArg::Type::NUM, /* default */ "fallback to 'confTarget'", "Total fee (NOT feerate) to pay, in satoshis. (DEPRECATED)\n"
             "                         In rare cases, the actual fee paid might be slightly higher than the specified\n"
             "                         totalFee if the tx change output has to be removed because it is too close to\n"
             "                         the dust threshold."},
@@ -3331,6 +3331,9 @@ static UniValue bumpfee(const JSONRPCRequest& request)
         } else if (options.exists("confTarget")) { // TODO: alias this to conf_target
             coin_control.m_confirm_target = ParseConfirmTarget(options["confTarget"], pwallet->chain().estimateMaxBlocks());
         } else if (options.exists("totalFee")) {
+            if (!pwallet->chain().rpcEnableDeprecated("totalFee")) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "totalFee argument has been deprecated and will be removed in 0.20. Please use -deprecatedrpc=totalFee to continue using this argument until removal.");
+            }
             totalFee = options["totalFee"].get_int64();
             if (totalFee <= 0) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Invalid totalFee %s (must be greater than 0)", FormatMoney(totalFee)));
