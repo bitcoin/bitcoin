@@ -182,12 +182,12 @@ std::string CSporkManager::GetSporkNameByID(int nSporkID)
 
 bool CSporkManager::SetSporkAddress(const std::string& strAddress) {
     CTxDestination address = DecodeDestination(strAddress);
-    const CKeyID *keyID = boost::get<CKeyID>(&address);
+    const PKHash *keyID = boost::get<PKHash>(&address);
     if (!IsValidDestination(address) || !keyID) {
         LogPrint(BCLog::SPORK, "CSporkManager::SetSporkAddress -- Failed to parse spork address\n");
         return false;
     }
-    sporkPubKeyID = *keyID;
+    sporkPubKeyID = CKeyID(*keyID);
     return true;
 }
 

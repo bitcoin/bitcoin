@@ -38,7 +38,6 @@ UniValue syscoinmint(const JSONRPCRequest& request);
 UniValue syscointxfund(const JSONRPCRequest& request);
 
 
-UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request);
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
 
 UniValue assetnew(const JSONRPCRequest& request);
@@ -415,87 +414,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
 	CRecipient recp = { scriptPubKey, 0, false };
 	recipient = recp;
 }
-UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, bool includechange = false)
-{
-    LOCK(pwallet->cs_wallet);
-	map<string, int> mapAddress;
-	UniValue ret(UniValue::VARR);
-  
-	const std::map<CKeyID, int64_t>& mapKeyPool = pwallet->GetAllReserveKeys();
-	for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
 
-		const CTxDestination& dest = item.first;
-		const string& strAccount = item.second.name;
-
-		isminefilter filter = ISMINE_SPENDABLE;
-		isminefilter mine = IsMine(*pwallet, dest);
-		if (!(mine & filter))
-			continue;
-
-		const string& strAddress = EncodeDestination(dest);
-
-        const CAmount& nBalance = getaddressbalance(strAddress);
-		UniValue obj(UniValue::VOBJ);
-		if (includeempty || (!includeempty && nBalance > 0)) {
-			obj.pushKV("balance", ValueFromAmount(nBalance));
-			obj.pushKV("label", strAccount);
-			const CKeyID *keyID = boost::get<CKeyID>(&dest);
-			if (keyID && !pwallet->mapAddressBook.count(dest) && !mapKeyPool.count(*keyID)) {
-				if (!includechange)
-					continue;
-				obj.pushKV("change", true);
-			}
-			else
-				obj.pushKV("change", false);
-			ret.push_back(obj);
-		}
-		mapAddress[strAddress] = 1;
-	}
-
-	vector<COutput> vecOutputs;
-	{
-        auto locked_chain = pwallet->chain().lock();
-        
-		pwallet->AvailableCoins(*locked_chain, vecOutputs, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
-	}
-	for(const COutput& out: vecOutputs) {
-		CTxDestination address;
-		if (!ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address))
-			continue;
-
-		const string& strAddress = EncodeDestination(address);
-		if (mapAddress.find(strAddress) != mapAddress.end())
-			continue;
-
-		UniValue paramsBalance(UniValue::VARR);
-		UniValue balanceParams(UniValue::VARR);
-		balanceParams.push_back("addr(" + strAddress + ")");
-		paramsBalance.push_back("start");
-		paramsBalance.push_back(balanceParams);
-		JSONRPCRequest request;
-		request.params = paramsBalance;
-		UniValue resBalance = scantxoutset(request);
-		UniValue obj(UniValue::VOBJ);
-		obj.pushKV("address", strAddress);
-		const CAmount& nBalance = AmountFromValue(find_value(resBalance.get_obj(), "total_amount"));
-		if (includeempty || (!includeempty && nBalance > 0)) {
-			obj.pushKV("balance", ValueFromAmount(nBalance));
-			obj.pushKV("label", "");
-			const CKeyID *keyID = boost::get<CKeyID>(&address);
-			if (keyID && !pwallet->mapAddressBook.count(address) && !mapKeyPool.count(*keyID)) {
-				if (!includechange)
-					continue;
-				obj.pushKV("change", true);
-			}
-			else
-				obj.pushKV("change", false);
-			ret.push_back(obj);
-		}
-		mapAddress[strAddress] = 1;
-
-	}
-	return ret;
-}
 UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, const vector<CRecipient> &vecSend, const COutPoint& outpoint) {
 	CMutableTransaction txNew;
     if(nVersion > 0)
@@ -1054,35 +973,6 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 		}
 	}
 	return count;
-}
-
-UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-	const UniValue &params = request.params;
-	if (request.fHelp || params.size() != 0)
-		throw runtime_error(
-            RPCHelpMan{"syscoinlistreceivedbyaddress",
-	  		    "\nList balances by receiving address.\n",
-                {},
-                RPCResult{
-    			"[\n"
-    			"  {\n"
-	    		"    \"address\" : \"receivingaddress\",    (string) The receiving address\n"
-		    	"    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
-			    "    \"label\" : \"label\"                  (string) A comment for the address/transaction, if any\n"
-    			"  }\n"
-	   	    	"  ,...\n"
-	    		"]\n"
-                },
-                RPCExamples{
-			        HelpExampleCli("syscoinlistreceivedbyaddress", "")
-    			    + HelpExampleRpc("syscoinlistreceivedbyaddress", "")
-                }
-            }.ToString());
-
-	return SyscoinListReceived(pwallet, true, false);
 }
 
 bool IsOutpointMature(const COutPoint& outpoint)
