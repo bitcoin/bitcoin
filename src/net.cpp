@@ -489,45 +489,43 @@ void CNode::SetAddrLocal(const CService& addrLocalIn) {
     }
 }
 
-#undef X
-#define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
 {
     stats.nodeid = this->GetId();
-    X(nServices);
-    X(addr);
-    X(addrBind);
+    stats.nServices = nServices;
+    stats.addr = addr;
+    stats.addrBind = addrBind;
     {
         LOCK(cs_filter);
-        X(fRelayTxes);
+        stats.fRelayTxes = fRelayTxes;
     }
-    X(nLastSend);
-    X(nLastRecv);
-    X(nTimeConnected);
-    X(nTimeOffset);
+    stats.nLastSend = nLastSend;
+    stats.nLastRecv = nLastRecv;
+    stats.nTimeConnected = nTimeConnected;
+    stats.nTimeOffset = nTimeOffset;
     stats.addrName = GetAddrName();
-    X(nVersion);
+    stats.nVersion = nVersion;
     {
         LOCK(cs_SubVer);
-        X(cleanSubVer);
+        stats.cleanSubVer = cleanSubVer;
     }
-    X(fInbound);
-    X(m_manual_connection);
-    X(nStartingHeight);
+    stats.fInbound = fInbound;
+    stats.m_manual_connection = m_manual_connection;
+    stats.nStartingHeight = nStartingHeight;
     {
         LOCK(cs_vSend);
-        X(mapSendBytesPerMsgCmd);
-        X(nSendBytes);
+        stats.mapSendBytesPerMsgCmd = mapSendBytesPerMsgCmd;
+        stats.nSendBytes = nSendBytes;
     }
     {
         LOCK(cs_vRecv);
-        X(mapRecvBytesPerMsgCmd);
-        X(nRecvBytes);
+        stats.mapRecvBytesPerMsgCmd = mapRecvBytesPerMsgCmd;
+        stats.nRecvBytes = nRecvBytes;
     }
-    X(fWhitelisted);
+    stats.fWhitelisted = fWhitelisted;
     {
         LOCK(cs_feeFilter);
-        X(minFeeFilter);
+        stats.minFeeFilter = minFeeFilter;
     }
 
     // It is common for nodes with good ping times to suddenly become lagged,
@@ -550,7 +548,6 @@ void CNode::copyStats(CNodeStats &stats)
     CService addrLocalUnlocked = GetAddrLocal();
     stats.addrLocal = addrLocalUnlocked.IsValid() ? addrLocalUnlocked.ToString() : "";
 }
-#undef X
 
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
