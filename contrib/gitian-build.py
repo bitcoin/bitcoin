@@ -95,7 +95,7 @@ def sign():
     if args.windows:
         print('\nSigning ' + args.version + ' Windows')
         subprocess.check_call('cp inputs/bitcoin-' + args.version + '-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz', shell=True)
-        subprocess.check_call(['bin/gbuild', '-i', '--commit', 'signature='+args.commit, '../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml'])
+        subprocess.check_call(['bin/gbuild', '--skip-image', '--upgrade', '--commit', 'signature='+args.commit, '../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-win-signed', '--destination', '../gitian.sigs/', '../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml'])
         subprocess.check_call('mv build/out/bitcoin-*win64-setup.exe ../bitcoin-binaries/'+args.version, shell=True)
         subprocess.check_call('mv build/out/bitcoin-*win32-setup.exe ../bitcoin-binaries/'+args.version, shell=True)
@@ -103,7 +103,7 @@ def sign():
     if args.macos:
         print('\nSigning ' + args.version + ' MacOS')
         subprocess.check_call('cp inputs/bitcoin-' + args.version + '-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz', shell=True)
-        subprocess.check_call(['bin/gbuild', '-i', '--commit', 'signature='+args.commit, '../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml'])
+        subprocess.check_call(['bin/gbuild', '--skip-image', '--upgrade', '--commit', 'signature='+args.commit, '../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-osx-signed', '--destination', '../gitian.sigs/', '../bitcoin/contrib/gitian-descriptors/gitian-osx-signer.yml'])
         subprocess.check_call('mv build/out/bitcoin-osx-signed.dmg ../bitcoin-binaries/'+args.version+'/bitcoin-'+args.version+'-osx.dmg', shell=True)
 
