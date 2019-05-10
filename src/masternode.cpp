@@ -116,7 +116,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
         return COLLATERAL_INVALID_AMOUNT;
     }
 
-    if(pubkey == CPubKey() || coin.out.scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
+    if(pubkey == CPubKey() || coin.out.scriptPubKey != GetScriptForDestination(PKHash(pubkey))) {
         return COLLATERAL_INVALID_PUBKEY;
     }
 
@@ -225,7 +225,7 @@ void CMasternode::Check(bool fForce)
         if(fSentinelPingExpired) {
             // only update if its not forced (the timer that calls maintenance which calls every masternode passes false for force)
             if(!fForce){
-                const CScript &mnScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+                const CScript &mnScript = GetScriptForDestination(PKHash(pubKeyCollateralAddress));
                 // only check masternodes in winners list
                 // give some buffer for ping retries to count up, once get in 10 retries to the end it is the red line and not check for winners list before incrementing ping retries
                 bool foundPayee = (nPingRetries >= (MASTERNODE_MAX_RETRIES-10));
@@ -337,7 +337,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
     const CBlockIndex *BlockReading = pindex;
 	
 	const CChainParams& chainparams = Params();
-    const CScript &mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+    const CScript &mnpayee = GetScriptForDestination(PKHash(pubKeyCollateralAddress));
     // LogPrint(BCLog::MNPAYMENT, "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s\n", outpoint.ToStringShort());
 
     LOCK(cs_mapMasternodeBlocks);
@@ -385,13 +385,13 @@ bool GetOutpointAndKeysFromOutput(interfaces::Wallet& wallet, const Coin& coin, 
     CTxDestination address;
     ExtractDestination(pubScript, address);
     
-    const CKeyID *keyID = boost::get<CKeyID>(&address);
-    if (!keyID) {
+    const PKHash *pkhash = boost::get<PKHash>(&address);
+    if (!pkhash) {
         LogPrintf("GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
-
-    if (!wallet.getPrivKey(*keyID, keyRet)) {
+    CKeyID keyID(*pkhash);
+    if (!wallet.getPrivKey(keyID, keyRet)) {
         LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
@@ -432,13 +432,13 @@ bool GetOutpointAndKeysFromOutput(CWallet* const pwallet, const Coin& coin, CPub
     CTxDestination address;
     ExtractDestination(pubScript, address);
     
-    const CKeyID *keyID = boost::get<CKeyID>(&address);
-    if (!keyID) {
+    const PKHash *pkhash = boost::get<PKHash>(&address);
+    if (!pkhash) {
         LogPrintf("GetOutpointAndKeysFromOutput -- Address does not refer to a key\n");
         return false;
     }
-
-    if (!pwallet->GetKey(*keyID, keyRet)) {
+    CKeyID keyID(*pkhash);
+    if (!pwallet->GetKey(keyID, keyRet)) {
         LogPrintf ("GetOutpointAndKeysFromOutput -- Private key for address is not known\n");
         return false;
     }
@@ -551,7 +551,7 @@ bool CMasternodeBroadcast::Create(const COutPoint& outpoint, const CService& ser
     if (fImporting || fReindex) return false;
 
     LogPrint(BCLog::MN, "CMasternodeBroadcast::Create -- pubKeyCollateralAddressNew = %s, pubKeyMasternodeNew.GetID() = %s\n",
-             EncodeDestination(pubKeyCollateralAddressNew.GetID()),
+             EncodeDestination(PKHash(pubKeyCollateralAddressNew)),
              pubKeyMasternodeNew.GetID().ToString());
 
     auto Log = [&strErrorRet,&mnbRet](std::string sErr)->bool
@@ -603,7 +603,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
         nActiveState = MASTERNODE_UPDATE_REQUIRED;
     }
     
-    const CScript &pubkeyScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
+    const CScript &pubkeyScript = GetScriptForDestination(PKHash(pubKeyCollateralAddress));
 
     if(pubkeyScript.size() != 25) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::SimpleCheck -- pubKeyCollateralAddress has the wrong size\n");
@@ -611,7 +611,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
         return false;
     }
     
-    const CScript &pubkeyScript2 = GetScriptForDestination(pubKeyMasternode.GetID());
+    const CScript &pubkeyScript2 = GetScriptForDestination(PKHash(pubKeyMasternode));
 
     if(pubkeyScript2.size() != 25) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::SimpleCheck -- pubKeyMasternode has the wrong size\n");
@@ -923,7 +923,7 @@ bool CMasternodePing::CheckAndUpdate(CMasternode* pmn, bool fFromNewBroadcast, i
     // allow pings during pre-enabled state and if its a new broadcast ping
     if(!fFromNewBroadcast && pmn->nActiveState != MASTERNODE_PRE_ENABLED && masternodeSync.IsSynced()){
         // ensure that masternode being pinged also exists in the payee list of up to 10 blocks in the future otherwise we don't like this ping
-        const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
+        const CScript &mnpayee = GetScriptForDestination(PKHash(pmn->pubKeyCollateralAddress));
         bool foundPayee = false;
         bool foundPayeeInWinnersList = false;
         {

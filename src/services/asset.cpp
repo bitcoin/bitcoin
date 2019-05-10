@@ -38,7 +38,6 @@ UniValue syscoinmint(const JSONRPCRequest& request);
 UniValue syscointxfund(const JSONRPCRequest& request);
 
 
-UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request);
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
 
 UniValue assetnew(const JSONRPCRequest& request);
@@ -415,87 +414,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
 	CRecipient recp = { scriptPubKey, 0, false };
 	recipient = recp;
 }
-UniValue SyscoinListReceived(const CWallet* pwallet, bool includeempty = true, bool includechange = false)
-{
-    LOCK(pwallet->cs_wallet);
-	map<string, int> mapAddress;
-	UniValue ret(UniValue::VARR);
-  
-	const std::map<CKeyID, int64_t>& mapKeyPool = pwallet->GetAllReserveKeys();
-	for (const std::pair<const CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
 
-		const CTxDestination& dest = item.first;
-		const string& strAccount = item.second.name;
-
-		isminefilter filter = ISMINE_SPENDABLE;
-		isminefilter mine = IsMine(*pwallet, dest);
-		if (!(mine & filter))
-			continue;
-
-		const string& strAddress = EncodeDestination(dest);
-
-        const CAmount& nBalance = getaddressbalance(strAddress);
-		UniValue obj(UniValue::VOBJ);
-		if (includeempty || (!includeempty && nBalance > 0)) {
-			obj.pushKV("balance", ValueFromAmount(nBalance));
-			obj.pushKV("label", strAccount);
-			const CKeyID *keyID = boost::get<CKeyID>(&dest);
-			if (keyID && !pwallet->mapAddressBook.count(dest) && !mapKeyPool.count(*keyID)) {
-				if (!includechange)
-					continue;
-				obj.pushKV("change", true);
-			}
-			else
-				obj.pushKV("change", false);
-			ret.push_back(obj);
-		}
-		mapAddress[strAddress] = 1;
-	}
-
-	vector<COutput> vecOutputs;
-	{
-        auto locked_chain = pwallet->chain().lock();
-        
-		pwallet->AvailableCoins(*locked_chain, vecOutputs, true, nullptr, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999);
-	}
-	for(const COutput& out: vecOutputs) {
-		CTxDestination address;
-		if (!ExtractDestination(out.tx->tx->vout[out.i].scriptPubKey, address))
-			continue;
-
-		const string& strAddress = EncodeDestination(address);
-		if (mapAddress.find(strAddress) != mapAddress.end())
-			continue;
-
-		UniValue paramsBalance(UniValue::VARR);
-		UniValue balanceParams(UniValue::VARR);
-		balanceParams.push_back("addr(" + strAddress + ")");
-		paramsBalance.push_back("start");
-		paramsBalance.push_back(balanceParams);
-		JSONRPCRequest request;
-		request.params = paramsBalance;
-		UniValue resBalance = scantxoutset(request);
-		UniValue obj(UniValue::VOBJ);
-		obj.pushKV("address", strAddress);
-		const CAmount& nBalance = AmountFromValue(find_value(resBalance.get_obj(), "total_amount"));
-		if (includeempty || (!includeempty && nBalance > 0)) {
-			obj.pushKV("balance", ValueFromAmount(nBalance));
-			obj.pushKV("label", "");
-			const CKeyID *keyID = boost::get<CKeyID>(&address);
-			if (keyID && !pwallet->mapAddressBook.count(address) && !mapKeyPool.count(*keyID)) {
-				if (!includechange)
-					continue;
-				obj.pushKV("change", true);
-			}
-			else
-				obj.pushKV("change", false);
-			ret.push_back(obj);
-		}
-		mapAddress[strAddress] = 1;
-
-	}
-	return ret;
-}
 UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, const vector<CRecipient> &vecSend, const COutPoint& outpoint) {
 	CMutableTransaction txNew;
     if(nVersion > 0)
@@ -768,8 +687,8 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	
     
 	// pass back new raw transaction
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(CTransaction(tx)));
+	UniValue res(UniValue::VOBJ);
+	res.pushKV("hex", EncodeHexTx(CTransaction(tx)));
 	return res;
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
@@ -793,8 +712,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
                     + HelpExampleRpc("syscoinburn", "\"funding_address\", \"amount\", \"ethaddress\"")
                 }
          }.ToString());
-      
-    string fundingAddress = params[0].get_str();      
+    string fundingAddress = params[0].get_str();    
 	CAmount nAmount = AmountFromValue(params[1]);
     string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
@@ -811,7 +729,6 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
-    
     UniValue res = syscointxfund_helper(fundingAddress, ethAddress.empty()? 0: SYSCOIN_TX_VERSION_BURN, "", vecSend);
     return res;
 }
@@ -1058,35 +975,6 @@ unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 	return count;
 }
 
-UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-	const UniValue &params = request.params;
-	if (request.fHelp || params.size() != 0)
-		throw runtime_error(
-            RPCHelpMan{"syscoinlistreceivedbyaddress",
-	  		    "\nList balances by receiving address.\n",
-                {},
-                RPCResult{
-    			"[\n"
-    			"  {\n"
-	    		"    \"address\" : \"receivingaddress\",    (string) The receiving address\n"
-		    	"    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
-			    "    \"label\" : \"label\"                  (string) A comment for the address/transaction, if any\n"
-    			"  }\n"
-	   	    	"  ,...\n"
-	    		"]\n"
-                },
-                RPCExamples{
-			        HelpExampleCli("syscoinlistreceivedbyaddress", "")
-    			    + HelpExampleRpc("syscoinlistreceivedbyaddress", "")
-                }
-            }.ToString());
-
-	return SyscoinListReceived(pwallet, true, false);
-}
-
 bool IsOutpointMature(const COutPoint& outpoint)
 {
 	Coin coin;
@@ -1186,8 +1074,8 @@ UniValue assetnew(const JSONRPCRequest& request) {
             "]\n"
             },
             RPCExamples{
-            HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31")
-            + HelpExampleRpc("assetnew", "\"myaddress\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31")
+            HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 \"\"")
+            + HelpExampleRpc("assetnew", "\"myaddress\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, \"\"")
             }
             }.ToString());
 	string vchAddress = params[0].get_str();
@@ -1224,6 +1112,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.vchContract = ParseHex(strContract);
 	newAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
 	newAsset.nBalance = nBalance;
+    newAsset.nTotalSupply = nBalance;
 	newAsset.nMaxSupply = nMaxSupply;
 	newAsset.nPrecision = precision;
 	newAsset.nUpdateFlags = nUpdateFlags;
@@ -1242,7 +1131,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 	UniValue res = syscointxfund_helper(vchAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
-	res.push_back((int)newAsset.nAsset);
+	res.pushKV("asset_guid", (int)newAsset.nAsset);
 	return res;
 }
 UniValue addressbalance(const JSONRPCRequest& request) {
@@ -1265,8 +1154,8 @@ UniValue addressbalance(const JSONRPCRequest& request) {
                 }
             }.ToString());
     string address = params[0].get_str();
-    UniValue res(UniValue::VARR);
-    res.push_back(ValueFromAmount(getaddressbalance(address)));
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("amount", ValueFromAmount(getaddressbalance(address)));
     return res;
 }
 
@@ -1652,6 +1541,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
 		entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 		entry.pushKV("precision", asset.nPrecision);
 	}
     entry.pushKV("blockhash", blockhash.GetHex());  
@@ -1687,6 +1577,7 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
 
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
         entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
         entry.pushKV("precision", asset.nPrecision);  
     }  
     entry.pushKV("blockhash", blockhash.GetHex()); 
@@ -2055,8 +1946,9 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
-
-    return pblockindex->GetBlockHash().GetHex();
+    UniValue res{UniValue::VOBJ};
+    res.pushKV("hex", pblockindex->GetBlockHash().GetHex());
+    return res;
 }
 UniValue syscoingetspvproof(const JSONRPCRequest& request)
 {
