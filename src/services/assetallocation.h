@@ -114,6 +114,7 @@ public:
 		return (a.assetAllocationTuple == b.assetAllocationTuple
 			);
 	}
+    CAssetAllocation(const CAssetAllocation&) = delete;
     CAssetAllocation(CAssetAllocation && other) = default;
     CAssetAllocation& operator=( CAssetAllocation& a ) = delete;
 	CAssetAllocation& operator=( CAssetAllocation&& a ) = default;
