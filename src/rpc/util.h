@@ -81,7 +81,7 @@ RPCErrorCode RPCErrorFromTransactionError(TransactionError terr);
 UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_string = "");
 
 //! Parse a JSON range specified as int64, or [int64, int64]
-std::pair<int64_t, int64_t> ParseRange(const UniValue& value);
+std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 struct RPCArg {
     enum class Type {

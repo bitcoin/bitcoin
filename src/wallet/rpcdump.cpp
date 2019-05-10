@@ -22,6 +22,7 @@
 #include <wallet/rpcwallet.h>
 
 #include <stdint.h>
+#include <tuple>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -1141,12 +1142,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         if (!data.exists("range")) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor is ranged, please specify the range");
         }
-        auto range = ParseRange(data["range"]);
-        range_start = range.first;
-        range_end = range.second;
-        if (range_start < 0 || (range_end >> 31) != 0 || range_end - range_start >= 1000000) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid descriptor range specified");
-        }
+        std::tie(range_start, range_end) = ParseDescriptorRange(data["range"]);
     }
 
     const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
