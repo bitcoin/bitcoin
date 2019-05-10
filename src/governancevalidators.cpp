@@ -159,7 +159,7 @@ bool CProposalValidator::ValidatePaymentAddress()
         return false;
     }
 
-    if(boost::get<CScriptID>(&address) || boost::get<WitnessV0ScriptHash>(&address)) {
+    if(boost::get<ScriptHash>(&address) || boost::get<WitnessV0ScriptHash>(&address)) {
         strErrorMessages += "script addresses are not supported;";
         return false;
     }

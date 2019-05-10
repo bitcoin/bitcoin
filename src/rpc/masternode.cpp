@@ -167,7 +167,7 @@ UniValue masternode(const JSONRPCRequest& request)
         obj.pushKV("IP:port",       mnInfo.addr.ToString());
         obj.pushKV("protocol",      mnInfo.nProtocolVersion);
         obj.pushKV("outpoint",      mnInfo.outpoint.ToStringShort());
-        obj.pushKV("payee",         EncodeDestination(mnInfo.pubKeyCollateralAddress.GetID()));
+        obj.pushKV("payee",         EncodeDestination(PKHash(mnInfo.pubKeyCollateralAddress)));
         obj.pushKV("lastseen",      mnInfo.nTimeLastPing);
         int64_t activeTime = (int64_t)(mnInfo.nTimeLastPing - mnInfo.sigTime);
         if(activeTime <= 0)
@@ -361,7 +361,7 @@ UniValue masternode(const JSONRPCRequest& request)
 
         CMasternode mn;
         if(mnodeman.Get(activeMasternode.outpoint, mn)) {
-            mnObj.pushKV("payee", EncodeDestination(mn.pubKeyCollateralAddress.GetID()));
+            mnObj.pushKV("payee", EncodeDestination(PKHash(mn.pubKeyCollateralAddress)));
         }
 
         mnObj.pushKV("status", activeMasternode.GetStatus());
@@ -502,7 +502,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 streamFull << std::setw(18) <<
                                mn.GetStatus() << " " <<
                                mn.nProtocolVersion << " " <<
-                               EncodeDestination(mn.pubKeyCollateralAddress.GetID()) << " " <<
+                               EncodeDestination(PKHash(mn.pubKeyCollateralAddress)) << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
                                mn.GetLastPaidTime() << " "  << std::setw(6) <<
@@ -518,7 +518,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 streamInfo << std::setw(18) <<
                                mn.GetStatus() << " " <<
                                mn.nProtocolVersion << " " <<
-                               EncodeDestination(mn.pubKeyCollateralAddress.GetID()) << " " <<
+                               EncodeDestination(PKHash(mn.pubKeyCollateralAddress)) << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
                                mn.lastPing.GetSentinelString() << " "  <<
@@ -532,7 +532,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             } else if (strMode == "json") {
                 std::ostringstream streamInfo;
                 streamInfo <<  mn.addr.ToString() << " " <<
-                               EncodeDestination(mn.pubKeyCollateralAddress.GetID()) << " " <<
+                               EncodeDestination(PKHash(mn.pubKeyCollateralAddress)) << " " <<
                                mn.GetStatus() << " " <<
                                mn.nProtocolVersion << " " <<
                                mn.lastPing.nDaemonVersion << " " <<
@@ -548,7 +548,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 UniValue objMN(UniValue::VOBJ);
                 objMN.pushKV("address", mn.addr.ToString());
-                objMN.pushKV("payee", EncodeDestination(mn.pubKeyCollateralAddress.GetID()));
+                objMN.pushKV("payee", EncodeDestination(PKHash(mn.pubKeyCollateralAddress)));
                 objMN.pushKV("status", mn.GetStatus());
                 objMN.pushKV("protocol", mn.nProtocolVersion);
                 objMN.pushKV("daemonversion", mn.lastPing.GetDaemonString());
@@ -573,7 +573,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.pushKV(strOutpoint, (int64_t)mn.lastPing.sigTime);
             } else if (strMode == "payee") {
-                std::string strPayee = EncodeDestination(mn.pubKeyCollateralAddress.GetID());
+                std::string strPayee = EncodeDestination(PKHash(mn.pubKeyCollateralAddress));
                 if (strFilter !="" && strPayee.find(strFilter) == std::string::npos &&
                     strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.pushKV(strOutpoint, strPayee);
@@ -774,8 +774,8 @@ UniValue masternodebroadcast(const JSONRPCRequest& request)
                 nSuccessful++;
                 resultObj.pushKV("outpoint", mnb.outpoint.ToStringShort());
                 resultObj.pushKV("addr", mnb.addr.ToString());
-                resultObj.pushKV("pubKeyCollateralAddress", EncodeDestination(mnb.pubKeyCollateralAddress.GetID()));
-                resultObj.pushKV("pubKeyMasternode", EncodeDestination(mnb.pubKeyMasternode.GetID()));
+                resultObj.pushKV("pubKeyCollateralAddress", EncodeDestination(PKHash(mnb.pubKeyCollateralAddress)));
+                resultObj.pushKV("pubKeyMasternode", EncodeDestination(PKHash(mnb.pubKeyMasternode)));
                 resultObj.pushKV("vchSig", EncodeBase64(&mnb.vchSig[0], mnb.vchSig.size()));
                 resultObj.pushKV("sigTime", mnb.sigTime);
                 resultObj.pushKV("protocolVersion", mnb.nProtocolVersion);

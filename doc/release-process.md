@@ -4,8 +4,8 @@ Release Process
 Before every release candidate:
 
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
-* Update manpages, see [gen-manpages.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
+* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/syscoin/syscoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update manpages, see [gen-manpages.sh](https://github.com/syscoin/syscoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
 
 
@@ -27,11 +27,11 @@ Before every major release:
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/syscoin/syscoin/pull/7415) for an example.
 * Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
-  [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
+  [this pull request](https://github.com/syscoin/syscoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
 * Update version of `contrib/gitian-descriptors/*.yml`: usually one'd want to do this on master after branching off the release - but be sure to at least do it before a new major release.
 * In `configure.ac` and `build_msvc/syscoin_config.h` on _the master branch_:
   - update `CLIENT_VERSION_MINOR` version
-* In `configure.ac` and `build_msvc/syscoin_config.h` on _a new release branch_ (see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd972fca3dd4a33cfff90bf901b71a687e7)):
+* In `configure.ac` and `build_msvc/syscoin_config.h` on _a new release branch_ (see [this commit](https://github.com/syscoin/syscoin/commit/742f7dd972fca3dd4a33cfff90bf901b71a687e7)):
   - update `CLIENT_VERSION_MINOR` version
   - set `CLIENT_VERSION_REVISION` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
@@ -224,7 +224,6 @@ Create (and optionally verify) the signed Windows binaries:
     ./bin/gsign --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
     ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../syscoin/contrib/gitian-descriptors/gitian-win-signer.yml
     mv build/out/syscoin-*win64-setup.exe ../syscoin-${VERSION}-win64-setup.exe
-    mv build/out/syscoin-*win32-setup.exe ../syscoin-${VERSION}-win32-setup.exe
     popd
 
 Commit your signature for the signed macOS/Windows binaries:
@@ -232,7 +231,7 @@ Commit your signature for the signed macOS/Windows binaries:
     pushd gitian.sigs
     git add ${VERSION}-osx-signed/"${SIGNER}"
     git add ${VERSION}-win-signed/"${SIGNER}"
-    git commit -a
+    git commit -m "Add ${SIGNER} ${VERSION} signed binaries signatures"
     git push  # Assuming you can push to the gitian.sigs tree
     popd
 
@@ -253,8 +252,6 @@ syscoin-${VERSION}-x86_64-linux-gnu.tar.gz
 syscoin-${VERSION}-osx64.tar.gz
 syscoin-${VERSION}-osx.dmg
 syscoin-${VERSION}.tar.gz
-syscoin-${VERSION}-win32-setup.exe
-syscoin-${VERSION}-win32.zip
 syscoin-${VERSION}-win64-setup.exe
 syscoin-${VERSION}-win64.zip
 ```

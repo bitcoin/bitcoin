@@ -119,7 +119,7 @@ bool CActiveMasternode::SendMasternodePing(CConnman& connman)
         return false;
     }
     // ensure that we should only create ping if in the winners list
-    const CScript &mnpayee = GetScriptForDestination(pmn->pubKeyCollateralAddress.GetID());
+    const CScript &mnpayee = GetScriptForDestination(PKHash(pmn->pubKeyCollateralAddress));
     bool foundPayee = false;
     {
         LOCK(cs_mapMasternodeBlocks);

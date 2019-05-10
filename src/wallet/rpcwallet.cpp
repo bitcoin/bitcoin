@@ -559,13 +559,14 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     }
 
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
-    if (!keyID) {
+    const PKHash *pkhash = boost::get<PKHash>(&dest);
+    if (!pkhash) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
 
     CKey key;
-    if (!pwallet->GetKey(*keyID, key)) {
+    CKeyID keyID(*pkhash);
+    if (!pwallet->GetKey(keyID, key)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
     }
 
@@ -2923,7 +2924,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             }
 
             if (scriptPubKey.IsPayToScriptHash()) {
-                const CScriptID& hash = boost::get<CScriptID>(address);
+                const CScriptID& hash = CScriptID(boost::get<ScriptHash>(address));
                 CScript redeemScript;
                 if (pwallet->GetCScript(hash, redeemScript)) {
                     entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
@@ -3612,8 +3613,9 @@ public:
 
     UniValue operator()(const CNoDestination& dest) const { return UniValue(UniValue::VOBJ); }
 
-    UniValue operator()(const CKeyID& keyID) const
+    UniValue operator()(const PKHash& pkhash) const
     {
+        CKeyID keyID(pkhash);
         UniValue obj(UniValue::VOBJ);
         CPubKey vchPubKey;
         if (pwallet && pwallet->GetPubKey(keyID, vchPubKey)) {
@@ -3623,8 +3625,9 @@ public:
         return obj;
     }
 
-    UniValue operator()(const CScriptID& scriptID) const
+    UniValue operator()(const ScriptHash& scripthash) const
     {
+        CScriptID scriptID(scripthash);
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
         if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
@@ -3721,13 +3724,13 @@ UniValue convertaddress(const JSONRPCRequest& request)
     std::string currentV3Address = "";
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
         currentV4Address =  EncodeDestination(dest);
-        currentV3Address =  EncodeDestination(CKeyID(*witness_id));
+        currentV3Address =  EncodeDestination(PKHash(*witness_id));
     }
-    else if (auto key_id = boost::get<CKeyID>(&dest)) {
+    else if (auto key_id = boost::get<PKHash>(&dest)) {
         currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
         currentV3Address =  EncodeDestination(*key_id);
     }
-    else if (auto script_id = boost::get<CScriptID>(&dest)) {
+    else if (auto script_id = boost::get<ScriptHash>(&dest)) {
         currentV4Address =  EncodeDestination(dest);
         currentV3Address =  currentV4Address;
     }
@@ -4359,7 +4362,6 @@ UniValue syscoinmint(const JSONRPCRequest& request);
 UniValue syscointxfund(const JSONRPCRequest& request);
 
 
-UniValue syscoinlistreceivedbyaddress(const JSONRPCRequest& request);
 UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
 
 UniValue assetnew(const JSONRPCRequest& request);
@@ -4467,8 +4469,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleroofpath_hex","witness"} },     
     { "syscoin",            "syscointxfund",                    &syscointxfund,                 {"hexstring","address","output_index"}},
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
-    { "syscoin",            "syscoinlistreceivedbyaddress",     &syscoinlistreceivedbyaddress,  {}},
-
+  
     /* masternodes + assets using the blockchain, coins/points/service backed tokens*/
     { "syscoin",            "assetnew",                         &assetnew,                      {"address","public value","contract","precision","supply","max_supply","update_flags","witness"}},
     { "syscoin",            "assetupdate",                      &assetupdate,                   {"asset_guid","public value","contract","supply","update_flags","witness"}},
