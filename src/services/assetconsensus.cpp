@@ -691,7 +691,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot find sender asset allocation");
                 return error(errorMessage.c_str());
             }        
-            mapAssetAllocation->second = std::move(dbAssetAllocation);                   
+            mapAssetAllocation->second = dbAssetAllocation;                   
         }
     }
     CAssetAllocation& storedSenderAllocationRef = fJustCheck? dbAssetAllocation:mapAssetAllocation->second;
@@ -1213,14 +1213,14 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 return error(errorMessage.c_str());
             }
             else
-                 mapAsset->second = std::move(theAsset); 
+                 mapAsset->second = theAsset; 
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
                 errorMessage =  "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2041 - " + _("Asset already exists");
                 return error(errorMessage.c_str());
             }
-            mapAsset->second = std::move(dbAsset); 
+            mapAsset->second = dbAsset; 
         }
     }
     CAsset &storedSenderAssetRef = mapAsset->second;
