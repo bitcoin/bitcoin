@@ -88,7 +88,7 @@ unsigned int ParseConfirmTarget(const UniValue& value, unsigned int max_target);
 UniValue GetServicesNames(ServiceFlags services);
 
 //! Parse a JSON range specified as int64, or [int64, int64]
-std::pair<int64_t, int64_t> ParseRange(const UniValue& value);
+std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
 
 struct RPCArg {
     enum class Type {
