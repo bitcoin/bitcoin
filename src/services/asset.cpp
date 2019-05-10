@@ -1088,8 +1088,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	string vchWitness;
 	UniValue param4 = params[4];
 	UniValue param5 = params[5];
+	
 	CAmount nBalance = AssetAmountFromValue(param4, precision);
 	CAmount nMaxSupply = AssetAmountFromValue(param5, precision);
+	LogPrintf("param4 %s param5 %s nBalance %lld nMaxSupply %lld\n", param4.write().c_str(), param5.write().c_str(), nBalance, nMaxSupply);
 	int nUpdateFlags = params[6].get_int();
 	vchWitness = params[7].get_str();
 
@@ -1207,10 +1209,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     theAsset.witnessAddress = copyWitness;
 	UniValue params3 = params[3];
 	CAmount nBalance = 0;
-	LogPrintf("params3 %s\n", params3.write().c_str());
 	if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
 		nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
-	LogPrintf("after parse\n");
 	if(strPubData != stringFromVch(theAsset.vchPubData))
 		theAsset.vchPubData = vchFromString(strPubData);
     else
