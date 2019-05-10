@@ -30,7 +30,7 @@ void SleepFor(const int& seconds, bool actualSleep=false);
 void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2);
 string SyscoinMint(const string& node, const string& address, const string& amount, int height, const string& txroot_hex, const string& tx_hex, const string& txmerkleproof_hex, const string& txmerkleroofpath_hex, const string& witness="''");
 string AssetNew(const string& node, const string& address, const string& pubdata = "''", const string& contract="''", const string& precision="8", const string& supply = "1", const string& maxsupply = "10", const string& updateflags = "31", const string& witness = "''");
-void AssetUpdate(const string& node, const string& guid, const string& pubdata = "''", const string& supply = "0",  const string& updateflags = "31", const string& witness = "''");
+void AssetUpdate(const string& node, const string& guid, const string& pubdata = "''", const string& supply = "''",  const string& updateflags = "31", const string& witness = "''");
 void AssetTransfer(const string& node, const string &tonode, const string& gid, const string& toaddress, const string& witness = "''");
 void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm=true);
 void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid,const string &index);

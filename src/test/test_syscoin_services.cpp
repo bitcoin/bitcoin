@@ -747,7 +747,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 
 	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
 	CAmount supplyamount = 0;
-	if (supply != "0") {
+	if (supply != "''") {
 		UniValue supplytmp(UniValue::VSTR);
 		supplytmp.setStr(supply);
 		supplyamount = AssetAmountFromValue(supplytmp, nprecision);
@@ -755,13 +755,13 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	CAmount newamount = oldsupplyamount + supplyamount;
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
-	string newsupply = supply == "0" ? "0" : supply;
+	string newsupply = supply == "''" ? "0" : supply;
 	int newflags = updateflags == "''" ? oldflags : boost::lexical_cast<int>(updateflags);
 	string newflagsstr = boost::lexical_cast<string>(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
 	// increase supply to new amount if we passed in a supply value
-	newsupply = supply == "0" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
+	newsupply = supply == "''" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
@@ -784,7 +784,6 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == oldsupplyamount);
-
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 
