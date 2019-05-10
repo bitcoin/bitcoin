@@ -897,7 +897,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		maxstr = ValueFromAssetAmount(negonesupply + precisionCoin, i).get_str();
 
 		// "assetnew [address] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
-		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " " + maxstr + " " + maxstr " " 31 ''"));
+		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " " + maxstr + " " + maxstr + " " 31 ''"));
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " 1 " + maxstr + " 31 ''"));
 		BOOST_CHECK_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " " + maxstrplusone + " " + maxstr + " 31 ''"), runtime_error);
 		BOOST_CHECK_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " 1 " + maxstrplusone + " 31 ''"), runtime_error);
