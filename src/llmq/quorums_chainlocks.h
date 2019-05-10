@@ -68,7 +68,8 @@ private:
     uint256 lastSignedMsgHash;
 
     // We keep track of txids from recently received blocks so that we can check if all TXs got ixlocked
-    std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> blockTxs;
+    typedef std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> BlockTxs;
+    BlockTxs blockTxs;
     std::unordered_map<uint256, int64_t> txFirstSeenTime;
 
     std::map<uint256, int64_t> seenChainLocks;
@@ -106,6 +107,8 @@ private:
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash);
 
     void DoInvalidateBlock(const CBlockIndex* pindex, bool activateBestChain);
+
+    BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash);
 
     void Cleanup();
 };
