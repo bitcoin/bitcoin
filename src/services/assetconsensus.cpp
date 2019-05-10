@@ -627,7 +627,7 @@ void CopyAsset(CAsset& a, const CAsset& b) {
 void CopyAllocation(CAssetAllocation& a, const CAssetAllocation& b) {
 	a.assetAllocationTuple.nAsset = b.assetAllocationTuple.nAsset;
 	a.assetAllocationTuple.witnessAddress.nVersion = b.assetAllocationTuple.witnessAddress.nVersion;
-	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.witnessAddress.assetAllocationTuple.vchWitnessProgram;
+	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.assetAllocationTuple.witnessAddress.vchWitnessProgram;
 	a.listSendingAllocationAmounts = b.listSendingAllocationAmounts;
 	a.nBalance = b.nBalance;
 	a.lockedOutpoint = b.lockedOutpoint;
