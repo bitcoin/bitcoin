@@ -1205,8 +1205,8 @@ UniValue assetupdate(const JSONRPCRequest& request) {
     const CWitnessAddress &copyWitness = theAsset.witnessAddress;
     theAsset.ClearAsset();
     theAsset.witnessAddress = copyWitness;
-    
-	CAmount nBalance = AssetAmountFromValue(param[3], theAsset.nPrecision);
+	UniValue params3 = params[3];
+	CAmount nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
 	
 	if(strPubData != stringFromVch(theAsset.vchPubData))
 		theAsset.vchPubData = vchFromString(strPubData);
