@@ -1359,7 +1359,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 					CopyAllocation(mapAssetAllocation->second, receiverAllocation);           
                 }
 				// adjust receiver balance
-				mapAssetAllocation->second += amountTuple.second;
+				mapAssetAllocation->second.nBalance += amountTuple.second;
                                         
                 // adjust sender balance
                 storedSenderAssetRef.nBalance -= amountTuple.second;                              
