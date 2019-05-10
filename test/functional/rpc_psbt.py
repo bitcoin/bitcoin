@@ -26,6 +26,9 @@ class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 3
+        self.extra_args = [[
+            "-walletrbf={}".format(int(i == 1)),
+        ] for i in range(self.num_nodes)]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -229,6 +232,23 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(complete_psbt, double_processed_psbt)
         # We don't care about the decode result, but decoding must succeed.
         self.nodes[0].decodepsbt(double_processed_psbt["psbt"])
+
+        # Test replaceable arg falls back to wallet's default setting
+        block_height = self.nodes[0].getblockcount()
+        psbtx_info = self.nodes[0].walletcreatefundedpsbt([], [{self.nodes[2].getnewaddress():10}], block_height+2, {}, False)
+        decoded_psbt = self.nodes[0].decodepsbt(psbtx_info["psbt"])
+        for tx_in, psbt_in in zip(decoded_psbt["tx"]["vin"], decoded_psbt["inputs"]):
+            assert tx_in["sequence"] > MAX_BIP125_RBF_SEQUENCE
+            assert "bip32_derivs" not in psbt_in
+        assert_equal(decoded_psbt["tx"]["locktime"], block_height+2)
+
+        block_height = self.nodes[1].getblockcount()
+        psbtx_info = self.nodes[1].walletcreatefundedpsbt([], [{self.nodes[2].getnewaddress():10}], block_height+2, {}, False)
+        decoded_psbt = self.nodes[1].decodepsbt(psbtx_info["psbt"])
+        for tx_in, psbt_in in zip(decoded_psbt["tx"]["vin"], decoded_psbt["inputs"]):
+            assert_equal(tx_in["sequence"], MAX_BIP125_RBF_SEQUENCE)
+            assert "bip32_derivs" not in psbt_in
+        assert_equal(decoded_psbt["tx"]["locktime"], block_height+2)
 
         # BIP 174 Test Vectors
 
