@@ -194,6 +194,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listassetallocationmempoolbalances", 1, "from" },
     { "listassetallocationmempoolbalances", 2, "options" },    
     { "assetnew", 3, "precision" },
+    { "assetnew", 4, "supply" },
+    { "assetnew", 5, "max_supply" },
     { "assetnew", 6, "update_flags" },
     { "assetupdate", 0, "asset_guid" },
     { "assetupdate", 3, "supply" },
