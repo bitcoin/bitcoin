@@ -2119,7 +2119,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                     "    \"total_supply\": (numeric) The total supply of this asset\n"
                     "    \"max_supply\":   (numeric) The maximum supply of this asset\n"
                     "    \"update_flag\":  (numeric) The flag in decimal \n"
-                    "    \"precision\":    (numeric) The precision of this asset \n"   
+                    "    \"precision\":    (numeric) The precision of this asset \n"
                     "  },\n"
                     "  ...\n"
                     "]\n"

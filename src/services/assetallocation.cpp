@@ -816,7 +816,7 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
 
     UniValue oRes(UniValue::VOBJ);
-    oRes.pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision)); 
+    oRes.pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
     return oRes;
 }
 
