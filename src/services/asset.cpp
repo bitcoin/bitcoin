@@ -1224,6 +1224,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     newAsset.vchContract = ParseHex(strContract);
 	newAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
 	newAsset.nBalance = nBalance;
+    newAsset.nTotalSupply = nBalance;
 	newAsset.nMaxSupply = nMaxSupply;
 	newAsset.nPrecision = precision;
 	newAsset.nUpdateFlags = nUpdateFlags;
@@ -1652,6 +1653,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
 		entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
 		entry.pushKV("precision", asset.nPrecision);
 	}
     entry.pushKV("blockhash", blockhash.GetHex());  
@@ -1687,6 +1689,7 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
 
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
         entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
         entry.pushKV("precision", asset.nPrecision);  
     }  
     entry.pushKV("blockhash", blockhash.GetHex()); 
