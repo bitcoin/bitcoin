@@ -886,10 +886,11 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		string maxstrupdate = ValueFromAssetAmount(negonesupply, i).get_str();
 		printf("maxstrupdate %s\n", maxstrupdate.c_str());
 		// can't create asset with more than max+1 balance or max+1 supply
-		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i).get_str();
+		string maxstrplusone = ValueFromAssetAmount(negonesupply + precisionCoin + 1, i).get_str();
 		string maxstrnew = ValueFromAssetAmount(negonesupply + precisionCoin, i).get_str();
-		printf("maxstrnew %s\n", maxstrnew.c_str());
+		printf("maxstrnew %s maxstrplusone %s\n", maxstrnew.c_str(), maxstrplusone.c_str());
 		string guid = AssetNew("node1", addressName, "data", "''", istr, "1", maxstrnew);
+		printf("after new\n");
 		AssetUpdate("node1", guid, "pub12", maxstrupdate);
 		printf("maxstrupdate %s\n", maxstrupdate.c_str());
 		// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
