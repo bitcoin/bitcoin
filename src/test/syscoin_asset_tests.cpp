@@ -873,6 +873,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 	printf("Running generate_assetupdate_precision_address...\n");
 	UniValue r;
 	for (int i = 0; i <= 8; i++) {
+		printf("i %d\n", i);
 		string istr = boost::lexical_cast<string>(i);
 		string addressName = GetNewFundedAddress("node1");
 		// test max supply for every possible precision
@@ -883,19 +884,23 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		// get max value - 1 (1 is already the supply, and this value is cumulative)
 		CAmount negonesupply = AssetAmountFromValue(negonevalue, i) - precisionCoin;
 		string maxstrupdate = ValueFromAssetAmount(negonesupply, i).get_str();
+		printf("maxstrupdate %s\n", maxstrupdate.c_str());
 		// can't create asset with more than max+1 balance or max+1 supply
 		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin * 2), i).get_str();
 		string maxstrnew = ValueFromAssetAmount(negonesupply + precisionCoin, i).get_str();
+		printf("maxstrnew %s\n", maxstrnew.c_str());
 		string guid = AssetNew("node1", addressName, "data", "''", istr, "1", maxstrnew);
 		AssetUpdate("node1", guid, "pub12", maxstrupdate);
+		printf("maxstrupdate %s\n", maxstrupdate.c_str());
+		// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
 		// can't go above max balance (10^18) / (10^i) for i decimal places
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " pub '' 1 31 ''"));
-
+		printf("assetupdate\n");
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
         string hex = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex + "\\\"]\""));
         BOOST_CHECK(!find_value(r.get_array()[0].get_obj(), "allowed").get_bool()); 
-
+		printf("before loop\n");
 
 
 		// "assetnew [address] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
@@ -903,6 +908,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		BOOST_CHECK_NO_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " 1 " + maxstrnew + " 31 ''"));
 		BOOST_CHECK_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " " + maxstrplusone + " " + maxstrnew + " 31 ''"), runtime_error);
 		BOOST_CHECK_THROW(CallRPC("node1", "assetnew " + addressName + " pub '' " + istr + " 1 " + maxstrplusone + " 31 ''"), runtime_error);
+		printf("end loop\n");
 	}
     string newaddress = GetNewFundedAddress("node1");
 	// invalid precisions
