@@ -776,7 +776,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK(flagValue.isNull());
 	}
 	// ensure sender state not changed before generating blocks
-	BOOST_CHECK_NO_THROW(r = CallRPC(node1, "assetinfo " + guid));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), oldpubdata);
