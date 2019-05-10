@@ -607,6 +607,31 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
     }         
     return true; 
 }
+void CopyAsset(CAsset& a, const CAsset& b) {
+	a.nAsset = b.nAsset;
+	a.witnessAddress.nVersion = b.witnessAddress.nVersion;
+	a.witnessAddress.vchWitnessProgram = b.witnessAddress.vchWitnessProgram;
+	a.witnessAddressTransfer.nVersion = b.witnessAddressTransfer.nVersion;
+	a.witnessAddressTransfer.vchWitnessProgram = b.witnessAddressTransfer.vchWitnessProgram;
+	a.vchContract = b.vchContract;
+	a.txHash = b.txHash;
+	a.nHeight = b.nHeight;
+	a.vchPubData = b.vchPubData;
+	a.nBalance = b.nBalance;
+	a.nTotalSupply = b.nTotalSupply;
+	a.nMaxSupply = b.nMaxSupply;
+	a.nPrecision = b.nPrecision;
+	a.nUpdateFlags = b.nUpdateFlags;
+	a.nDumurrageOrInterest = b.nDumurrageOrInterest;
+}
+void CopyAllocation(CAssetAllocation& a, const CAssetAllocation& b) {
+	a.assetAllocationTuple.nAsset = b.assetAllocationTuple.nAsset;
+	a.assetAllocationTuple.witnessAddress.nVersion = b.assetAllocationTuple.witnessAddress.nVersion;
+	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.witnessAddress.assetAllocationTuple.vchWitnessProgram;
+	a.listSendingAllocationAmounts = b.listSendingAllocationAmounts;
+	a.nBalance = b.nBalance;
+	a.lockedOutpoint = b.lockedOutpoint;
+}
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
@@ -690,8 +715,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             {
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot find sender asset allocation");
                 return error(errorMessage.c_str());
-            }        
-            mapAssetAllocation->second = dbAssetAllocation;                   
+            }
+			CopyAllocation(mapAssetAllocation->second, dbAssetAllocation);              
         }
     }
     CAssetAllocation& storedSenderAllocationRef = fJustCheck? dbAssetAllocation:mapAssetAllocation->second;
@@ -1213,14 +1238,14 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 return error(errorMessage.c_str());
             }
             else
-                 mapAsset->second = theAsset; 
+				CopyAsset(mapAsset->second , theAsset);
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
                 errorMessage =  "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2041 - " + _("Asset already exists");
                 return error(errorMessage.c_str());
             }
-            mapAsset->second = dbAsset; 
+			CopyAsset(mapAsset->second , dbAsset);
         }
     }
     CAsset &storedSenderAssetRef = mapAsset->second;
