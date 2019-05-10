@@ -737,6 +737,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
+	printf("assetupdate\n");
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	string oldaddress = find_value(r.get_obj(), "address").get_str();
 	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
@@ -744,7 +745,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
 	int oldflags = find_value(r.get_obj(), "update_flags").get_int();
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
-
+	printf("1\n");
 	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
 	CAmount supplyamount = 0;
 	if (supply != "''") {
@@ -752,14 +753,17 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		supplytmp.setStr(supply);
 		supplyamount = AssetAmountFromValue(supplytmp, nprecision);
 	}
+	printf("2\n");
 	CAmount newamount = oldsupplyamount + supplyamount;
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
 	string newsupply = supply == "''" ? "0" : supply;
 	int newflags = updateflags == "''" ? oldflags : boost::lexical_cast<int>(updateflags);
 	string newflagsstr = boost::lexical_cast<string>(newflags);
+	printf("3\n");
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
+	printf("4\n");
 	// increase supply to new amount if we passed in a supply value
 	newsupply = supply == "''" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
@@ -775,6 +779,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	else {
 		BOOST_CHECK(flagValue.isNull());
 	}
+	printf("5\n");
 	// ensure sender state not changed before generating blocks
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
@@ -795,6 +800,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "listassetindexassets " + oldaddress ));
 	BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	GenerateBlocks(6, node);
+	printf("6\n");
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
