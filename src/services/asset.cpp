@@ -1661,7 +1661,7 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
                 // add asset address association
                 auto itVec = std::find(assetGuids.begin(), assetGuids.end(),  key.first);
                 if(itVec == assetGuids.end()){
-                    // if we had the sepcial erase flag we remove that and add the real guid
+                    // if we had the special erase flag we remove that and add the real guid
                     if(assetGuids.size() == 1 && assetGuids[0] == 0)
                         assetGuids.clear();
                     assetGuids.emplace_back(key.first);
