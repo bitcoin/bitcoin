@@ -3,11 +3,11 @@
 Crown Core v0.13.0 is a major release and a mandatory upgrade.
 It is available for download from:
 
-[](https://crown.tech/downloads)
+https://crown.tech/downloads
 
 Please report bugs using the issue tracker at Gitlab:
 
-[](https://gitlab.crown.tech/crown/crown-core/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=)
+https://gitlab.crown.tech/crown/crown-core/issues/new?issue%5Bassignee_id%5D=&issue%5Bmilestone_id%5D=
 
 ## How to upgrade
 
@@ -101,7 +101,7 @@ coins are eligible to earn rewards. Therefore the minimum wallet balance which
 can stake is 500 coins and those coins must be locked as the collateral for a 
 systemnode. 
 
-The system is described in more detail in [Crown-MNPoS.md](https://gitlab.crown.tech/walkjivefly/crown-core/blob/v0.13_preparation/doc/Crown-masternode-Proof-of-Stake-consensus-overview.md)
+The system is described in more detail in [Crown-MNPoS.md](https://gitlab.crown.tech/crown/crown-core/blob/master/doc/Crown-MNPoS.md)
 
 ### The switchover
 The switchover from PoW to PoS will take place at block height 2330000, approximately
