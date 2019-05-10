@@ -1091,7 +1091,6 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	
 	CAmount nBalance = AssetAmountFromValue(param4, precision);
 	CAmount nMaxSupply = AssetAmountFromValue(param5, precision);
-	LogPrintf("param4 %s param5 %s nBalance %lld nMaxSupply %lld\n", param4.write().c_str(), param5.write().c_str(), nBalance, nMaxSupply);
 	int nUpdateFlags = params[6].get_int();
 	vchWitness = params[7].get_str();
 

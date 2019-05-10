@@ -873,7 +873,6 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 	printf("Running generate_assetupdate_precision_address...\n");
 	UniValue r;
 	for (int i = 0; i <= 8; i++) {
-		printf("i %d\n", i);
 		string istr = boost::lexical_cast<string>(i);
 		string addressName = GetNewFundedAddress("node1");
 		// test max supply for every possible precision
