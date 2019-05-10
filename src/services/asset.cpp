@@ -768,8 +768,8 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
 	
     
 	// pass back new raw transaction
-	UniValue res(UniValue::VARR);
-	res.push_back(EncodeHexTx(CTransaction(tx)));
+	UniValue res(UniValue::VOBJ);
+	res.pushKV("hex", EncodeHexTx(CTransaction(tx)));
 	return res;
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
@@ -793,8 +793,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
                     + HelpExampleRpc("syscoinburn", "\"funding_address\", \"amount\", \"ethaddress\"")
                 }
          }.ToString());
-      
-    string fundingAddress = params[0].get_str();      
+    string fundingAddress = params[0].get_str();    
 	CAmount nAmount = AmountFromValue(params[1]);
     string ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
@@ -811,7 +810,6 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
     vecSend.push_back(burn);
-    
     UniValue res = syscointxfund_helper(fundingAddress, ethAddress.empty()? 0: SYSCOIN_TX_VERSION_BURN, "", vecSend);
     return res;
 }
@@ -1243,7 +1241,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 	UniValue res = syscointxfund_helper(vchAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
-	res.push_back((int)newAsset.nAsset);
+	res.pushKV("asset_guid", (int)newAsset.nAsset);
 	return res;
 }
 UniValue addressbalance(const JSONRPCRequest& request) {
@@ -1266,8 +1264,8 @@ UniValue addressbalance(const JSONRPCRequest& request) {
                 }
             }.ToString());
     string address = params[0].get_str();
-    UniValue res(UniValue::VARR);
-    res.push_back(ValueFromAmount(getaddressbalance(address)));
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("amount", ValueFromAmount(getaddressbalance(address)));
     return res;
 }
 
@@ -2058,8 +2056,9 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
     if (!pblockindex) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
-
-    return pblockindex->GetBlockHash().GetHex();
+    UniValue res{UniValue::VOBJ};
+    res.pushKV("hex", pblockindex->GetBlockHash().GetHex());
+    return res;
 }
 UniValue syscoingetspvproof(const JSONRPCRequest& request)
 {
