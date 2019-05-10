@@ -222,7 +222,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
             }
-            mapAssetAllocation->second = std::move(receiverAllocation);              
+			CopyAllocation(mapAssetAllocation->second, receiverAllocation);             
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
         // sender as burn
@@ -238,7 +238,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
                 senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);
                 senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress); 
             }
-            mapSenderAssetAllocation->second = std::move(senderAllocation);              
+            CopyAllocation(mapSenderAssetAllocation->second , senderAllocation);              
         }
         CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
         if (!AssetRange(mintSyscoin.nValueAsset))
@@ -490,7 +490,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
             receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
             receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
         } 
-        mapAssetAllocation->second = std::move(receiverAllocation);                 
+		CopyAllocation(mapAssetAllocation->second, receiverAllocation);               
     }
     CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
     // sender
@@ -506,7 +506,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
             senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);
             senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress);
         } 
-        mapAssetAllocation->second = std::move(senderAllocation);                 
+		CopyAllocation(mapAssetAllocation->second, senderAllocation);              
     }
     CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
     
@@ -555,7 +555,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
             senderAllocation.assetAllocationTuple.nAsset = std::move(theAssetAllocation.assetAllocationTuple.nAsset);
             senderAllocation.assetAllocationTuple.witnessAddress = std::move(theAssetAllocation.assetAllocationTuple.witnessAddress);       
         } 
-        mapAssetAllocation->second = std::move(senderAllocation);                 
+		CopyAllocation(mapAssetAllocation->second, senderAllocation);                
     }
     CAssetAllocation& storedSenderAllocationRef = mapAssetAllocation->second;
 
@@ -574,7 +574,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
             } 
-            mapAssetAllocationReceiver->second = std::move(receiverAllocation);                 
+			CopyAllocation(mapAssetAllocationReceiver->second, receiverAllocation);                
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocationReceiver->second;
 
@@ -628,7 +628,6 @@ void CopyAllocation(CAssetAllocation& a, const CAssetAllocation& b) {
 	a.assetAllocationTuple.nAsset = b.assetAllocationTuple.nAsset;
 	a.assetAllocationTuple.witnessAddress.nVersion = b.assetAllocationTuple.witnessAddress.nVersion;
 	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.assetAllocationTuple.witnessAddress.vchWitnessProgram;
-	a.listSendingAllocationAmounts = b.listSendingAllocationAmounts;
 	a.nBalance = b.nBalance;
 	a.lockedOutpoint = b.lockedOutpoint;
 }
@@ -800,7 +799,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                     dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);              
                 }
-                mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                   
+				CopyAllocation(mapAssetAllocationReceiver->second, dbAssetAllocationReceiver);                  
             } 
             mapAssetAllocationReceiver->second.nBalance += nAmountFromScript;                        
         }else if (!bSanityCheck && !bMiner) {
@@ -816,7 +815,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015a - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
 			return error(errorMessage.c_str());
 		}
-        if (!bMiner && !bSanityCheck && !fJustCheck){
+        if (!bSanityCheck && !fJustCheck){
     		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
     		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND transaction
     		vecLockedOutpoints.emplace_back(std::move(theAssetAllocation.lockedOutpoint));
@@ -830,7 +829,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             return error(errorMessage.c_str());
         }       
 		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
-		if (!bMiner && !bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
+		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
 			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
 			vecLockedOutpoints.emplace_back(std::move(emptyOutPoint));
 			storedSenderAllocationRef.lockedOutpoint.SetNull();
@@ -898,7 +897,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 if(mapAssetAllocationReceiverNotFound){
                     CAssetAllocation receiverAllocation;
                     GetAssetAllocation(receiverAllocationTuple, receiverAllocation);
-                    mapBalanceReceiver->second = std::move(receiverAllocation.nBalance);
+                    mapBalanceReceiver->second = receiverAllocation.nBalance;
                 }
                 if(!bSanityCheck){
                     mapBalanceReceiver->second += amountTuple.second;
@@ -914,7 +913,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
                     }
-                    mapBalanceReceiverBlock->second = std::move(receiverAllocation);   
+					CopyAllocation(mapBalanceReceiverBlock->second, receiverAllocation);   
                 }
                 mapBalanceReceiverBlock->second.nBalance += amountTuple.second; 
                 // to remove mempool balances but need to check to ensure that all txid's from arrivalTimes are first gone before removing receiver mempool balance
@@ -984,7 +983,7 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",theAssetAllocation.assetAllocationTuple.nAsset);
             return false;               
         } 
-        mapAsset->second = std::move(dbAsset);                   
+		CopyAsset(mapAsset->second, dbAsset);                  
     }
     CAsset& storedSenderRef = mapAsset->second;
                
@@ -1002,7 +1001,7 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
             } 
-            mapAssetAllocation->second = std::move(receiverAllocation);                 
+			CopyAllocation(mapAssetAllocation->second, receiverAllocation);               
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
                     
@@ -1050,7 +1049,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",theAsset.nAsset);
             return false;               
         } 
-        mapAsset->second = std::move(dbAsset);                   
+		CopyAsset(mapAsset->second, dbAsset);                
     }
     CAsset& storedSenderRef = mapAsset->second;   
            
@@ -1088,7 +1087,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",theAsset.nAsset);
             return false;               
         } 
-        mapAsset->second = std::move(dbAsset);                   
+		CopyAsset(mapAsset->second, dbAsset);                
     }
     mapAsset->second.SetNull();  
     if(fAssetIndex){
@@ -1358,12 +1357,10 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
                     } 
-                    mapAssetAllocation->second = std::move(receiverAllocation);                
+					CopyAllocation(mapAssetAllocation->second, receiverAllocation);           
                 }
-                
-                CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
-                
-                storedReceiverAllocationRef.nBalance += amountTuple.second;
+				// adjust receiver balance
+				mapAssetAllocation->second += amountTuple.second;
                                         
                 // adjust sender balance
                 storedSenderAssetRef.nBalance -= amountTuple.second;                              
