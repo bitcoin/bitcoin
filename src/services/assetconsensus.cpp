@@ -1146,7 +1146,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Precision must be between 0 and 8");
                 return error(errorMessage.c_str());
             }
-            if (theAsset.nMaxSupply != -1 && !AssetRange(theAsset.nMaxSupply, theAsset.nPrecision))
+            if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision))
             {
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Max supply out of money range");
                 return error(errorMessage.c_str());
