@@ -1361,7 +1361,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
             {
                 {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to."},
-                {"wtiness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
+                {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
             },
             RPCResult{
             "[\n"
