@@ -66,7 +66,7 @@ def build():
         subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'dash='+args.commit, '--url', 'dash='+args.url, '../dash/contrib/gitian-descriptors/gitian-win.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-win-unsigned', '--destination', '../gitian.sigs/', '../dash/contrib/gitian-descriptors/gitian-win.yml'])
         subprocess.check_call('mv build/out/dashcore-*-win-unsigned.tar.gz inputs/', shell=True)
-        subprocess.check_call('mv build/out/dashcore-*.zip build/out/dashcore-*.exe ../dashcore-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/dashcore-*.zip build/out/dashcore-*.exe build/out/src/dashcore-*.tar.gz ../dashcore-binaries/'+args.version, shell=True)
 
     if args.macos:
         print('\nCompiling ' + args.version + ' MacOS')
@@ -75,7 +75,7 @@ def build():
         subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'dash='+args.commit, '--url', 'dash='+args.url, '../dash/contrib/gitian-descriptors/gitian-osx.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-osx-unsigned', '--destination', '../gitian.sigs/', '../dash/contrib/gitian-descriptors/gitian-osx.yml'])
         subprocess.check_call('mv build/out/dashcore-*-osx-unsigned.tar.gz inputs/', shell=True)
-        subprocess.check_call('mv build/out/dashcore-*.tar.gz build/out/dashcore-*.dmg ../dashcore-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/dashcore-*.tar.gz build/out/dashcore-*.dmg build/out/src/dashcore-*.tar.gz ../dashcore-binaries/'+args.version, shell=True)
 
     os.chdir(workdir)
 
