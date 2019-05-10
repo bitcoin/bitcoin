@@ -109,7 +109,7 @@ struct LLMQParams {
     int signingActiveQuorumCount;
 
     // Used for inter-quorum communication. This is the number of quorums for which we should keep old connections. This
-    // should be at least as much as the active quorums set.
+    // should be at least one more then the active quorums set.
     int keepOldConnections;
 };
 

@@ -122,7 +122,7 @@ static Consensus::LLMQParams llmq5_60 = {
 
         .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
 
-        .keepOldConnections = 24,
+        .keepOldConnections = 3,
 };
 
 static Consensus::LLMQParams llmq50_60 = {
@@ -140,7 +140,7 @@ static Consensus::LLMQParams llmq50_60 = {
 
         .signingActiveQuorumCount = 24, // a full day worth of LLMQs
 
-        .keepOldConnections = 24,
+        .keepOldConnections = 25,
 };
 
 static Consensus::LLMQParams llmq400_60 = {
@@ -158,7 +158,7 @@ static Consensus::LLMQParams llmq400_60 = {
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
-        .keepOldConnections = 4,
+        .keepOldConnections = 5,
 };
 
 // Used for deployment and min-proto-version signalling, so it needs a higher threshold
@@ -177,7 +177,7 @@ static Consensus::LLMQParams llmq400_85 = {
 
         .signingActiveQuorumCount = 4, // two days worth of LLMQs
 
-        .keepOldConnections = 4,
+        .keepOldConnections = 5,
 };
 
 
