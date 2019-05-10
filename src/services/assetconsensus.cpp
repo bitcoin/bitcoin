@@ -61,7 +61,30 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     }   
     return true;       
 }
-
+void CopyAsset(CAsset& a, const CAsset& b) {
+	a.nAsset = b.nAsset;
+	a.witnessAddress.nVersion = b.witnessAddress.nVersion;
+	a.witnessAddress.vchWitnessProgram = b.witnessAddress.vchWitnessProgram;
+	a.witnessAddressTransfer.nVersion = b.witnessAddressTransfer.nVersion;
+	a.witnessAddressTransfer.vchWitnessProgram = b.witnessAddressTransfer.vchWitnessProgram;
+	a.vchContract = b.vchContract;
+	a.txHash = b.txHash;
+	a.nHeight = b.nHeight;
+	a.vchPubData = b.vchPubData;
+	a.nBalance = b.nBalance;
+	a.nTotalSupply = b.nTotalSupply;
+	a.nMaxSupply = b.nMaxSupply;
+	a.nPrecision = b.nPrecision;
+	a.nUpdateFlags = b.nUpdateFlags;
+	a.nDumurrageOrInterest = b.nDumurrageOrInterest;
+}
+void CopyAllocation(CAssetAllocation& a, const CAssetAllocation& b) {
+	a.assetAllocationTuple.nAsset = b.assetAllocationTuple.nAsset;
+	a.assetAllocationTuple.witnessAddress.nVersion = b.assetAllocationTuple.witnessAddress.nVersion;
+	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.assetAllocationTuple.witnessAddress.vchWitnessProgram;
+	a.nBalance = b.nBalance;
+	a.lockedOutpoint = b.lockedOutpoint;
+}
 bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
@@ -606,30 +629,6 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
         }       
     }         
     return true; 
-}
-void CopyAsset(CAsset& a, const CAsset& b) {
-	a.nAsset = b.nAsset;
-	a.witnessAddress.nVersion = b.witnessAddress.nVersion;
-	a.witnessAddress.vchWitnessProgram = b.witnessAddress.vchWitnessProgram;
-	a.witnessAddressTransfer.nVersion = b.witnessAddressTransfer.nVersion;
-	a.witnessAddressTransfer.vchWitnessProgram = b.witnessAddressTransfer.vchWitnessProgram;
-	a.vchContract = b.vchContract;
-	a.txHash = b.txHash;
-	a.nHeight = b.nHeight;
-	a.vchPubData = b.vchPubData;
-	a.nBalance = b.nBalance;
-	a.nTotalSupply = b.nTotalSupply;
-	a.nMaxSupply = b.nMaxSupply;
-	a.nPrecision = b.nPrecision;
-	a.nUpdateFlags = b.nUpdateFlags;
-	a.nDumurrageOrInterest = b.nDumurrageOrInterest;
-}
-void CopyAllocation(CAssetAllocation& a, const CAssetAllocation& b) {
-	a.assetAllocationTuple.nAsset = b.assetAllocationTuple.nAsset;
-	a.assetAllocationTuple.witnessAddress.nVersion = b.assetAllocationTuple.witnessAddress.nVersion;
-	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.assetAllocationTuple.witnessAddress.vchWitnessProgram;
-	a.nBalance = b.nBalance;
-	a.lockedOutpoint = b.lockedOutpoint;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
