@@ -112,6 +112,7 @@ public:
     }
     CAsset(const CAsset&) = delete;
     CAsset(CAsset && other) = default;
+    CAsset& operator=(CAsset& other) = delete;
     CAsset& operator=(CAsset&& other) = default;
     CAsset(const CTransaction &tx) {
         SetNull();
