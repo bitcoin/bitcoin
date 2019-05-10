@@ -193,7 +193,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].generate(6)
         self.sync_all()
 
-        # Test additional args in walletcreatepsbt
+        # Test additional args in walletcreatefundedpsbt
         # Make sure both pre-included and funded inputs
         # have the correct sequence numbers based on
         # replaceable arg
