@@ -425,9 +425,14 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, const Consensus::Par
         return true;
     }
 
-    for (auto& id : ids) {
+    for (size_t i = 0; i < tx.vin.size(); i++) {
+        auto& in = tx.vin[i];
+        auto& id = ids[i];
         inputRequestIds.emplace(id);
-        quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash());
+        if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash())) {
+            LogPrintf("CInstantSendManager::%s -- txid=%s: voted on input %s with id %s\n", __func__,
+                      tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString());
+        }
     }
 
     // We might have received all input locks before we got the corresponding TX. In this case, we have to sign the
