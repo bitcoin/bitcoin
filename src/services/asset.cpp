@@ -1208,7 +1208,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 	UniValue params3 = params[3];
 	CAmount nBalance = 0;
 	LogPrintf("params3 %s\n", params3.write().c_str());
-	if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_int64() != 0))
+	if((params3.isStr() && params3.get_str() != "0") || (params3.isNum() && params3.get_real() != 0))
 		nBalance = AssetAmountFromValue(params3, theAsset.nPrecision);
 	LogPrintf("after parse\n");
 	if(strPubData != stringFromVch(theAsset.vchPubData))
