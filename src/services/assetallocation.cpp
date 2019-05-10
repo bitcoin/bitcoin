@@ -354,9 +354,9 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
                     {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn as normal without the bridge.  If it is left empty this will process as a normal assetallocationsend to the burn address"}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"hexstring\"                 (string) The unsigned transaction"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
@@ -453,9 +453,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"txid\"                 (string) The transaction ID"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"witness\"")
@@ -518,9 +518,9 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"hexstring\":    (string) the unsigned transaction hexstring.\n"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("assetallocationsend", "\"assetguid\" \"addressfrom\" \"addressto\" \"amount\"")
@@ -568,9 +568,9 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
                      {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"hexstring\":    (string) the unsigned transaction hexstring.\n"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
@@ -703,9 +703,9 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
                 {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
             },
             RPCResult{
-            "[\n"
-            "    \"hexstring\"        (hexstring) unsigned transaction hexstring\n"
-            "]\n"
+            "{\n"
+            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+            "}\n"
             },
             RPCExamples{
             HelpExampleCli("assetallocationlock", "\"asset_guid\" \"addressfrom\" \"txid\" \"output_index\" \"\"")
@@ -783,7 +783,9 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the allocation owner"}
                 },
                 RPCResult{
-                "\"balance\"        (numeric) The balance of a single asset allocation.\n"
+                "{\n"
+                "  \"amount\": xx        (numeric) The balance of a single asset allocation.\n"
+                "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("assetallocationbalance","\"asset_guid\" \"address\"")
@@ -813,8 +815,9 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
     if (!GetAsset(nAsset, theAsset))
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
 
-        
-    return ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision);
+    UniValue oRes(UniValue::VOBJ);
+    oRes.pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision)); 
+    return oRes;
 }
 
 UniValue assetallocationinfo(const JSONRPCRequest& request) {
@@ -831,10 +834,10 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                     "{\n"
                     "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                     "    \"asset_guid\":         (string) The guid of the asset\n"
-                    "    \"address\":       (string) The address of the owner of this allocation\n"
-                    "    \"balance\":       (numeric) The current balance\n"
-                    "    \"balance_zdag\":  (numeric) The zdag balance\n"
-                    "    \"locked_outpoint\":  (string) The locked UTXO if applicable for this allocation\n"
+                    "    \"address\":            (string) The address of the owner of this allocation\n"
+                    "    \"balance\":            (numeric) The current balance\n"
+                    "    \"balance_zdag\":       (numeric) The zdag balance\n"
+                    "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
                     "}\n"
                 },
                 RPCExamples{
@@ -881,14 +884,17 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
                     {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
                 },
                 RPCResult{
-                    "[{\n"
+                    "[\n"
+                    "  {\n"
                     "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                     "    \"asset_guid\":         (string) The guid of the asset\n"
-                    "    \"address\":       (string) The address of the owner of this allocation\n"
-                    "    \"balance\":       (numeric) The current balance\n"
-                    "    \"balance_zdag\":  (numeric) The zdag balance\n"
-                    "    \"locked_outpoint\":  (string) The locked UTXO if applicable for this allocation\n"
-                    "}]\n"
+                    "    \"address\":            (string) The address of the owner of this allocation\n"
+                    "    \"balance\":            (numeric) The current balance\n"
+                    "    \"balance_zdag\":       (numeric) The zdag balance\n"
+                    "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
+                    "  },\n"
+                    "  ...\n"
+                    "]\n"
                 },
                 RPCExamples{
                     HelpExampleCli("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
@@ -1453,12 +1459,12 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
                  "  {\n"
                  "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                  "    \"asset_guid\":         (string) The guid of the asset\n"
-                 "    \"address\":       (string) The address of the owner of this allocation\n"
-                 "    \"balance\":       (numeric) The current balance\n"
-                 "    \"balance_zdag\":  (numeric) The zdag balance\n"
-                 "    \"locked_outpoint\":  (string) The locked UTXO if applicable for this allocation\n"
+                 "    \"address\":            (string) The address of the owner of this allocation\n"
+                 "    \"balance\":            (numeric) The current balance\n"
+                 "    \"balance_zdag\":       (numeric) The zdag balance\n"
+                 "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
                  "  }\n"
-                 " ...\n"
+                 "  ...\n"
                  "]\n"
                  },
                  RPCExamples{
