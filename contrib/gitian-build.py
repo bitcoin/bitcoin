@@ -68,14 +68,14 @@ def build():
         subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'syscoin='+args.commit, '--url', 'syscoin='+args.url, '../syscoin/contrib/gitian-descriptors/gitian-win.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-win-unsigned', '--destination', '../gitian.sigs/', '../syscoin/contrib/gitian-descriptors/gitian-win.yml'])
         subprocess.check_call('mv build/out/syscoin-*-win-unsigned.tar.gz inputs/', shell=True)
-        subprocess.check_call('mv build/out/syscoin-*.zip build/out/syscoin-*.exe ../syscoin-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/syscoin-*.zip build/out/syscoin-*.exe build/out/src/syscoin-*.tar.gz ../syscoin-binaries/'+args.version, shell=True)
 
     if args.macos:
         print('\nCompiling ' + args.version + ' MacOS')
         subprocess.check_call(['bin/gbuild', '-j', args.jobs, '-m', args.memory, '--commit', 'syscoin='+args.commit, '--url', 'syscoin='+args.url, '../syscoin/contrib/gitian-descriptors/gitian-osx.yml'])
         subprocess.check_call(['bin/gsign', '-p', args.sign_prog, '--signer', args.signer, '--release', args.version+'-osx-unsigned', '--destination', '../gitian.sigs/', '../syscoin/contrib/gitian-descriptors/gitian-osx.yml'])
         subprocess.check_call('mv build/out/syscoin-*-osx-unsigned.tar.gz inputs/', shell=True)
-        subprocess.check_call('mv build/out/syscoin-*.tar.gz build/out/syscoin-*.dmg ../syscoin-binaries/'+args.version, shell=True)
+        subprocess.check_call('mv build/out/syscoin-*.tar.gz build/out/syscoin-*.dmg build/out/src/syscoin-*.tar.gz ../syscoin-binaries/'+args.version, shell=True)
 
     os.chdir(workdir)
 
