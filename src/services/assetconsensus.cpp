@@ -705,7 +705,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     AssetBalanceMap::iterator mapBalanceSender;
     CAmount mapBalanceSenderCopy;
     bool mapSenderMempoolBalanceNotFound = false;
-    if(fJustCheck){
+    if(fJustCheck && !bSanityCheck){
         LOCK(cs_assetallocation); 
         auto result =  mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(storedSenderAllocationRef.nBalance))); 
         mapBalanceSender = result.first;
@@ -752,7 +752,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         }        
         mapBalanceSenderCopy -= nAmountFromScript;
         if (mapBalanceSenderCopy < 0) {
-            if(fJustCheck)
+            if(fJustCheck && !bSanityCheck)
             {
                 LOCK(cs_assetallocation); 
                 if(mapSenderMempoolBalanceNotFound){
@@ -836,7 +836,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     return true;
                 }
             }
-            if(fJustCheck)
+            if(fJustCheck && !bSanityCheck)
             {
                 LOCK(cs_assetallocation); 
                 if(mapSenderMempoolBalanceNotFound){
@@ -850,7 +850,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                
         for (const auto& amountTuple : theAssetAllocation.listSendingAllocationAmounts) {
             if (amountTuple.first == theAssetAllocation.assetAllocationTuple.witnessAddress) {
-                if(fJustCheck)
+                if(fJustCheck && !bSanityCheck)
                 {
                     LOCK(cs_assetallocation); 
                     if(mapSenderMempoolBalanceNotFound){
@@ -865,7 +865,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             const string &receiverTupleStr = receiverAllocationTuple.ToString();
             AssetBalanceMap::iterator mapBalanceReceiver;
             AssetAllocationMap::iterator mapBalanceReceiverBlock;            
-            if(fJustCheck){
+            if(fJustCheck && !bSanityCheck){
                 LOCK(cs_assetallocation);
                 auto result = mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(0));
                 auto mapBalanceReceiver = result.first;
@@ -891,10 +891,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     }
                     mapBalanceReceiverBlock->second = std::move(receiverAllocation);  
                 }
-                mapBalanceReceiverBlock->second.nBalance += amountTuple.second; 
-                // to remove mempool balances but need to check to ensure that all txid's from arrivalTimes are first gone before removing receiver mempool balance
-                // otherwise one can have a conflict as a sender and send himself an allocation and clear the mempool balance inadvertently
-                ResetAssetAllocation(receiverTupleStr, txHash, bMiner);           
+                mapBalanceReceiverBlock->second.nBalance += amountTuple.second;
+                if(!fJustCheck){ 
+                    // to remove mempool balances but need to check to ensure that all txid's from arrivalTimes are first gone before removing receiver mempool balance
+                    // otherwise one can have a conflict as a sender and send himself an allocation and clear the mempool balance inadvertently
+                    ResetAssetAllocation(receiverTupleStr, txHash, bMiner);      
+                }     
             }
 
         }   

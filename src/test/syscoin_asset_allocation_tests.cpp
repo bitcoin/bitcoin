@@ -92,10 +92,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + rawTx));
 
     string hex_str = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "testmempoolaccept \"[\\\"" + hex_str + "\\\"]\""));
-    
 
-	BOOST_CHECK(find_value(r.get_array()[0].get_obj(), "allowed").get_bool());
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
     string res = r.get_str();
     res.erase(std::remove(res.begin(), res.end(), '\n'), res.end());
