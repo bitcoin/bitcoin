@@ -633,7 +633,7 @@ void ThreadScriptCheck(int worker_num) {
  */
 static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                              bool bypass_limits, const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache, bool test_accept, bool bMultiThreaded) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                              bool bypass_limits, const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache, bool test_accept, bool bMultiThreaded, bool bSanityCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const CTransaction& tx = *ptx;
     const uint256 hash = tx.GetHash();
@@ -975,7 +975,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             if (!control.Wait())
                 return false;
             bool bOverflow = false;
-            if (!CheckSyscoinInputs(false, tx, state, view, true, bOverflow, ::ChainActive().Height(), CBlock(), test_accept)) {
+            if (!CheckSyscoinInputs(false, tx, state, view, true, bOverflow, ::ChainActive().Height(), CBlock(), bSanityCheck)) {
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-syscoin-inputs-check-failed (%s)", "CheckSyscoinInputs Error (single-threaded)"));
             }
         } 
@@ -1161,7 +1161,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded = false) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded = false, bool bSanityCheck = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
     if (GetTime() - nLastMultithreadMempoolFailure < 60) {
@@ -1171,7 +1171,7 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     else if(!fConcurrentProcessing || test_accept || tx->nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
         bMultiThreaded = false;
     std::vector<COutPoint> coins_to_uncache;
-    bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bMultiThreaded);
+    bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bMultiThreaded, bSanityCheck);
     if (!res) {
         // Remove coins that were not present in the coins cache before calling ATMPW;
         // this is to prevent memory DoS in case we receive a large number of
@@ -1189,10 +1189,10 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+                        bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded, bool bSanityCheck) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     const CChainParams& chainparams = Params();
-    return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept, bMultiThreaded);
+    return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, pfMissingInputs, GetTime(), plTxnReplaced, bypass_limits, nAbsurdFee, test_accept, bMultiThreaded, bSanityCheck);
 }
 
 /**

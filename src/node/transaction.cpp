@@ -31,9 +31,9 @@ TransactionError BroadcastTransaction(const CTransactionRef tx, uint256& hashTx,
         // push to local node and sync with wallets
         CValidationState state;
         bool fMissingInputs;
-        // SYSCOIN
+        // SYSCOIN always bSanityCheck as false, which triggers bSanityCheck to false in checksyscoininputs which saves balances in mempool balance object (for senders)
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), &fMissingInputs,
-                                nullptr /* plTxnReplaced */, false /* bypass_limits */, highfee, false, fTPSTestEnabled)) {
+                                nullptr /* plTxnReplaced */, false /* bypass_limits */, highfee, false, fTPSTestEnabled, false)) {
             if (state.IsInvalid()) {
                 err_string = FormatStateMessage(state);
                 return TransactionError::MEMPOOL_REJECTED;
