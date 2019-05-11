@@ -61,30 +61,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     }   
     return true;       
 }
-void CopyAsset(CAsset& a, const CAsset& b) {
-	a.nAsset = b.nAsset;
-	a.witnessAddress.nVersion = b.witnessAddress.nVersion;
-	a.witnessAddress.vchWitnessProgram = b.witnessAddress.vchWitnessProgram;
-	a.witnessAddressTransfer.nVersion = b.witnessAddressTransfer.nVersion;
-	a.witnessAddressTransfer.vchWitnessProgram = b.witnessAddressTransfer.vchWitnessProgram;
-	a.vchContract = b.vchContract;
-	a.txHash = b.txHash;
-	a.nHeight = b.nHeight;
-	a.vchPubData = b.vchPubData;
-	a.nBalance = b.nBalance;
-	a.nTotalSupply = b.nTotalSupply;
-	a.nMaxSupply = b.nMaxSupply;
-	a.nPrecision = b.nPrecision;
-	a.nUpdateFlags = b.nUpdateFlags;
-	a.nDumurrageOrInterest = b.nDumurrageOrInterest;
-}
-void CopyAllocation(CAssetAllocation& a, const CAssetAllocation& b) {
-	a.assetAllocationTuple.nAsset = b.assetAllocationTuple.nAsset;
-	a.assetAllocationTuple.witnessAddress.nVersion = b.assetAllocationTuple.witnessAddress.nVersion;
-	a.assetAllocationTuple.witnessAddress.vchWitnessProgram = b.assetAllocationTuple.witnessAddress.vchWitnessProgram;
-	a.nBalance = b.nBalance;
-	a.lockedOutpoint = b.lockedOutpoint;
-}
+
 bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
@@ -245,7 +222,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
             }
-			CopyAllocation(mapAssetAllocation->second, receiverAllocation);             
+            mapAssetAllocation->second = std::move(receiverAllocation);             
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
         // sender as burn
@@ -261,7 +238,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
                 senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);
                 senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress); 
             }
-            CopyAllocation(mapSenderAssetAllocation->second , senderAllocation);              
+            mapSenderAssetAllocation->second = std::move(senderAllocation);              
         }
         CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
         if (!AssetRange(mintSyscoin.nValueAsset))
@@ -513,7 +490,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
             receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
             receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
         } 
-		CopyAllocation(mapAssetAllocation->second, receiverAllocation);               
+        mapAssetAllocation->second = std::move(receiverAllocation);                 
     }
     CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
     // sender
@@ -529,7 +506,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
             senderAllocation.assetAllocationTuple.nAsset = std::move(senderAllocationTuple.nAsset);
             senderAllocation.assetAllocationTuple.witnessAddress = std::move(senderAllocationTuple.witnessAddress);
         } 
-		CopyAllocation(mapAssetAllocation->second, senderAllocation);              
+        mapAssetAllocation->second = std::move(senderAllocation);               
     }
     CAssetAllocation& storedSenderAllocationRef = mapSenderAssetAllocation->second;
     
@@ -578,7 +555,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
             senderAllocation.assetAllocationTuple.nAsset = std::move(theAssetAllocation.assetAllocationTuple.nAsset);
             senderAllocation.assetAllocationTuple.witnessAddress = std::move(theAssetAllocation.assetAllocationTuple.witnessAddress);       
         } 
-		CopyAllocation(mapAssetAllocation->second, senderAllocation);                
+        mapAssetAllocation->second = std::move(senderAllocation);               
     }
     CAssetAllocation& storedSenderAllocationRef = mapAssetAllocation->second;
 
@@ -597,7 +574,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
             } 
-			CopyAllocation(mapAssetAllocationReceiver->second, receiverAllocation);                
+            mapAssetAllocationReceiver->second = std::move(receiverAllocation);               
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocationReceiver->second;
 
@@ -714,7 +691,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot find sender asset allocation");
                 return error(errorMessage.c_str());
             }
-			CopyAllocation(mapAssetAllocation->second, dbAssetAllocation);              
+            mapAssetAllocation->second = std::move(dbAssetAllocation);             
         }
     }
     CAssetAllocation& storedSenderAllocationRef = fJustCheck? dbAssetAllocation:mapAssetAllocation->second;
@@ -798,7 +775,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                     dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);              
                 }
-				CopyAllocation(mapAssetAllocationReceiver->second, dbAssetAllocationReceiver);                  
+                mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                  
             } 
             mapAssetAllocationReceiver->second.nBalance += nAmountFromScript;                        
         }else if (!bSanityCheck && !bMiner) {
@@ -912,7 +889,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
                     }
-					CopyAllocation(mapBalanceReceiverBlock->second, receiverAllocation);   
+                    mapBalanceReceiverBlock->second = std::move(receiverAllocation);  
                 }
                 mapBalanceReceiverBlock->second.nBalance += amountTuple.second; 
                 // to remove mempool balances but need to check to ensure that all txid's from arrivalTimes are first gone before removing receiver mempool balance
@@ -982,7 +959,7 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",theAssetAllocation.assetAllocationTuple.nAsset);
             return false;               
         } 
-		CopyAsset(mapAsset->second, dbAsset);                  
+        mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedSenderRef = mapAsset->second;
                
@@ -1000,7 +977,7 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
                 receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                 receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);
             } 
-			CopyAllocation(mapAssetAllocation->second, receiverAllocation);               
+            mapAssetAllocation->second = std::move(receiverAllocation);            
         }
         CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
                     
@@ -1048,7 +1025,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",theAsset.nAsset);
             return false;               
         } 
-		CopyAsset(mapAsset->second, dbAsset);                
+        mapAsset->second = std::move(dbAsset);                    
     }
     CAsset& storedSenderRef = mapAsset->second;   
            
@@ -1086,7 +1063,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
             LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Could not get asset %d\n",theAsset.nAsset);
             return false;               
         } 
-		CopyAsset(mapAsset->second, dbAsset);                
+        mapAsset->second = std::move(dbAsset);      
     }
     mapAsset->second.SetNull();  
     if(fAssetIndex){
@@ -1236,14 +1213,14 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 return error(errorMessage.c_str());
             }
             else
-				CopyAsset(mapAsset->second , theAsset);
+                mapAsset->second = std::move(theAsset);      
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
                 errorMessage =  "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2041 - " + _("Asset already exists");
                 return error(errorMessage.c_str());
             }
-			CopyAsset(mapAsset->second , dbAsset);
+            mapAsset->second = std::move(dbAsset);      
         }
     }
     CAsset &storedSenderAssetRef = mapAsset->second;
@@ -1356,7 +1333,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                         receiverAllocation.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
                         receiverAllocation.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);                       
                     } 
-					CopyAllocation(mapAssetAllocation->second, receiverAllocation);           
+                    mapAssetAllocation->second = std::move(receiverAllocation);                   
                 }
 				// adjust receiver balance
                 mapAssetAllocation->second.nBalance += amountTuple.second;
