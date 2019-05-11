@@ -172,6 +172,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "voteraw", 5, "time" },
     { "syscoinmint", 1, "amount" },
     { "syscoinmint", 2, "blocknumber" },
+    { "syscoinburn", 1, "amount" },
     { "syscointxfund", 2, "output_index" },
     { "assetallocationlock", 0, "asset_guid" },
     { "assetallocationlock", 3, "output_index" },
