@@ -1007,8 +1007,12 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     // Get the public keys
     const UniValue& keys_or_addrs = request.params[1].get_array();
     std::vector<CPubKey> pubkeys;
+    bool legacy = false;
     for (unsigned int i = 0; i < keys_or_addrs.size(); ++i) {
         if (IsHex(keys_or_addrs[i].get_str()) && (keys_or_addrs[i].get_str().length() == 66 || keys_or_addrs[i].get_str().length() == 130)) {
+            if (keys_or_addrs[i].get_str().length() == 130) {
+                legacy = true;
+            }
             pubkeys.push_back(HexToPubKey(keys_or_addrs[i].get_str()));
         } else {
             pubkeys.push_back(AddrToPubKey(pwallet, keys_or_addrs[i].get_str()));
@@ -1016,6 +1020,9 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
     }
 
     OutputType output_type = pwallet->m_default_address_type;
+    if (legacy) {
+        output_type = OutputType::LEGACY;
+    }
     if (!request.params[3].isNull()) {
         if (!ParseOutputType(request.params[3].get_str(), output_type)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Unknown address type '%s'", request.params[3].get_str()));
