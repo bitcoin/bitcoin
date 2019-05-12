@@ -1604,7 +1604,7 @@ bool CWallet::GetDecryptedHDChain(CHDChain& hdChainRet)
     return true;
 }
 
-bool CWallet::IsHDEnabled()
+bool CWallet::IsHDEnabled() const
 {
     CHDChain hdChainCurrent;
     return GetHDChain(hdChainCurrent);
