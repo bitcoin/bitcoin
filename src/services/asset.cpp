@@ -534,9 +534,9 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                     {"output_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction."}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"hexstring\"       (string) the unsigned funded transaction hexstring. \n"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned funded transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
 			        HelpExampleCli("syscointxfund", "<hexstring> \"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\"")
@@ -703,9 +703,9 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
                     {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 bytes (40 character) hex string of the ethereum destination address.  Leave empty to burn as normal without the bridge"}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"txid\":        (string) The transaction ID\n"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("syscoinburn", "\"funding_address\" \"amount\" \"ethaddress\"")
@@ -749,9 +749,9 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
-                    "[\n"
-                    "  \"txid\"                 (string) The transaction ID"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"\"")
@@ -1068,10 +1068,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
                 {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
             },
             RPCResult{
-            "[                       (array of strings)\n"
-            "  \"rawtransaction\"           (string) The unsigned raw transaction of the new asset creation transaction\n"
-            "  \"assetguid\"                (string) The guid of asset to be created\n"
-            "]\n"
+            "{\n"
+            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+            "  \"assetguid\": xxxx        (numeric) The guid of asset to be created\n"
+            "}\n"
             },
             RPCExamples{
             HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 \"\"")
@@ -1145,9 +1145,9 @@ UniValue addressbalance(const JSONRPCRequest& request) {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to holding the balance"}
             },
             RPCResult{
-            "[\n"
-            "  \"balance\"            (numeric) Syscoin balance of the address\n"
-            "]\n"
+            "{\n"
+            "  \"amount\": xx            (numeric) Syscoin balance of the address\n"
+            "}\n"
             },
             RPCExamples{
                 HelpExampleCli("addressbalance", "\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"")
@@ -1175,9 +1175,9 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                     {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
-                    "[\n"
-                    "    \"tx\"                (string) Unsigned transaction hex\n"
-                    "]\n"
+                    "{\n"
+                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                    "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("assetupdate", "\"assetguid\" \"publicvalue\" \"contractaddress\" \"supply\" \"update_flags\" \"\"")
@@ -1252,9 +1252,9 @@ UniValue assettransfer(const JSONRPCRequest& request) {
                 {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
             },
             RPCResult{
-            "[\n"
-            "  \"hexstring\"    (string) Unsigned transaction hexstring\n"
-            "]\n"
+            "{\n"
+            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+            "}\n"
             },
             RPCExamples{
                 HelpExampleCli("assettransfer", "\"asset_guid\" \"address\" \"\"")
@@ -1314,9 +1314,9 @@ UniValue assetsend(const JSONRPCRequest& request) {
                 {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send."}
             },
             RPCResult{
-            "[\n"
-            "  \"hexstring\":    (string) The unsigned transaction hexstring.\n"
-            "]\n"
+            "{\n"
+            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+            "}\n"
             },
             RPCExamples{
                 HelpExampleCli("assetsend", "\"assetguid\" \"addressto\" \"amount\"")
@@ -1362,9 +1362,9 @@ UniValue assetsendmany(const JSONRPCRequest& request) {
                 {"witness", RPCArg::Type::STR, "\"\"", "Witnesses address that will sign for web-of-trust notarization of this transaction"}
             },
             RPCResult{
-            "[\n"
-            "  \"hexstring\":      (string) The unsigned transaction hexstring.\n"
-            "]\n"
+            "{\n"
+            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+            "}\n"
             },
             RPCExamples{
                 HelpExampleCli("assetsendmany", "\"assetguid\" '[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
@@ -1926,7 +1926,9 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
                     {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "A transaction that is in the block."}
                 },
                 RPCResult{
-                    "\"hash\"         (string) The block hash\n"
+                "{\n"
+                "  \"hex\": \"hexstring\"     (string) The block hash that contains the txid\n"
+                "}\n"
                 },
                 RPCExamples{
                     HelpExampleCli("getblockhashbytxid", "dfc7eac24fa89b0226c64885f7bedaf132fc38e8980b5d446d76707027254490")
@@ -2058,7 +2060,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             RPCResult{
                  "[\n"
                  "  {\n"
-                 "    \"asset_guid\":          (numeric) The asset guid\n"
+                 "    \"asset_guid\":   (numeric) The asset guid\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
                  "    \"publicvalue\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
@@ -2106,18 +2108,21 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                     {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
                 },
                 RPCResult{
-                    "[{\n"
-                    "  \"asset_guid\":          (numeric) The asset guid\n"
-                    "  \"txid\":         (string) The transaction id that created this asset\n"
-                    "  \"publicvalue\":  (string) The public value attached to this asset\n"
-                    "  \"address\":      (string) The address that controls this address\n"
-                    "  \"contract\":     (string) The ethereum contract address\n"
-                    "  \"balance\":      (numeric) The current balance\n"
-                    "  \"total_supply\": (numeric) The total supply of this asset\n"
-                    "  \"max_supply\":   (numeric) The maximum supply of this asset\n"
-                    "  \"update_flag\":  (numeric) The flag in decimal \n"
-                    "  \"precision\":    (numeric) The precision of this asset \n"   
-                    "}]\n"
+                    "[\n"
+                    "  {\n"
+                    "    \"asset_guid\":   (numeric) The asset guid\n"
+                    "    \"txid\":         (string) The transaction id that created this asset\n"
+                    "    \"publicvalue\":  (string) The public value attached to this asset\n"
+                    "    \"address\":      (string) The address that controls this address\n"
+                    "    \"contract\":     (string) The ethereum contract address\n"
+                    "    \"balance\":      (numeric) The current balance\n"
+                    "    \"total_supply\": (numeric) The total supply of this asset\n"
+                    "    \"max_supply\":   (numeric) The maximum supply of this asset\n"
+                    "    \"update_flag\":  (numeric) The flag in decimal \n"
+                    "    \"precision\":    (numeric) The precision of this asset \n"
+                    "  },\n"
+                    "  ...\n"
+                    "]\n"
                 },
                 RPCExamples{
                     HelpExampleCli("listassetindexassets", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
