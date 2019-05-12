@@ -2284,6 +2284,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
 
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
+    const uint32_t nGethOldHeight = fGethCurrentHeight;
     for(size_t i =0;i<headerArray.size();i++){
         const UniValue &tupleArray = headerArray[i].get_array();
         if(tupleArray.size() != 2)
@@ -2302,8 +2303,10 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(vchTxRoot));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap) && pethereumtxrootsdb->PruneTxRoots();
+    
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", res? "success": "fail");
+    LogPrint(BCLog::SYS, "syscoinsetethheaders old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     return ret;
 }
 bool CEthereumTxRootsDB::PruneTxRoots() {
@@ -2368,20 +2371,25 @@ bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     if(vecHeightKeys.empty())
         return true;
+    const uint32_t &nFirst = vecHeightKeys.front();
+    const uint32_t &nLast = vecHeightKeys.back();
     CDBBatch batch(*this);
     for (const auto &key : vecHeightKeys) {
         batch.Erase(key);
     }
-    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots\n", vecHeightKeys.size());
+    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
     return WriteBatch(batch);
 }
 bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots){
     if(mapTxRoots.empty())
         return true;
+    const uint32_t &nFirst = mapTxRoots.begin()->first;
+    uint32_t nLast = nFirst;
     CDBBatch batch(*this);
     for (const auto &key : mapTxRoots) {
         batch.Write(key.first, key.second);
+        nLast = key.first;
     }
-    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots\n", mapTxRoots.size());
+    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
     return WriteBatch(batch);
 }
