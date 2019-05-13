@@ -68,6 +68,10 @@ static bool GetPubKey(const SigningProvider& provider, const SignatureData& sigd
 
 static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdata, const SigningProvider& provider, std::vector<unsigned char>& sig_out, const CPubKey& pubkey, const CScript& scriptcode, SigVersion sigversion)
 {
+    // Signing with uncompressed keys is disabled in witness scripts
+    if (sigversion == SigVersion::WITNESS_V0 && !pubkey.IsCompressed()) {
+        return false;
+    }
     CKeyID keyid = pubkey.GetID();
     const auto it = sigdata.signatures.find(keyid);
     if (it != sigdata.signatures.end()) {
@@ -143,6 +147,10 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         ret.push_back(valtype()); // workaround CHECKMULTISIG bug
         for (size_t i = 1; i < vSolutions.size() - 1; ++i) {
             CPubKey pubkey = CPubKey(vSolutions[i]);
+            // Signing with uncompressed keys is disabled in witness scripts
+            if (sigversion == SigVersion::WITNESS_V0 && !pubkey.IsCompressed()) {
+                return false;
+            }
             if (ret.size() < required + 1 && CreateSig(creator, sigdata, provider, sig, pubkey, scriptPubKey, sigversion)) {
                 ret.push_back(std::move(sig));
             }
