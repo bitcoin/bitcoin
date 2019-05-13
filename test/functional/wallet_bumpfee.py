@@ -23,7 +23,6 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_raises_rpc_error,
-    connect_nodes_bi,
     hex_str_to_bytes,
 )
 
@@ -44,14 +43,14 @@ class BumpFeeTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        # Encrypt wallet for test_locked_wallet_fails test
-        self.nodes[1].encryptwallet(WALLET_PASSPHRASE)
-        self.nodes[1].walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+        peer_node, rbf_node = self.nodes
 
-        connect_nodes_bi(self.nodes, 0, 1)
+        # Encrypt wallet for test_locked_wallet_fails test
+        rbf_node.encryptwallet(WALLET_PASSPHRASE)
+        rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+
         self.sync_all()
 
-        peer_node, rbf_node = self.nodes
         rbf_node_address = rbf_node.getnewaddress()
 
         # fund rbf node with 10 coins of 0.001 btc (100,000 satoshis)
