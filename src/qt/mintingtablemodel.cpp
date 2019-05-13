@@ -234,11 +234,11 @@ public:
 
 };
 
-struct TransactionNotification
+struct TransactionNotification2
 {
 public:
-    TransactionNotification() {}
-    TransactionNotification(uint256 _hash, ChangeType _status):
+    TransactionNotification2() {}
+    TransactionNotification2(uint256 _hash, ChangeType _status):
         hash(_hash), status(_status) {}
 
     void invoke(QObject *ttm)
@@ -255,7 +255,7 @@ private:
 
 static void NotifyTransactionChanged(MintingTableModel *ttm, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-    TransactionNotification notification(hash, status);
+    TransactionNotification2 notification(hash, status);
     notification.invoke(ttm);
 }
 
