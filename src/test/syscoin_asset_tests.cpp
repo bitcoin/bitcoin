@@ -50,6 +50,89 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
+{
+    printf("Running generate_asset_audittxroot...\n");
+    UniValue r;
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[709780,\\\"a\\\"],[707780,\\\"a\\\"],[707772,\\\"a\\\"],[707776,\\\"a\\\"],[707770,\\\"a\\\"],[707778,\\\"a\\\"],[707774,\\\"a\\\"]]\""));
+    int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
+    int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("syscoinsetethstatus elasped time %lld\n", end-start);
+    UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
+    // the - MAX_ETHEREUM_TX_ROOTS check to ensure you have atleast that many roots stored from the tip
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 707769);
+
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 707771);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 707771);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_int() == 707773);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_int() == 707773);
+    BOOST_CHECK(find_value(blocksArray[3].get_obj(), "from").get_int() == 707775);
+    BOOST_CHECK(find_value(blocksArray[3].get_obj(), "to").get_int() == 707775);
+    BOOST_CHECK(find_value(blocksArray[4].get_obj(), "from").get_int() == 707777);
+    BOOST_CHECK(find_value(blocksArray[4].get_obj(), "to").get_int() == 707777);
+    BOOST_CHECK(find_value(blocksArray[5].get_obj(), "from").get_int() == 707779);
+    BOOST_CHECK(find_value(blocksArray[5].get_obj(), "to").get_int() == 707779);
+    BOOST_CHECK(find_value(blocksArray[6].get_obj(), "from").get_int() == 707781);
+    BOOST_CHECK(find_value(blocksArray[6].get_obj(), "to").get_int() == 709779);
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"a\\\"],[707775,\\\"a\\\"],[707771,\\\"a\\\"],[707777,\\\"a\\\"],[707779,\\\"a\\\"],[707781,\\\"a\\\"]]\""));
+    start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
+    end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("syscoinsetethstatus1 elasped time %lld\n", end-start);
+    blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 707769);
+
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 707782);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 709779);
+}   
+BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
+{
+    printf("Running generate_asset_audittxroot1...\n");
+    UniValue r;
+    std::string roots = "";
+    unsigned int nStartHeight = 700000;
+    unsigned int nMissingRange1 = 700059;
+    unsigned int nMissingRange2 = 800022;
+    unsigned int nMissingRange3 = 814011;
+    unsigned int nCount = 0;
+    for(unsigned int i = nStartHeight;i<(nStartHeight+120000);i++){
+        if(i == nMissingRange1 || i == nMissingRange2 || i == nMissingRange3)
+            continue;
+        if(nCount > 0)
+            roots += ",";
+        roots += strprintf("[%d,\\\"a\\\"]", i);
+        if(nCount > 0 && (nCount % 10000) == 0){
+            BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[" + roots + "]\""));
+            roots = "";
+            nCount = 0;
+            continue;
+        }
+        nCount++;
+    }
+    if(!roots.empty())
+        BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[" + roots + "]\""));
+    int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
+    int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("syscoinsetethstatus elasped time %lld\n", end-start);
+    UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 700059);
+    BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 700059);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 800022);
+    BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 800022);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_int() == 814011);
+    BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_int() == 814011);
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[814011,\\\"a\\\"],[700059,\\\"a\\\"],[800022,\\\"a\\\"]]\""));
+    start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
+    end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    printf("syscoinsetethstatus1 elasped time %lld\n", end-start);
+    blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
+    BOOST_CHECK(blocksArray.empty());
+}
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();

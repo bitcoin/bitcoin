@@ -2215,6 +2215,50 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     ret.pushKV("status", "success");
     return ret;
 }
+void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
+    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    vector<uint32_t> vecHeightKeys;
+    std::pair<std::string, uint32_t> key;
+    uint32_t nKey = 0;
+    uint32_t nKeyIndex = 0;
+    const uint32_t& nKeyCutoff = fGethCurrentHeight - MAX_ETHEREUM_TX_ROOTS;
+
+    std::vector<unsigned char> txPos;
+    std::set<uint32_t> setKeys;
+    // sort keys numerically
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            if(!pcursor->GetKey(key) || key.first != txRootFlag){
+                 pcursor->Next();
+                 continue;
+            }
+            setKeys.emplace(std::move(key.second));
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return;
+        }
+    } 
+    if(setKeys.size() < 2)
+        return;
+    std::set<uint32_t>::iterator setIt = setKeys.begin();
+    nKeyIndex = *setIt;
+    setIt++;
+    // we should have atleast MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
+    if(nKeyIndex > nKeyCutoff){
+        vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
+    }
+    // find sequence gaps in sorted key set 
+    for (; setIt != setKeys.end(); ++setIt){
+            const uint32_t &nKey = *setIt;
+            const uint32_t &nNextKeyIndex = nKeyIndex+1;
+            if (nKey != nNextKeyIndex && (nKey-1) >= nNextKeyIndex)
+                vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, nKey-1));
+            nKeyIndex = nKey;   
+    }  
+}
 UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
@@ -2244,12 +2288,24 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         LOCK(cs_ethsyncheight);
         fGethSyncHeight = highestBlock;
     }
+    std::vector<std::pair<uint32_t, uint32_t> > vecMissingBlockRanges;
+    
     fGethSyncStatus = status; 
-    if(!fGethSynced && fGethSyncStatus == "synced")       
+    if(!fGethSynced && fGethSyncStatus == "synced")  {     
         fGethSynced = true;
-
+    }
+    if(fGethSynced){
+        pethereumtxrootsdb->AuditTxRootDB(vecMissingBlockRanges);
+    }
+    UniValue retArray(UniValue::VARR);
+    for(const auto& range: vecMissingBlockRanges){
+        UniValue retRange(UniValue::VOBJ);
+        retRange.pushKV("from", (int)range.first);
+        retRange.pushKV("to", (int)range.second);
+        retArray.push_back(retRange);
+    }
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("status", "success");
+    ret.pushKV("missing_blocks", retArray);
     return ret;
 }
 UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
@@ -2313,7 +2369,7 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
-    uint32_t key;
+    std::pair<std::string,uint32_t> key;
     int32_t cutoffHeight;
     {
         LOCK(cs_ethsyncheight);
@@ -2329,8 +2385,8 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
         boost::this_thread::interruption_point();
         try {
        
-            if (pcursor->GetKey(key) && key < (uint32_t)cutoffHeight) {
-                vecHeightKeys.emplace_back(std::move(key));
+            if (pcursor->GetKey(key) && key.first == txRootFlag && key.second < (uint32_t)cutoffHeight) {
+                vecHeightKeys.emplace_back(key.second);
             }
             pcursor->Next();
         }
@@ -2375,7 +2431,7 @@ bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     const uint32_t &nLast = vecHeightKeys.back();
     CDBBatch batch(*this);
     for (const auto &key : vecHeightKeys) {
-        batch.Erase(key);
+        batch.Erase(std::make_pair(txRootFlag,key));
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
     return WriteBatch(batch);
@@ -2387,7 +2443,7 @@ bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots){
     uint32_t nLast = nFirst;
     CDBBatch batch(*this);
     for (const auto &key : mapTxRoots) {
-        batch.Write(key.first, key.second);
+        batch.Write(std::make_pair(txRootFlag,key.first), key.second);
         nLast = key.first;
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
