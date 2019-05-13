@@ -347,6 +347,10 @@ void CChainLocksHandler::TrySignChainTip()
 
 void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
 {
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
     bool handleTx = true;
     if (tx.IsCoinBase() || tx.vin.empty()) {
         handleTx = false;

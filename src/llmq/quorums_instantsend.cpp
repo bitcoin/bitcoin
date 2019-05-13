@@ -964,6 +964,10 @@ void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIn
         }
     }
 
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
     bool chainlocked = pindex && chainLocksHandler->HasChainLock(pindex->nHeight, pindex->GetBlockHash());
     if (islockHash.IsNull() && !chainlocked) {
         ProcessTx(tx, Params().GetConsensus());
