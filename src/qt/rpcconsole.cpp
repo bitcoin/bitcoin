@@ -485,8 +485,12 @@ void RPCConsole::setNumConnections(int count)
 void RPCConsole::setNumBlocks(int count)
 {
     ui->numberOfBlocks->setText(QString::number(count));
-    if(clientModel)
-        ui->lastBlockTime->setText(clientModel->getLastBlockDate().toString());
+    if(clientModel) {
+        QDateTime dt;
+        int nHeight;
+        clientModel->getLastBlockData(dt, nHeight);
+        ui->lastBlockTime->setText(dt.toString());
+    }
 }
 
 void RPCConsole::setMasternodeCount(const QString &strMasternodes)

@@ -58,7 +58,7 @@ public:
     quint64 getTotalBytesSent() const;
 
     double getVerificationProgress() const;
-    QDateTime getLastBlockDate() const;
+    void getLastBlockData(QDateTime& date, int& nHeight) const;
 
     //! Return true if core is doing initial block download
     bool inInitialBlockDownload() const;

@@ -2084,6 +2084,7 @@ CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fIn
     fPingQueued = false;
     fMasternode = false;
     fSystemnode = false;
+    fSyncingWith = false;
 
     {
         LOCK(cs_nLastNodeId);
@@ -2113,6 +2114,13 @@ CNode::~CNode()
         delete pfilter;
 
     GetNodeSignals().FinalizeNode(GetId());
+}
+
+void CNode::AskForBlock(const CInv& inv)
+{
+    if (listAskForBlocks.size() > MAPASKFOR_MAX_SZ)
+        return;
+    listAskForBlocks.emplace_back(inv);
 }
 
 void CNode::AskFor(const CInv& inv)

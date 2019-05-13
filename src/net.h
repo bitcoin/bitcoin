@@ -301,12 +301,14 @@ public:
     mruset<CAddress> setAddrKnown;
     bool fGetAddr;
     std::set<uint256> setKnown;
+    bool fSyncingWith;
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
     std::multimap<int64_t, CInv> mapAskFor;
+    std::list<CInv> listAskForBlocks;
     std::set<uint256> setBlockAskedFor;
 
     // Ping time measurement:
@@ -415,6 +417,7 @@ public:
     }
 
     void AskFor(const CInv& inv);
+    void AskForBlock(const CInv& inv);
 
     // TODO: Document the postcondition of this function.  Is cs_vSend locked?
     void BeginMessage(const char* pszCommand) EXCLUSIVE_LOCK_FUNCTION(cs_vSend);
