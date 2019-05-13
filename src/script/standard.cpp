@@ -108,11 +108,11 @@ txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned 
     std::vector<unsigned char> witnessprogram;
     if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_KEYHASH_SIZE) {
-            vSolutionsRet.push_back(witnessprogram);
+            vSolutionsRet.push_back(std::move(witnessprogram));
             return TX_WITNESS_V0_KEYHASH;
         }
         if (witnessversion == 0 && witnessprogram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            vSolutionsRet.push_back(witnessprogram);
+            vSolutionsRet.push_back(std::move(witnessprogram));
             return TX_WITNESS_V0_SCRIPTHASH;
         }
         if (witnessversion != 0) {
@@ -152,7 +152,7 @@ txnouttype Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned 
         return TX_MULTISIG;
     }
 
-    vSolutionsRet.clear();
+    assert(vSolutionsRet.empty());
     return TX_NONSTANDARD;
 }
 
