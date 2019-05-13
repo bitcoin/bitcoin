@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2018 The Crown developers
+# Copyright (c) 2018-2019 The Crown developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 #
 # Setup crown server or update existing one
 
-LATEST_RELEASE="0.13.2.0"
+LATEST_RELEASE="0.13.4.0"
 
 systemnode=false
 masternode=false
@@ -15,17 +15,22 @@ help=false
 install=false
 unknown=()
 appname=$(basename "$0")
+watchdog=0
 
 print_help()
 {
-echo "Usage: $(basename "$0") [OPTION]...
+echo "Usage: $appname [OPTION]...
 Setup crown server or update existing one
 
-  -m, --masternode                  create a masternode
-  -s, --systemnode                  create a systemnode
-  -p, --privkey=privkey             set private key
-  -v, --version=version             set version, default will be the latest release
-  -h, --help                        display this help and exit
+  -m, --masternode           create a masternode
+  -s, --systemnode           create a systemnode
+  -p, --privkey=privkey      set private key
+  -v, --version=version      set version, default will be the latest release
+  -j, --job=job#             install/update a pipeline build for testing
+  -w, --watchdog=level       enable watchdog (1=check running, 2=pre-emptive restart on low memory)
+  -c, --wallet               create a wallet
+  -b, --bootstrap            download bootstrap
+  -h, --help                 display this help and exit
 
 "
 }
@@ -66,6 +71,32 @@ handle_arguments()
                 LATEST_RELEASE="${key#*=}"
                 shift
                 ;;
+            -w|--watchdog)
+                watchdog="$2"
+                shift
+                shift
+                ;;
+            --watchdog=*)
+                watchdog="${key#*=}"
+                shift
+                ;;
+            -c|--wallet)
+                wallet=true
+                shift
+                ;;
+            -j|--job)
+                job="$2"
+                shift
+                shift
+                ;;
+            --job=*)
+                job="${key#*=}"
+                shift
+                ;;
+            -b|-bootstrap)
+                bootstrap=true
+                shift
+                ;;
 
             *)    # unknown option
                 unknown+=("$1") # save it in an array
@@ -103,38 +134,65 @@ handle_arguments()
     fi
 
     # If private key is set then install otherwise update
-    if [ ! -z "$privkey" ]; then
+    if [ -n "$privkey" ] || [ -n "$wallet" ]; then
         install=true
     fi
-    echo $LATEST_RELEASE
+
+    # '-j' overrides '-v'
+    if [ -n "$job" ]; then
+        blah="pipeline job $job"
+    else
+        blah="version $LATEST_RELEASE"
+    fi
+
+    echo "==============================================================================="
+    echo
+    if [ $install == true ]; then
+        echo "About to install Crown $blah"
+    else
+        echo "About to update to Crown $blah"
+    fi
+    echo
+    echo "==============================================================================="
 }
 
 install_dependencies() {
-    sudo apt-get install curl ufw unzip -y
+    sudo apt-get install curl ufw unzip wget -y >/dev/null 2>&1
 }
 
 create_swap() {
-    if [ `sudo swapon | wc -l` -lt 2 ]; then
+    if [ $(sudo swapon | wc -l) -lt 2 ]; then
+	echo    
+        echo "There is no swap defined. Adding 2GB of swap space."
         sudo mkdir -p /var/cache/swap/   
-        sudo dd if=/dev/zero of=/var/cache/swap/myswap bs=1M count=1024
+        sudo dd if=/dev/zero of=/var/cache/swap/myswap bs=1M count=2048
         sudo chmod 600 /var/cache/swap/myswap
         sudo mkswap /var/cache/swap/myswap
         sudo swapon /var/cache/swap/myswap
-        swap_line='/var/cache/swap/myswap   none    swap    sw  0   0'
+        swap_line="/var/cache/swap/myswap   none    swap    sw  0   0"
         # Add the line only once 
         sudo grep -q -F "$swap_line" /etc/fstab || echo "$swap_line" | sudo tee --append /etc/fstab > /dev/null
+        echo "The updated /etc/fstab looks like this:"
         cat /etc/fstab
+        echo
+    echo "==============================================================================="
     fi
 }
 
 update_repos() {
-    sudo apt-get update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade
+    echo
+    echo "Making sure the system is up to date (this could take a few minutes)."
+    sudo apt-get update >/dev/null 2>&1
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade >/dev/null 2>&1
+    sudo apt autoremove -y >/dev/null 2>&1
+    echo
+    echo "==============================================================================="
 }
 
 download_package() {
+    echo
     # Create temporary directory
-    dir=`mktemp -d`
+    dir=$(mktemp -d)
     if [ -z "$dir" ]; then
         # Create directory under $HOME if above operation failed
         dir=$HOME/crown-temp
@@ -145,26 +203,60 @@ download_package() {
     if [ $? -ne 0 ]; then
        BITS=64
     fi
-    # Change this later to take latest release version.
-    wget "https://github.com/Crowndev/crowncoin/releases/download/v0.13.2.0/Crown-$LATEST_RELEASE-Linux64.zip" -O $dir/crown.zip
+    if [ -n "$job" ]; then
+        # Pull a pipeline build by job number
+        echo "Downloading pipeline job $job"
+        wget "https://gitlab.crown.tech/crown/crown-core/-/jobs/$job/artifacts/download" -O $dir/crown.zip
+    else
+        # Change this later to take latest release version.
+        echo "Downloading $BITS bit Crown package version $LATEST_RELEASE."
+        wget "https://github.com/Crowndev/crowncoin/releases/download/v$LATEST_RELEASE/Crown-$LATEST_RELEASE-Linux$BITS.zip" -O $dir/crown.zip
+    fi
+    wget "https://raw.githubusercontent.com/Crowndev/crowncoin/master/scripts/crownwatch.sh" -O $dir/crownwatch.sh
+    if [ -s "$dir/crown.zip" ]; then
+        # Download bootstrap if requested
+        if [ -n "$bootstrap" ]; then
+            echo "Downloading bootstrap"
+            wget "https://nextcloud.crown.tech/nextcloud/s/RiyWmDLckmcXS6n/download" -O $dir/bootstrap.zip
+	    if [ ! -e "$dir/bootstrap.zip" ]; then
+	        echo "Failed to download bootstrap. Continuing without it."
+	        bootstrap=
+            fi
+        fi
+    else
+        echo "Failed to download package. Aborting."
+        exit
+    fi	
+    echo
+    echo "==============================================================================="
 }
 
 install_package() {
-    sudo unzip -d $dir/crown $dir/crown.zip
+    echo
+    echo "Unzipping and installing the Crown package."
+    sudo unzip -qd $dir/crown $dir/crown.zip
     sudo cp -f $dir/crown/*/bin/* /usr/local/bin/
     sudo cp -f $dir/crown/*/lib/* /usr/local/lib/
+    sudo chmod +x $dir/crownwatch.sh
+    sudo cp -f $dir/crownwatch.sh /usr/local/bin
+    if [ -n "$bootstrap" ]; then
+	    echo "Unzipping bootstrap (which will take a few minutes) and removing old blockchain"
+	rm -rf ~/.crown/{blocks,chainstate,bootstrap.dat.old}
+        unzip -od ~/.crown $dir/bootstrap.zip
+    fi
     sudo rm -rf $dir
+    echo
+    echo "==============================================================================="
 }
 
 configure_conf() {
+    echo
+    echo "Creating the Crown datadir and config file."
     cd $HOME
     mkdir -p .crown
     sudo mv .crown/crown.conf .crown/crown.bak
-    touch .crown/crown.conf
     IP=$(curl http://checkip.amazonaws.com/)
     PW=$(< /dev/urandom tr -dc a-zA-Z0-9 | head -c32;echo;)
-    echo "==========================================================="
-    pwd
     echo "daemon=1" > .crown/crown.conf 
     echo "rpcallowip=127.0.0.1" >> .crown/crown.conf 
     echo "rpcuser=crowncoinrpc">> .crown/crown.conf 
@@ -179,38 +271,68 @@ configure_conf() {
         echo "masternode=1" >>.crown/crown.conf
         echo "masternodeprivkey="$privkey >>.crown/crown.conf
     fi
+    echo "This is the config file:"
     cat .crown/crown.conf
+    echo
+    echo "==============================================================================="
 }
 
 configure_firewall() {
+    echo
+    echo "Configuring base firewall."
+    sudo ufw default deny
     sudo ufw allow ssh/tcp
     sudo ufw limit ssh/tcp
     sudo ufw allow 9340/tcp
     sudo ufw logging on
     sudo ufw --force enable
+    echo
+    echo "which looks like this:"
+    sudo ufw status numbered
+    echo
+    echo "==============================================================================="
 }
 
-add_cron_job() {
-    cron_line="@reboot /usr/local/bin/crownd"
-    if [ `crontab -l 2>/dev/null | grep "$cron_line" | wc -l` -eq 0 ]; then
-        (crontab -l 2>/dev/null; echo "$cron_line") | crontab -
+ensure_cron_line() {
+    if [ $(crontab -l 2>/dev/null | grep "$*" | wc -l) -eq 0 ]; then
+        (crontab -l 2>/dev/null; echo "$*") | crontab -
     fi
 }
 
+add_cron_job() {
+    echo
+    if [ $watchdog -eq 2 ]; then
+	echo "Adding watchdog level 2 (memory checking) to crontab"
+        ensure_cron_line "*/15 * * * * /usr/local/bin/crownwatch.sh mem"
+    elif [ $watchdog -eq 1 ]; then
+	echo "Adding watchdog level 1 (daemon running) to crontab"
+        ensure_cron_line "*/15 * * * * /usr/local/bin/crownwatch.sh"
+    fi
+    echo "Adding start on reboot to crontab"
+    echo
+    ensure_cron_line "@reboot /usr/local/bin/crownd"
+    echo "Your crontab now looks like this:"
+    crontab -l
+    echo
+    echo "==============================================================================="
+}
+
 main() {
-    # (Quietly) Stop crownd (in case it's running)
-    /usr/local/bin/crown-cli stop 2>/dev/null
+    # Stop crownd if it's running
+    PID=$(pidof crownd)
+    if [ -n "$PID" ]; then
+        echo "Shutting down the crown daemon."
+        /usr/local/bin/crown-cli stop 2>/dev/null
+    fi
     # Update Repos
     update_repos
     # Install dependencies
     install_dependencies
-    # Download the latest release
+    # Download the latest release (and bootstrap if requested)
     download_package
-    # Extract and install
-    install_package
 
     if [ "$install" = true ] ; then
-        # Create swap to help with sync
+        # Create swap to help with sync and day-to-day running
         create_swap
         # Create folder structures and configure crown.conf
         configure_conf
@@ -218,10 +340,39 @@ main() {
         configure_firewall
     fi
 
-    # Ensure there is a cron job to restart crownd on reboot
+    if [ -n "$PID" ]; then
+        # Allow up to another 5 minutes for old daemon to shutdown gracefully
+        for ((i=0; i<5; i++)); do
+            if [[ $(ps -p $PID | wc -l) -lt 2 ]]; then
+                break
+            fi
+            echo "...still waiting for shutdown to complete..."
+            sleep 60
+        done
+
+        # If it still hasn't shutdown, terminate with extreme prejudice
+        if [[ $i -eq 5 ]]; then
+            echo "Shutdown still incomplete, killing the daemon."
+            kill -9 $PID
+            sleep 10
+            rm -f ~/.crown/{.lock,crownd.pid}
+        fi
+    fi	
+
+    # Extract and install
+    install_package
+    # Start Crownd to begin sync or resume normal operations
+    /usr/local/bin/crownd -daemon
+    # Visual reassurance
+    sleep 2
+    echo "Check the timestamp on the following message is within the last few seconds"
+    echo "(currently it is $(date))"
+    echo "and that the version is the one you expect."
+    echo
+    grep "Crown version" ~/.crown/debug.log | tail -1
+    echo
+    # Ensure there is a cron job to restart crownd on reboot and run watchdog
     add_cron_job
-    # Start Crownd to begin sync
-    /usr/local/bin/crownd
 }
 
 handle_arguments "$@"
