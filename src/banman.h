@@ -34,6 +34,12 @@ class CSubNet;
 // between nodes running old code and nodes running
 // new code.
 
+enum class BanLevel {
+    NOT_BANNED                  =    0,
+    AUTOMATIC_MISBEHAVIOUR_BAN  =    1,
+    ANY_OTHER_BAN               =    2
+};
+
 class BanMan
 {
 public:
@@ -42,7 +48,7 @@ public:
     void Ban(const CNetAddr& net_addr, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void ClearBanned();
-    int IsBannedLevel(CNetAddr net_addr);
+    BanLevel IsBannedLevel(CNetAddr net_addr);
     bool IsBanned(CNetAddr net_addr);
     bool IsBanned(CSubNet sub_net);
     bool Unban(const CNetAddr& net_addr);
