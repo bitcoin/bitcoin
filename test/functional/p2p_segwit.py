@@ -2038,9 +2038,9 @@ class SegWitTest(BitcoinTestFramework):
         # TODO: test p2sh sigop counting
 
     def test_superfluous_witness(self):
-        # Serialization of tx that puts witness flag to 1 always
+        # Serialization of tx that puts witness flag to 3 always
         def serialize_with_bogus_witness(tx):
-            flags = 1
+            flags = 3
             r = b""
             r += struct.pack("<i", tx.nVersion)
             if flags:
@@ -2059,9 +2059,29 @@ class SegWitTest(BitcoinTestFramework):
             r += struct.pack("<I", tx.nLockTime)
             return r
 
-        raw = self.nodes[0].createrawtransaction([{"txid":"00"*32, "vout":0}], {self.nodes[0].getnewaddress():1})
+        class msg_bogus_tx(msg_tx):
+            def serialize(self):
+                return serialize_with_bogus_witness(self.tx)
+
+        self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(address_type='bech32'), 5)
+        self.nodes[0].generate(1)
+        unspent = next(u for u in self.nodes[0].listunspent() if u['spendable'] and u['address'].startswith('bcrt'))
+
+        raw = self.nodes[0].createrawtransaction([{"txid": unspent['txid'], "vout": unspent['vout']}], {self.nodes[0].getnewaddress(): 1})
         tx = FromHex(CTransaction(), raw)
         assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, serialize_with_bogus_witness(tx).hex())
+        with self.nodes[0].assert_debug_log(['Superfluous witness record']):
+            self.nodes[0].p2p.send_message(msg_bogus_tx(tx))
+            self.nodes[0].p2p.sync_with_ping()
+        raw = self.nodes[0].signrawtransactionwithwallet(raw)
+        assert raw['complete']
+        raw = raw['hex']
+        tx = FromHex(CTransaction(), raw)
+        assert_raises_rpc_error(-22, "TX decode failed", self.nodes[0].decoderawtransaction, serialize_with_bogus_witness(tx).hex())
+        with self.nodes[0].assert_debug_log(['Unknown transaction optional data']):
+            self.nodes[0].p2p.send_message(msg_bogus_tx(tx))
+            self.nodes[0].p2p.sync_with_ping()
+
 
 if __name__ == '__main__':
     SegWitTest().main()
