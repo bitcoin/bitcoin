@@ -173,6 +173,7 @@ BASE_SCRIPTS = [
     'rpc_bind.py --nonloopback',
     'mining_basic.py',
     'wallet_bumpfee.py',
+    'wallet_bumpfee_totalfee_deprecation.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'p2p_leak.py',
