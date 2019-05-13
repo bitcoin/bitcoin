@@ -214,18 +214,11 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 
 static bool InitRPCAuthentication()
 {
-    if (gArgs.GetArg("-rpcpassword", "") == "")
-    {
-        LogPrintf("No rpcpassword set - using random cookie authentication.\n");
-        if (!GenerateAuthCookie(&strRPCUserColonPass)) {
-            uiInterface.ThreadSafeMessageBox(
-                _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
-                "", CClientUIInterface::MSG_ERROR);
-            return false;
-        }
-    } else {
-        LogPrintf("Config options rpcuser and rpcpassword will soon be deprecated. Locally-run instances may remove rpcuser to use cookie-based auth, or may be replaced with rpcauth. Please see share/rpcauth for rpcauth auth generation.\n");
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+    if (!GenerateAuthCookie(&strRPCUserColonPass)) {
+        uiInterface.ThreadSafeMessageBox(
+            _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
+            "", CClientUIInterface::MSG_ERROR);
+        return false;
     }
     if (gArgs.GetArg("-rpcauth","") != "")
     {

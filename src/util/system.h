@@ -314,7 +314,7 @@ std::string HelpMessageGroup(const std::string& message);
 /**
  * Format a string to be used as option description in help messages
  *
- * @param option Option message (e.g. "-rpcuser=<user>")
+ * @param option Option message (e.g. "-rpcauth=<userpw>")
  * @param message Option description (e.g. "Username for JSON-RPC connections")
  * @return the formatted string
  */
