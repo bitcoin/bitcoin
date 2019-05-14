@@ -67,4 +67,22 @@ void ForEachNoDup(CharType (&string)[StringLength], CharType min_char, CharType 
     }
 }
 
+/**
+ * Iterate over string values and call function for each string without
+ * successive duplicate characters.
+ */
+template <typename CharType, size_t StringLength, typename Fn>
+void ForEachNoDup(CharType (&string)[StringLength], CharType min_char, CharType max_char, Fn&& fn) {
+    for (bool has_next = true; has_next; has_next = NextString(string, min_char, max_char)) {
+        int prev = -1;
+        bool skip_string = false;
+        for (CharType c : string) {
+            if (c == prev) skip_string = true;
+            if (skip_string || c < min_char || c > max_char) break;
+            prev = c;
+        }
+        if (!skip_string) fn();
+    }
+}
+
 #endif // SYSCOIN_TEST_UTIL_H
