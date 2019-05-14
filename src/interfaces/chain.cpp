@@ -22,6 +22,7 @@ class LockImpl : public Chain::Lock
 {
     Optional<int> getHeight() override
     {
+        LockAnnotation lock(::cs_main);
         int height = ::ChainActive().Height();
         if (height >= 0) {
             return height;
@@ -30,6 +31,7 @@ class LockImpl : public Chain::Lock
     }
     Optional<int> getBlockHeight(const uint256& hash) override
     {
+        LockAnnotation lock(::cs_main);
         CBlockIndex* block = LookupBlockIndex(hash);
         if (block && ::ChainActive().Contains(block)) {
             return block->nHeight;
@@ -44,29 +46,34 @@ class LockImpl : public Chain::Lock
     }
     uint256 getBlockHash(int height) override
     {
+        LockAnnotation lock(::cs_main);
         CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetBlockHash();
     }
     int64_t getBlockTime(int height) override
     {
+        LockAnnotation lock(::cs_main);
         CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetBlockTime();
     }
     int64_t getBlockMedianTimePast(int height) override
     {
+        LockAnnotation lock(::cs_main);
         CBlockIndex* block = ::ChainActive()[height];
         assert(block != nullptr);
         return block->GetMedianTimePast();
     }
     bool haveBlockOnDisk(int height) override
     {
+        LockAnnotation lock(::cs_main);
         CBlockIndex* block = ::ChainActive()[height];
         return block && ((block->nStatus & BLOCK_HAVE_DATA) != 0) && block->nTx > 0;
     }
     Optional<int> findFirstBlockWithTime(int64_t time, uint256* hash) override
     {
+        LockAnnotation lock(::cs_main);
         CBlockIndex* block = ::ChainActive().FindEarliestAtLeast(time);
         if (block) {
             if (hash) *hash = block->GetBlockHash();
@@ -90,6 +97,7 @@ class LockImpl : public Chain::Lock
     }
     Optional<int> findPruned(int start_height, Optional<int> stop_height) override
     {
+        LockAnnotation lock(::cs_main);
         if (::fPruneMode) {
             CBlockIndex* block = stop_height ? ::ChainActive()[*stop_height] : ::ChainActive().Tip();
             while (block && block->nHeight >= start_height) {
@@ -103,6 +111,7 @@ class LockImpl : public Chain::Lock
     }
     Optional<int> findFork(const uint256& hash, Optional<int>* height) override
     {
+        LockAnnotation lock(::cs_main);
         const CBlockIndex* block = LookupBlockIndex(hash);
         const CBlockIndex* fork = block ? ::ChainActive().FindFork(block) : nullptr;
         if (height) {
@@ -119,11 +128,16 @@ class LockImpl : public Chain::Lock
     }
     bool isPotentialTip(const uint256& hash) override
     {
+        LockAnnotation lock(::cs_main);
         if (::ChainActive().Tip()->GetBlockHash() == hash) return true;
         CBlockIndex* block = LookupBlockIndex(hash);
         return block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip();
     }
-    CBlockLocator getTipLocator() override { return ::ChainActive().GetLocator(); }
+    CBlockLocator getTipLocator() override
+    {
+        LockAnnotation lock(::cs_main);
+        return ::ChainActive().GetLocator();
+    }
     Optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LockAnnotation lock(::cs_main);
