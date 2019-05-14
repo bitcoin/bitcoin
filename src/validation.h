@@ -412,7 +412,7 @@ public:
 /** Replay blocks that aren't fully applied to the database. */
 bool ReplayBlocks(const CChainParams& params, CCoinsView* view);
 
-inline CBlockIndex* LookupBlockIndex(const uint256& hash)
+inline CBlockIndex* LookupBlockIndex(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     BlockMap::const_iterator it = mapBlockIndex.find(hash);
