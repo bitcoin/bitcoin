@@ -29,7 +29,6 @@ extern CCriticalSection cs_assetallocationarrival;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
-std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CAssetIndexDB> passetindexdb;
 std::vector<CTxIn> savedtxins;
 // SYSCOIN service rpc functions
@@ -734,7 +733,7 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 12 != params.size())
+	if (request.fHelp || 11 != params.size())
 		throw runtime_error(
                 RPCHelpMan{"syscoinmint",
                 "\nMint syscoin to come back from the ethereum bridge\n",
@@ -745,11 +744,10 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
                     {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
                     {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
                     {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
-                    {"txmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction merkle root."},
+                    {"merklerootpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle hash for both transaction and receipt root."},
                     {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
                     {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
                     {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
-                    {"receiptmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction receipt merkle root."},
                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
@@ -758,8 +756,8 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"receiptmerkleproofpath\"")
-                    + HelpExampleRpc("syscoinmint","\"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof\", \"txmerkleproofpath\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"receiptmerkleproofpath\", \"\"")
+                    HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
+                    + HelpExampleRpc("syscoinmint","\"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof\", \"txmerkleproofpath\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
                 }
                 }.ToString());
 
@@ -774,9 +772,8 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
     string vchReceiptValue = params[7].get_str();
     string vchReceiptRoot = params[8].get_str();
     string vchReceiptParentNodes = params[9].get_str();
-    string vchReceiptPath = params[10].get_str();
     
-    string strWitnessAddress = params[11].get_str();
+    string strWitnessAddress = params[10].get_str();
     
 	vector<CRecipient> vecSend;
 	const CTxDestination &dest = DecodeDestination(vchAddress);
@@ -795,7 +792,6 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
     mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
     mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
-    mintSyscoin.vchReceiptPath = ParseHex(vchReceiptPath);
        
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
@@ -2225,49 +2221,6 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     ret.pushKV("status", "success");
     return ret;
 }
-void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->SeekToFirst();
-    vector<uint32_t> vecHeightKeys;
-    uint32_t nKey = 0;
-    uint32_t nKeyIndex = 0;
-    const uint32_t& nKeyCutoff = fGethCurrentHeight - MAX_ETHEREUM_TX_ROOTS;
-
-    std::vector<unsigned char> txPos;
-    std::set<uint32_t> setKeys;
-    // sort keys numerically
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-            if(!pcursor->GetKey(nKey)){
-                 pcursor->Next();
-                 continue;
-            }
-            setKeys.emplace(std::move(nKey));
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            return;
-        }
-    } 
-    if(setKeys.size() < 2)
-        return;
-    std::set<uint32_t>::iterator setIt = setKeys.begin();
-    nKeyIndex = *setIt;
-    setIt++;
-    // we should have atleast MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
-    if(nKeyIndex > nKeyCutoff){
-        vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
-    }
-    // find sequence gaps in sorted key set 
-    for (; setIt != setKeys.end(); ++setIt){
-            const uint32_t &nKey = *setIt;
-            const uint32_t &nNextKeyIndex = nKeyIndex+1;
-            if (nKey != nNextKeyIndex && (nKey-1) >= nNextKeyIndex)
-                vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, nKey-1));
-            nKeyIndex = nKey;   
-    }  
-}
 UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
@@ -2376,52 +2329,6 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     ret.pushKV("status", res? "success": "fail");
     return ret;
 }
-bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
-    uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
-    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
-    pcursor->SeekToFirst();
-    vector<uint32_t> vecHeightKeys;
-    uint32_t nKey = 0;
-    int32_t cutoffHeight = 0;
-    if(fNewGethSyncHeight > 0)
-    {
-
-        // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
-        cutoffHeight = fNewGethSyncHeight - (MAX_ETHEREUM_TX_ROOTS*3);
-        if(cutoffHeight < 0){
-            LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
-            return true;
-        }
-    }
-    std::vector<unsigned char> txPos;
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-            if(pcursor->GetKey(nKey)){
-                // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
-                if (fNewGethSyncHeight > 0 && (nKey < (uint32_t)cutoffHeight || nKey > fNewGethSyncHeight)) {
-                    vecHeightKeys.emplace_back(nKey);
-                }
-                else if(nKey > fNewGethCurrentHeight)
-                    fNewGethCurrentHeight = nKey;
-            }
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
-        }
-    }
-
-    {
-        LOCK(cs_ethsyncheight);
-        fGethSyncHeight = fNewGethSyncHeight;
-        fGethCurrentHeight = fNewGethCurrentHeight;
-    }      
-    return FlushErase(vecHeightKeys);
-}
-bool CEthereumTxRootsDB::Init(){
-    return PruneTxRoots(0);
-}
 bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
     if(vecTXIDs.empty() || !fAssetIndex)
         return true;
@@ -2434,28 +2341,4 @@ bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
     LogPrint(BCLog::SYS, "Flushing %d asset index removals\n", vecTXIDs.size());
     return WriteBatch(batch);
 }
-bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
-    if(vecHeightKeys.empty())
-        return true;
-    const uint32_t &nFirst = vecHeightKeys.front();
-    const uint32_t &nLast = vecHeightKeys.back();
-    CDBBatch batch(*this);
-    for (const auto &key : vecHeightKeys) {
-        batch.Erase(key);
-    }
-    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
-    return WriteBatch(batch);
-}
-bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots){
-    if(mapTxRoots.empty())
-        return true;
-    const uint32_t &nFirst = mapTxRoots.begin()->first;
-    uint32_t nLast = nFirst;
-    CDBBatch batch(*this);
-    for (const auto &key : mapTxRoots) {
-        batch.Write(key.first, key.second);
-        nLast = key.first;
-    }
-    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
-    return WriteBatch(batch);
-}
+

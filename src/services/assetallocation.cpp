@@ -437,7 +437,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
-    if (request.fHelp || 13 != params.size())
+    if (request.fHelp || 12 != params.size())
         throw runtime_error(
             RPCHelpMan{"assetallocationmint",
                 "\nMint assetallocation to come back from the bridge\n",
@@ -449,11 +449,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                     {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
                     {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
                     {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
-                    {"txmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction merkle root."},
+                    {"merklerootpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle hash for both transaction and receipt root."},
                     {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
                     {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
-                    {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
-                    {"receiptmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction receipt merkle root."},
                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
@@ -462,8 +460,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"receiptmerkleproofpath\" \"witness\"")
-                    + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"addressto\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"receiptmerkleproofpath\", \"\"")
+                    HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"witness\"")
+                    + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"addressto\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
                 }
             }.ToString());
 
@@ -480,10 +478,9 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string vchReceiptValue = params[8].get_str();
     string vchReceiptRoot = params[9].get_str();
     string vchReceiptParentNodes = params[10].get_str();
-    string vchReceiptPath = params[11].get_str();
     
     
-    string strWitness = params[12].get_str();
+    string strWitness = params[11].get_str();
     if(!fGethSynced){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
     }
@@ -506,7 +503,6 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
     mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
     mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
-    mintSyscoin.vchReceiptPath = ParseHex(vchReceiptPath);
     
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
@@ -1193,7 +1189,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
 
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     CMintSyscoin mintsyscoin(tx);
-    if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
+    if (!mintsyscoin.IsNull() && (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull())) {
         int nHeight = 0;
         const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
@@ -1204,23 +1200,35 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         {
             nHeight = blockindex->nHeight;
         }
-        entry.pushKV("txtype", "assetallocationmint");
-        entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+        entry.pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
+            entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
         entry.pushKV("txid", txHash.GetHex());
         entry.pushKV("height", nHeight);
-        entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-        entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-        CAsset dbAsset;
-        GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-       
-        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-        oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-    
-        entry.pushKV("allocations", oAssetAllocationReceiversArray); 
-        entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
+            entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+            entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        }
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
+            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+            CAsset dbAsset;
+            GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
+           
+            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+            oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+        
+            entry.pushKV("allocations", oAssetAllocationReceiversArray); 
+            entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+        }
+        else{
+            UniValue o(UniValue::VOBJ);
+            ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, o, true);
+            entry.pushKV("scriptPubKey", o);
+            entry.pushKV("total", ValueFromAmount(tx.vout[0].nValue));
+        }
+        
         entry.pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
@@ -1229,8 +1237,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         oSPVProofObj.pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
         oSPVProofObj.pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
         oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
-        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot));
-        oSPVProofObj.pushKV("receiptpath", HexStr(mintsyscoin.vchReceiptPath));  
+        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
         oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
         entry.pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
@@ -1238,25 +1245,37 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     return false;                   
 }
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
-    if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
-        entry.pushKV("txtype", "assetallocationmint");
-        entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+    if (!mintsyscoin.IsNull() && (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull())) {
+        entry.pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
+            entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
         entry.pushKV("txid", tx.GetHash().GetHex());
-        entry.pushKV("height", nHeight);       
-        entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-        entry.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-        CAsset dbAsset;
-        GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-       
-        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-        oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+        entry.pushKV("height", nHeight);
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
+            entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+            entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        }
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
+            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+            CAsset dbAsset;
+            GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
+           
+            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+            oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         
-        entry.pushKV("allocations", oAssetAllocationReceiversArray);
-        entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        entry.pushKV("blockhash", blockhash.GetHex()); 
+            entry.pushKV("allocations", oAssetAllocationReceiversArray); 
+            entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+        }
+        else{
+            UniValue o(UniValue::VOBJ);
+            ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, o, true);
+            entry.pushKV("scriptPubKey", o);
+            entry.pushKV("total", ValueFromAmount(tx.vout[0].nValue));
+        }
+        
+        entry.pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
         oSPVProofObj.pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
@@ -1264,13 +1283,12 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         oSPVProofObj.pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
         oSPVProofObj.pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
         oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
-        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot));
-        oSPVProofObj.pushKV("receiptpath", HexStr(mintsyscoin.vchReceiptPath));  
+        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
         oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
         entry.pushKV("spv_proof", oSPVProofObj); 
-        return true;                                                  
-    }   
-    return false;                
+        return true;                                        
+    } 
+    return false;                   
 }
 
 bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
