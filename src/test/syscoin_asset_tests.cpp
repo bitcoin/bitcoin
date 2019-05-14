@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 {
     printf("Running generate_asset_audittxroot...\n");
     UniValue r;
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[709780,\\\"a\\\"],[707780,\\\"a\\\"],[707772,\\\"a\\\"],[707776,\\\"a\\\"],[707770,\\\"a\\\"],[707778,\\\"a\\\"],[707774,\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[709780,\\\"a\\\",\\\"a\\\"],[707780,\\\"a\\\",\\\"a\\\"],[707772,\\\"a\\\",\\\"a\\\"],[707776,\\\"a\\\",\\\"a\\\"],[707770,\\\"a\\\",\\\"a\\\"],[707778,\\\"a\\\",\\\"a\\\"],[707774,\\\"a\\\",\\\"a\\\"]]\""));
     int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     BOOST_CHECK(find_value(blocksArray[5].get_obj(), "to").get_int() == 707779);
     BOOST_CHECK(find_value(blocksArray[6].get_obj(), "from").get_int() == 707781);
     BOOST_CHECK(find_value(blocksArray[6].get_obj(), "to").get_int() == 709779);
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"a\\\"],[707775,\\\"a\\\"],[707771,\\\"a\\\"],[707777,\\\"a\\\"],[707779,\\\"a\\\"],[707781,\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"a\\\",\\\"a\\\"],[707775,\\\"a\\\",\\\"a\\\"],[707771,\\\"a\\\",\\\"a\\\"],[707777,\\\"a\\\",\\\"a\\\"],[707779,\\\"a\\\",\\\"a\\\"],[707781,\\\"a\\\",\\\"a\\\"]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
             continue;
         if(nCount > 0)
             roots += ",";
-        roots += strprintf("[%d,\\\"a\\\"]", i);
+        roots += strprintf("[%d,\\\"a\\\",\\\"a\\\"]", i);
         if(nCount > 0 && (nCount % 10000) == 0){
             BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[" + roots + "]\""));
             roots = "";
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 800022);
     BOOST_CHECK(find_value(blocksArray[2].get_obj(), "from").get_int() == 814011);
     BOOST_CHECK(find_value(blocksArray[2].get_obj(), "to").get_int() == 814011);
-    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[814011,\\\"a\\\"],[700059,\\\"a\\\"],[800022,\\\"a\\\"]]\""));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[814011,\\\"a\\\",\\\"a\\\"],[700059,\\\"a\\\",\\\"a\\\"],[800022,\\\"a\\\",\\\"a\\\"]]\""));
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -425,7 +425,6 @@ BOOST_AUTO_TEST_CASE(generate_syscoinmint)
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
 {
-exit(0);
     printf("Running generate_burn_syscoin...\n");
     UniValue r;
     string newaddress = GetNewFundedAddress("node1");
