@@ -7,6 +7,7 @@
 #include <clientversion.h>
 #include <primitives/transaction.h>
 #include <sync.h>
+#include <test/util.h>
 #include <util/strencodings.h>
 #include <util/moneystr.h>
 #include <test/setup_common.h>
@@ -580,7 +581,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 
 // Test different ways settings can be merged, and verify results. This test can
 // be used to confirm that updates to settings code don't change behavior
-// unintentially.
+// unintentionally.
 //
 // The test covers:
 //
@@ -600,20 +601,22 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
 //   outside a network section, and non-network specific settings like "-server"
 //   that aren't sensitive to the network.
 //
-struct SettingsMergeTestingSetup : public BasicTestingSetup {
+struct ArgsMergeTestingSetup : public BasicTestingSetup {
     //! Max number of actions to sequence together. Can decrease this when
     //! debugging to make test results easier to understand.
     static constexpr int MAX_ACTIONS = 3;
 
-    enum Action { SET = 0, NEGATE, SECTION_SET, SECTION_NEGATE, END };
+    enum Action { NONE, SET, NEGATE, SECTION_SET, SECTION_NEGATE };
     using ActionList = Action[MAX_ACTIONS];
 
     //! Enumerate all possible test configurations.
     template <typename Fn>
     void ForEachMergeSetup(Fn&& fn)
     {
-        ForEachActionList([&](const ActionList& arg_actions) {
-            ForEachActionList([&](const ActionList& conf_actions) {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, SET, SECTION_NEGATE, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, SET, SECTION_NEGATE, [&] {
                 for (bool soft_set : {false, true}) {
                     for (bool force_set : {false, true}) {
                         for (const std::string& section : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET}) {
@@ -629,36 +632,6 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
         });
     }
 
-    //! Enumerate interesting combinations of actions.
-    template <typename Fn>
-    void ForEachActionList(Fn&& fn)
-    {
-        ActionList actions = {SET};
-        for (bool done = false; !done;) {
-            int prev_action = -1;
-            bool skip_actions = false;
-            for (Action action : actions) {
-                if ((prev_action == END && action != END) || (prev_action != END && action == prev_action)) {
-                    // To cut down list of enumerated settings, skip enumerating
-                    // settings with ignored actions after an END, and settings that
-                    // repeat the same action twice in a row.
-                    skip_actions = true;
-                    break;
-                }
-                prev_action = action;
-            }
-            if (!skip_actions) fn(actions);
-            done = true;
-            for (Action& action : actions) {
-                action = Action(action < END ? action + 1 : 0);
-                if (action) {
-                    done = false;
-                    break;
-                }
-            }
-        }
-    }
-
     //! Translate actions into a list of <key>=<value> setting strings.
     std::vector<std::string> GetValues(const ActionList& actions,
         const std::string& section,
@@ -668,7 +641,7 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
         std::vector<std::string> values;
         int suffix = 0;
         for (Action action : actions) {
-            if (action == END) break;
+            if (action == NONE) break;
             std::string prefix;
             if (action == SECTION_SET || action == SECTION_NEGATE) prefix = section + ".";
             if (action == SET || action == SECTION_SET) {
@@ -687,12 +660,12 @@ struct SettingsMergeTestingSetup : public BasicTestingSetup {
 // Regression test covering different ways config settings can be merged. The
 // test parses and merges settings, representing the results as strings that get
 // compared against an expected hash. To debug, the result strings can be dumped
-// to a file (see below).
-BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
+// to a file (see comments below).
+BOOST_FIXTURE_TEST_CASE(util_ArgsMerge, ArgsMergeTestingSetup)
 {
     CHash256 out_sha;
     FILE* out_file = nullptr;
-    if (const char* out_path = getenv("SETTINGS_MERGE_TEST_OUT")) {
+    if (const char* out_path = getenv("ARGS_MERGE_TEST_OUT")) {
         out_file = fsbridge::fopen(out_path, "w");
         if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
     }
@@ -706,7 +679,7 @@ BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
         desc += network;
         parser.m_network = network;
 
-        const std::string& name = net_specific ? "server" : "wallet";
+        const std::string& name = net_specific ? "wallet" : "server";
         const std::string key = "-" + name;
         parser.AddArg(key, name, false, OptionsCategory::OPTIONS);
         if (net_specific) parser.SetNetworkOnlyArg(key);
@@ -794,14 +767,116 @@ BOOST_FIXTURE_TEST_CASE(util_SettingsMerge, SettingsMergeTestingSetup)
 
     // If check below fails, should manually dump the results with:
     //
-    //   SETTINGS_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_SettingsMerge
+    //   ARGS_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_ArgsMerge
     //
     // And verify diff against previous results to make sure the changes are expected.
     //
     // Results file is formatted like:
     //
     //   <input> || <IsArgSet/IsArgNegated/GetArg output> | <GetArgs output> | <GetUnsuitable output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "80964e17fbd3c5569d3c824d032e28e2d319ef57494735b0e76eb7aad9957f2c");
+    BOOST_CHECK_EQUAL(out_sha_hex, "b835eef5977d69114eb039a976201f8c7121f34fe2b7ea2b73cafb516e5c9dc8");
+}
+
+// Similar test as above, but for ArgsManager::GetChainName function.
+struct ChainMergeTestingSetup : public BasicTestingSetup {
+    static constexpr int MAX_ACTIONS = 2;
+
+    enum Action { NONE, ENABLE_TEST, DISABLE_TEST, NEGATE_TEST, ENABLE_REG, DISABLE_REG, NEGATE_REG };
+    using ActionList = Action[MAX_ACTIONS];
+
+    //! Enumerate all possible test configurations.
+    template <typename Fn>
+    void ForEachMergeSetup(Fn&& fn)
+    {
+        ActionList arg_actions = {};
+        ForEachNoDup(arg_actions, ENABLE_TEST, NEGATE_REG, [&] {
+            ActionList conf_actions = {};
+            ForEachNoDup(conf_actions, ENABLE_TEST, NEGATE_REG, [&] { fn(arg_actions, conf_actions); });
+        });
+    }
+};
+
+BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
+{
+    CHash256 out_sha;
+    FILE* out_file = nullptr;
+    if (const char* out_path = getenv("CHAIN_MERGE_TEST_OUT")) {
+        out_file = fsbridge::fopen(out_path, "w");
+        if (!out_file) throw std::system_error(errno, std::generic_category(), "fopen failed");
+    }
+
+    ForEachMergeSetup([&](const ActionList& arg_actions, const ActionList& conf_actions) {
+        TestArgsManager parser;
+        LOCK(parser.cs_args);
+        parser.AddArg("-regtest", "regtest", false, OptionsCategory::OPTIONS);
+        parser.AddArg("-testnet", "testnet", false, OptionsCategory::OPTIONS);
+
+        auto arg = [](Action action) { return action == ENABLE_TEST  ? "-testnet=1"   :
+                                              action == DISABLE_TEST ? "-testnet=0"   :
+                                              action == NEGATE_TEST  ? "-notestnet=1" :
+                                              action == ENABLE_REG   ? "-regtest=1"   :
+                                              action == DISABLE_REG  ? "-regtest=0"   :
+                                              action == NEGATE_REG   ? "-noregtest=1" : nullptr; };
+
+        std::string desc;
+        std::vector<const char*> argv = {"ignored"};
+        for (Action action : arg_actions) {
+            const char* argstr = arg(action);
+            if (!argstr) break;
+            argv.push_back(argstr);
+            desc += " ";
+            desc += argv.back();
+        }
+        std::string error;
+        BOOST_CHECK(parser.ParseParameters(argv.size(), argv.data(), error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        std::string conf;
+        for (Action action : conf_actions) {
+            const char* argstr = arg(action);
+            if (!argstr) break;
+            desc += " ";
+            desc += argstr + 1;
+            conf += argstr + 1;
+        }
+        std::istringstream conf_stream(conf);
+        BOOST_CHECK(parser.ReadConfigStream(conf_stream, "filepath", error));
+        BOOST_CHECK_EQUAL(error, "");
+
+        desc += " || ";
+        try {
+            desc += parser.GetChainName();
+        } catch (const std::runtime_error& e) {
+            desc += "error: ";
+            desc += e.what();
+        }
+        desc += "\n";
+
+        out_sha.Write((const unsigned char*)desc.data(), desc.size());
+        if (out_file) {
+            BOOST_REQUIRE(fwrite(desc.data(), 1, desc.size(), out_file) == desc.size());
+        }
+    });
+
+    if (out_file) {
+        if (fclose(out_file)) throw std::system_error(errno, std::generic_category(), "fclose failed");
+        out_file = nullptr;
+    }
+
+    unsigned char out_sha_bytes[CSHA256::OUTPUT_SIZE];
+    out_sha.Finalize(out_sha_bytes);
+    std::string out_sha_hex = HexStr(std::begin(out_sha_bytes), std::end(out_sha_bytes));
+
+    // If check below fails, should manually dump the results with:
+    //
+    //   CHAIN_MERGE_TEST_OUT=results.txt ./test_bitcoin --run_test=util_tests/util_ChainMerge
+    //
+    // And verify diff against previous results to make sure the changes are expected.
+    //
+    // Results file is formatted like:
+    //
+    //   <input> || <output>
+    BOOST_CHECK_EQUAL(out_sha_hex, "b284f4b4a15dd6bf8c06213a69a004b1960388e1d9917173927db52ac220927f");
 }
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney)
