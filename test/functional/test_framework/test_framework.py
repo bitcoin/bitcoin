@@ -12,6 +12,7 @@ import logging
 import argparse
 import os
 import pdb
+import random
 import shutil
 import sys
 import tempfile
@@ -147,6 +148,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
                             help="Scale the test timeouts by multiplying them with the here provided value (default: %(default)s)")
         parser.add_argument("--perf", dest="perf", default=False, action="store_true",
                             help="profile running nodes with perf for the duration of the test")
+        parser.add_argument("--randomseed", type=int,
+                            help="set a random seed for deterministically reproducing a previous test run")
         self.add_options(parser)
         self.options = parser.parse_args()
 
@@ -181,6 +184,22 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         else:
             self.options.tmpdir = tempfile.mkdtemp(prefix="test")
         self._start_logging()
+
+        # Seed the PRNG. Note that test runs are reproducible if and only if
+        # a single thread accesses the PRNG. For more information, see
+        # https://docs.python.org/3/library/random.html#notes-on-reproducibility.
+        # The network thread shouldn't access random. If we need to change the
+        # network thread to access randomness, it should instantiate its own
+        # random.Random object.
+        seed = self.options.randomseed
+
+        if seed is None:
+            seed = random.randrange(sys.maxsize)
+        else:
+            self.log.debug("User supplied random seed {}".format(seed))
+
+        random.seed(seed)
+        self.log.debug("PRNG seed is: {}".format(seed))
 
         self.log.debug('Setting up network thread')
         self.network_thread = NetworkThread()
