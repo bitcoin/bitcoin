@@ -101,7 +101,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
    
-    int32_t cutoffHeight;
+    uint32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
@@ -116,7 +116,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         LOCK(cs_ethsyncheight);
         // cutoff is ~1 week of blocks is about 40K blocks
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-        if(cutoffHeight > 0 && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
+        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain");
             bTxRootError = true;
             return false;
@@ -1561,13 +1561,13 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
-    int32_t cutoffHeight = 0;
+    uint32_t cutoffHeight = 0;
     if(fNewGethSyncHeight > 0)
     {
-
+        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS*3;
         // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
-        cutoffHeight = fNewGethSyncHeight - (MAX_ETHEREUM_TX_ROOTS*3);
-        if(cutoffHeight < 0){
+        cutoffHeight = fNewGethSyncHeight - nCutoffHeight;
+        if(fNewGethSyncHeight < nCutoffHeight){
             LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
             return true;
         }
@@ -1632,7 +1632,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     nKeyIndex = *setIt;
     setIt++;
     // we should have atleast MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
-    if(nKeyIndex > nKeyCutoff){
+    if(fGethCurrentHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
     }
     // find sequence gaps in sorted key set 
