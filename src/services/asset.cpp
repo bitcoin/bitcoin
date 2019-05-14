@@ -349,7 +349,7 @@ bool FlushSyscoinDBs() {
 	 }
      if (pethereumtxrootsdb != nullptr)
      {
-        if(!pethereumtxrootsdb->PruneTxRoots())
+        if(!pethereumtxrootsdb->PruneTxRoots(fGethCurrentHeight))
         {
             LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
             ret = false;
@@ -2293,10 +2293,16 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
                 }.ToString());
     string status = params[0].get_str();
     int highestBlock = params[1].get_int();
-    
+    const uint32_t nGethOldHeight = fGethCurrentHeight;
+    UniValue ret(UniValue::VOBJ);
+     UniValue retArray(UniValue::VARR);
     if(highestBlock > 0){
-        LOCK(cs_ethsyncheight);
-        fGethSyncHeight = highestBlock;
+        if(!pethereumtxrootsdb->PruneTxRoots(highestBlock))
+        {
+            LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
+            ret.pushKV("missing_blocks", retArray);
+            return ret;
+        }
     }
     std::vector<std::pair<uint32_t, uint32_t> > vecMissingBlockRanges;
     
@@ -2307,14 +2313,14 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     if(fGethSynced){
         pethereumtxrootsdb->AuditTxRootDB(vecMissingBlockRanges);
     }
-    UniValue retArray(UniValue::VARR);
+   
     for(const auto& range: vecMissingBlockRanges){
         UniValue retRange(UniValue::VOBJ);
         retRange.pushKV("from", (int)range.first);
         retRange.pushKV("to", (int)range.second);
         retArray.push_back(retRange);
     }
-    UniValue ret(UniValue::VOBJ);
+    LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     ret.pushKV("missing_blocks", retArray);
     return ret;
 }
@@ -2351,19 +2357,12 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
 
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
-    const uint32_t nGethOldHeight = fGethCurrentHeight;
+    
     for(size_t i =0;i<headerArray.size();i++){
         const UniValue &tupleArray = headerArray[i].get_array();
         if(tupleArray.size() != 3)
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 3"));
         uint32_t nHeight = (uint32_t)tupleArray[0].get_int();
-        {
-            LOCK(cs_ethsyncheight);
-            if(nHeight > fGethSyncHeight)
-                fGethSyncHeight = nHeight;
-        }
-        if(nHeight > fGethCurrentHeight)
-            fGethCurrentHeight = nHeight;
         string txRoot = tupleArray[1].get_str();
         boost::erase_all(txRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
@@ -2372,25 +2371,25 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         const vector<unsigned char> &vchTxReceiptRoot = ParseHex(txReceiptRoot);       
         txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(make_pair(vchTxRoot, vchTxReceiptRoot)));
     } 
-    bool res = pethereumtxrootsdb->FlushWrite(txRootMap) && pethereumtxrootsdb->PruneTxRoots();
+    bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
     
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", res? "success": "fail");
-    LogPrint(BCLog::SYS, "syscoinsetethheaders old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     return ret;
 }
-bool CEthereumTxRootsDB::PruneTxRoots() {
+bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
+    uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
     std::pair<std::string,uint32_t> key;
     int32_t cutoffHeight;
     {
-        LOCK(cs_ethsyncheight);
+
         // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
-        cutoffHeight = fGethSyncHeight - (MAX_ETHEREUM_TX_ROOTS*3);
+        cutoffHeight = fNewGethSyncHeight - (MAX_ETHEREUM_TX_ROOTS*3);
         if(cutoffHeight < 0){
-            LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fGethSyncHeight);
+            LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
             return true;
         }
     }
@@ -2398,9 +2397,13 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
-       
-            if (pcursor->GetKey(key) && key.first == txRootFlag && key.second < (uint32_t)cutoffHeight) {
-                vecHeightKeys.emplace_back(key.second);
+            if(pcursor->GetKey(key) && key.first == txRootFlag){
+                // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
+                if (key.second < (uint32_t)cutoffHeight || key.second > fNewGethSyncHeight) {
+                    vecHeightKeys.emplace_back(key.second);
+                }
+                else if(key.second > fNewGethCurrentHeight)
+                    fNewGethCurrentHeight = key.second;
             }
             pcursor->Next();
         }
@@ -2408,14 +2411,14 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
+    
+    if(WriteHighestHeight(fNewGethSyncHeight) && WriteCurrentHeight(fNewGethCurrentHeight))
     {
         LOCK(cs_ethsyncheight);
-        WriteHighestHeight(fGethSyncHeight);
-    }
-    
-    WriteCurrentHeight(fGethCurrentHeight);      
-    FlushErase(vecHeightKeys);
-    return true;
+        fGethSyncHeight = fNewGethSyncHeight;
+        fGethCurrentHeight = fNewGethCurrentHeight;
+    }      
+    return FlushErase(vecHeightKeys);
 }
 bool CEthereumTxRootsDB::Init(){
     bool highestHeight = false;
