@@ -68,7 +68,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     return true;       
 }
 
-bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
+bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, bool &bTxRootError)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     // unserialize assetallocation from txn, check for valid
@@ -108,6 +108,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, vchTxRoots)){
         if(ethTxRootShouldExist){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
+            bTxRootError = true;
             return false;
         }
     }  
@@ -117,6 +118,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
         if(cutoffHeight > 0 && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain");
+            bTxRootError = true;
             return false;
         } 
         
@@ -124,6 +126,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
         if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
+            bTxRootError = true;
             return false;
         } 
     }
@@ -332,7 +335,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         nHeight = ::ChainActive().Height()+1;
     std::string errorMessage;
     bool good = true;
-
+    bool bTxRootError = false;
     bOverflow=false;
     if (block.vtx.empty()) {  
         if(tx.IsCoinBase())
@@ -352,11 +355,15 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         else if(IsSyscoinMintTx(tx.nVersion)) 
         {
             errorMessage.clear();
-            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations, vecMintKeys);
+            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
         }
   
-        if (!good || !errorMessage.empty())
-            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, errorMessage);
+        if (!good || !errorMessage.empty()){
+            if(bTxRootError)
+                return state.Error(errorMessage);
+            else
+                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, errorMessage);
+        }
       
         return true;
     }
@@ -392,7 +399,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             else if(IsSyscoinMintTx(tx.nVersion))
             {
                 errorMessage.clear();
-                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys);
+                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
             }
              
                         
@@ -419,8 +426,12 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
                 }
             }
         }        
-        if (!good || !errorMessage.empty())
-            return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
+        if (!good || !errorMessage.empty()){
+            if(bTxRootError)
+                return state.Error(errorMessage);
+            else
+                return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
+        }
     }
     return true;
 }
