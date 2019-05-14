@@ -2229,7 +2229,6 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
-    std::pair<std::string, uint32_t> key;
     uint32_t nKey = 0;
     uint32_t nKeyIndex = 0;
     const uint32_t& nKeyCutoff = fGethCurrentHeight - MAX_ETHEREUM_TX_ROOTS;
@@ -2240,11 +2239,11 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
-            if(!pcursor->GetKey(key) || key.first != txRootFlag){
+            if(!pcursor->GetKey(nKey)){
                  pcursor->Next();
                  continue;
             }
-            setKeys.emplace(std::move(key.second));
+            setKeys.emplace(std::move(nKey));
             pcursor->Next();
         }
         catch (std::exception &e) {
@@ -2382,8 +2381,9 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
     pcursor->SeekToFirst();
     vector<uint32_t> vecHeightKeys;
-    std::pair<std::string,uint32_t> key;
-    int32_t cutoffHeight;
+    uint32_t nKey = 0;
+    int32_t cutoffHeight = 0;
+    if(fNewGethSyncHeight > 0)
     {
 
         // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
@@ -2397,13 +2397,13 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         try {
-            if(pcursor->GetKey(key) && key.first == txRootFlag){
+            if(pcursor->GetKey(nKey)){
                 // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
-                if (key.second < (uint32_t)cutoffHeight || key.second > fNewGethSyncHeight) {
-                    vecHeightKeys.emplace_back(key.second);
+                if (fNewGethSyncHeight > 0 && (nKey < (uint32_t)cutoffHeight || nKey > fNewGethSyncHeight)) {
+                    vecHeightKeys.emplace_back(nKey);
                 }
-                else if(key.second > fNewGethCurrentHeight)
-                    fNewGethCurrentHeight = key.second;
+                else if(nKey > fNewGethCurrentHeight)
+                    fNewGethCurrentHeight = nKey;
             }
             pcursor->Next();
         }
@@ -2411,8 +2411,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
-    
-    if(WriteHighestHeight(fNewGethSyncHeight) && WriteCurrentHeight(fNewGethCurrentHeight))
+
     {
         LOCK(cs_ethsyncheight);
         fGethSyncHeight = fNewGethSyncHeight;
@@ -2421,13 +2420,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     return FlushErase(vecHeightKeys);
 }
 bool CEthereumTxRootsDB::Init(){
-    bool highestHeight = false;
-    {
-        LOCK(cs_ethsyncheight);
-        highestHeight = ReadHighestHeight(fGethSyncHeight);
-    }
-    return highestHeight && ReadCurrentHeight(fGethCurrentHeight);
-    
+    return PruneTxRoots(0);
 }
 bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
     if(vecTXIDs.empty() || !fAssetIndex)
@@ -2448,7 +2441,7 @@ bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     const uint32_t &nLast = vecHeightKeys.back();
     CDBBatch batch(*this);
     for (const auto &key : vecHeightKeys) {
-        batch.Erase(std::make_pair(txRootFlag,key));
+        batch.Erase(key);
     }
     LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
     return WriteBatch(batch);
@@ -2460,7 +2453,7 @@ bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots){
     uint32_t nLast = nFirst;
     CDBBatch batch(*this);
     for (const auto &key : mapTxRoots) {
-        batch.Write(std::make_pair(txRootFlag,key.first), key.second);
+        batch.Write(key.first, key.second);
         nLast = key.first;
     }
     LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
