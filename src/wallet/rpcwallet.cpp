@@ -4464,9 +4464,9 @@ static const CRPCCommand commands[] =
    /* SYSCOIN rpc functions*/
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
     { "syscoin",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","ethereum_destination_address"} },
-    { "syscoin",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleroofpath_hex","witness"} }, 
+    { "syscoin",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","witness"} }, 
     { "syscoin",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
-    { "syscoin",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleroofpath_hex","witness"} },     
+    { "syscoin",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","witness"} },     
     { "syscoin",            "syscointxfund",                    &syscointxfund,                 {"hexstring","address","output_index"}},
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
   
