@@ -136,18 +136,18 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	UniValue r;
-	printf("Running generate_asset_throughput...\n");
-	GenerateBlocks(5, "node1");
-	GenerateBlocks(5, "node3");
+    UniValue r;
+    printf("Running generate_asset_throughput...\n");
+    GenerateBlocks(5, "node1");
+    GenerateBlocks(5, "node3");
     vector<string> vecAssets;
-	// setup senders and receiver node addresses
-	vector<string> senders;
-	vector<string> receivers;
-	senders.push_back("node1");
-	senders.push_back("node2");
-	receivers.push_back("node3");
-	BOOST_CHECK(receivers.size() == 1);
+    // setup senders and receiver node addresses
+    vector<string> senders;
+    vector<string> receivers;
+    senders.push_back("node1");
+    senders.push_back("node2");
+    receivers.push_back("node3");
+    BOOST_CHECK(receivers.size() == 1);
     // user modifiable variables
 
     // for every asset you add numberOfAssetSendsPerBlock tx's effectively
@@ -237,17 +237,17 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));       
     }
 
-	GenerateBlocks(5);
+    GenerateBlocks(5);
 
     // PHASE 6:  SEND ALLOCATIONS TO NEW ALLOCATIONS (UNFUNDED ADDRESSES) USING ZDAG
-	printf("Creating assetallocationsend transactions...\n");
-	int count = 0;
-	int unfoundedAccountIndex = 0;
+    printf("Creating assetallocationsend transactions...\n");
+    int count = 0;
+    int unfoundedAccountIndex = 0;
     int assetAllocationSendIndex = 0;
-	// create vector of signed transactions
+    // create vector of signed transactions
     string assetAllocationSendMany = "";
     int txCount = 0;
-	for(int i =0;i<numAssets;i++){
+    for(int i =0;i<numAssets;i++){
         // send asset to numberOfAssetSendsPerBlock addresses
         string assetAllocationSendMany = "";
         // +1 to account for change output
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         }
         if(vecTX != "["){
             vecTX += "]";
-			BOOST_CHECK_NO_THROW(CallExtRPC(senders[senderIndex++], "tpstestadd", "0," + vecTX));
+            BOOST_CHECK_NO_THROW(CallExtRPC(senders[senderIndex++], "tpstestadd", "0," + vecTX));
         }
         if(senderIndex >= senders.size())
             senderIndex = 0;
@@ -300,14 +300,14 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     }
 
     // PHASE 8:  CALL tpstestadd ON ALL SENDER/RECEIVER NODES WITH A FUTURE TIME
-	// set the start time to 1 second from now (this needs to be profiled, if the tpstestadd setting time to every node exceeds say 500ms then this time should be extended to account for the latency).
-	// rule of thumb if sender count is high (> 25) then profile how long it takes and multiple by 10 and get ceiling of next second needed to send this rpc to every node to have them sync up
+    // set the start time to 1 second from now (this needs to be profiled, if the tpstestadd setting time to every node exceeds say 500ms then this time should be extended to account for the latency).
+    // rule of thumb if sender count is high (> 25) then profile how long it takes and multiple by 10 and get ceiling of next second needed to send this rpc to every node to have them sync up
 
-	// this will set a start time to every node which will send the vector of signed txs to the network
-	int64_t tpstarttime = GetTimeMicros();
-	int microsInSecond = 1000 * 1000;
-	tpstarttime = tpstarttime + 1 * microsInSecond;
-	printf("Adding assetsend transactions to queue on sender nodes...\n");
+    // this will set a start time to every node which will send the vector of signed txs to the network
+    int64_t tpstarttime = GetTimeMicros();
+    int microsInSecond = 1000 * 1000;
+    tpstarttime = tpstarttime + 1 * microsInSecond;
+    printf("Adding assetsend transactions to queue on sender nodes...\n");
     // ensure mnsync isn't doing its thing before the test starts
     for (auto &sender : senders){
         BOOST_CHECK_NO_THROW(CallRPC(sender, "mnsync next", true, false));
@@ -323,52 +323,52 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_NO_THROW(CallRPC(receiver, "mnsync next", true, false));
         BOOST_CHECK_NO_THROW(CallRPC(receiver, "mnsync next", true, false));
     }
-	for (auto &sender : senders){
-		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  boost::lexical_cast<string>(tpstarttime)));
+    for (auto &sender : senders){
+        BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  boost::lexical_cast<string>(tpstarttime)));
         BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
         BOOST_CHECK_EQUAL(find_value(r.get_obj(), "testinitiatetime").get_int64(), tpstarttime);
     }
-	for (auto &receiver : receivers){
-		BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestadd", boost::lexical_cast<string>(tpstarttime)));
+    for (auto &receiver : receivers){
+        BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestadd", boost::lexical_cast<string>(tpstarttime)));
         BOOST_CHECK_EQUAL(find_value(r.get_obj(), "testinitiatetime").get_int64(), tpstarttime);
     }
 
-	// PHASE 9:  WAIT 10 SECONDS + DELAY SET ABOVE (1 SECOND)
-	printf("Waiting 11 seconds as per protocol...\n");
-	// start 11 second wait
-	MilliSleep(11000);
+    // PHASE 9:  WAIT 10 SECONDS + DELAY SET ABOVE (1 SECOND)
+    printf("Waiting 11 seconds as per protocol...\n");
+    // start 11 second wait
+    MilliSleep(11000);
 
     // PHASE 10:  CALL tpstestinfo ON SENDERS AND GET AVERAGE START TIME (TIME SENDERS PUSHED TRANSACTIONS TO THE SOCKETS)
-	// get the elapsed time of each node on how long it took to push the vector of signed txs to the network
-	int64_t avgteststarttime = 0;
-	for (auto &sender : senders) {
-		BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
-		avgteststarttime += find_value(r.get_obj(), "teststarttime").get_int64();
-	}
-	avgteststarttime /= senders.size();
+    // get the elapsed time of each node on how long it took to push the vector of signed txs to the network
+    int64_t avgteststarttime = 0;
+    for (auto &sender : senders) {
+        BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
+        avgteststarttime += find_value(r.get_obj(), "teststarttime").get_int64();
+    }
+    avgteststarttime /= senders.size();
 
     // PHASE 11:  CALL tpstestinfo ON RECEIVERS AND GET AVERAGE RECEIVE TIME, CALCULATE AVERAGE
-	// gather received transfers on the receiver, you can query any receiver node here, in general they all should see the same state after the elapsed time.
-	BOOST_CHECK_NO_THROW(r = CallExtRPC(receivers[0], "tpstestinfo"));
-	UniValue tpsresponse = r.get_obj();
-	UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
+    // gather received transfers on the receiver, you can query any receiver node here, in general they all should see the same state after the elapsed time.
+    BOOST_CHECK_NO_THROW(r = CallExtRPC(receivers[0], "tpstestinfo"));
+    UniValue tpsresponse = r.get_obj();
+    UniValue tpsresponsereceivers = find_value(tpsresponse, "receivers").get_array();
 
-	float totalTime = 0;
-	for (size_t i = 0; i < tpsresponsereceivers.size(); i++) {
-		const UniValue &responseObj = tpsresponsereceivers[i].get_obj();
-		totalTime += find_value(responseObj, "time").get_int64() - avgteststarttime;
-	}
-	// average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
-	totalTime /= tpsresponsereceivers.size();
+    float totalTime = 0;
+    for (size_t i = 0; i < tpsresponsereceivers.size(); i++) {
+        const UniValue &responseObj = tpsresponsereceivers[i].get_obj();
+        totalTime += find_value(responseObj, "time").get_int64() - avgteststarttime;
+    }
+    // average the start time - received time by the number of responses received (usually number of responses should match number of transactions sent beginning of test)
+    totalTime /= tpsresponsereceivers.size();
 
 
     // PHASE 12:  DISPLAY RESULTS
 
-	printf("tpstarttime %lld avgteststarttime %lld totaltime %.2f, num responses %zu\n", tpstarttime, avgteststarttime, totalTime, tpsresponsereceivers.size());
-	for (auto &sender : senders)
-		BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestsetenabled", "false"));
-	for (auto &receiver : receivers)
-		BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestsetenabled", "false"));
+    printf("tpstarttime %lld avgteststarttime %lld totaltime %.2f, num responses %zu\n", tpstarttime, avgteststarttime, totalTime, tpsresponsereceivers.size());
+    for (auto &sender : senders)
+        BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestsetenabled", "false"));
+    for (auto &receiver : receivers)
+        BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestsetenabled", "false"));
     int64_t end = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     const int64_t &startblock = GetTimeMicros();
     printf("creating %d blocks\n", (numAssets/(93*4)) + 2);
@@ -407,17 +407,25 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 BOOST_AUTO_TEST_CASE(generate_syscoinmint)
 {
     UniValue r;
-    printf("Running generate_syscoinmint...\n");      
+    printf("Running generate_syscoinmint...\n");  
+    // txid 0x4c68e1964c994a2c3facef047a83d14bbb0a127a14006f5f51ca7f6c8d219082 on rinkeby    
 	std::string spv_tx_root = "b7bd7593040ca5b230f658d529bddb6beb5b5f0baad3ae1c2bd844f647885c4a";
-	std::string spv_parent_nodes = "f9035af851a0ca9340bba90781b81f3385b7eee298e3e55cb6a2c05b9f43960ae3b648076cf080808080808080a094047daa38d0aed9cecf2ec2ddf40921f875cbc8f314c73841e92a6a2eff1c918080808080808080f901f180a08164f4ff6b1eca79c231e562597d20b6d8bb1f468c59c6ec7124ab1da14d11dca05168f1dae52b7a223b933aa10429a9b37f1a6e7be82dd4f71d72dc4ab8300f9fa06bdb4be7a6cb3faf333c03647b5d4105f5050f481e259e97018f2da7e9846a98a0a35898131ebc4d8c7296e2157905a8711931e8b06d8f1a3fdd4520591aefcda6a002e4ec3017df498e401a672549d2fb459578b2782c33afee631c391b27a99cbfa09ede31da1d6113501b879fa1ac3cc599c6accb151c81b3c3570e35583257a911a014e0026d220deeaaa62497ed5e76b23670dd415eb1cff01996b390e08f09182fa0cc1d629d03c192cae56aa3ba8e9557fd152a3819f6317a00e73c58e648c4298fa05533a6daec2715c4ab23cdf8b555b0446bab8b80e54ec122f990c2f3d6b542a1a052aabf523dbe87e486900b76142a69d02af00e0b692aaae050783a863f13ad70a070ff8ed8be9cc8a23f89f5f9137762f03f0460bb0441ff2e480d6b4be8da7e9ea0fd8182c3c14e0f73ee706e8f57adb42ed33955c615c2f41140134ba07ef3a15ba09efd760f82967b69b89440ffc161aaff5b30f1bfbd241d50324e140f73266dc7a0ff10c05d4ba159dd75fd9e8b9dcd1f280d841c20f172af91b2af6e8b9cbc02eaa0d3091b9e467b9a5fdf02d6067c1536a55f75f758f8aea313153bc90c3bf9f78580f9011020b9010cf901094f843b9aca008307a120945f6e74ba20bf26161612eac8f7e8b3b6c9baaadd80b8a4285c5bc60000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de00000000000000000000002ca080c84e86f9bffe6a33ded8bb9c8be35bf202468c76e586f37bac0295e5ed509ea0250448d451e3126e548293629b63f3dbaa5a884a0d8a8e629722fce8be4095a4";
-	std::string spv_value = "f901094f843b9aca008307a120945f6e74ba20bf26161612eac8f7e8b3b6c9baaadd80b8a4285c5bc60000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de00000000000000000000002ca080c84e86f9bffe6a33ded8bb9c8be35bf202468c76e586f37bac0295e5ed509ea0250448d451e3126e548293629b63f3dbaa5a884a0d8a8e629722fce8be4095a4";
-	std::string spv_path = "0e";
+	std::string spv_tx_parent_nodes = "f9035af851a0ca9340bba90781b81f3385b7eee298e3e55cb6a2c05b9f43960ae3b648076cf080808080808080a094047daa38d0aed9cecf2ec2ddf40921f875cbc8f314c73841e92a6a2eff1c918080808080808080f901f180a08164f4ff6b1eca79c231e562597d20b6d8bb1f468c59c6ec7124ab1da14d11dca05168f1dae52b7a223b933aa10429a9b37f1a6e7be82dd4f71d72dc4ab8300f9fa06bdb4be7a6cb3faf333c03647b5d4105f5050f481e259e97018f2da7e9846a98a0a35898131ebc4d8c7296e2157905a8711931e8b06d8f1a3fdd4520591aefcda6a002e4ec3017df498e401a672549d2fb459578b2782c33afee631c391b27a99cbfa09ede31da1d6113501b879fa1ac3cc599c6accb151c81b3c3570e35583257a911a014e0026d220deeaaa62497ed5e76b23670dd415eb1cff01996b390e08f09182fa0cc1d629d03c192cae56aa3ba8e9557fd152a3819f6317a00e73c58e648c4298fa05533a6daec2715c4ab23cdf8b555b0446bab8b80e54ec122f990c2f3d6b542a1a052aabf523dbe87e486900b76142a69d02af00e0b692aaae050783a863f13ad70a070ff8ed8be9cc8a23f89f5f9137762f03f0460bb0441ff2e480d6b4be8da7e9ea0fd8182c3c14e0f73ee706e8f57adb42ed33955c615c2f41140134ba07ef3a15ba09efd760f82967b69b89440ffc161aaff5b30f1bfbd241d50324e140f73266dc7a0ff10c05d4ba159dd75fd9e8b9dcd1f280d841c20f172af91b2af6e8b9cbc02eaa0d3091b9e467b9a5fdf02d6067c1536a55f75f758f8aea313153bc90c3bf9f78580f9011020b9010cf901094f843b9aca008307a120945f6e74ba20bf26161612eac8f7e8b3b6c9baaadd80b8a4285c5bc60000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de00000000000000000000002ca080c84e86f9bffe6a33ded8bb9c8be35bf202468c76e586f37bac0295e5ed509ea0250448d451e3126e548293629b63f3dbaa5a884a0d8a8e629722fce8be4095a4";
+	std::string spv_tx_value = "f901094f843b9aca008307a120945f6e74ba20bf26161612eac8f7e8b3b6c9baaadd80b8a4285c5bc60000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de00000000000000000000002ca080c84e86f9bffe6a33ded8bb9c8be35bf202468c76e586f37bac0295e5ed509ea0250448d451e3126e548293629b63f3dbaa5a884a0d8a8e629722fce8be4095a4";
+	std::string spv_tx_path = "0e";
+    
+    std::string spv_receipt_root = "d2f2401b91a8625f24508ced119fde56012d5f523ee07f17b769f23f1c817c0c";
+    std::string spv_receipt_parent_nodes = "f90458f851a02134434d523bf63424751820616d62f6ade388009724c1d1f2c892969eb6df4680808080808080a0e58215be848c1293dd381210359d84485553000a82b67410406d183b42adbbdd8080808080808080f901f180a0386f6bdc34e1469a424a4cfac85c62baeffb30f63643b1ea0195dee62527b6efa0c0567cc263d6e94ac00616245a7765dea1d2fbac700f5cca7d738b3df4e6d559a0cccf1990f8e5b36ed8f73a9b5790256cdbe19be4c2e08a8ed184afbf892c3ea3a069fcc61b1885ad084d9a821786f301b5f7110920dc985dbbcfdd22b72148effaa0f448a231ee9d335bffa17f89bda80f93a95b4c40a58edfad30444bb2bbc8328fa085a8314e91e4ea8484edb05ac95cb7a79b9d2b4968911cff68964896a5071cc8a0054c4901dc735415ac95d3641d398b79b191a2ecff84ae86990dae2179a9413ba0e551274c969b8f11966a1192660884c95200273b8be27b4701834f5186da8f35a0abc4c5c9a8a9da18d6973fdd899e3b045491ccaf122d0d2f462fe456005999eba0ccc33f018212af392c211272d5a5f2f5c6e2c7c88cf68b96f9edbb516794e12ca08d840ffeb5042d40372843799b2b9c8f97acf3f883d228cecb5f3de44a5af926a0cd366e7dc3e453a2624c3dfb63ee7880596239460e2de5c4785ed326d889e710a00064dbbbf5e446fc1f71d2afa27867e87c557cbbf98344b48a355ee397671004a02ea034d281cced4241777416600ab751589ad4641f0634ad74392b77aee2708da0d91aff6cb90254a646b46b4cfa91928da80009059b5677977974650fb794919580f9020e20b9020af9020701830f55e4b9010000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000080000000000000000000000000000000000000000000000000000000000000000800000000000000000000001000010000f8fdf8fb945f6e74ba20bf26161612eac8f7e8b3b6c9baaaddf842a0496f2146a902cabfc1b17d4cd1de13001dc9a8e792c8f89ecb7eb3c941bf8344a0000000000000000000000000bd244ffc1e6c64a6732f2b5b123d1e34d43ec341b8a00000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de0000000000000000000000";
+    std::string spv_receipt_value = "f9020701830f55e4b9010000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000080000000000000000000000000000000000000000000000000000000000000000800000000000000000000001000010000f8fdf8fb945f6e74ba20bf26161612eac8f7e8b3b6c9baaaddf842a0496f2146a902cabfc1b17d4cd1de13001dc9a8e792c8f89ecb7eb3c941bf8344a0000000000000000000000000bd244ffc1e6c64a6732f2b5b123d1e34d43ec341b8a00000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de0000000000000000000000";
+    std::string spv_receipt_path = "0e";
+    
     int height = 4189030;
     string newaddress = GetNewFundedAddress("node1");
-    SyscoinMint("node1", newaddress, "3", height, spv_value, spv_tx_root, spv_parent_nodes, spv_path);
+    SyscoinMint("node1", newaddress, "3", height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, spv_receipt_path);
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
 {
+exit(0);
     printf("Running generate_burn_syscoin...\n");
     UniValue r;
     string newaddress = GetNewFundedAddress("node1");

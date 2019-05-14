@@ -437,7 +437,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
-    if (request.fHelp || 9 != params.size())
+    if (request.fHelp || 13 != params.size())
         throw runtime_error(
             RPCHelpMan{"assetallocationmint",
                 "\nMint assetallocation to come back from the bridge\n",
@@ -445,11 +445,15 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees will be taken from the owner address"},
-                    {"blocknumer", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
-                    {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Raw transaction hex of the burn transaction on Ethereum."},
+                    {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
+                    {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
                     {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
-                    {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof."},
-                    {"txmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle root."},
+                    {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
+                    {"txmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction merkle root."},
+                    {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
+                    {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
+                    {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
+                    {"receiptmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction receipt merkle root."},
                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
@@ -458,8 +462,8 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"witness\"")
-                    + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"addressto\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"\"")
+                    HelpExampleCli("assetallocationmint", "\"assetguid\" \"addressto\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"receiptmerkleproofpath\" \"witness\"")
+                    + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"addressto\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"receiptmerkleproofpath\", \"\"")
                 }
             }.ToString());
 
@@ -468,11 +472,18 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CAmount nAmount = AmountFromValue(params[2]);
     uint32_t nBlockNumber = (uint32_t)params[3].get_int();
     
-    string vchValue = params[4].get_str();
+    string vchTxValue = params[4].get_str();
     string vchTxRoot = params[5].get_str();
-    string vchParentNodes = params[6].get_str();
-    string vchPath = params[7].get_str();
-    string strWitness = params[8].get_str();
+    string vchTxParentNodes = params[6].get_str();
+    string vchTxPath = params[7].get_str();
+ 
+    string vchReceiptValue = params[8].get_str();
+    string vchReceiptRoot = params[9].get_str();
+    string vchReceiptParentNodes = params[10].get_str();
+    string vchReceiptPath = params[11].get_str();
+    
+    
+    string strWitness = params[12].get_str();
     if(!fGethSynced){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
     }
@@ -487,11 +498,15 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CMintSyscoin mintSyscoin;
     mintSyscoin.assetAllocationTuple = CAssetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
     mintSyscoin.nValueAsset = nAmount;
-    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
-    mintSyscoin.vchValue = ParseHex(vchValue);
     mintSyscoin.nBlockNumber = nBlockNumber;
-    mintSyscoin.vchParentNodes = ParseHex(vchParentNodes);
-    mintSyscoin.vchPath = ParseHex(vchPath);
+    mintSyscoin.vchTxValue = ParseHex(vchTxValue);
+    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
+    mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
+    mintSyscoin.vchTxPath = ParseHex(vchTxPath);
+    mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
+    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
+    mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
+    mintSyscoin.vchReceiptPath = ParseHex(vchReceiptPath);
     
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
@@ -1208,10 +1223,14 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         entry.pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.pushKV("value", HexStr(mintsyscoin.vchValue));   
-        oSPVProofObj.pushKV("parentnodes", HexStr(mintsyscoin.vchParentNodes)); 
+        oSPVProofObj.pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
+        oSPVProofObj.pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
         oSPVProofObj.pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
-        oSPVProofObj.pushKV("path", HexStr(mintsyscoin.vchPath));  
+        oSPVProofObj.pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
+        oSPVProofObj.pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
+        oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot));
+        oSPVProofObj.pushKV("receiptpath", HexStr(mintsyscoin.vchReceiptPath));  
         oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
         entry.pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
@@ -1239,10 +1258,14 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         entry.pushKV("blockhash", blockhash.GetHex()); 
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.pushKV("value", HexStr(mintsyscoin.vchValue));   
-        oSPVProofObj.pushKV("parentnodes", HexStr(mintsyscoin.vchParentNodes)); 
+        oSPVProofObj.pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
+        oSPVProofObj.pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
         oSPVProofObj.pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
-        oSPVProofObj.pushKV("path", HexStr(mintsyscoin.vchPath));  
+        oSPVProofObj.pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
+        oSPVProofObj.pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
+        oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot));
+        oSPVProofObj.pushKV("receiptpath", HexStr(mintsyscoin.vchReceiptPath));  
         oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
         entry.pushKV("spv_proof", oSPVProofObj); 
         return true;                                                  
