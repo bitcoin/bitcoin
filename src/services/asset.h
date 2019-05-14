@@ -204,27 +204,14 @@ public:
     void Serialize(std::vector<unsigned char>& vchData);
 };
 typedef std::unordered_map<uint32_t, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > EthereumTxRootMap;
-static std::string txRootFlag = "t";
 class CEthereumTxRootsDB : public CDBWrapper {
 public:
     CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
        Init();
     } 
     bool ReadTxRoots(const uint32_t& nHeight, std::pair<std::vector<unsigned char>, std::vector<unsigned char> >& vchTxRoots) {
-        return Read(std::make_pair(txRootFlag,nHeight), vchTxRoots);
+        return Read(nHeight, vchTxRoots);
     } 
-    bool ReadCurrentHeight(uint32_t &nCurrentHeight){
-        return Read("currentheight", nCurrentHeight);
-    }
-    bool WriteCurrentHeight(const uint32_t &nCurrentHeight){
-        return Write("currentheight", nCurrentHeight);
-    }
-    bool ReadHighestHeight(uint32_t &nHighestHeight){
-         return Read("highestheight", nHighestHeight);
-    }
-    bool WriteHighestHeight(const uint32_t &nHighestHeight){
-        return Write("highestheight", nHighestHeight);
-    }
     void AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges);
     bool Init();
     bool PruneTxRoots(const uint32_t &fNewGethSyncHeight);
