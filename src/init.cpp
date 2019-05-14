@@ -326,6 +326,7 @@ void Shutdown(InitInterfaces& interfaces)
     passetallocationdb.reset();
     passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
+    pethereumtxmintdb.reset();
     passetindexdb.reset();
     pblockindexdb.reset();
 	plockedoutpointsdb.reset();
@@ -1634,6 +1635,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                 passetallocationdb.reset();
                 passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
+                pethereumtxmintdb.reset();
                 passetindexdb.reset();
                 pblockindexdb.reset();
 				plockedoutpointsdb.reset();
@@ -1651,6 +1653,7 @@ bool AppInitMain(InitInterfaces& interfaces)
                     passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
                 }                
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
+                pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset));
                 fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
                 if(fAssetIndex)
