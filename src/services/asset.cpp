@@ -734,18 +734,22 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
 }
 UniValue syscoinmint(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 8 != params.size())
+	if (request.fHelp || 12 != params.size())
 		throw runtime_error(
                 RPCHelpMan{"syscoinmint",
                 "\nMint syscoin to come back from the ethereum bridge\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to mint.  Note that fees are applied on top.  It is not inclusive of fees"},
-                    {"blocknumer", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
-                    {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block."},
+                    {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
+                    {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
                     {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
-                    {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof."},
-                    {"txmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle root."},
+                    {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
+                    {"txmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction merkle root."},
+                    {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
+                    {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
+                    {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
+                    {"receiptmerkleroofpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the transaction receipt merkle root."},
                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
                 },
                 RPCResult{
@@ -754,23 +758,25 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"\"")
-                    + HelpExampleRpc("syscoinmint","\"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof\", \"txmerkleproofpath\", \"\"")
+                    HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"receiptmerkleproofpath\"")
+                    + HelpExampleRpc("syscoinmint","\"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof\", \"txmerkleproofpath\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"receiptmerkleproofpath\", \"\"")
                 }
                 }.ToString());
 
 	string vchAddress = params[0].get_str();
 	CAmount nAmount = AmountFromValue(params[1]);
     uint32_t nBlockNumber = (uint32_t)params[2].get_int();
-    string vchValue = params[3].get_str();
-    boost::erase_all(vchValue, "'");
+    string vchTxValue = params[3].get_str();
     string vchTxRoot = params[4].get_str();
-    boost::erase_all(vchTxRoot, "'");
-    string vchParentNodes = params[5].get_str();
-    boost::erase_all(vchParentNodes, "'");
-    string vchPath = params[6].get_str();
-    boost::erase_all(vchPath, "'");
-    string strWitnessAddress = params[7].get_str();
+    string vchTxParentNodes = params[5].get_str();
+    string vchTxPath = params[6].get_str();
+ 
+    string vchReceiptValue = params[7].get_str();
+    string vchReceiptRoot = params[8].get_str();
+    string vchReceiptParentNodes = params[9].get_str();
+    string vchReceiptPath = params[10].get_str();
+    
+    string strWitnessAddress = params[11].get_str();
     
 	vector<CRecipient> vecSend;
 	const CTxDestination &dest = DecodeDestination(vchAddress);
@@ -781,12 +787,16 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
     }
 
     CMintSyscoin mintSyscoin;
-    mintSyscoin.vchValue = ParseHex(vchValue);
-    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
     mintSyscoin.nBlockNumber = nBlockNumber;
-    mintSyscoin.vchParentNodes = ParseHex(vchParentNodes);
-    mintSyscoin.vchPath = ParseHex(vchPath);
-    
+    mintSyscoin.vchTxValue = ParseHex(vchTxValue);
+    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
+    mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
+    mintSyscoin.vchTxPath = ParseHex(vchTxPath);
+    mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
+    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
+    mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
+    mintSyscoin.vchReceiptPath = ParseHex(vchReceiptPath);
+       
     vector<unsigned char> data;
     mintSyscoin.Serialize(data);
     
@@ -2320,11 +2330,12 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
                             {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of [block number, tx root] ",
                                 {
                                     {"block_number", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The block height number"},
-                                    {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX root of the block height"}
+                                    {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX root of the block height"},
+                                    {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX Receipt root of the block height"}
                                 }
                             }
                         },
-                        "[block number, txroot] ..."
+                        "[block number, txroot, txreceiptroot] ..."
                     }
                 },
                 RPCResult{
@@ -2333,8 +2344,8 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
                 "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-                    + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+                    HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+                    + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
                 }
             }.ToString());  
 
@@ -2343,8 +2354,8 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     const uint32_t nGethOldHeight = fGethCurrentHeight;
     for(size_t i =0;i<headerArray.size();i++){
         const UniValue &tupleArray = headerArray[i].get_array();
-        if(tupleArray.size() != 2)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroot tuple, should be size of 2"));
+        if(tupleArray.size() != 3)
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 3"));
         uint32_t nHeight = (uint32_t)tupleArray[0].get_int();
         {
             LOCK(cs_ethsyncheight);
@@ -2356,7 +2367,10 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         string txRoot = tupleArray[1].get_str();
         boost::erase_all(txRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
-        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(vchTxRoot));
+        string txReceiptRoot = tupleArray[2].get_str();
+        boost::erase_all(txReceiptRoot, "0x");  // strip 0x
+        const vector<unsigned char> &vchTxReceiptRoot = ParseHex(txReceiptRoot);       
+        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(make_pair(vchTxRoot, vchTxReceiptRoot)));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap) && pethereumtxrootsdb->PruneTxRoots();
     

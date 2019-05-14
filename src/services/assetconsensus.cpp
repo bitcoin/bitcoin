@@ -88,15 +88,18 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Failed to read from asset DB");
         return false;
     }
+    
+   
+    
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
-    std::vector<unsigned char> vchTxRoot;
+    std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
    
     int32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoot(mintSyscoin.nBlockNumber, vchTxRoot)){
+    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, vchTxRoots)){
         if(ethTxRootShouldExist){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
             return false;
@@ -118,38 +121,78 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         } 
     }
     
+     // check transaction receipt validity
+
+    const std::vector<unsigned char> &vchReceiptParentNodes = mintSyscoin.vchReceiptParentNodes;
+    dev::RLP rlpReceiptParentNodes(&vchReceiptParentNodes);
+
+    const std::vector<unsigned char> &vchReceiptValue = mintSyscoin.vchReceiptValue;
+    dev::RLP rlpReceiptValue(&vchReceiptValue);
     
-    dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
-    if(!vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoot){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
+    if (!rlpReceiptValue.isList()){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Transaction Receipt RLP must be a list");
+        return false;
+    }
+    if (rlpReceiptValue.itemCount() != 4){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Transaction Receipt RLP invalid item count");
         return false;
     } 
-    const std::vector<unsigned char> &vchParentNodes = mintSyscoin.vchParentNodes;
-    dev::RLP rlpParentNodes(&vchParentNodes);
-    const std::vector<unsigned char> &vchValue = mintSyscoin.vchValue;
-    dev::RLP rlpValue(&vchValue);
-    const std::vector<unsigned char> &vchPath = mintSyscoin.vchPath;
-    if(!VerifyProof(&vchPath, rlpValue, rlpParentNodes, rlpTxRoot)){
+    const uint64_t &nStatus = rlpReceiptValue[0].toInt<uint64_t>(dev::RLP::VeryStrict);
+    if (nStatus != 1){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Transaction Receipt showing invalid status, make sure transaction was accepted by Ethereum EVM");
+        return false;
+    } 
+
+     
+    // check transaction spv proofs
+    dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
+    dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
+
+    if(!vchTxRoots.first.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.first){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
+        return false;
+    }
+
+    if(!vchTxRoots.second.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.second){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Receipt Roots");
+        return false;
+    } 
+    // verify receipt proof
+    const std::vector<unsigned char> &vchReceiptPath = mintSyscoin.vchReceiptPath;
+    if(!VerifyProof(&vchReceiptPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not verify ethereum transaction receipt using SPV proof");
+        return false;
+    } 
+    
+    
+    const std::vector<unsigned char> &vchTxParentNodes = mintSyscoin.vchTxParentNodes;
+    dev::RLP rlpTxParentNodes(&vchTxParentNodes);
+    const std::vector<unsigned char> &vchTxValue = mintSyscoin.vchTxValue;
+    dev::RLP rlpTxValue(&vchTxValue);
+    const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
+    
+    // verify transaction proof
+    if(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot)){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not verify ethereum transaction using SPV proof");
         return false;
     } 
-    if (!rlpValue.isList()){
+    if (!rlpTxValue.isList()){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Transaction RLP must be a list");
         return false;
     }
-    if (rlpValue.itemCount() < 6){
+    if (rlpTxValue.itemCount() < 6){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Transaction RLP invalid item count");
         return false;
     }        
-    if (!rlpValue[5].isData()){
+    if (!rlpTxValue[5].isData()){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Transaction data RLP must be an array");
         return false;
     }        
-    if (rlpValue[3].isEmpty()){
+    if (rlpTxValue[3].isEmpty()){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction receiver");
         return false;
     }                       
-    const dev::Address &address160 = rlpValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
+    const dev::Address &address160 = rlpTxValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
     if(tx.nVersion == SYSCOIN_TX_VERSION_MINT && Params().GetConsensus().vchSYSXContract != address160.asBytes()){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Receiver not the expected SYSX contract address");
         return false;
@@ -161,7 +204,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     
     CAmount outputAmount;
     uint32_t nAsset = 0;
-    const std::vector<unsigned char> &rlpBytes = rlpValue[5].toBytes(dev::RLP::VeryStrict);
+    const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     CWitnessAddress witnessAddress;
     if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, rlpBytes, outputAmount, nAsset, witnessAddress)){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not parse and validate transaction data");

@@ -61,12 +61,12 @@ BOOST_AUTO_TEST_CASE(ethspv_valid)
 
         const std::vector<unsigned char> &vchTxRoot = ParseHex(spv_tx_root);
         dev::RLP rlpTxRoot(&vchTxRoot);
-        const std::vector<unsigned char> &vchParentNodes = ParseHex(spv_parent_nodes);
-        dev::RLP rlpParentNodes(&vchParentNodes);
-        const std::vector<unsigned char> &vchValue = ParseHex(spv_value);
-        dev::RLP rlpValue(&vchValue);
-        const std::vector<unsigned char> &vchPath = ParseHex(spv_path);
-        BOOST_CHECK(VerifyProof(&vchPath, rlpValue, rlpParentNodes, rlpTxRoot));
+        const std::vector<unsigned char> &vchTxParentNodes = ParseHex(spv_parent_nodes);
+        dev::RLP rlpTxParentNodes(&vchTxParentNodes);
+        const std::vector<unsigned char> &vchTxValue = ParseHex(spv_value);
+        dev::RLP rlpTxValue(&vchTxValue);
+        const std::vector<unsigned char> &vchTxPath = ParseHex(spv_path);
+        BOOST_CHECK(VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot));
         }
     }
 }
@@ -99,12 +99,12 @@ BOOST_AUTO_TEST_CASE(ethspv_invalid)
 
             const std::vector<unsigned char> &vchTxRoot = ParseHex(spv_tx_root);
             dev::RLP rlpTxRoot(&vchTxRoot);
-            const std::vector<unsigned char> &vchParentNodes = ParseHex(spv_parent_nodes);
-            dev::RLP rlpParentNodes(&vchParentNodes);
-            const std::vector<unsigned char> &vchValue = ParseHex(spv_value);
-            dev::RLP rlpValue(&vchValue);
-            const std::vector<unsigned char> &vchPath = ParseHex(spv_path);
-            BOOST_CHECK(!VerifyProof(&vchPath, rlpValue, rlpParentNodes, rlpTxRoot));
+            const std::vector<unsigned char> &vchTxParentNodes = ParseHex(spv_parent_nodes);
+            dev::RLP rlpTxParentNodes(&vchTxParentNodes);
+            const std::vector<unsigned char> &vchTxValue = ParseHex(spv_value);
+            dev::RLP rlpTxValue(&vchTxValue);
+            const std::vector<unsigned char> &vchTxPath = ParseHex(spv_path);
+            BOOST_CHECK(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot));
         }
     }
 }

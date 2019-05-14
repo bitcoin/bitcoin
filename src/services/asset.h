@@ -163,11 +163,16 @@ public:
 class CMintSyscoin {
 public:
     CAssetAllocationTuple assetAllocationTuple;
-    std::vector<unsigned char> vchValue;
-    std::vector<unsigned char> vchParentNodes;
+    std::vector<unsigned char> vchTxValue;
+    std::vector<unsigned char> vchTxParentNodes;
     std::vector<unsigned char> vchTxRoot;
+    std::vector<unsigned char> vchTxPath;
+    std::vector<unsigned char> vchReceiptValue;
+    std::vector<unsigned char> vchReceiptParentNodes;
+    std::vector<unsigned char> vchReceiptRoot;
+    std::vector<unsigned char> vchReceiptPath;   
     uint32_t nBlockNumber;
-    std::vector<unsigned char> vchPath;
+    
     CAmount nValueAsset;
     CMintSyscoin() {
         SetNull();
@@ -179,29 +184,34 @@ public:
     ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {      
-        READWRITE(vchValue);
-        READWRITE(vchParentNodes);
-        READWRITE(nBlockNumber);
+        READWRITE(vchTxValue);
+        READWRITE(vchTxParentNodes);
         READWRITE(vchTxRoot);
-        READWRITE(vchPath);   
+        READWRITE(vchTxPath);   
+        READWRITE(vchReceiptValue);
+        READWRITE(vchReceiptParentNodes);
+        READWRITE(vchReceiptRoot);
+        READWRITE(vchReceiptPath);        
+        READWRITE(nBlockNumber);
+
         READWRITE(assetAllocationTuple);  
         READWRITE(nValueAsset);  
     }
-    inline void SetNull() { nValueAsset = 0; assetAllocationTuple.SetNull(); vchTxRoot.clear(); vchValue.clear(); vchParentNodes.clear(); nBlockNumber = 0; vchPath.clear(); }
-    inline bool IsNull() const { return (vchValue.empty()); }
+    inline void SetNull() { nValueAsset = 0; assetAllocationTuple.SetNull(); vchTxRoot.clear(); vchTxValue.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); vchReceiptRoot.clear(); vchReceiptValue.clear(); vchReceiptParentNodes.clear(); vchReceiptPath.clear(); nBlockNumber = 0;  }
+    inline bool IsNull() const { return (vchTxValue.empty() && vchReceiptValue.empty()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     void Serialize(std::vector<unsigned char>& vchData);
 };
-typedef std::unordered_map<uint32_t, std::vector<unsigned char> > EthereumTxRootMap;
+typedef std::unordered_map<uint32_t, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > EthereumTxRootMap;
 static std::string txRootFlag = "t";
 class CEthereumTxRootsDB : public CDBWrapper {
 public:
     CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
        Init();
     } 
-    bool ReadTxRoot(const uint32_t& nHeight, std::vector<unsigned char>& vchTxRoot) {
-        return Read(std::make_pair(txRootFlag,nHeight), vchTxRoot);
+    bool ReadTxRoots(const uint32_t& nHeight, std::pair<std::vector<unsigned char>, std::vector<unsigned char> >& vchTxRoots) {
+        return Read(std::make_pair(txRootFlag,nHeight), vchTxRoots);
     } 
     bool ReadCurrentHeight(uint32_t &nCurrentHeight){
         return Read("currentheight", nCurrentHeight);
