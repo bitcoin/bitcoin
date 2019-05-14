@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
         if(nCount > 0)
             roots += ",";
         roots += strprintf("[%d,\\\"a\\\",\\\"a\\\"]", i);
-        if(nCount > 0 && (nCount % 10000) == 0){
+        if(nCount > 0 && (nCount % 4000) == 0){
             BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[" + roots + "]\""));
             roots = "";
             nCount = 0;
