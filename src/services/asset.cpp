@@ -687,7 +687,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     
 	// pass back new raw transaction
 	UniValue res(UniValue::VOBJ);
-	res.pushKV("hex", EncodeHexTx(CTransaction(tx)));
+	res.__pushKV("hex", EncodeHexTx(CTransaction(tx)));
 	return res;
 }
 UniValue syscoinburn(const JSONRPCRequest& request) {
@@ -911,9 +911,9 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
         nHeight = blockindex->nHeight;
     }
 
-    entry.pushKV("txtype", "syscoinburn");
-    entry.pushKV("txid", txHash.GetHex());
-    entry.pushKV("height", nHeight);
+    entry.__pushKV("txtype", "syscoinburn");
+    entry.__pushKV("txid", txHash.GetHex());
+    entry.__pushKV("height", nHeight);
     UniValue oOutputArray(UniValue::VARR);
     for (const auto& txout : tx.vout){
         CTxDestination address;
@@ -921,15 +921,15 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
             continue;
         UniValue oOutputObj(UniValue::VOBJ);
         const string& strAddress = EncodeDestination(address);
-        oOutputObj.pushKV("address", strAddress);
-        oOutputObj.pushKV("amount", ValueFromAmount(txout.nValue));   
+        oOutputObj.__pushKV("address", strAddress);
+        oOutputObj.__pushKV("amount", ValueFromAmount(txout.nValue));   
         oOutputArray.push_back(oOutputObj);
     }
     
-    entry.pushKV("outputs", oOutputArray);
-    entry.pushKV("total", ValueFromAmount(tx.GetValueOut()));
-    entry.pushKV("blockhash", blockhash.GetHex()); 
-    entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+    entry.__pushKV("outputs", oOutputArray);
+    entry.__pushKV("total", ValueFromAmount(tx.GetValueOut()));
+    entry.__pushKV("blockhash", blockhash.GetHex()); 
+    entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 int GenerateSyscoinGuid()
@@ -1142,7 +1142,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 	UniValue res = syscointxfund_helper(vchAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
-	res.pushKV("asset_guid", (int)newAsset.nAsset);
+	res.__pushKV("asset_guid", (int)newAsset.nAsset);
 	return res;
 }
 UniValue addressbalance(const JSONRPCRequest& request) {
@@ -1166,7 +1166,7 @@ UniValue addressbalance(const JSONRPCRequest& request) {
             }.ToString());
     string address = params[0].get_str();
     UniValue res(UniValue::VOBJ);
-    res.pushKV("amount", ValueFromAmount(getaddressbalance(address)));
+    res.__pushKV("amount", ValueFromAmount(getaddressbalance(address)));
     return res;
 }
 
@@ -1339,8 +1339,8 @@ UniValue assetsend(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    outputObj.pushKV("address", params[1].get_str());
-    outputObj.pushKV("amount", ValueFromAmount(nAmount));
+    outputObj.__pushKV("address", params[1].get_str());
+    outputObj.__pushKV("amount", ValueFromAmount(nAmount));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0].get_int());
@@ -1495,16 +1495,16 @@ UniValue assetinfo(const JSONRPCRequest& request) {
 }
 bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
-    oAsset.pushKV("asset_guid", (int)asset.nAsset);
-    oAsset.pushKV("txid", asset.txHash.GetHex());
-	oAsset.pushKV("publicvalue", stringFromVch(asset.vchPubData));
-	oAsset.pushKV("address", asset.witnessAddress.ToString());
-    oAsset.pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
-	oAsset.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
-	oAsset.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
-	oAsset.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
-	oAsset.pushKV("update_flags", asset.nUpdateFlags);
-	oAsset.pushKV("precision", (int)asset.nPrecision);
+    oAsset.__pushKV("asset_guid", (int)asset.nAsset);
+    oAsset.__pushKV("txid", asset.txHash.GetHex());
+	oAsset.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
+	oAsset.__pushKV("address", asset.witnessAddress.ToString());
+    oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
+	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+	oAsset.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+	oAsset.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+	oAsset.__pushKV("update_flags", asset.nUpdateFlags);
+	oAsset.__pushKV("precision", (int)asset.nPrecision);
 	return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
@@ -1527,35 +1527,36 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     }
         	
 
-	entry.pushKV("txtype", assetFromTx(tx.nVersion));
-	entry.pushKV("asset_guid", (int)asset.nAsset);
-    entry.pushKV("txid", txHash.GetHex());
-    entry.pushKV("height", nHeight);
+	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
+	entry.__pushKV("asset_guid", (int)asset.nAsset);
+    entry.__pushKV("txid", txHash.GetHex());
+    entry.
+    __pushKV("height", nHeight);
     
 	if (!asset.vchPubData.empty())
-		entry.pushKV("publicvalue", stringFromVch(asset.vchPubData));
+		entry.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
 
 	if (!asset.vchContract.empty())
-		entry.pushKV("contract", "0x" + HexStr(asset.vchContract));
+		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
 
 	if (!asset.witnessAddress.IsNull())
-		entry.pushKV("sender", asset.witnessAddress.ToString());
+		entry.__pushKV("sender", asset.witnessAddress.ToString());
 
 	if (!asset.witnessAddressTransfer.IsNull())
-		entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
+		entry.__pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
 
 	if (asset.nUpdateFlags > 0)
-		entry.pushKV("update_flags", asset.nUpdateFlags);
+		entry.__pushKV("update_flags", asset.nUpdateFlags);
 
 	if (asset.nBalance > 0)
-		entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+		entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
 
 	if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
-		entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
-        entry.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
-		entry.pushKV("precision", asset.nPrecision);
+		entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+		entry.__pushKV("precision", asset.nPrecision);
 	}
-    entry.pushKV("blockhash", blockhash.GetHex());  
+    entry.__pushKV("blockhash", blockhash.GetHex());  
     return true;
 }
 bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry)
@@ -1563,35 +1564,35 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
     CAsset asset(tx);
     if(asset.IsNull())
         return false;
-    entry.pushKV("txtype", assetFromTx(tx.nVersion));
-    entry.pushKV("asset_guid", (int)asset.nAsset);
-    entry.pushKV("txid", tx.GetHash().GetHex());
-    entry.pushKV("height", nHeight);
+    entry.__pushKV("txtype", assetFromTx(tx.nVersion));
+    entry.__pushKV("asset_guid", (int)asset.nAsset);
+    entry.__pushKV("txid", tx.GetHash().GetHex());
+    entry.__pushKV("height", nHeight);
 
     if(!asset.vchPubData.empty())
-        entry.pushKV("publicvalue", stringFromVch(asset.vchPubData));
+        entry.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
         
     if(!asset.vchContract.empty())
-        entry.pushKV("contract", "0x"+HexStr(asset.vchContract));
+        entry.__pushKV("contract", "0x"+HexStr(asset.vchContract));
         
     if(!asset.witnessAddress.IsNull())
-        entry.pushKV("sender", asset.witnessAddress.ToString());
+        entry.__pushKV("sender", asset.witnessAddress.ToString());
 
     if(!asset.witnessAddressTransfer.IsNull())
-        entry.pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
+        entry.__pushKV("address_transfer", asset.witnessAddressTransfer.ToString());
 
     if(asset.nUpdateFlags > 0)
-        entry.pushKV("update_flags", asset.nUpdateFlags);
+        entry.__pushKV("update_flags", asset.nUpdateFlags);
               
     if (asset.nBalance > 0)
-        entry.pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
+        entry.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
 
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE){
-        entry.pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
-        entry.pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
-        entry.pushKV("precision", asset.nPrecision);  
+        entry.__pushKV("total_supply", ValueFromAssetAmount(asset.nTotalSupply, asset.nPrecision));
+        entry.__pushKV("max_supply", ValueFromAssetAmount(asset.nMaxSupply, asset.nPrecision));
+        entry.__pushKV("precision", asset.nPrecision);  
     }  
-    entry.pushKV("blockhash", blockhash.GetHex()); 
+    entry.__pushKV("blockhash", blockhash.GetHex()); 
     return true;
 }
 UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
@@ -1918,10 +1919,10 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         if(!ReadPayload(txid, oObj))
             continue;
         if(pblockindexdb->ReadBlockHash(txid, block_hash)){
-            oObj.pushKV("blockhash", block_hash.GetHex());        
+            oObj.__pushKV("blockhash", block_hash.GetHex());        
         }
         else
-            oObj.pushKV("blockhash", "");
+            oObj.__pushKV("blockhash", "");
            
         oRes.push_back(oObj);
     }
@@ -1960,7 +1961,7 @@ UniValue getblockhashbytxid(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
     }
     UniValue res{UniValue::VOBJ};
-    res.pushKV("hex", pblockindex->GetBlockHash().GetHex());
+    res.__pushKV("hex", pblockindex->GetBlockHash().GetHex());
     return res;
 }
 UniValue syscoingetspvproof(const JSONRPCRequest& request)
@@ -2015,9 +2016,9 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
     ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
     const std::string &rawTx = EncodeHexTx(CTransaction(*tx), PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
-    res.pushKV("transaction",rawTx);
+    res.__pushKV("transaction",rawTx);
     // get first 80 bytes of header (non auxpow part)
-    res.pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));
+    res.__pushKV("header", HexStr(ssBlock.begin(), ssBlock.begin()+80));
     UniValue siblings(UniValue::VARR);
     // store the index of the transaction we are looking for within the block
     int nIndex = 0;
@@ -2027,8 +2028,8 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
             nIndex = i;
         siblings.push_back(txHashFromBlock.GetHex());
     }
-    res.pushKV("siblings", siblings);
-    res.pushKV("index", nIndex);
+    res.__pushKV("siblings", siblings);
+    res.__pushKV("index", nIndex);
     UniValue assetVal;
     try{
         UniValue paramsDecode(UniValue::VARR);
@@ -2046,11 +2047,11 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
              throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
         if(asset.vchContract.empty())
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
-         res.pushKV("contract", HexStr(asset.vchContract));    
+         res.__pushKV("contract", HexStr(asset.vchContract));    
                    
     }
     else{
-        res.pushKV("contract", HexStr(Params().GetConsensus().vchSYSXContract));
+        res.__pushKV("contract", HexStr(Params().GetConsensus().vchSYSXContract));
     }
     return res;
 }
@@ -2190,7 +2191,7 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
     if(!StopGethNode(gethPID))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop Geth"));
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("status", "success");
+    ret.__pushKV("status", "success");
     return ret;
 }
 UniValue syscoinstartgeth(const JSONRPCRequest& request) {
@@ -2224,7 +2225,7 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("status", "success");
+    ret.__pushKV("status", "success");
     return ret;
 }
 UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
@@ -2258,7 +2259,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         if(!pethereumtxrootsdb->PruneTxRoots(highestBlock))
         {
             LogPrintf("Failed to write to prune Ethereum TX Roots database!\n");
-            ret.pushKV("missing_blocks", retArray);
+            ret.__pushKV("missing_blocks", retArray);
             return ret;
         }
     }
@@ -2274,12 +2275,12 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
    
     for(const auto& range: vecMissingBlockRanges){
         UniValue retRange(UniValue::VOBJ);
-        retRange.pushKV("from", (int)range.first);
-        retRange.pushKV("to", (int)range.second);
+        retRange.__pushKV("from", (int)range.first);
+        retRange.__pushKV("to", (int)range.second);
         retArray.push_back(retRange);
     }
     LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
-    ret.pushKV("missing_blocks", retArray);
+    ret.__pushKV("missing_blocks", retArray);
     return ret;
 }
 UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
@@ -2332,7 +2333,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
     
     UniValue ret(UniValue::VOBJ);
-    ret.pushKV("status", res? "success": "fail");
+    ret.__pushKV("status", res? "success": "fail");
     return ret;
 }
 bool CAssetIndexDB::FlushErase(const std::vector<uint256> &vecTXIDs){
