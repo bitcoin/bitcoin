@@ -5,6 +5,10 @@ The package "mylib" will be used here as an example
 
 General tips:
 - mylib_foo is written as $(package)_foo in order to make recipes more similar.
+- Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
+  those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
+  need to be shared and should be built statically whenever possible. See
+  [below](#secondary-dependencies) for more details.
 
 ## Identifiers
 Each package is required to define at least these variables:
@@ -146,3 +150,22 @@ $($(package)_config_opts) will be appended.
 Most autotools projects can be properly staged using:
 
     $(MAKE) DESTDIR=$($(package)_staging_dir) install
+
+## Secondary dependencies:
+
+Secondary dependency packages relative to the bitcoin binaries/libraries (i.e.
+those not in `ALLOWED_LIBRARIES` in `contrib/devtools/symbol-check.py`) don't
+need to be shared and should be built statically whenever possible. This
+improves general build reliability as illustrated by the following example:
+
+When linking an executable against a shared library `libprimary` that has its
+own shared dependency `libsecondary`, we may need to specify the path to
+`libsecondary` on the link command using the `-rpath/-rpath-link` options, it is
+not sufficient to just say `libprimary`.
+
+For us, it's much easier to just link a static `libsecondary` into a shared
+`libprimary`. Especially because in our case, we are linking against a dummy
+`libprimary` anyway that we'll throw away. We don't care if the end-user has a
+static or dynamic `libseconday`, that's not our concern. With a static
+`libseconday`, when we need to link `libprimary` into our executable, there's no
+dependency chain to worry about as `libprimary` has all the symbols.
