@@ -18,7 +18,7 @@ namespace Platform
     {
     }
 
-    bool PlatformDb::ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor)
+    void PlatformDb::ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor)
     {
         std::unique_ptr<leveldb::Iterator> dbIt(m_db.NewIterator());
 
@@ -29,15 +29,14 @@ namespace Platform
             if (!processor(*dbIt))
             {
                 LogPrintf("%s : Cannot process a platform db record - %s", __func__, dbIt->key().ToString());
-                return false;
+                continue;
             }
         }
 
         HandleError(dbIt->status());
-        return true;
     }
 
-    bool PlatformDb::ProcessNftIndexGutsOnly(std::function<bool(NfTokenIndex)> nftIndexHandler)
+    void PlatformDb::ProcessNftIndexGutsOnly(std::function<bool(NfTokenIndex)> nftIndexHandler)
     {
         std::unique_ptr<leveldb::Iterator> dbIt(m_db.NewIterator());
 
@@ -45,12 +44,14 @@ namespace Platform
         {
             boost::this_thread::interruption_point();
 
-            if (!ProcessNftIndex(*dbIt, nftIndexHandler))
-                return false;
+            if (ProcessNftIndex(*dbIt, nftIndexHandler))
+            {
+                LogPrintf("%s : Cannot process a platform db record - %s", __func__, dbIt->key().ToString());
+                continue;
+            }
         }
 
         HandleError(dbIt->status());
-        return true;
     }
 
     bool PlatformDb::IsNftIndexEmpty()

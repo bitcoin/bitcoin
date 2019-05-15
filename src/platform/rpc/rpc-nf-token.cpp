@@ -130,8 +130,7 @@ namespace Platform
 
         json_spirit::Array nftList;
 
-        auto tokensRange = NfTokensManager::Instance().NftIndexRangeByHeight(height);
-        for (const auto & nftIndex : tokensRange)
+        NfTokensManager::Instance().ProcessNftIndexRangeByHeight(height, [&, verbose](const NfTokenIndex & nftIndex) -> bool
         {
             if (verbose)
             {
@@ -143,7 +142,8 @@ namespace Platform
                 hashObj.push_back(json_spirit::Pair("registrationTxHash", nftIndex.RegTxHash().GetHex()));
                 nftList.push_back(hashObj);
             }
-        }
+            return true;
+        });
 
         return nftList;
     }

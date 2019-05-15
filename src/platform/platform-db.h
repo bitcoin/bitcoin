@@ -43,8 +43,8 @@ namespace Platform
         bool OptimizeRam() const { return m_optSetting == PlatformOpt::OptRam; }
         bool OptimizeSpeed() const { return m_optSetting == PlatformOpt::OptSpeed; }
 
-        bool ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor);
-        bool ProcessNftIndexGutsOnly(std::function<bool(NfTokenIndex)> nftIndexHandler);
+        void ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor);
+        void ProcessNftIndexGutsOnly(std::function<bool(NfTokenIndex)> nftIndexHandler);
         bool ProcessNftIndex(const leveldb::Iterator & dbIt, std::function<bool(NfTokenIndex)> nftIndexHandler);
         bool ProcessNftProtosSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler);
 

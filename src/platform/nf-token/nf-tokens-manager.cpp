@@ -26,10 +26,9 @@ namespace Platform
             return true;
         };
 
-        bool res = false;
         if (PlatformDb::Instance().OptimizeSpeed())
         {
-            res = PlatformDb::Instance().ProcessPlatformDbGuts([&, this](const leveldb::Iterator & dbIt) -> bool
+            PlatformDb::Instance().ProcessPlatformDbGuts([&, this](const leveldb::Iterator & dbIt) -> bool
             {
                 if (!PlatformDb::Instance().ProcessNftProtosSupply(dbIt, protoSupplyHandler))
                 {
@@ -41,18 +40,13 @@ namespace Platform
                 });
             });
         }
-        else /// PlatformDb::Instance().OptimizeRam()
+        else /// PlatformDb::Instance().OptimizeRam() is on
         {
-            res = PlatformDb::Instance().ProcessPlatformDbGuts([&](const leveldb::Iterator & dbIt) -> bool
+            PlatformDb::Instance().ProcessPlatformDbGuts([&](const leveldb::Iterator & dbIt) -> bool
             {
                 PlatformDb::Instance().ProcessNftProtosSupply(dbIt, protoSupplyHandler);
                 return true;
             });
-        }
-
-        if (!res)
-        {
-            throw std::runtime_error("Cannot process Platform DB guts");
         }
     }
 
@@ -125,7 +119,6 @@ namespace Platform
 
     bool NfTokensManager::Contains(uint64_t protocolId, const uint256 & tokenId, int height)
     {
-        // TODO; db.Exists
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
         assert(height >= 0);
@@ -289,19 +282,60 @@ namespace Platform
         return it->second;
     }
 
-    NfTokensManager::NftIndexRange NfTokensManager::FullNftIndexRange() const
+    void NfTokensManager::ProcessFullNftIndexRange(std::function<bool(const NfTokenIndex &)> nftIndexHandler) const
     {
-        //TODO: read from the db if optimized by RAM
-        return m_nfTokensIndexSet;
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            for (const auto & nftIndex : m_nfTokensIndexSet)
+            {
+                if (!nftIndexHandler(nftIndex))
+                    LogPrintf("%s: NFT index processing failed.", __func__);
+            }
+        }
+        else /// PlatformDb::Instance().OptimizeRam() is on
+        {
+            PlatformDb::Instance().ProcessNftIndexGutsOnly([&](NfTokenIndex nftIndex) -> bool
+            {
+                if (!nftIndexHandler(nftIndex))
+                {
+                    LogPrintf("%s: NFT index processing failed.", __func__);
+                    return false;
+                }
+                return true;
+            });
+        }
     }
 
-    NfTokensManager::NftIndexRange NfTokensManager::NftIndexRangeByHeight(int height) const
+    void NfTokensManager::ProcessNftIndexRangeByHeight(int height, std::function<bool(const NfTokenIndex &)> nftIndexHandler) const
     {
-        //TODO: read from the db if optimized by RAM
-        return m_nfTokensIndexSet.get<Tags::Height>().range(
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            NftIndexRange nftIndexRange = m_nfTokensIndexSet.get<Tags::Height>().range(
                     bmx::unbounded,
                     [&](int curHeight) { return curHeight <= height; }
-        );
+                    );
+
+            for (const auto & nftIndex : nftIndexRange)
+            {
+                if (!nftIndexHandler(nftIndex))
+                    LogPrintf("%s: NFT index processing failed.", __func__);
+            }
+        }
+        else /// PlatformDb::Instance().OptimizeRam() is on
+        {
+            PlatformDb::Instance().ProcessNftIndexGutsOnly([&, height](NfTokenIndex nftIndex) -> bool
+            {
+                if (nftIndex.BlockIndex()->nHeight <= height)
+                {
+                    if (!nftIndexHandler(nftIndex))
+                    {
+                        LogPrintf("%s: NFT index processing failed.", __func__);
+                        return false;
+                    }
+                }
+                return true;
+            });
+        }
     }
 
     bool NfTokensManager::Delete(uint64_t protocolId, const uint256 & tokenId)
