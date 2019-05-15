@@ -37,7 +37,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 
 	if (!find_value(r.get_obj(), "inputs").get_array().empty())
 	{
-		printf("This script does not support airdropping input range based assets *yet*\n");
+		tfm::format(std::cout,"This script does not support airdropping input range based assets *yet*\n");
 		return;
 	}
 
@@ -69,7 +69,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
-			printf("strSendAsset #%d, total %s, num txs %d\n", currentTx, ValueFromAmount(nTotalSent).write(), totalTx);
+			tfm::format(std::cout,"strSendAsset #%d, total %s, num txs %d\n", currentTx, ValueFromAmount(nTotalSent).write(), totalTx);
 			SendSnapShotPayment(sendManyString);
 			sendManyString = "";
 			nTotalSent = 0;
@@ -77,7 +77,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 	}
 	if(sendManyString != "") 
 	{
-		printf("FINAL strSendAsset #%d, total %s, num txs %d\n", currentTx, ValueFromAmount(nTotalSent).write(), totalTx);
+		tfm::format(std::cout,"FINAL strSendAsset #%d, total %s, num txs %d\n", currentTx, ValueFromAmount(nTotalSent).write(), totalTx);
 		SendSnapShotPayment(sendManyString);
 
 	}
@@ -113,7 +113,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts, CAmount& nTotal)
         payment.amount = amountInSys1;
 		paymentAmounts.push_back(payment);
     }
-	printf("Read %d total utxo sets, rejected %d, total amount %lld\n", rejectTx+countTx, rejectTx, countTx);
+	tfm::format(std::cout,"Read %d total utxo sets, rejected %d, total amount %lld\n", rejectTx+countTx, rejectTx, countTx);
 }
 bool IsMainNetAlreadyCreated()
 {

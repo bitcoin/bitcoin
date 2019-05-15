@@ -58,10 +58,10 @@ static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash)
         }
         nOnce++;
     }
-    printf("genesis.nTime = %u \n", genesisBlock.nTime);
-    printf("genesis.nNonce = %u \n", genesisBlock.nNonce);
-    printf("Generate hash = %s\n", phash.ToString().c_str());
-    printf("genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
+    tfm::format(std::cout,"genesis.nTime = %u \n", genesisBlock.nTime);
+    tfm::format(std::cout,"genesis.nNonce = %u \n", genesisBlock.nNonce);
+    tfm::format(std::cout,"Generate hash = %s\n", phash.ToString().c_str());
+    tfm::format(std::cout,"genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
 }   
 /**
  * Build the genesis block. Note that the output of its generation

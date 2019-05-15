@@ -36,7 +36,7 @@ void SendSnapShotPayment(const std::string &strSend)
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
 	// generate snapshot payments and let it mature
-	printf("Generating 101 blocks to start the mainnet\n");
+	tfm::format(std::cout,"Generating 101 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(101, "mainnet1");
 	int numberOfTxPerBlock = 250;
 	int totalTx = 0;
@@ -54,7 +54,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
-			printf("strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
+			tfm::format(std::cout,"strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
 			SendSnapShotPayment(sendManyString);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
@@ -63,13 +63,13 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	}
 	if(sendManyString != "") 
 	{
-		printf("FINAL strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
+		tfm::format(std::cout,"FINAL strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
 		SendSnapShotPayment(sendManyString);
 		GenerateMainNetBlocks(1, "mainnet1");
 	}
 
 	GenerateMainNetBlocks(1, "mainnet1");
-	printf("done!\n");
+	tfm::format(std::cout,"done!\n");
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 {
@@ -97,7 +97,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         payment.amount = ValueFromAmount(amountInSys1).write();
 		paymentAmounts.push_back(payment);
     }
-	printf("Read %d total utxo sets, rejected %d, valid %d\n", rejectTx+countTx, rejectTx, countTx);
+	tfm::format(std::cout,"Read %d total utxo sets, rejected %d, valid %d\n", rejectTx+countTx, rejectTx, countTx);
 }
 void SendSnapShotAssetAllocation(const std::string &guid, const std::string &strSend)
 {
@@ -113,7 +113,7 @@ void GenerateAssetAllocationSnapshots(const std::string &guid, const UniValue &a
 	CAmount nTotal  =0;
 	currentTx = 0;
 	std::string sendManyString = "";
-	printf("Sending allocations for asset %s\n", guid.c_str());
+	tfm::format(std::cout,"Sending allocations for asset %s\n", guid.c_str());
 	for(unsigned int i =0;i<assetAllocations.size();i++)
 	{
 		const UniValue& assetAllocationObj = assetAllocations[i].get_obj();
@@ -132,7 +132,7 @@ void GenerateAssetAllocationSnapshots(const std::string &guid, const UniValue &a
 		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
-			printf("strSendMany #%d, total %s, num txs %d\n", currentTx, ValueFromAssetAmount(nTotal, precision).write().c_str(), totalTx);
+			tfm::format(std::cout,"strSendMany #%d, total %s, num txs %d\n", currentTx, ValueFromAssetAmount(nTotal, precision).write().c_str(), totalTx);
 			SendSnapShotAssetAllocation(guid, sendManyString);
 			sendManyString = "";
 			nTotal = 0;
@@ -140,22 +140,22 @@ void GenerateAssetAllocationSnapshots(const std::string &guid, const UniValue &a
 	}
 	if(sendManyString != "") 
 	{
-		printf("FINAL strSendMany #%d, total %s, num txs %d\n", currentTx, ValueFromAssetAmount(nTotal, precision).write().c_str(), totalTx);
+		tfm::format(std::cout,"FINAL strSendMany #%d, total %s, num txs %d\n", currentTx, ValueFromAssetAmount(nTotal, precision).write().c_str(), totalTx);
 		SendSnapShotAssetAllocation(guid, sendManyString);
 	}
 
 	GenerateMainNetBlocks(1, "mainnet1");
-	printf("done!\n");
+	tfm::format(std::cout,"done!\n");
 }
 void GetAssetBalancesAndPrepareAsset()
 {
 	
     UniValue assetBalanceArray = read_json(std::string(json_tests::assetbalances, json_tests::assetbalances + sizeof(json_tests::assetbalances)));
-    printf("Creating and distributing %d assets\n", assetBalanceArray.size());
+    tfm::format(std::cout,"Creating and distributing %d assets\n", assetBalanceArray.size());
 	for (unsigned int idx = 0; idx < assetBalanceArray.size(); idx++) {
 		UniValue r;
 		const std::string &newaddress = GetNewFundedAddress("mainnet1",false);
-		printf("Got funded address %s\n", newaddress.c_str());
+		tfm::format(std::cout,"Got funded address %s\n", newaddress.c_str());
         const UniValue &assetBalances = assetBalanceArray[idx].get_obj();
 		const std::string &address = find_value(assetBalances, "address").get_str();
 		const std::string &symbol = find_value(assetBalances, "symbol").get_str();
@@ -170,10 +170,10 @@ void GetAssetBalancesAndPrepareAsset()
 
 		// string AssetNew(const string& node, const string& address, const string& pubdata = "''", const string& contract="''", const string& precision="8", const string& supply = "1", const string& maxsupply = "10", const string& updateflags = "31", const string& witness = "''", const string& symbol = "SYM",  bool bRegtest = true);
 		std::string guid = AssetNew("mainnet1", newaddress, publicvalue, "''", itostr(nPrecision), total_supply, max_supply, "31", "''", symbol, false);
-		printf("Created asset %s - %s with %d allocations\n", guid.c_str(), symbol.c_str(), paymentAmounts.size());
+		tfm::format(std::cout,"Created asset %s - %s with %d allocations\n", guid.c_str(), symbol.c_str(), paymentAmounts.size());
 		if(paymentAmounts.size() > 0){
 			GenerateAssetAllocationSnapshots(guid, paymentAmounts, nPrecision);
-			printf("Created %d allocations\n", paymentAmounts.size());
+			tfm::format(std::cout,"Created %d allocations\n", paymentAmounts.size());
 		}
 		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "convertaddress " + address, false));
 		const std::string &witnessaddress = find_value(r.get_obj(), "v4address").get_str();
@@ -194,7 +194,7 @@ void generate_snapshot_asset_consistency_check()
 	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
 	UniValue assetAllocationsInvalidatedResults, assetAllocationsNowResults, assetAllocationsValidatedResults;
 	UniValue r;
-	printf("Running generate_snapshot_asset_consistency_check...\n");
+	tfm::format(std::cout,"Running generate_snapshot_asset_consistency_check...\n");
 	GenerateBlocks(5);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getblockcount", false, false));
@@ -243,7 +243,7 @@ void generate_snapshot_asset_consistency_check()
 }
 BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 {
-	printf("Running generate_and_verify_snapshot...\n");
+	tfm::format(std::cout,"Running generate_and_verify_snapshot...\n");
 	std::vector<PaymentAmount> paymentAmounts;
 	if(!IsMainNetAlreadyCreated())
 	{

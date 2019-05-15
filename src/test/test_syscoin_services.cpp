@@ -49,7 +49,7 @@ string LookupURL(const string& node) {
 // SYSCOIN testing setup
 void StartNodes()
 {
-	printf("Stopping any test nodes that are running...\n");
+	tfm::format(std::cout,"Stopping any test nodes that are running...\n");
 	InitNodeURLMap();
 	StopNodes();
     if (boost::filesystem::exists(boost::filesystem::system_complete("node1/regtest")))
@@ -62,7 +62,7 @@ void StartNodes()
 	node2LastBlock = 0;
 	node3LastBlock = 0;
 	//StopMainNetNodes();
-	printf("Starting 3 nodes in a regtest setup...\n");
+	tfm::format(std::cout,"Starting 3 nodes in a regtest setup...\n");
 	StartNode("node1");
     BOOST_CHECK_NO_THROW(CallExtRPC("node1", "generate", "5"));
 	StartNode("node2");
@@ -72,23 +72,23 @@ void StartNodes()
 void StartMainNetNodes()
 {
 	StopMainNetNodes();
-	printf("Starting 2 nodes in mainnet setup...\n");
+	tfm::format(std::cout,"Starting 2 nodes in mainnet setup...\n");
 	StartNode("mainnet1", false);
 	SelectParams(CBaseChainParams::MAIN);
 
 }
 void StopMainNetNodes()
 {
-	printf("Stopping mainnet1..\n");
+	tfm::format(std::cout,"Stopping mainnet1..\n");
 	StopNode("mainnet1", false);
-	printf("Done!\n");
+	tfm::format(std::cout,"Done!\n");
 }
 void StopNodes()
 {
 	StopNode("node1");
 	StopNode("node2");
 	StopNode("node3");
-	printf("Done!\n");
+	tfm::format(std::cout,"Done!\n");
 }
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs, bool reindex)
 {
@@ -102,19 +102,19 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 		nodePath += string(" ") + extraArgs;
 
 	boost::thread t(runCommand, nodePath);
-	printf("Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
+	tfm::format(std::cout,"Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
 	MilliSleep(1000);
 	UniValue r;
 	while (1)
 	{
 		try {
-			printf("Calling getblockchaininfo!\n");
+			tfm::format(std::cout,"Calling getblockchaininfo!\n");
 			r = CallRPC(dataDir, "getblockchaininfo", regTest);
 			if (dataDir == "node1")
 			{
 				if (node1LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
-					printf("Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node1LastBlock);
+					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node1LastBlock);
 					MilliSleep(500);
 					continue;
 				}
@@ -125,7 +125,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 			{
 				if (node2LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
-					printf("Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node2LastBlock);
+					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node2LastBlock);
 					MilliSleep(500);
 					continue;
 				}
@@ -136,7 +136,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 			{
 				if (node3LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
-					printf("Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node3LastBlock);
+					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node3LastBlock);
 					MilliSleep(500);
 					continue;
 				}
@@ -147,17 +147,17 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 		}
 		catch (const runtime_error& error)
 		{
-			printf("Waiting for %s to come online, trying again in 1 second...\n", dataDir.c_str());
+			tfm::format(std::cout,"Waiting for %s to come online, trying again in 1 second...\n", dataDir.c_str());
 			MilliSleep(1000);
 			continue;
 		}
 		break;
 	}
-	printf("Done!\n");
+	tfm::format(std::cout,"Done!\n");
 }
 
 void StopNode(const string &dataDir, bool regtest) {
-	printf("Stopping %s..\n", dataDir.c_str());
+	tfm::format(std::cout,"Stopping %s..\n", dataDir.c_str());
 	UniValue r;
 	try {
 		r = CallRPC(dataDir, "getblockchaininfo", regtest);
@@ -302,7 +302,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 		newHeight = find_value(r.get_obj(), "blocks").get_int();
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "getwalletinfo", false));
 		CAmount balance = AmountFromValue(find_value(r.get_obj(), "balance"));
-		printf("Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real());
+		tfm::format(std::cout,"Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real());
 	}
 	BOOST_CHECK(newHeight >= targetHeight);
 	height = 0;
@@ -326,7 +326,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 		height = find_value(r.get_obj(), "blocks").get_int();
 		timeoutCounter++;
 		if (timeoutCounter > 100) {
-			printf("Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 			break;
 		}
 		MilliSleep(10);
@@ -381,7 +381,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 		height = find_value(r.get_obj(), "blocks").get_int();
 		timeoutCounter++;
 		if (timeoutCounter > 100) {
-			printf("Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 			break;
 		}
 		MilliSleep(10);
@@ -408,7 +408,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 		height = find_value(r.get_obj(), "blocks").get_int();
 		timeoutCounter++;
 		if (timeoutCounter > 100) {
-			printf("Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
 			break;
 		}
 		MilliSleep(10);
