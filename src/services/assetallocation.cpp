@@ -235,17 +235,17 @@ UniValue tpstestinfo(const JSONRPCRequest& request) {
 	UniValue oTPSTestResults(UniValue::VOBJ);
 	UniValue oTPSTestReceivers(UniValue::VARR);
 	UniValue oTPSTestReceiversMempool(UniValue::VARR);
-	oTPSTestResults.pushKV("enabled", fTPSTestEnabled);
-    oTPSTestResults.pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
-	oTPSTestResults.pushKV("teststarttime", (int64_t)nTPSTestingSendRawEndTime);
+	oTPSTestResults.__pushKV("enabled", fTPSTestEnabled);
+    oTPSTestResults.__pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
+	oTPSTestResults.__pushKV("teststarttime", (int64_t)nTPSTestingSendRawEndTime);
    
 	for (auto &receivedTime : vecTPSTestReceivedTimesMempool) {
 		UniValue oTPSTestStatusObj(UniValue::VOBJ);
-		oTPSTestStatusObj.pushKV("txid", receivedTime.first.GetHex());
-		oTPSTestStatusObj.pushKV("time", receivedTime.second);
+		oTPSTestStatusObj.__pushKV("txid", receivedTime.first.GetHex());
+		oTPSTestStatusObj.__pushKV("time", receivedTime.second);
 		oTPSTestReceiversMempool.push_back(oTPSTestStatusObj);
 	}
-	oTPSTestResults.pushKV("receivers", oTPSTestReceiversMempool);
+	oTPSTestResults.__pushKV("receivers", oTPSTestReceiversMempool);
 	return oTPSTestResults;
 }
 UniValue tpstestsetenabled(const JSONRPCRequest& request) {
@@ -266,7 +266,7 @@ UniValue tpstestsetenabled(const JSONRPCRequest& request) {
 		nTPSTestingStartTime = 0;
 	}
 	UniValue result(UniValue::VOBJ);
-	result.pushKV("status", "success");
+	result.__pushKV("status", "success");
 	return result;
 }
 UniValue tpstestadd(const JSONRPCRequest& request) {
@@ -331,7 +331,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 		}
 	}
 	UniValue result(UniValue::VOBJ);
-	result.pushKV("status", "success");
+	result.__pushKV("status", "success");
 	return result;
 }
 template <typename T>
@@ -406,8 +406,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
     if(ethAddress.empty()){
         UniValue output(UniValue::VARR);
         UniValue outputObj(UniValue::VOBJ);
-        outputObj.pushKV("address", "burn");
-        outputObj.pushKV("amount", ValueFromAssetAmount(amount, theAsset.nPrecision));
+        outputObj.__pushKV("address", "burn");
+        outputObj.__pushKV("amount", ValueFromAssetAmount(amount, theAsset.nPrecision));
         output.push_back(outputObj);
         UniValue paramsFund(UniValue::VARR);
         paramsFund.push_back(nAsset);
@@ -544,8 +544,8 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    outputObj.pushKV("address", params[2].get_str());
-    outputObj.pushKV("amount", ValueFromAmount(nAmount));
+    outputObj.__pushKV("address", params[2].get_str());
+    outputObj.__pushKV("amount", ValueFromAmount(nAmount));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0].get_int());
@@ -828,7 +828,7 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
 
     UniValue oRes(UniValue::VOBJ);
-    oRes.pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
+    oRes.__pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
     return oRes;
 }
 
@@ -1069,7 +1069,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     	else
     		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
     	
-        oAssetAllocationStatus.pushKV("status", nStatus);
+        oAssetAllocationStatus.__pushKV("status", nStatus);
     }
 	return oAssetAllocationStatus;
 }
@@ -1083,13 +1083,13 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
         if(mapIt != mempoolMapAssetBalances.end())
             nBalanceZDAG = mapIt->second;
     }
-    oAssetAllocation.pushKV("asset_allocation", allocationTupleStr);
-	oAssetAllocation.pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
-	oAssetAllocation.pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
-	oAssetAllocation.pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
-    oAssetAllocation.pushKV("balance_zdag", ValueFromAssetAmount(nBalanceZDAG, asset.nPrecision));
+    oAssetAllocation.__pushKV("asset_allocation", allocationTupleStr);
+	oAssetAllocation.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+	oAssetAllocation.__pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
+	oAssetAllocation.__pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
+    oAssetAllocation.__pushKV("balance_zdag", ValueFromAssetAmount(nBalanceZDAG, asset.nPrecision));
     if(!assetallocation.lockedOutpoint.IsNull())
-        oAssetAllocation.pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
+        oAssetAllocation.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
 	return true;
 }
 
@@ -1122,12 +1122,12 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     {
         nHeight = blockindex->nHeight;
     }
-    entry.pushKV("txtype", assetAllocationFromTx(tx.nVersion));
-    entry.pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
-    entry.pushKV("txid", txHash.GetHex());
-    entry.pushKV("height", nHeight);
-    entry.pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
-    entry.pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
+    entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
+    entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
+    entry.__pushKV("txid", txHash.GetHex());
+    entry.__pushKV("height", nHeight);
+    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;  
     if (!assetallocation.listSendingAllocationAmounts.empty()) {
@@ -1135,18 +1135,18 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
             nTotal += amountTuple.second;
             const string& strReceiver = amountTuple.first.ToString();
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.pushKV("address", strReceiver);
-            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
+            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);          
         }
     }
-    entry.pushKV("allocations", oAssetAllocationReceiversArray);
-    entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
-    entry.pushKV("blockhash", blockhash.GetHex()); 
+    entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+    entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+    entry.__pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
-         entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+         entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
 	else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
-		entry.pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
+		entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
@@ -1163,12 +1163,12 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
 
     if(assetallocation.assetAllocationTuple.IsNull() || dbAsset.IsNull())
         return false;
-    entry.pushKV("txtype", assetAllocationFromTx(tx.nVersion));
-    entry.pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
-    entry.pushKV("txid", tx.GetHash().GetHex());
-    entry.pushKV("height", nHeight);
-    entry.pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
-    entry.pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
+    entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
+    entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
+    entry.__pushKV("txid", tx.GetHash().GetHex());
+    entry.__pushKV("height", nHeight);
+    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
 
@@ -1177,16 +1177,16 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
             nTotal += amountTuple.second;
             const string& strReceiver = amountTuple.first.ToString();
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.pushKV("address", strReceiver);
-            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
+            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);          
         }
     }
-    entry.pushKV("allocations", oAssetAllocationReceiversArray);
-    entry.pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
-    entry.pushKV("blockhash", blockhash.GetHex()); 
+    entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+    entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+    entry.__pushKV("blockhash", blockhash.GetHex()); 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
-         entry.pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+         entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 
@@ -1205,88 +1205,88 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         {
             nHeight = blockindex->nHeight;
         }
-        entry.pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
+        entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
-            entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
-        entry.pushKV("txid", txHash.GetHex());
-        entry.pushKV("height", nHeight);
+            entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+        entry.__pushKV("txid", txHash.GetHex());
+        entry.__pushKV("height", nHeight);
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-            entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-            entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
             UniValue oAssetAllocationReceiversArray(UniValue::VARR);
             CAsset dbAsset;
             GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
            
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         
-            entry.pushKV("allocations", oAssetAllocationReceiversArray); 
-            entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+            entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+            entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         }
         else{
             UniValue o(UniValue::VOBJ);
             ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, o, true);
-            entry.pushKV("scriptPubKey", o);
-            entry.pushKV("total", ValueFromAmount(tx.vout[0].nValue));
+            entry.__pushKV("scriptPubKey", o);
+            entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
         }
         
-        entry.pushKV("blockhash", blockhash.GetHex());   
+        entry.__pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
-        oSPVProofObj.pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
-        oSPVProofObj.pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
-        oSPVProofObj.pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
-        oSPVProofObj.pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
-        oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
-        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
-        oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
-        entry.pushKV("spv_proof", oSPVProofObj); 
+        oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
+        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
+        oSPVProofObj.__pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
+        oSPVProofObj.__pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
+        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
+        oSPVProofObj.__pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
+        entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
     } 
     return false;                   
 }
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
     if (!mintsyscoin.IsNull() && (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull())) {
-        entry.pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
+        entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
-            entry.pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
-        entry.pushKV("txid", tx.GetHash().GetHex());
-        entry.pushKV("height", nHeight);
+            entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+        entry.__pushKV("txid", tx.GetHash().GetHex());
+        entry.__pushKV("height", nHeight);
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-            entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-            entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
             UniValue oAssetAllocationReceiversArray(UniValue::VARR);
             CAsset dbAsset;
             GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
            
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            oAssetAllocationReceiversObj.pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+            oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         
-            entry.pushKV("allocations", oAssetAllocationReceiversArray); 
-            entry.pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+            entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+            entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         }
         else{
             UniValue o(UniValue::VOBJ);
             ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, o, true);
-            entry.pushKV("scriptPubKey", o);
-            entry.pushKV("total", ValueFromAmount(tx.vout[0].nValue));
+            entry.__pushKV("scriptPubKey", o);
+            entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
         }
         
-        entry.pushKV("blockhash", blockhash.GetHex());   
+        entry.__pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
-        oSPVProofObj.pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
-        oSPVProofObj.pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
-        oSPVProofObj.pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
-        oSPVProofObj.pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
-        oSPVProofObj.pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
-        oSPVProofObj.pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
-        oSPVProofObj.pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
-        oSPVProofObj.pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
-        entry.pushKV("spv_proof", oSPVProofObj); 
+        oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
+        oSPVProofObj.__pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
+        oSPVProofObj.__pushKV("txroot", HexStr(mintsyscoin.vchTxRoot));
+        oSPVProofObj.__pushKV("txpath", HexStr(mintsyscoin.vchTxPath)); 
+        oSPVProofObj.__pushKV("receiptvalue", HexStr(mintsyscoin.vchReceiptValue));   
+        oSPVProofObj.__pushKV("receiptparentnodes", HexStr(mintsyscoin.vchReceiptParentNodes)); 
+        oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
+        oSPVProofObj.__pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
+        entry.__pushKV("spv_proof", oSPVProofObj); 
         return true;                                        
     } 
     return false;                   
@@ -1323,7 +1323,7 @@ bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const int cou
                 continue;
             }
             UniValue resultObj(UniValue::VOBJ);
-            resultObj.pushKV(indexObj.first, ValueFromAmount(indexObj.second));
+            resultObj.__pushKV(indexObj.first, ValueFromAmount(indexObj.second));
             oRes.push_back(resultObj);
             if (index >= count + from)
                 break;
