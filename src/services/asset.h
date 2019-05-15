@@ -203,21 +203,6 @@ public:
     bool UnserializeFromTx(const CTransaction &tx);
     void Serialize(std::vector<unsigned char>& vchData);
 };
-typedef std::unordered_map<uint32_t, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > EthereumTxRootMap;
-class CEthereumTxRootsDB : public CDBWrapper {
-public:
-    CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
-       Init();
-    } 
-    bool ReadTxRoots(const uint32_t& nHeight, std::pair<std::vector<unsigned char>, std::vector<unsigned char> >& vchTxRoots) {
-        return Read(nHeight, vchTxRoots);
-    } 
-    void AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges);
-    bool Init();
-    bool PruneTxRoots(const uint32_t &fNewGethSyncHeight);
-    bool FlushErase(const std::vector<uint32_t> &vecHeightKeys);
-    bool FlushWrite(const EthereumTxRootMap &mapTxRoots);
-};
 typedef std::unordered_map<int, CAsset > AssetMap;
 class CAssetDB : public CDBWrapper {
 public:
@@ -357,6 +342,5 @@ void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
-extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CAssetIndexDB> passetindexdb;
 #endif // SYSCOIN_SERVICES_ASSET_H

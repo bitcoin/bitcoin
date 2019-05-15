@@ -21,12 +21,14 @@ extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap;
 std::unique_ptr<CBlockIndexDB> pblockindexdb;
 std::unique_ptr<CLockedOutpointsDB> plockedoutpointsdb;
+std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
+std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
 using namespace std::chrono;
 using namespace std;
-bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations)
+bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
     if(tx.IsCoinBase())
         return true;
@@ -35,9 +37,13 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
         return true;
     
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-        if(!DisconnectMintAsset(tx, mapAssetAllocations))
+        if(!DisconnectMintAsset(tx, mapAssetAllocations, vecMintKeys))
             return false;       
     }
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_MINT){
+        if(!DisconnectMint(tx, vecMintKeys))
+            return false;       
+    }    
     else{
         if (IsAssetAllocationTx(tx.nVersion))
         {
@@ -62,7 +68,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     return true;       
 }
 
-bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
+bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, bool &bTxRootError)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     // unserialize assetallocation from txn, check for valid
@@ -95,13 +101,14 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
    
-    int32_t cutoffHeight;
+    uint32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, vchTxRoots)){
         if(ethTxRootShouldExist){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
+            bTxRootError = true;
             return false;
         }
     }  
@@ -109,8 +116,9 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         LOCK(cs_ethsyncheight);
         // cutoff is ~1 week of blocks is about 40K blocks
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-        if(cutoffHeight > 0 && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
+        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain");
+            bTxRootError = true;
             return false;
         } 
         
@@ -118,6 +126,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
         if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
+            bTxRootError = true;
             return false;
         } 
     }
@@ -158,12 +167,6 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Receipt Roots");
         return false;
     } 
-    // verify receipt proof
-    const std::vector<unsigned char> &vchReceiptPath = mintSyscoin.vchReceiptPath;
-    if(!VerifyProof(&vchReceiptPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not verify ethereum transaction receipt using SPV proof");
-        return false;
-    } 
     
     
     const std::vector<unsigned char> &vchTxParentNodes = mintSyscoin.vchTxParentNodes;
@@ -171,7 +174,23 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     const std::vector<unsigned char> &vchTxValue = mintSyscoin.vchTxValue;
     dev::RLP rlpTxValue(&vchTxValue);
     const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
+    dev::RLP rlpTxPath(&vchTxPath);
+    const uint32_t &nPath = rlpTxPath.toInt<uint32_t>(dev::RLP::VeryStrict);
     
+    // ensure eth tx not already spent
+    const std::pair<uint64_t, uint32_t> &ethKey = std::make_pair(mintSyscoin.nBlockNumber, nPath);
+    if(pethereumtxmintdb->ExistsKey(ethKey)){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("This block number+transaction index pair has already been used to mint");
+        return false;
+    } 
+    // add the key to flush to db later
+    vecMintKeys.emplace_back(ethKey);
+    
+    // verify receipt proof
+    if(!VerifyProof(&vchTxPath, rlpReceiptValue, rlpReceiptParentNodes, rlpReceiptRoot)){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not verify ethereum transaction receipt using SPV proof");
+        return false;
+    } 
     // verify transaction proof
     if(!VerifyProof(&vchTxPath, rlpTxValue, rlpTxParentNodes, rlpTxRoot)){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not verify ethereum transaction using SPV proof");
@@ -310,12 +329,13 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
+    EthereumMintTxVec vecMintKeys;
 	std::vector<COutPoint> vecLockedOutpoints;
     if (nHeight == 0)
         nHeight = ::ChainActive().Height()+1;
     std::string errorMessage;
     bool good = true;
-
+    bool bTxRootError = false;
     bOverflow=false;
     if (block.vtx.empty()) {  
         if(tx.IsCoinBase())
@@ -335,11 +355,15 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         else if(IsSyscoinMintTx(tx.nVersion)) 
         {
             errorMessage.clear();
-            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations);
+            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
         }
   
-        if (!good || !errorMessage.empty())
-            return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, errorMessage);
+        if (!good || !errorMessage.empty()){
+            if(bTxRootError)
+                return state.Error(errorMessage);
+            else
+                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, errorMessage);
+        }
       
         return true;
     }
@@ -375,7 +399,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             else if(IsSyscoinMintTx(tx.nVersion))
             {
                 errorMessage.clear();
-                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations);
+                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
             }
              
                         
@@ -396,14 +420,18 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
                         
         if(!bSanity && !fJustCheck){
             if(!bMiner && pblockindexdb){
-                if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints)){
+                if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
                     good = false;
                     errorMessage = "Error flushing to asset dbs";
                 }
             }
         }        
-        if (!good || !errorMessage.empty())
-            return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
+        if (!good || !errorMessage.empty()){
+            if(bTxRootError)
+                return state.Error(errorMessage);
+            else
+                return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
+        }
     }
     return true;
 }
@@ -515,11 +543,26 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
     return removeAllConflicts;
     
 }
-bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations){
+bool DisconnectMint(const CTransaction &tx,  EthereumMintTxVec &vecMintKeys){
     CMintSyscoin mintSyscoin(tx);
     if(mintSyscoin.IsNull())
     {
         LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Cannot unserialize data inside of this transaction relating to an syscoinmint\n");
+        return false;
+    }   
+    const std::vector<unsigned char> &vchTxPath = mintSyscoin.vchTxPath;
+    dev::RLP rlpTxPath(&vchTxPath);
+    const uint32_t &nPath = rlpTxPath.toInt<uint32_t>(dev::RLP::VeryStrict);
+    // remove eth spend tx from our internal db
+    const std::pair<uint64_t, uint32_t> &ethKey = std::make_pair(mintSyscoin.nBlockNumber, nPath);
+    vecMintKeys.emplace_back(ethKey);  
+    return true; 
+}
+bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys){
+    CMintSyscoin mintSyscoin(tx);
+    if(mintSyscoin.IsNull())
+    {
+        LogPrint(BCLog::SYS,"DisconnectSyscoinTransaction: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }   
     // recver
@@ -1511,4 +1554,143 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 		}
 	}
 	return true;
+}
+bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
+    uint32_t fNewGethCurrentHeight = fGethCurrentHeight;
+    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    vector<uint32_t> vecHeightKeys;
+    uint32_t nKey = 0;
+    uint32_t cutoffHeight = 0;
+    if(fNewGethSyncHeight > 0)
+    {
+        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS*3;
+        // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
+        cutoffHeight = fNewGethSyncHeight - nCutoffHeight;
+        if(fNewGethSyncHeight < nCutoffHeight){
+            LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fNewGethSyncHeight);
+            return true;
+        }
+    }
+    std::vector<unsigned char> txPos;
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            if(pcursor->GetKey(nKey)){
+                // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
+                if (fNewGethSyncHeight > 0 && (nKey < cutoffHeight || nKey > fNewGethSyncHeight)) {
+                    vecHeightKeys.emplace_back(nKey);
+                }
+                else if(nKey > fNewGethCurrentHeight)
+                    fNewGethCurrentHeight = nKey;
+            }
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return error("%s() : deserialize error", __PRETTY_FUNCTION__);
+        }
+    }
+
+    {
+        LOCK(cs_ethsyncheight);
+        fGethSyncHeight = fNewGethSyncHeight;
+        fGethCurrentHeight = fNewGethCurrentHeight;
+    }      
+    return FlushErase(vecHeightKeys);
+}
+bool CEthereumTxRootsDB::Init(){
+    return PruneTxRoots(0);
+}
+void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges){
+    boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
+    pcursor->SeekToFirst();
+    vector<uint32_t> vecHeightKeys;
+    uint32_t nKey = 0;
+    uint32_t nKeyIndex = 0;
+    uint32_t nCurrentSyncHeight = 0;
+    {
+        LOCK(cs_ethsyncheight);
+        nCurrentSyncHeight = fGethSyncHeight;
+       
+    }
+    const uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
+    std::vector<unsigned char> txPos;
+    std::set<uint32_t> setKeys;
+    // sort keys numerically
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            if(!pcursor->GetKey(nKey)){
+                 pcursor->Next();
+                 continue;
+            }
+            setKeys.emplace(nKey);
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return;
+        }
+    } 
+    if(setKeys.size() < 2)
+        return;
+    std::set<uint32_t>::iterator setIt = setKeys.begin();
+    nKeyIndex = *setIt;
+    setIt++;
+    // we should have atleast MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
+    if(nCurrentSyncHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
+        vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
+    }
+    // find sequence gaps in sorted key set 
+    for (; setIt != setKeys.end(); ++setIt){
+            const uint32_t &key = *setIt;
+            const uint32_t &nNextKeyIndex = nKeyIndex+1;
+            if (key != nNextKeyIndex && (key-1) >= nNextKeyIndex)
+                vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, key-1));
+            nKeyIndex = key;   
+    }  
+}
+bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
+    if(vecHeightKeys.empty())
+        return true;
+    const uint32_t &nFirst = vecHeightKeys.front();
+    const uint32_t &nLast = vecHeightKeys.back();
+    CDBBatch batch(*this);
+    for (const auto &key : vecHeightKeys) {
+        batch.Erase(key);
+    }
+    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx roots, block range (%d-%d)\n", vecHeightKeys.size(), nFirst, nLast);
+    return WriteBatch(batch);
+}
+bool CEthereumTxRootsDB::FlushWrite(const EthereumTxRootMap &mapTxRoots){
+    if(mapTxRoots.empty())
+        return true;
+    const uint32_t &nFirst = mapTxRoots.begin()->first;
+    uint32_t nLast = nFirst;
+    CDBBatch batch(*this);
+    for (const auto &key : mapTxRoots) {
+        batch.Write(key.first, key.second);
+        nLast = key.first;
+    }
+    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx roots, block range (%d-%d)\n", mapTxRoots.size(), nFirst, nLast);
+    return WriteBatch(batch);
+}
+bool CEthereumMintedTxDB::FlushWrite(const EthereumMintTxVec &vecMintKeys){
+    if(vecMintKeys.empty())
+        return true;
+    CDBBatch batch(*this);
+    for (const auto &key : vecMintKeys) {
+        batch.Write(key, true);
+    }
+    LogPrint(BCLog::SYS, "Flushing, writing %d ethereum tx mints\n", vecMintKeys.size());
+    return WriteBatch(batch);
+}
+bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxVec &vecMintKeys){
+    if(vecMintKeys.empty())
+        return true;
+    CDBBatch batch(*this);
+    for (const auto &key : vecMintKeys) {
+        batch.Erase(key);
+    }
+    LogPrint(BCLog::SYS, "Flushing, erasing %d ethereum tx mints\n", vecMintKeys.size());
+    return WriteBatch(batch);
 }
