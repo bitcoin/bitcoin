@@ -523,7 +523,11 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         return false;   
     }
       
-    CBlockIndex* blockindex = LookupBlockIndex(blockhash);
+    CBlockIndex* blockindex = nullptr;
+    {
+        LOCK(cs_main);
+        blockindex = LookupBlockIndex(blockhash);
+    }
     if(!blockindex){
         strError = strprintf("Can't find collateral blockhash %s", blockhash.ToString());
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
