@@ -7,9 +7,13 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_raises_rpc_error,
+    assert_equal,
 )
-import decimal
+from test_framework.key import ECPubKey
 
+import binascii
+import decimal
+import itertools
 
 class RpcCreateMultiSigTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -43,6 +47,30 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
                     self.do_multisig()
 
         self.checkbalances()
+
+        # Test mixed compressed and uncompressed pubkeys
+        self.log.info('Mixed compressed and uncompressed multisigs are not allowed')
+        pk0 = node0.getaddressinfo(node0.getnewaddress())['pubkey']
+        pk1 = node1.getaddressinfo(node1.getnewaddress())['pubkey']
+        pk2 = node2.getaddressinfo(node2.getnewaddress())['pubkey']
+
+        # decompress pk2
+        pk_obj = ECPubKey()
+        pk_obj.set(binascii.unhexlify(pk2))
+        pk_obj.compressed = False
+        pk2 = binascii.hexlify(pk_obj.get_bytes()).decode()
+
+        # Check all permutations of keys because order matters apparently
+        for keys in itertools.permutations([pk0, pk1, pk2]):
+            # Results should be the same as this legacy one
+            legacy_addr = node0.createmultisig(2, keys, 'legacy')['address']
+            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'legacy')['address'])
+
+            # Generate addresses with the segwit types. These should all make legacy addresses
+            assert_equal(legacy_addr, node0.createmultisig(2, keys, 'bech32')['address'])
+            assert_equal(legacy_addr, node0.createmultisig(2, keys, 'p2sh-segwit')['address'])
+            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'bech32')['address'])
+            assert_equal(legacy_addr, node0.addmultisigaddress(2, keys, '', 'p2sh-segwit')['address'])
 
     def check_addmultisigaddress_errors(self):
         self.log.info('Check that addmultisigaddress fails when the private keys are missing')
