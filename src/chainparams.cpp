@@ -254,7 +254,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.vchSYSXContract = ParseHex("f7af70929df0d4beda3abb4c056169daae4b39d7");
+        consensus.vchSYSXContract = ParseHex("46c6accc790ebd002c022057a14a7d247d5e5d37");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
