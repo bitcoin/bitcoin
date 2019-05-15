@@ -2314,7 +2314,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         const UniValue &tupleArray = headerArray[i].get_array();
         if(tupleArray.size() != 3)
             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 3"));
-        uint32_t nHeight = (uint32_t)tupleArray[0].get_int();
+        const uint32_t &nHeight = (uint32_t)tupleArray[0].get_int();
         string txRoot = tupleArray[1].get_str();
         boost::erase_all(txRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);

@@ -1209,8 +1209,6 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
             entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
             entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-        }
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
             UniValue oAssetAllocationReceiversArray(UniValue::VARR);
             CAsset dbAsset;
             GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
@@ -1255,8 +1253,6 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
             entry.pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
             entry.pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-        }
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
             UniValue oAssetAllocationReceiversArray(UniValue::VARR);
             CAsset dbAsset;
             GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);

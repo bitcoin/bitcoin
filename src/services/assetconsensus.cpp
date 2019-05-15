@@ -1578,7 +1578,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
         try {
             if(pcursor->GetKey(nKey)){
                 // if height is before cutoff height or after tip height passed in (re-org), remove the txroot from db
-                if (fNewGethSyncHeight > 0 && (nKey < (uint32_t)cutoffHeight || nKey > fNewGethSyncHeight)) {
+                if (fNewGethSyncHeight > 0 && (nKey < cutoffHeight || nKey > fNewGethSyncHeight)) {
                     vecHeightKeys.emplace_back(nKey);
                 }
                 else if(nKey > fNewGethCurrentHeight)
@@ -1607,8 +1607,13 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     vector<uint32_t> vecHeightKeys;
     uint32_t nKey = 0;
     uint32_t nKeyIndex = 0;
-    const uint32_t& nKeyCutoff = fGethCurrentHeight - MAX_ETHEREUM_TX_ROOTS;
-
+    uint32_t nCurrentSyncHeight = 0;
+    {
+        LOCK(cs_ethsyncheight);
+        nCurrentSyncHeight = fGethSyncHeight;
+       
+    }
+    const uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
     std::vector<unsigned char> txPos;
     std::set<uint32_t> setKeys;
     // sort keys numerically
@@ -1619,7 +1624,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
                  pcursor->Next();
                  continue;
             }
-            setKeys.emplace(std::move(nKey));
+            setKeys.emplace(nKey);
             pcursor->Next();
         }
         catch (std::exception &e) {
@@ -1632,16 +1637,16 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     nKeyIndex = *setIt;
     setIt++;
     // we should have atleast MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
-    if(fGethCurrentHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
+    if(nCurrentSyncHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
     }
     // find sequence gaps in sorted key set 
     for (; setIt != setKeys.end(); ++setIt){
-            const uint32_t &nKey = *setIt;
+            const uint32_t &key = *setIt;
             const uint32_t &nNextKeyIndex = nKeyIndex+1;
-            if (nKey != nNextKeyIndex && (nKey-1) >= nNextKeyIndex)
-                vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, nKey-1));
-            nKeyIndex = nKey;   
+            if (key != nNextKeyIndex && (key-1) >= nNextKeyIndex)
+                vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, key-1));
+            nKeyIndex = key;   
     }  
 }
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
