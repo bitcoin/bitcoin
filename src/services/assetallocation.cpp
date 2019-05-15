@@ -1114,8 +1114,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb->ReadBlockHash(txHash, blockhash))  
-        blockindex = LookupBlockIndex(blockhash);
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
+        LOCK(cs_main);
+        blockindex = LookupBlockIndex(blockhash);  
+    }
     if(blockindex)
     {
         nHeight = blockindex->nHeight;
@@ -1195,8 +1197,10 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
         uint256 blockhash;
-        if(pblockindexdb->ReadBlockHash(txHash, blockhash))
-            blockindex = LookupBlockIndex(blockhash);
+        if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
+            LOCK(cs_main);
+            blockindex = LookupBlockIndex(blockhash);  
+        }
         if(blockindex)
         {
             nHeight = blockindex->nHeight;

@@ -902,8 +902,10 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb->ReadBlockHash(txHash, blockhash))
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){
+        LOCK(cs_main);
         blockindex = LookupBlockIndex(blockhash);
+    }
     if(blockindex)
     {
         nHeight = blockindex->nHeight;
@@ -988,9 +990,11 @@ bool IsOutpointMature(const COutPoint& outpoint)
 	if (coin.IsSpent() || coin.IsCoinBase())
 		return false;
 	int numConfirmationsNeeded = 0;
-    if (coin.nHeight > -1 && ::ChainActive().Tip())
-        return (::ChainActive().Height() - coin.nHeight) >= numConfirmationsNeeded;
-
+    {
+        LOCK(cs_main);
+        if (coin.nHeight > -1 && ::ChainActive().Tip())
+            return (::ChainActive().Height() - coin.nHeight) >= numConfirmationsNeeded;
+    }
 	// don't have chainActive or coin height is neg 1 or less
 	return false;
 
@@ -1513,8 +1517,10 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
     uint256 blockhash;
-    if(pblockindexdb->ReadBlockHash(txHash, blockhash))
-        blockindex = LookupBlockIndex(blockhash);
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
+        LOCK(cs_main);
+        blockindex = LookupBlockIndex(blockhash);  
+    }
     if(blockindex)
     {
         nHeight = blockindex->nHeight;
