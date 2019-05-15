@@ -135,6 +135,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
 }
 BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 {
+
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     UniValue r;
     printf("Running generate_asset_throughput...\n");
@@ -417,11 +418,20 @@ BOOST_AUTO_TEST_CASE(generate_syscoinmint)
     std::string spv_receipt_root = "d2f2401b91a8625f24508ced119fde56012d5f523ee07f17b769f23f1c817c0c";
     std::string spv_receipt_parent_nodes = "f90458f851a02134434d523bf63424751820616d62f6ade388009724c1d1f2c892969eb6df4680808080808080a0e58215be848c1293dd381210359d84485553000a82b67410406d183b42adbbdd8080808080808080f901f180a0386f6bdc34e1469a424a4cfac85c62baeffb30f63643b1ea0195dee62527b6efa0c0567cc263d6e94ac00616245a7765dea1d2fbac700f5cca7d738b3df4e6d559a0cccf1990f8e5b36ed8f73a9b5790256cdbe19be4c2e08a8ed184afbf892c3ea3a069fcc61b1885ad084d9a821786f301b5f7110920dc985dbbcfdd22b72148effaa0f448a231ee9d335bffa17f89bda80f93a95b4c40a58edfad30444bb2bbc8328fa085a8314e91e4ea8484edb05ac95cb7a79b9d2b4968911cff68964896a5071cc8a0054c4901dc735415ac95d3641d398b79b191a2ecff84ae86990dae2179a9413ba0e551274c969b8f11966a1192660884c95200273b8be27b4701834f5186da8f35a0abc4c5c9a8a9da18d6973fdd899e3b045491ccaf122d0d2f462fe456005999eba0ccc33f018212af392c211272d5a5f2f5c6e2c7c88cf68b96f9edbb516794e12ca08d840ffeb5042d40372843799b2b9c8f97acf3f883d228cecb5f3de44a5af926a0cd366e7dc3e453a2624c3dfb63ee7880596239460e2de5c4785ed326d889e710a00064dbbbf5e446fc1f71d2afa27867e87c557cbbf98344b48a355ee397671004a02ea034d281cced4241777416600ab751589ad4641f0634ad74392b77aee2708da0d91aff6cb90254a646b46b4cfa91928da80009059b5677977974650fb794919580f9020e20b9020af9020701830f55e4b9010000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000080000000000000000000000000000000000000000000000000000000000000000800000000000000000000001000010000f8fdf8fb945f6e74ba20bf26161612eac8f7e8b3b6c9baaaddf842a0496f2146a902cabfc1b17d4cd1de13001dc9a8e792c8f89ecb7eb3c941bf8344a0000000000000000000000000bd244ffc1e6c64a6732f2b5b123d1e34d43ec341b8a00000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de0000000000000000000000";
     std::string spv_receipt_value = "f9020701830f55e4b9010000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000080000000000000000000000000000000000000000000000000000000000000000800000000000000000000001000010000f8fdf8fb945f6e74ba20bf26161612eac8f7e8b3b6c9baaaddf842a0496f2146a902cabfc1b17d4cd1de13001dc9a8e792c8f89ecb7eb3c941bf8344a0000000000000000000000000bd244ffc1e6c64a6732f2b5b123d1e34d43ec341b8a00000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de0000000000000000000000";
-    std::string spv_receipt_path = "0e";
     
     int height = 4189030;
     string newaddress = GetNewFundedAddress("node1");
-    SyscoinMint("node1", newaddress, "3", height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes, spv_receipt_path);
+    string amount = "3";
+    
+    SyscoinMint("node1", newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
+    
+    // try to mint again
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinmint " + newaddress + " " + amount + " " + boost::lexical_cast<string>(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    string hex_str = find_value(r.get_obj(), "hex").get_str();
+    // should fail: already minted with that block+txindex tuple
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false)); 
+    BOOST_CHECK(r.write().size() < 32);
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
 {
@@ -461,8 +471,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr), runtime_error);
-
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
     // this one is ok
     BurnAssetAllocation("node1", assetguid, useraddress, "0.5");
     
@@ -519,8 +529,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_multiple)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr), runtime_error);
-    
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
 
     // this will stop the chain if both burns were allowed in the chain, the miner must throw away one of the burns to avoid his block from being flagged as invalid
     GenerateBlocks(5, "node1");
@@ -611,7 +621,9 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
+    
     MilliSleep(1000);
 
     AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
@@ -682,7 +694,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr), runtime_error);
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
 
     AssetAllocationTransfer(true, "node1", assetguid, useraddress2, "\"[{\\\"address\\\":\\\"" + useraddress3 + "\\\",\\\"amount\\\":0.2}]\"");
     MilliSleep(1000);
@@ -729,7 +742,8 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr ), runtime_error); 
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
     
     
     AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
@@ -895,8 +909,9 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew " + newaddress + " " + gooddata + " '' 3 2000 1000 31 ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    string hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex ), runtime_error); 
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
     
 }
 
@@ -911,8 +926,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "assetupdate " + guid + " " + newaddress + " '' 1 31 ''"));
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    string hex_str = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str ), runtime_error);
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
     
 	AssetUpdate("node1", guid, "pub1");
 	// shouldn't update data, just uses prev data because it hasn't changed
@@ -929,8 +945,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + newaddress + " '' 5 " + boost::lexical_cast<string>(updateflags) + " ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    string hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex ), runtime_error);
+    hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
         
 
 	AssetUpdate("node1", guid1, "pub12", "1", boost::lexical_cast<string>(updateflags));
@@ -938,8 +955,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " " + newaddress + " '' 1 " + boost::lexical_cast<string>(updateflags) + " ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex ), runtime_error);  
+    hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
 
 }
 BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
@@ -966,8 +984,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		// can't go above max balance (10^18) / (10^i) for i decimal places
 		BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " pub '' 1 31 ''"));
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-        string hex = find_value(r.get_obj(), "hex").get_str();
-        BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex ), runtime_error);
+        string hexStr = find_value(r.get_obj(), "hex").get_str();
+        BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+        BOOST_CHECK(r.write().size() < 32);
 
 
 		// "assetnew [address] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
@@ -1030,8 +1049,9 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + newaddress + " '' 1 31 ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    string hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex ), runtime_error);
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
 
 }
 BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
@@ -1059,8 +1079,9 @@ BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assettransfer " + guid1 + " " + newaddres3 + " ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    string hex = find_value(r.get_obj(), "hex").get_str();
-    BOOST_CHECK_THROW(r = CallRPC("node1", "sendrawtransaction " + hex ), runtime_error);    
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);  
     GenerateBlocks(5, "node1");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == newaddres2);
