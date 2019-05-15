@@ -574,8 +574,16 @@ UniValue importwallet(const JSONRPCRequest& request)
                 },
             }.ToString());
 
+<<<<<<< HEAD
     if (pwallet->chain().getPruneMode()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled in pruned mode");
+=======
+    if (pwallet->chain().havePruned()) {
+        // Exit early and print an error.
+        // If a block is pruned after this check, we will import the key(s),
+        // but fail the rescan with a generic error.
+        throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when blocks are pruned");
+>>>>>>> fa7e311e1... [doc] rpcwallet: Only fail rescan when blocks have been pruned
     }
 
     WalletRescanReserver reserver(pwallet);

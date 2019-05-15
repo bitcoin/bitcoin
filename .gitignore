@@ -120,6 +120,9 @@ src/test/node1/*
 src/test/node2/*
 src/test/node3/*
 src/qt/node1
+*.tmp
+*.ipch
+*.bin
 
 !src/leveldb*/Makefile
 
