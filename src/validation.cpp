@@ -1876,6 +1876,7 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
     }
     AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
+    EthereumMintTxVec vecMintKeys;
     std::vector<uint256> vecTXIDs;
 	std::vector<COutPoint> vecOutpoints;
     std::vector<uint256> vecBlocks;
@@ -1930,11 +1931,11 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations))
+        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations, vecMintKeys))
             fClean = false;
     } 
     // SYSCOIN 
-    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints)){
+    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
        error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
        return DISCONNECT_FAILED;
     }  
