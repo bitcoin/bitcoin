@@ -43,17 +43,25 @@ namespace Platform
         bool OptimizeRam() const { return m_optSetting == PlatformOpt::OptRam; }
         bool OptimizeSpeed() const { return m_optSetting == PlatformOpt::OptSpeed; }
 
-        bool ProcessNftIndexGuts(std::function<bool(NfTokenIndex)> nftIndexHandler);
+        bool ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor);
+        bool ProcessNftIndexGutsOnly(std::function<bool(NfTokenIndex)> nftIndexHandler);
+        bool ProcessNftIndex(const leveldb::Iterator & dbIt, std::function<bool(NfTokenIndex)> nftIndexHandler);
+        bool ProcessNftProtosSupply(const leveldb::Iterator & dbIt, std::function<bool(uint64_t, std::size_t)> protoSupplyHandler);
 
+        bool IsNftIndexEmpty();
         void WriteNftDiskIndex(const NfTokenDiskIndex & nftDiskIndex);
         void EraseNftDiskIndex(const uint64_t &protocolId, const uint256 &tokenId);
         NfTokenIndex ReadNftIndex(const uint64_t &protocolId, const uint256 &tokenId);
+
+        void WriteTotalSupply(std::size_t count, uint64_t nftProtocolId = NfToken::UNKNOWN_TOKEN_PROTOCOL);
+        bool ReadTotalSupply(std::size_t & count, uint64_t nftProtocolId = NfToken::UNKNOWN_TOKEN_PROTOCOL);
 
     private:
         explicit PlatformDb(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
     public:
         static const char DB_NFT;
+        static const char DB_PROTO_TOTAL;
 
     private:
         PlatformOpt m_optSetting = PlatformOpt::OptSpeed;
