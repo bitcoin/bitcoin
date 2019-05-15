@@ -14,7 +14,7 @@
 #include <sys/types.h>
 #include <univalue.h>
 #ifdef ENABLE_WALLET
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 #endif
 class CTransaction;
 class CCoinsViewCache;
