@@ -19,7 +19,7 @@ extern UniValue read_json(const std::string& jsondata);
 BOOST_AUTO_TEST_SUITE(ethereum_tests)
 BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
 {
-    printf("Running ethereum_parseabidata...\n");
+    tfm::format(std::cout,"Running ethereum_parseabidata...\n");
     CAmount outputAmount = 0;
     uint32_t nAsset = 0;
     const std::vector<unsigned char> &expectedMethodHash = ParseHex("285c5bc6");
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(ethereum_parseabidata)
 
 BOOST_AUTO_TEST_CASE(ethspv_valid)
 {
-    printf("Running ethspv_valid...\n");
+    tfm::format(std::cout,"Running ethspv_valid...\n");
     // Read tests from test/data/ethspv_valid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(ethspv_valid)
 
 BOOST_AUTO_TEST_CASE(ethspv_invalid)
 {
-    printf("Running ethspv_invalid...\n");
+    tfm::format(std::cout,"Running ethspv_invalid...\n");
     // Read tests from test/data/ethspv_invalid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]

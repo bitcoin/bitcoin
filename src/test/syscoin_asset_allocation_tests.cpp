@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(syscoin_asset_allocation_tests, BasicSyscoinTestingSetu
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_address_sync...\n");
+	tfm::format(std::cout,"Running generate_asset_allocation_address_sync...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_lock...\n");
+	tfm::format(std::cout,"Running generate_asset_allocation_lock...\n");
 	GenerateBlocks(5);
 	string txid;
 	string newaddress1 = GetNewFundedAddress("node2");
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_send_address...\n");
+	tfm::format(std::cout,"Running generate_asset_allocation_send_address...\n");
 	GenerateBlocks(5);
     GenerateBlocks(5, "node2");
 	string newaddress1 = GetNewFundedAddress("node1");
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
 	UniValue assetAllocationsInvalidatedResults, assetAllocationsNowResults, assetAllocationsValidatedResults;
 	UniValue r;
-	printf("Running generate_asset_consistency_check...\n");
+	tfm::format(std::cout,"Running generate_asset_consistency_check...\n");
 	GenerateBlocks(5);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockcount", true, false));

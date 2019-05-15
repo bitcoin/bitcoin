@@ -37,13 +37,13 @@ void print_number(double x) {
     y *= 10.0;
     c++;
   }
-  printf("%.*f", c, x);
+  tfm::format(std::cout,"%.*f", c, x);
 }
 
 void run_benchmark(char *name, void(*benchmark)(void*, int), void(*setup)(void*), void(*teardown)(void*), void* data) {
   int count = 10;
   for (int i = 1; i <= count; i += 1) {
-    // printf("starting #%d %s for %d iterations\n", i, name, ITERATIONS);
+    // tfm::format(std::cout,"starting #%d %s for %d iterations\n", i, name, ITERATIONS);
     if (setup != NULL) {
       setup(data);
     }
@@ -60,11 +60,11 @@ void run_benchmark(char *name, void(*benchmark)(void*, int), void(*setup)(void*)
 
     double avgUS = totalUS / (ITERATIONS*i);
 
-    printf("#%d %s (x%d): total ", i, name, ITERATIONS*i);
+    tfm::format(std::cout,"#%d %s (x%d): total ", i, name, ITERATIONS*i);
     print_number(totalMS);
-    printf("ms / avg ");
+    tfm::format(std::cout,"ms / avg ");
     print_number(avgUS);
-    printf("us\n");
+    tfm::format(std::cout,"us\n");
   }
 }
 
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 {
   options.setQueueSize(65536);
 
-  printf("cores: %d threads: %zu queue: %zu\n", std::thread::hardware_concurrency(), options.threadCount(), options.queueSize());
+  tfm::format(std::cout,"cores: %d threads: %zu queue: %zu\n", std::thread::hardware_concurrency(), options.threadCount(), options.queueSize());
 
   int i;
   secp256k1_pubkey pubkey;

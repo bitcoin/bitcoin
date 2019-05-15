@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	StartNodes();
     SelectParams(CBaseChainParams::REGTEST);
 	GenerateSpendableCoins();
-	printf("Running generate_big_assetdata...\n");
+	tfm::format(std::cout,"Running generate_big_assetdata...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
 	// 256 bytes long
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
     UniValue r;
-    printf("Running generate_asset_address_spend...\n");
+    tfm::format(std::cout,"Running generate_asset_address_spend...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -157,13 +157,13 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 }
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 {
-    printf("Running generate_asset_audittxroot...\n");
+    tfm::format(std::cout,"Running generate_asset_audittxroot...\n");
     UniValue r;
     BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[709780,\\\"709780\\\",\\\"709779\\\",\\\"a\\\",\\\"a\\\"],[707780,\\\"707780\\\",\\\"707779\\\",\\\"a\\\",\\\"a\\\"],[707772,\\\"707772\\\",\\\"707771\\\",\\\"a\\\",\\\"a\\\"],[707776,\\\"707776\\\",\\\"707775\\\",\\\"a\\\",\\\"a\\\"],[707770,\\\"707770\\\",\\\"707769\\\",\\\"a\\\",\\\"a\\\"],[707778,\\\"707778\\\",\\\"707777\\\",\\\"a\\\",\\\"a\\\"],[707774,\\\"707774\\\",\\\"707773\\\",\\\"a\\\",\\\"a\\\"]]\""));
     int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    printf("syscoinsetethstatus elasped time %lld\n", end-start);
+    tfm::format(std::cout,"syscoinsetethstatus elasped time %lld\n", end-start);
     UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     // the - MAX_ETHEREUM_TX_ROOTS check to ensure you have at least that many roots stored from the tip
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    printf("syscoinsetethstatus1 elasped time %lld\n", end-start);
+    tfm::format(std::cout,"syscoinsetethstatus1 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 707769);
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 709780"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    printf("syscoinsetethstatus2 elasped time %lld\n", end-start);
+    tfm::format(std::cout,"syscoinsetethstatus2 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
 
     BOOST_CHECK_EQUAL(blocksArray.size(), 4);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 }
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
 {
-    printf("Running generate_asset_audittxroot1...\n");
+    tfm::format(std::cout,"Running generate_asset_audittxroot1...\n");
     UniValue r;
     std::string roots = "";
     unsigned int nStartHeight = 700000;
@@ -247,7 +247,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
     int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    printf("syscoinsetethstatus elasped time %lld\n", end-start);
+    tfm::format(std::cout,"syscoinsetethstatus elasped time %lld\n", end-start);
     UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 700059);
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 700059);
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
     start = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinsetethstatus synced 820000"));
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    printf("syscoinsetethstatus1 elasped time %lld\n", end-start);
+    tfm::format(std::cout,"syscoinsetethstatus1 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
     BOOST_CHECK(blocksArray.empty());
 }
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
     int64_t start = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     UniValue r;
-    printf("Running generate_asset_throughput...\n");
+    tfm::format(std::cout,"Running generate_asset_throughput...\n");
     GenerateBlocks(5, "node1");
     GenerateBlocks(5, "node3");
     vector<string> vecAssets;
@@ -299,8 +299,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     vector<string> vecFundedAddresses;
     GenerateBlocks((numAssets+1)/ numberOfAssetSendsPerBlock);
     // PHASE 1:  GENERATE UNFUNDED ADDRESSES FOR RECIPIENTS TO ASSETALLOCATIONSEND
-    printf("Throughput test: Total transaction count: %d, Receivers Per Asset Allocation Transfer %d, Total Number of Assets needed %d\n\n", numberOfTransactionToSend, numberOfAssetSendsPerBlock, numAssets);
-    printf("creating %d unfunded addresses...\n", numberOfAssetSendsPerBlock);
+    tfm::format(std::cout,"Throughput test: Total transaction count: %d, Receivers Per Asset Allocation Transfer %d, Total Number of Assets needed %d\n\n", numberOfTransactionToSend, numberOfAssetSendsPerBlock, numAssets);
+    tfm::format(std::cout,"creating %d unfunded addresses...\n", numberOfAssetSendsPerBlock);
     for(int i =0;i<numberOfAssetSendsPerBlock;i++){
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
         unfundedAccounts.emplace_back(r.get_str());
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     // create address for funding
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
     string fundedAccount = r.get_str();
-    printf("creating %d funded accounts for using with assetsend/assetallocationsend in subsequent steps...\n", numAssets*numberOfAssetSendsPerBlock);
+    tfm::format(std::cout,"creating %d funded accounts for using with assetsend/assetallocationsend in subsequent steps...\n", numAssets*numberOfAssetSendsPerBlock);
     string sendManyString = "";
     for(int i =0;i<numAssets;i++){
         BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
             sendManyString += ",";
         sendManyString += "\"" + fundedAccount + "\":1";
         if(((i+1)% numberOfAssetSendsPerBlock)==0){
-            printf("Sending funds to batch of %d funded accounts, approx. %d batches remaining\n", numberOfAssetSendsPerBlock, (numAssets-i)/ numberOfAssetSendsPerBlock);
+            tfm::format(std::cout,"Sending funds to batch of %d funded accounts, approx. %d batches remaining\n", numberOfAssetSendsPerBlock, (numAssets-i)/ numberOfAssetSendsPerBlock);
             std::string strSendMany = "sendmany \"\" {" + sendManyString + "}";
             CallExtRPC("node1", "sendmany", "\"\",{" + sendManyString + "}");
             sendManyString = "";
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
      // PHASE 4:  CREATE ASSETS
     // create assets needed
-    printf("creating %d sender assets...\n", numAssets);
+    tfm::format(std::cout,"creating %d sender assets...\n", numAssets);
     for(int i =0;i<numAssets;i++){
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew " + vecFundedAddresses[i] + " tps '' '' 8 250 250 31 ''"));
         string guid = itostr(find_value(r.get_obj(), "asset_guid").get_int());
@@ -351,7 +351,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         vecAssets.push_back(guid);
     }
     GenerateBlocks(5);
-    printf("sending assets with assetsend...\n");
+    tfm::format(std::cout,"sending assets with assetsend...\n");
     // PHASE 5:  SEND ASSETS TO NEW ALLOCATIONS
     for(int i =0;i<numAssets;i++){
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassetindexassets " + vecFundedAddresses[i]));
@@ -371,7 +371,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     GenerateBlocks(5);
 
     // PHASE 6:  SEND ALLOCATIONS TO NEW ALLOCATIONS (UNFUNDED ADDRESSES) USING ZDAG
-    printf("Creating assetallocationsend transactions...\n");
+    tfm::format(std::cout,"Creating assetallocationsend transactions...\n");
     int count = 0;
     int unfoundedAccountIndex = 0;
     int assetAllocationSendIndex = 0;
@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     // PHASE 7:  DISTRIBUTE LOAD AMONG SENDERS
     // push vector of signed transactions to tpstestadd on every sender node distributed evenly
     int txPerSender = rawSignedAssetAllocationSends.size() / senders.size();
-    printf("Dividing work (%d transactions) between %d senders (%d per sender)...\n", rawSignedAssetAllocationSends.size(), senders.size(), txPerSender);
+    tfm::format(std::cout,"Dividing work (%d transactions) between %d senders (%d per sender)...\n", rawSignedAssetAllocationSends.size(), senders.size(), txPerSender);
     // max 5 tx per call for max buffer size sent to rpc
     if(txPerSender > 5)
         txPerSender = 5;
@@ -438,7 +438,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     int64_t tpstarttime = GetTimeMicros();
     int microsInSecond = 1000 * 1000;
     tpstarttime = tpstarttime + 1 * microsInSecond;
-    printf("Adding assetsend transactions to queue on sender nodes...\n");
+    tfm::format(std::cout,"Adding assetsend transactions to queue on sender nodes...\n");
     // ensure mnsync isn't doing its thing before the test starts
     for (auto &sender : senders){
         BOOST_CHECK_NO_THROW(CallRPC(sender, "mnsync next", true, false));
@@ -465,7 +465,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     }
 
     // PHASE 9:  WAIT 10 SECONDS + DELAY SET ABOVE (1 SECOND)
-    printf("Waiting 11 seconds as per protocol...\n");
+    tfm::format(std::cout,"Waiting 11 seconds as per protocol...\n");
     // start 11 second wait
     MilliSleep(11000);
 
@@ -495,20 +495,20 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 
     // PHASE 12:  DISPLAY RESULTS
 
-    printf("tpstarttime %lld avgteststarttime %lld totaltime %.2f, num responses %zu\n", tpstarttime, avgteststarttime, totalTime, tpsresponsereceivers.size());
+    tfm::format(std::cout,"tpstarttime %lld avgteststarttime %lld totaltime %.2f, num responses %zu\n", tpstarttime, avgteststarttime, totalTime, tpsresponsereceivers.size());
     for (auto &sender : senders)
         BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestsetenabled", "false"));
     for (auto &receiver : receivers)
         BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestsetenabled", "false"));
     int64_t end = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     const int64_t &startblock = GetTimeMicros();
-    printf("creating %d blocks\n", (numAssets/(93*4)) + 2);
+    tfm::format(std::cout,"creating %d blocks\n", (numAssets/(93*4)) + 2);
     GenerateBlocks((numAssets/(93*4)) + 2, receivers[0]);
 
     const int64_t &endblock = GetTimeMicros();
-    printf("elapsed time in block creation: %lld\n", endblock-startblock);
-    printf("elapsed time in seconds: %lld\n", end-start);
-    printf("checking indexes...\n");
+    tfm::format(std::cout,"elapsed time in block creation: %lld\n", endblock-startblock);
+    tfm::format(std::cout,"elapsed time in seconds: %lld\n", end-start);
+    tfm::format(std::cout,"checking indexes...\n");
     unfoundedAccountIndex = 0;
     for(int i =0;i<numAssets;i++){
         uint32_t nAssetStored;
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
 BOOST_AUTO_TEST_CASE(generate_syscoinmint)
 {
     UniValue r;
-    printf("Running generate_syscoinmint...\n");  
+    tfm::format(std::cout,"Running generate_syscoinmint...\n");  
     // txid 0x4c68e1964c994a2c3facef047a83d14bbb0a127a14006f5f51ca7f6c8d219082 on rinkeby    
 	std::string spv_tx_root = "b7bd7593040ca5b230f658d529bddb6beb5b5f0baad3ae1c2bd844f647885c4a";
 	std::string spv_tx_parent_nodes = "f9035af851a0ca9340bba90781b81f3385b7eee298e3e55cb6a2c05b9f43960ae3b648076cf080808080808080a094047daa38d0aed9cecf2ec2ddf40921f875cbc8f314c73841e92a6a2eff1c918080808080808080f901f180a08164f4ff6b1eca79c231e562597d20b6d8bb1f468c59c6ec7124ab1da14d11dca05168f1dae52b7a223b933aa10429a9b37f1a6e7be82dd4f71d72dc4ab8300f9fa06bdb4be7a6cb3faf333c03647b5d4105f5050f481e259e97018f2da7e9846a98a0a35898131ebc4d8c7296e2157905a8711931e8b06d8f1a3fdd4520591aefcda6a002e4ec3017df498e401a672549d2fb459578b2782c33afee631c391b27a99cbfa09ede31da1d6113501b879fa1ac3cc599c6accb151c81b3c3570e35583257a911a014e0026d220deeaaa62497ed5e76b23670dd415eb1cff01996b390e08f09182fa0cc1d629d03c192cae56aa3ba8e9557fd152a3819f6317a00e73c58e648c4298fa05533a6daec2715c4ab23cdf8b555b0446bab8b80e54ec122f990c2f3d6b542a1a052aabf523dbe87e486900b76142a69d02af00e0b692aaae050783a863f13ad70a070ff8ed8be9cc8a23f89f5f9137762f03f0460bb0441ff2e480d6b4be8da7e9ea0fd8182c3c14e0f73ee706e8f57adb42ed33955c615c2f41140134ba07ef3a15ba09efd760f82967b69b89440ffc161aaff5b30f1bfbd241d50324e140f73266dc7a0ff10c05d4ba159dd75fd9e8b9dcd1f280d841c20f172af91b2af6e8b9cbc02eaa0d3091b9e467b9a5fdf02d6067c1536a55f75f758f8aea313153bc90c3bf9f78580f9011020b9010cf901094f843b9aca008307a120945f6e74ba20bf26161612eac8f7e8b3b6c9baaadd80b8a4285c5bc60000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de00000000000000000000002ca080c84e86f9bffe6a33ded8bb9c8be35bf202468c76e586f37bac0295e5ed509ea0250448d451e3126e548293629b63f3dbaa5a884a0d8a8e629722fce8be4095a4";
@@ -565,7 +565,7 @@ BOOST_AUTO_TEST_CASE(generate_syscoinmint)
 }
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
 {
-    printf("Running generate_burn_syscoin...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin...\n");
     UniValue r;
     string newaddress = GetNewFundedAddress("node1");
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 9.9 0x931D387731bBbC988B312206c74F77D004D6B84b"));
@@ -585,7 +585,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -616,7 +616,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_multiple)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset_multiple...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_multiple...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -675,7 +675,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_multiple)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset_zdag...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -723,7 +723,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset_zdag1...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag1...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -776,7 +776,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset_zdag2...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag2...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -846,7 +846,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset_zdag3...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag3...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
 {
     UniValue r;
-    printf("Running generate_burn_syscoin_asset_zdag4...\n");
+    tfm::format(std::cout,"Running generate_burn_syscoin_asset_zdag4...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -1026,7 +1026,7 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 {
     UniValue r;
 	GenerateBlocks(5);
-	printf("Running generate_bad_assetmaxsupply_address...\n");
+	tfm::format(std::cout,"Running generate_bad_assetmaxsupply_address...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
 	// 256 bytes long
@@ -1047,7 +1047,7 @@ BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 
 BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 {
-	printf("Running generate_assetupdate_address...\n");
+	tfm::format(std::cout,"Running generate_assetupdate_address...\n");
 	string newaddress = GetNewFundedAddress("node1");
 	string guid = AssetNew("node1", newaddress, "data");
 	// update an asset that isn't yours
@@ -1092,7 +1092,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
 }
 BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 {
-	printf("Running generate_assetupdate_precision_address...\n");
+	tfm::format(std::cout,"Running generate_assetupdate_precision_address...\n");
 	UniValue r;
 	for (int i = 0; i <= 8; i++) {
 		string istr = itostr(i);
@@ -1133,7 +1133,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 BOOST_AUTO_TEST_CASE(generate_assetsend_address)
 {
 	UniValue r;
-	printf("Running generate_assetsend_address...\n");
+	tfm::format(std::cout,"Running generate_assetsend_address...\n");
 	string newaddress = GetNewFundedAddress("node1");
 	string newaddress1 = GetNewFundedAddress("node1");
 	string guid = AssetNew("node1", newaddress, "data", "''", "8", "10", "20");
@@ -1187,7 +1187,7 @@ BOOST_AUTO_TEST_CASE(generate_assetsend_address)
 BOOST_AUTO_TEST_CASE(generate_assettransfer_address)
 {
     UniValue r;
-	printf("Running generate_assettransfer_address...\n");
+	tfm::format(std::cout,"Running generate_assettransfer_address...\n");
 	GenerateBlocks(15, "node1");
 	GenerateBlocks(15, "node2");
 	GenerateBlocks(15, "node3");
