@@ -46,5 +46,13 @@ class RpcMiscTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-8, "unknown mode foobar", node.getmemoryinfo, mode="foobar")
 
+        self.log.info("test logging")
+        assert_equal(node.logging()['qt'], True)
+        node.logging(exclude=['qt'])
+        assert_equal(node.logging()['qt'], False)
+        node.logging(include=['qt'])
+        assert_equal(node.logging()['qt'], True)
+
+
 if __name__ == '__main__':
     RpcMiscTest().main()
