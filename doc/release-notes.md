@@ -88,6 +88,16 @@ Configuration
   the selected network. This change takes only effect if the selected network
   is not mainnet.
 
+Wallet
+------
+
+- When in pruned mode, a rescan that was triggered by an `importwallet`,
+  `importpubkey`, `importaddress`, or `importprivkey` RPC will only fail when
+  blocks have been pruned. Previously it would fail when `-prune` has been set.
+  This change allows to set `-prune` to a high value (e.g. the disk size) and
+  the calls to any of the import RPCs would fail when the first block is
+  pruned.
+
 Credits
 =======
 
