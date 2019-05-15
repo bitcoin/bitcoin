@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Ceci sont vos addresses Bitcoin pour recevoir vos paiements. Il est recommandé d'utiliser une nouvelle adresse de recepetion pour chaque transaction</translation>
+        <translation>Ceci sont vos addresses Bitcoin pour recevoir vos paiements. Il est recommandé d'utiliser une nouvelle adresse de recepetion pour chaque transaction.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -79,11 +79,11 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Copier &amp;Étiquette </translation>
+        <translation>Copier &amp;Étiquette</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation>&amp;Éditer </translation>
+        <translation>&amp;Éditer</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -99,7 +99,7 @@
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>Une erreur s'est produite en enregistrant la list d'adresses à %1. Merci de reéssayer.</translation>
+        <translation>Une erreur s'est produite en enregistrant la liste d'adresses à %1. Merci de reéssayer.</translation>
     </message>
 </context>
 <context>
@@ -149,7 +149,7 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>Cette operation nécessite la phrase clé de votre porte-monnaie pour le déverouiller</translation>
+        <translation>Cette operation nécessite la phrase clé de votre porte-monnaie pour le déverouiller.</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
-        <translation>Entrez l'ancien mot de passe et le nouveau mot de passe pour le portefeuille</translation>
+        <translation>Entrez l'ancien mot de passe et le nouveau mot de passe pour le portefeuille.</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Êtes-vous sûr de de vouloir crypter votre portefeuille ? </translation>
+        <translation>Êtes-vous sûr de de vouloir crypter votre portefeuille ?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -236,7 +236,7 @@
     </message>
     <message>
         <source>Banned Until</source>
-        <translation>Banni jusque </translation>
+        <translation>Banni jusque</translation>
     </message>
 </context>
 <context>
@@ -303,7 +303,7 @@
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Chiffrer le portefeuille </translation>
+        <translation>&amp;Chiffrer le portefeuille</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
@@ -758,7 +758,7 @@
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Un nouveau répertoire de données sera créé. </translation>
+        <translation>Un nouveau répertoire de données sera créé.</translation>
     </message>
     <message>
         <source>name</source>
@@ -770,7 +770,7 @@
     </message>
     <message>
         <source>Path already exists, and is not a directory.</source>
-        <translation>Le chemin existe déjà et ce n'est pas un répertoire. </translation>
+        <translation>Le chemin existe déjà et ce n'est pas un répertoire.</translation>
     </message>
     <message>
         <source>Cannot create data directory here.</source>
@@ -800,7 +800,7 @@
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Bienvenue </translation>
+        <translation>Bienvenue</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -808,7 +808,7 @@
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>Utiliser le répertoire par défaut </translation>
+        <translation>Utiliser le répertoire par défaut</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
@@ -973,7 +973,7 @@
     </message>
     <message>
         <source>&amp;Cancel</source>
-        <translation>&amp;Annuler </translation>
+        <translation>&amp;Annuler</translation>
     </message>
     <message>
         <source>default</source>
@@ -985,7 +985,7 @@
     </message>
     <message>
         <source>Confirm options reset</source>
-        <translation>Confirmer les options de réinitialisation </translation>
+        <translation>Confirmer les options de réinitialisation</translation>
     </message>
     <message>
         <source>Client restart required to activate changes.</source>
@@ -1044,7 +1044,7 @@
     </message>
     <message>
         <source>Recent transactions</source>
-        <translation>Transactions récentes </translation>
+        <translation>Transactions récentes</translation>
     </message>
     </context>
 <context>
@@ -1059,7 +1059,7 @@
     </message>
     <message>
         <source>Payment request rejected</source>
-        <translation>Requête de paiement rejetée </translation>
+        <translation>Requête de paiement rejetée</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -1094,7 +1094,7 @@
     </message>
     <message>
         <source>Node/Service</source>
-        <translation>Nœud/Service </translation>
+        <translation>Nœud/Service</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1102,7 +1102,7 @@
     </message>
     <message>
         <source>Received</source>
-        <translation>Reçu </translation>
+        <translation>Reçu</translation>
     </message>
 </context>
 <context>
@@ -1206,7 +1206,7 @@
     </message>
     <message>
         <source>Debug window</source>
-        <translation>Fenêtre de débogage </translation>
+        <translation>Fenêtre de débogage</translation>
     </message>
     <message>
         <source>General</source>
@@ -1214,7 +1214,7 @@
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Version BerkeleyDButilisée </translation>
+        <translation>Version BerkeleyDB utilisée</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1234,7 +1234,7 @@
     </message>
     <message>
         <source>Block chain</source>
-        <translation>Chaîne de bloc </translation>
+        <translation>Chaîne de blocs</translation>
     </message>
     <message>
         <source>Current number of blocks</source>
@@ -1254,7 +1254,7 @@
     </message>
     <message>
         <source>Received</source>
-        <translation>Reçu </translation>
+        <translation>Reçu</translation>
     </message>
     <message>
         <source>Sent</source>
@@ -1530,11 +1530,11 @@
     </message>
     <message>
         <source>automatically selected</source>
-        <translation>Automatiquement sélectionné </translation>
+        <translation>Automatiquement sélectionné</translation>
     </message>
     <message>
         <source>Insufficient funds!</source>
-        <translation>Fonds insuffisants</translation>
+        <translation>Fonds insuffisants!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1578,7 +1578,7 @@
     </message>
     <message>
         <source>Recommended:</source>
-        <translation>Recommandé: </translation>
+        <translation>Recommandé:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1590,7 +1590,7 @@
     </message>
     <message>
         <source>Dust:</source>
-        <translation>Poussière: </translation>
+        <translation>Poussière:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1606,7 +1606,7 @@
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>E&amp;voyer</translation>
+        <translation>E&amp;nvoyer</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1630,11 +1630,11 @@
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Copier la poussière </translation>
+        <translation>Copier la poussière</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Copier changement </translation>
+        <translation>Copier le changement</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -1662,11 +1662,11 @@
     </message>
     <message>
         <source>The amount exceeds your balance.</source>
-        <translation>Le montant excède votre balance. </translation>
+        <translation>Le montant excède votre balance.</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>Échec de la création de la transaction  </translation>
+        <translation>Échec de la création de la transaction!</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -1701,7 +1701,7 @@
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Choisir une adresse précédemment utilisée </translation>
+        <translation>Choisir une adresse précédemment utilisée</translation>
     </message>
     <message>
         <source>This is a normal payment.</source>
@@ -1802,15 +1802,15 @@
     </message>
     <message>
         <source>The entered address is invalid.</source>
-        <translation>L'adresse entrée est invalide. </translation>
+        <translation>L'adresse entrée est invalide.</translation>
     </message>
     <message>
         <source>Please check the address and try again.</source>
-        <translation>Vérifiez l'adresse et réessayer. </translation>
+        <translation>Vérifiez l'adresse et réessayer.</translation>
     </message>
     <message>
         <source>Message signed.</source>
-        <translation>Message signé. </translation>
+        <translation>Message signé.</translation>
     </message>
     <message>
         <source>Please check the signature and try again.</source>
@@ -1822,7 +1822,7 @@
     </message>
     <message>
         <source>Message verified.</source>
-        <translation>Message vérifié. </translation>
+        <translation>Message vérifié.</translation>
     </message>
 </context>
 <context>
@@ -1895,7 +1895,7 @@
     </message>
     <message>
         <source>label</source>
-        <translation>Étiquette </translation>
+        <translation>Étiquette</translation>
     </message>
     <message>
         <source>Credit</source>
@@ -1915,7 +1915,7 @@
     </message>
     <message>
         <source>Total credit</source>
-        <translation>Crédit total </translation>
+        <translation>Crédit total</translation>
     </message>
     <message>
         <source>Transaction fee</source>
@@ -1931,7 +1931,7 @@
     </message>
     <message>
         <source>Comment</source>
-        <translation>Commentaire </translation>
+        <translation>Commentaire</translation>
     </message>
     <message>
         <source>Transaction ID</source>
@@ -1943,7 +1943,7 @@
     </message>
     <message>
         <source>Debug information</source>
-        <translation>Information de débogage </translation>
+        <translation>Information de débogage</translation>
     </message>
     <message>
         <source>Transaction</source>
@@ -1951,7 +1951,7 @@
     </message>
     <message>
         <source>Inputs</source>
-        <translation>Entrées </translation>
+        <translation>Entrées</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2172,7 +2172,7 @@
     </message>
     <message>
         <source>Exporting Successful</source>
-        <translation>Export réalisé avec sucés </translation>
+        <translation>Export réalisé avec succès</translation>
     </message>
     <message>
         <source>Range:</source>
@@ -2239,8 +2239,7 @@
     </message>
     <message>
         <source>Importing...</source>
-        <translation>
-Importation ...</translation>
+        <translation>Importation ...</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
