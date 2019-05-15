@@ -1,0 +1,34 @@
+{
+  /* multi-line comment */
+  // single-line comment
+  // Uncomment and modify options
+  "algo": "x22i",
+  "url": "stratum+tcp://yiimp.eu:3223",
+  "user": "test",
+  "pass": "x"
+  // Add comma to the end of the previous line
+  /* "intensity": 6,
+  "device": "0",
+  "log": "log.txt",
+  "no-color": false,
+  "no-watchdog": false,
+  "retries": 0,
+  "retry-pause": 15,
+  "timeout": 300,
+  "cpu-priority": 3,
+  "api-type": "ccminer-tcp",
+  "api-bind": "127.0.0.1:4068",
+  "pools": [{
+      "algo": "bitcore",
+      "url": "stratum+tcp://yiimp.eu:3566",
+      "user": "test",
+      "pass": "x"
+    },
+    {
+      "algo": "phi2",
+      "url": "stratum+tcp://yiimp.eu:8332",
+      "user": "test",
+      "pass": "x"
+    }
+  ] */
+}
