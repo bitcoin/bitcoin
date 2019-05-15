@@ -65,7 +65,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
 bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations)
 {
     static bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    // unserialize assetallocation from txn, check for valid
+    // unserialize mint object from txn, check for valid
     CMintSyscoin mintSyscoin(tx);
     CAsset dbAsset;
     if(mintSyscoin.IsNull())
