@@ -11,7 +11,7 @@
 #include <txmempool.h>
 #include <services/witnessaddress.h>
 #ifdef ENABLE_WALLET
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 #endif
 class CTransaction;
 class CAsset;
