@@ -288,7 +288,8 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
                     /* pfMissingInputs */ &ignored,
                     &plTxnReplaced,
                     /* bypass_limits */ false,
-                    /* nAbsurdFee */ 0));
+                    /* nAbsurdFee */ 0,
+                    /* test_accept */ false));
             }
         }
 

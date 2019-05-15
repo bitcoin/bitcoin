@@ -363,7 +363,7 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
         CValidationState stateDummy;
         if (!fAddToMempool || (*it)->IsCoinBase() ||
             !AcceptToMemoryPool(mempool, stateDummy, *it, nullptr /* pfMissingInputs */,
-                                nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */)) {
+                                nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */, false /* test_accept */)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);

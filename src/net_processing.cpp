@@ -1809,7 +1809,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
         CValidationState orphan_state;
 
         if (setMisbehaving.count(fromPeer)) continue;
-        if (AcceptToMemoryPool(mempool, orphan_state, porphanTx, &fMissingInputs2, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+        if (AcceptToMemoryPool(mempool, orphan_state, porphanTx, &fMissingInputs2, &removed_txn, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test_accept */)) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanTx, connman);
             for (unsigned int i = 0; i < orphanTx.vout.size(); i++) {
@@ -2496,7 +2496,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::list<CTransactionRef> lRemovedTxn;
 
         if (!AlreadyHave(inv) &&
-            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */)) {
+            AcceptToMemoryPool(mempool, state, ptx, &fMissingInputs, &lRemovedTxn, false /* bypass_limits */, 0 /* nAbsurdFee */, false /* test_accept */)) {
             mempool.check(pcoinsTip.get());
             RelayTransaction(tx, connman);
             for (unsigned int i = 0; i < tx.vout.size(); i++) {

@@ -153,7 +153,7 @@ class LockImpl : public Chain::Lock, public UniqueLock<CCriticalSection>
     {
         LockAssertion lock(::cs_main);
         return AcceptToMemoryPool(::mempool, state, tx, nullptr /* missing inputs */, nullptr /* txn replaced */,
-            false /* bypass limits */, absurd_fee);
+            false /* bypass limits */, absurd_fee, /* test_accept */ false);
     }
 
     using UniqueLock::UniqueLock;
