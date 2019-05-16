@@ -9,6 +9,11 @@
 #include <atomic>
 #include <thread>
 
+#if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
+#include <pthread.h>
+#include <pthread_np.h>
+#endif
+
 #include <util/threadnames.h>
 
 #ifdef HAVE_SYS_PRCTL_H
