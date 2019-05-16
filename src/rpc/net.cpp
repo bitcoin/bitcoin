@@ -582,12 +582,12 @@ static UniValue setban(const JSONRPCRequest& request)
             absolute = true;
 
         if (isSubnet) {
-            g_banman->Ban(subNet, BanReasonManuallyAdded, banTime, absolute);
+            g_banman->Ban(subNet, BanReason::ManuallyAdded, banTime, absolute);
             if (g_connman) {
                 g_connman->DisconnectNode(subNet);
             }
         } else {
-            g_banman->Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
+            g_banman->Ban(netAddr, BanReason::ManuallyAdded, banTime, absolute);
             if (g_connman) {
                 g_connman->DisconnectNode(netAddr);
             }

@@ -3183,7 +3183,7 @@ bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_
         } else {
             // Disconnect and ban all nodes sharing the address
             if (m_banman) {
-                m_banman->Ban(pnode->addr, BanReasonNodeMisbehaving);
+                m_banman->Ban(pnode->addr, BanReason::NodeMisbehaving);
             }
             connman->DisconnectNode(pnode->addr);
         }

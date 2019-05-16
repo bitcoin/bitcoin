@@ -78,8 +78,8 @@ Optional<BanReason> BanMan::IsBannedReason(CNetAddr net_addr)
         CBanEntry ban_entry = it.second;
 
         if (current_time < ban_entry.nBanUntil && sub_net.Match(net_addr)) {
-            if (ban_entry.banReason != BanReasonNodeMisbehaving) return BanReason(ban_entry.banReason);
-            reason = BanReason(ban_entry.banReason);
+            if (ban_entry.banReason != BanReason::NodeMisbehaving) return ban_entry.banReason;
+            reason = ban_entry.banReason;
         }
     }
     return reason;
@@ -133,7 +133,7 @@ void BanMan::Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ba
     if (m_client_interface) m_client_interface->BannedListChanged();
 
     //store banlist to disk immediately if user requested ban
-    if (ban_reason == BanReasonManuallyAdded) DumpBanlist();
+    if (ban_reason == BanReason::ManuallyAdded) DumpBanlist();
 }
 
 bool BanMan::Unban(const CNetAddr& net_addr)

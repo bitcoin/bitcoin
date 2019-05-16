@@ -938,7 +938,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     // Don't accept connections from banned peers, but if our inbound slots aren't almost full, accept
     // if the only banning reason was an automatic misbehavior ban.
-    if (!whitelisted && bannedreason != nullopt && ((nInbound + 1 >= nMaxInbound) || bannedreason != BanReasonNodeMisbehaving)) {
+    if (!whitelisted && bannedreason != nullopt && ((nInbound + 1 >= nMaxInbound) || bannedreason != BanReason::NodeMisbehaving)) {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
         CloseSocket(hSocket);
         return;
