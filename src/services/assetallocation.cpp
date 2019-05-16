@@ -467,7 +467,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
             }.ToString());
 
     uint32_t nAsset;
-    if(params[2].isNum())
+    if(params[0].isNum())
         nAsset = (uint32_t)params[0].get_int();
     else if(params[0].isStr())
         ParseUInt32(params[0].get_str(), &nAsset);
@@ -478,7 +478,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     uint32_t nBlockNumber;
     if(params[3].isNum())
         nBlockNumber = (uint32_t)params[3].get_int();
-    else if(params[0].isStr())
+    else if(params[3].isStr())
         ParseUInt32(params[3].get_str(), &nBlockNumber);    
     
     string vchTxValue = params[4].get_str();
