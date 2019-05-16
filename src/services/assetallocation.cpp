@@ -466,10 +466,20 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
                 }
             }.ToString());
 
-    const int &nAsset = params[0].get_int();
+    uint32_t nAsset;
+    if(params[2].isNum())
+        nAsset = (uint32_t)params[0].get_int();
+    else if(params[0].isStr())
+        ParseUInt32(params[0].get_str(), &nAsset);
+
     string strAddress = params[1].get_str();
     CAmount nAmount = AmountFromValue(params[2]);
-    uint32_t nBlockNumber = (uint32_t)params[3].get_int();
+    
+    uint32_t nBlockNumber;
+    if(params[3].isNum())
+        nBlockNumber = (uint32_t)params[3].get_int();
+    else if(params[0].isStr())
+        ParseUInt32(params[3].get_str(), &nBlockNumber);    
     
     string vchTxValue = params[4].get_str();
     string vchTxRoot = params[5].get_str();
