@@ -138,11 +138,6 @@ public:
     //! unlocked when the returned interface is freed.
     virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
 
-    //! Return Lock interface assuming chain is already locked. This
-    //! method is temporary and is only used in a few places to avoid changing
-    //! behavior while code is transitioned to use the Chain::Lock interface.
-    virtual std::unique_ptr<Lock> assumeLocked() = 0;
-
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
     //!
