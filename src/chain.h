@@ -158,6 +158,8 @@ enum BlockStatus: uint32_t {
     BLOCK_FAILED_VALID       =   32, //!< stage after last reached validness failed
     BLOCK_FAILED_CHILD       =   64, //!< descends from failed block
     BLOCK_FAILED_MASK        =   BLOCK_FAILED_VALID | BLOCK_FAILED_CHILD,
+
+    BLOCK_CONFLICT_CHAINLOCK =   128, //!< conflicts with chainlock system
 };
 
 /** The block chain is a tree shaped structure starting with the
