@@ -1202,7 +1202,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
 
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     CMintSyscoin mintsyscoin(tx);
-    if (!mintsyscoin.IsNull() && (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull())) {
+    if (!mintsyscoin.IsNull() && ((tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull()) || tx.nVersion == SYSCOIN_TX_VERSION_MINT)) {
         int nHeight = 0;
         const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
@@ -1258,7 +1258,7 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     return false;                   
 }
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
-    if (!mintsyscoin.IsNull() && (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull())) {
+    if (!mintsyscoin.IsNull() && ((tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull()) || tx.nVersion == SYSCOIN_TX_VERSION_MINT)) {
         entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
             entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
