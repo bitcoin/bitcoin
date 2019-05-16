@@ -17,6 +17,7 @@
 #include <crypto/sha256.h>
 #include <primitives/transaction.h>
 #include <netbase.h>
+#include <optional.h>
 #include <scheduler.h>
 #include <ui_interface.h>
 #include <util/strencodings.h>
@@ -933,12 +934,11 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     // on all platforms.  Set it again here just to be sure.
     SetSocketNoDelay(hSocket);
 
-    int bannedlevel = m_banman ? m_banman->IsBannedLevel(addr) : 0;
+    Optional<BanReason> bannedreason = m_banman ? m_banman->IsBannedReason(addr) : nullopt;
 
     // Don't accept connections from banned peers, but if our inbound slots aren't almost full, accept
     // if the only banning reason was an automatic misbehavior ban.
-    if (!whitelisted && bannedlevel > ((nInbound + 1 < nMaxInbound) ? 1 : 0))
-    {
+    if (!whitelisted && bannedreason != nullopt && ((nInbound + 1 >= nMaxInbound) || bannedreason != BanReasonNodeMisbehaving)) {
         LogPrint(BCLog::NET, "connection from %s dropped (banned)\n", addr.ToString());
         CloseSocket(hSocket);
         return;
@@ -961,7 +961,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
-    pnode->m_prefer_evict = bannedlevel > 0;
+    pnode->m_prefer_evict = bannedreason != nullopt;
     m_msgproc->InitializeNode(pnode);
 
     LogPrint(BCLog::NET, "connection from %s accepted\n", addr.ToString());

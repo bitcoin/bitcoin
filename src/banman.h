@@ -10,6 +10,7 @@
 
 #include <addrdb.h>
 #include <fs.h>
+#include <optional.h>
 #include <sync.h>
 
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
@@ -42,7 +43,7 @@ public:
     void Ban(const CNetAddr& net_addr, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void Ban(const CSubNet& sub_net, const BanReason& ban_reason, int64_t ban_time_offset = 0, bool since_unix_epoch = false);
     void ClearBanned();
-    int IsBannedLevel(CNetAddr net_addr);
+    Optional<BanReason> IsBannedReason(CNetAddr net_addr);
     bool IsBanned(CNetAddr net_addr);
     bool IsBanned(CSubNet sub_net);
     bool Unban(const CNetAddr& net_addr);
