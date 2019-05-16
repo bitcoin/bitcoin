@@ -84,6 +84,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
  void CChainParams::TurnOffSegwitForUnitTests ()
 {
   consensus.BIP16Height = 1000000;
+  consensus.BIP34Height = 1000000;
 }
 /**
  * Main network

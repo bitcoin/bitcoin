@@ -1268,9 +1268,11 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
+    static bool bRegtest = Params().NetworkIDString() == CBaseChainParams::REGTEST;
     if (nHeight == 0)
         return 50*COIN;
     if (nHeight == 1)
+    if (!bRegtest && nHeight == 1)
     {
         // SYSCOIN 4 snapshot
         nTotalRewardWithMasternodes = 554200000 * COIN;
@@ -1741,11 +1743,6 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
  *  When FAILED is returned, view is left in an indeterminate state. */
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
-    // SYSCOIN
-    if(!passetdb || !passetallocationdb){
-        error("DisconnectBlock(): Syscoin dbs do not exist");
-        return DISCONNECT_FAILED;
-    }
     AssetMap mapAssets;
     AssetAllocationMap mapAssetAllocations;
     EthereumMintTxVec vecMintKeys;
@@ -1803,14 +1800,16 @@ DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockI
             // At this point, all of txundo.vprevout should have been moved out.
         }
         // SYSCOIN
-        if(!DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations, vecMintKeys))
+        if(passetdb != nullptr && !DisconnectSyscoinTransaction(tx, pindex, view, mapAssets, mapAssetAllocations, vecMintKeys))
             fClean = false;
     } 
     // SYSCOIN 
-    if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
-       error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
-       return DISCONNECT_FAILED;
-    }  
+    if(passetdb != nullptr){
+        if(!passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !passetindexdb->FlushErase(vecTXIDs) || !pblockindexdb->FlushErase(vecTXIDs) || !plockedoutpointsdb->FlushErase(vecOutpoints) || !pethereumtxmintdb->FlushErase(vecMintKeys)){
+            error("DisconnectBlock(): Error flushing to asset dbs on disconnect");
+            return DISCONNECT_FAILED;
+        }
+    }
 
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
