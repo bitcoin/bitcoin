@@ -196,8 +196,8 @@ public:
     //! Relay dust fee setting (-dustrelayfee), reflecting lowest rate it's economical to spend.
     virtual CFeeRate relayDustFee() = 0;
 
-    //! Check if pruning is enabled.
-    virtual bool getPruneMode() = 0;
+    //! Check if any block has been pruned.
+    virtual bool havePruned() = 0;
 
     //! Check if p2p enabled.
     virtual bool p2pEnabled() = 0;

@@ -158,8 +158,11 @@ UniValue importprivkey(const JSONRPCRequest& request)
         if (!request.params[2].isNull())
             fRescan = request.params[2].get_bool();
 
-        if (fRescan && pwallet->chain().getPruneMode()) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
+        if (fRescan && pwallet->chain().havePruned()) {
+            // Exit early and print an error.
+            // If a block is pruned after this check, we will import the key(s),
+            // but fail the rescan with a generic error.
+            throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled when blocks are pruned");
         }
 
         if (fRescan && !reserver.reserve()) {
@@ -315,8 +318,11 @@ UniValue importaddress(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         fRescan = request.params[2].get_bool();
 
-    if (fRescan && pwallet->chain().getPruneMode()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
+    if (fRescan && pwallet->chain().havePruned()) {
+        // Exit early and print an error.
+        // If a block is pruned after this check, we will import the key(s),
+        // but fail the rescan with a generic error.
+        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled when blocks are pruned");
     }
 
     WalletRescanReserver reserver(pwallet);
@@ -508,8 +514,11 @@ UniValue importpubkey(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         fRescan = request.params[2].get_bool();
 
-    if (fRescan && pwallet->chain().getPruneMode()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled in pruned mode");
+    if (fRescan && pwallet->chain().havePruned()) {
+        // Exit early and print an error.
+        // If a block is pruned after this check, we will import the key(s),
+        // but fail the rescan with a generic error.
+        throw JSONRPCError(RPC_WALLET_ERROR, "Rescan is disabled when blocks are pruned");
     }
 
     WalletRescanReserver reserver(pwallet);
