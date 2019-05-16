@@ -311,6 +311,9 @@ struct SCOPED_LOCKABLE LockAnnotation
     template <typename Mutex>
     explicit LockAnnotation(Mutex& mutex) EXCLUSIVE_LOCK_FUNCTION(mutex)
     {
+#ifdef DEBUG_LOCKORDER
+        AssertLockHeld(mutex);
+#endif
     }
     ~LockAnnotation() UNLOCK_FUNCTION() {}
 };
