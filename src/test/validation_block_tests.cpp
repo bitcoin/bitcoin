@@ -20,7 +20,10 @@
 #include <thread>
 
 struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
+    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {
+        // SYSCOIN
+        TurnOffSegwitForUnitTests();
+    }
 };
 
 static const std::vector<unsigned char> V_OP_TRUE{OP_TRUE};
@@ -186,11 +189,11 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             }
 
             // to make sure that eventually we process the full chain - do it here
+
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
                     bool processed = ProcessNewBlock(Params(), block, true, &ignored);
-                    // SYSCOIN no corruption possible
-                    //assert(processed);
+                    assert(processed);
                 }
             }
         });
