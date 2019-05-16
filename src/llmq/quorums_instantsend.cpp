@@ -1117,10 +1117,6 @@ void CInstantSendManager::HandleFullyConfirmedBlock(const CBlockIndex* pindex)
             RemoveNonLockedTx(txid, true);
         }
     }
-
-    for (auto& p : removeISLocks) {
-        UpdateWalletTransaction(p.second->txid, nullptr);
-    }
 }
 
 void CInstantSendManager::RemoveMempoolConflictsForLock(const uint256& hash, const CInstantSendLock& islock)
