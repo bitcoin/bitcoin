@@ -763,7 +763,12 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
 
 	string vchAddress = params[0].get_str();
 	CAmount nAmount = AmountFromValue(params[1]);
-    uint32_t nBlockNumber = (uint32_t)params[2].get_int();
+    uint32_t nBlockNumber;
+    if(params[2].isNum())
+        nBlockNumber = (uint32_t)params[2].get_int();
+    else if(params[2].isStr())
+        ParseUInt32(params[2].get_str(), &nBlockNumber);
+ 
     string vchTxValue = params[3].get_str();
     string vchTxRoot = params[4].get_str();
     string vchTxParentNodes = params[5].get_str();
