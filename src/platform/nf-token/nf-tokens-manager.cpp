@@ -294,7 +294,7 @@ namespace Platform
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
-            PlatformDb::Instance().ProcessNftIndexGutsOnly([&](NfTokenIndex nftIndex) -> bool
+            auto dbHandler = [&](NfTokenIndex nftIndex) -> bool
             {
                 if (!nftIndexHandler(nftIndex))
                 {
@@ -302,7 +302,9 @@ namespace Platform
                     return false;
                 }
                 return true;
-            });
+            };
+
+            PlatformDb::Instance().ProcessNftIndexGutsOnly(dbHandler);
         }
     }
 
@@ -323,7 +325,7 @@ namespace Platform
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
-            PlatformDb::Instance().ProcessNftIndexGutsOnly([&, height](NfTokenIndex nftIndex) -> bool
+            auto dbHandler = [&, height](NfTokenIndex nftIndex) -> bool
             {
                 if (nftIndex.BlockIndex()->nHeight <= height)
                 {
@@ -334,7 +336,9 @@ namespace Platform
                     }
                 }
                 return true;
-            });
+            };
+
+            PlatformDb::Instance().ProcessNftIndexGutsOnly(dbHandler);
         }
     }
 
