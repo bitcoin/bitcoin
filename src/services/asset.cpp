@@ -825,20 +825,20 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
             RPCResult{
             "{\n"
             "  \"txtype\" : \"txtype\",         (string) The syscoin transaction type\n"
+            "  \"asset_guid\" : n,              (numeric) The asset guid\n"
+            "  \"symbol\" : \"symbol\",         (string) The asset symbol\n"
             "  \"txid\" : \"id\",               (string) The transaction id\n"
-            "  \"height\" : n,                (numeric) The blockheight of the transaction \n"
-            "  \"asset_guid\" : n,                 (numeric) The asset guid\n"
-            "  \"asset_symbol\" : \"symbol\",      (string) The asset symbol\n"
+            "  \"height\" : n,                  (numeric) The blockheight of the transaction \n"
             "  \"sender\" : \"address\",        (string) The address of the sender\n"
-            "  \"allocations\" : [            (array of json objects)\n"
+            "  \"allocations\" : [              (array of json objects)\n"
             "    {\n"
             "      \"address\": \"address\",    (string) The address of the receiver\n"
-            "      \"amount\" : n,            (numeric) The amount of the transaction\n"
+            "      \"amount\" : n,              (numeric) The amount of the transaction\n"
             "    },\n"
             "    ...\n"
             "  ]\n"
-            "  \"total\" : n,                 (numeric) The total amount in this transaction\n"
-            "  \"confirmed\" : true|false     (boolean) If the transaction is confirmed\n"
+            "  \"total\" : n,                   (numeric) The total amount in this transaction\n"
+            "  \"confirmed\" : true|false       (boolean) If the transaction is confirmed\n"
             "}\n"
             },
             RPCExamples{
@@ -1541,8 +1541,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 	entry.__pushKV("asset_guid", (int)asset.nAsset);
     entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
-    entry.
-    __pushKV("height", nHeight);
+    entry.__pushKV("height", nHeight);
     
 	if (!asset.vchPubData.empty())
 		entry.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
