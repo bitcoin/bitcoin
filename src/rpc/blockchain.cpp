@@ -1711,10 +1711,11 @@ static UniValue reconsiderblock(const JSONRPCRequest& request)
 
         ResetBlockFailureFlags(pblockindex);
     }
-
+    // SYSCOIN do not re-validate eth txroots
+    fLoaded = false;
     CValidationState state;
     ActivateBestChain(state, Params());
-
+    fLoaded = true;
     if (!state.IsValid()) {
         throw JSONRPCError(RPC_DATABASE_ERROR, FormatStateMessage(state));
     }
