@@ -101,6 +101,14 @@ static void RescanWallet(CWallet& wallet, const WalletRescanReserver& reserver, 
     }
 }
 
+static void EnsureBlockDataFromTime(interfaces::Chain::Lock& locked_chain, int64_t timestamp)
+{
+    const Optional<int> height = locked_chain.findFirstBlockWithTimeAndHeight(timestamp - TIMESTAMP_WINDOW, 0, nullptr);
+    if (height && !locked_chain.haveBlockOnDisk(*height)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Pruned blocks required to import keys");
+    }
+}
+
 UniValue importprivkey(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
