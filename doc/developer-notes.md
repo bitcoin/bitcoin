@@ -478,6 +478,14 @@ Wallet
 General C++
 -------------
 
+For general C++ guidelines, you may refer to the [C++ Core
+Guidelines](https://isocpp.github.io/CppCoreGuidelines/).
+
+Common misconceptions are clarified in those sections:
+
+- Passing (non-)fundamental types in the [C++ Core
+  Guideline](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rf-conventional)
+
 - Assertions should not have side-effects
 
   - *Rationale*: Even though the source code is set to refuse to compile
