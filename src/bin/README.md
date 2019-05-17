@@ -17,3 +17,13 @@ MacOS
 
 Windows (64-bit)
 `c3c71acdcf9234970db37ee66feee6d7`
+
+
+Relayer
+-------
+
+Source: [Github](https://www.github.com/syscoin/relayer/)
+Version: 1.0.8
+MD5 (relayer-linux) = 82feafab1ddf5db734a8862242b5c924
+MD5 (relayer-macos) = f17a2840c5a690c96e0e13c445f64afd
+MD5 (relayer-win.exe) = 6c223119601a39dd801fe4fbdca5a10b
