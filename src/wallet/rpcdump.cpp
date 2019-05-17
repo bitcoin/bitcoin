@@ -1370,10 +1370,6 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         // Verify all timestamps are present before importing any keys.
         const Optional<int> tip_height = locked_chain->getHeight();
         now = tip_height ? locked_chain->getBlockMedianTimePast(*tip_height) : 0;
-        for (const UniValue& data : requests.getValues()) {
-            GetImportTimestamp(data, now);
-        }
-
         const int64_t minimumTimestamp = 1;
 
         if (fRescan && tip_height) {
@@ -1382,6 +1378,13 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             fRescan = false;
         }
 
+        for (const UniValue& data : requests.getValues()) {
+            const int64_t timestamp = std::max(GetImportTimestamp(data, now), minimumTimestamp);
+            // Get the lowest timestamp.
+            if (timestamp < nLowestTimestamp) {
+                nLowestTimestamp = timestamp;
+            }
+        }
         for (const UniValue& data : requests.getValues()) {
             const int64_t timestamp = std::max(GetImportTimestamp(data, now), minimumTimestamp);
             const UniValue result = ProcessImport(pwallet, data, timestamp);
@@ -1394,11 +1397,6 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             // If at least one request was successful then allow rescan.
             if (result["success"].get_bool()) {
                 fRunScan = true;
-            }
-
-            // Get the lowest timestamp.
-            if (timestamp < nLowestTimestamp) {
-                nLowestTimestamp = timestamp;
             }
         }
     }
