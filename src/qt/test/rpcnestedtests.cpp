@@ -155,12 +155,18 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY_EXCEPTION_THROWN(RPCConsole::RPCExecuteCommandLine(result, "rpcNestedTest(abc,,)"), std::runtime_error); //don't tollerate empty arguments when using ,
 #endif
 
+    UnloadBlockIndex();
     delete pcoinsTip;
+    pcoinsTip = nullptr;
     llmq::DestroyLLMQSystem();
     delete deterministicMNManager;
+    deterministicMNManager = nullptr;
     delete pcoinsdbview;
+    pcoinsdbview = nullptr;
     delete pblocktree;
+    pblocktree = nullptr;
     delete evoDb;
+    evoDb = nullptr;
 
     boost::filesystem::remove_all(boost::filesystem::path(path));
 }

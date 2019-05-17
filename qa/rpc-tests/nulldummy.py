@@ -63,29 +63,29 @@ class NULLDUMMYTest(BitcoinTestFramework):
 
         self.log.info("Test 1: NULLDUMMY compliant base transactions should be accepted to mempool and mined before activation [430]")
         test1txs = [self.create_transaction(self.nodes[0], coinbase_txid[0], self.ms_address, 49)]
-        txid1 = self.tx_submit(self.nodes[0], test1txs[0])
+        txid1 = self.nodes[0].sendrawtransaction(bytes_to_hex_str(test1txs[0].serialize()), True)
         test1txs.append(self.create_transaction(self.nodes[0], txid1, self.ms_address, 48))
-        txid2 = self.tx_submit(self.nodes[0], test1txs[1])
+        txid2 = self.nodes[0].sendrawtransaction(bytes_to_hex_str(test1txs[1].serialize()), True)
         self.block_submit(self.nodes[0], test1txs, True)
 
         self.log.info("Test 2: Non-NULLDUMMY base multisig transaction should not be accepted to mempool before activation")
         test2tx = self.create_transaction(self.nodes[0], txid2, self.ms_address, 47)
         trueDummy(test2tx)
-        txid4 = self.tx_submit(self.nodes[0], test2tx, NULLDUMMY_ERROR)
+        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test2tx.serialize()), True)
 
         self.log.info("Test 3: Non-NULLDUMMY base transactions should be accepted in a block before activation [431]")
         self.block_submit(self.nodes[0], [test2tx], True)
 
         self.log.info("Test 4: Non-NULLDUMMY base multisig transaction is invalid after activation")
-        test4tx = self.create_transaction(self.nodes[0], txid4, self.address, 46)
+        test4tx = self.create_transaction(self.nodes[0], test2tx.hash, self.address, 46)
         test6txs=[CTransaction(test4tx)]
         trueDummy(test4tx)
-        self.tx_submit(self.nodes[0], test4tx, NULLDUMMY_ERROR)
+        assert_raises_jsonrpc(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, bytes_to_hex_str(test4tx.serialize()), True)
         self.block_submit(self.nodes[0], [test4tx])
 
         self.log.info("Test 6: NULLDUMMY compliant transactions should be accepted to mempool and in block after activation [432]")
         for i in test6txs:
-            self.tx_submit(self.nodes[0], i)
+            self.nodes[0].sendrawtransaction(bytes_to_hex_str(i.serialize()), True)
         self.block_submit(self.nodes[0], test6txs, True)
 
 
@@ -98,17 +98,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
         f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
-
-
-    def tx_submit(self, node, tx, msg = ""):
-        tx.rehash()
-        try:
-            node.sendrawtransaction(bytes_to_hex_str(tx.serialize()), True)
-        except JSONRPCException as exp:
-            assert_equal(exp.error["message"], msg)
-        else:
-            assert_equal('', msg)
-        return tx.hash
 
 
     def block_submit(self, node, txs, accept = False):

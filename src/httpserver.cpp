@@ -147,13 +147,6 @@ public:
             cond.wait(lock);
         }
     }
-
-    /** Return current depth of queue */
-    size_t Depth()
-    {
-        std::unique_lock<std::mutex> lock(cs);
-        return queue.size();
-    }
 };
 
 struct HTTPPathHandler
@@ -489,6 +482,7 @@ void StopHTTPServer()
         workQueue->WaitExit();
 #endif        
         delete workQueue;
+        workQueue = nullptr;
     }
     if (eventBase) {
         LogPrint("http", "Waiting for HTTP event thread to exit\n");

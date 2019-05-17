@@ -47,10 +47,8 @@
 #include <unistd.h>
 #endif
 
-#ifdef WIN32
-#define MSG_DONTWAIT        0
-#else
-typedef u_int SOCKET;
+#ifndef WIN32
+typedef unsigned int SOCKET;
 #include "errno.h"
 #define WSAGetLastError()   errno
 #define WSAEINVAL           EINVAL
@@ -72,11 +70,6 @@ typedef u_int SOCKET;
 #endif
 #else
 #define MAX_PATH            1024
-#endif
-
-// As Solaris does not have the MSG_NOSIGNAL flag for send(2) syscall, it is defined as 0
-#if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
 #endif
 
 #if HAVE_DECL_STRNLEN == 0
