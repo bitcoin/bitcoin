@@ -108,7 +108,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
     if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, vchTxRoots)){
         if(ethTxRootShouldExist){
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid transaction root for SPV proof");
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Missing transaction root for SPV proof at Ethereum block: ") + itostr(mintSyscoin.nBlockNumber);
             bTxRootError = true;
             return false;
         }
@@ -126,7 +126,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         // ensure that we wait at least ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
         // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
         if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 10: ETHEREUM_CONFIRMS_REQUIRED))){
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction");
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction. Blocks required: ") + itostr(ETHEREUM_CONFIRMS_REQUIRED - (fGethSyncHeight - mintSyscoin.nBlockNumber));
             bTxRootError = true;
             return false;
         } 
