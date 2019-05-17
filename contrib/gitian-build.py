@@ -255,7 +255,7 @@ def main():
         os.chdir('gitian.sigs')
         subprocess.check_call(['git', 'pull'])
         os.chdir(workdir)
-        sys.exit(verify())
+        verify()
 
 if __name__ == '__main__':
     main()
