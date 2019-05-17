@@ -3951,19 +3951,9 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_RE
 bool LoadChainTip(const CChainParams& chainparams)
 {
     AssertLockHeld(cs_main);
+    assert(!pcoinsTip->GetBestBlock().IsNull()); // Never called when the coins view is empty
 
     if (::ChainActive().Tip() && ::ChainActive().Tip()->GetBlockHash() == pcoinsTip->GetBestBlock()) return true;
-
-    if (pcoinsTip->GetBestBlock().IsNull() && mapBlockIndex.size() == 1) {
-        // In case we just added the genesis block, connect it now, so
-        // that we always have a ::ChainActive().Tip() when we return.
-        LogPrintf("%s: Connecting genesis block...\n", __func__);
-        CValidationState state;
-        if (!ActivateBestChain(state, chainparams)) {
-            LogPrintf("%s: failed to activate chain (%s)\n", __func__, FormatStateMessage(state));
-            return false;
-        }
-    }
 
     // Load pointer to end of best chain
     CBlockIndex* pindex = LookupBlockIndex(pcoinsTip->GetBestBlock());
