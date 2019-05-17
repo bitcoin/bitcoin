@@ -175,6 +175,11 @@ A lot of refactoring, backports, code cleanups and other small fixes were done i
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.13.3.0...dashpay:v0.14.0.0).
 
+- [`612a90e8c`](https://github.com/dashpay/dash/commit/612a90e8c) Set CLIENT_VERSION_IS_RELEASE to true (#2926)
+- [`9482f77e5`](https://github.com/dashpay/dash/commit/9482f77e5) Update help text via gen-manpages.sh (#2929)
+- [`211a39d19`](https://github.com/dashpay/dash/commit/211a39d19) 0.14 release notes draft (#2896)
+- [`84162021a`](https://github.com/dashpay/dash/commit/84162021a) Fix duplicate `-instantsendnotify` invocation (#2925)
+- [`38aab0c5e`](https://github.com/dashpay/dash/commit/38aab0c5e) Add blocks conflicting with ChainLocks to block index (#2923)
 - [`394bec483`](https://github.com/dashpay/dash/commit/394bec483) Skip processing in SyncTransaction when chain is not synced yet (#2920)
 - [`c8a80b279`](https://github.com/dashpay/dash/commit/c8a80b279) Set DIP0008 mainnet activation params (#2915)
 - [`040abafe3`](https://github.com/dashpay/dash/commit/040abafe3) [0.14] Bump chainparams (#2910)
