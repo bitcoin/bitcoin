@@ -828,6 +828,7 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
             "  \"txid\" : \"id\",               (string) The transaction id\n"
             "  \"height\" : n,                (numeric) The blockheight of the transaction \n"
             "  \"asset_guid\" : n,                 (numeric) The asset guid\n"
+            "  \"asset_symbol\" : \"symbol\",      (string) The asset symbol\n"
             "  \"sender\" : \"address\",        (string) The address of the sender\n"
             "  \"allocations\" : [            (array of json objects)\n"
             "    {\n"
@@ -1068,12 +1069,13 @@ bool GetAsset(const int &nAsset,
 
 UniValue assetnew(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-    if (request.fHelp || params.size() != 8)
+    if (request.fHelp || params.size() != 9)
         throw runtime_error(
             RPCHelpMan{"assetnew",
             "\nCreate a new asset\n",
             {
                 {"address", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "An address that you own."},
+                {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
                 {"public_value", RPCArg::Type::STR, RPCArg::Optional::NO, "public data, 256 characters max."},
                 {"contract", RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
                 {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
@@ -1089,25 +1091,26 @@ UniValue assetnew(const JSONRPCRequest& request) {
             "}\n"
             },
             RPCExamples{
-            HelpExampleCli("assetnew", "\"myaddress\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 \"\"")
-            + HelpExampleRpc("assetnew", "\"myaddress\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, \"\"")
+            HelpExampleCli("assetnew", "\"myaddress\" \"CAT\" \"publicvalue\" \"contractaddr\" 8 100 1000 31 \"\"")
+            + HelpExampleRpc("assetnew", "\"myaddress\", \"CAT\", \"publicvalue\", \"contractaddr\", 8, 100, 1000, 31, \"\"")
             }
             }.ToString());
 	string vchAddress = params[0].get_str();
-	vector<unsigned char> vchPubData = vchFromString(params[1].get_str());
-    string strContract = params[2].get_str();
+    string strSymbol = params[1].get_str();
+	vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
+    string strContract = params[3].get_str();
     if(!strContract.empty())
          boost::erase_all(strContract, "0x");  // strip 0x in hex str if exist
    
-	int precision = params[3].get_int();
+	int precision = params[4].get_int();
 	string vchWitness;
-	UniValue param4 = params[4];
-	UniValue param5 = params[5];
+	UniValue param4 = params[5];
+	UniValue param5 = params[6];
 	
 	CAmount nBalance = AssetAmountFromValue(param4, precision);
 	CAmount nMaxSupply = AssetAmountFromValue(param5, precision);
-	int nUpdateFlags = params[6].get_int();
-	vchWitness = params[7].get_str();
+	int nUpdateFlags = params[7].get_int();
+	vchWitness = params[8].get_str();
 
 	string strAddressFrom;
 	string strAddress = vchAddress;
@@ -1124,6 +1127,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     // build asset object
     CAsset newAsset;
 	newAsset.nAsset = GenerateSyscoinGuid();
+    newAsset.strSymbol = strSymbol;
 	newAsset.vchPubData = vchPubData;
     newAsset.vchContract = ParseHex(strContract);
 	newAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
@@ -1501,6 +1505,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
 bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
 {
     oAsset.__pushKV("asset_guid", (int)asset.nAsset);
+    oAsset.__pushKV("symbol", asset.strSymbol);
     oAsset.__pushKV("txid", asset.txHash.GetHex());
 	oAsset.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
 	oAsset.__pushKV("address", asset.witnessAddress.ToString());
@@ -1534,6 +1539,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
 
 	entry.__pushKV("txtype", assetFromTx(tx.nVersion));
 	entry.__pushKV("asset_guid", (int)asset.nAsset);
+    entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     entry.
     __pushKV("height", nHeight);
@@ -1571,6 +1577,7 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
         return false;
     entry.__pushKV("txtype", assetFromTx(tx.nVersion));
     entry.__pushKV("asset_guid", (int)asset.nAsset);
+    entry.__pushKV("symbol", asset.strSymbol);
     entry.__pushKV("txid", tx.GetHash().GetHex());
     entry.__pushKV("height", nHeight);
 
@@ -1819,7 +1826,8 @@ UniValue listassets(const JSONRPCRequest& request) {
                  RPCResult{
                  "[\n"
                  "  {\n"
-                 "    \"asset_guid\":          (numeric) The asset guid\n"
+                 "    \"asset_guid\":   (numeric) The asset guid\n"
+                 "    \"symbol\":       (string) The asset symbol\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
                  "    \"publicvalue\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
@@ -2079,6 +2087,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
                  "[\n"
                  "  {\n"
                  "    \"asset_guid\":   (numeric) The asset guid\n"
+                 "    \"symbol\":       (string) The asset symbol\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
                  "    \"publicvalue\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
@@ -2129,6 +2138,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                     "[\n"
                     "  {\n"
                     "    \"asset_guid\":   (numeric) The asset guid\n"
+                    "    \"symbol\":       (string) The asset symbol\n"
                     "    \"txid\":         (string) The transaction id that created this asset\n"
                     "    \"publicvalue\":  (string) The public value attached to this asset\n"
                     "    \"address\":      (string) The address that controls this address\n"
