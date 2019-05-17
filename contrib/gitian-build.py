@@ -219,6 +219,10 @@ def main():
     subprocess.check_call(['git', 'checkout', args.commit])
     os.chdir(workdir)
 
+    os.chdir('gitian-builder')
+    subprocess.check_call(['git', 'pull'])
+    os.chdir(workdir)
+
     if args.build:
         build()
 
@@ -226,6 +230,9 @@ def main():
         sign()
 
     if args.verify:
+        os.chdir('gitian.sigs')
+        subprocess.check_call(['git', 'pull'])
+        os.chdir(workdir)
         verify()
 
 if __name__ == '__main__':
