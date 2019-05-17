@@ -1213,6 +1213,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Precision must be between 0 and 8");
                 return error(errorMessage.c_str());
             }
+            if (theAsset.strSymbol.size() > 8 || theAsset.strSymbol.size() < 1)
+            {
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Symbol must be between 1 and 8");
+                return error(errorMessage.c_str());
+            }
             if (!AssetRange(theAsset.nMaxSupply, theAsset.nPrecision))
             {
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2014 - " + _("Max supply out of money range");
@@ -1326,6 +1331,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Precision cannot be changed.");
 			return error(errorMessage.c_str());
 		}
+        if(theAsset.strSymbol != storedSenderAssetRef.strSymbol)
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Symbol cannot be changed.");
+            return error(errorMessage.c_str());
+        }        
         storedSenderAssetRef.witnessAddress = theAsset.witnessAddressTransfer;   
         // sanity to ensure transfer field is never set on the actual asset in db  
         storedSenderAssetRef.witnessAddressTransfer.SetNull();      
@@ -1342,6 +1352,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 			errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Precision cannot be changed.");
 			return error(errorMessage.c_str());
 		}
+        if(theAsset.strSymbol != storedSenderAssetRef.strSymbol)
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot update this asset. Symbol cannot be changed.");
+            return error(errorMessage.c_str());
+        }         
         if (theAsset.nBalance > 0 && !(storedSenderAssetRef.nUpdateFlags & ASSET_UPDATE_SUPPLY))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2026 - " + _("Insufficient privileges to update supply");

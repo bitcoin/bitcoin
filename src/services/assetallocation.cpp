@@ -856,6 +856,7 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
                     "{\n"
                     "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                     "    \"asset_guid\":         (string) The guid of the asset\n"
+                    "    \"symbol\":             (string) The asset symbol\n"
                     "    \"address\":            (string) The address of the owner of this allocation\n"
                     "    \"balance\":            (numeric) The current balance\n"
                     "    \"balance_zdag\":       (numeric) The zdag balance\n"
@@ -910,6 +911,7 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
                     "  {\n"
                     "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                     "    \"asset_guid\":         (string) The guid of the asset\n"
+                    "    \"symbol\":             (string) The asset symbol\n"
                     "    \"address\":            (string) The address of the owner of this allocation\n"
                     "    \"balance\":            (numeric) The current balance\n"
                     "    \"balance_zdag\":       (numeric) The zdag balance\n"
@@ -1095,6 +1097,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
     }
     oAssetAllocation.__pushKV("asset_allocation", allocationTupleStr);
 	oAssetAllocation.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    oAssetAllocation.__pushKV("symbol", asset.strSymbol);
 	oAssetAllocation.__pushKV("address",  assetallocation.assetAllocationTuple.witnessAddress.ToString());
 	oAssetAllocation.__pushKV("balance", ValueFromAssetAmount(assetallocation.nBalance, asset.nPrecision));
     oAssetAllocation.__pushKV("balance_zdag", ValueFromAssetAmount(nBalanceZDAG, asset.nPrecision));
@@ -1134,9 +1137,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     }
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
+    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("height", nHeight);
-    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
     entry.__pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;  
@@ -1175,9 +1179,10 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
         return false;
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
+    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("symbol", dbAsset.strSymbol);
     entry.__pushKV("txid", tx.GetHash().GetHex());
     entry.__pushKV("height", nHeight);
-    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
     entry.__pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;
@@ -1218,14 +1223,14 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
             entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
-        entry.__pushKV("txid", txHash.GetHex());
-        entry.__pushKV("height", nHeight);
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
             CAsset dbAsset;
             GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
+            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+            entry.__pushKV("symbol", dbAsset.strSymbol);
+            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+
            
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
@@ -1241,7 +1246,8 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
             entry.__pushKV("scriptPubKey", o);
             entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
         }
-        
+        entry.__pushKV("txid", txHash.GetHex());
+        entry.__pushKV("height", nHeight);       
         entry.__pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
@@ -1262,14 +1268,13 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
         entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
             entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
-        entry.__pushKV("txid", tx.GetHash().GetHex());
-        entry.__pushKV("height", nHeight);
         if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
             CAsset dbAsset;
             GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
+            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+            entry.__pushKV("symbol", dbAsset.strSymbol);
+            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
            
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
@@ -1285,7 +1290,8 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
             entry.__pushKV("scriptPubKey", o);
             entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
         }
-        
+        entry.__pushKV("txid", tx.GetHash().GetHex());
+        entry.__pushKV("height", nHeight);        
         entry.__pushKV("blockhash", blockhash.GetHex());   
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
@@ -1511,6 +1517,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
                  "  {\n"
                  "    \"asset_allocation\":   (string) The unique key for this allocation\n"
                  "    \"asset_guid\":         (string) The guid of the asset\n"
+                 "    \"symbol\":             (string) The asset symbol\n"
                  "    \"address\":            (string) The address of the owner of this allocation\n"
                  "    \"balance\":            (numeric) The current balance\n"
                  "    \"balance_zdag\":       (numeric) The zdag balance\n"

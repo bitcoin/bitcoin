@@ -657,8 +657,8 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	GetOtherNodes(node, otherNode1, otherNode2);
 	UniValue r;
     
-	// "assetnew [address] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + address + " " + pubdata + " " + contract + " " + precision + " " + supply + " " + maxsupply + " " + updateflags + " " + witness));
+	// "assetnew [address] [symbol] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + address + " symbol " + pubdata + " " + contract + " " + precision + " " + supply + " " + maxsupply + " " + updateflags + " " + witness));
     string guid = boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();

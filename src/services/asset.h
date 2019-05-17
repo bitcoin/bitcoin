@@ -97,6 +97,7 @@ public:
 	CWitnessAddress witnessAddress;
     CWitnessAddress witnessAddressTransfer;
 	std::vector<unsigned char> vchContract;
+    std::string strSymbol;
     uint256 txHash;
     unsigned int nHeight;
 	std::vector<unsigned char> vchPubData;
@@ -133,6 +134,7 @@ public:
 		READWRITE(vchPubData);
 		READWRITE(txHash);
 		READWRITE(nAsset);
+        READWRITE(strSymbol);
 		READWRITE(witnessAddress);
         READWRITE(witnessAddressTransfer);
 		READWRITE(nBalance);
