@@ -559,13 +559,6 @@ UniValue importwallet(const JSONRPCRequest& request)
                 },
             }.Check(request);
 
-    if (pwallet->chain().havePruned()) {
-        // Exit early and print an error.
-        // If a block is pruned after this check, we will import the key(s),
-        // but fail the rescan with a generic error.
-        throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets is disabled when blocks are pruned");
-    }
-
     WalletRescanReserver reserver(pwallet);
     if (!reserver.reserve()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
@@ -634,6 +627,9 @@ UniValue importwallet(const JSONRPCRequest& request)
             }
         }
         file.close();
+        if (pwallet->chain().havePruned()) {
+            EnsureBlockDataFromTime(*locked_chain, nTimeBegin);
+        }
         // We now know whether we are importing private keys, so we can error if private keys are disabled
         if (keys.size() > 0 && pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
             pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
@@ -1389,6 +1385,9 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
             if (timestamp < nLowestTimestamp) {
                 nLowestTimestamp = timestamp;
             }
+        }
+        if (pwallet->chain().havePruned()) {
+            EnsureBlockDataFromTime(*locked_chain, nLowestTimestamp);
         }
         for (const UniValue& data : requests.getValues()) {
             const int64_t timestamp = std::max(GetImportTimestamp(data, now), minimumTimestamp);
