@@ -115,10 +115,10 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     }  
     if(ethTxRootShouldExist){
         LOCK(cs_ethsyncheight);
-        // cutoff is ~2.5 week of blocks is about 100K blocks
+        // cutoff is ~1 week of blocks is about 40K blocks
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
         if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 80000 blocks of the burn transaction on Ethereum blockchain");
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain");
             bTxRootError = true;
             return false;
         } 
@@ -1565,7 +1565,7 @@ bool CEthereumTxRootsDB::PruneTxRoots(const uint32_t &fNewGethSyncHeight) {
     uint32_t cutoffHeight = 0;
     if(fNewGethSyncHeight > 0)
     {
-        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS+20000;
+        const uint32_t &nCutoffHeight = MAX_ETHEREUM_TX_ROOTS*3;
         // cutoff to keep blocks is ~3 week of blocks is about 120k blocks
         cutoffHeight = fNewGethSyncHeight - nCutoffHeight;
         if(fNewGethSyncHeight < nCutoffHeight){
