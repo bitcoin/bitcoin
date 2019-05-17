@@ -615,11 +615,13 @@ UniValue importwallet(const JSONRPCRequest& request)
                         fLabel = true;
                     }
                 }
+                nTimeBegin = std::min(nTimeBegin, nTime);
                 keys.push_back(std::make_tuple(key, nTime, fLabel, strLabel));
             } else if(IsHex(vstr[0])) {
                 std::vector<unsigned char> vData(ParseHex(vstr[0]));
                 CScript script = CScript(vData.begin(), vData.end());
                 int64_t birth_time = DecodeDumpTime(vstr[1]);
+                if (birth_time > 0) nTimeBegin = std::min(nTimeBegin, birth_time);
                 scripts.push_back(std::pair<CScript, int64_t>(script, birth_time));
             }
         }
@@ -652,8 +654,6 @@ UniValue importwallet(const JSONRPCRequest& request)
 
             if (has_label)
                 pwallet->SetAddressBook(PKHash(keyid), label, "receive");
-
-            nTimeBegin = std::min(nTimeBegin, time);
             progress++;
         }
         for (const auto& script_pair : scripts) {
@@ -665,9 +665,6 @@ UniValue importwallet(const JSONRPCRequest& request)
                 pwallet->WalletLogPrintf("Error importing script %s\n", HexStr(script));
                 fGood = false;
                 continue;
-            }
-            if (time > 0) {
-                nTimeBegin = std::min(nTimeBegin, time);
             }
 
             progress++;
