@@ -368,7 +368,10 @@ public:
         int changePos = -1;
         std::string error;
         CCoinControl dummy;
-        BOOST_CHECK(wallet->CreateTransaction(*m_locked_chain, {recipient}, tx, reservekey, fee, changePos, error, dummy));
+        {
+            auto locked_chain = m_chain->lock();
+            BOOST_CHECK(wallet->CreateTransaction(*locked_chain, {recipient}, tx, reservekey, fee, changePos, error, dummy));
+        }
         CValidationState state;
         BOOST_CHECK(wallet->CommitTransaction(tx, {}, {}, reservekey, state));
         CMutableTransaction blocktx;
@@ -387,7 +390,6 @@ public:
     }
 
     std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain();
-    std::unique_ptr<interfaces::Chain::Lock> m_locked_chain = m_chain->assumeLocked();  // Temporary. Removed in upcoming lock cleanup
     std::unique_ptr<CWallet> wallet;
 };
 
@@ -399,8 +401,9 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     // address.
     std::map<CTxDestination, std::vector<COutput>> list;
     {
-        LOCK2(cs_main, wallet->cs_wallet);
-        list = wallet->ListCoins(*m_locked_chain);
+        auto locked_chain = m_chain->lock();
+        LOCK(wallet->cs_wallet);
+        list = wallet->ListCoins(*locked_chain);
     }
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(boost::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);
@@ -415,8 +418,9 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
     // pubkey.
     AddTx(CRecipient{GetScriptForRawPubKey({}), 1 * COIN, false /* subtract fee */});
     {
-        LOCK2(cs_main, wallet->cs_wallet);
-        list = wallet->ListCoins(*m_locked_chain);
+        auto locked_chain = m_chain->lock();
+        LOCK(wallet->cs_wallet);
+        list = wallet->ListCoins(*locked_chain);
     }
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(boost::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);
@@ -424,9 +428,10 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
     // Lock both coins. Confirm number of available coins drops to 0.
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        auto locked_chain = m_chain->lock();
+        LOCK(wallet->cs_wallet);
         std::vector<COutput> available;
-        wallet->AvailableCoins(*m_locked_chain, available);
+        wallet->AvailableCoins(*locked_chain, available);
         BOOST_CHECK_EQUAL(available.size(), 2U);
     }
     for (const auto& group : list) {
@@ -436,16 +441,18 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
         }
     }
     {
-        LOCK2(cs_main, wallet->cs_wallet);
+        auto locked_chain = m_chain->lock();
+        LOCK(wallet->cs_wallet);
         std::vector<COutput> available;
-        wallet->AvailableCoins(*m_locked_chain, available);
+        wallet->AvailableCoins(*locked_chain, available);
         BOOST_CHECK_EQUAL(available.size(), 0U);
     }
     // Confirm ListCoins still returns same result as before, despite coins
     // being locked.
     {
-        LOCK2(cs_main, wallet->cs_wallet);
-        list = wallet->ListCoins(*m_locked_chain);
+        auto locked_chain = m_chain->lock();
+        LOCK(wallet->cs_wallet);
+        list = wallet->ListCoins(*locked_chain);
     }
     BOOST_CHECK_EQUAL(list.size(), 1U);
     BOOST_CHECK_EQUAL(boost::get<PKHash>(list.begin()->first).ToString(), coinbaseAddress);

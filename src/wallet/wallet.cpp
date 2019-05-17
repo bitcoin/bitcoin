@@ -4074,7 +4074,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
             return nullptr;
         }
 
-        auto locked_chain = chain.assumeLocked();  // Temporary. Removed in upcoming lock cleanup
+        auto locked_chain = chain.lock();
         walletInstance->ChainStateFlushed(locked_chain->getTipLocator());
     } else if (wallet_creation_flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS) {
         // Make it impossible to disable private keys after creation
