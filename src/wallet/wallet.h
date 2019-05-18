@@ -720,6 +720,9 @@ private:
     //! Adds a script to the store and saves it to disk
     bool AddCScriptWithDB(WalletBatch& batch, const CScript& script);
 
+    //! Unsets a wallet flag and saves it to disk
+    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
+
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
