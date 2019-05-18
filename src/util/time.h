@@ -8,27 +8,34 @@
 
 #include <stdint.h>
 #include <string>
-
-/** 
- * GetTimeMicros() and GetTimeMillis() both return the system time, but in
- * different units. GetTime() returns the system time in seconds, but also
- * supports mocktime, where the time can be specified by the user, eg for
- * testing (eg with the setmocktime rpc, or -mocktime argument).
- *
- * TODO: Rework these functions to be type-safe (so that we don't inadvertently
- * compare numbers with different units, or compare a mocktime to system time).
- */
-
-int64_t GetTime();
-int64_t GetTimeMillis();
-int64_t GetTimeMicros();
-int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
-void SetMockTime(int64_t nMockTimeIn);
-int64_t GetMockTime();
-void MilliSleep(int64_t n);
+#include <chrono>
 
 /**
- * ISO 8601 formatting is preferred. Use the FormatISO8601{DateTime,Date,Time}
+ * DEPRECATED
+ * Use either GetSystemTimeInSeconds (not mockable) or GetTime<T> (mockable)
+ */
+int64_t GetTime();
+
+/** Returns the system time (not mockable) */
+int64_t GetTimeMillis();
+/** Returns the system time (not mockable) */
+int64_t GetTimeMicros();
+/** Returns the system time (not mockable) */
+int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
+
+/** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
+void SetMockTime(int64_t nMockTimeIn);
+/** For testing */
+int64_t GetMockTime();
+
+void MilliSleep(int64_t n);
+
+/** Return system time (or mocked time, if set) */
+template <typename T>
+T GetTime();
+
+/**
+ * ISO 8601 formatting is preferred. Use the FormatISO8601{DateTime,Date}
  * helper functions if possible.
  */
 std::string FormatISO8601DateTime(int64_t nTime);
