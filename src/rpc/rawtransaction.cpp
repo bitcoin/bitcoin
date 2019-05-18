@@ -189,13 +189,13 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     }else {      
         LOCK(cs_main);
         uint256 blockhash;
-        if(!pblockindexdb->ReadBlockHash(hash, blockhash))
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found in asset index");
-        blockindex = LookupBlockIndex(blockhash);
-        if (!blockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+        if(pblockindexdb->ReadBlockHash(hash, blockhash)){
+            blockindex = LookupBlockIndex(blockhash);
+            if (!blockindex) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
+            }
+            in_active_chain = ::ChainActive().Contains(blockindex);
         }
-        in_active_chain = ::ChainActive().Contains(blockindex);
     }
 
     bool f_txindex_ready = false;
