@@ -176,6 +176,13 @@ def main():
 
     args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
 
+<<<<<<< HEAD
+=======
+    if args.buildsign:
+        args.build = True
+        args.sign = True
+
+>>>>>>> cbbd98863... Fix Docker related issues for gitian-build.py
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')
 
@@ -219,8 +226,13 @@ def main():
         print(script_name+': Missing signer')
         print('Try '+script_name+' --help for more information')
         sys.exit(1)
+<<<<<<< HEAD
     if not args.version:
         print(script_name+': Missing version')
+=======
+    if args.version == '':
+        print(script_name+': Missing version.')
+>>>>>>> cbbd98863... Fix Docker related issues for gitian-build.py
         print('Try '+script_name+' --help for more information')
         sys.exit(1)
 
