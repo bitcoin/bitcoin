@@ -7,20 +7,20 @@ import sys
 
 def setup():
     global args, workdir
-    programs = ['ruby', 'git', 'apt-cacher-ng', 'make', 'wget']
+    programs = ['ruby', 'git', 'make', 'wget']
     if args.kvm:
-        programs += ['python-vm-builder', 'qemu-kvm', 'qemu-utils']
-    elif args.docker:
+        programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
+    elif args.docker and not os.path.isfile('/lib/systemd/system/docker.service'):
         dockers = ['docker.io', 'docker-ce']
         for i in dockers:
             return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
             if return_code == 0:
                 break
         if return_code != 0:
-            print('Cannot find any way to install docker', file=sys.stderr)
-            exit(1)
+            print('Cannot find any way to install Docker.', file=sys.stderr)
+            sys.exit(1)
     else:
-        programs += ['lxc', 'debootstrap']
+        programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
     if not os.path.isdir('gitian.sigs'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/gitian.sigs.git'])
@@ -41,7 +41,7 @@ def setup():
     if args.is_bionic and not args.kvm and not args.docker:
         subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
         print('Reboot is required')
-        exit(0)
+        sys.exit(0)
 
 def build():
     global args, workdir
@@ -165,8 +165,8 @@ def main():
     args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
 
     if args.buildsign:
-        args.build=True
-        args.sign=True
+        args.build = True
+        args.sign = True
 
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')
@@ -193,11 +193,11 @@ def main():
     if args.signer == '':
         print(script_name+': Missing signer.')
         print('Try '+script_name+' --help for more information')
-        exit(1)
+        sys.exit(1)
     if args.version == '':
         print(script_name+': Missing version.')
         print('Try '+script_name+' --help for more information')
-        exit(1)
+        sys.exit(1)
 
     # Add leading 'v' for tags
     if args.commit and args.pull:
