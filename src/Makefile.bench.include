@@ -28,6 +28,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
   bench/rpc_mempool.cpp \
+  bench/util_time.cpp \
   bench/verify_script.cpp \
   bench/base58.cpp \
   bench/bech32.cpp \
