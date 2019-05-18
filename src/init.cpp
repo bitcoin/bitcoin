@@ -1652,7 +1652,8 @@ bool AppInitMain(InitInterfaces& interfaces)
                     LOCK(cs_assetallocationarrival);
                     passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
                 }                
-                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
+                // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
+                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset));
                 fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
