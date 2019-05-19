@@ -700,7 +700,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     // unconfirmed ancestors anyway; doing otherwise is hopelessly
                     // insecure.
                     bool fReplacementOptOut = true;
-                    if (fEnableReplacement)
+                    if (fEnableReplacement && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
                     {
                         for (const CTxIn &_txin : ptxConflicting->vin)
                         {

@@ -194,7 +194,7 @@ static CAmount ExtractAndValidateValue(const std::string& strValue)
 static void MutateTxVersion(CMutableTransaction& tx, const std::string& cmdVal)
 {
     int64_t newVersion;
-    if (!ParseInt64(cmdVal, &newVersion) || ((newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_VERSION) && !IsSyscoinTx(newVersion)))
+    if (!ParseInt64(cmdVal, &newVersion) || ((newVersion < 1 || newVersion > CTransaction::MAX_STANDARD_VERSION)))
         throw std::runtime_error("Invalid TX version requested: '" + cmdVal + "'");
 
     tx.nVersion = (int) newVersion;
