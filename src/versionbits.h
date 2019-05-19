@@ -15,7 +15,9 @@ static const int32_t VERSIONBITS_TOP_BITS = 0x20000000UL;
 /** What bitmask determines whether versionbits is in use */
 static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
-static const int32_t VERSIONBITS_NUM_BITS = 29;
+static const int32_t VERSIONBITS_NUM_BITS = 13;
+/** Bitmask for ignored versionbits. It should match VERSIONBITS_NUM_BITS (BIPxxx) */
+static const int32_t VERSIONBITS_IGNORE_MASK = 0xE0001FFFUL;
 
 enum class ThresholdState {
     DEFINED,

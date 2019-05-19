@@ -9,6 +9,7 @@ soft-forks, and test that warning alerts are generated.
 """
 import os
 import re
+from time import sleep
 
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import msg_block
@@ -19,8 +20,9 @@ from test_framework.util import wait_until
 VB_PERIOD = 144           # versionbits period length for regtest
 VB_THRESHOLD = 108        # versionbits activation threshold for regtest
 VB_TOP_BITS = 0x20000000
-VB_UNKNOWN_BIT = 27       # Choose a bit unassigned to any deployment
+VB_UNKNOWN_BIT = 11       # Choose a bit unassigned to any deployment
 VB_UNKNOWN_VERSION = VB_TOP_BITS | (1 << VB_UNKNOWN_BIT)
+VB_IGNORE_VERSION = VB_TOP_BITS | 0x1FFFE000
 
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("Warning: unknown new rules activated.*versionbit")
@@ -68,32 +70,37 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         # Mine one period worth of blocks
         node.generatetoaddress(VB_PERIOD, node_deterministic_address)
 
+        self.log.info("Check that there is no warning if previous VB_BLOCKS have VB_PERIOD blocks with ignored versionbits version.")
+        # Build one period of blocks with ignored bits
+        self.send_blocks_with_version(node.p2p, VB_PERIOD, VB_IGNORE_VERSION)
+        # Mine a period worth of expected blocks
+        node.generatetoaddress(VB_PERIOD, node_deterministic_address)
+        # Check that we're not getting any versionbit-related errors in get*info()
+        assert not VB_PATTERN.match(node.getmininginfo()["warnings"])
+        assert not VB_PATTERN.match(node.getnetworkinfo()["warnings"])
+        # Check that the alert file does not the versionbits unknown rules warning
+        sleep(5)
+        assert(not self.versionbits_in_alert_file())
+
         self.log.info("Check that there is no warning if previous VB_BLOCKS have <VB_THRESHOLD blocks with unknown versionbits version.")
         # Build one period of blocks with < VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(node.p2p, VB_THRESHOLD - 1, VB_UNKNOWN_VERSION)
         node.generatetoaddress(VB_PERIOD - VB_THRESHOLD + 1, node_deterministic_address)
-
+        # Mine a period worth of expected blocks
+        node.generatetoaddress(VB_PERIOD, node_deterministic_address)
         # Check that we're not getting any versionbit-related errors in get*info()
         assert not VB_PATTERN.match(node.getmininginfo()["warnings"])
         assert not VB_PATTERN.match(node.getnetworkinfo()["warnings"])
+        # Check that the alert file does not the versionbits unknown rules warning
+        sleep(5)
+        assert(not self.versionbits_in_alert_file())
 
+        self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
         # Build one period of blocks with VB_THRESHOLD blocks signaling some unknown bit
         self.send_blocks_with_version(node.p2p, VB_THRESHOLD, VB_UNKNOWN_VERSION)
         node.generatetoaddress(VB_PERIOD - VB_THRESHOLD, node_deterministic_address)
-
-        self.log.info("Check that there is a warning if previous VB_BLOCKS have >=VB_THRESHOLD blocks with unknown versionbits version.")
-        # Mine a period worth of expected blocks so the generic block-version warning
-        # is cleared. This will move the versionbit state to ACTIVE.
+        # Mine a period worth of expected blocks to move the versionbit state to ACTIVE.
         node.generatetoaddress(VB_PERIOD, node_deterministic_address)
-
-        # Stop-start the node. This is required because bitcoind will only warn once about unknown versions or unknown rules activating.
-        self.restart_node(0)
-
-        # Generating one block guarantees that we'll get out of IBD
-        node.generatetoaddress(1, node_deterministic_address)
-        wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'], timeout=10, lock=mininode_lock)
-        # Generating one more block will be enough to generate an error.
-        node.generatetoaddress(1, node_deterministic_address)
         # Check that get*info() shows the versionbits unknown rules warning
         assert WARN_UNKNOWN_RULES_ACTIVE in node.getmininginfo()["warnings"]
         assert WARN_UNKNOWN_RULES_ACTIVE in node.getnetworkinfo()["warnings"]
