@@ -366,10 +366,10 @@ bool CheckBlockHeaderIntegrity(uint256 hashBlockHeader, unsigned int nBits, cons
     // Check target for prime proof-of-work
     CBigNum bnPrimeChainOrigin = CBigNum(hashBlockHeader) * bnPrimeChainMultiplier;
     if (bnPrimeChainOrigin < bnPrimeMin)
-        return error("CheckBlockHeaderIntegrity() : prime too small %s", bnPrimeChainOrigin.GetHexStr().c_str());
+        return error("CheckBlockHeaderIntegrity() : prime too small %s", bnPrimeChainOrigin.GetHex().c_str());
     // First prime in chain must not exceed cap
     if (bnPrimeChainOrigin > bnPrimeMax)
-        return error("CheckBlockHeaderIntegrity() : prime too big %s", bnPrimeChainOrigin.GetHexStr().c_str());
+        return error("CheckBlockHeaderIntegrity() : prime too big %s", bnPrimeChainOrigin.GetHex().c_str());
      // Proof-of-work check contains Fermat test of prime chain origin, it takes a lot of time,
     // typical CPU can do ~60-70k Fermat tests per second in single thread, current block
     // height at moment near 2.7M. So, we can't use Fermat test at startup for checking block headers
