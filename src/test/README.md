@@ -39,7 +39,7 @@ unit tests as possible).
 
 The build system is setup to compile an executable called `test_dash`
 that runs all of the unit tests.  The main source file is called
-test_dash.cpp. To add a new unit test file to our test suite you need 
+test_dash.cpp. To add a new unit test file to our test suite you need
 to add the file to `src/Makefile.test.include`. The pattern is to create 
 one test file for each class or source file for which you want to create 
 unit tests.  The file naming convention is `<source_filename>_tests.cpp` 
@@ -50,12 +50,3 @@ examine `uint256_tests.cpp`.
 For further reading, I found the following website to be helpful in
 explaining how the boost unit test framework works:
 [http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/](http://www.alittlemadness.com/2009/03/31/c-unit-testing-with-boosttest/).
-
-### bitcoin-util-test.py
-
-The test directory also contains the bitcoin-util-test.py tool, which tests bitcoin utils (currently just dash-tx). This test gets run automatically during the `make check` build process. It is also possible to run the test manually from the src directory:
-
-```
-test/bitcoin-util-test.py --srcdir=[current directory]
-
-```

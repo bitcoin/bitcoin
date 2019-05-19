@@ -5,7 +5,7 @@
 """Create a blockchain cache.
 
 Creating a cache of the blockchain speeds up test execution when running
-multiple qa tests. This helper script is executed by rpc-tests when multiple
+multiple functional tests. This helper script is executed by test_runner when multiple
 tests are being run in parallel.
 """
 
