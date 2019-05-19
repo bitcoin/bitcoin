@@ -1652,7 +1652,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     std::set<uint32_t>::iterator setIt = setKeys.begin();
     nKeyIndex = *setIt;
     setIt++;
-    // we should have atleast MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
+    // we should have at least MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
     if(nCurrentSyncHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
     }

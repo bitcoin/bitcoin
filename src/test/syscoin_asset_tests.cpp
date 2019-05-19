@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     int64_t end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     printf("syscoinsetethstatus elasped time %lld\n", end-start);
     UniValue blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
-    // the - MAX_ETHEREUM_TX_ROOTS check to ensure you have atleast that many roots stored from the tip
+    // the - MAX_ETHEREUM_TX_ROOTS check to ensure you have at least that many roots stored from the tip
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "from").get_int() == 669780);
     BOOST_CHECK(find_value(blocksArray[0].get_obj(), "to").get_int() == 707769);
 
