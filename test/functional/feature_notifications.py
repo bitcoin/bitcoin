@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
+import shutil
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE
 from test_framework.test_framework import BitcoinTestFramework
@@ -31,6 +32,16 @@ class NotificationsTest(BitcoinTestFramework):
                             "-rescan",
                             "-walletnotify=echo > {}".format(os.path.join(self.walletnotify_dir, '%s'))]]
         super().setup_network()
+
+    def test_importmulti(self, update_existing, expected_notifications):
+        shutil.rmtree(self.walletnotify_dir)
+        os.mkdir(self.walletnotify_dir)
+
+        addr = self.nodes[0].getnewaddress()
+        self.nodes[0].generatetoaddress(1, addr)
+
+        self.nodes[1].importmulti([{"scriptPubKey": {"address": addr}, "timestamp": "now"}], {"update_existing": update_existing})
+        wait_until(lambda: len(os.listdir(self.walletnotify_dir)) == expected_notifications, timeout=10)
 
     def run_test(self):
         self.log.info("test -blocknotify")
@@ -65,6 +76,10 @@ class NotificationsTest(BitcoinTestFramework):
             # directory content should equal the generated transaction hashes
             txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
             assert_equal(sorted(txids_rpc), sorted(os.listdir(self.walletnotify_dir)))
+
+            self.log.info("test -walletnotify with importmulti")
+            self.test_importmulti(update_existing=True, expected_notifications=block_count+1)
+            self.test_importmulti(update_existing=False, expected_notifications=1)
 
         # TODO: add test for `-alertnotify` large fork notifications
 
