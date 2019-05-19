@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(poly1305_testvector)
 
 BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
 {
-    // Use rfc5869 test vectors but trucated to 32 bytes (our implementation only support length 32)
+    // Use rfc5869 test vectors but truncated to 32 bytes (our implementation only support length 32)
     TestHKDF_SHA256_32(
                 /* IKM */ "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
                 /* salt */ "000102030405060708090a0b0c",
