@@ -309,11 +309,11 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
-  core_write.cpp \
   services/graph.cpp \
   services/asset.cpp \
   services/assetallocation.cpp \
   services/assetconsensus.cpp \
+  core_write.cpp \
   activemasternode.cpp \
   dsnotificationinterface.cpp \
   governance.cpp \
