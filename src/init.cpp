@@ -1641,9 +1641,9 @@ bool AppInitMain(InitInterfaces& interfaces)
 				plockedoutpointsdb.reset();
 
 				plockedoutpointsdb.reset(new CLockedOutpointsDB(nCoinDBCache * 16, false, fReset));
-                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset));
-                passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset));
-                passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset));
+                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));
+                passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset || fReindexChainState));
+                passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset || fReindexChainState));
                 {
                     LOCK(cs_assetallocation);
                     passetallocationmempooldb->ReadAssetAllocationMempoolBalances(mempoolMapAssetBalances);
@@ -1654,8 +1654,8 @@ bool AppInitMain(InitInterfaces& interfaces)
                 }                
                 // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
-                pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset));
-                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset));
+                pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
+                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
                 fAssetIndex = gArgs.GetBoolArg("-assetindex", false);
                 if(fAssetIndex)
                     passetindexdb.reset(new CAssetIndexDB(nCoinDBCache*16, false, fReset));
