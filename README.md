@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 NdovuCoin Core integration/staging tree
 =====================================
 
