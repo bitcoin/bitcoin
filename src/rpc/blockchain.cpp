@@ -1183,54 +1183,49 @@ static UniValue verifychain(const JSONRPCRequest& request)
     return CVerifyDB().VerifyDB(Params(), pcoinsTip.get(), nCheckLevel, nCheckDepth);
 }
 
-/** Implementation of IsSuperMajority with better feedback */
-static UniValue SoftForkMajorityDesc(int version, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    // For buried deployments.
+    // A buried deployment is one where the height of the activation has been hardcoded into
+    // the client implementation long after the consensus change has activated. See BIP 90.
+    // Buried deployments with activation height value of
+    // std::numeric_limits<int>::max() are disabled and thus hidden.
+    if (height == std::numeric_limits<int>::max()) return;
+
     UniValue rv(UniValue::VOBJ);
-    bool activated = false;
-    switch(version)
-    {
-        case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
-            break;
-        case 3:
-            activated = pindex->nHeight >= consensusParams.BIP66Height;
-            break;
-        case 4:
-            activated = pindex->nHeight >= consensusParams.BIP65Height;
-            break;
-    }
-    rv.pushKV("status", activated);
-    return rv;
+    rv.pushKV("type", "buried");
+    // getblockchaininfo reports the softfork as active from when the chain height is
+    // one below the activation height
+    rv.pushKV("active", ::ChainActive().Tip()->nHeight + 1 >= height);
+    rv.pushKV("height", height);
+    softforks.pushKV(name, rv);
 }
 
-static UniValue SoftForkDesc(const std::string &name, int version, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    UniValue rv(UniValue::VOBJ);
-    rv.pushKV("id", name);
-    rv.pushKV("version", version);
-    rv.pushKV("reject", SoftForkMajorityDesc(version, pindex, consensusParams));
-    return rv;
-}
+    // For BIP9 deployments.
+    // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
+    // A timeout value of 0 guarantees a softfork will never be activated.
+    // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
+    if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
 
-static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
-{
-    UniValue rv(UniValue::VOBJ);
+    UniValue bip9(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
     switch (thresholdState) {
-    case ThresholdState::DEFINED: rv.pushKV("status", "defined"); break;
-    case ThresholdState::STARTED: rv.pushKV("status", "started"); break;
-    case ThresholdState::LOCKED_IN: rv.pushKV("status", "locked_in"); break;
-    case ThresholdState::ACTIVE: rv.pushKV("status", "active"); break;
-    case ThresholdState::FAILED: rv.pushKV("status", "failed"); break;
+    case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
+    case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
+    case ThresholdState::LOCKED_IN: bip9.pushKV("status", "locked_in"); break;
+    case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
+    case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
     }
     if (ThresholdState::STARTED == thresholdState)
     {
-        rv.pushKV("bit", consensusParams.vDeployments[id].bit);
+        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
-    rv.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
-    rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
+    bip9.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
+    bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    int64_t since_height = VersionBitsTipStateSinceHeight(consensusParams, id);
+    bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
@@ -1240,18 +1235,18 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         statsUV.pushKV("possible", statsStruct.possible);
-        rv.pushKV("statistics", statsUV);
+        bip9.pushKV("statistics", statsUV);
     }
-    return rv;
-}
 
-static void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
-{
-    // Deployments with timeout value of 0 are hidden.
-    // A timeout value of 0 guarantees a softfork will never be activated.
-    // This is used when softfork codes are merged without specifying the deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout > 0)
-        bip9_softforks.pushKV(VersionBitsDeploymentInfo[id].name, BIP9SoftForkDesc(consensusParams, id));
+    UniValue rv(UniValue::VOBJ);
+    rv.pushKV("type", "bip9");
+    rv.pushKV("bip9", bip9);
+    if (ThresholdState::ACTIVE == thresholdState) {
+        rv.pushKV("height", since_height);
+    }
+    rv.pushKV("active", ThresholdState::ACTIVE == thresholdState);
+
+    softforks.pushKV(name, rv);
 }
 
 UniValue getblockchaininfo(const JSONRPCRequest& request)
@@ -1275,29 +1270,25 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  \"pruneheight\": xxxxxx,        (numeric) lowest-height complete block stored (only present if pruning is enabled)\n"
             "  \"automatic_pruning\": xx,      (boolean) whether automatic pruning is enabled (only present if pruning is enabled)\n"
             "  \"prune_target_size\": xxxxxx,  (numeric) the target size used by pruning (only present if automatic pruning is enabled)\n"
-            "  \"softforks\": [                (array) status of softforks in progress\n"
-            "     {\n"
-            "        \"id\": \"xxxx\",           (string) name of softfork\n"
-            "        \"version\": xx,          (numeric) block version\n"
-            "        \"reject\": {             (object) progress toward rejecting pre-softfork blocks\n"
-            "           \"status\": xx,        (boolean) true if threshold reached\n"
-            "        },\n"
-            "     }, ...\n"
-            "  ],\n"
-            "  \"bip9_softforks\": {           (object) status of BIP9 softforks in progress\n"
+            "  \"softforks\": {                (object) status of softforks\n"
             "     \"xxxx\" : {                 (string) name of the softfork\n"
-            "        \"status\": \"xxxx\",       (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
-            "        \"bit\": xx,              (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "        \"startTime\": xx,        (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
-            "        \"timeout\": xx,          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
-            "        \"since\": xx,            (numeric) height of the first block to which the status applies\n"
-            "        \"statistics\": {         (object) numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)\n"
-            "           \"period\": xx,        (numeric) the length in blocks of the BIP9 signalling period \n"
-            "           \"threshold\": xx,     (numeric) the number of blocks with the version bit set required to activate the feature \n"
-            "           \"elapsed\": xx,       (numeric) the number of blocks elapsed since the beginning of the current period \n"
-            "           \"count\": xx,         (numeric) the number of blocks with the version bit set in the current period \n"
-            "           \"possible\": xx       (boolean) returns false if there are not enough blocks left in this period to pass activation threshold \n"
-            "        }\n"
+            "        \"type\": \"xxxx\",         (string) one of \"buried\", \"bip9\"\n"
+            "        \"bip9\": {               (object) status of bip9 softforks (only for \"bip9\" type)\n"
+            "           \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
+            "           \"bit\": xx,           (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
+            "           \"startTime\": xx,     (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
+            "           \"timeout\": xx,       (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+            "           \"since\": xx,         (numeric) height of the first block to which the status applies\n"
+            "           \"statistics\": {      (object) numeric statistics about BIP9 signalling for a softfork\n"
+            "              \"period\": xx,     (numeric) the length in blocks of the BIP9 signalling period \n"
+            "              \"threshold\": xx,  (numeric) the number of blocks with the version bit set required to activate the feature \n"
+            "              \"elapsed\": xx,    (numeric) the number of blocks elapsed since the beginning of the current period \n"
+            "              \"count\": xx,      (numeric) the number of blocks with the version bit set in the current period \n"
+            "              \"possible\": xx    (boolean) returns false if there are not enough blocks left in this period to pass activation threshold \n"
+            "           }\n"
+            "        },\n"
+            "        \"height\": \"xxxxxx\",     (numeric) height of the first block which the rules are or will be enforced (only for \"buried\" type, or \"bip9\" type with \"active\" status)\n"
+            "        \"active\": xx,           (boolean) true if the rules are enforced for the mempool and the next block\n"
             "     }\n"
             "  }\n"
             "  \"warnings\" : \"...\",           (string) any network and blockchain warnings.\n"
@@ -1342,16 +1333,14 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    UniValue softforks(UniValue::VARR);
-    UniValue bip9_softforks(UniValue::VOBJ);
-    softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
-        BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
-    }
+    UniValue softforks(UniValue::VOBJ);
+    BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);
+    BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height);
+    BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
+    BIP9SoftForkDescPushBack(softforks, "csv", consensusParams, Consensus::DEPLOYMENT_CSV);
+    BIP9SoftForkDescPushBack(softforks, "segwit", consensusParams, Consensus::DEPLOYMENT_SEGWIT);
+    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
     obj.pushKV("softforks",             softforks);
-    obj.pushKV("bip9_softforks", bip9_softforks);
 
     obj.pushKV("warnings", GetWarnings("statusbar"));
     return obj;
