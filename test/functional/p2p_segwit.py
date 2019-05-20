@@ -76,7 +76,7 @@ from test_framework.util import (
     assert_equal,
     connect_nodes,
     disconnect_nodes,
-    get_bip9_status,
+    softfork_active,
     hex_str_to_bytes,
     assert_raises_rpc_error,
 )
@@ -85,6 +85,8 @@ from test_framework.util import (
 SEGWIT_HEIGHT = 432
 
 MAX_SIGOP_COST = 80000
+
+SEGWIT_HEIGHT = 120
 
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
@@ -183,9 +185,9 @@ class SegWitTest(SyscoinTestFramework):
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-vbparams=segwit:0:999999999999"],
-            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-vbparams=segwit:0:999999999999"],
-            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-vbparams=segwit:0:0"],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-whitelist=127.0.0.1", "-acceptnonstdtxn=1", "-segwitheight=-1"]
         ]
 
     def skip_test_if_missing_module(self):
@@ -229,8 +231,8 @@ class SegWitTest(SyscoinTestFramework):
         # Keep a place to store utxo's that can be used in later tests
         self.utxo = []
 
-        # Segwit status 'defined'
-        self.segwit_status = 'defined'
+        self.log.info("Starting tests before segwit activation")
+        self.segwit_active = False
 
         self.test_non_witness_transaction()
         self.test_block_relay()
@@ -365,7 +367,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Check that we can getdata for witness blocks or regular blocks,
         # and the right thing happens.
-        if self.segwit_status != 'active':
+        if not self.segwit_active:
             # Before activation, we should be able to request old blocks with
             # or without witness, and they should be the same.
             chain_height = self.nodes[0].getblockcount()
@@ -486,7 +488,7 @@ class SegWitTest(SyscoinTestFramework):
         tx3.wit.vtxinwit.append(CTxInWitness())
         tx3.wit.vtxinwit[0].scriptWitness.stack = [witness_program]
         tx3.rehash()
-        if self.segwit_status != 'active':
+        if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
             assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True}])
@@ -507,6 +509,7 @@ class SegWitTest(SyscoinTestFramework):
     @subtest
     def advance_to_segwit_active(self):
         """Mine enough blocks to activate segwit."""
+        assert not softfork_active(self.nodes[0], 'segwit')
         height = self.nodes[0].getblockcount()
         self.nodes[0].generate(SEGWIT_HEIGHT - height)
         self.segwit_status = 'active'
