@@ -339,6 +339,10 @@ def get_bip9_status(node, key):
     info = node.getblockchaininfo()
     return info['softforks'][key]['bip9']
 
+def softfork_active(node, key):
+    """Return whether a softfork is active."""
+    return node.getblockchaininfo()['softforks'][key]['active']
+
 def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
