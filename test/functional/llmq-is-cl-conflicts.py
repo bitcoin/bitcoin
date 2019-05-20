@@ -15,9 +15,9 @@ Checks conflict handling between ChainLocks and InstantSend
 
 '''
 
-class TestNode(SingleNodeConnCB):
+class TestNode(NodeConnCB):
     def __init__(self):
-        SingleNodeConnCB.__init__(self)
+        super().__init__()
         self.clsigs = {}
         self.islocks = {}
 
