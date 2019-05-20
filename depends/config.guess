@@ -1,6 +1,6 @@
 #! /bin/sh
 # Attempt to guess a canonical system name.
-#   Copyright 1992-2018 Free Software Foundation, Inc.
+#   Copyright 1992-2019 Free Software Foundation, Inc.
 
 timestamp='2018-07-06'
 
@@ -50,7 +50,7 @@ version="\
 GNU config.guess ($timestamp)
 
 Originally written by Per Bothner.
-Copyright 1992-2018 Free Software Foundation, Inc.
+Copyright 1992-2019 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
