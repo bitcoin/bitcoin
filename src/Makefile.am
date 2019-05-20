@@ -649,17 +649,15 @@ syscoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 
 # syscoin-tx binary #
 syscoin_tx_SOURCES = syscoin-tx.cpp
-syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
-syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+syscoin_tx_CPPFLAGS = $(syscoind_CPPFLAGS)
+syscoin_tx_CXXFLAGS = $(syscoind_CXXFLAGS)
+syscoin_tx_LDFLAGS = $(syscoind_LDFLAGS)
 
 if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
 
 syscoin_tx_LDADD = $(syscoind_LDADD)
-
-syscoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # syscoin-wallet binary #
