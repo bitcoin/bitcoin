@@ -527,7 +527,6 @@ libsyscoin_common_a_SOURCES = \
   coins.cpp \
   compressor.cpp \
   core_read.cpp \
-  core_write.cpp \
   key.cpp \
   key_io.cpp \
   keystore.cpp \
@@ -556,6 +555,7 @@ libsyscoin_common_a_SOURCES = \
 libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
+  core_write.cpp \
   support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -649,9 +649,9 @@ syscoin_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 
 # syscoin-tx binary #
 syscoin_tx_SOURCES = syscoin-tx.cpp
-syscoin_tx_CPPFLAGS = $(syscoind_CPPFLAGS)
-syscoin_tx_CXXFLAGS = $(syscoind_CXXFLAGS)
-syscoin_tx_LDFLAGS = $(syscoind_LDFLAGS)
+syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
