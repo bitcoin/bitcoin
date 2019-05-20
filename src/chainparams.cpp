@@ -133,7 +133,7 @@ public:
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.vchSYSXContract = ParseHex("a0c233dbfc1c9246c98e0ede24f1eede4e8d3e09");
+        consensus.vchSYSXContract = ParseHex("3c00b564ab8fd77427d6e2a95a70dab4ab0f3813");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         /**
          * The message start string is designed to be unlikely to occur in normal data.
