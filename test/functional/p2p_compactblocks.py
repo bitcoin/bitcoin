@@ -807,7 +807,7 @@ class CompactBlocksTest(SyscoinTestFramework):
         # We will need UTXOs to construct transactions in later tests.
         self.make_utxos()
 
-        assert_equal(get_bip9_status(self.nodes[0], "segwit")["status"], 'active')
+        assert softfork_active(self.nodes[0], "segwit")
 
         self.log.info("Testing SENDCMPCT p2p message... ")
         self.test_sendcmpct(self.segwit_node, old_node=self.old_node)
