@@ -84,6 +84,7 @@ BITCOIN_TESTS =\
   test/addrman_tests.cpp \
   test/amount_tests.cpp \
   test/allocator_tests.cpp \
+  test/args_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
@@ -129,6 +130,7 @@ BITCOIN_TESTS =\
   test/rpc_tests.cpp \
   test/sanity_tests.cpp \
   test/scheduler_tests.cpp \
+  test/script_eval_tests.cpp \
   test/script_p2sh_tests.cpp \
   test/script_tests.cpp \
   test/script_standard_tests.cpp \

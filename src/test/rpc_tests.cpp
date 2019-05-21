@@ -2,22 +2,19 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <rpc/server.h>
-#include <rpc/client.h>
-#include <rpc/util.h>
-
 #include <core_io.h>
 #include <init.h>
 #include <interfaces/chain.h>
-
+#include <rpc/blockchain.h>
+#include <rpc/client.h>
+#include <rpc/server.h>
+#include <rpc/util.h>
 #include <test/setup_common.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include <univalue.h>
-
-#include <rpc/blockchain.h>
 
 UniValue CallRPC(std::string args)
 {
