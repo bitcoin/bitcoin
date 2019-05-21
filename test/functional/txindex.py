@@ -47,11 +47,12 @@ class TxIndexTest(BitcoinTestFramework):
 
         privkey = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
         address = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
-        addressHash = "C5E4FB9171C22409809A3E8047A29C83886E325D".decode("hex")
+        addressHash = binascii.unhexlify("C5E4FB9171C22409809A3E8047A29C83886E325D")
         scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
-        amount = unspent[0]["amount"] * 100000000
+        tx_fee_sat = 1000
+        amount = int(unspent[0]["amount"] * 100000000) - tx_fee_sat
         tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
@@ -62,9 +63,9 @@ class TxIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         # Check verbose raw transaction results
-        verbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
-        assert_equal(verbose["vout"][0]["valueSat"], 5000000000);
-        assert_equal(verbose["vout"][0]["value"], 50);
+        verbose = self.nodes[3].getrawtransaction(txid, 1)
+        assert_equal(verbose["vout"][0]["valueSat"], 50000000000 - tx_fee_sat);
+        assert_equal(verbose["vout"][0]["value"] * 100000000, 50000000000 - tx_fee_sat);
 
         self.log.info("Passed")
 

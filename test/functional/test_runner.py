@@ -132,6 +132,7 @@ EXTENDED_SCRIPTS = [
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
+    'txindex.py',
     'forknotify.py',
     'invalidateblock.py',
     'maxblocksinflight.py',
