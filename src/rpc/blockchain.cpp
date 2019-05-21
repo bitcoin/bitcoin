@@ -837,6 +837,86 @@ UniValue getblockheaders(const JSONRPCRequest& request)
     return arrHeaders;
 }
 
+UniValue getmerkleblocks(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
+        throw std::runtime_error(
+            "getmerkleblocks \"filter\" \"hash\" ( count )\n"
+            "\nReturns an array of items with information about <count> merkleblocks starting from <hash> which match <filter>.\n"
+            "\nArguments:\n"
+            "1. \"filter\"        (string, required) The hex encoded bloom filter\n"
+            "2. \"hash\"          (string, required) The block hash\n"
+            "3. count           (numeric, optional, default/max=" + strprintf("%s", MAX_HEADERS_RESULTS) +")\n"
+            "\nResult (for verbose=false):\n"
+            "[\n"
+            "  \"data\",                        (string)  A string that is serialized, hex-encoded data for a merkleblock.\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getmerkleblocks", "\"2303028005802040100040000008008400048141010000f8400420800080025004000004130000000000000001\" \"00000000007e1432d2af52e8463278bf556b55cf5049262f25634557e2e91202\" 2000")
+            + HelpExampleRpc("getmerkleblocks", "\"2303028005802040100040000008008400048141010000f8400420800080025004000004130000000000000001\" \"00000000007e1432d2af52e8463278bf556b55cf5049262f25634557e2e91202\" 2000")
+        );
+
+    LOCK(cs_main);
+
+    CBloomFilter filter;
+    std::string strFilter = request.params[0].get_str();
+    CDataStream ssBloomFilter(ParseHex(strFilter), SER_NETWORK, PROTOCOL_VERSION);
+    ssBloomFilter >> filter;
+    if (!filter.IsWithinSizeConstraints()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Filter is not within size constraints");
+    }
+    filter.UpdateEmptyFull();
+
+    std::string strHash = request.params[1].get_str();
+    uint256 hash(uint256S(strHash));
+
+    if (mapBlockIndex.count(hash) == 0) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+    }
+
+    int nCount = MAX_HEADERS_RESULTS;
+    if (request.params.size() > 2)
+        nCount = request.params[2].get_int();
+
+    if (nCount <= 0 || nCount > (int)MAX_HEADERS_RESULTS) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Count is out of range");
+    }
+
+    CBlock block;
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+
+    if (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+    }
+
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+        // Block not found on disk. This could be because we have the block
+        // header in our index but don't have the block (for example if a
+        // non-whitelisted node sends us an unrequested long chain of valid
+        // blocks, we add the headers to our index, but don't accept the
+        // block).
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+    }
+
+    UniValue arrMerkleBlocks(UniValue::VARR);
+
+    for (; pblockindex; pblockindex = chainActive.Next(pblockindex))
+    {
+        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+            // this shouldn't happen, we already checked pruning case earlier
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+        }
+        CDataStream ssMerkleBlock(SER_NETWORK, PROTOCOL_VERSION);
+        ssMerkleBlock << CMerkleBlock(block, filter);
+        std::string strHex = HexStr(ssMerkleBlock);
+        arrMerkleBlocks.push_back(strHex);
+        if (--nCount <= 0)
+            break;
+    }
+    return arrMerkleBlocks;
+}
+
 UniValue getblock(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -1760,6 +1840,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getblockhash",           &getblockhash,           true,  {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         true,  {"blockhash","verbose"} },
     { "blockchain",         "getblockheaders",        &getblockheaders,        true,  {"blockhash","count","verbose"} },
+    { "blockchain",         "getmerkleblocks",        &getmerkleblocks,        true,  {"filter","blockhash","count"} },
     { "blockchain",         "getchaintips",           &getchaintips,           true,  {"count","branchlen"} },
     { "blockchain",         "getdifficulty",          &getdifficulty,          true,  {} },
     { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true,  {"txid","verbose"} },

@@ -103,6 +103,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getblockheader", 1, "verbose" },
     { "getblockheaders", 1, "count" },
     { "getblockheaders", 2, "verbose" },
+    { "getmerkleblocks", 2, "count" },
     { "gettransaction", 1, "include_watchonly" },
     { "getrawtransaction", 1, "verbose" },
     { "createrawtransaction", 0, "inputs" },
