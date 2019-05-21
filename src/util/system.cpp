@@ -1162,8 +1162,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         if( pid == 0 ) {
             std::string portStr = std::to_string(websocketport);
             if(bGethTestnet){
-                char * argv[] = {(char*)fpath.c_str(), (char*)"--rpc", (char*)"--rinkeby", 
-                    (char*)"--rpccorsdomain", (char*)"*", (char*)"--rpcapi", (char*)"eth,net,web3,admin",
+                char * argv[] = {(char*)fpath.c_str(), (char*)"--rinkeby", 
                     (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                     (char*)"--wsorigins", (char*)"*",
                     (char*)"--syncmode", (char*)"light", 
@@ -1180,8 +1179,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
 		    }
 	    }
             else{
-                char * argv[] = {(char*)fpath.c_str(), (char*)"--rpc", (char*)"--rpccorsdomain", (char*)"*", 
-                    (char*)"--rpcapi", (char*)"eth,net,web3,admin", (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                char * argv[] = {(char*)fpath.c_str(), (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                     (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", (char*)"--datadir", (char*)dataDir.c_str(),
                         NULL };
                     execvp(argv[0], &argv[0]);
@@ -1201,7 +1199,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         }
     #else
         std::string portStr = std::to_string(websocketport);
-        std::string args = std::string("--rpc --rpccorsdomain * --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
+        std::string args = std::string("--ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
         }
