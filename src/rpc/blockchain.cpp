@@ -11,7 +11,7 @@
 #include "coins.h"
 #include "core_io.h"
 #include "consensus/validation.h"
-#include "instantx.h"
+#include "instantsend.h"
 #include "validation.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"

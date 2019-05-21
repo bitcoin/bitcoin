@@ -4,10 +4,10 @@
 
 #include "privatesend.h"
 
-#include "activemasternode.h"
+#include "masternode/activemasternode.h"
 #include "consensus/validation.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
+#include "masternode/masternode-payments.h"
+#include "masternode/masternode-sync.h"
 #include "messagesigner.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"

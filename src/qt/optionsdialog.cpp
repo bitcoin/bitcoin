@@ -20,7 +20,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h" // for CWallet::GetRequiredFee()
 
-#include "privatesend-client.h"
+#include "privatesend/privatesend-client.h"
 #endif // ENABLE_WALLET
 
 #include <boost/thread.hpp>

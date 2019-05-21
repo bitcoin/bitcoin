@@ -20,8 +20,8 @@
 #include "validation.h" // For mempool
 #include "wallet/wallet.h"
 
-#include "instantx.h"
-#include "privatesend-client.h"
+#include "instantsend.h"
+#include "privatesend/privatesend-client.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 

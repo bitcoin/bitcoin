@@ -23,9 +23,9 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h" // for BackupWallet
 
-#include "instantx.h"
+#include "instantsend.h"
 #include "spork.h"
-#include "privatesend-client.h"
+#include "privatesend/privatesend-client.h"
 #include "llmq/quorums_instantsend.h"
 
 #include <stdint.h>

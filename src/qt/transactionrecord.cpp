@@ -11,7 +11,7 @@
 #include "timedata.h"
 #include "wallet/wallet.h"
 
-#include "privatesend.h"
+#include "privatesend/privatesend.h"
 
 #include <stdint.h>
 

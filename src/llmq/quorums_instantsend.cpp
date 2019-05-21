@@ -10,7 +10,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "txmempool.h"
-#include "masternode-sync.h"
+#include "masternode/masternode-sync.h"
 #include "net_processing.h"
 #include "spork.h"
 #include "validation.h"
@@ -20,7 +20,7 @@
 #endif
 
 // needed for AUTO_IX_MEMPOOL_THRESHOLD
-#include "instantx.h"
+#include "instantsend.h"
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>

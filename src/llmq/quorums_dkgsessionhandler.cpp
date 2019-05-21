@@ -8,7 +8,7 @@
 #include "quorums_init.h"
 #include "quorums_utils.h"
 
-#include "activemasternode.h"
+#include "masternode/activemasternode.h"
 #include "chainparams.h"
 #include "init.h"
 #include "net_processing.h"

@@ -19,7 +19,7 @@
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 
-#include "instantx.h"
+#include "instantsend.h"
 
 #include <stdint.h>
 #include <string>

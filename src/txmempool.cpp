@@ -8,7 +8,7 @@
 #include "clientversion.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "instantx.h"
+#include "instantsend.h"
 #include "validation.h"
 #include "policy/policy.h"
 #include "policy/fees.h"

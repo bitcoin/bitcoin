@@ -23,7 +23,7 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 
-#include "privatesend-client.h"
+#include "privatesend/privatesend-client.h"
 #endif
 
 #include <QNetworkProxy>

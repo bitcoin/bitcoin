@@ -20,7 +20,7 @@
 #include "wallet/walletdb.h"
 #include "wallet/rpcwallet.h"
 
-#include "privatesend.h"
+#include "privatesend/privatesend.h"
 
 #include <algorithm>
 #include <atomic>

@@ -4,9 +4,9 @@
 
 #include "mnauth.h"
 
-#include "activemasternode.h"
+#include "masternode/activemasternode.h"
 #include "evo/deterministicmns.h"
-#include "masternode-sync.h"
+#include "masternode/masternode-sync.h"
 #include "net.h"
 #include "net_processing.h"
 #include "netmessagemaker.h"

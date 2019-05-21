@@ -5,7 +5,7 @@
 #include "activemasternode.h"
 #include "evo/deterministicmns.h"
 #include "init.h"
-#include "masternode-sync.h"
+#include "masternode/masternode-sync.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "validation.h"

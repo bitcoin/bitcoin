@@ -23,7 +23,7 @@
 #include "txmempool.h"
 #include "wallet/wallet.h"
 
-#include "privatesend.h"
+#include "privatesend/privatesend.h"
 
 #include <QFontMetrics>
 #include <QMessageBox>

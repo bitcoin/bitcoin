@@ -32,15 +32,15 @@
 #include "validationinterface.h"
 
 #include "spork.h"
-#include "governance.h"
-#include "instantx.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternode-meta.h"
+#include "governance/governance.h"
+#include "instantsend.h"
+#include "masternode/masternode-payments.h"
+#include "masternode/masternode-sync.h"
+#include "masternode/masternode-meta.h"
 #ifdef ENABLE_WALLET
-#include "privatesend-client.h"
+#include "privatesend/privatesend-client.h"
 #endif // ENABLE_WALLET
-#include "privatesend-server.h"
+#include "privatesend/privatesend-server.h"
 
 #include "evo/deterministicmns.h"
 #include "evo/mnauth.h"

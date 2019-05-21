@@ -10,7 +10,7 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "instantx.h"
+#include "instantsend.h"
 #include "net.h"
 #include "rpc/server.h"
 #include "timedata.h"
@@ -20,7 +20,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 #include "keepass.h"
-#include "privatesend-client.h"
+#include "privatesend/privatesend-client.h"
 
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_instantsend.h"

@@ -6,7 +6,7 @@
 #include "quorums_signing_shares.h"
 #include "quorums_utils.h"
 
-#include "activemasternode.h"
+#include "masternode/activemasternode.h"
 #include "bls/bls_batchverifier.h"
 #include "init.h"
 #include "net_processing.h"
