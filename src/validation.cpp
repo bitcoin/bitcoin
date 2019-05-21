@@ -476,6 +476,11 @@ static bool IsCurrentForFeeEstimation() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     return true;
 }
 
+static bool IsSuitableForEstimator(const CBlockIndex* block_index)
+{
+    return block_index->GetBlockTime() > GetTime() - MAX_FEE_ESTIMATOR_BLOCK_AGE;
+}
+
 /* Make mempool consistent after a reorg, by re-adding or recursively erasing
  * disconnected block transactions from the mempool, and also removing any
  * other transactions from the mempool that are no longer valid given the new
@@ -2459,7 +2464,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
     // Remove conflicting transactions from the mempool.;
-    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight, GuessVerificationProgress(chainparams.TxData(), pindexNew) > 0.9);
+    mempool.removeForBlock(blockConnecting.vtx, pindexNew->nHeight, IsSuitableForEstimator(pindexNew));
     disconnectpool.removeForBlock(blockConnecting.vtx);
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
