@@ -313,6 +313,7 @@ libsyscoin_server_a_SOURCES = \
   services/asset.cpp \
   services/assetallocation.cpp \
   services/assetconsensus.cpp \
+  core_write.cpp \
   activemasternode.cpp \
   dsnotificationinterface.cpp \
   governance.cpp \
@@ -556,7 +557,6 @@ libsyscoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_util_a_SOURCES = \
   support/lockedpool.cpp \
-  core_write.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
   compat/glibc_sanity.cpp \
