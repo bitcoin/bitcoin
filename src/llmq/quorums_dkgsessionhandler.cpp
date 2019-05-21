@@ -489,7 +489,7 @@ void CDKGSessionHandler::HandleDKGRound()
                         debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
                     }
                 }
-                LogPrint("llmq-dkg", debugMsg);
+                LogPrint("llmq-dkg", debugMsg.c_str());
             }
             g_connman->AddMasternodeQuorumNodes(params.type, curQuorumHash, connections);
         }

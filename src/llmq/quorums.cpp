@@ -212,7 +212,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
                             debugMsg += strprintf("  %s (%s)\n", c.ToString(), dmn->pdmnState->addr.ToString(false));
                         }
                     }
-                    LogPrint("llmq", debugMsg);
+                    LogPrint("llmq", debugMsg.c_str());
                 }
                 g_connman->AddMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash, connections);
             }
