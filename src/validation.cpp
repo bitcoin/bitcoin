@@ -4307,6 +4307,7 @@ bool RewindBlockIndex(const CChainParams& params) {
         return false;
     }
 
+    LOCK(cs_main);
     if (::ChainActive().Tip() != nullptr) {
         // FlushStateToDisk can possibly read ::ChainActive(). Be conservative
         // and skip it here, we're about to -reindex-chainstate anyway, so
