@@ -3452,7 +3452,8 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 2) {
         throw std::runtime_error(
             RPCHelpMan{"rescanblockchain",
-                "\nRescan the local blockchain for wallet related transactions.\n",
+                "\nRescan the local blockchain for wallet related transactions.\n"
+                "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
                 {
                     {"start_height", RPCArg::Type::NUM, /* default */ "0", "block height where the rescan should start"},
                     {"stop_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "the last block height that should be scanned. If none is provided it will rescan up to the tip at return time of this call."},
