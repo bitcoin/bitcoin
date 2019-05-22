@@ -122,7 +122,7 @@ ArgsManager gArgs;
         const wchar_t* app_const = app_w.c_str();
         LogPrintf("CreateProcessW app %s arg %s\n",app, arg);
         int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
-              0, NULL, NULL, &si, &pi);
+              CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
         {
             LogPrintf("CreateProcess failed (%d)\n", GetLastError());
@@ -1203,7 +1203,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
         }
-        pid = fork(fpath.string(), args);
+        pid = fork("\"" + fpath.string() + "\"", "\"" + args + "\"");
         if( pid <= 0 ) {
             LogPrintf("Could not start Geth\n");
             return false;
