@@ -63,6 +63,8 @@ public:
     long getMempoolSize() const;
     //! Return the dynamic memory usage of the mempool
     size_t getMempoolDynamicUsage() const;
+    //! Return number of ISLOCKs
+    size_t getInstantSentLockCount() const;
 
     void setMasternodeList(const CDeterministicMNList& mnList);
     CDeterministicMNList getMasternodeList() const;
@@ -117,6 +119,7 @@ Q_SIGNALS:
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
+    void islockCountChanged(size_t count);
     void networkActiveChanged(bool networkActive);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
