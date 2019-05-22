@@ -20,7 +20,7 @@ import time
 # p2p messages to a node, generating the messages in the main testing logic.
 class TestNode(NodeConnCB):
     def __init__(self):
-        NodeConnCB.__init__(self)
+        super().__init__()
         self.connection = None
         self.ping_counter = 1
         self.last_pong = msg_pong()
@@ -67,15 +67,6 @@ class TestNode(NodeConnCB):
 
     def on_close(self, conn):
         self.peer_disconnected = True
-
-    # Sync up with the node after delivery of a block
-    def sync_with_ping(self, timeout=30):
-        def received_pong():
-            return (self.last_pong.nonce == self.ping_counter)
-        self.connection.send_message(msg_ping(nonce=self.ping_counter))
-        success = wait_until(received_pong, timeout=timeout)
-        self.ping_counter += 1
-        return success
 
 class MaxUploadTest(BitcoinTestFramework):
  

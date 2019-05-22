@@ -58,7 +58,7 @@ from test_framework.blocktools import create_block, create_coinbase
 # p2p messages to a node, generating the messages in the main testing logic.
 class TestNode(NodeConnCB):
     def __init__(self):
-        NodeConnCB.__init__(self)
+        super().__init__()
         self.connection = None
         self.ping_counter = 1
         self.last_pong = msg_pong()
@@ -87,21 +87,6 @@ class TestNode(NodeConnCB):
 
     def on_pong(self, conn, message):
         self.last_pong = message
-
-    # Sync up with the node after delivery of a block
-    def sync_with_ping(self, timeout=30):
-        self.connection.send_message(msg_ping(nonce=self.ping_counter))
-        received_pong = False
-        sleep_time = 0.05
-        while not received_pong and timeout > 0:
-            time.sleep(sleep_time)
-            timeout -= sleep_time
-            with mininode_lock:
-                if self.last_pong.nonce == self.ping_counter:
-                    received_pong = True
-        self.ping_counter += 1
-        return received_pong
-
 
 class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):

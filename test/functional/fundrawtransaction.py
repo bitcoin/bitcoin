@@ -327,8 +327,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         #compare fee of a standard pubkeyhash transaction
         inputs = []
         outputs = {self.nodes[1].getnewaddress():11}
-        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 11)
@@ -343,8 +343,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         #compare fee of a standard pubkeyhash transaction with multiple outputs
         inputs = []
         outputs = {self.nodes[1].getnewaddress():11,self.nodes[1].getnewaddress():12,self.nodes[1].getnewaddress():1,self.nodes[1].getnewaddress():13,self.nodes[1].getnewaddress():2,self.nodes[1].getnewaddress():3}
-        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawtx)
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendmany("", outputs)
         signedFee = self.nodes[0].getrawmempool(True)[txId]['fee']
@@ -369,8 +369,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         inputs = []
         outputs = {mSigObj:11}
-        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(mSigObj, 11)
@@ -402,8 +402,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         inputs = []
         outputs = {mSigObj:11}
-        rawTx = self.nodes[0].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[0].fundrawtransaction(rawTx)
+        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[0].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
         txId = self.nodes[0].sendtoaddress(mSigObj, 11)
@@ -437,8 +437,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         oldBalance = self.nodes[1].getbalance()
         inputs = []
         outputs = {self.nodes[1].getnewaddress():11}
-        rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[2].fundrawtransaction(rawTx)
+        rawtx = self.nodes[2].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[2].fundrawtransaction(rawtx)
 
         signedTx = self.nodes[2].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[2].sendrawtransaction(signedTx['hex'])
@@ -474,10 +474,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[1].getnewaddress()
         inputs = []
         outputs = {self.nodes[0].getnewaddress():1.1}
-        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
         # fund a transaction that requires a new key for the change output
         # creating the key must be impossible because the wallet is locked
-        assert_raises_jsonrpc(-4, "Insufficient funds", self.nodes[1].fundrawtransaction, rawtx)
+        assert_raises_jsonrpc(-4, "Keypool ran out, please call keypoolrefill first", self.nodes[1].fundrawtransaction, rawtx)
 
         #refill the keypool
         self.nodes[1].walletpassphrase("test", 100)
@@ -489,8 +489,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         inputs = []
         outputs = {self.nodes[0].getnewaddress():11}
-        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[1].fundrawtransaction(rawtx)
 
         #now we need to unlock
         self.nodes[1].walletpassphrase("test", 600)
@@ -520,8 +520,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         #fund a tx with ~20 small inputs
         inputs = []
         outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
-        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[1].fundrawtransaction(rawtx)
 
         #create same transaction over sendtoaddress
         txId = self.nodes[1].sendmany("", outputs)
@@ -552,8 +552,8 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         inputs = []
         outputs = {self.nodes[0].getnewaddress():0.15,self.nodes[0].getnewaddress():0.04}
-        rawTx = self.nodes[1].createrawtransaction(inputs, outputs)
-        fundedTx = self.nodes[1].fundrawtransaction(rawTx)
+        rawtx = self.nodes[1].createrawtransaction(inputs, outputs)
+        fundedTx = self.nodes[1].fundrawtransaction(rawtx)
         fundedAndSignedTx = self.nodes[1].signrawtransaction(fundedTx['hex'])
         txId = self.nodes[1].sendrawtransaction(fundedAndSignedTx['hex'])
         self.sync_all()
@@ -698,7 +698,6 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         inputs = []
         outputs = {self.nodes[2].getnewaddress(): value for value in (1.0, 1.1, 1.2, 1.3)}
-        keys = list(outputs.keys())
         rawtx = self.nodes[3].createrawtransaction(inputs, outputs)
 
         result = [self.nodes[3].fundrawtransaction(rawtx),

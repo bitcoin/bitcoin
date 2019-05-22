@@ -12,9 +12,9 @@ from test_framework.blocktools import create_block, create_coinbase
 from test_framework.script import CScript, OP_TRUE
 
 # TestNode: A peer we use to send messages to bitcoind, and store responses.
-class TestNode(SingleNodeConnCB):
+class TestNode(NodeConnCB):
     def __init__(self):
-        SingleNodeConnCB.__init__(self)
+        super().__init__()
         self.last_sendcmpct = []
         self.last_headers = None
         self.last_inv = None
@@ -29,6 +29,13 @@ class TestNode(SingleNodeConnCB):
         # This is for synchronizing the p2p message traffic,
         # so we can eg wait until a particular block is announced.
         self.set_announced_blockhashes = set()
+        self.connected = False
+
+    def on_open(self, conn):
+        self.connected = True
+
+    def on_close(self, conn):
+        self.connected = False
 
     def on_sendcmpct(self, conn, message):
         self.last_sendcmpct.append(message)
@@ -103,6 +110,18 @@ class TestNode(SingleNodeConnCB):
         def received_hash():
             return (block_hash in self.set_announced_blockhashes)
         return wait_until(received_hash, timeout=timeout)
+
+    def send_await_disconnect(self, message, timeout=30):
+        """Sends a message to the node and wait for disconnect.
+
+        This is used when we want to send a message into the node that we expect
+        will get us disconnected, eg an invalid block."""
+        self.send_message(message)
+        success = wait_until(lambda: not self.connected, timeout=timeout)
+        if not success:
+            logger.error("send_await_disconnect failed!")
+            raise AssertionError("send_await_disconnect failed!")
+        return success
 
 class CompactBlocksTest(BitcoinTestFramework):
     def __init__(self):
@@ -260,8 +279,8 @@ class CompactBlocksTest(BitcoinTestFramework):
         # This index will be too high
         prefilled_txn = PrefilledTransaction(1, block.vtx[0])
         cmpct_block.prefilled_txn = [prefilled_txn]
-        self.test_node.send_and_ping(msg_cmpctblock(cmpct_block))
-        assert(int(self.nodes[0].getbestblockhash(), 16) == block.hashPrevBlock)
+        self.test_node.send_await_disconnect(msg_cmpctblock(cmpct_block))
+        assert_equal(int(self.nodes[0].getbestblockhash(), 16), block.hashPrevBlock)
 
     # Compare the generated shortids to what we expect based on BIP 152, given
     # bitcoind's choice of nonce.

@@ -16,7 +16,7 @@ from test_framework.mininode import (
     CInv,
     NetworkThread,
     NodeConn,
-    SingleNodeConnCB,
+    NodeConnCB,
     msg_headers,
     msg_block,
     msg_getdata,
@@ -90,14 +90,14 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
         # TODO remove this when mininode is up-to-date with Bitcoin
-        class MyNodeConnCB(SingleNodeConnCB):
+        class MyNodeConnCB(NodeConnCB):
             def __init__(self):
-                SingleNodeConnCB.__init__(self)
+                super().__init__()
                 self.cond = threading.Condition()
                 self.last_message = {}
 
             def deliver(self, conn, message):
-                SingleNodeConnCB.deliver(self, conn, message)
+                super().deliver(conn, message)
                 command = message.command.decode('ascii')
                 self.last_message[command] = message
                 with self.cond:

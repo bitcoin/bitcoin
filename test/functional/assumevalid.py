@@ -15,7 +15,7 @@ transactions:
     2-101:    bury that block with 100 blocks so the coinbase transaction
               output can be spent
     102:      a block containing a transaction spending the coinbase
-              transaction output. The transaction has an invalid signature. 
+              transaction output. The transaction has an invalid signature.
     103-2202: bury the bad block with just over two weeks' worth of blocks
               (2100 blocks)
 
@@ -29,40 +29,31 @@ Start three nodes:
       block 200. node2 will reject block 102 since it's assumed valid, but it
       isn't buried by at least two weeks' work.
 """
+import time
 
-from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.blocktools import create_block, create_coinbase
+from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.key import CECKey
-from test_framework.script import *
+from test_framework.mininode import (CBlockHeader,
+                                     COutPoint,
+                                     CTransaction,
+                                     CTxIn,
+                                     CTxOut,
+                                     NetworkThread,
+                                     NodeConn,
+                                     NodeConnCB,
+                                     msg_block,
+                                     msg_headers)
+from test_framework.script import (CScript, OP_TRUE)
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (start_node, p2p_port, assert_equal)
 
-class BaseNode(SingleNodeConnCB):
-    def __init__(self):
-        SingleNodeConnCB.__init__(self)
-        self.last_inv = None
-        self.last_headers = None
-        self.last_block = None
-        self.last_getdata = None
-        self.block_announced = False
-        self.last_getheaders = None
-        self.disconnected = False
-        self.last_blockhash_announced = None
-
-    def on_close(self, conn):
-        self.disconnected = True
-
-    def wait_for_disconnect(self, timeout=60):
-        test_function = lambda: self.disconnected
-        assert(wait_until(test_function, timeout=timeout))
-        return
-
+class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):
         headers_message = msg_headers()
-        headers_message.headers = [ CBlockHeader(b) for b in new_blocks ]
+        headers_message.headers = [CBlockHeader(b) for b in new_blocks]
         self.send_message(headers_message)
 
-class SendHeadersTest(BitcoinTestFramework):
+class AssumeValidTest(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.setup_clean_chain = True
@@ -72,8 +63,34 @@ class SendHeadersTest(BitcoinTestFramework):
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir))
+        self.nodes = [start_node(0, self.options.tmpdir)]
+
+    def send_blocks_until_disconnected(self, node):
+        """Keep sending blocks to the node until we're disconnected."""
+        for i in range(len(self.blocks)):
+            try:
+                node.send_message(msg_block(self.blocks[i]))
+            except IOError as e:
+                assert str(e) == 'Not connected, no pushbuf'
+                break
+
+    def assert_blockchain_height(self, node, height):
+        """Wait until the blockchain is no longer advancing and verify it's reached the expected height."""
+        last_height = node.getblock(node.getbestblockhash())['height']
+        timeout = 10
+        while True:
+            time.sleep(0.25)
+            current_height = node.getblock(node.getbestblockhash())['height']
+            if current_height != last_height:
+                last_height = current_height
+                if timeout < 0:
+                    assert False, "blockchain too short after timeout: %d" % current_height
+                timeout - 0.25
+                continue
+            elif current_height > height:
+                assert False, "blockchain too long: %d" % current_height
+            elif current_height == height:
+                break
 
     def run_test(self):
 
@@ -83,7 +100,7 @@ class SendHeadersTest(BitcoinTestFramework):
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))
         node0.add_connection(connections[0])
 
-        NetworkThread().start() # Start up network handling in another thread
+        NetworkThread().start()  # Start up network handling in another thread
         node0.wait_for_verack()
 
         # Build the blockchain
@@ -120,7 +137,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # Create a transaction spending the coinbase output with an invalid (null) signature
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(self.block1.vtx[0].sha256, 0), scriptSig=b""))
-        tx.vout.append(CTxOut(49*100000000, CScript([OP_TRUE])))
+        tx.vout.append(CTxOut(49 * 100000000, CScript([OP_TRUE])))
         tx.calc_sha256()
 
         block102 = create_block(self.tip, create_coinbase(height), self.block_time)
@@ -166,25 +183,20 @@ class SendHeadersTest(BitcoinTestFramework):
         node1.send_header_for_blocks(self.blocks[2000:])
         node2.send_header_for_blocks(self.blocks[0:200])
 
-        # Send 102 blocks to node0. Block 102 will be rejected.
-        for i in range(101):
-            node0.send_message(msg_block(self.blocks[i]))
-        node0.sync_with_ping() # make sure the most recent block is synced
-        node0.send_message(msg_block(self.blocks[101]))
-        assert_equal(self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height'], 101)
+        # Send blocks to node0. Block 102 will be rejected.
+        self.send_blocks_until_disconnected(node0)
+        self.assert_blockchain_height(self.nodes[0], 101)
 
-        # Send 3102 blocks to node1. All blocks will be accepted.
+        # Send all blocks to node1. All blocks will be accepted.
         for i in range(2202):
             node1.send_message(msg_block(self.blocks[i]))
-        node1.sync_with_ping() # make sure the most recent block is synced
+        # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
+        node1.sync_with_ping(120)
         assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
 
-        # Send 102 blocks to node2. Block 102 will be rejected.
-        for i in range(101):
-            node2.send_message(msg_block(self.blocks[i]))
-        node2.sync_with_ping() # make sure the most recent block is synced
-        node2.send_message(msg_block(self.blocks[101]))
-        assert_equal(self.nodes[2].getblock(self.nodes[2].getbestblockhash())['height'], 101)
+        # Send blocks to node2. Block 102 will be rejected.
+        self.send_blocks_until_disconnected(node2)
+        self.assert_blockchain_height(self.nodes[2], 101)
 
 if __name__ == '__main__':
-    SendHeadersTest().main()
+    AssumeValidTest().main()

@@ -96,7 +96,12 @@ struct CMainSignals {
     boost::signals2::signal<void (const uint256 &)> Inventory;
     /** Tells listeners to broadcast their data. */
     boost::signals2::signal<void (int64_t nBestBlockTime, CConnman* connman)> Broadcast;
-    /** Notifies listeners of a block validation result */
+    /**
+     * Notifies listeners of a block validation result.
+     * If the provided CValidationState IsValid, the provided block
+     * is guaranteed to be the current best block at the time the
+     * callback was generated (not necessarily now)
+     */
     boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
     /** Notifies listeners that a key for mining is required (coinbase) */
     boost::signals2::signal<void (boost::shared_ptr<CReserveScript>&)> ScriptForMining;

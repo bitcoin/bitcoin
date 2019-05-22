@@ -10,9 +10,8 @@ import os
 import sys
 import shutil
 import tempfile
-import traceback
+import time
 from concurrent.futures import ThreadPoolExecutor
-from time import time, sleep
 
 from .util import (
     assert_equal,
@@ -41,8 +40,11 @@ from .util import (
     copy_datadir)
 from .authproxy import JSONRPCException
 
-
 class BitcoinTestFramework(object):
+
+    TEST_EXIT_PASSED = 0
+    TEST_EXIT_FAILED = 1
+    TEST_EXIT_SKIPPED = 77
 
     def __init__(self):
         self.num_nodes = 4
@@ -202,11 +204,11 @@ class BitcoinTestFramework(object):
                     print("".join(deque(open(f), MAX_LINES_TO_PRINT)))
         if success:
             self.log.info("Tests successful")
-            sys.exit(0)
+            sys.exit(self.TEST_EXIT_PASSED)
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             logging.shutdown()
-            sys.exit(1)
+            sys.exit(self.TEST_EXIT_FAILED)
 
     def _start_logging(self):
         # Add logger and logging handlers
@@ -222,6 +224,7 @@ class BitcoinTestFramework(object):
         ch.setLevel(ll)
         # Format logs the same as bitcoind's debug.log with microprecision (so log files can be concatenated and sorted)
         formatter = logging.Formatter(fmt = '%(asctime)s.%(msecs)03d000 %(name)s (%(levelname)s): %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+        formatter.converter = time.gmtime
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         # add the handlers to the logger
@@ -547,7 +550,7 @@ class DashTestFramework(BitcoinTestFramework):
 
     def wait_for_instantlock(self, txid, node):
         # wait for instantsend locks
-        start = time()
+        start = time.time()
         locked = False
         while True:
             try:
@@ -558,17 +561,17 @@ class DashTestFramework(BitcoinTestFramework):
             except:
                 # TX not received yet?
                 pass
-            if time() > start + 10:
+            if time.time() > start + 10:
                 break
-            sleep(0.5)
+            time.sleep(0.5)
         return locked
 
     def wait_for_sporks_same(self, timeout=30):
-        st = time()
-        while time() < st + timeout:
+        st = time.time()
+        while time.time() < st + timeout:
             if self.check_sporks_same():
                 return
-            sleep(0.5)
+            time.sleep(0.5)
         raise AssertionError("wait_for_sporks_same timed out")
 
     def check_sporks_same(self):
@@ -580,8 +583,8 @@ class DashTestFramework(BitcoinTestFramework):
         return True
 
     def wait_for_quorum_phase(self, phase, check_received_messages, check_received_messages_count, timeout=30):
-        t = time()
-        while time() - t < timeout:
+        t = time.time()
+        while time.time() - t < timeout:
             all_ok = True
             for mn in self.mninfo:
                 s = mn.node.quorum("dkgstatus")["session"]
@@ -601,12 +604,12 @@ class DashTestFramework(BitcoinTestFramework):
                         break
             if all_ok:
                 return
-            sleep(0.1)
+            time.sleep(0.1)
         raise AssertionError("wait_for_quorum_phase timed out")
 
     def wait_for_quorum_commitment(self, timeout = 15):
-        t = time()
-        while time() - t < timeout:
+        t = time.time()
+        while time.time() - t < timeout:
             all_ok = True
             for node in self.nodes:
                 s = node.quorum("dkgstatus")
@@ -619,7 +622,7 @@ class DashTestFramework(BitcoinTestFramework):
                     break
             if all_ok:
                 return
-            sleep(0.1)
+            time.sleep(0.1)
         raise AssertionError("wait_for_quorum_commitment timed out")
 
     def mine_quorum(self, expected_contributions=5, expected_complaints=0, expected_justifications=0, expected_commitments=5):
@@ -636,7 +639,7 @@ class DashTestFramework(BitcoinTestFramework):
         # Make sure all reached phase 1 (init)
         self.wait_for_quorum_phase(1, None, 0)
         # Give nodes some time to connect to neighbors
-        sleep(2)
+        time.sleep(2)
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(2)
@@ -681,7 +684,7 @@ class DashTestFramework(BitcoinTestFramework):
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].generate(1)
         while quorums == self.nodes[0].quorum("list"):
-            sleep(2)
+            time.sleep(2)
             set_mocktime(get_mocktime() + 1)
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)

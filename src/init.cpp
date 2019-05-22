@@ -374,17 +374,30 @@ void Shutdown()
 }
 
 /**
- * Signal handlers are very limited in what they are allowed to do, so:
+ * Signal handlers are very limited in what they are allowed to do.
+ * The execution context the handler is invoked in is not guaranteed,
+ * so we restrict handler operations to just touching variables:
  */
-void HandleSIGTERM(int)
+static void HandleSIGTERM(int)
 {
     fRequestShutdown = true;
 }
 
-void HandleSIGHUP(int)
+static void HandleSIGHUP(int)
 {
     fReopenDebugLog = true;
 }
+
+#ifndef WIN32
+static void registerSignalHandler(int signal, void(*handler)(int))
+{
+    struct sigaction sa;
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(signal, &sa, NULL);
+}
+#endif
 
 bool static Bind(CConnman& connman, const CService &addr, unsigned int flags) {
     if (!(flags & BF_EXPLICIT) && IsLimited(addr))
@@ -473,13 +486,13 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-banscore=<n>", strprintf(_("Threshold for disconnecting misbehaving peers (default: %u)"), DEFAULT_BANSCORE_THRESHOLD));
     strUsage += HelpMessageOpt("-bantime=<n>", strprintf(_("Number of seconds to keep misbehaving peers from reconnecting (default: %u)"), DEFAULT_MISBEHAVING_BANTIME));
     strUsage += HelpMessageOpt("-bind=<addr>", _("Bind to given address and always listen on it. Use [host]:port notation for IPv6"));
-    strUsage += HelpMessageOpt("-connect=<ip>", _("Connect only to the specified node(s); -noconnect or -connect=0 alone to disable automatic connections"));
+    strUsage += HelpMessageOpt("-connect=<ip>", _("Connect only to the specified node(s); -connect=0 disables automatic connections"));
     strUsage += HelpMessageOpt("-discover", _("Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)"));
     strUsage += HelpMessageOpt("-dns", _("Allow DNS lookups for -addnode, -seednode and -connect") + " " + strprintf(_("(default: %u)"), DEFAULT_NAME_LOOKUP));
-    strUsage += HelpMessageOpt("-dnsseed", _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect/-noconnect)"));
+    strUsage += HelpMessageOpt("-dnsseed", _("Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)"));
     strUsage += HelpMessageOpt("-externalip=<ip>", _("Specify your own public address"));
     strUsage += HelpMessageOpt("-forcednsseed", strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), DEFAULT_FORCEDNSSEED));
-    strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect/-noconnect)"));
+    strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"));
     strUsage += HelpMessageOpt("-listenonion", strprintf(_("Automatically create Tor hidden service (default: %d)"), DEFAULT_LISTEN_ONION));
     strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (temporary service connections excluded) (default: %u)"), DEFAULT_MAX_PEER_CONNECTIONS));
     strUsage += HelpMessageOpt("-maxreceivebuffer=<n>", strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), DEFAULT_MAXRECEIVEBUFFER));
@@ -506,8 +519,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-whitebind=<addr>", _("Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6"));
     strUsage += HelpMessageOpt("-whitelist=<IP address or network>", _("Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.") +
         " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"));
-    strUsage += HelpMessageOpt("-whitelistrelay", strprintf(_("Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)"), DEFAULT_WHITELISTRELAY));
-    strUsage += HelpMessageOpt("-whitelistforcerelay", strprintf(_("Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)"), DEFAULT_WHITELISTFORCERELAY));
     strUsage += HelpMessageOpt("-maxuploadtarget=<n>", strprintf(_("Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)"), DEFAULT_MAX_UPLOAD_TARGET));
 
 #ifdef ENABLE_WALLET
@@ -570,8 +581,6 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit size of signature cache to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
         strUsage += HelpMessageOpt("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE));
     }
-    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
-        CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
     strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)"),
         CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)));
     strUsage += HelpMessageOpt("-printtoconsole", _("Send trace/debug info to console instead of debug.log file"));
@@ -616,6 +625,10 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-bytespersigop", strprintf(_("Minimum bytes per sigop in transactions we relay and mine (default: %u)"), DEFAULT_BYTES_PER_SIGOP));
     strUsage += HelpMessageOpt("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), DEFAULT_ACCEPT_DATACARRIER));
     strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
+    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
+    strUsage += HelpMessageOpt("-whitelistrelay", strprintf(_("Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)"), DEFAULT_WHITELISTRELAY));
+    strUsage += HelpMessageOpt("-whitelistforcerelay", strprintf(_("Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)"), DEFAULT_WHITELISTFORCERELAY));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
@@ -1064,19 +1077,11 @@ bool AppInitBasicSetup()
     }
 
     // Clean shutdown on SIGTERM
-    struct sigaction sa;
-    sa.sa_handler = HandleSIGTERM;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGINT, &sa, NULL);
+    registerSignalHandler(SIGTERM, HandleSIGTERM);
+    registerSignalHandler(SIGINT, HandleSIGTERM);
 
     // Reopen debug.log on SIGHUP
-    struct sigaction sa_hup;
-    sa_hup.sa_handler = HandleSIGHUP;
-    sigemptyset(&sa_hup.sa_mask);
-    sa_hup.sa_flags = 0;
-    sigaction(SIGHUP, &sa_hup, NULL);
+    registerSignalHandler(SIGHUP, HandleSIGHUP);
 
     // Ignore SIGPIPE, otherwise it will bring the daemon down if the client closes unexpectedly
     signal(SIGPIPE, SIG_IGN);
@@ -1208,8 +1213,15 @@ bool AppInitParameterInteraction()
         nPruneTarget = std::numeric_limits<uint64_t>::max();
         fPruneMode = true;
     } else if (nPruneTarget) {
-        if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
-            return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
+        if (GetBoolArg("-regtest", false)) {
+            // we use 1MB blocks to test this on regtest
+            if (nPruneTarget < 550 * 1024 * 1024) {
+                return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), 550));
+            }
+        } else {
+            if (nPruneTarget < MIN_DISK_SPACE_FOR_BLOCK_FILES) {
+                return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), MIN_DISK_SPACE_FOR_BLOCK_FILES / 1024 / 1024));
+            }
         }
         LogPrintf("Prune configured to target %uMiB on disk for block and undo files.\n", nPruneTarget / 1024 / 1024);
         fPruneMode = true;

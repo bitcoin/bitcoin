@@ -45,15 +45,15 @@ class PruneTest(BitcoinTestFramework):
         self.nodes.append(start_node(1, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
 
         # Create node 2 to test pruning
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-maxreceivebuffer=20000","-prune=550"], timewait=900))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-litemode","-txindex=0","-maxreceivebuffer=20000","-prune=550"], redirect_stderr=True, timewait=900))
         self.prunedir = self.options.tmpdir+"/node2/regtest/blocks/"
 
         # Create nodes 3 and 4 to test manual pruning (they will be re-started with manual pruning later)
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
-        self.nodes.append(start_node(4, self.options.tmpdir, ["-maxreceivebuffer=20000","-blockmaxsize=999000"], timewait=900))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-litemode","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"], redirect_stderr=True, timewait=900))
+        self.nodes.append(start_node(4, self.options.tmpdir, ["-litemode","-txindex=0","-maxreceivebuffer=20000","-blockmaxsize=999000"], redirect_stderr=True, timewait=900))
 
         # Create nodes 5 to test wallet in prune mode, but do not connect
-        self.nodes.append(start_node(5, self.options.tmpdir, ["-prune=550"]))
+        self.nodes.append(start_node(5, self.options.tmpdir, ["-litemode","-txindex=0","-prune=550"], redirect_stderr=True))
 
         # Determine default relay fee
         self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
@@ -228,13 +228,13 @@ class PruneTest(BitcoinTestFramework):
 
     def manual_test(self, node_number, use_timestamp):
         # at this point, node has 995 blocks and has not yet run in prune mode
-        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, timewait=900)
+        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-litemode","-txindex=0"], redirect_stderr=True, timewait=900)
         assert_equal(node.getblockcount(), 995)
         assert_raises_jsonrpc(-1, "not in prune mode", node.pruneblockchain, 500)
         self.stop_node(node_number)
 
         # now re-start in manual pruning mode
-        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-prune=1"], timewait=900)
+        node = self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-litemode","-txindex=0","-prune=1"], redirect_stderr=True, timewait=900)
         assert_equal(node.getblockcount(), 995)
 
         def height(index):
@@ -308,7 +308,7 @@ class PruneTest(BitcoinTestFramework):
 
         # stop node, start back up with auto-prune at 550MB, make sure still runs
         self.stop_node(node_number)
-        self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-prune=550"], timewait=900)
+        self.nodes[node_number] = start_node(node_number, self.options.tmpdir, ["-litemode","-txindex=0","-prune=550"], redirect_stderr=True, timewait=900)
 
         self.log.info("Success")
 
@@ -316,7 +316,7 @@ class PruneTest(BitcoinTestFramework):
         # check that the pruning node's wallet is still in good shape
         self.log.info("Stop and start pruning node to trigger wallet rescan")
         self.stop_node(2)
-        start_node(2, self.options.tmpdir, ["-prune=550"])
+        start_node(2, self.options.tmpdir, ["-litemode","-txindex=0","-prune=550"], redirect_stderr=True)
         self.log.info("Success")
 
         # check that wallet loads loads successfully when restarting a pruned node after IBD.
@@ -326,7 +326,7 @@ class PruneTest(BitcoinTestFramework):
         nds = [self.nodes[0], self.nodes[5]]
         sync_blocks(nds, wait=5, timeout=300)
         self.stop_node(5) #stop and start to trigger rescan
-        start_node(5, self.options.tmpdir, ["-prune=550"])
+        start_node(5, self.options.tmpdir, ["-litemode","-txindex=0","-prune=550"], redirect_stderr=True)
         self.log.info("Success")
 
     def run_test(self):

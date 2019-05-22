@@ -27,9 +27,9 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class TestNode(SingleNodeConnCB):
+class TestNode(NodeConnCB):
     def __init__(self):
-        SingleNodeConnCB.__init__(self)
+        super().__init__()
         self.connected = False
         self.received_version = False
 

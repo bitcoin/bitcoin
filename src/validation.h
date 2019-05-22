@@ -327,7 +327,7 @@ void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 /** Prune block files up to a given height */
-void PruneBlockFilesManual(int nPruneUpToHeight);
+void PruneBlockFilesManual(int nManualPruneHeight);
 
 /** (try to) add transaction to memory pool */
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
