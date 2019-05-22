@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
         }
 
         // One every 10 iterations, remove a random entry from the cache
-        if (insecure_rand() % 10) {
+        if (insecure_rand() % 10 == 0) {
             COutPoint out(txids[insecure_rand() % txids.size()], 0);
             int cacheid = insecure_rand() % stack.size();
             stack[cacheid]->Uncache(out);
@@ -430,13 +430,13 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
         }
 
         // One every 10 iterations, remove a random entry from the cache
-        if (utxoset.size() > 1 && insecure_rand() % 30) {
+        if (utxoset.size() > 1 && insecure_rand() % 30 == 0) {
             stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(utxoset)->first);
         }
-        if (disconnected_coins.size() > 1 && insecure_rand() % 30) {
+        if (disconnected_coins.size() > 1 && insecure_rand() % 30 == 0) {
             stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(disconnected_coins)->first);
         }
-        if (duplicate_coins.size() > 1 && insecure_rand() % 30) {
+        if (duplicate_coins.size() > 1 && insecure_rand() % 30 == 0) {
             stack[insecure_rand() % stack.size()]->Uncache(FindRandomFrom(duplicate_coins)->first);
         }
 

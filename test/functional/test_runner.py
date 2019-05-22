@@ -82,6 +82,7 @@ BASE_SCRIPTS= [
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
+    'net.py',
     'keypool.py',
     'keypool-hd.py',
     'p2p-mempool.py',

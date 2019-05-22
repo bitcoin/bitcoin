@@ -91,7 +91,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight) {
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
         // Pass fCoinbase as the possible_overwrite flag to AddCoin, in order to correctly
-        // deal with the pre-BIP30 occurrances of duplicate coinbase transactions.
+        // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), fCoinbase);
     }
 }
