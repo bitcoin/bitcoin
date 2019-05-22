@@ -30,6 +30,28 @@ Network specific options can be:
 - placed into sections with headers `[main]` (not `[mainnet]`), `[test]` (not `[testnet]`) or `[regtest]`;
 - prefixed with a chain name; e.g., `regtest.maxmempool=100`.
 
+Options that are either prefixed with a chain name or placed
+into sections with headers take precedence over options
+without network specific information. If multiple values
+for the same option is found with the same precedence, the 
+first one is generally chosen. 
+
+This means that given the following configuration, `rpcport` is set to `3000`:
+
+```
+regtest=1
+rpcport=2000
+regtest.rpcport=3000
+
+[regtest]
+rpcport=4000
+```
+
+Note that there's no way to end a network section without 
+opening a new one, so all options prefixed with a network 
+must be placed before any network sections are opened. 
+
+
 ## Configuration File Path
 
 The configuration file is not automatically created; you can create it using your favorite text editor. By default, the configuration file name is `bitcoin.conf` and it is located in the Bitcoin data directory, but both the Bitcoin data directory and the configuration file path may be changed using the `-datadir` and `-conf` command-line options.
