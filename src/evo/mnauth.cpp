@@ -39,7 +39,7 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
     mnauth.proRegTxHash = activeMasternodeInfo.proTxHash;
     mnauth.sig = activeMasternodeInfo.blsKeyOperator->Sign(signHash);
 
-    LogPrint("net", "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->id);
+    LogPrint(BCLog::NET, "CMNAuth::%s -- Sending MNAUTH, peer=%d\n", __func__, pnode->id);
 
     connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::MNAUTH, mnauth));
 }
@@ -99,7 +99,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
 
         connman.ForEachNode([&](CNode* pnode2) {
             if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
-                LogPrint("net", "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping old connection. peer=%d\n",
+                LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, dropping old connection. peer=%d\n",
                         mnauth.proRegTxHash.ToString(), pnode2->id, pnode->id);
                 pnode2->fDisconnect = true;
             }
@@ -111,7 +111,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             pnode->verifiedPubKeyHash = dmn->pdmnState->pubKeyOperator.GetHash();
         }
 
-        LogPrint("net", "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->id);
+        LogPrint(BCLog::NET, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->id);
     }
 }
 
@@ -140,7 +140,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         }
 
         if (doRemove) {
-            LogPrint("net", "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
+            LogPrint(BCLog::NET, "CMNAuth::NotifyMasternodeListChanged -- Disconnecting MN %s due to key changed/removed, peer=%d\n",
                      pnode->verifiedProRegTxHash.ToString(), pnode->id);
             pnode->fDisconnect = true;
         }

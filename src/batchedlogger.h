@@ -14,7 +14,7 @@ private:
     std::string header;
     std::string msg;
 public:
-    CBatchedLogger(const std::string& _category, const std::string& _header);
+    CBatchedLogger(uint64_t _category, const std::string& _header);
     virtual ~CBatchedLogger();
 
     template<typename... Args>

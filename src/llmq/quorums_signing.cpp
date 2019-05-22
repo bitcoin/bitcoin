@@ -325,7 +325,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 
     db.WriteBatch(batch);
 
-    LogPrint("llmq", "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, toDelete.size());
+    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, toDelete.size());
 }
 
 bool CRecoveredSigsDb::HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id)
@@ -390,7 +390,7 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 
     db.WriteBatch(batch);
 
-    LogPrint("llmq", "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, cnt);
+    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%d -- deleted %d entries\n", __func__, cnt);
 }
 
 //////////////////
@@ -444,7 +444,7 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
         return;
     }
 
-    LogPrint("llmq", "CSigningManager::%s -- signHash=%s, node=%d\n", __func__, CLLMQUtils::BuildSignHash(recoveredSig).ToString(), pfrom->id);
+    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- signHash=%s, node=%d\n", __func__, CLLMQUtils::BuildSignHash(recoveredSig).ToString(), pfrom->id);
 
     LOCK(cs);
     pendingRecoveredSigs[pfrom->id].emplace_back(recoveredSig);
@@ -463,7 +463,7 @@ bool CSigningManager::PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& 
     CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, recoveredSig.quorumHash);
 
     if (!quorum) {
-        LogPrint("llmq", "CSigningManager::%s -- quorum %s not found, node=%d\n", __func__,
+        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found, node=%d\n", __func__,
                   recoveredSig.quorumHash.ToString(), nodeId);
         return false;
     }
@@ -520,13 +520,13 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
             if (!retQuorums.count(quorumKey)) {
                 CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, recSig.quorumHash);
                 if (!quorum) {
-                    LogPrint("llmq", "CSigningManager::%s -- quorum %s not found, node=%d\n", __func__,
+                    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not found, node=%d\n", __func__,
                               recSig.quorumHash.ToString(), nodeId);
                     it = v.erase(it);
                     continue;
                 }
                 if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc.quorumHash)) {
-                    LogPrint("llmq", "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
+                    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
                               recSig.quorumHash.ToString(), nodeId);
                     it = v.erase(it);
                     continue;
@@ -590,7 +590,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
     batchVerifier.Verify();
     verifyTimer.stop();
 
-    LogPrint("llmq", "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());
+    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- verified recovered sig(s). count=%d, vt=%d, nodes=%d\n", __func__, verifyCount, verifyTimer.count(), recSigsByNode.size());
 
     std::unordered_set<uint256, StaticSaltedHasher> processed;
     for (auto& p : recSigsByNode) {
@@ -634,7 +634,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 
         auto signHash = CLLMQUtils::BuildSignHash(recoveredSig);
 
-        LogPrint("llmq", "CSigningManager::%s -- valid recSig. signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
+        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- valid recSig. signHash=%s, id=%s, msgHash=%s, node=%d\n", __func__,
                 signHash.ToString(), recoveredSig.id.ToString(), recoveredSig.msgHash.ToString(), nodeId);
 
         if (db.HasRecoveredSigForId(llmqType, recoveredSig.id)) {
@@ -726,7 +726,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
                 LogPrintf("CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting on conflicting msgHash=%s\n", __func__,
                         id.ToString(), prevMsgHash.ToString(), msgHash.ToString());
             } else {
-                LogPrint("llmq", "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting again.\n", __func__,
+                LogPrint(BCLog::LLMQ, "CSigningManager::%s -- already voted for id=%s and msgHash=%s. Not voting again.\n", __func__,
                           id.ToString(), prevMsgHash.ToString());
             }
             return false;
@@ -752,12 +752,12 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
     // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
     CQuorumCPtr quorum = SelectQuorumForSigning(llmqType, tipHeight, id);
     if (!quorum) {
-        LogPrint("llmq", "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
+        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
         return false;
     }
 
     if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-        //LogPrint("llmq", "CSigningManager::%s -- we're not a valid member of quorum %s\n", __func__, quorum->quorumHash.ToString());
+        //LogPrint(BCLog::LLMQ, "CSigningManager::%s -- we're not a valid member of quorum %s\n", __func__, quorum->quorumHash.ToString());
         return false;
     }
 

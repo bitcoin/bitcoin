@@ -134,7 +134,7 @@ UniValue debug(const JSONRPCRequest& request)
             "                       addrman, alert, bench, cmpctblock, coindb, db, http, leveldb, libevent, lock, mempool,\n"
             "                       mempoolrej, net, proxy, prune, qt, rand, reindex, rpc, selectcoins, tor, zmq, dash\n"
             "                       (or specifically: chainlocks, gobject, instantsend, keepass, llmq, llmq-dkg, llmq-sigs,\n"
-            "                       masternode, mnpayments, mnsync, privatesend, spork).\n"
+            "                       mnpayments, mnsync, privatesend, spork).\n"
             "                       Can also use \"1\" to turn all categories on at once and \"0\" to turn them off.\n"
             "                       Note: If specified category doesn't match any of the above, no error is thrown.\n"
             "\nResult:\n"
@@ -145,17 +145,21 @@ UniValue debug(const JSONRPCRequest& request)
         );
 
     std::string strMode = request.params[0].get_str();
+    logCategories = BCLog::NONE;
 
-    std::vector<std::string> newMultiArgs;
-    boost::split(newMultiArgs, strMode, boost::is_any_of("+"));
-    ForceSetMultiArgs("-debug", newMultiArgs);
-    ForceSetArg("-debug", newMultiArgs[newMultiArgs.size() - 1]);
+    std::vector<std::string> categories;
+    boost::split(categories, strMode, boost::is_any_of("+"));
 
-    fDebug = GetArg("-debug", "") != "0";
+    if (std::find(categories.begin(), categories.end(), std::string("0")) == categories.end()) {
+        for (const auto& cat : categories) {
+            uint64_t flag;
+            if (GetLogCategory(&flag, &cat)) {
+                logCategories |= flag;
+            }
+        }
+    }
 
-    ResetLogAcceptCategoryCache();
-
-    return "Debug mode: " + (fDebug ? strMode : "off");
+    return "Debug mode: " + ListActiveLogCategories();
 }
 
 UniValue mnsync(const JSONRPCRequest& request)

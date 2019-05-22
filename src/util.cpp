@@ -129,7 +129,6 @@ CCriticalSection cs_args;
 std::unordered_map<std::string, std::string> mapArgs;
 static std::unordered_map<std::string, std::vector<std::string> > _mapMultiArgs;
 const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
-bool fDebug = false;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 
@@ -139,6 +138,9 @@ bool fLogThreadNames = DEFAULT_LOGTHREADNAMES;
 bool fLogIPs = DEFAULT_LOGIPS;
 std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
+
+/** Log categories bitfield. Leveldb/libevent need special handling if their flags are changed at runtime. */
+std::atomic<uint64_t> logCategories(0);
 
 /** Init OpenSSL library multithreading support */
 static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
@@ -213,7 +215,6 @@ static boost::once_flag debugPrintInitFlag = BOOST_ONCE_INIT;
 static FILE* fileout = NULL;
 static boost::mutex* mutexDebugLog = NULL;
 static std::list<std::string>* vMsgsBeforeOpenLog;
-static std::atomic<int> logAcceptCategoryCacheCounter(0);
 
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
@@ -249,71 +250,120 @@ void OpenDebugLog()
     vMsgsBeforeOpenLog = NULL;
 }
 
-bool LogAcceptCategory(const char* category)
+struct CLogCategoryDesc
 {
-    if (category != NULL)
-    {
-        // Give each thread quick access to -debug settings.
-        // This helps prevent issues debugging global destructors,
-        // where mapMultiArgs might be deleted before another
-        // global destructor calls LogPrint()
-        static boost::thread_specific_ptr<std::set<std::string> > ptrCategory;
-        static boost::thread_specific_ptr<int> cacheCounter;
+    uint64_t flag;
+    std::string category;
+};
 
-        if (!fDebug) {
-            if (ptrCategory.get() != NULL) {
-                LogPrintf("debug turned off: thread %s\n", GetThreadName());
-                ptrCategory.release();
-            }
-            return false;
+const CLogCategoryDesc LogCategories[] =
+{
+    {BCLog::NONE, "0"},
+    {BCLog::NET, "net"},
+    {BCLog::TOR, "tor"},
+    {BCLog::MEMPOOL, "mempool"},
+    {BCLog::HTTP, "http"},
+    {BCLog::BENCHMARK, "bench"},
+    {BCLog::ZMQ, "zmq"},
+    {BCLog::DB, "db"},
+    {BCLog::RPC, "rpc"},
+    {BCLog::ESTIMATEFEE, "estimatefee"},
+    {BCLog::ADDRMAN, "addrman"},
+    {BCLog::SELECTCOINS, "selectcoins"},
+    {BCLog::REINDEX, "reindex"},
+    {BCLog::CMPCTBLOCK, "cmpctblock"},
+    {BCLog::RANDOM, "rand"},
+    {BCLog::PRUNE, "prune"},
+    {BCLog::PROXY, "proxy"},
+    {BCLog::MEMPOOLREJ, "mempoolrej"},
+    {BCLog::LIBEVENT, "libevent"},
+    {BCLog::COINDB, "coindb"},
+    {BCLog::QT, "qt"},
+    {BCLog::LEVELDB, "leveldb"},
+    {BCLog::ALL, "1"},
+    {BCLog::ALL, "all"},
+
+    //Start Dash
+    {BCLog::CHAINLOCKS, "chainlocks"},
+    {BCLog::GOBJECT, "gobject"},
+    {BCLog::INSTANTSEND, "instantsend"},
+    {BCLog::KEEPASS, "keepass"},
+    {BCLog::LLMQ, "llmq"},
+    {BCLog::LLMQ_DKG, "llmq-dkg"},
+    {BCLog::LLMQ_SIGS, "llmq-sigs"},
+    {BCLog::MNPAYMENTS, "mnpayments"},
+    {BCLog::MNSYNC, "mnsync"},
+    {BCLog::PRIVATESEND, "privatesend"},
+    {BCLog::SPORK, "spork"},
+    {BCLog::ALERT, "alert"},
+    //End Dash
+
+};
+
+bool GetLogCategory(uint64_t *f, const std::string *str)
+{
+    if (f && str) {
+        if (*str == "") {
+            *f = BCLog::ALL;
+            return true;
         }
-
-        if (ptrCategory.get() == NULL || *cacheCounter != logAcceptCategoryCacheCounter.load())
-        {
-            cacheCounter.reset(new int(logAcceptCategoryCacheCounter.load()));
-
-            LOCK(cs_args);
-            if (mapMultiArgs.count("-debug")) {
-                std::string strThreadName = GetThreadName();
-                LogPrintf("debug turned on:\n");
-                for (int i = 0; i < (int)mapMultiArgs.at("-debug").size(); ++i)
-                    LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs.at("-debug")[i]);
-                const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
-                ptrCategory.reset(new std::set<std::string>(categories.begin(), categories.end()));
-                // thread_specific_ptr automatically deletes the set when the thread ends.
-                // "dash" is a composite category enabling all Dash-related debug output
-                if(ptrCategory->count(std::string("dash"))) {
-                    ptrCategory->insert(std::string("chainlocks"));
-                    ptrCategory->insert(std::string("gobject"));
-                    ptrCategory->insert(std::string("instantsend"));
-                    ptrCategory->insert(std::string("keepass"));
-                    ptrCategory->insert(std::string("llmq"));
-                    ptrCategory->insert(std::string("llmq-dkg"));
-                    ptrCategory->insert(std::string("llmq-sigs"));
-                    ptrCategory->insert(std::string("masternode"));
-                    ptrCategory->insert(std::string("mnpayments"));
-                    ptrCategory->insert(std::string("mnsync"));
-                    ptrCategory->insert(std::string("spork"));
-                    ptrCategory->insert(std::string("privatesend"));
-                }
-            } else {
-                ptrCategory.reset(new std::set<std::string>());
+        if (*str == "dash") {
+            *f = BCLog::CHAINLOCKS
+                | BCLog::GOBJECT
+                | BCLog::INSTANTSEND
+                | BCLog::KEEPASS
+                | BCLog::LLMQ
+                | BCLog::LLMQ_DKG
+                | BCLog::LLMQ_SIGS
+                | BCLog::MNPAYMENTS
+                | BCLog::MNSYNC
+                | BCLog::PRIVATESEND
+                | BCLog::SPORK;
+            return true;
+        }
+        for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
+            if (LogCategories[i].category == *str) {
+                *f = LogCategories[i].flag;
+                return true;
             }
         }
-        const std::set<std::string>& setCategories = *ptrCategory;
-
-        // if not debugging everything and not debugging specific category, LogPrint does nothing.
-        if (setCategories.count(std::string("")) == 0 &&
-            setCategories.count(std::string("1")) == 0 &&
-            setCategories.count(std::string(category)) == 0)
-            return false;
     }
-    return true;
+    return false;
 }
 
-void ResetLogAcceptCategoryCache()
+std::string ListLogCategories()
 {
-    logAcceptCategoryCacheCounter++;
+    std::string ret;
+    int outcount = 0;
+    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
+        // Omit the special cases.
+        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL) {
+            if (outcount != 0) ret += ", ";
+            ret += LogCategories[i].category;
+            outcount++;
+        }
+    }
+    return ret;
+}
+
+std::string ListActiveLogCategories()
+{
+    if (logCategories == BCLog::NONE)
+        return "0";
+    if (logCategories == BCLog::ALL)
+        return "1";
+
+    std::string ret;
+    int outcount = 0;
+    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
+        // Omit the special cases.
+        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL && LogAcceptCategory(LogCategories[i].flag)) {
+            if (outcount != 0) ret += ", ";
+            ret += LogCategories[i].category;
+            outcount++;
+        }
+    }
+    return ret;
 }
 
 /**

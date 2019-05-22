@@ -765,7 +765,7 @@ void CoinControlDialog::updateView()
             COutPoint outpoint = COutPoint(out.tx->tx->GetHash(), out.i);
             int nRounds = pwalletMain->GetRealOutpointPrivateSendRounds(outpoint);
 
-            if (nRounds >= 0 || fDebug) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, QString::number(nRounds));
+            if (nRounds >= 0 || LogAcceptCategory(BCLog::PRIVATESEND)) itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, QString::number(nRounds));
             else itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, tr("n/a"));
             itemOutput->setData(COLUMN_PRIVATESEND_ROUNDS, Qt::UserRole, QVariant((qlonglong)nRounds));
 

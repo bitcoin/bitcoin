@@ -65,7 +65,7 @@ CDKGLogger::CDKGLogger(const CDKGSession& _quorumDkg, const std::string& _func) 
 }
 
 CDKGLogger::CDKGLogger(Consensus::LLMQType _llmqType, const uint256& _quorumHash, int _height, bool _areWeMember, const std::string& _func) :
-    CBatchedLogger("llmq-dkg", strprintf("QuorumDKG(type=%d, height=%d, member=%d, func=%s)", _llmqType, _height, _areWeMember, _func))
+    CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%d, height=%d, member=%d, func=%s)", _llmqType, _height, _areWeMember, _func))
 {
 }
 
