@@ -185,6 +185,28 @@ bool CInstantSendDb::HasArchivedInstantSendLock(const uint256& islockHash)
     return db.Exists(std::make_tuple(std::string("is_a2"), islockHash));
 }
 
+size_t CInstantSendDb::GetInstantSendLockCount()
+{
+    auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+    auto firstKey = std::make_tuple(std::string("is_i"), uint256());
+
+    it->Seek(firstKey);
+
+    size_t cnt = 0;
+    while (it->Valid()) {
+        decltype(firstKey) curKey;
+        if (!it->GetKey(curKey) || std::get<0>(curKey) != "is_i") {
+            break;
+        }
+
+        cnt++;
+
+        it->Next();
+    }
+
+    return cnt;
+}
+
 CInstantSendLockPtr CInstantSendDb::GetInstantSendLockByHash(const uint256& hash)
 {
     CInstantSendLockPtr ret;
@@ -1410,6 +1432,11 @@ CInstantSendLockPtr CInstantSendManager::GetConflictingLock(const CTransaction& 
         }
     }
     return nullptr;
+}
+
+size_t CInstantSendManager::GetInstantSendLockCount()
+{
+    return db.GetInstantSendLockCount();
 }
 
 void CInstantSendManager::WorkThreadMain()
