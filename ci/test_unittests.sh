@@ -6,7 +6,7 @@ set -e
 
 source ./ci/matrix.sh
 
-if [ "$RUN_TESTS" != "true" ]; then
+if [ "$RUN_UNITTESTS" != "true" ]; then
   echo "Skipping unit tests"
   exit 0
 fi
