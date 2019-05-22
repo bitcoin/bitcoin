@@ -14,8 +14,9 @@ Each package is required to define at least these variables:
     placeholder such as 1.0 can be used.
 
     $(package)_download_path:
-    Location of the upstream source, without the file-name. Usually http or
-    ftp.
+    Location of the upstream source, without the file-name. Usually http, https
+    or ftp. Secure transmission options like https should be preferred if
+    available.
 
     $(package)_file_name:
     The upstream source filename available at the download path.
