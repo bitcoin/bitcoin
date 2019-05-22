@@ -1623,7 +1623,7 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
 		strPrecision = boost::lexical_cast<string>(precision);
 	}
 
-	return UniValue(UniValue::VSTR,
+	return UniValue(UniValue::VNUM,
 		strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
 }
 CAmount AssetAmountFromValue(UniValue& value, int precision)
