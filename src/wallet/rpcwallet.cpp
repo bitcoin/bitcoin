@@ -1305,8 +1305,13 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  ret            The UniValue into which the result is stored.
  * @param  filter_ismine  The "is mine" filter flags.
  * @param  filter_label   Optional label string to filter incoming transactions.
+ * @param  afterVOut      start adding after afterVOut
+ * @param  limit          limits the insertion amount
+ *
+ * starts inserting transaction elements from startVOut if >= 0
+ * Returns true only if all elements got processed
  */
-static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+static bool ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label, int limit) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     CAmount nFee;
     std::list<COutputEntry> listReceived;
@@ -1322,6 +1327,10 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
         for (const COutputEntry& s : listSent)
         {
             UniValue entry(UniValue::VOBJ);
+            // check for limit when new entry exists
+            if (limit-- == 0) {
+                return false;
+            }
             if (involvesWatchonly || (::IsMine(*pwallet, s.destination) & ISMINE_WATCH_ONLY)) {
                 entry.pushKV("involvesWatchonly", true);
             }
@@ -1352,6 +1361,10 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             if (filter_label && label != *filter_label) {
                 continue;
             }
+            // check for limit when new entry exists
+            if (limit-- == 0) {
+                return false;
+            }
             UniValue entry(UniValue::VOBJ);
             if (involvesWatchonly || (::IsMine(*pwallet, r.destination) & ISMINE_WATCH_ONLY)) {
                 entry.pushKV("involvesWatchonly", true);
@@ -1380,6 +1393,24 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             ret.push_back(entry);
         }
     }
+
+    return true;
+}
+
+/**
+ * List transactions based on the given criteria.
+ *
+ * @param  pwallet        The wallet.
+ * @param  wtx            The wallet transaction.
+ * @param  nMinDepth      The minimum confirmation depth.
+ * @param  fLong          Whether to include the JSON version of the transaction.
+ * @param  ret            The UniValue into which the result is stored.
+ * @param  filter_ismine  The "is mine" filter flags.
+ * @param  filter_label   Optional label string to filter incoming transactions.
+ */
+static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label)  EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+{
+    ListTransactions(locked_chain, pwallet, wtx, nMinDepth, fLong, ret, filter_ismine, filter_label, -1);
 }
 
 UniValue listtransactions(const JSONRPCRequest& request)
@@ -1391,7 +1422,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || request.params.size() > 5)
         throw std::runtime_error(
             RPCHelpMan{"listtransactions",
                 "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
@@ -1400,10 +1431,20 @@ UniValue listtransactions(const JSONRPCRequest& request)
                     {"label", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If set, should be a valid label name to return only incoming transactions\n"
             "              with the specified label, or \"*\" to disable filtering and return all transactions."},
                     {"count", RPCArg::Type::NUM, /* default */ "10", "The number of transactions to return"},
-                    {"skip", RPCArg::Type::NUM, /* default */ "0", "The number of transactions to skip"},
+                    {"skip", RPCArg::Type::NUM, /* default */ "0", "The number of transactions to skip, If \"usesnextpagepointer\" option is true, skip won't have an effect."},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Include transactions to watch-only addresses (see 'importaddress')"},
+                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON object for options",
+                        {
+                            {"paginatebypointer", RPCArg::Type::BOOL, /* default */ "false", "If it is true it changes output type to an object containing records and nextpagepointer"},
+                            {"nextpagepointer", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A nullable string provided from previous calls to listtransactions for performing pagination"},
+                        },
+                        "options"},
                 },
                 RPCResult{
+            "\nResult with nextpagepointer option returns an object containing \"records\" and \"nextpagepointer\"."
+            "\nAlso it has a secondary effect at order of output txs. Though it still starts with most recent."
+            "\n{ \"records\": [/*list of txs*/], \"nextpagepointer\": \"txid:vout\"|null }"
+            "\nResult with no nextpagepointer:\n"
             "[\n"
             "  {\n"
             "    \"address\":\"address\",    (string) The bitcoin address of the transaction.\n"
@@ -1442,7 +1483,9 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "\nList transactions 100 to 120\n"
             + HelpExampleCli("listtransactions", "\"*\" 20 100") +
             "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
+            + HelpExampleRpc("listtransactions", "\"*\", 20, 100") +
+            "\nlist transactions with paginatebypointer option\n"
+            + HelpExampleCli("listtransactions", "\"*\" 20 0 false '{\"paginatebypointer\":true}'")
                 },
             }.ToString());
 
@@ -1460,60 +1503,174 @@ UniValue listtransactions(const JSONRPCRequest& request)
     int nCount = 10;
     if (!request.params[1].isNull())
         nCount = request.params[1].get_int();
-    int nFrom = 0;
-    if (!request.params[2].isNull())
-        nFrom = request.params[2].get_int();
+    if (nCount < 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+
     isminefilter filter = ISMINE_SPENDABLE;
     if(!request.params[3].isNull())
         if(request.params[3].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
-    if (nCount < 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
-    if (nFrom < 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
-
-    UniValue ret(UniValue::VARR);
-
-    {
-        auto locked_chain = pwallet->chain().lock();
-        LOCK(pwallet->cs_wallet);
-
-        const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
-
-        // iterate backwards until we have nCount items to return:
-        for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
-        {
-            CWalletTx *const pwtx = (*it).second;
-            ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, ret, filter, filter_label);
-            if ((int)ret.size() >= (nCount+nFrom)) break;
+    bool paginatebypointer = false;
+    std::string nextpagepointer;
+    const UniValue& options = request.params[4];
+    if (!options.isNull()) {
+        RPCTypeCheckArgument(options, UniValue::VOBJ);
+        RPCTypeCheckObj(options,
+            {
+                {"paginatebypointer", UniValueType(UniValue::VBOOL)},
+                {"nextpagepointer", UniValueType(UniValue::VSTR)},
+            }, true, true);
+        if (options.exists("paginatebypointer")) {
+            paginatebypointer = options["paginatebypointer"].get_bool();
+        }
+        if (options.exists("nextpagepointer") &&
+            !options["nextpagepointer"].isNull()) {
+            nextpagepointer = options["nextpagepointer"].get_str();
         }
     }
 
-    // ret is newest to oldest
+    if (paginatebypointer) {
+        uint256 nextHash;
+        // if it is -1 it indicates nextpagepointer is not provided
+        int32_t nextVOut = -1;
+        bool nextIsSend = false;
+        if (!nextpagepointer.empty()) {
+            std::stringstream ss(nextpagepointer);
+            std::string s;
+            int i = 0;
+            while (std::getline(ss, s, ':')) {
+                if (i == 0) {
+                    if (!IsHex(s)) {
+                        break;
+                    }
+                    nextHash = uint256S(s);
+                } else if (i == 1) {
+                    if (!ParseInt32(s, &nextVOut)) {
+                        break;
+                    }
+                } else if (i == 2) {
+                    int32_t v;
+                    if (!ParseInt32(s, &v)) {
+                        break;
+                    }
+                    nextIsSend = v == 1;
+                }
+                i++;
+            }
+            if (i != 3) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, nextpagepointer expected to be in format <txid:vout:issend>");
+            }
+        }
 
-    if (nFrom > (int)ret.size())
-        nFrom = ret.size();
-    if ((nFrom + nCount) > (int)ret.size())
-        nCount = ret.size() - nFrom;
+        UniValue txs(UniValue::VARR);
+        bool hasMore = false;
 
-    std::vector<UniValue> arrTmp = ret.getValues();
+        {
+            auto locked_chain = pwallet->chain().lock();
+            LOCK(pwallet->cs_wallet);
 
-    std::vector<UniValue>::iterator first = arrTmp.begin();
-    std::advance(first, nFrom);
-    std::vector<UniValue>::iterator last = arrTmp.begin();
-    std::advance(last, nFrom+nCount);
+            const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
+            // iterate backwards until we have nCount items to return:
+            CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin();
+            if (nextVOut != -1) {
+                // skip processing until txid match found
+                while (it != txOrdered.rend()) {
+                    CWalletTx *const pwtx = (*it++).second;
+                    if (nextHash == pwtx->GetHash()) {
+                        UniValue tmp(UniValue::VARR);
+                        ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, tmp, filter, filter_label, -1);
+                        unsigned int idx = 0;
+                        while (idx < tmp.size()) {
+                            const UniValue& o = tmp[idx++].get_obj();
+                            const bool isSend = find_value(o, "category").get_str() == "send";
+                            if (((isSend && nextIsSend) || !isSend) &&
+                                find_value(o, "vout").get_int() == nextVOut) {
+                                break;
+                            }
+                        }
+                        for (; idx < tmp.size(); idx++) {
+                            if (((int)txs.size()) >= nCount) {
+                                hasMore = nCount > 0 && tmp.size() - idx - 1 > 0;
+                                break;
+                            }
+                            txs.push_back(tmp[idx]);
+                        }
+                        break;
+                    }
+                }
+            }
+            // when hasMore is true, no more need for rest of iteration
+            if (!hasMore) {
+                for (; it != txOrdered.rend(); ++it) {
+                    CWalletTx *const pwtx = (*it).second;
+                    // in all cases, nCount >= txs.size()
+                    // There's no need to add more if statement
+                    if (!ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, txs, filter, filter_label, nCount - txs.size())) {
+                        hasMore = nCount > 0;
+                        break;
+                    }
+                }
+            }
+        }
 
-    if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
-    if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
+        UniValue ret(UniValue::VOBJ);
+        ret.pushKV("records", txs);
+        if (hasMore) {
+            const UniValue& lastTx = txs[txs.size()-1].get_obj();
+            ret.pushKV("nextpagepointer", strprintf("%s:%d:%d", find_value(lastTx, "txid").get_str(), find_value(lastTx, "vout").get_int(), find_value(lastTx, "category").get_str() == "send" ? 1 : 0));
+        } else {
+            ret.pushKV("nextpagepointer", NullUniValue); // set to null
+        }
+        return ret;
+    } else {
+        int nFrom = 0;
+        if (!request.params[2].isNull())
+            nFrom = request.params[2].get_int();
+        if (nFrom < 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative from");
+        UniValue ret(UniValue::VARR);
 
-    std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
+        {
+            auto locked_chain = pwallet->chain().lock();
+            LOCK(pwallet->cs_wallet);
 
-    ret.clear();
-    ret.setArray();
-    ret.push_backV(arrTmp);
+            const CWallet::TxItems & txOrdered = pwallet->wtxOrdered;
 
-    return ret;
+            // iterate backwards until we have nCount items to return:
+            for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
+                {
+                    CWalletTx *const pwtx = (*it).second;
+                    ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, ret, filter, filter_label);
+                    if ((int)ret.size() >= (nCount+nFrom)) break;
+                }
+        }
+
+        // ret is newest to oldest
+
+        if (nFrom > (int)ret.size())
+            nFrom = ret.size();
+        if ((nFrom + nCount) > (int)ret.size())
+            nCount = ret.size() - nFrom;
+
+        std::vector<UniValue> arrTmp = ret.getValues();
+
+        std::vector<UniValue>::iterator first = arrTmp.begin();
+        std::advance(first, nFrom);
+        std::vector<UniValue>::iterator last = arrTmp.begin();
+        std::advance(last, nFrom+nCount);
+
+        if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
+        if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
+
+        std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
+
+        ret.clear();
+        ret.setArray();
+        ret.push_backV(arrTmp);
+
+        return ret;
+    }
 }
 
 static UniValue listsinceblock(const JSONRPCRequest& request)
@@ -4208,7 +4365,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listreceivedbylabel",              &listreceivedbylabel,           {"minconf","include_empty","include_watchonly"} },
     { "wallet",             "listsinceblock",                   &listsinceblock,                {"blockhash","target_confirmations","include_watchonly","include_removed"} },
-    { "wallet",             "listtransactions",                 &listtransactions,              {"label|dummy","count","skip","include_watchonly"} },
+    { "wallet",             "listtransactions",                 &listtransactions,              {"label|dummy","count","skip","include_watchonly","options"} },
     { "wallet",             "listunspent",                      &listunspent,                   {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwalletdir",                    &listwalletdir,                 {} },
     { "wallet",             "listwallets",                      &listwallets,                   {} },
