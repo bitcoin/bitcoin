@@ -61,6 +61,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "waitfornewblock", 0, "timeout" },
     { "listtransactions", 1, "count" },
     { "listtransactions", 2, "skip" },
+    { "listtransactions", 2, "options" },
     { "listtransactions", 3, "include_watchonly" },
     { "walletpassphrase", 1, "timeout" },
     { "getblocktemplate", 0, "template_request" },

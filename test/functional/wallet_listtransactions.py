@@ -105,6 +105,69 @@ class ListTransactionsTest(BitcoinTestFramework):
                             {"txid": txid, "label": "watchonly"})
 
         self.run_rbf_opt_in_test()
+        self.run_with_paginatebypointer_test()
+
+    # specific tests with nextpagepointer flag
+    def run_with_paginatebypointer_test(self):
+        def get_with_paginatebypointer(node, count=20, label="*", watchonly=False):
+            i = 1
+            records = []
+            pointer = None
+            while i < count:
+                options = {
+                    "paginatebypointer": True,
+                    "nextpagepointer": pointer,
+                }
+                #if pointer is None:
+                #    del options["nextpagepointer"]
+                result = node.listtransactions(label, i, options, watchonly)
+                pointer = result.get("nextpagepointer", None)
+                records += result["records"]
+                if len(records) >= count or pointer is None:
+                    break
+                i += 1
+            return records
+        # Simple send, 0 to 1:
+        txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
+        self.sync_all()
+        assert_array_result(get_with_paginatebypointer(self.nodes[0]),
+                            {"txid": txid},
+                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 0})
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"txid": txid},
+                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0})
+
+        # sendmany from node1: twice to self, twice to node2:
+        send_to = {self.nodes[0].getnewaddress(): 0.111,
+                   self.nodes[1].getnewaddress(): 0.222,
+                   self.nodes[0].getnewaddress(): 0.333,
+                   self.nodes[1].getnewaddress(): 0.444}
+        txid = self.nodes[1].sendmany("", send_to)
+        self.sync_all()
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"category": "send", "amount": Decimal("-0.111")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[0]),
+                            {"category": "receive", "amount": Decimal("0.111")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"category": "send", "amount": Decimal("-0.222")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"category": "receive", "amount": Decimal("0.222")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"category": "send", "amount": Decimal("-0.333")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[0]),
+                            {"category": "receive", "amount": Decimal("0.333")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"category": "send", "amount": Decimal("-0.444")},
+                            {"txid": txid})
+        assert_array_result(get_with_paginatebypointer(self.nodes[1]),
+                            {"category": "receive", "amount": Decimal("0.444")},
+                            {"txid": txid})
 
     # Check that the opt-in-rbf flag works properly, for sent and received
     # transactions.
