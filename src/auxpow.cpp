@@ -87,11 +87,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
     }
     else
     {
-        // For backward compatibility.
-        // Enforce only one chain merkle root by checking that it starts early in the coinbase.
-        // 8-12 bytes are enough to encode extraNonce and nBits.
-        if (pc - script.begin() > 20)
-            return error("Aux POW chain merkle root must start in the first 20 bytes of the parent coinbase");
+        return error("Missing auxpow header");
     }
 
 
