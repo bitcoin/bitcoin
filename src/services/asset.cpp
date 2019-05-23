@@ -1475,7 +1475,7 @@ UniValue assetinfo(const JSONRPCRequest& request) {
                     "{\n"
                     "  \"asset_guid\":          (numeric) The asset guid\n"
                     "  \"txid\":         (string) The transaction id that created this asset\n"
-                    "  \"publicvalue\":  (string) The public value attached to this asset\n"
+                    "  \"public_value\":  (string) The public value attached to this asset\n"
                     "  \"address\":      (string) The address that controls this address\n"
                     "  \"contract\":     (string) The ethereum contract address\n"
                     "  \"balance\":      (numeric) The current balance\n"
@@ -1507,7 +1507,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oAsset)
     oAsset.__pushKV("asset_guid", (int)asset.nAsset);
     oAsset.__pushKV("symbol", asset.strSymbol);
     oAsset.__pushKV("txid", asset.txHash.GetHex());
-	oAsset.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
+	oAsset.__pushKV("public_value", stringFromVch(asset.vchPubData));
 	oAsset.__pushKV("address", asset.witnessAddress.ToString());
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
 	oAsset.__pushKV("balance", ValueFromAssetAmount(asset.nBalance, asset.nPrecision));
@@ -1544,7 +1544,7 @@ bool AssetTxToJSON(const CTransaction& tx, UniValue &entry)
     entry.__pushKV("height", nHeight);
     
 	if (!asset.vchPubData.empty())
-		entry.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
+		entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
 
 	if (!asset.vchContract.empty())
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
@@ -1581,7 +1581,7 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
     entry.__pushKV("height", nHeight);
 
     if(!asset.vchPubData.empty())
-        entry.__pushKV("publicvalue", stringFromVch(asset.vchPubData));
+        entry.__pushKV("public_value", stringFromVch(asset.vchPubData));
         
     if(!asset.vchContract.empty())
         entry.__pushKV("contract", "0x"+HexStr(asset.vchContract));
@@ -1828,7 +1828,7 @@ UniValue listassets(const JSONRPCRequest& request) {
                  "    \"asset_guid\":   (numeric) The asset guid\n"
                  "    \"symbol\":       (string) The asset symbol\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
-                 "    \"publicvalue\":  (string) The public value attached to this asset\n"
+                 "    \"public_value\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
                  "    \"contract\":     (string) The ethereum contract address\n"
                  "    \"balance\":      (numeric) The current balance\n"
@@ -2088,7 +2088,7 @@ UniValue listassetindex(const JSONRPCRequest& request) {
                  "    \"asset_guid\":   (numeric) The asset guid\n"
                  "    \"symbol\":       (string) The asset symbol\n"
                  "    \"txid\":         (string) The transaction id that created this asset\n"
-                 "    \"publicvalue\":  (string) The public value attached to this asset\n"
+                 "    \"public_value\":  (string) The public value attached to this asset\n"
                  "    \"address\":      (string) The address that controls this address\n"
                  "    \"contract\":     (string) The ethereum contract address\n"
                  "    \"balance\":      (numeric) The current balance\n"
@@ -2139,7 +2139,7 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
                     "    \"asset_guid\":   (numeric) The asset guid\n"
                     "    \"symbol\":       (string) The asset symbol\n"
                     "    \"txid\":         (string) The transaction id that created this asset\n"
-                    "    \"publicvalue\":  (string) The public value attached to this asset\n"
+                    "    \"public_value\":  (string) The public value attached to this asset\n"
                     "    \"address\":      (string) The address that controls this address\n"
                     "    \"contract\":     (string) The ethereum contract address\n"
                     "    \"balance\":      (numeric) The current balance\n"

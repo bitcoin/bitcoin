@@ -673,7 +673,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 
 	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == address);
-	BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
+	BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 	UniValue balance = find_value(r.get_obj(), "balance");
 	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
@@ -698,7 +698,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
 		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
-		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
+		BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 		UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
@@ -716,7 +716,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid));
 		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
-		BOOST_CHECK(find_value(r.get_obj(), "publicvalue").get_str() == pubdata);
+		BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 		UniValue maxsupplyu = find_value(r.get_obj(), "max_supply");
@@ -740,13 +740,12 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	string oldaddress = find_value(r.get_obj(), "address").get_str();
-	string oldpubdata = find_value(r.get_obj(), "publicvalue").get_str();
-	string oldsupply = find_value(r.get_obj(), "total_supply").get_str();
+	string oldpubdata = find_value(r.get_obj(), "public_value").get_str();
+    UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
+    CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
 	int oldflags = find_value(r.get_obj(), "update_flags").get_int();
-	UniValue totalsupply = find_value(r.get_obj(), "total_supply");
-
-	CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
+    
 	CAmount supplyamount = 0;
 	if (supply != "''") {
 		UniValue supplytmp(UniValue::VSTR);
@@ -761,8 +760,6 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	string newflagsstr = boost::lexical_cast<string>(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
-	// increase supply to new amount if we passed in a supply value
-	newsupply = supply == "''" ? oldsupply : ValueFromAssetAmount(newamount, nprecision).write();
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -779,7 +776,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), oldpubdata);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), oldpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), oldflags);
 
 	totalsupply = find_value(r.get_obj(), "total_supply");
@@ -800,7 +797,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
 		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
 	
 		totalsupply = find_value(r.get_obj(), "total_supply");
@@ -813,7 +810,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid));
 		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "publicvalue").get_str(), newpubdata);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
