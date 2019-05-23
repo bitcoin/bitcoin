@@ -652,7 +652,7 @@ void SetupServerArgs()
 std::string LicenseInfo()
 {
     const std::string URL_SOURCE_CODE = "<https://github.com/syscoin/syscoin>";
-    const std::string URL_WEBSITE = "<https://syscoincore.org>";
+    const std::string URL_WEBSITE = "<https://syscoin.org>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
