@@ -314,9 +314,9 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         // update balances  
         storedReceiverAllocationRef.nBalance += mintSyscoin.nValueAsset;
         storedSenderAllocationRef.nBalance -= mintSyscoin.nValueAsset;
+        // if burn less 0 set to 0 we dont enforce total supply since eth contracts can have their own mint strategy not related to sys asset one
         if(storedSenderAllocationRef.nBalance < 0){
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn balance cannot go below 0");
-            return false;
+            storedSenderAllocationRef.nBalance = 0;
         }    
         if(storedSenderAllocationRef.nBalance == 0)
             storedSenderAllocationRef.SetNull();  
