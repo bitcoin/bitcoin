@@ -1187,7 +1187,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
 			    "\nPerform an update on an asset you control.\n",
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                    {"pubic_value", RPCArg::Type::STR, RPCArg::Optional::NO, "Public data, 256 characters max."},
+                    {"public_value", RPCArg::Type::STR, RPCArg::Optional::NO, "Public data, 256 characters max."},
                     {"contract",  RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridg."},
                     {"supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens."},
                     {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
