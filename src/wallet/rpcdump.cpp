@@ -938,7 +938,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     CWallet* const pwallet = wallet.get();
 
     auto locked_chain = pwallet->chain().lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
     LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);

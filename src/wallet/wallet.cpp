@@ -1285,6 +1285,7 @@ void CWallet::LoadToWallet(CWalletTx& wtxIn)
     // If wallet doesn't have a chain (e.g wallet-tool), lock can't be taken.
     auto locked_chain = LockChain();
     if (locked_chain) {
+        LockAssertion lock(::cs_main);
         Optional<int> block_height = locked_chain->getBlockHeight(wtxIn.m_confirm.hashBlock);
         if (block_height) {
             // Update cached block height variable since it not stored in the
@@ -1476,7 +1477,7 @@ bool CWallet::AbandonTransaction(const uint256& hashTx)
 void CWallet::MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx)
 {
     auto locked_chain = chain().lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
     LOCK(cs_wallet); // check WalletBatch::LoadWallet()
 
     int conflictconfirms = (m_last_block_processed_height - conflicting_height + 1) * -1;
@@ -4124,6 +4125,9 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     // tx status. If lock can't be taken (e.g wallet-tool), tx confirmation
     // status may be not reliable.
     auto locked_chain = LockChain();
+    if (locked_chain) {
+        LockAssertion lock(::cs_main);
+    }
     LOCK(cs_wallet);
 
     fFirstRunRet = false;

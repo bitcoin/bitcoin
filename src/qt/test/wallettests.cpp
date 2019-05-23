@@ -122,7 +122,7 @@ void TestGUI(interfaces::Node& node)
     }
     {
         auto locked_chain = wallet->chain().lock();
-        LockAnnotation lock(::cs_main);
+        LockAssertion lock(::cs_main);
 
         WalletRescanReserver reserver(wallet.get());
         reserver.reserve();

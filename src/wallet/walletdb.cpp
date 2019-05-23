@@ -510,7 +510,9 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     DBErrors result = DBErrors::LOAD_OK;
 
     auto locked_chain = pwallet->LockChain();
-    LockAnnotation lock(::cs_main);
+    if (locked_chain) {
+        LockAssertion lock(::cs_main);
+    }
     LOCK(pwallet->cs_wallet);
     try {
         int nMinVersion = 0;
