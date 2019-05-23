@@ -271,7 +271,7 @@ public:
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("00000fcf12e4746e1e13ebcbd156dce74a48d6a3e0148250bf47a172a2d26d6a"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000fcf12e4746e1e13ebcbd156dce74a48d6a3e0148250bf47a172a2d26d6a"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
