@@ -352,7 +352,7 @@
 #define PACKAGE_TARNAME "syscoin"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://syscoincore.org/"
+#define PACKAGE_URL "https://syscoin.org/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "4.0.0"
