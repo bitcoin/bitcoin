@@ -1329,7 +1329,7 @@ UniValue assetsend(const JSONRPCRequest& request) {
             "\nSend an asset you own to another address.\n",
             {
                 {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
-                {"addressto", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
                 {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send."}
             },
             RPCResult{
@@ -1338,8 +1338,8 @@ UniValue assetsend(const JSONRPCRequest& request) {
             "}\n"
             },
             RPCExamples{
-                HelpExampleCli("assetsend", "\"assetguid\" \"addressto\" \"amount\"")
-                + HelpExampleRpc("assetsend", "\"assetguid\", \"addressto\", \"amount\"")
+                HelpExampleCli("assetsend", "\"assetguid\" \"address\" \"amount\"")
+                + HelpExampleRpc("assetsend", "\"assetguid\", \"address\", \"amount\"")
                 }
 
             }.ToString());
