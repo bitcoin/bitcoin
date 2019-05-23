@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2016-2018 The Syscoin Core developers
+// Copyright (c) 2016-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1043,10 +1043,11 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid ));
-	string fromsupply = find_value(r.get_obj(), "total_supply").get_str();
+	
 	UniValue balance = find_value(r.get_obj(), "balance");
 	CAmount newfromamount = AssetAmountFromValue(balance, nprecision) - inputamount;
-
+    UniValue totalsupply = find_value(r.get_obj(), "total_supply");
+    CAmount fromsupply = AssetAmountFromValue(totalsupply, nprecision);
 	// "assetsendmany [asset] ( [{\"address\":\"address\",\"amount\":amount},...] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetsendmany " + guid + " " + inputs + " " + witness));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
@@ -1058,16 +1059,18 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 
 		GenerateBlocks(11, node);
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid ));
-
-		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
+        totalsupply = find_value(r.get_obj(), "total_supply");
+		BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, nprecision), fromsupply);
 		balance = find_value(r.get_obj(), "balance");
+        
 		if (newfromamount > 0)
 			BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision), newfromamount);
 
 		if (!otherNode1.empty())
 		{
 			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
+            totalsupply = find_value(r.get_obj(), "total_supply");
+			BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, nprecision), fromsupply);
 			balance = find_value(r.get_obj(), "balance");
 			if (newfromamount > 0)
 				BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision), newfromamount);
@@ -1076,7 +1079,8 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 		if (!otherNode2.empty())
 		{
 			BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid ));
-			BOOST_CHECK_EQUAL(find_value(r.get_obj(), "total_supply").get_str(), fromsupply);
+            totalsupply = find_value(r.get_obj(), "total_supply");
+			BOOST_CHECK_EQUAL(AssetAmountFromValue(totalsupply, nprecision), fromsupply);
 			balance = find_value(r.get_obj(), "balance");
 			if (newfromamount > 0)
 				BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, nprecision), newfromamount);
