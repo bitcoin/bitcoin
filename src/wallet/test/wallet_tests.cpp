@@ -44,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(scan_for_wallet_transactions, TestChain100Setup)
 
     auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
 
     // Verify ScanForWalletTransactions accommodates a null start block.
     {
@@ -123,7 +123,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
 
     auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
 
     // Prune the older block file.
     PruneOneBlockFile(oldTip->GetBlockPos().nFile);
@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
 
     auto chain = interfaces::MakeChain();
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
 
     std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
 
@@ -248,7 +248,7 @@ BOOST_FIXTURE_TEST_CASE(coin_mark_dirty_immature_credit, TestChain100Setup)
     CWalletTx wtx(&wallet, m_coinbase_txns.back());
 
     auto locked_chain = chain->lock();
-    LockAnnotation lock(::cs_main);
+    LockAssertion lock(::cs_main);
     LOCK(wallet.cs_wallet);
 
     wtx.hashBlock = ::ChainActive().Tip()->GetBlockHash();
@@ -272,8 +272,8 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     SetMockTime(mockTime);
     CBlockIndex* block = nullptr;
     if (blockTime > 0) {
-        LockAnnotation lock(::cs_main);
         auto locked_chain = wallet.chain().lock();
+        LockAssertion lock(::cs_main);
         auto inserted = mapBlockIndex.emplace(GetRandHash(), new CBlockIndex);
         assert(inserted.second);
         const uint256& hash = inserted.first->first;
