@@ -52,8 +52,9 @@ enum PoolMessage {
     MSG_NOERR,
     MSG_SUCCESS,
     MSG_ENTRIES_ADDED,
+    ERR_SIZE_MISMATCH,
     MSG_POOL_MIN = ERR_ALREADY_HAVE,
-    MSG_POOL_MAX = MSG_ENTRIES_ADDED
+    MSG_POOL_MAX = ERR_SIZE_MISMATCH
 };
 
 // pool states
@@ -310,6 +311,7 @@ public:
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight);
+    bool IsValidStructure();
 };
 
 // base class

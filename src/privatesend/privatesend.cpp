@@ -122,6 +122,29 @@ bool CPrivateSendBroadcastTx::IsExpired(int nHeight)
     return (nConfirmedHeight != -1) && (nHeight - nConfirmedHeight > 24);
 }
 
+bool CPrivateSendBroadcastTx::IsValidStructure()
+{
+    // some trivial checks only
+    if (tx->vin.size() != tx->vout.size()) {
+        return false;
+    }
+    if (tx->vin.size() < CPrivateSend::GetMinPoolParticipants()) {
+        return false;
+    }
+    if (tx->vin.size() > CPrivateSend::GetMaxPoolParticipants() * PRIVATESEND_ENTRY_MAX_SIZE) {
+        return false;
+    }
+    for (const auto& out : tx->vout) {
+        if (!CPrivateSend::IsDenominatedAmount(out.nValue)) {
+            return false;
+        }
+        if (!out.scriptPubKey.IsPayToPublicKeyHash()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void CPrivateSendBaseSession::SetNull()
 {
     // Both sides
@@ -445,6 +468,8 @@ std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)
         return _("Transaction created successfully.");
     case MSG_ENTRIES_ADDED:
         return _("Your entries added successfully.");
+    case ERR_SIZE_MISMATCH:
+        return _("Inputs vs outputs size mismatch.");
     default:
         return _("Unknown response.");
     }

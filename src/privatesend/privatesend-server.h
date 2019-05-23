@@ -36,6 +36,8 @@ private:
     void ChargeFees(CConnman& connman);
     /// Rarely charge fees to pay miners
     void ChargeRandomFees(CConnman& connman);
+    /// Consume collateral in cases when peer misbehaved
+    void ConsumeCollateral(CConnman& connman, const CTransactionRef& txref);
 
     /// Check for process
     void CheckPool(CConnman& connman);
