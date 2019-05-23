@@ -526,7 +526,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     }
 
     if (pindexNotify) {
-        GetMainSignals().NotifyChainLock(pindexNotify);
+        GetMainSignals().NotifyChainLock(pindexNotify, clsig);
     }
 }
 

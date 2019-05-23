@@ -1172,8 +1172,8 @@ public:
     bool SetCryptedHDChain(const CHDChain& chain, bool memonly);
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
-    void NotifyTransactionLock(const CTransaction &tx) override;
-    void NotifyChainLock(const CBlockIndex* pindexChainLock) override;
+    void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock) override;
+    void NotifyChainLock(const CBlockIndex* pindexChainLock, const llmq::CChainLockSig& clsig) override;
 };
 
 /** A key allocated from the key pool. */

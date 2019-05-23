@@ -539,7 +539,8 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
     }
 #endif
 
-    GetMainSignals().NotifyTransactionLock(*txLockCandidate.txLockRequest.tx);
+    llmq::CInstantSendLock islock;
+    GetMainSignals().NotifyTransactionLock(*txLockCandidate.txLockRequest.tx, islock);
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSend::UpdateLockedTransaction -- done, txid=%s\n", txHash.ToString());
 }

@@ -920,31 +920,33 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     RemoveMempoolConflictsForLock(hash, islock);
     ResolveBlockConflicts(hash, islock);
-    UpdateWalletTransaction(islock.txid, tx);
+    UpdateWalletTransaction(tx, islock);
 }
 
-void CInstantSendManager::UpdateWalletTransaction(const uint256& txid, const CTransactionRef& tx)
+void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, const CInstantSendLock& islock)
 {
+    if (tx == nullptr) {
+        return;
+    }
+
 #ifdef ENABLE_WALLET
     if (!pwalletMain) {
         return;
     }
 
-    if (pwalletMain->UpdatedTransaction(txid)) {
+    if (pwalletMain->UpdatedTransaction(tx->GetHash())) {
         // notify an external script once threshold is reached
         std::string strCmd = GetArg("-instantsendnotify", "");
         if (!strCmd.empty()) {
-            boost::replace_all(strCmd, "%s", txid.GetHex());
+            boost::replace_all(strCmd, "%s", tx->GetHash().GetHex());
             boost::thread t(runCommand, strCmd); // thread runs free
         }
     }
 #endif
 
-    if (tx) {
-        GetMainSignals().NotifyTransactionLock(*tx);
-        // bump mempool counter to make sure newly mined txes are picked up by getblocktemplate
-        mempool.AddTransactionsUpdated(1);
-    }
+    GetMainSignals().NotifyTransactionLock(*tx, islock);
+    // bump mempool counter to make sure newly mined txes are picked up by getblocktemplate
+    mempool.AddTransactionsUpdated(1);
 }
 
 void CInstantSendManager::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)

@@ -19,8 +19,10 @@ static const char *MSG_HASHGOBJ      = "hashgovernanceobject";
 static const char *MSG_HASHISCON     = "hashinstantsenddoublespend";
 static const char *MSG_RAWBLOCK      = "rawblock";
 static const char *MSG_RAWCHAINLOCK  = "rawchainlock";
+static const char *MSG_RAWCLSIG      = "rawchainlocksig";
 static const char *MSG_RAWTX         = "rawtx";
 static const char *MSG_RAWTXLOCK     = "rawtxlock";
+static const char *MSG_RAWTXLOCKSIG  = "rawtxlocksig";
 static const char *MSG_RAWGVOTE      = "rawgovernancevote";
 static const char *MSG_RAWGOBJ       = "rawgovernanceobject";
 static const char *MSG_RAWISCON      = "rawinstantsenddoublespend";
@@ -164,7 +166,7 @@ bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     return SendMessage(MSG_HASHBLOCK, data, 32);
 }
 
-bool CZMQPublishHashChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex)
+bool CZMQPublishHashChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const llmq::CChainLockSig& clsig)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashchainlock %s\n", hash.GetHex());
@@ -184,7 +186,7 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
     return SendMessage(MSG_HASHTX, data, 32);
 }
 
-bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransaction &transaction)
+bool CZMQPublishHashTransactionLockNotifier::NotifyTransactionLock(const CTransaction &transaction, const llmq::CInstantSendLock& islock)
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtxlock %s\n", hash.GetHex());
@@ -249,7 +251,7 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
     return SendMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex)
+bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex, const llmq::CChainLockSig& clsig)
 {
     LogPrint(BCLog::ZMQ, "zmq: Publish rawchainlock %s\n", pindex->GetBlockHash().GetHex());
 
@@ -270,6 +272,28 @@ bool CZMQPublishRawChainLockNotifier::NotifyChainLock(const CBlockIndex *pindex)
     return SendMessage(MSG_RAWCHAINLOCK, &(*ss.begin()), ss.size());
 }
 
+bool CZMQPublishRawChainLockSigNotifier::NotifyChainLock(const CBlockIndex *pindex, const llmq::CChainLockSig& clsig)
+{
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawchainlocksig %s\n", pindex->GetBlockHash().GetHex());
+
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    {
+        LOCK(cs_main);
+        CBlock block;
+        if(!ReadBlockFromDisk(block, pindex, consensusParams))
+        {
+            zmqError("Can't read block from disk");
+            return false;
+        }
+
+        ss << block;
+        ss << clsig;
+    }
+
+    return SendMessage(MSG_RAWCLSIG, &(*ss.begin()), ss.size());
+}
+
 bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
 {
     uint256 hash = transaction.GetHash();
@@ -279,13 +303,23 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransaction &transaction)
+bool CZMQPublishRawTransactionLockNotifier::NotifyTransactionLock(const CTransaction &transaction, const llmq::CInstantSendLock& islock)
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish rawtxlock %s\n", hash.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << transaction;
     return SendMessage(MSG_RAWTXLOCK, &(*ss.begin()), ss.size());
+}
+
+bool CZMQPublishRawTransactionLockSigNotifier::NotifyTransactionLock(const CTransaction &transaction, const llmq::CInstantSendLock& islock)
+{
+    uint256 hash = transaction.GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawtxlocksig %s\n", hash.GetHex());
+    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+    ss << transaction;
+    ss << islock;
+    return SendMessage(MSG_RAWTXLOCKSIG, &(*ss.begin()), ss.size());
 }
 
 bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const CGovernanceVote &vote)
