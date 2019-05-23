@@ -627,7 +627,7 @@ string SyscoinMint(const string& node, const string& address, const string& amou
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethheaders " + headerStr));
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
     }   
-    // "syscoinmint [addressto] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
+    // "syscoinmint [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + boost::lexical_cast<string>(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
