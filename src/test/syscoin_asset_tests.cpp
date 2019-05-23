@@ -974,7 +974,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 		CAmount precisionCoin = pow(10, i);
 		// get max value - 1 (1 is already the supply, and this value is cumulative)
 		CAmount negonesupply = AssetAmountFromValue(negonevalue, i) - precisionCoin;
-		string maxstrupdate = ValueFromAssetAmount(negonesupply, i).get_str();
+		string maxstrupdate = ValueFromAssetAmount(negonesupply, i).write();
 		// can't create asset with more than max+1 balance or max+1 supply
 		string maxstrplusone = ValueFromAssetAmount(negonesupply + (precisionCoin *2), i).write();
 		string maxstrnew = ValueFromAssetAmount(negonesupply + precisionCoin, i).write();
