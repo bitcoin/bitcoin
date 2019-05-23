@@ -1203,7 +1203,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
         if(bGethTestnet) {
             args += std::string(" --rinkeby");
         }
-        pid = fork("\"" + fpath.string() + "\"", args);
+        pid = fork(fpath.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Could not start Geth\n");
             return false;
