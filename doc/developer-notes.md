@@ -73,7 +73,7 @@ tool to clean up patches automatically before submission.
 - **Symbol naming conventions**. These are preferred in new code, but are not
 required when doing so would need changes to significant pieces of existing
 code.
-  - Variable (including function arguments) and namespace names are all lowercase, and may use `_` to
+  - Variable (including function parameters) and namespace names are all lowercase, and may use `_` to
     separate words (snake_case).
     - Class member variables have a `m_` prefix.
     - Global variables have a `g_` prefix.
@@ -139,7 +139,7 @@ For example, to describe a function use:
 /**
  * ... text ...
  * @param[in] arg1    A description
- * @param[in] arg2    Another argument description
+ * @param[in] arg2    Another parameter description
  * @pre Precondition for function...
  */
 bool function(int arg1, const char *arg2)
@@ -545,10 +545,10 @@ class A
 }
 ```
 
-- By default, declare single-argument constructors `explicit`.
+- By default, declare single-parameter constructors `explicit`.
 
   - *Rationale*: This is a precaution to avoid unintended conversions that might
-    arise when single-argument constructors are used as implicit conversion
+    arise when single-parameter constructors are used as implicit conversion
     functions.
 
 - Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
@@ -619,7 +619,7 @@ Although the shadowing warning (`-Wshadow`) is not enabled by default (it preven
 from using a different variable with the same name),
 please name variables so that their names do not shadow variables defined in the source code.
 
-E.g. in member initializers, prepend `_` to the argument name shadowing the
+E.g. in member initializers, prepend `_` to the parameter name shadowing the
 member name:
 
 ```c++
