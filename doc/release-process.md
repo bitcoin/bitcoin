@@ -27,10 +27,10 @@ Release Process
 * Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead.
 * Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
   [this pull request](https://github.com/bitcoin/bitcoin/pull/12270) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
-* In `configure.ac` and `build_msvc/bitcoin_config.h` on _the master branch_:
-  - update `CLIENT_VERSION_MINOR` version
-* In `configure.ac` and `build_msvc/bitcoin_config.h` on _a new release branch_ (see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd972fca3dd4a33cfff90bf901b71a687e7)):
-  - update `CLIENT_VERSION_MINOR` version
+* On both the master branch and the new release branch:
+  - update `CLIENT_VERSION_MINOR` in [`configure.ac`](../configure.ac)
+  - update `CLIENT_VERSION_MINOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h)
+* On the new release branch in [`configure.ac`](../configure.ac) and [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h) (see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd)):
   - set `CLIENT_VERSION_REVISION` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
 
