@@ -422,7 +422,7 @@ public:
     static CPrivateSendBroadcastTx GetDSTX(const uint256& hash);
 
     static void UpdatedBlockTip(const CBlockIndex* pindex);
-    static void SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock);
+    static void SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex = nullptr, int posInBlock = 0);
 };
 
 #endif

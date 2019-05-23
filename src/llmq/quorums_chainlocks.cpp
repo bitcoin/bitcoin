@@ -345,14 +345,14 @@ void CChainLocksHandler::TrySignChainTip()
     quorumSigningManager->AsyncSignIfMember(Params().GetConsensus().llmqChainLocks, requestId, msgHash);
 }
 
-void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
+void CChainLocksHandler::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
 
     bool handleTx = true;
-    if (tx.IsCoinBase() || tx.vin.empty()) {
+    if (tx->IsCoinBase() || tx->vin.empty()) {
         handleTx = false;
     }
 
@@ -360,13 +360,13 @@ void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockInd
 
     if (handleTx) {
         int64_t curTime = GetAdjustedTime();
-        txFirstSeenTime.emplace(tx.GetHash(), curTime);
+        txFirstSeenTime.emplace(tx->GetHash(), curTime);
     }
 
     // We listen for SyncTransaction so that we can collect all TX ids of all included TXs of newly received blocks
     // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
     // safe.
-    if (pindex && posInBlock != CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK) {
+    if (pindex != nullptr && posInBlock != -1) {
         auto it = blockTxs.find(pindex->GetBlockHash());
         if (it == blockTxs.end()) {
             // we want this to be run even if handleTx == false, so that the coinbase TX triggers creation of an empty entry
@@ -374,7 +374,7 @@ void CChainLocksHandler::SyncTransaction(const CTransaction& tx, const CBlockInd
         }
         if (handleTx) {
             auto& txs = *it->second;
-            txs.emplace(tx.GetHash());
+            txs.emplace(tx->GetHash());
         }
     }
 }

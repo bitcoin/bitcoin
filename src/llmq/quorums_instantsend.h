@@ -141,7 +141,7 @@ public:
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
     void UpdateWalletTransaction(const CTransactionRef& tx, const CInstantSendLock& islock);
 
-    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex = nullptr, int posInBlock = 0);
     void AddNonLockedTx(const CTransactionRef& tx);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
     void RemoveConflictedTx(const CTransaction& tx);

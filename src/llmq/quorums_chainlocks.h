@@ -90,7 +90,7 @@ public:
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew);
-    void SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock);
+    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex = nullptr, int posInBlock = 0);
     void CheckActiveState();
     void TrySignChainTip();
     void EnforceBestChainLock();

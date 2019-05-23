@@ -72,12 +72,42 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 
-void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
+void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
     llmq::quorumInstantSendManager->SyncTransaction(tx, pindex, posInBlock);
     llmq::chainLocksHandler->SyncTransaction(tx, pindex, posInBlock);
     instantsend.SyncTransaction(tx, pindex, posInBlock);
     CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
+}
+
+void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
+{
+    SyncTransaction(ptx);
+}
+
+void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+{
+    // TODO: Tempoarily ensure that mempool removals are notified before
+    // connected transactions.  This shouldn't matter, but the abandoned
+    // state of transactions in our wallet is currently cleared when we
+    // receive another notification and there is a race condition where
+    // notification of a connected conflict might cause an outside process
+    // to abandon a transaction and then have it inadvertantly cleared by
+    // the notification that the conflicted transaction was evicted.
+
+    for (const CTransactionRef& ptx : vtxConflicted) {
+        SyncTransaction(ptx);
+    }
+    for (size_t i = 0; i < pblock->vtx.size(); i++) {
+        SyncTransaction(pblock->vtx[i], pindex, i);
+    }
+}
+
+void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+{
+    for (const CTransactionRef& ptx : pblock->vtx) {
+        SyncTransaction(ptx, pindex, -1);
+    }
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)

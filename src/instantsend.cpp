@@ -882,19 +882,19 @@ void CInstantSend::UpdatedBlockTip(const CBlockIndex *pindex)
     nCachedBlockHeight = pindex->nHeight;
 }
 
-void CInstantSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock)
+void CInstantSend::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
     // Update lock candidates and votes if corresponding tx confirmed
     // or went from confirmed to 0-confirmed or conflicted.
 
-    if (tx.IsCoinBase()) return;
+    if (tx->IsCoinBase()) return;
 
     LOCK2(cs_main, cs_instantsend);
 
-    uint256 txHash = tx.GetHash();
+    uint256 txHash = tx->GetHash();
 
-    // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nHeightNew should be set to -1
-    int nHeightNew = posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK ? -1 : pindex->nHeight;
+    // When tx is 0-confirmed or conflicted, posInBlock is -1 and nHeightNew should be set to -1
+    int nHeightNew = (posInBlock == -1 || pindex == nullptr) ? -1 : pindex->nHeight;
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSend::SyncTransaction -- txid=%s nHeightNew=%d\n", txHash.ToString(), nHeightNew);
 
