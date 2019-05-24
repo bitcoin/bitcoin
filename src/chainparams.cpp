@@ -149,13 +149,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1552606661, 943747, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1552606661, 651899, 0x1e0fffff, 1, 50 * COIN);
         
-        /*uint256 hash;
-        CBlockHeader genesisHeader = genesis.GetBlockHeader();
+        uint256 hash;
+       /*CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000007e0aeb37995d0c0ae8ad49fb7ae17eba65167501f85d40d736d67e754c3"));
+        assert(consensus.hashGenesisBlock == uint256S("0x00000448444b0b3ddf48863024870d158bf48ce7f02a1d3093b01a84c1c1da42"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // TODO re-enable once we go live
@@ -265,13 +265,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1557607987, 2401810, 0x1e0ffff0, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1557607987, 1303900, 0x1e0fffff, 1, 50 * COIN);
         
-        /*uint256 hash;
+       /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000fcf12e4746e1e13ebcbd156dce74a48d6a3e0148250bf47a172a2d26d6a"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000042618cc06df22407caf369c444a2f6165a3264afdc28b3a388c8f6e1771"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
