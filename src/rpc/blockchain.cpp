@@ -154,7 +154,7 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     return result;
 }
 
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails)
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, const int verbosity)
 {
     // Serialize passed information without accessing chain state of the active chain!
     AssertLockNotHeld(cs_main); // For performance reasons
@@ -172,17 +172,29 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("versionHex", strprintf("%08x", block.nVersion));
     result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
     UniValue txs(UniValue::VARR);
-    for(const auto& tx : block.vtx)
-    {
-        if(txDetails)
-        {
+
+    if (verbosity >= 2) {
+        const CBlockUndo blockUndo = GetUndoChecked(blockindex);
+        for (size_t i = 0; i < block.vtx.size(); ++i) {
+
+            const auto& tx = block.vtx.at(i);
+            const CTxUndo* ptr_txundo;
             UniValue objTx(UniValue::VOBJ);
-            TxToUniv(*tx, uint256(), objTx, true, RPCSerializationFlags());
+
+            if (!tx->IsCoinBase()) {
+                ptr_txundo = &blockUndo.vtxundo.at(i - 1);
+            }
+
+            TxToUniv(*tx, uint256(), objTx, true, RPCSerializationFlags(), verbosity, ptr_txundo);
             txs.push_back(objTx);
         }
-        else
+    } else {
+        for (size_t i = 0; i < block.vtx.size(); ++i) {
+            const auto& tx = block.vtx.at(i);
             txs.push_back(tx->GetHash().GetHex());
+        }
     }
+
     result.pushKV("tx", txs);
     result.pushKV("time", block.GetBlockTime());
     result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
@@ -845,58 +857,55 @@ static UniValue getblockheader(const JSONRPCRequest& request)
 
 static UniValue getblock(const JSONRPCRequest& request)
 {
-    const RPCHelpMan help{"getblock",
-                "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
-                "If verbosity is 1, returns an Object with information about block <hash>.\n"
-                "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction. \n",
-                {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
-                    {"verbosity", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
-                },
-                {
-                    RPCResult{"for verbosity = 0",
-            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
-                    },
-                    RPCResult{"for verbosity = 1",
-            "{\n"
-            "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
-            "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
-            "  \"size\" : n,            (numeric) The block size\n"
-            "  \"strippedsize\" : n,    (numeric) The block size excluding witness data\n"
-            "  \"weight\" : n           (numeric) The block weight as defined in BIP 141\n"
-            "  \"height\" : n,          (numeric) The block height or index\n"
-            "  \"version\" : n,         (numeric) The block version\n"
-            "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
-            "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
-            "  \"tx\" : [               (array of string) The transaction ids\n"
-            "     \"transactionid\"     (string) The transaction id\n"
-            "     ,...\n"
-            "  ],\n"
-            "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
-            "  \"nonce\" : n,           (numeric) The nonce\n"
-            "  \"bits\" : \"1d00ffff\", (string) The bits\n"
-            "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
-            "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
-            "  \"nTx\" : n,             (numeric) The number of transactions in the block.\n"
-            "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
-            "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
-            "}\n"
-                    },
-                    RPCResult{"for verbosity = 2",
-            "{\n"
-            "  ...,                     Same output as verbosity = 1.\n"
-            "  \"tx\" : [               (array of Objects) The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result.\n"
-            "         ,...\n"
-            "  ],\n"
-            "  ,...                     Same output as verbosity = 1.\n"
-            "}\n"
-                    },
-                },
-                RPCExamples{
-                    HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-            + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
-                },
+    const RPCHelpMan help{
+        "getblock",
+        "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'hash'.\n"
+        "If verbosity is 1, returns an Object with information about block <hash>.\n"
+        "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction. \n"
+        "If verbosity is 3, returns an Object with information about block <hash> and information about each transaction prevout information for inputs. \n",
+        {
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+            {"verbosity", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
+        },
+        {
+            RPCResult{"for verbosity = 0",
+                "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"},
+            RPCResult{"for verbosity = 1",
+                "{\n"
+                "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
+                "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+                "  \"size\" : n,            (numeric) The block size\n"
+                "  \"strippedsize\" : n,    (numeric) The block size excluding witness data\n"
+                "  \"weight\" : n           (numeric) The block weight as defined in BIP 141\n"
+                "  \"height\" : n,          (numeric) The block height or index\n"
+                "  \"version\" : n,         (numeric) The block version\n"
+                "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
+                "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
+                "  \"tx\" : [               (array of string) The transaction ids\n"
+                "     \"transactionid\"     (string) The transaction id\n"
+                "     ,...\n"
+                "  ],\n"
+                "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
+                "  \"nonce\" : n,           (numeric) The nonce\n"
+                "  \"bits\" : \"1d00ffff\", (string) The bits\n"
+                "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
+                "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
+                "  \"nTx\" : n,             (numeric) The number of transactions in the block.\n"
+                "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
+                "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+                "}\n"},
+            RPCResult{"for verbosity = 2",
+                "{\n"
+                "  ...,                     Same output as verbosity = 1.\n"
+                "  \"tx\" : [               (array of Objects) The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result.\n"
+                "         ,...\n"
+                "  ],\n"
+                "  ,...                     Same output as verbosity = 1.\n"
+                "}\n"},
+        },
+        RPCExamples{
+            HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"") + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")},
     };
 
     if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
@@ -936,7 +945,7 @@ static UniValue getblock(const JSONRPCRequest& request)
         return strHex;
     }
 
-    return blockToJSON(block, tip, pblockindex, verbosity >= 2);
+    return blockToJSON(block, tip, pblockindex, verbosity);
 }
 
 struct CCoinsStats

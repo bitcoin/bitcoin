@@ -11,10 +11,12 @@
 #include <script/standard.h>
 #include <serialize.h>
 #include <streams.h>
+#include <undo.h>
 #include <univalue.h>
-#include <util/system.h>
 #include <util/moneystr.h>
 #include <util/strencodings.h>
+#include <util/system.h>
+
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
@@ -176,7 +178,7 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey,
     out.pushKV("addresses", a);
 }
 
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags)
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags, int verbosity, const CTxUndo * txundo)
 {
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
@@ -187,6 +189,10 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
 
     UniValue vin(UniValue::VARR);
+
+    CAmount amt_total_in = 0;
+    CAmount amt_total_out = 0;
+
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const CTxIn& txin = tx.vin[i];
         UniValue in(UniValue::VOBJ);
@@ -205,6 +211,20 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
                     txinwitness.push_back(HexStr(item.begin(), item.end()));
                 }
                 in.pushKV("txinwitness", txinwitness);
+            }
+            if (txundo != nullptr) {
+                auto prevout = txundo->vprevout[i];
+                amt_total_in += prevout.out.nValue;
+                if (verbosity >= 3) {
+                    UniValue p(UniValue::VOBJ);
+                    p.pushKV("height", (int64_t)prevout.nHeight);
+                    p.pushKV("value", ValueFromAmount(prevout.out.nValue));
+                    p.pushKV("coinbase", (bool)prevout.fCoinBase);
+                    UniValue o(UniValue::VOBJ);
+                    ScriptPubKeyToUniv(prevout.out.scriptPubKey, o, true);
+                    p.pushKV("scriptPubKey", o);
+                    in.pushKV("prevout", p);
+                }
             }
         }
         in.pushKV("sequence", (int64_t)txin.nSequence);
@@ -225,8 +245,16 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
         ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
         out.pushKV("scriptPubKey", o);
         vout.push_back(out);
+
+        amt_total_out += txout.nValue;
     }
     entry.pushKV("vout", vout);
+
+    if (txundo != nullptr && !tx.IsCoinBase()) {
+        CAmount fees = amt_total_in - amt_total_out;
+        assert(MoneyRange(fees));
+        entry.pushKV("fees", ValueFromAmount(fees));
+    }
 
     if (!hashBlock.IsNull())
         entry.pushKV("blockhash", hashBlock.GetHex());
