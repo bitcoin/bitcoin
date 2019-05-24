@@ -92,6 +92,39 @@ static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* b
     return blockindex == tip ? 1 : -1;
 }
 
+static CBlock GetBlockChecked(const CBlockIndex* pblockindex)
+{
+    CBlock block;
+    if (IsBlockPruned(pblockindex)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+    }
+
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
+        // Block not found on disk. This could be because we have the block
+        // header in our index but don't have the block (for example if a
+        // non-whitelisted node sends us an unrequested long chain of valid
+        // blocks, we add the headers to our index, but don't accept the
+        // block).
+        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+    }
+
+    return block;
+}
+
+static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex)
+{
+    CBlockUndo blockUndo;
+    if (IsBlockPruned(pblockindex)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
+    }
+
+    if (!UndoReadFromDisk(blockUndo, pblockindex)) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Can't read undo data from disk");
+    }
+
+    return blockUndo;
+}
+
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex)
 {
     // Serialize passed information without accessing chain state of the active chain!
@@ -808,39 +841,6 @@ static UniValue getblockheader(const JSONRPCRequest& request)
     }
 
     return blockheaderToJSON(tip, pblockindex);
-}
-
-static CBlock GetBlockChecked(const CBlockIndex* pblockindex)
-{
-    CBlock block;
-    if (IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
-    }
-
-    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
-        // Block not found on disk. This could be because we have the block
-        // header in our index but don't have the block (for example if a
-        // non-whitelisted node sends us an unrequested long chain of valid
-        // blocks, we add the headers to our index, but don't accept the
-        // block).
-        throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
-    }
-
-    return block;
-}
-
-static CBlockUndo GetUndoChecked(const CBlockIndex* pblockindex)
-{
-    CBlockUndo blockUndo;
-    if (IsBlockPruned(pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Undo data not available (pruned data)");
-    }
-
-    if (!UndoReadFromDisk(blockUndo, pblockindex)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "Can't read undo data from disk");
-    }
-
-    return blockUndo;
 }
 
 static UniValue getblock(const JSONRPCRequest& request)
