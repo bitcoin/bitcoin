@@ -2762,17 +2762,13 @@ static UniValue createwallet(const JSONRPCRequest& request)
     if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(help.ToString());
     }
-    std::string error;
-    std::string warning;
 
     uint64_t flags = 0;
     if (!request.params[1].isNull() && request.params[1].get_bool()) {
         flags |= WALLET_FLAG_DISABLE_PRIVATE_KEYS;
     }
 
-    bool create_blank = false; // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
     if (!request.params[2].isNull() && request.params[2].get_bool()) {
-        create_blank = true;
         flags |= WALLET_FLAG_BLANK_WALLET;
     }
     SecureString passphrase;
@@ -2783,56 +2779,19 @@ static UniValue createwallet(const JSONRPCRequest& request)
             // Empty string is invalid
             throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Cannot encrypt a wallet with a blank password");
         }
-        // Born encrypted wallets need to be blank first so that wallet creation doesn't make any unencrypted keys
-        flags |= WALLET_FLAG_BLANK_WALLET;
     }
 
-    WalletLocation location(request.params[0].get_str());
-    if (location.Exists()) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet " + location.GetName() + " already exists.");
+    std::string error;
+    std::string warning;
+    WalletCreationStatus status;
+    std::shared_ptr<CWallet> wallet = CreateWallet(*g_rpc_interfaces->chain, request.params[0].get_str(), error, warning, status, passphrase, flags);
+    if (status == WalletCreationStatus::CREATION_FAILED) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error);
+    } else if (status == WalletCreationStatus::ENCRYPTION_FAILED) {
+        throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, error);
+    } else if (status != WalletCreationStatus::SUCCESS) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed");
     }
-
-    // Wallet::Verify will check if we're trying to create a wallet with a duplication name.
-    if (!CWallet::Verify(*g_rpc_interfaces->chain, location, error, warning)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet file verification failed: " + error);
-    }
-
-    const auto wallet = CWallet::CreateWalletFromFile(*g_rpc_interfaces->chain, location, flags);
-    if (!wallet) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Wallet creation failed.");
-    }
-
-    // Encrypt the wallet if there's a passphrase
-    if (!passphrase.empty() && !(flags & WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        if (!wallet->EncryptWallet(passphrase)) {
-            throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Wallet created but failed to encrypt.");
-        }
-
-        if (!create_blank) {
-            // Unlock the wallet
-            if (!wallet->Unlock(passphrase)) {
-                throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Error: Wallet was encrypted but could not be unlocked");
-            }
-
-            // Set a HD chain for the wallet
-            // TODO: re-enable this and `keypoolsize_hd_internal` check in `wallet_createwallet.py`
-            // when HD is the default mode (make sure this actually works!)...
-            // if (!wallet->GenerateNewHDChainEncrypted("", "", passphrase)) {
-            //     throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
-            // }
-            // ... and drop this
-            wallet->UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
-            wallet->NewKeyPool();
-            // end TODO
-
-            // Relock the wallet
-            wallet->Lock();
-        }
-    }
-
-    AddWallet(wallet);
-
-    wallet->postInitProcess();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("name", wallet->GetName());

@@ -52,6 +52,14 @@ std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning);
 
+enum WalletCreationStatus {
+    SUCCESS,
+    CREATION_FAILED,
+    ENCRYPTION_FAILED
+};
+
+std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning, WalletCreationStatus& status, const SecureString& passphrase, uint64_t wallet_creation_flags);
+
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 //! -paytxfee default
 constexpr CAmount DEFAULT_PAY_TX_FEE = 0;
