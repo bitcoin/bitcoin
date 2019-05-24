@@ -109,7 +109,7 @@ static int AppInitRPC(int argc, char* argv[])
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
     }
-    if (!datadirFromCmdLine && !boost::filesystem::is_directory(GetDataDir(false))) {
+    if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false))) {
         fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", GetArg("-datadir", "").c_str());
         return EXIT_FAILURE;
     }

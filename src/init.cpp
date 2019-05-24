@@ -2025,7 +2025,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     bool fIgnoreCacheFiles = fLiteMode || fReindex || fReindexChainState;
     if (!fIgnoreCacheFiles) {
-        boost::filesystem::path pathDB = GetDataDir();
+        fs::path pathDB = GetDataDir();
         std::string strDBName;
 
         strDBName = "mncache.dat";

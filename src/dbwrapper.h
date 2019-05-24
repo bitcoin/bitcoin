@@ -15,8 +15,6 @@
 
 #include <typeindex>
 
-#include <boost/filesystem/path.hpp>
-
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 

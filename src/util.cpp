@@ -667,10 +667,8 @@ const fs::path &GetDataDir(bool fNetSpecific)
     return path;
 }
 
-boost::filesystem::path GetBackupsDir()
+fs::path GetBackupsDir()
 {
-    namespace fs = boost::filesystem;
-
     if (!IsArgSet("-walletbackupsdir"))
         return GetDataDir() / "backups";
 
