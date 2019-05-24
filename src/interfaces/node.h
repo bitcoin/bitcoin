@@ -9,6 +9,7 @@
 #include <amount.h>     // For CAmount
 #include <net.h>        // For CConnman::NumConnections
 #include <netaddress.h> // For Network
+#include <support/allocators/secure.h> // For SecureString
 
 #include <functional>
 #include <memory>
@@ -193,6 +194,9 @@ public:
     //! The loaded wallet is also notified to handlers previously registered
     //! with handleLoadWallet.
     virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, std::string& error, std::string& warning) = 0;
+
+    //! Create a wallet from file
+    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, std::string& error, std::string& warning, const SecureString& passphrase, uint64_t wallet_creation_flags) = 0;
 
     //! Register handler for init messages.
     using InitMessageFn = std::function<void(const std::string& message)>;

@@ -33,7 +33,6 @@ class WalletController : public QObject
 {
     Q_OBJECT
 
-    WalletModel* getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet);
     void removeAndDeleteWallet(WalletModel* wallet_model);
 
 public:
@@ -41,9 +40,11 @@ public:
     ~WalletController();
 
     std::vector<WalletModel*> getWallets() const;
+    WalletModel* getOrCreateWallet(std::unique_ptr<interfaces::Wallet> wallet);
     std::vector<std::string> getWalletsAvailableToOpen() const;
 
     OpenWalletActivity* openWallet(const std::string& name, QWidget* parent = nullptr);
+    std::unique_ptr<interfaces::Wallet> createWallet(const std::string& name, std::string& error, std::string& warning, SecureString& passphrase, uint64_t wallet_creation_flags);
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
 
 private Q_SLOTS:

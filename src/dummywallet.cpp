@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include <util/system.h>
 #include <walletinitinterface.h>
+#include <support/allocators/secure.h>
 
 class CWallet;
+enum class WalletCreationStatus;
 
 namespace interfaces {
 class Chain;
@@ -70,6 +72,11 @@ std::vector<std::shared_ptr<CWallet>> GetWallets()
 }
 
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning)
+{
+    throw std::logic_error("Wallet function called in non-wallet build.");
+}
+
+std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::string& name, std::string& error, std::string& warning, WalletCreationStatus& status, const SecureString& passphrase, uint64_t wallet_creation_flags)
 {
     throw std::logic_error("Wallet function called in non-wallet build.");
 }
