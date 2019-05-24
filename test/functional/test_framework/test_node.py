@@ -23,6 +23,7 @@ import collections
 
 from .authproxy import JSONRPCException
 from .util import (
+    MAX_NODES,
     append_config,
     delete_cookie_file,
     get_rpc_proxy,
@@ -131,10 +132,8 @@ class TestNode():
 
         self.p2ps = []
 
-    def get_deterministic_priv_key(self):
-        """Return a deterministic priv key in base58, that only depends on the node's index"""
-        AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
-        PRIV_KEYS = [
+    AddressKeyPair = collections.namedtuple('AddressKeyPair', ['address', 'key'])
+    PRIV_KEYS = [
             # address , privkey
             AddressKeyPair('yYdShjQSptFKitYLksFEUSwHe4hnbar5rf', 'cMfbiEsnG5b8Gwm6vEgfWvZLuXZNC4zsN2y7Es3An9xHRWRjmwgR'),
             AddressKeyPair('yfTFJgvq65UZsb9RBbpdYAAzsJoCGXqH2w', 'cStuFACUD1N6JjKQxNLUQ443qJUtSzLitKKEkA8x6utxTPZTLUtA'),
@@ -145,8 +144,23 @@ class TestNode():
             AddressKeyPair('yfy21e12jn3A3uDicNehCq486o9fMwJKMc', 'cMuko9rLDbtxCFWuBSrFgBDRSMxsLWKpJKScRGNuWKbhuQsnsjKT'),
             AddressKeyPair('yURgENB3b2YRMWnbhKF7iGs3KoaVRVXsJr', 'cQhdjTMh57MaHCDk9FsWGPtftRMBUuhaYAtouWnetcewmBuSrLSM'),
             AddressKeyPair('yYC9AxBEUs3ZZxfcQvj2LUF5PVxxtqaEs7', 'cQFueiiP13mfytV3Svoe4o4Ux79fRJvwuSgHapXsnBwrHod57EeL'),
-        ]
-        return PRIV_KEYS[self.index]
+            AddressKeyPair('yVs9jXGyLWLLFbpESnoppk7F8DtXcuCCTf', 'cN55daf1HotwBAgAKWVgDcoppmUNDtQSfb7XLutTLeAgVc3u8hik'),
+            AddressKeyPair('yV3eqNNshZJ4Pv6NCyYsbdJb1ERFFygFqf', 'cT7qK7g1wkYEMvKowd2ZrX1E5f6JQ7TM246UfqbCiyF7kZhorpX3'),
+            AddressKeyPair('yfE8gZCiFW9Uqu21v3JGibr3WVSPQWmY8n', 'cPiRWE8KMjTRxH1MWkPerhfoHFn5iHPWVK5aPqjW8NxmdwenFinJ'),
+            AddressKeyPair('yLLVXzya7GzmVkjQzsCG4iDpqYJyJFDSEV', 'cVLCocFyWxzyCwEknkWvDeWneTBsh9Jf3u4yiJCYjcy3gt8Jw1cM'),
+            AddressKeyPair('yLNNR3HeJxgR669oRePksYmCqHuPUG79mF', 'cQawC3oUgoToGDJBw1Ub2PpDmf44kVtcaVaTcHyzXMRKGwdn9UYW'),
+            AddressKeyPair('yLPKVwRTXME7Q3JfKAPJ4FHEaGdWgJuhpj', 'cVcFaWTbkCUZPFTHfDs8iHurPWns5QXc5rqcfkPMHUdmv17o8UYB'),
+            AddressKeyPair('yLPUundzTpvjU8KYVyM4Zmnr4REf3FFvhZ', 'cRVeRmRaYuEYP9HbCZFsf1ifYYZ4KQD9rttRoTNb9wjPzhvRwqMb'),
+            AddressKeyPair('yLRhHqau58AS1ALtnaowv1Pyztxi1Q6fXG', 'cNYFW52pJswYbfPR9fpiRpWHEQygg5tyMih2ASPsgMgPy9SUSSEV'),
+            AddressKeyPair('yLRwHeMkXwYrkDzC4q12vej243AyTeWiPm', 'cRqfZ3dAp8BJUcGhSv7ueCXNGbki1bpcXEKk5dEJN344H52GuHQY'),
+            AddressKeyPair('yLTMCXJhG1mpaWhbHcsr7zUt9wDWuQSPSk', 'cVWGbeCT5QcVGVTL5NuiLs9JfL8HFDb9PN5Gq2xudw6ZsDFeDy1V'),
+            AddressKeyPair('yLU9vxiAWUdiKKxn6EazLDFq9WXrK2T7RP', 'cVCzrzfxMhUMxV34UhTmdmntAqHvosAuNo2KUZsiHZSKLm73g35o'),
+    ]
+
+    def get_deterministic_priv_key(self):
+        """Return a deterministic priv key in base58, that only depends on the node's index"""
+        assert len(self.PRIV_KEYS) == MAX_NODES
+        return self.PRIV_KEYS[self.index]
 
     def _node_msg(self, msg: str) -> str:
         """Return a modified msg that identifies this node by its index as a debugging aid."""
