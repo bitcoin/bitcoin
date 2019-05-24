@@ -96,7 +96,7 @@ extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
-bool fFeeEstimatesInitialized = false;
+static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
 static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
