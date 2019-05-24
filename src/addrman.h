@@ -176,7 +176,7 @@ class CAddrMan
 {
 protected:
     //! critical section to protect the inner data structures
-    mutable CCriticalSection cs;
+    mutable RecursiveMutex cs;
 
 private:
     //! last used nId

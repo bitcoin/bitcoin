@@ -42,7 +42,7 @@ public:
 class CBasicKeyStore : public CKeyStore
 {
 protected:
-    mutable CCriticalSection cs_KeyStore;
+    mutable RecursiveMutex cs_KeyStore;
 
     using KeyMap = std::map<CKeyID, CKey>;
     using WatchKeyMap = std::map<CKeyID, CPubKey>;

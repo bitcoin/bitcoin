@@ -150,7 +150,7 @@ protected:
         Arg(const std::string& help_param, const std::string& help_text, bool debug_only) : m_help_param(help_param), m_help_text(help_text), m_debug_only(debug_only) {};
     };
 
-    mutable CCriticalSection cs_args;
+    mutable RecursiveMutex cs_args;
     std::map<std::string, std::vector<std::string>> m_override_args GUARDED_BY(cs_args);
     std::map<std::string, std::vector<std::string>> m_config_args GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
