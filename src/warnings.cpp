@@ -9,10 +9,10 @@
 #include <warnings.h>
 #include <hash.h>
 
-CCriticalSection cs_warnings;
-std::string strMiscWarning GUARDED_BY(cs_warnings);
-bool fLargeWorkForkFound GUARDED_BY(cs_warnings) = false;
-bool fLargeWorkInvalidChainFound GUARDED_BY(cs_warnings) = false;
+static RecursiveMutex cs_warnings;
+static std::string strMiscWarning GUARDED_BY(cs_warnings);
+static bool fLargeWorkForkFound GUARDED_BY(cs_warnings) = false;
+static bool fLargeWorkInvalidChainFound GUARDED_BY(cs_warnings) = false;
 
 void SetMiscWarning(const std::string& strWarning)
 {
