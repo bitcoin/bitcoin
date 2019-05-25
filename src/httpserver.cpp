@@ -139,15 +139,15 @@ struct HTTPPathHandler
 //! libevent event loop
 static struct event_base* eventBase = nullptr;
 //! HTTP server
-struct evhttp* eventHTTP = nullptr;
+static struct evhttp* eventHTTP = nullptr;
 //! List of subnets to allow RPC connections from
 static std::vector<CSubNet> rpc_allow_subnets;
 //! Work queue for handling longer requests off the event loop thread
 static WorkQueue<HTTPClosure>* workQueue = nullptr;
 //! Handlers for (sub)paths
-std::vector<HTTPPathHandler> pathHandlers;
+static std::vector<HTTPPathHandler> pathHandlers;
 //! Bound listening sockets
-std::vector<evhttp_bound_socket *> boundSockets;
+static std::vector<evhttp_bound_socket *> boundSockets;
 
 /** Check if a network address is allowed to access the HTTP server */
 static bool ClientAllowed(const CNetAddr& netaddr)
@@ -420,7 +420,7 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-std::thread threadHTTP;
+static std::thread threadHTTP;
 static std::vector<std::thread> g_thread_http_workers;
 
 void StartHTTPServer()
