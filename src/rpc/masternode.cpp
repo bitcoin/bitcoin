@@ -32,8 +32,10 @@ UniValue voteraw(const JSONRPCRequest& request);
 
 UniValue masternode(const JSONRPCRequest& request)
 {
+    #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> wallet = GetWalletForJSONRPCRequest(request);
     CWallet* pwallet = wallet.get();
+    #endif // ENABLE_WALLET
     std::string strCommand;
     if (request.params.size() >= 1) {
         strCommand = request.params[0].get_str();
@@ -619,8 +621,10 @@ bool DecodeHexVecMnb(std::vector<CMasternodeBroadcast>& vecMnb, std::string strH
 
 UniValue masternodebroadcast(const JSONRPCRequest& request)
 {
+    #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
+    #endif // ENABLE_WALLET
     std::string strCommand;
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
