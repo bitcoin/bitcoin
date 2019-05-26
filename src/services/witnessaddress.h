@@ -1,6 +1,7 @@
 #ifndef SYSCOIN_SERVICES_WITNESSADDRESS_H
 #define SYSCOIN_SERVICES_WITNESSADDRESS_H
 #include <serialize.h>
+class CScript;
 class CWitnessAddress{
 public:
     unsigned char nVersion;
@@ -56,6 +57,7 @@ public:
     }
     bool IsValid() const;
     std::string ToString() const;
+    CScript GetScriptForDestination() const;
     inline bool IsNull() const {
         return (nVersion == 0 && vchWitnessProgram.empty());
     }

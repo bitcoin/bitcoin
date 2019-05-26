@@ -1383,13 +1383,27 @@ CAmount CWallet::GetChange(const CTxOut& txout) const
         throw std::runtime_error(std::string(__func__) + ": value out of range");
     return (IsChange(txout) ? txout.nValue : 0);
 }
-
+bool CWallet::IsAssetMine(const CTransaction& tx) const {
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
+        CAssetAllocation assetallocation(tx);
+        if(!assetallocation.assetAllocationTuple.IsNull()){
+            if (!assetallocation.listSendingAllocationAmounts.empty()) {
+                for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+                    if(::IsMine(*this, amountTuple.first.GetScriptForDestination()))
+                        return true;        
+                }
+            }
+        }
+    }
+    return false;
+}
 bool CWallet::IsMine(const CTransaction& tx) const
 {
     for (const CTxOut& txout : tx.vout)
         if (IsMine(txout))
             return true;
-    return false;
+    // SYSCOIN
+    return IsAssetMine(tx);
 }
 
 bool CWallet::IsFromMe(const CTransaction& tx) const

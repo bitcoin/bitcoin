@@ -55,6 +55,21 @@ string CWitnessAddress::ToString() const {
     }
     return "";
 }
+CScript CWitnessAddress::GetScriptForDestination() const {
+    CScript script;
+    if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
+        return script;
+    
+    if(nVersion == 0){
+        if (vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
+            return ::GetScriptForDestination(WitnessV0KeyHash(vchWitnessProgram));
+        }
+        else if (vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+            return ::GetScriptForDestination(WitnessV0ScriptHash(vchWitnessProgram));
+        }
+    }
+    return script;
+}
 bool CWitnessAddress::IsValid() const {
     const size_t& size = vchWitnessProgram.size();
     // this is a hard limit 2->40
