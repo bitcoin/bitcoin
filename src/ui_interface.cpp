@@ -25,7 +25,8 @@ struct UISignals {
     boost::signals2::signal<CClientUIInterface::NotifyMasternodeListChangedSig> NotifyMasternodeListChanged;
     boost::signals2::signal<CClientUIInterface::NotifyAdditionalDataSyncProgressChangedSig> NotifyAdditionalDataSyncProgressChanged;
     boost::signals2::signal<CClientUIInterface::BannedListChangedSig> BannedListChanged;
-} g_ui_signals;
+};
+static UISignals g_ui_signals;
 
 #define ADD_SIGNALS_IMPL_WRAPPER(signal_name)                                                                 \
     boost::signals2::connection CClientUIInterface::signal_name##_connect(std::function<signal_name##Sig> fn) \
