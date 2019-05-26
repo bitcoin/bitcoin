@@ -6,10 +6,8 @@
 #include <init.h>
 #include <validation.h>
 #include <core_io.h>
-#include <wallet/rpcwallet.h>
 #include <chainparams.h>
 #include <chrono>
-#include <wallet/coincontrol.h>
 #include <key_io.h>
 #include <consensus/validation.h>
 #include <merkleblock.h>
