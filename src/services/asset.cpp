@@ -6,6 +6,7 @@
 #include <boost/algorithm/string.hpp>
 #include <services/assetconsensus.h>
 #include <validationinterface.h>
+#include <boost/thread.hpp>
 
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
