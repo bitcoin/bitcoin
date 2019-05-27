@@ -17,6 +17,7 @@
 #include "consensus/validation.h"
 #include "hash.h"
 #include "init.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/block.h"
