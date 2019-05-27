@@ -513,11 +513,13 @@ void CPrivateSend::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHei
 {
     AssertLockHeld(cs_mapdstx);
 
-    uint256 txHash = tx->GetHash();
-    if (!mapDSTX.count(txHash)) return;
+    auto it = mapDSTX.find(tx->GetHash());
+    if (it == mapDSTX.end()) {
+        return;
+    }
 
-    mapDSTX[txHash].SetConfirmedHeight(nHeight);
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSend::%s -- txid=%s, nHeight=%d\n", __func__, txHash.ToString(), nHeight);
+    it->second.SetConfirmedHeight(nHeight);
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSend::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight);
 }
 
 void CPrivateSend::TransactionAddedToMempool(const CTransactionRef& tx)
