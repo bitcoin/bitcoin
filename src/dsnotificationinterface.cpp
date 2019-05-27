@@ -75,13 +75,13 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
     instantsend.SyncTransaction(tx, pindex, posInBlock);
-    CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
 }
 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
 {
     llmq::quorumInstantSendManager->TransactionAddedToMempool(ptx);
     llmq::chainLocksHandler->TransactionAddedToMempool(ptx);
+    CPrivateSend::TransactionAddedToMempool(ptx);
     SyncTransaction(ptx);
 }
 
@@ -97,6 +97,7 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
 
     llmq::quorumInstantSendManager->BlockConnected(pblock, pindex, vtxConflicted);
     llmq::chainLocksHandler->BlockConnected(pblock, pindex, vtxConflicted);
+    CPrivateSend::BlockConnected(pblock, pindex, vtxConflicted);
 
     for (const CTransactionRef& ptx : vtxConflicted) {
         SyncTransaction(ptx);
@@ -110,6 +111,7 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
 {
     llmq::quorumInstantSendManager->BlockDisconnected(pblock, pindexDisconnected);
     llmq::chainLocksHandler->BlockDisconnected(pblock, pindexDisconnected);
+    CPrivateSend::BlockDisconnected(pblock, pindexDisconnected);
 
     for (const CTransactionRef& ptx : pblock->vtx) {
         SyncTransaction(ptx, pindexDisconnected->pprev, -1);
