@@ -188,6 +188,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetallocationinfo", 0, "asset_guid" },
     { "assetallocationbalance", 0, "asset_guid" },
     { "assetallocationsenderstatus", 0, "asset_guid" },
+    { "syscoingettxroots", 0, "height" },
     { "listassetallocations", 0, "count" },
     { "listassetallocations", 1, "from" },
     { "listassetallocations", 2, "options" },
