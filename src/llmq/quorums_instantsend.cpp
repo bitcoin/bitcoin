@@ -956,7 +956,7 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
     }
 
     if (tx->IsCoinBase() || tx->vin.empty()) {
-        // coinbase can't and TXs with no inputs be locked
+        // coinbase and TXs with no inputs can't be locked
         return;
     }
 
