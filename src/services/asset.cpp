@@ -312,7 +312,7 @@ void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){
     int count = 0;
     for (const txiter& it : stage) {
         const CTransaction& tx = it->GetTx();
-        if(IsAssetAllocationTx(tx.nVersion)){
+        if(IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK){
             CAssetAllocation allocation(tx);
             if(allocation.assetAllocationTuple.IsNull())
                 continue;
@@ -363,7 +363,7 @@ bool IsAssetTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
 }
 bool IsAssetAllocationTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN || 
+    return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN || 
         nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK;
 }
 bool IsSyscoinTx(const int &nVersion){
