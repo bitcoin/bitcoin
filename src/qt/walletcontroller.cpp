@@ -46,13 +46,16 @@ std::vector<WalletModel*> WalletController::getWallets() const
     return m_wallets;
 }
 
-std::vector<std::string> WalletController::getWalletsAvailableToOpen() const
+std::map<std::string, bool> WalletController::listWalletDir() const
 {
     QMutexLocker locker(&m_mutex);
-    std::vector<std::string> wallets = m_node.listWalletDir();
+    std::map<std::string, bool> wallets;
+    for (const std::string& name : m_node.listWalletDir()) {
+        wallets[name] = false;
+    }
     for (WalletModel* wallet_model : m_wallets) {
-        auto it = std::remove(wallets.begin(), wallets.end(), wallet_model->wallet().getWalletName());
-        if (it != wallets.end()) wallets.erase(it);
+        auto it = wallets.find(wallet_model->wallet().getWalletName());
+        if (it != wallets.end()) it->second = true;
     }
     return wallets;
 }
