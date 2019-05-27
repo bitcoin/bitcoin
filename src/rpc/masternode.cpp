@@ -19,8 +19,10 @@
 #include <fstream>
 #include <iomanip>
 #include <univalue.h>
+#ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #include <wallet/rpcwallet.h>
+#endif
 #include <rpc/util.h>
 UniValue masternodelist(const JSONRPCRequest& request);
 UniValue mnsync(const JSONRPCRequest& request);
