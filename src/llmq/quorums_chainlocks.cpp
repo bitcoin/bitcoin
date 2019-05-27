@@ -352,12 +352,38 @@ void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx)
 
 void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
 {
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
+    // We listen for BlockConnected so that we can collect all TX ids of all included TXs of newly received blocks
+    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
+    // safe.
+
+    LOCK(cs);
+
+    auto it = blockTxs.find(pindex->GetBlockHash());
+    if (it == blockTxs.end()) {
+        // we must create this entry even if there are no lockable transactions in the block, so that TrySignChainTip
+        // later knows about this block
+        it = blockTxs.emplace(pindex->GetBlockHash(), std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
+    }
+    auto& txids = *it->second;
+
+    for (const auto& tx : pblock->vtx) {
+        if (tx->IsCoinBase() || tx->vin.empty()) {
+            continue;
+        }
+
+        txids.emplace(tx->GetHash());
+    }
 
 }
 
 void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
-
+    LOCK(cs);
+    blockTxs.erase(pindexDisconnected->GetBlockHash());
 }
 
 void CChainLocksHandler::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
@@ -376,21 +402,6 @@ void CChainLocksHandler::SyncTransaction(const CTransactionRef& tx, const CBlock
     if (handleTx) {
         int64_t curTime = GetAdjustedTime();
         txFirstSeenTime.emplace(tx->GetHash(), curTime);
-    }
-
-    // We listen for SyncTransaction so that we can collect all TX ids of all included TXs of newly received blocks
-    // We need this information later when we try to sign a new tip, so that we can determine if all included TXs are
-    // safe.
-    if (pindex != nullptr && posInBlock != -1) {
-        auto it = blockTxs.find(pindex->GetBlockHash());
-        if (it == blockTxs.end()) {
-            // we want this to be run even if handleTx == false, so that the coinbase TX triggers creation of an empty entry
-            it = blockTxs.emplace(pindex->GetBlockHash(), std::make_shared<std::unordered_set<uint256, StaticSaltedHasher>>()).first;
-        }
-        if (handleTx) {
-            auto& txs = *it->second;
-            txs.emplace(tx->GetHash());
-        }
     }
 }
 
