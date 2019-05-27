@@ -347,7 +347,17 @@ void CChainLocksHandler::TrySignChainTip()
 
 void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx)
 {
+    if (tx->IsCoinBase() || tx->vin.empty()) {
+        return;
+    }
 
+    if (!masternodeSync.IsBlockchainSynced()) {
+        return;
+    }
+
+    LOCK(cs);
+    int64_t curTime = GetAdjustedTime();
+    txFirstSeenTime.emplace(tx->GetHash(), curTime);
 }
 
 void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -370,12 +380,15 @@ void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pbl
     }
     auto& txids = *it->second;
 
+    int64_t curTime = GetAdjustedTime();
+
     for (const auto& tx : pblock->vtx) {
         if (tx->IsCoinBase() || tx->vin.empty()) {
             continue;
         }
 
         txids.emplace(tx->GetHash());
+        txFirstSeenTime.emplace(tx->GetHash(), curTime);
     }
 
 }
@@ -384,25 +397,6 @@ void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& 
 {
     LOCK(cs);
     blockTxs.erase(pindexDisconnected->GetBlockHash());
-}
-
-void CChainLocksHandler::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
-{
-    if (!masternodeSync.IsBlockchainSynced()) {
-        return;
-    }
-
-    bool handleTx = true;
-    if (tx->IsCoinBase() || tx->vin.empty()) {
-        handleTx = false;
-    }
-
-    LOCK(cs);
-
-    if (handleTx) {
-        int64_t curTime = GetAdjustedTime();
-        txFirstSeenTime.emplace(tx->GetHash(), curTime);
-    }
 }
 
 CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const uint256& blockHash)
