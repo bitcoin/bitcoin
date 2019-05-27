@@ -312,7 +312,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         // update balances  
         storedReceiverAllocationRef.nBalance += mintSyscoin.nValueAsset;
         storedSenderAllocationRef.nBalance -= mintSyscoin.nValueAsset;
-        // if burn less 0 set to 0 we dont enforce total supply since eth contracts can have their own mint strategy not related to sys asset one
+        // if burn less 0 set to 0 we don't enforce total supply since eth contracts can have their own mint strategy not related to sys asset one
         if(storedSenderAllocationRef.nBalance < 0){
             storedSenderAllocationRef.nBalance = 0;
         }    
