@@ -154,6 +154,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
 
     if(!vchTxRoots.first.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.first){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
+        bTxRootError = true;
         // flag as mismatch to fetch again
         auto it = setFlaggedTxRoots.emplace(mintSyscoin.nBlockNumber);
         if(it.second){
@@ -164,6 +165,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
 
     if(!vchTxRoots.second.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.second){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Receipt Roots");
+        bTxRootError = true;
         // flag as mismatch to fetch again
         auto it = setFlaggedTxRoots.emplace(mintSyscoin.nBlockNumber);
         if(it.second){
