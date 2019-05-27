@@ -974,7 +974,11 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
                 }
             }.ToString());
 
-	const int &nAsset = params[0].get_int();
+    uint32_t nAsset;
+    if(params[0].isNum())
+        nAsset = (uint32_t)params[0].get_int();
+    else if(params[0].isStr())
+        ParseUInt32(params[0].get_str(), &nAsset);
 	string strAddress = params[1].get_str();
     
 	const CTxDestination &addressFrom = DecodeDestination(strAddress);
@@ -1020,7 +1024,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
         outputObj.__pushKV("amount", ValueFromAssetAmount(amount, theAsset.nPrecision));
         output.push_back(outputObj);
         UniValue paramsFund(UniValue::VARR);
-        paramsFund.push_back(nAsset);
+        paramsFund.push_back((int)nAsset);
         paramsFund.push_back(strAddress);
         paramsFund.push_back(output);
         paramsFund.push_back("");
