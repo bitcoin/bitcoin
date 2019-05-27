@@ -986,7 +986,7 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
     if (!chainlocked && islockHash.IsNull()) {
         // TX is not locked, so make sure it is tracked
         AddNonLockedTx(tx);
-        nonLockedTxs.at(tx->GetHash()).pindexMined = posInBlock != -1 ? pindex : nullptr;
+        nonLockedTxs.at(tx->GetHash()).pindexMined = pindex;
     } else {
         // TX is locked, so make sure we don't track it anymore
         RemoveNonLockedTx(tx->GetHash(), true);
