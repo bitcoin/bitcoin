@@ -74,7 +74,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
 void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
-    llmq::chainLocksHandler->SyncTransaction(tx, pindex, posInBlock);
     instantsend.SyncTransaction(tx, pindex, posInBlock);
     CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
 }
@@ -82,6 +81,7 @@ void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const 
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
 {
     llmq::quorumInstantSendManager->TransactionAddedToMempool(ptx);
+    llmq::chainLocksHandler->TransactionAddedToMempool(ptx);
     SyncTransaction(ptx);
 }
 
@@ -96,6 +96,7 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
     // the notification that the conflicted transaction was evicted.
 
     llmq::quorumInstantSendManager->BlockConnected(pblock, pindex, vtxConflicted);
+    llmq::chainLocksHandler->BlockConnected(pblock, pindex, vtxConflicted);
 
     for (const CTransactionRef& ptx : vtxConflicted) {
         SyncTransaction(ptx);
@@ -108,6 +109,7 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
     llmq::quorumInstantSendManager->BlockDisconnected(pblock, pindexDisconnected);
+    llmq::chainLocksHandler->BlockDisconnected(pblock, pindexDisconnected);
 
     for (const CTransactionRef& ptx : pblock->vtx) {
         SyncTransaction(ptx, pindexDisconnected->pprev, -1);

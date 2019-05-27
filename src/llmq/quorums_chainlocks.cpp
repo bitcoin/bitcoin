@@ -345,6 +345,21 @@ void CChainLocksHandler::TrySignChainTip()
     quorumSigningManager->AsyncSignIfMember(Params().GetConsensus().llmqChainLocks, requestId, msgHash);
 }
 
+void CChainLocksHandler::TransactionAddedToMempool(const CTransactionRef& tx)
+{
+
+}
+
+void CChainLocksHandler::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+{
+
+}
+
+void CChainLocksHandler::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+{
+
+}
+
 void CChainLocksHandler::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
     if (!masternodeSync.IsBlockchainSynced()) {
