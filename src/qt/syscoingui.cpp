@@ -664,7 +664,7 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller)
     connect(wallet_controller, &WalletController::walletAdded, this, &SyscoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &SyscoinGUI::removeWallet);
 
-    for (WalletModel* wallet_model : m_wallet_controller->getWallets()) {
+    for (WalletModel* wallet_model : m_wallet_controller->getOpenWallets()) {
         addWallet(wallet_model);
     }
 }
