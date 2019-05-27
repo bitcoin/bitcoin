@@ -1146,7 +1146,7 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
                     {"address_sender", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation from"},
-                    {"address_reeiver", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
+                    {"address_receiver", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"}
                 },
                 RPCResult{
