@@ -1270,9 +1270,9 @@ static const CRPCCommand commands[] =
 
    /* assets using the blockchain, coins/points/service backed tokens*/
     { "syscoinwallet",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","ethereum_destination_address"} },
-    { "syscoinwallet",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","witness"} }, 
+    { "syscoinwallet",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} }, 
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","witness"} },     
+    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
     { "syscoinwallet",            "syscointxfund",                    &syscointxfund,                 {"hexstring","address","output_index"}},
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","public value","contract","supply","update_flags","witness"}},
