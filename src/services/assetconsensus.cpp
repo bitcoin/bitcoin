@@ -3,14 +3,9 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <services/assetconsensus.h>
-#include <init.h>
 #include <validation.h>
-#include <core_io.h>
 #include <chainparams.h>
-#include <chrono>
-#include <key_io.h>
 #include <consensus/validation.h>
-#include <merkleblock.h>
 #include <ethereum/ethereum.h>
 #include <ethereum/address.h>
 #include <ethereum/common.h>
@@ -25,7 +20,6 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
-using namespace std::chrono;
 using namespace std;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
