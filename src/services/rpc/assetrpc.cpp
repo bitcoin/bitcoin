@@ -1073,6 +1073,40 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     ret.__pushKV("status", res? "success": "fail");
     return ret;
 }
+ 
+UniValue syscoingettxroots(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"syscoingettxroot",
+            "\nGet Ethereum transaction and receipt roots based on block height.\n",
+            {
+                {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height to lookup."}
+            },
+            RPCResult{
+                "{\n"
+                "  \"txroot\" : \"hash\",        (string) The transaction merkle root\n"
+                "  \"receiptroot\" : \"hash\",        (string) The receipt merkle root\n"
+                "}\n"
+            },
+            RPCExamples{
+                HelpExampleCli("syscoingettxroots", "23232322")
+                + HelpExampleRpc("syscoingettxroots", "23232322")
+            }
+            }.ToString());
+    }
+    int nHeight = request.params[0].get_int();
+    std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
+   
+    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(nHeight, vchTxRoots)){
+       throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read transaction roots");
+    }
+      
+    UniValue ret(UniValue::VOBJ);  
+    ret.pushKV("txroot", HexStr(vchTxRoots.first));
+    ret.pushKV("receiptroot", HexStr(vchTxRoots.second));     
+    return ret;
+} 
 UniValue convertaddress(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1) {
@@ -1130,6 +1164,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
+    { "syscoin",            "syscoingettxroots",                &syscoingettxroots,             {"height"} },
     { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
     { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
