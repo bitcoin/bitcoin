@@ -962,17 +962,6 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
 
     bool inMempool = mempool.get(tx->GetHash()) != nullptr;
 
-    // Are we called from validation.cpp/MemPoolConflictRemovalTracker?
-    // TODO refactor this when we backport the BlockConnected signal from Bitcoin, as it gives better info about
-    // conflicted TXs
-    bool isConflictRemoved = pindex == nullptr && posInBlock == -1 && !inMempool;
-
-    if (isConflictRemoved) {
-        LOCK(cs);
-        RemoveConflictedTx(*tx);
-        return;
-    }
-
     uint256 islockHash;
     {
         LOCK(cs);
@@ -1017,6 +1006,13 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
 {
     if (!IsNewInstantSendEnabled()) {
         return;
+    }
+
+    if (!vtxConflicted.empty()) {
+        LOCK(cs);
+        for (const auto& tx : vtxConflicted) {
+            RemoveConflictedTx(*tx);
+        }
     }
 
     for (const auto& tx : pblock->vtx) {
