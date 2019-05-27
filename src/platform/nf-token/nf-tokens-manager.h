@@ -105,7 +105,6 @@ namespace Platform
             /// gives access to the nf-token registered in a specified transaction
             bmx::hashed_unique<
                 bmx::tag<Tags::RegTxHash>,
-                //bmx::member<NfTokenIndex, uint256, &NfTokenIndex::RegTxHash>
                 RegTxHashExtractor
             >,
             /// hash-indexed by nf-token registration block hash
@@ -120,6 +119,17 @@ namespace Platform
             bmx::ordered_non_unique<
                 bmx::tag<Tags::Height>,
                 HeightExtractor
+            >,
+            /// ordered by nf-token protocol id and registration block height
+            /// gives access to all nf-tokens registered at a specific block height
+            /// or gives access to a range requested by height
+            bmx::ordered_non_unique<
+                bmx::tag<Tags::ProtocolIdHeight>,
+                bmx::composite_key<
+                    NfTokenIndex,
+                    TokenProtocolIdExtractor,
+                    HeightExtractor
+                >
             >,
             /// hash-indexed by a composite-key <TokenProtocolId, OwnerId>
             /// gives access to all nf-tokens owned by the OwnerId in a specified protocol
@@ -196,10 +206,32 @@ namespace Platform
             /// Total amount of nf-tokens for a specified protocol
             std::size_t TotalSupply(uint64_t protocolId) const;
 
-            using NftIndexRange = boost::any_range<const NfTokenIndex &, boost::forward_traversal_tag>;
+            using NftIndexRange = boost::any_range<const NfTokenIndex &, boost::bidirectional_traversal_tag>;
 
             void ProcessFullNftIndexRange(std::function<bool(const NfTokenIndex &)> nftIndexHandler) const;
-            void ProcessNftIndexRangeByHeight(int height, std::function<bool(const NfTokenIndex &)> nftIndexHandler) const;
+            void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                              int height,
+                                              int count,
+                                              int startFrom) const;
+
+            void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                              uint64_t nftProtoId,
+                                              int height,
+                                              int count,
+                                              int startFrom) const;
+
+            void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                              CKeyID keyId,
+                                              int height,
+                                              int count,
+                                              int startFrom) const;
+
+            void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                              uint64_t nftProtoId,
+                                              CKeyID keyId,
+                                              int height,
+                                              int count,
+                                              int startFrom) const;
 
             /// Delete a specified nf-token
             bool Delete(uint64_t protocolId, const uint256 & tokenId);

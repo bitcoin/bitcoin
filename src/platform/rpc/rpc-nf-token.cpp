@@ -12,7 +12,7 @@
 
 json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
 {
-    std::string command = Platform::GetCommand(params, "usage: nftoken register|list|get|totalsupply");
+    std::string command = Platform::GetCommand(params, "usage: nftoken register|list|get|getbytxid|totalsupply");
 
     if (command == "register")
         return Platform::RegisterNfToken(params, fHelp);
@@ -36,7 +36,7 @@ namespace Platform
                 "nftoken register \"nfTokenProtocol\" \"tokenId\" \"tokenOwnerAddr\" \"tokenMetadataAdminAddr\" \"metadata\"\n"
                 "Creates and sends a new non-fungible token transaction.\n"
                 "\nArguments:\n"
-                "1. \"nfTokenProtocol\"           (string, required) A non-fungible token protocol symbol name to use in the token creation.\n"
+                "1. \"nfTokenProtocol\"           (string, required) A non-fungible token protocol symbol to use in the token creation.\n"
                 "                                 The protocol name must be valid and registered previously.\n"
 
                 "2. \"nfTokenId\"                 (string, required) The token id in hex.\n"
@@ -85,11 +85,48 @@ namespace Platform
     void ListNfTokenTxsHelp()
     {
         static std::string helpMessage =
-                "nftoken list\n"
-                "Lists all nftoken registration (for now) transactions on chain (or in your wallet:TODO)\n"
-                "\nArguments:\n"
-                "1. \"verbose\"             (boolean, optional, default=false) true for a detailed list, false for an array of transaction IDs\n"
-                "2. \"height\"              (numeric, optional) If height is not specified, it defaults to the current chain-tip\n";
+                R"(nftoken list
+Lists all nftoken records on chain
+
+Arguments:
+1. "nfTokenProtocol"  (string, optional) The non-fungible token protocol symbol of the registered token record
+                      The protocol name must be valid and registered previously. If "*" is set, it will list NFTs for all protocols.
+2. "nfTokenOwnerAddr" (string, optional) The token owner address, it can be used in any operations with the token.
+                      The private key belonging to this address may be or may be not known in your wallet. If "*" is set, it will list NFTs for all addresses.
+3. height             (numeric, optional) If height is not specified, it defaults to the current chain-tip
+4. count              (numeric, optional, default=20) The number of transactions to return
+5. from               (numeric, optional, default=0) The number of transactions to skip
+6. regTxOnly          (boolean, optional, default=false) false for a detailed list, true for an array of transaction IDs
+
+Examples:
+List the most recent 20 NFT records
+)"
++ HelpExampleCli("nftoken", R"(list)")
++ R"(List the most recent 20 records of the "doc" NFT protocol
+)"
++ HelpExampleCli("nftoken", R"(list "doc")")
++ HelpExampleCli("nftoken", R"(list "doc" "*")")
++ R"(List the most recent 20 records of the "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
+)"
++ HelpExampleCli("nftoken", R"(list "*" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc")")
++ R"(List the most recent 20 records of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
+)"
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc")")
+ + R"(List the most recent 20 records of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
+)"
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050)")
++ R"(List records 100 to 150 of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block
+)"
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50)")
++ R"(List records 100 to 150 of the "doc" NFT protocol and "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address up to 5050st block. List only registration tx IDs.
+)"
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50 true)")
++ R"(As JSON-RPC calls
+)"
++ HelpExampleRpc("nftoken", R"(list "*" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc")")
++ HelpExampleRpc("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050)")
++ HelpExampleCli("nftoken", R"(list "doc" "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" 5050 100 50)");
+
         throw std::runtime_error(helpMessage);
     }
 
@@ -119,31 +156,57 @@ namespace Platform
 
     json_spirit::Value ListNfTokenTxs(const json_spirit::Array& params, bool fHelp)
     {
-        if (fHelp || params.empty() || params.size() > 3)
+        if (fHelp || params.empty() || params.size() > 7)
             ListNfTokenTxsHelp();
 
-        bool verbose = (params.size() > 1) ? ParseBoolV(params[1], "verbose") : false;
+        uint64_t nftProtoId = NfToken::UNKNOWN_TOKEN_PROTOCOL;
+        if (params.size() > 1)
+        {
+            std::string nftProtoIdStr = params[1].get_str();
+            if (nftProtoIdStr != "*")
+                nftProtoId = StringToProtocolName(nftProtoIdStr.c_str());
+        }
 
-        int height = (params.size() > 2) ? ParseInt32V(params[2], "height") : chainActive.Height();
+        CKeyID filterKeyId;
+        if (params.size() > 2 && params[2].get_str() != "*")
+        {
+            filterKeyId = ParsePubKeyIDFromAddress(params[2].get_str(), "nfTokenOwnerAddr");
+        }
+
+        int height = (params.size() > 3) ? ParseInt32V(params[3], "height") : chainActive.Height();
         if (height < 0 || height > chainActive.Height())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
+
+        static const int defaultTxsCount = 20;
+        int count = (params.size() > 4) ? params[3].get_int() : defaultTxsCount;
+        int startFrom = (params.size() > 5) ? params[4].get_int() : 0;
+        bool regTxOnly = (params.size() > 6) ? ParseBoolV(params[1], "regTxOnly") : false;
 
         json_spirit::Array nftList;
 
-        NfTokensManager::Instance().ProcessNftIndexRangeByHeight(height, [&, verbose](const NfTokenIndex & nftIndex) -> bool
+        auto nftIndexHandler = [&](const NfTokenIndex & nftIndex) -> bool
         {
-            if (verbose)
-            {
-                nftList.push_back(BuildNftRecord(nftIndex));
-            }
-            else
+            if (regTxOnly)
             {
                 json_spirit::Object hashObj;
                 hashObj.push_back(json_spirit::Pair("registrationTxHash", nftIndex.RegTxHash().GetHex()));
                 nftList.push_back(hashObj);
             }
+            else
+            {
+                nftList.push_back(BuildNftRecord(nftIndex));
+            }
             return true;
-        });
+        };
+
+        if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL && filterKeyId.IsNull())
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, height, count, startFrom);
+        else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && filterKeyId.IsNull())
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, height, count, startFrom);
+        else if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count, startFrom);
+        else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count, startFrom);
 
         return nftList;
     }
@@ -155,7 +218,7 @@ namespace Platform
 Get an nftoken record by an NFT protocol ID and token ID
 Arguments:
 
-1. "nfTokenProtocol"  (string, required) The non-fungible token protocol symbol name of the registered token record
+1. "nfTokenProtocol"  (string, required) The non-fungible token protocol symbol of the registered token record
                       The protocol name must be valid and registered previously.
 2. "nfTokenId"        (string, required) The token id in hex.
                       The token id must be registered previously.
@@ -218,7 +281,7 @@ Examples:
 Get NFTs current total supply
 
 nArguments:
-1. "nfTokenProtocol"  (string, optional) The non-fungible token protocol symbol name
+1. "nfTokenProtocol"  (string, optional) The non-fungible token protocol symbol
                       The protocol name must be valid and registered previously.
 
 Examples:

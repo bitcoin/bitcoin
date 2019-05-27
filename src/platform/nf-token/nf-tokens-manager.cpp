@@ -308,16 +308,28 @@ namespace Platform
         }
     }
 
-    void NfTokensManager::ProcessNftIndexRangeByHeight(int height, std::function<bool(const NfTokenIndex &)> nftIndexHandler) const
+    void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                                       int height,
+                                                       int count,
+                                                       int startFrom) const
     {
         if (PlatformDb::Instance().OptimizeSpeed())
         {
-            NftIndexRange nftIndexRange = m_nfTokensIndexSet.get<Tags::Height>().range(
+            auto originalRange = m_nfTokensIndexSet.get<Tags::Height>().range(
                     bmx::unbounded,
                     [&](int curHeight) { return curHeight <= height; }
-                    );
+            );
 
-            for (const auto & nftIndex : nftIndexRange)
+            long rangeSize = std::distance(originalRange.first, originalRange.second);
+            assert(rangeSize >= 0);
+
+            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
+            long reverseEnd = rangeSize < rangeSize - startFrom + count ? 0 : reverseBegin - count;
+            auto begin = std::prev(originalRange.second, reverseBegin);
+            auto end = std::prev(originalRange.second, reverseEnd);
+
+            NftIndexRange finalRange(begin, end);
+            for (const auto & nftIndex : finalRange)
             {
                 if (!nftIndexHandler(nftIndex))
                     LogPrintf("%s: NFT index processing failed.", __func__);
@@ -325,20 +337,118 @@ namespace Platform
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
-            auto dbHandler = [&, height](NfTokenIndex nftIndex) -> bool
-            {
-                if (nftIndex.BlockIndex()->nHeight <= height)
-                {
-                    if (!nftIndexHandler(nftIndex))
-                    {
-                        LogPrintf("%s: NFT index processing failed.", __func__);
-                        return false;
-                    }
-                }
-                return true;
-            };
+            std::string error = std::string(__func__) + "is implemented only for speed optimized node instances. Change the conf and restart your node.";
+            throw std::runtime_error(error);
+        }
+    }
 
-            PlatformDb::Instance().ProcessNftIndexGutsOnly(dbHandler);
+    void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                                      uint64_t nftProtoId,
+                                                      int height,
+                                                      int count,
+                                                      int startFrom) const
+    {
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            auto first = m_nfTokensIndexSet.get<Tags::ProtocolIdHeight>().lower_bound(std::make_tuple(nftProtoId, 0));
+            auto second = m_nfTokensIndexSet.get<Tags::ProtocolIdHeight>().upper_bound(std::make_tuple(nftProtoId, height));
+
+            long rangeSize = std::distance(first, second);
+            assert(rangeSize >= 0);
+
+            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
+            long reverseEnd = rangeSize < rangeSize - startFrom + count ? 0 : reverseBegin - count;
+            auto begin = std::prev(second, reverseBegin);
+            auto end = std::prev(second, reverseEnd);
+
+            NftIndexRange finalRange(begin, end);
+            for (const auto & nftIndex : finalRange)
+            {
+                if (!nftIndexHandler(nftIndex))
+                    LogPrintf("%s: NFT index processing failed.", __func__);
+            }
+        }
+        else /// PlatformDb::Instance().OptimizeRam() is on
+        {
+            std::string error = std::string(__func__) + " is implemented only for speed optimized node instances. Change the conf and restart your node.";
+            throw std::runtime_error(error);
+        }
+    }
+
+    void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                                       CKeyID keyId,
+                                                       int height,
+                                                       int count,
+                                                       int startFrom) const
+    {
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            auto originalRange = m_nfTokensIndexSet.get<Tags::OwnerId>().equal_range(keyId);
+            //std::sort(originalRange.first, originalRange.second, [](const NfTokenIndex & left, const NfTokenIndex & right) -> bool
+            //{
+            //    return left.BlockIndex()->nHeight > right.BlockIndex()->nHeight;
+            //});
+
+            int skipped = 0;
+            int processed = 0;
+            for (auto it = originalRange.first; it != originalRange.second || processed != count; ++it)
+            {
+                if (it->BlockIndex()->nHeight < height && skipped < startFrom)
+                {
+                    skipped++;
+                }
+                else if (it->BlockIndex()->nHeight < height && skipped == startFrom)
+                {
+                    if (!nftIndexHandler(*it))
+                        processed++;
+                    else
+                        LogPrintf("%s: NFT index processing failed.", __func__);
+                }
+            }
+        }
+        else /// PlatformDb::Instance().OptimizeRam() is on
+        {
+            std::string error = std::string(__func__) + " is implemented only for speed optimized node instances. Change the conf and restart your node.";
+            throw std::runtime_error(error);
+        }
+    }
+
+    void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
+                                                       uint64_t nftProtoId,
+                                                       CKeyID keyId,
+                                                       int height,
+                                                       int count,
+                                                       int startFrom) const
+    {
+        if (PlatformDb::Instance().OptimizeSpeed())
+        {
+            auto originalRange = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().equal_range(std::make_tuple(nftProtoId, keyId));
+            //std::sort(originalRange.first, originalRange.second), [](const NfTokenIndex & left, const NfTokenIndex & right) -> bool
+            //{
+            //    return left.BlockIndex()->nHeight > right.BlockIndex()->nHeight;
+            //});
+
+            int skipped = 0;
+            int processed = 0;
+            for (auto it = originalRange.first; it != originalRange.second || processed != count; ++it)
+            {
+                if (it->BlockIndex()->nHeight < height && skipped < startFrom)
+                {
+                    skipped++;
+                }
+                else if (it->BlockIndex()->nHeight < height && skipped == startFrom)
+                {
+                    if (!nftIndexHandler(*it))
+                        processed++;
+                    else
+                        LogPrintf("%s: NFT index processing failed.", __func__);
+                }
+            }
+        }
+        else /// PlatformDb::Instance().OptimizeRam() is on
+        {
+            std::string error = std::string(__func__) + " is implemented only for speed optimized node instances. Change the conf and restart your node.";
+            throw std::runtime_error(error);
         }
     }
 

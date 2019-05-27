@@ -44,7 +44,7 @@ namespace Platform
         {
             boost::this_thread::interruption_point();
 
-            if (ProcessNftIndex(*dbIt, nftIndexHandler))
+            if (!ProcessNftIndex(*dbIt, nftIndexHandler))
             {
                 LogPrintf("%s : Cannot process a platform db record - %s", __func__, dbIt->key().ToString());
                 continue;

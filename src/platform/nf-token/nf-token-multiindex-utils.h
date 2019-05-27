@@ -21,6 +21,7 @@ namespace Platform
         class BlockHash {};
         class RegTxHash {};
         class Height {};
+        class ProtocolIdHeight{};
         class ProtocolId {};
         class TokenId {};
         class ProtocolIdTokenId {};
