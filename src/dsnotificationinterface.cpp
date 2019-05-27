@@ -72,18 +72,12 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 
-void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
-{
-    // TODO when the old InstantSend system is removed, also remove this whole method and all the surrounding compatiblity code
-    instantsend.SyncTransaction(tx, pindex, posInBlock);
-}
-
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
 {
     llmq::quorumInstantSendManager->TransactionAddedToMempool(ptx);
     llmq::chainLocksHandler->TransactionAddedToMempool(ptx);
     CPrivateSend::TransactionAddedToMempool(ptx);
-    SyncTransaction(ptx);
+    instantsend.SyncTransaction(ptx);
 }
 
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -101,10 +95,10 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
     CPrivateSend::BlockConnected(pblock, pindex, vtxConflicted);
 
     for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
+        instantsend.SyncTransaction(ptx);
     }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        SyncTransaction(pblock->vtx[i], pindex, i);
+        instantsend.SyncTransaction(pblock->vtx[i], pindex, i);
     }
 }
 
@@ -115,7 +109,7 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
     CPrivateSend::BlockDisconnected(pblock, pindexDisconnected);
 
     for (const CTransactionRef& ptx : pblock->vtx) {
-        SyncTransaction(ptx, pindexDisconnected->pprev, -1);
+        instantsend.SyncTransaction(ptx, pindexDisconnected->pprev, -1);
     }
 }
 

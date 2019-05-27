@@ -29,8 +29,6 @@ protected:
 
 private:
     CConnman& connman;
-    /* Used by TransactionAddedToMemorypool/BlockConnected/Disconnected */
-    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex = nullptr, int posInBlock = 0);
 };
 
 #endif // BITCOIN_DSNOTIFICATIONINTERFACE_H
