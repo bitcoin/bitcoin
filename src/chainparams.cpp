@@ -196,6 +196,12 @@ public:
                 {295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983")},
             }
         };*/
+        /* Fake mainnet checkpoint data TODO: remove this when launching real mainnet */
+        checkpointData = {
+             {
+                 { 100, uint256S("000000b6d83d17213adea8032cdc3400c77dbdd3aa0a5864fe5d3ef90a5dfcca")},
+             }
+        };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000000000f1c54590ee18d15ec70e68c8cd4cfbadb1b4f11697eee
