@@ -19,6 +19,7 @@ class base_blob
 {
 protected:
     static constexpr int WIDTH = BITS / 8;
+    static constexpr int WORDS = BITS / 32;
     uint8_t data[WIDTH];
 public:
     base_blob()
@@ -30,8 +31,8 @@ public:
 
     bool IsNull() const
     {
-        for (int i = 0; i < WIDTH; i++)
-            if (data[i] != 0)
+        for (int i = 0; i < WORDS; ++i)
+            if (((uint32_t*) data)[i] != 0)
                 return false;
         return true;
     }
