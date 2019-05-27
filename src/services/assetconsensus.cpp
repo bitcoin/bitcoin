@@ -20,6 +20,7 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
+std::set<uint32_t> setFlaggedTxRoots;
 using namespace std;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
@@ -153,11 +154,21 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
 
     if(!vchTxRoots.first.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.first){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
+        // flag as mismatch to fetch again
+        auto it = setFlaggedTxRoots.emplace(mintSyscoin.nBlockNumber);
+        if(it.second){
+            LogPrint(BCLog::SYS, "Mismatching tx root at height %d added to the fetch list\n", mintSyscoin.nBlockNumber);
+        }
         return false;
     }
 
     if(!vchTxRoots.second.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.second){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Receipt Roots");
+        // flag as mismatch to fetch again
+        auto it = setFlaggedTxRoots.emplace(mintSyscoin.nBlockNumber);
+        if(it.second){
+            LogPrint(BCLog::SYS, "Mismatching receipt root at height %d added to the fetch list\n", mintSyscoin.nBlockNumber);
+        }
         return false;
     } 
     
@@ -1624,6 +1635,10 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     const uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
     std::vector<unsigned char> txPos;
     std::set<uint32_t> setKeys;
+    // add flagged txroots that are Mismatching
+    for(const auto& flaggedHeight: setFlaggedTxRoots){
+        setKeys.emplace(flaggedHeight);
+    }
     // sort keys numerically
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();

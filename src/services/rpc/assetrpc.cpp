@@ -19,6 +19,7 @@ extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool
 extern std::unordered_set<std::string> assetAllocationConflicts;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
+extern std::set<uint32_t> setFlaggedTxRoots;
 using namespace std;
 
 UniValue tpstestinfo(const JSONRPCRequest& request) {
@@ -1066,6 +1067,10 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         boost::erase_all(txReceiptRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxReceiptRoot = ParseHex(txReceiptRoot);       
         txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(make_pair(vchTxRoot, vchTxReceiptRoot)));
+        // if tx root was flagged for retrieval, remove it from flagged object
+        auto it = setFlaggedTxRoots.find(nHeight);
+        if(it != setFlaggedTxRoots.end())
+            setFlaggedTxRoots.erase(it);
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
     
