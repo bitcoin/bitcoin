@@ -95,10 +95,9 @@ if BUILD_SYSCOIN_TX
 endif
 if ENABLE_WALLET
 if BUILD_SYSCOIN_WALLET
-  bin_PROGRAMS += syscoin-wallet
+  bin_PROGRAMS += syscoin-wallet syscoinbench
 endif
 endif
-bin_PROGRAMS += syscoinbench
 
 .PHONY: FORCE check-symbols check-security
 # syscoin core #
