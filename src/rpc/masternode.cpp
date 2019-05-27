@@ -907,8 +907,10 @@ void RegisterGovernanceRPCCommands(CRPCTable &t)
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
+#ifdef ENABLE_WALLET
 void RegisterGovernanceWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commandsWallet); vcidx++)
         handlers.emplace_back(chain.handleRpc(commandsWallet[vcidx]));
 }
+#endif
