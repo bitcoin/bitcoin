@@ -31,35 +31,12 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request);
 UniValue getsuperblockbudget(const JSONRPCRequest& request);
 UniValue gobject(const JSONRPCRequest& request);
 UniValue voteraw(const JSONRPCRequest& request);
-bool GetBudgetSystemCollateralTX(CWallet* const pwallet, CTransactionRef& tx, uint256 hash, CAmount amount)
-{
-    // make our change address
-    CReserveKey reservekey(pwallet);
-
-    CScript scriptChange;
-    scriptChange << OP_RETURN << ToByteVector(hash);
-
-    CAmount nFeeRet = 0;
-    int nChangePosRet = -1;
-    std::string strFail = "";
-    std::vector< CRecipient > vecSend;
-    vecSend.push_back((CRecipient){scriptChange, amount, false});
-
-    CCoinControl coinControl;
-    auto locked_chain = pwallet->chain().lock();
-    LOCK(pwallet->cs_wallet);
-    bool success = pwallet->CreateTransaction(*locked_chain, vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
-    if(!success){
-        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
-        return false;
-    }
-
-    return true;
-}
 UniValue gobject(const JSONRPCRequest& request)
 {
+    #ifdef ENABLE_WALLET
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
+    #endif // ENABLE_WALLET
     std::string strCommand;
     if (request.params.size() >= 1)
         strCommand = request.params[0].get_str();
@@ -229,13 +206,13 @@ UniValue gobject(const JSONRPCRequest& request)
 				throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
 		}
         EnsureWalletIsUnlocked(pwallet);
-
-        CTransactionRef tx;
-        if(!GetBudgetSystemCollateralTX(pwallet, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
-        }
+        
         // -- make our change address
         CReserveKey reservekey(pwallet);
+        CTransactionRef tx;
+        if(!pwallet->GetBudgetSystemCollateralTX(reservekey, tx, govobj.GetHash(), govobj.GetMinCollateralFee())) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.");
+        }
         // -- send the tx to the network
         CValidationState state;
         mapValue_t mapValue;

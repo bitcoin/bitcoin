@@ -9,8 +9,6 @@
 #include <key.h>
 #include <primitives/transaction.h>
 
-#include <boost/lexical_cast.hpp>
-
 class CGovernanceVote;
 class CConnman;
 

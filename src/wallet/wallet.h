@@ -34,8 +34,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-// SYSCOIN
-CWallet* GetDefaultWallet();
 //! Explicitly unload and delete the wallet.
 //! Blocks the current thread after signaling the unload intent so that all
 //! wallet clients release the wallet.
@@ -1218,7 +1216,9 @@ public:
      * Gives the wallet a chance to register repetitive tasks and complete post-init tasks
      */
     void postInitProcess();
-
+    // SYSCOIN
+    void LockMasternodeOutputs();
+    bool GetBudgetSystemCollateralTX(CReserveKey &reservekey, CTransactionRef& tx, uint256 hash, CAmount amount);
     bool BackupWallet(const std::string& strDest);
 
     /* Set the HD chain model (chain child index counters) */

@@ -23,7 +23,12 @@
 #include <wallet/rpcwallet.h>
 #include <rpc/util.h>
 UniValue masternodelist(const JSONRPCRequest& request);
-
+UniValue mnsync(const JSONRPCRequest& request);
+UniValue spork(const JSONRPCRequest& request);
+UniValue getgovernanceinfo(const JSONRPCRequest& request);
+UniValue getsuperblockbudget(const JSONRPCRequest& request);
+UniValue gobject(const JSONRPCRequest& request);
+UniValue voteraw(const JSONRPCRequest& request);
 
 UniValue masternode(const JSONRPCRequest& request)
 {
@@ -870,4 +875,34 @@ UniValue sentinelping(const JSONRPCRequest& request)
 
     activeMasternode.UpdateSentinelPing(request.params[0].get_int());
     return true;
+}
+// clang-format off
+static const CRPCCommand commands[] =
+{ //  category              name                                actor (function)                argNames
+    //  --------------------- ------------------------          -----------------------         ----------
+    { "governance",            "mnsync",                           &mnsync,                        {} },
+    { "governance",            "spork",                            &spork,                         {"name","value"} },
+    { "governance",            "getgovernanceinfo",                &getgovernanceinfo,             {} },
+    { "governance",            "getsuperblockbudget",              &getsuperblockbudget,           {"index"} },
+    { "governance",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governancehash","vote-signal","vote","time","vote-sig"} },  
+    { "governance",            "masternodelist",                   &masternodelist,                {"mode","filter"} },
+    { "governance",            "sentinelping",                     &sentinelping,                  {"version"} }, 
+};
+static const CRPCCommand commandsWallet[] =
+{ //  category              name                                actor (function)                argNames
+    //  --------------------- ------------------------          -----------------------         ----------
+    { "governancewallet",            "gobject",                          &gobject,                       {} },
+    { "governancewallet",            "masternode",                       &masternode,                    {"command","data"} },
+    { "governancewallet",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },
+};
+// clang-format on
+void RegisterGovernanceRPCCommands(CRPCTable &t)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        t.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}
+void RegisterGovernanceWalletRPCCommands(interfaces::Chain& chain, std::vector<std::unique_ptr<interfaces::Handler>>& handlers)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commandsWallet); vcidx++)
+        handlers.emplace_back(chain.handleRpc(commandsWallet[vcidx]));
 }

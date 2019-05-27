@@ -42,19 +42,12 @@
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
 #include <services/assetconsensus.h>
+#include <util/system.h>
+#include <masternodeconfig.h>
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
-// SYSCOIN
-CWallet* GetDefaultWallet() {
-    const std::vector<std::shared_ptr<CWallet>>& vecWallets = GetWallets();
-    if (vecWallets.empty())
-        return nullptr;
-    std::shared_ptr<CWallet> const wallet = vecWallets[0];
-    CWallet* const pwallet = wallet.get();
-    return pwallet;
-}
 bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallets);
@@ -4329,12 +4322,60 @@ void CWallet::handleNotifications()
 {
     m_chain_notifications_handler = m_chain->handleNotifications(*this);
 }
+bool CWallet::GetBudgetSystemCollateralTX(CReserveKey &reservekey, CTransactionRef& tx, uint256 hash, CAmount amount)
+{
+    auto locked_chain = chain().lock();
+    LOCK(cs_wallet);
+    CScript scriptChange;
+    scriptChange << OP_RETURN << ToByteVector(hash);
 
+    CAmount nFeeRet = 0;
+    int nChangePosRet = -1;
+    std::string strFail = "";
+    std::vector< CRecipient > vecSend;
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
+
+    CCoinControl coinControl;
+    bool success = CreateTransaction(*locked_chain, vecSend, tx, reservekey, nFeeRet, nChangePosRet, strFail, coinControl, true);
+    if(!success){
+        LogPrintf("CWallet::GetBudgetSystemCollateralTX -- Error: %s\n", strFail);
+        return false;
+    }
+
+    return true;
+}
+void CWallet::LockMasternodeOutputs(){
+    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile().string());
+    if(gArgs.GetBoolArg("-mnconflock", true) && (masternodeConfig.getCount() > 0)) {
+        LogPrintf("Locking Masternodes:\n");
+        uint256 mnTxHash;
+        uint32_t outputIndex;
+        for (const auto& mne : masternodeConfig.getEntries()) {
+            mnTxHash.SetHex(mne.getTxHash());
+            if(!ParseUInt32(mne.getOutputIndex(), &outputIndex)){
+                LogPrintf("  %s %s - Could not parse output index, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
+                continue;
+            }
+            const COutPoint &outpoint = COutPoint(mnTxHash, outputIndex);
+            // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
+            if(IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
+                LogPrintf("  %s %s - IS NOT SPENDABLE, was not locked\n", mne.getTxHash(), mne.getOutputIndex());
+                continue;
+            }
+            {
+                LOCK(cs_wallet);
+                LockCoin(outpoint);
+            }
+            LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
+        }
+    }
+}
 void CWallet::postInitProcess()
 {
     auto locked_chain = chain().lock();
     LOCK(cs_wallet);
-
+    // SYSCOIN
+    LockMasternodeOutputs();
     // Add wallet transactions that aren't already in a block to mempool
     // Do this here as mempool requires genesis block to be loaded
     ReacceptWalletTransactions(*locked_chain);

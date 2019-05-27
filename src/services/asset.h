@@ -16,7 +16,6 @@ class CTransaction;
 class CReserveKey;
 class CCoinsViewCache;
 class CBlock;
-struct CRecipient;
 class COutPoint;
 class UniValue;
 class CTxOut;
@@ -44,7 +43,6 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient);
 unsigned int addressunspent(const std::string& strAddressFrom, COutPoint& outpoint);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
@@ -55,16 +53,14 @@ bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWit
 bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
-UniValue syscointxfund_helper(const std::string& strAddress, const int &nVersion, const std::string &vchWitness, const std::vector<CRecipient> &vecSend, const COutPoint& outpoint=emptyOutPoint);
 bool FlushSyscoinDBs();
-void LockMasternodesInDefaultWallet();
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch);
 bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, const CWitnessAddress& witnessAddressToMatch, const COutPoint& lockedOutpoint);
 bool IsAssetAllocationTx(const int &nVersion);
 bool IsSyscoinTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
-
+CAmount getaddressbalance(const std::string& strAddress);
 int GenerateSyscoinGuid();
 
 

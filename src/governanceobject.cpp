@@ -225,8 +225,8 @@ std::string CGovernanceObject::GetSignatureMessage() const
 {
     LOCK(cs);
     std::string strMessage = nHashParent.ToString() + "|" +
-        boost::lexical_cast<std::string>(nRevision) + "|" +
-        boost::lexical_cast<std::string>(nTime) + "|" +
+        itostr(nRevision) + "|" +
+        itostr(nTime) + "|" +
         GetDataAsHexString() + "|" +
         masternodeOutpoint.ToStringShort() + "|" +
         nCollateralHash.ToString();

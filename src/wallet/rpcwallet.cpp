@@ -50,10 +50,6 @@
 #include <services/assetconsensus.h>
 #include <base58.h>
 #include <bech32.h>
-extern UniValue sentinelping(const JSONRPCRequest& request);
-extern  UniValue masternodebroadcast(const JSONRPCRequest& request);
-extern UniValue masternodelist(const JSONRPCRequest& request);
-extern UniValue masternode(const JSONRPCRequest& request);
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
@@ -3721,69 +3717,6 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
     ret.pushKV("purpose", data.purpose);
     return ret;
 }
-// SYSCOIN
-UniValue convertaddress(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
-            RPCHelpMan{"convertaddress",
-            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}
-            },
-            RPCResult{
-                "{\n"
-                "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
-                "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
-                "}\n"
-            },
-            RPCExamples{
-                HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-                + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-            }
-            }.ToString());
-    }
-
-    LOCK(pwallet->cs_wallet);
-
-    UniValue ret(UniValue::VOBJ);
-    CTxDestination dest = DecodeDestination(request.params[0].get_str());
-
-    // Make sure the destination is valid
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-    }
-    std::string currentV4Address = "";
-    std::string currentV3Address = "";
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
-        currentV3Address =  EncodeDestination(PKHash(*witness_id));
-    }
-    else if (auto key_id = boost::get<PKHash>(&dest)) {
-        currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
-        currentV3Address =  EncodeDestination(*key_id);
-    }
-    else if (auto script_id = boost::get<ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
-        currentV3Address =  currentV4Address;
-    }
-    else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
-        currentV3Address =  currentV4Address;
-    }   
-    ret.pushKV("v3address", currentV3Address);
-    ret.pushKV("v4address", currentV4Address);
-                       
-    
-    return ret;
-}
 UniValue getaddressinfo(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -4396,52 +4329,7 @@ UniValue importwallet(const JSONRPCRequest& request);
 UniValue importprunedfunds(const JSONRPCRequest& request);
 UniValue removeprunedfunds(const JSONRPCRequest& request);
 UniValue importmulti(const JSONRPCRequest& request);
-// SYSCOIN service rpc functions
-UniValue syscoinburn(const JSONRPCRequest& request);
-UniValue syscoinmint(const JSONRPCRequest& request);
-UniValue syscointxfund(const JSONRPCRequest& request);
 
-
-UniValue syscoindecoderawtransaction(const JSONRPCRequest& request);
-
-UniValue assetnew(const JSONRPCRequest& request);
-UniValue assetupdate(const JSONRPCRequest& request);
-UniValue addressbalance(const JSONRPCRequest& request);
-UniValue assettransfer(const JSONRPCRequest& request);
-UniValue assetsend(const JSONRPCRequest& request);
-UniValue assetsendmany(const JSONRPCRequest& request);
-UniValue assetinfo(const JSONRPCRequest& request);
-UniValue listassets(const JSONRPCRequest& request);
-UniValue assetallocationlock(const JSONRPCRequest& request);
-UniValue assetallocationsend(const JSONRPCRequest& request);
-UniValue assetallocationsendmany(const JSONRPCRequest& request);
-UniValue assetallocationmint(const JSONRPCRequest& request);
-UniValue assetallocationburn(const JSONRPCRequest& request);
-UniValue assetallocationinfo(const JSONRPCRequest& request);
-UniValue assetallocationbalance(const JSONRPCRequest& request);
-UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
-UniValue listassetallocations(const JSONRPCRequest& request);
-UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request);
-UniValue listassetindex(const JSONRPCRequest& request);
-UniValue listassetindexassets(const JSONRPCRequest& request);
-UniValue listassetindexallocations(const JSONRPCRequest& request);
-UniValue getblockhashbytxid(const JSONRPCRequest& request);
-UniValue syscoingetspvproof(const JSONRPCRequest& request);
-
-UniValue tpstestinfo(const JSONRPCRequest& request);
-UniValue tpstestadd(const JSONRPCRequest& request);
-UniValue tpstestsetenabled(const JSONRPCRequest& request);
-UniValue syscoinsetethstatus(const JSONRPCRequest& request);
-UniValue syscoinsetethheaders(const JSONRPCRequest& request);
-UniValue syscoinstartgeth(const JSONRPCRequest& request);
-UniValue syscoinstopgeth(const JSONRPCRequest& request);
-
-UniValue mnsync(const JSONRPCRequest& request);
-UniValue spork(const JSONRPCRequest& request);
-UniValue getgovernanceinfo(const JSONRPCRequest& request);
-UniValue getsuperblockbudget(const JSONRPCRequest& request);
-UniValue gobject(const JSONRPCRequest& request);
-UniValue voteraw(const JSONRPCRequest& request);
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -4501,54 +4389,6 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
-   /* SYSCOIN rpc functions*/
-    { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
-    { "syscoin",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","ethereum_destination_address"} },
-    { "syscoin",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","witness"} }, 
-    { "syscoin",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
-    { "syscoin",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","witness"} },     
-    { "syscoin",            "syscointxfund",                    &syscointxfund,                 {"hexstring","address","output_index"}},
-    { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
-  
-    /* masternodes + assets using the blockchain, coins/points/service backed tokens*/
-    { "syscoin",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},
-    { "syscoin",            "assetupdate",                      &assetupdate,                   {"asset_guid","public value","contract","supply","update_flags","witness"}},
-    { "syscoin",            "addressbalance",                   &addressbalance,                {}},
-    { "syscoin",            "assettransfer",                    &assettransfer,                 {"asset_guid","address","witness"}},
-    { "syscoin",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
-    { "syscoin",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","inputs"}},
-    { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
-    { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
-    { "syscoin",            "assetallocationlock",              &assetallocationlock,           {"asset_guid","address","txid","output_index","witness"}},
-    { "syscoin",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_sender","address_receiver","amount"}},
-    { "syscoin",            "assetallocationsendmany",          &assetallocationsendmany,       {"asset_guid","address","inputs","witness"}},
-    { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
-    { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
-    { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid"}},
-    { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
-    { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
-    { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },
-    { "syscoin",            "listassetindexassets",             &listassetindexassets,          {"address"} },
-    { "syscoin",            "listassetindexallocations",        &listassetindexallocations,     {"address"} },
-    { "syscoin",            "tpstestinfo",                      &tpstestinfo,                   {} },
-    { "syscoin",            "tpstestadd",                       &tpstestadd,                    {"starttime","rawtxs"} },
-    { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },
-    { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highestBlock"} },
-    { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
-    { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
-    { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
-    { "syscoin",            "mnsync",                           &mnsync,                        {} },
-    { "syscoin",            "spork",                            &spork,                         {"name","value"} },
-    { "syscoin",            "getgovernanceinfo",                &getgovernanceinfo,             {} },
-    { "syscoin",            "getsuperblockbudget",              &getsuperblockbudget,           {"index"} },
-    { "syscoin",            "gobject",                          &gobject,                       {} },
-    { "syscoin",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governancehash","vote-signal","vote","time","vote-sig"} },  
-    { "syscoin",            "masternode",                       &masternode,                    {"command","data"} },
-    { "syscoin",            "masternodelist",                   &masternodelist,                {"mode","filter"} },
-    { "syscoin",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },
-    { "syscoin",            "sentinelping",                     &sentinelping,                  {"version"} }, 
-    { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
-    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
     { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
      /** Auxpow wallet functions */
     { "mining",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },

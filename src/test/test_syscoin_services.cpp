@@ -21,7 +21,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
-#include <boost/lexical_cast.hpp>
 #include <bech32.h>
 #include <rpc/util.h>
 static int node1LastBlock = 0;
@@ -610,25 +609,25 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     CAmount nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
     // ensure that block number you claim the burn is at least 1 hour old
     int heightPlus240 = height+ETHEREUM_CONFIRMS_REQUIRED;
-    string headerStr = "\"[[" + boost::lexical_cast<string>(height) + ",\\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
+    string headerStr = "\"[[" + itostr(height) + ",\\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
  
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethheaders " + headerStr));
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethstatus synced " + itostr(heightPlus240)));
     if (!otherNode1.empty())
     {
         
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethheaders " + headerStr));
-        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
+        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinsetethstatus synced " + itostr(heightPlus240)));
     }
     if (!otherNode2.empty())
     {
         
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethheaders " + headerStr));
-        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + boost::lexical_cast<string>(heightPlus240)));
+        BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + itostr(heightPlus240)));
     }   
     // "syscoinmint [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + boost::lexical_cast<string>(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + itostr(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
@@ -645,7 +644,7 @@ bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string gui
 	UniValue arrayVal = results.get_array();
 	for(unsigned i = 0;i<arrayVal.size();i++){
 		UniValue r = arrayVal[i];
-		if(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid)
+		if(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid)
 			return true;
 	}
 	return false;
@@ -659,7 +658,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
     
 	// "assetnew [address] [symbol] [public value] [contract] [precision=8] [supply] [max_supply] [update_flags] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetnew " + address + " symbol " + pubdata + " " + contract + " " + precision + " " + supply + " " + maxsupply + " " + updateflags + " " + witness));
-    string guid = boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int());
+    string guid = itostr(find_value(r.get_obj(), "asset_guid").get_int());
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -671,7 +670,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	int nprecision;
 	ParseInt32(precision, &nprecision);
 
-	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == address);
 	BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 	UniValue balance = find_value(r.get_obj(), "balance");
@@ -697,7 +696,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
-		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
@@ -715,7 +714,7 @@ string AssetNew(const string& node, const string& address, const string& pubdata
 	if (!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid));
-		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "public_value").get_str() == pubdata);
 		UniValue balance = find_value(r.get_obj(), "balance");
 		UniValue totalsupply = find_value(r.get_obj(), "total_supply");
@@ -756,8 +755,10 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
 	string newsupply = supply == "''" ? "0" : supply;
-	int newflags = updateflags == "''" ? oldflags : boost::lexical_cast<int>(updateflags);
-	string newflagsstr = boost::lexical_cast<string>(newflags);
+	int flagsi;
+	ParseInt32(updateflags, &flagsi);
+	int newflags = updateflags == "''" ? oldflags : flagsi;
+	string newflagsstr = itostr(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
@@ -774,7 +775,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	}
 	// ensure sender state not changed before generating blocks
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
-	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), oldpubdata);
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), oldflags);
@@ -784,7 +785,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	GenerateBlocks(5, node);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 
-	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 	totalsupply = find_value(r.get_obj(), "total_supply");
 	BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
@@ -795,7 +796,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	if (!otherNode1.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "assetinfo " + guid ));
-		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
@@ -808,7 +809,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	if (!otherNode2.empty())
 	{
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "assetinfo " + guid));
-		BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+		BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		totalsupply = find_value(r.get_obj(), "total_supply");
@@ -839,7 +840,7 @@ void AssetTransfer(const string& node, const string &tonode, const string& guid,
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 
 
-	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	GenerateBlocks(6, node);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(tonode, "assetinfo " + guid));

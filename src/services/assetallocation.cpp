@@ -2,41 +2,20 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <init.h>
 #include <validation.h>
-#include <txmempool.h>
-#include <core_io.h>
-#ifdef ENABLE_WALLET
-#include <wallet/wallet.h>
-#endif // ENABLE_WALLET
-#include <wallet/rpcwallet.h>
-#include <chainparams.h>
-#include <boost/lexical_cast.hpp>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
-#include <key_io.h>
 #include <future>
-#include <rpc/util.h>
+#include <validationinterface.h>
 #include <services/assetconsensus.h>
+extern std::string EncodeDestination(const CTxDestination& dest);
+extern CTxDestination DecodeDestination(const std::string& str);
+extern UniValue ValueFromAmount(const CAmount& amount);
+extern UniValue DescribeAddress(const CTxDestination& dest);
+extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
+
 CCriticalSection cs_assetallocation;
 CCriticalSection cs_assetallocationarrival;
-// SYSCOIN service rpc functions
-extern UniValue sendrawtransaction(const JSONRPCRequest& request);
-
-UniValue assetallocationlock(const JSONRPCRequest& request);
-UniValue assetallocationsend(const JSONRPCRequest& request);
-UniValue assetallocationsendmany(const JSONRPCRequest& request);
-UniValue assetallocationmint(const JSONRPCRequest& request);
-UniValue assetallocationburn(const JSONRPCRequest& request);
-UniValue assetallocationinfo(const JSONRPCRequest& request);
-UniValue assetallocationbalance(const JSONRPCRequest& request);
-UniValue assetallocationsenderstatus(const JSONRPCRequest& request);
-UniValue listassetallocations(const JSONRPCRequest& request);
-UniValue tpstestinfo(const JSONRPCRequest& request);
-UniValue tpstestadd(const JSONRPCRequest& request);
-UniValue tpstestsetenabled(const JSONRPCRequest& request);
-UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request);
-
 using namespace std;
 AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocation);
 ArrivalTimesMapImpl arrivalTimesMap GUARDED_BY(cs_assetallocationarrival);
@@ -84,7 +63,7 @@ bool CWitnessAddress::IsValid() const {
     return true;
 }
 string CAssetAllocationTuple::ToString() const {
-	return boost::lexical_cast<string>(nAsset) + "-" + witnessAddress.ToString();
+	return itostr(nAsset) + "-" + witnessAddress.ToString();
 }
 string assetAllocationFromTx(const int &nVersion) {
     switch (nVersion) {
@@ -239,867 +218,6 @@ bool GetAssetAllocation(const CAssetAllocationTuple &assetAllocationTuple, CAsse
     return true;
 }
 
-UniValue tpstestinfo(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 0 != params.size())
-		throw runtime_error("tpstestinfo\n"
-			"Gets TPS Test information for receivers of assetallocation transfers\n");
-	if(!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
-	
-	UniValue oTPSTestResults(UniValue::VOBJ);
-	UniValue oTPSTestReceivers(UniValue::VARR);
-	UniValue oTPSTestReceiversMempool(UniValue::VARR);
-	oTPSTestResults.__pushKV("enabled", fTPSTestEnabled);
-    oTPSTestResults.__pushKV("testinitiatetime", (int64_t)nTPSTestingStartTime);
-	oTPSTestResults.__pushKV("teststarttime", (int64_t)nTPSTestingSendRawEndTime);
-   
-	for (auto &receivedTime : vecTPSTestReceivedTimesMempool) {
-		UniValue oTPSTestStatusObj(UniValue::VOBJ);
-		oTPSTestStatusObj.__pushKV("txid", receivedTime.first.GetHex());
-		oTPSTestStatusObj.__pushKV("time", receivedTime.second);
-		oTPSTestReceiversMempool.push_back(oTPSTestStatusObj);
-	}
-	oTPSTestResults.__pushKV("receivers", oTPSTestReceiversMempool);
-	return oTPSTestResults;
-}
-UniValue tpstestsetenabled(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 1 != params.size())
-		throw runtime_error("tpstestsetenabled [enabled]\n"
-			"\nSet TPS Test to enabled/disabled state. Must have -tpstest configuration set to make this call.\n"
-			"\nArguments:\n"
-			"1. enabled                  (boolean, required) TPS Test enabled state. Set to true for enabled and false for disabled.\n"
-			"\nExample:\n"
-			+ HelpExampleCli("tpstestsetenabled", "true"));
-	if(!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then try again."));
-	fTPSTestEnabled = params[0].get_bool();
-	if (!fTPSTestEnabled) {
-		vecTPSTestReceivedTimesMempool.clear();
-		nTPSTestingSendRawEndTime = 0;
-		nTPSTestingStartTime = 0;
-	}
-	UniValue result(UniValue::VOBJ);
-	result.__pushKV("status", "success");
-	return result;
-}
-UniValue tpstestadd(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 1 > params.size() || params.size() > 2)
-		throw runtime_error("tpstestadd [starttime] [{\"tx\":\"hex\"},...]\n"
-			"\nAdds raw transactions to the test raw tx queue to be sent to the network at starttime.\n"
-			"\nArguments:\n"
-			"1. starttime                  (numeric, required) Unix epoch time in micro seconds for when to send the raw transaction queue to the network. If set to 0, will not send transactions until you call this function again with a defined starttime.\n"
-			"2. \"raw transactions\"                (array, not-required) A json array of signed raw transaction strings\n"
-			"     [\n"
-			"       {\n"
-			"         \"tx\":\"hex\",    (string, required) The transaction hex\n"
-			"       } \n"
-			"       ,...\n"
-			"     ]\n"
-			"\nExample:\n"
-			+ HelpExampleCli("tpstestadd", "\"223233433839384\" \"[{\\\"tx\\\":\\\"first raw hex tx\\\"},{\\\"tx\\\":\\\"second raw hex tx\\\"}]\""));
-	if (!fTPSTest)
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("This function requires tpstest configuration to be set upon startup. Please shutdown and enable it by adding it to your syscoin.conf file and then call 'tpstestsetenabled true'."));
-
-	bool bFirstTime = vecTPSRawTransactions.empty();
-	nTPSTestingStartTime = params[0].get_int64();
-	UniValue txs;
-	if(params.size() > 1)
-		txs = params[1].get_array();
-	if (fTPSTestEnabled) {
-		for (unsigned int idx = 0; idx < txs.size(); idx++) {
-			const UniValue& tx = txs[idx];
-			UniValue paramsRawTx(UniValue::VARR);
-			paramsRawTx.push_back(find_value(tx.get_obj(), "tx").get_str());
-
-			JSONRPCRequest request;
-			request.params = paramsRawTx;
-			vecTPSRawTransactions.push_back(request);
-		}
-		if (bFirstTime) {
-			// define a task for the worker to process
-			std::packaged_task<void()> task([]() {
-				while (nTPSTestingStartTime <= 0 || GetTimeMicros() < nTPSTestingStartTime) {
-					MilliSleep(0);
-				}
-				nTPSTestingSendRawStartTime = nTPSTestingStartTime;
-
-				for (auto &txReq : vecTPSRawTransactions) {
-					sendrawtransaction(txReq);
-				}
-			});
-			bool isThreadPosted = false;
-			for (int numTries = 1; numTries <= 50; numTries++)
-			{
-				// send task to threadpool pointer from init.cpp
-				isThreadPosted = threadpool->tryPost(task);
-				if (isThreadPosted)
-				{
-					break;
-				}
-				MilliSleep(10);
-			}
-			if (!isThreadPosted)
-				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("thread pool queue is full"));
-		}
-	}
-	UniValue result(UniValue::VOBJ);
-	result.__pushKV("status", "success");
-	return result;
-}
-template <typename T>
-inline std::string int_to_hex(T val, size_t width=sizeof(T)*2)
-{
-    std::stringstream ss;
-    ss << std::setfill('0') << std::setw(width) << std::hex << (val|0);
-    return ss.str();
-}
-UniValue assetallocationburn(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 4 != params.size())
-		throw runtime_error(
-            RPCHelpMan{"assetallocationburn",
-                "\nBurn an asset allocation in order to use the bridge\n",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
-                    {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn as normal without the bridge.  If it is left empty this will process as a normal assetallocationsend to the burn address"}
-                },
-                RPCResult{
-                    "{\n"
-                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
-                    + HelpExampleRpc("assetallocationburn", "\"asset\", \"address\", \"amount\", \"ethereum_destination_address\"")
-                }
-            }.ToString());
-
-	const int &nAsset = params[0].get_int();
-	string strAddress = params[1].get_str();
-    
-	const CTxDestination &addressFrom = DecodeDestination(strAddress);
-
-    
-    UniValue detail = DescribeAddress(addressFrom);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();            	
-	CAssetAllocation theAssetAllocation;
-	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
-    {
-        LOCK(cs_assetallocationarrival);
-        // check to see if a transaction for this asset/address tuple has arrived before minimum latency period
-        const ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetAllocationTuple.ToString()];
-        const int64_t & nNow = GetTimeMillis();
-        int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
-        if (fUnitTest)
-            minLatency = 1000;
-        for (auto& arrivalTime : arrivalTimes) {
-            // if this tx arrived within the minimum latency period flag it as potentially conflicting
-            if ((nNow - arrivalTime.second) < minLatency) {
-                throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1503 - " + _("Please wait a few more seconds and try again..."));
-            }
-        }
-    }
-	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
-        
-    UniValue amountObj = params[2];
-	CAmount amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-	string ethAddress = params[3].get_str();
-    boost::erase_all(ethAddress, "0x");  // strip 0x if exist
-    // if no eth address provided just send as a std asset allocation send but to burn address
-    if(ethAddress.empty()){
-        UniValue output(UniValue::VARR);
-        UniValue outputObj(UniValue::VOBJ);
-        outputObj.__pushKV("address", "burn");
-        outputObj.__pushKV("amount", ValueFromAssetAmount(amount, theAsset.nPrecision));
-        output.push_back(outputObj);
-        UniValue paramsFund(UniValue::VARR);
-        paramsFund.push_back(nAsset);
-        paramsFund.push_back(strAddress);
-        paramsFund.push_back(output);
-        paramsFund.push_back("");
-        JSONRPCRequest requestMany;
-        requestMany.params = paramsFund;
-        return assetallocationsendmany(requestMany);  
-    }
-    // convert to hex string because otherwise cscript will push a cscriptnum which is 4 bytes but we want 8 byte hex representation of an int64 pushed
-    const std::string amountHex = int_to_hex(amount);
-    const std::string witnessVersionHex = int_to_hex(assetAllocationTuple.witnessAddress.nVersion);
-    const std::string assetHex = int_to_hex(nAsset);
-
-    
-	vector<CRecipient> vecSend;
-
-
-	CScript scriptData;
-	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
-	CRecipient fee;
-	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee);
-
-	return syscointxfund_helper(strAddress, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN, "", vecSend);
-}
-UniValue assetallocationmint(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    if (request.fHelp || 12 != params.size())
-        throw runtime_error(
-            RPCHelpMan{"assetallocationmint",
-                "\nMint assetallocation to come back from the bridge\n",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees will be taken from the owner address"},
-                    {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
-                    {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
-                    {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
-                    {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
-                    {"merklerootpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle hash for both transaction and receipt root."},
-                    {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
-                    {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
-                    {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
-                    {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
-                },
-                RPCResult{
-                    "{\n"
-                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("assetallocationmint", "\"assetguid\" \"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof_hex\" \"txmerkleproofpath_hex\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\" \"witness\"")
-                    + HelpExampleRpc("assetallocationmint", "\"assetguid\", \"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof_hex\", \"txmerkleproofpath_hex\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
-                }
-            }.ToString());
-
-    uint32_t nAsset;
-    if(params[0].isNum())
-        nAsset = (uint32_t)params[0].get_int();
-    else if(params[0].isStr())
-        ParseUInt32(params[0].get_str(), &nAsset);
-
-    string strAddress = params[1].get_str();
-    CAmount nAmount = AmountFromValue(params[2]);
-    
-    uint32_t nBlockNumber;
-    if(params[3].isNum())
-        nBlockNumber = (uint32_t)params[3].get_int();
-    else if(params[3].isStr())
-        ParseUInt32(params[3].get_str(), &nBlockNumber);    
-    
-    string vchTxValue = params[4].get_str();
-    string vchTxRoot = params[5].get_str();
-    string vchTxParentNodes = params[6].get_str();
-    string vchTxPath = params[7].get_str();
- 
-    string vchReceiptValue = params[8].get_str();
-    string vchReceiptRoot = params[9].get_str();
-    string vchReceiptParentNodes = params[10].get_str();
-    
-    
-    string strWitness = params[11].get_str();
-    if(!fGethSynced){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
-    }
-    const CTxDestination &dest = DecodeDestination(strAddress);
-    UniValue detail = DescribeAddress(dest);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-    vector<CRecipient> vecSend;
-    
-    CMintSyscoin mintSyscoin;
-    mintSyscoin.assetAllocationTuple = CAssetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
-    mintSyscoin.nValueAsset = nAmount;
-    mintSyscoin.nBlockNumber = nBlockNumber;
-    mintSyscoin.vchTxValue = ParseHex(vchTxValue);
-    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
-    mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
-    mintSyscoin.vchTxPath = ParseHex(vchTxPath);
-    mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
-    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
-    mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
-    
-    vector<unsigned char> data;
-    mintSyscoin.Serialize(data);
-    
-    CScript scriptData;
-    scriptData << OP_RETURN << data;
-    CRecipient fee;
-    CreateFeeRecipient(scriptData, fee);
-    vecSend.push_back(fee);
-       
-    return syscointxfund_helper(strAddress, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT, strWitness, vecSend);
-}
-
-UniValue assetallocationsend(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    if (request.fHelp || params.size() != 4)
-        throw runtime_error(
-            RPCHelpMan{"assetallocationsend",
-                "\nSend an asset allocation you own to another address.\n",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
-                    {"address_sender", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation from"},
-                    {"address_reeiver", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The quantity of asset to send"}
-                },
-                RPCResult{
-                    "{\n"
-                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("assetallocationsend", "\"assetguid\" \"addressfrom\" \"address\" \"amount\"")
-                    + HelpExampleRpc("assetallocationsend", "\"assetguid\", \"addressfrom\", \"address\", \"amount\"")
-                }
-            }.ToString());
-    CAmount nAmount = AmountFromValue(params[3]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    UniValue output(UniValue::VARR);
-    UniValue outputObj(UniValue::VOBJ);
-    outputObj.__pushKV("address", params[2].get_str());
-    outputObj.__pushKV("amount", ValueFromAmount(nAmount));
-    output.push_back(outputObj);
-    UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back(params[0].get_int());
-    paramsFund.push_back(params[1].get_str());
-    paramsFund.push_back(output);
-    paramsFund.push_back("");
-    JSONRPCRequest requestMany;
-    requestMany.params = paramsFund;
-    return assetallocationsendmany(requestMany);          
-}
-
-UniValue assetallocationsendmany(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || params.size() != 4)
-		throw runtime_error(
-            RPCHelpMan{"assetallocationsendmany",
-                "\nSend an asset allocation you own to another address. Maximum recipients is 250.\n",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                    {"addressfrom", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
-                    {"amounts", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of assetallocationsend objects",
-                        {
-                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "The assetallocationsend object",
-                                {
-                                    {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to transfer to"},
-                                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Quantity of asset to send"}
-                                }
-                            },
-                         },
-                         "[assetallocationsend object]..."
-                     },
-                     {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
-                },
-                RPCResult{
-                    "{\n"
-                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\' \"\"")
-                    + HelpExampleCli("assetallocationsendmany", "\"assetguid\" \"addressfrom\" \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"\"")
-                    + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \'[{\"address\":\"sysaddress1\",\"amount\":100},{\"address\":\"sysaddress2\",\"amount\":200}]\', \"\"")
-                    + HelpExampleRpc("assetallocationsendmany", "\"assetguid\", \"addressfrom\", \"[{\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\", \"\"")
-                }
-            }.ToString());
-
-	// gather & validate inputs
-	const int &nAsset = params[0].get_int();
-	string vchAddressFrom = params[1].get_str();
-	UniValue valueTo = params[2];
-	vector<unsigned char> vchWitness;
-    string strWitness = params[3].get_str();
-	if (!valueTo.isArray())
-		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-	string strAddressFrom;
-	const string &strAddress = vchAddressFrom;
-    CTxDestination addressFrom;
-    string witnessProgramHex;
-    unsigned char witnessVersion = 0;
-    if(strAddress != "burn"){
-	    addressFrom = DecodeDestination(strAddress);
-    	if (IsValidDestination(addressFrom)) {
-    		strAddressFrom = strAddress;
-    	
-            UniValue detail = DescribeAddress(addressFrom);
-            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-            witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str(); 
-            witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
-        }  
-    }
-    
-	CAssetAllocation theAssetAllocation;
-	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddress == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
-
-	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
-	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
-   
-	theAssetAllocation.SetNull();
-    theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
-    theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress); 
-	UniValue receivers = valueTo.get_array();
-	
-	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
-		const UniValue& receiver = receivers[idx];
-		if (!receiver.isObject())
-			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address'\" or \"amount\"}");
-
-		const UniValue &receiverObj = receiver.get_obj();
-        const std::string &toStr = find_value(receiverObj, "address").get_str();
-        CWitnessAddress recpt;
-        if(toStr != "burn"){
-            CTxDestination dest = DecodeDestination(toStr);
-            if(!IsValidDestination(dest))
-                throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2509 - " + _("Asset must be sent to a valid syscoin address"));
-
-            UniValue detail = DescribeAddress(dest);
-            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-            string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-            unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();    
-            recpt.vchWitnessProgram = ParseHex(witnessProgramHex);
-            recpt.nVersion = witnessVersion;
-        } 
-        else{
-            recpt.vchWitnessProgram = vchFromString("burn");
-            recpt.nVersion = 0;
-        }  
-		UniValue amountObj = find_value(receiverObj, "amount");
-		if (amountObj.isNum() || amountObj.isStr()) {
-			const CAmount &amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
-			if (amount <= 0)
-				throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(recpt.nVersion, recpt.vchWitnessProgram), amount));
-		}
-		else
-			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
-
-	}
-    
-    {
-        LOCK(cs_assetallocationarrival);
-    	// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
-    	const ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetAllocationTuple.ToString()];
-    	const int64_t & nNow = GetTimeMillis();
-    	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
-    	if (fUnitTest)
-    		minLatency = 1000;
-    	for (auto& arrivalTime : arrivalTimes) {
-    		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-    		if ((nNow - arrivalTime.second) < minLatency) {
-    			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1503 - " + _("Please wait a few more seconds and try again..."));
-    		}
-    	}
-    }
-
-	vector<unsigned char> data;
-	theAssetAllocation.Serialize(data);   
-
-
-	// send the asset pay txn
-	vector<CRecipient> vecSend;
-	
-	CScript scriptData;
-	scriptData << OP_RETURN << data;
-	CRecipient fee;
-	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee);
-	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend, lockedOutpoint);
-}
-
-UniValue assetallocationlock(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || params.size() != 5)
-		throw runtime_error(
-            RPCHelpMan{"assetallocationlock",
-            "\nLock an asset allocation to a specific UTXO (txid/output). This is useful for things such as hashlock and CLTV type operations where script checks are done on UTXO prior to spending which extend to an assetallocationsend.\n",
-            {
-                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                {"addressfrom", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
-                {"txid", RPCArg::Type::STR, RPCArg::Optional::NO, "Transaction hash"},
-                {"output_index", RPCArg::Type::NUM, RPCArg::Optional::NO, "Output index inside the transaction output array"},
-                {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction"}
-            },
-            RPCResult{
-            "{\n"
-            "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-            "}\n"
-            },
-            RPCExamples{
-            HelpExampleCli("assetallocationlock", "\"asset_guid\" \"addressfrom\" \"txid\" \"output_index\" \"\"")
-            + HelpExampleRpc("assetallocationlock", "\"asset_guid\",\"addressfrom\",\"txid\",\"output_index\",\"\"")
-            }
-            }.ToString()); 
-            
-	// gather & validate inputs
-	const int &nAsset = params[0].get_int();
-	string vchAddressFrom = params[1].get_str();
-	uint256 txid = uint256S(params[2].get_str());
-	int outputIndex = params[3].get_int();
-	vector<unsigned char> vchWitness;
-	string strWitness = params[4].get_str();
-
-	string strAddressFrom;
-	const string &strAddress = vchAddressFrom;
-	CTxDestination addressFrom;
-	string witnessProgramHex;
-	unsigned char witnessVersion = 0;
-	if (strAddress != "burn") {
-		addressFrom = DecodeDestination(strAddress);
-		if (IsValidDestination(addressFrom)) {
-			strAddressFrom = strAddress;
-
-			UniValue detail = DescribeAddress(addressFrom);
-			if (find_value(detail.get_obj(), "iswitness").get_bool() == false)
-				throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-			witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-			witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-		}
-	}
-
-	CAssetAllocation theAssetAllocation;
-	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddress == "burn" ? vchFromString("burn") : ParseHex(witnessProgramHex)));
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
-
-	theAssetAllocation.SetNull();
-	theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
-	theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress);
-	theAssetAllocation.lockedOutpoint = COutPoint(txid, outputIndex);
-    if(!IsOutpointMature(theAssetAllocation.lockedOutpoint))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint not mature"));
-    Coin pcoin;
-    GetUTXOCoin(theAssetAllocation.lockedOutpoint, pcoin);
-    CTxDestination address;
-    if (!ExtractDestination(pcoin.out.scriptPubKey, address))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not extract destination from outpoint"));
-        
-    const string& strAddressDest = EncodeDestination(address);
-    if(strAddressFrom != strAddressDest)    
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
-    
-    vector<unsigned char> data;
-    theAssetAllocation.Serialize(data);    
-	vector<CRecipient> vecSend;
-
-	CScript scriptData;
-	scriptData << OP_RETURN << data;
-	CRecipient fee;
-	CreateFeeRecipient(scriptData, fee);
-	vecSend.push_back(fee);
-
-	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK, strWitness, vecSend);
-}
-UniValue assetallocationbalance(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    if (request.fHelp || 2 != params.size())
-        throw runtime_error(
-            RPCHelpMan{"assetallocationbalance",
-                "\nShow stored balance of a single asset allocation.\n",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the allocation owner"}
-                },
-                RPCResult{
-                "{\n"
-                "  \"amount\": xx        (numeric) The balance of a single asset allocation.\n"
-                "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("assetallocationbalance","\"asset_guid\" \"address\"")
-                    + HelpExampleRpc("assetallocationbalance", "\"asset_guid\", \"address\"")
-                }
-            }.ToString());
-
-    const int &nAsset = params[0].get_int();
-    string strAddressFrom = params[1].get_str();
-    string witnessProgramHex = "";
-    unsigned char witnessVersion = 0;
-    if(strAddressFrom != "burn"){
-        const CTxDestination &dest = DecodeDestination(strAddressFrom);
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-    }
-    UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
-    CAssetAllocation txPos;
-    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
-
-    CAsset theAsset;
-    if (!GetAsset(nAsset, theAsset))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
-
-    UniValue oRes(UniValue::VOBJ);
-    oRes.__pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
-    return oRes;
-}
-
-UniValue assetallocationinfo(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-    if (request.fHelp || 2 != params.size())
-        throw runtime_error(
-            RPCHelpMan{"assetallocationinfo",
-                "\nShow stored values of a single asset allocation.\n",
-                {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the owner"}
-                },
-                RPCResult{
-                    "{\n"
-                    "    \"asset_allocation\":   (string) The unique key for this allocation\n"
-                    "    \"asset_guid\":         (string) The guid of the asset\n"
-                    "    \"symbol\":             (string) The asset symbol\n"
-                    "    \"address\":            (string) The address of the owner of this allocation\n"
-                    "    \"balance\":            (numeric) The current balance\n"
-                    "    \"balance_zdag\":       (numeric) The zdag balance\n"
-                    "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("assetallocationinfo", "\"assetguid\" \"address\"")
-                    + HelpExampleRpc("assetallocationinfo", "\"assetguid\", \"address\"")
-                }
-            }.ToString());
-
-    const int &nAsset = params[0].get_int();
-    string strAddressFrom = params[1].get_str();
-    string witnessProgramHex = "";
-    unsigned char witnessVersion = 0;
-    if(strAddressFrom != "burn"){
-        const CTxDestination &dest = DecodeDestination(strAddressFrom);
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-    }
-    UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
-    CAssetAllocation txPos;
-    if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
-
-
-	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
-
-
-	if(!BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation))
-		oAssetAllocation.clear();
-    return oAssetAllocation;
-}
-UniValue listassetindexallocations(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    if (request.fHelp || 1 != params.size())
-        throw runtime_error(
-            RPCHelpMan{"listassetindexallocations",
-                "\nReturn a list of asset allocations an address is associated with.\n",
-                {
-                    {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to find assets associated with."}
-                },
-                RPCResult{
-                    "[\n"
-                    "  {\n"
-                    "    \"asset_allocation\":   (string) The unique key for this allocation\n"
-                    "    \"asset_guid\":         (string) The guid of the asset\n"
-                    "    \"symbol\":             (string) The asset symbol\n"
-                    "    \"address\":            (string) The address of the owner of this allocation\n"
-                    "    \"balance\":            (numeric) The current balance\n"
-                    "    \"balance_zdag\":       (numeric) The zdag balance\n"
-                    "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
-                    "  },\n"
-                    "  ...\n"
-                    "]\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-                    + HelpExampleRpc("listassetindexallocations", "sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7")
-                }
-            }.ToString());
-    if(!fAssetIndex){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
-    }       
-    const CTxDestination &dest = DecodeDestination(params[0].get_str());
-    UniValue detail = DescribeAddress(dest);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
- 
-    UniValue oRes(UniValue::VARR);
-    std::vector<uint32_t> assetGuids;
-    passetallocationdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids);
-    
-    CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
-    for(const uint32_t& guid: assetGuids){
-        UniValue oAssetAllocation(UniValue::VOBJ);
-        const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
-        CAssetAllocation txPos;
-        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
-            continue;
-        CAsset theAsset;
-        if (!GetAsset(guid, theAsset))
-           continue;
-
-        if(BuildAssetAllocationJson(txPos, theAsset, oAssetAllocation)){
-            oRes.push_back(oAssetAllocation);
-        }
-    }
-    return oRes;
-}
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) {
-    LOCK(cs_assetallocationarrival);
-	CAssetAllocation dbAssetAllocation;
-	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
-	// The idea is that real-time spending amounts can in some cases overrun the POW balance safely whereas in some cases some of the spends are 
-	// put in another block due to not using enough fees or for other reasons that miners don't mine them.
-	// We just want to flag them as level 1 so it warrants deeper investigation on receiver side if desired (if fund amounts being transferred are not negligible)
-	if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTupleSender, dbAssetAllocation))
-		return ZDAG_NOT_FOUND;
-        
-
-	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
-	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
-    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
-	if(arrivalTimes.empty())
-		return ZDAG_NOT_FOUND;
-	// sort the arrivalTimesMap ascending based on arrival time value
-
-	// Declaring the type of Predicate for comparing arrivalTimesMap
-	typedef std::function<bool(std::pair<uint256, int64_t>, std::pair<uint256, int64_t>)> Comparator;
-
-	// Defining a lambda function to compare two pairs. It will compare two pairs using second field
-	Comparator compFunctor =
-		[](std::pair<uint256, int64_t> elem1, std::pair<uint256, int64_t> elem2)
-	{
-		return elem1.second < elem2.second;
-	};
-
-	// Declaring a set that will store the pairs using above comparison logic
-	std::set<std::pair<uint256, int64_t>, Comparator> arrivalTimesSet(
-		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
-
-	// go through arrival times and check that balances don't overrun the POW balance
-	pair<uint256, int64_t> lastArrivalTime;
-	lastArrivalTime.second = GetTimeMillis();
-	unordered_map<string, CAmount> mapBalances;
-	// init sender balance, track balances by address
-	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
-	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.witnessAddress.ToString()];
-	senderBalance = dbAssetAllocation.nBalance;
-	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
-	if (fUnitTest)
-		minLatency = 1000;
-	for (auto& arrivalTime : arrivalTimesSet)
-	{
-		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		const CTransactionRef txRef = mempool.get(arrivalTime.first);
-		if (!txRef)
-			continue;
-		const CTransaction &tx = *txRef;
-
-		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-		if (abs(arrivalTime.second - lastArrivalTime.second) < minLatency) {
-			return ZDAG_MINOR_CONFLICT;
-		}
-		const uint256& txHash = tx.GetHash();
-		CAssetAllocation assetallocation(tx);
-
-
-		if (!assetallocation.listSendingAllocationAmounts.empty()) {
-			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
-				senderBalance -= amountTuple.second;
-				mapBalances[amountTuple.first.ToString()] += amountTuple.second;
-				// if running balance overruns the stored balance then we have a potential conflict
-				if (senderBalance < 0) {
-					return ZDAG_MINOR_CONFLICT;
-				}
-			}
-		}
-		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
-		if (txHash == lookForTxHash) {
-			return ZDAG_STATUS_OK;
-		}
-	}
-	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
-}
-UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 3 != params.size())
-		throw runtime_error("assetallocationsenderstatus <asset_guid> <address> <txid>\n"
-			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
-			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
-			"Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
-			"Level 0 means OK.\n"
-			"Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
-			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n"
-            "\nArguments:\n"
-            "1. \"asset\":      (numeric, required) The guid of the asset\n"
-            "2. \"address\":    (string, required) The address of the sender\n"
-            "3. \"txid\":       (string, required) The transaction id of the assetallocationsend\n"   
-            "\nResult:\n"
-            "{\n"
-            "  \"status\":      (numeric) The status level of the transaction\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("assetallocationsenderstatus", "\"asset\" \"address\" \"txid\"")
-            + HelpExampleRpc("assetallocationsenderstatus", "\"asset\", \"address\", \"txid\"")
-            );
-
-	const int &nAsset = params[0].get_int();
-	string strAddressSender = params[1].get_str();
-
-    
-    const CTxDestination &dest = DecodeDestination(strAddressSender);
-    UniValue detail = DescribeAddress(dest);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-	uint256 txid;
-	txid.SetNull();
-	if(!params[2].get_str().empty())
-		txid.SetHex(params[2].get_str());
-	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
-    {
-        LOCK2(cs_main, mempool.cs);
-        ResetAssetAllocation(assetAllocationTupleSender.ToString(), txid, false, true);
-        
-    	int nStatus = ZDAG_STATUS_OK;
-    	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
-    		nStatus = ZDAG_MAJOR_CONFLICT;
-    	else
-    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
-    	
-        oAssetAllocationStatus.__pushKV("status", nStatus);
-    }
-	return oAssetAllocationStatus;
-}
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
 {
     CAmount nBalanceZDAG = assetallocation.nBalance;
@@ -1433,7 +551,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	if (!oOptions.isNull()) {
 		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if(assetObj.isNum()) {
-			nAsset = boost::lexical_cast<uint32_t>(assetObj.get_int());
+			nAsset = (uint32_t)assetObj.get_int();
 		}
 
 		const UniValue &owners = find_value(oOptions, "addresses");
@@ -1505,132 +623,79 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	}
 	return true;
 }
+int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) {
+    LOCK(cs_assetallocationarrival);
+	CAssetAllocation dbAssetAllocation;
+	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
+	// The idea is that real-time spending amounts can in some cases overrun the POW balance safely whereas in some cases some of the spends are 
+	// put in another block due to not using enough fees or for other reasons that miners don't mine them.
+	// We just want to flag them as level 1 so it warrants deeper investigation on receiver side if desired (if fund amounts being transferred are not negligible)
+	if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTupleSender, dbAssetAllocation))
+		return ZDAG_NOT_FOUND;
+        
 
-UniValue listassetallocations(const JSONRPCRequest& request) {
-	const UniValue &params = request.params;
-	if (request.fHelp || 3 < params.size())
-		throw runtime_error(
-            RPCHelpMan{"listassetallocations",
-			    "\nScan through all asset allocations.\n",
-                {
-                    {"count", RPCArg::Type::NUM, "10", "The number of results to return."},
-                    {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
-                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
-                        {
-                            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
-                            {"addresses", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
-                                {
-                                    {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter"},
-                                },
-                                "[addressobjects,...]"
-                            }
-                        }
-                     }
-                 },
-                 RPCResult{
-                 "[\n"
-                 "  {\n"
-                 "    \"asset_allocation\":   (string) The unique key for this allocation\n"
-                 "    \"asset_guid\":         (string) The guid of the asset\n"
-                 "    \"symbol\":             (string) The asset symbol\n"
-                 "    \"address\":            (string) The address of the owner of this allocation\n"
-                 "    \"balance\":            (numeric) The current balance\n"
-                 "    \"balance_zdag\":       (numeric) The zdag balance\n"
-                 "    \"locked_outpoint\":    (string) The locked UTXO if applicable for this allocation\n"
-                 "  }\n"
-                 "  ...\n"
-                 "]\n"
-                 },
-                 RPCExamples{
-			         HelpExampleCli("listassetallocations", "0")
-        			+ HelpExampleCli("listassetallocations", "10 10")
-		        	+ HelpExampleCli("listassetallocations", "0 0 '{\"asset_guid\":92922}'")
-	        		+ HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-		        	+ HelpExampleRpc("listassetallocations", "0")
-        			+ HelpExampleRpc("listassetallocations", "10, 10")
-	        		+ HelpExampleRpc("listassetallocations", "0, 0, '{\"asset_guid\":92922}'")
-		        	+ HelpExampleRpc("listassetallocations", "0, 0, '{\"addresses\":[{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"},{\"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}]}'")
-                 }
-            }.ToString());
-	UniValue options;
-	int count = 10;
-	int from = 0;
-	if (params.size() > 0) {
-		count = params[0].get_int();
-		if (count == 0) {
-			count = 10;
-		} else
-		if (count < 0) {
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'count' must be 0 or greater"));
+	// ensure that this transaction exists in the arrivalTimes DB (which is the running stored lists of all real-time asset allocation sends not in POW)
+	// the arrivalTimes DB is only added to for valid asset allocation sends that happen in real-time and it is removed once there is POW on that transaction
+    const ArrivalTimesMap& arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
+	if(arrivalTimes.empty())
+		return ZDAG_NOT_FOUND;
+	// sort the arrivalTimesMap ascending based on arrival time value
+
+	// Declaring the type of Predicate for comparing arrivalTimesMap
+	typedef std::function<bool(std::pair<uint256, int64_t>, std::pair<uint256, int64_t>)> Comparator;
+
+	// Defining a lambda function to compare two pairs. It will compare two pairs using second field
+	Comparator compFunctor =
+		[](std::pair<uint256, int64_t> elem1, std::pair<uint256, int64_t> elem2)
+	{
+		return elem1.second < elem2.second;
+	};
+
+	// Declaring a set that will store the pairs using above comparison logic
+	std::set<std::pair<uint256, int64_t>, Comparator> arrivalTimesSet(
+		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
+
+	// go through arrival times and check that balances don't overrun the POW balance
+	pair<uint256, int64_t> lastArrivalTime;
+	lastArrivalTime.second = GetTimeMillis();
+	unordered_map<string, CAmount> mapBalances;
+	// init sender balance, track balances by address
+	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
+	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.witnessAddress.ToString()];
+	senderBalance = dbAssetAllocation.nBalance;
+	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
+	if (fUnitTest)
+		minLatency = 1000;
+	for (auto& arrivalTime : arrivalTimesSet)
+	{
+		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
+		const CTransactionRef txRef = mempool.get(arrivalTime.first);
+		if (!txRef)
+			continue;
+		const CTransaction &tx = *txRef;
+
+		// if this tx arrived within the minimum latency period flag it as potentially conflicting
+		if (abs(arrivalTime.second - lastArrivalTime.second) < minLatency) {
+			return ZDAG_MINOR_CONFLICT;
+		}
+		const uint256& txHash = tx.GetHash();
+		CAssetAllocation assetallocation(tx);
+
+
+		if (!assetallocation.listSendingAllocationAmounts.empty()) {
+			for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+				senderBalance -= amountTuple.second;
+				mapBalances[amountTuple.first.ToString()] += amountTuple.second;
+				// if running balance overruns the stored balance then we have a potential conflict
+				if (senderBalance < 0) {
+					return ZDAG_MINOR_CONFLICT;
+				}
+			}
+		}
+		// even if the sender may be flagged, the order of events suggests that this receiver should get his money confirmed upon pow because real-time balance is sufficient for this receiver
+		if (txHash == lookForTxHash) {
+			return ZDAG_STATUS_OK;
 		}
 	}
-	if (params.size() > 1) {
-		from = params[1].get_int();
-		if (from < 0) {
-			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'from' must be 0 or greater"));
-		}
-	}
-	if (params.size() > 2) {
-		options = params[2];
-	}
-	UniValue oRes(UniValue::VARR);
-	if (!passetallocationdb->ScanAssetAllocations(count, from, options, oRes))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
-	return oRes;
-}
-UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
-    const UniValue &params = request.params;
-    if (request.fHelp || 3 < params.size())
-        throw runtime_error(
-            RPCHelpMan{"listassetallocationmempoolbalances",
-                "\nScan through all asset allocation mempool balances. Useful for ZDAG analysis on senders of allocations.\n",
-                {
-                    {"count", RPCArg::Type::NUM, "10", "The number of results to return."},
-                    {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
-                    {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
-                        {
-                            {"addresses_array", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json array with owners",  
-                                {
-                                    {"sender_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter"},
-                                },
-                                "[address,...]"
-                            }
-                        }
-                     }
-                },
-                RPCResults{},
-                RPCExamples{
-                    HelpExampleCli("listassetallocationmempoolbalances", "0")
-                    + HelpExampleCli("listassetallocationmempoolbalances", "10 10")
-                    + HelpExampleCli("listassetallocationmempoolbalances", "0 0 '{\"senders\":[{\"address\":\"sysrt1q9hrtqlcpvd089hswwa3gtsy29f8pugc3wah3fl\"},{\"address\":\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"}]}'")
-                    + HelpExampleRpc("listassetallocationmempoolbalances", "0")
-                    + HelpExampleRpc("listassetallocationmempoolbalances", "10, 10")
-                    + HelpExampleRpc("listassetallocationmempoolbalances", "0, 0, '{\"senders\":[{\"address\":\"sysrt1q9hrtqlcpvd089hswwa3gtsy29f8pugc3wah3fl\"},{\"address\":\"sysrt1qea3v4dj5kjxjgtysdxd3mszjz56530ugw467dq\"}]}'")
-                }
-            }.ToString());
-    UniValue options;
-    int count = 10;
-    int from = 0;
-    if (params.size() > 0) {
-        count = params[0].get_int();
-        if (count == 0) {
-            count = 10;
-        } else
-        if (count < 0) {
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'count' must be 0 or greater"));
-        }
-    }
-    if (params.size() > 1) {
-        from = params[1].get_int();
-        if (from < 0) {
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("'from' must be 0 or greater"));
-        }
-    }
-    if (params.size() > 2) {
-        options = params[2];
-    }
-    UniValue oRes(UniValue::VARR);
-    if (!passetallocationmempooldb->ScanAssetAllocationMempoolBalances(count, from, options, oRes))
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
-    return oRes;
+	return lookForTxHash.IsNull()? ZDAG_STATUS_OK: ZDAG_NOT_FOUND;
 }
