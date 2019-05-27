@@ -128,7 +128,7 @@ public:
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000000000000000000000000000000000000000000000000000000000000000"); //563378
+        consensus.defaultAssumeValid = uint256S("000000b6d83d17213adea8032cdc3400c77dbdd3aa0a5864fe5d3ef90a5dfcca"); //100
         consensus.nAuxpowChainId = 0x1000;
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
