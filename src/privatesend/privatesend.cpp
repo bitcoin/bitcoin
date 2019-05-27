@@ -509,16 +509,16 @@ void CPrivateSend::UpdatedBlockTip(const CBlockIndex* pindex)
     }
 }
 
-void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlockIndex* pindex, int posInBlock)
+void CPrivateSend::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
-    if (tx.IsCoinBase()) return;
+    if (tx->IsCoinBase()) return;
 
     LOCK2(cs_main, cs_mapdstx);
 
-    uint256 txHash = tx.GetHash();
+    uint256 txHash = tx->GetHash();
     if (!mapDSTX.count(txHash)) return;
 
     // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nConfirmedHeight should be set to -1
-    mapDSTX[txHash].SetConfirmedHeight(posInBlock == CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK ? -1 : pindex->nHeight);
+    mapDSTX[txHash].SetConfirmedHeight((posInBlock == -1 || pindex == nullptr) ? -1 : pindex->nHeight);
     LogPrint(BCLog::PRIVATESEND, "CPrivateSend::SyncTransaction -- txid=%s\n", txHash.ToString());
 }

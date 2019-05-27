@@ -343,7 +343,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     if binary is None:
         binary = os.getenv("BITCOIND", "dashd")
     # RPC tests still depend on free transactions
-    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000", "-logtimemicros", "-debug", "-mocktime="+str(get_mocktime()) ]
+    args = [binary, "-datadir=" + datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(get_mocktime())]
     # Don't try auto backups (they fail a lot when running tests)
     args += [ "-createwalletbackups=0" ]
     if extra_args is not None: args.extend(extra_args)
