@@ -969,11 +969,7 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
 
         // update DB about when an IS lock was mined
         if (!islockHash.IsNull() && pindex) {
-            if (posInBlock == -1) {
-                db.RemoveInstantSendLockMined(islockHash, pindex->nHeight);
-            } else {
-                db.WriteInstantSendLockMined(islockHash, pindex->nHeight);
-            }
+            db.WriteInstantSendLockMined(islockHash, pindex->nHeight);
         }
     }
 
@@ -1022,6 +1018,13 @@ void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pb
 
 void CInstantSendManager::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
+    LOCK(cs);
+    for (auto& tx : pblock->vtx) {
+        auto islockHash = db.GetInstantSendLockHashByTxid(tx->GetHash());
+        if (!islockHash.IsNull()) {
+            db.RemoveInstantSendLockMined(islockHash, pindexDisconnected->nHeight);
+        }
+    }
 }
 
 void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx)
