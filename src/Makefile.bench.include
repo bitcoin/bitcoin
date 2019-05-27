@@ -34,6 +34,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
   bench/prevector.cpp \
+  bench/uint256.cpp \
   test/setup_common.h \
   test/setup_common.cpp \
   test/util.h \
