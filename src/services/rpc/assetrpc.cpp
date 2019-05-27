@@ -1130,6 +1130,8 @@ UniValue convertaddress(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
+    { "syscoin",            "getblockhashbytxid",               &getblockhashbytxid,            {"txid"} },
+    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
     { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
     { "syscoin",            "addressbalance",                   &addressbalance,                {}},
