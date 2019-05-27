@@ -77,7 +77,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/exception/info.hpp
     boost/exception/info_tuple.hpp
     boost/functional/hash.hpp
-    boost/lexical_cast.hpp
     boost/multiprecision/cpp_int.hpp
     boost/throw_exception.hpp
     boost/tuple/tuple.hpp

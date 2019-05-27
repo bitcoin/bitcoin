@@ -88,6 +88,7 @@
 #include <thread_pool/thread_pool.hpp>
 #include <flatdatabase.h>
 #include <services/assetconsensus.h>
+#include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
@@ -2095,7 +2096,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     uiInterface.InitMessage(_("Done loading"));
     // SYSCOIN
     #ifdef ENABLE_WALLET
-    LockMasternodesInDefaultWallet();
     int wsport = gArgs.GetArg("-gethwebsocketport", 8546);
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     StartGethNode(gethPID, bGethTestnet, wsport);

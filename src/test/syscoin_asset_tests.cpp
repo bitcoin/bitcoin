@@ -10,7 +10,6 @@
 #include <base58.h>
 #include <chainparams.h>
 #include <boost/test/unit_test.hpp>
-#include <boost/lexical_cast.hpp>
 #include <iterator>
 #include <core_io.h>
 #include <key.h>
@@ -43,12 +42,12 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "listassets"));
 	UniValue rArray = r.get_array();
 	BOOST_CHECK(rArray.size() > 0);
-	BOOST_CHECK_EQUAL(boost::lexical_cast<string>(find_value(rArray[0].get_obj(), "asset_guid").get_int()), guid);
+	BOOST_CHECK_EQUAL(itostr(find_value(rArray[0].get_obj(), "asset_guid").get_int()), guid);
 	string guid1 = AssetNew("node1", newaddress, gooddata);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid));
-	BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
+	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
-    BOOST_CHECK(boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
+    BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 {
@@ -214,7 +213,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     printf("creating %d sender assets...\n", numAssets);
     for(int i =0;i<numAssets;i++){
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetnew " + vecFundedAddresses[i] + " tps '' '' 8 250 250 31 ''"));
-        string guid = boost::lexical_cast<string>(find_value(r.get_obj(), "asset_guid").get_int());
+        string guid = itostr(find_value(r.get_obj(), "asset_guid").get_int());
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
         string hex_str = find_value(r.get_obj(), "hex").get_str();
         BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false));
@@ -325,12 +324,12 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_NO_THROW(CallRPC(receiver, "mnsync next", true, false));
     }
     for (auto &sender : senders){
-        BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  boost::lexical_cast<string>(tpstarttime)));
+        BOOST_CHECK_NO_THROW(CallExtRPC(sender, "tpstestadd",  i64tostr(tpstarttime)));
         BOOST_CHECK_NO_THROW(r = CallExtRPC(sender, "tpstestinfo"));
         BOOST_CHECK_EQUAL(find_value(r.get_obj(), "testinitiatetime").get_int64(), tpstarttime);
     }
     for (auto &receiver : receivers){
-        BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestadd", boost::lexical_cast<string>(tpstarttime)));
+        BOOST_CHECK_NO_THROW(CallExtRPC(receiver, "tpstestadd", i64tostr(tpstarttime)));
         BOOST_CHECK_EQUAL(find_value(r.get_obj(), "testinitiatetime").get_int64(), tpstarttime);
     }
 
@@ -426,7 +425,7 @@ BOOST_AUTO_TEST_CASE(generate_syscoinmint)
     SyscoinMint("node1", newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
     
     // try to mint again
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinmint " + newaddress + " " + amount + " " + boost::lexical_cast<string>(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinmint " + newaddress + " " + amount + " " + itostr(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"));
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     // should fail: already minted with that block+txindex tuple
@@ -942,7 +941,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
     int updateflags = ASSET_UPDATE_ALL & ~ASSET_UPDATE_SUPPLY;
 	string guid1 = AssetNew("node1", newaddress, "data", "''", "8", "1", "10", "31");
     // can't change supply > max supply (current balance already 6, max is 10)
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + newaddress + " '' 5 " + boost::lexical_cast<string>(updateflags) + " ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid + " " + newaddress + " '' 5 " + itostr(updateflags) + " ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -950,9 +949,9 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_address)
     BOOST_CHECK(r.write().size() < 32);
         
 
-	AssetUpdate("node1", guid1, "pub12", "1", boost::lexical_cast<string>(updateflags));
+	AssetUpdate("node1", guid1, "pub12", "1", itostr(updateflags));
 	// ensure can't update supply (update flags is set to not allowsupply update)
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " " + newaddress + " '' 1 " + boost::lexical_cast<string>(updateflags) + " ''"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + guid1 + " " + newaddress + " '' 1 " + itostr(updateflags) + " ''"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -965,7 +964,7 @@ BOOST_AUTO_TEST_CASE(generate_assetupdate_precision_address)
 	printf("Running generate_assetupdate_precision_address...\n");
 	UniValue r;
 	for (int i = 0; i <= 8; i++) {
-		string istr = boost::lexical_cast<string>(i);
+		string istr = itostr(i);
 		string addressName = GetNewFundedAddress("node1");
 		// test max supply for every possible precision
 		
