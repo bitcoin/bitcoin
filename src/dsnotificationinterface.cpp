@@ -74,6 +74,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
 void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
 {
+    // TODO when the old InstantSend system is removed, also remove this whole method and all the surrounding compatiblity code
     instantsend.SyncTransaction(tx, pindex, posInBlock);
 }
 
