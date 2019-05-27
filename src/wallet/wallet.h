@@ -1118,7 +1118,7 @@ public:
     CAmount GetChange(const CTxOut& txout) const;
     bool IsMine(const CTransaction& tx) const;
     // SYSCOIN
-    bool IsAssetMine(const CTransaction& tx) const;
+    bool IsAssetMine(const CTransaction& t, const isminefilter& filter) const;
     /** should probably be renamed to IsRelevantToMe */
     bool IsFromMe(const CTransaction& tx) const;
     CAmount GetDebit(const CTransaction& tx, const isminefilter& filter) const;
