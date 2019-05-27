@@ -141,7 +141,10 @@ public:
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
     void UpdateWalletTransaction(const CTransactionRef& tx, const CInstantSendLock& islock);
 
-    void SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex = nullptr, int posInBlock = 0);
+    void ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex);
+    void TransactionAddedToMempool(const CTransactionRef& tx);
+    void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
+    void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
     void AddNonLockedTx(const CTransactionRef& tx);
     void RemoveNonLockedTx(const uint256& txid, bool retryChildren);
     void RemoveConflictedTx(const CTransaction& tx);

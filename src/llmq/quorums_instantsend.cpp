@@ -949,7 +949,7 @@ void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, con
     mempool.AddTransactionsUpdated(1);
 }
 
-void CInstantSendManager::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
+void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex)
 {
     if (!IsNewInstantSendEnabled()) {
         return;
@@ -1006,6 +1006,26 @@ void CInstantSendManager::SyncTransaction(const CTransactionRef& tx, const CBloc
         // TX is locked, so make sure we don't track it anymore
         RemoveNonLockedTx(tx->GetHash(), true);
     }
+}
+
+void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
+{
+    ProcessNewTransaction(tx, nullptr);
+}
+
+void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+{
+    if (!IsNewInstantSendEnabled()) {
+        return;
+    }
+
+    for (const auto& tx : pblock->vtx) {
+        ProcessNewTransaction(tx, pindex);
+    }
+}
+
+void CInstantSendManager::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+{
 }
 
 void CInstantSendManager::AddNonLockedTx(const CTransactionRef& tx)
