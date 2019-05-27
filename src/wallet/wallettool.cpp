@@ -56,7 +56,7 @@ static std::shared_ptr<CWallet> MakeWallet(const std::string& name, const fs::pa
     try {
         bool first_run;
         load_wallet_ret = wallet_instance->LoadWallet(first_run);
-    } catch (const std::runtime_error) {
+    } catch (const std::runtime_error&) {
         tfm::format(std::cerr, "Error loading %s. Is wallet being used by another process?\n", name);
         return nullptr;
     }
