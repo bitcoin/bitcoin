@@ -23,6 +23,7 @@
 #include <boost/thread.hpp>
 #include <bech32.h>
 #include <rpc/util.h>
+#include <services/rpc/assetrpc.h>
 static int node1LastBlock = 0;
 static int node2LastBlock = 0;
 static int node3LastBlock = 0;

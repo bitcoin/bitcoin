@@ -17,6 +17,7 @@
 #include <key_io.h>
 #include <univalue.h>
 #include <util/strencodings.h>
+#include <services/rpc/assetrpc.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 

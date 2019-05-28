@@ -5,22 +5,23 @@
 #ifndef SYSCOIN_SERVICES_ASSET_H
 #define SYSCOIN_SERVICES_ASSET_H
 
-#include <rpc/server.h>
+
 #include <dbwrapper.h>
 #include <script/standard.h>
 #include <serialize.h>
 #include <primitives/transaction.h>
 #include <services/assetallocation.h>
 #include <sys/types.h>
+#include <univalue.h>
+#ifdef ENABLE_WALLET
 #include <script/ismine.h>
+#endif
 class CTransaction;
-class CReserveKey;
 class CCoinsViewCache;
-class CBlock;
 class COutPoint;
-class UniValue;
-class CTxOut;
+#ifdef ENABLE_WALLET
 class CWallet;
+#endif
 
 const int SYSCOIN_TX_VERSION_MINT = 0x7400;
 const int SYSCOIN_TX_VERSION_BURN = 0x7401;
@@ -44,14 +45,16 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-unsigned int addressunspent(const std::string& strAddressFrom, COutPoint& outpoint);
 int GetSyscoinDataOutput(const CTransaction& tx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData);
 bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress);
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress);
-bool SysTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet = nullptr, const isminefilter* filter_ismine = nullptr);
+#ifdef ENABLE_WALLET
+bool SysTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine);
+#endif
+bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
 bool FlushSyscoinDBs();
@@ -68,17 +71,6 @@ int GenerateSyscoinGuid();
 bool AssetTxToJSON(const CTransaction& tx, UniValue &entry);
 bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& blockhash, UniValue &entry);
 std::string assetFromTx(const int &nVersion);
-/** Upper bound for mantissa.
-* 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
-* Larger integers cannot consist of arbitrary combinations of 0-9:
-*
-*   999999999999999999  10^18-1
-*  1000000000000000000  10^18		(would overflow)
-*  9223372036854775807  (1<<63)-1   (max int64_t)
-*  9999999999999999999  10^19-1     (would overflow)
-*/
-static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
-inline bool AssetRange(const CAmount& nValue) { return (nValue > 0 && nValue <= MAX_ASSET); }
 enum {
     ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
     ASSET_UPDATE_DATA=2, // can you update public data field?
@@ -333,10 +325,10 @@ public:
 static CAsset emptyAsset;
 bool GetAsset(const int &nAsset,CAsset& txPos);
 bool BuildAssetJson(const CAsset& asset, UniValue& oName);
-UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
-CAmount AssetAmountFromValue(UniValue& value, int precision);
-bool AssetRange(const CAmount& amountIn, int precision);
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet = nullptr, const isminefilter* filter_ismine = nullptr);
+#ifdef ENABLE_WALLET
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine);
+#endif
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;

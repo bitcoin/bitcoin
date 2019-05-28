@@ -8,17 +8,17 @@
 #include <dbwrapper.h>
 #include <primitives/transaction.h>
 #include <unordered_map>
-#include <services/graph.h>
 #include <txmempool.h>
 #include <services/witnessaddress.h>
+#ifdef ENABLE_WALLET
 #include <script/ismine.h>
+#endif
 class CTransaction;
-class CReserveKey;
-class CCoinsViewCache;
-class CBlock;
 class CAsset;
 class CMintSyscoin;
+#ifdef ENABLE_WALLET
 class CWallet;
+#endif
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry);
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight,  const uint256& blockhash, UniValue &entry);
 
@@ -168,7 +168,10 @@ public:
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation);
-bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet = nullptr, const isminefilter* filter_ismine = nullptr);
+#ifdef ENABLE_WALLET
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine);
+#endif
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
 void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);

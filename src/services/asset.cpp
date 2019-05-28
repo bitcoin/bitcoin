@@ -7,7 +7,10 @@
 #include <services/assetconsensus.h>
 #include <validationinterface.h>
 #include <boost/thread.hpp>
+#ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
+#endif
+#include <services/rpc/assetrpc.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -31,18 +34,6 @@ int GetSyscoinDataOutput(const CTransaction& tx) {
 			return i;
 	}
 	return -1;
-}
-CAmount getaddressbalance(const string& strAddress)
-{
-    UniValue paramsUTXO(UniValue::VARR);
-    UniValue utxoParams(UniValue::VARR);
-    utxoParams.push_back("addr(" + strAddress + ")");
-    paramsUTXO.push_back("start");
-    paramsUTXO.push_back(utxoParams);
-    JSONRPCRequest request;
-    request.params = paramsUTXO;
-    UniValue resUTXOs = scantxoutset(request);
-    return AmountFromValue(find_value(resUTXOs.get_obj(), "total_amount"));
 }
 string stringFromValue(const UniValue& value) {
 	string strName = value.get_str();
@@ -369,6 +360,7 @@ bool IsAssetAllocationTx(const int &nVersion){
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
+#ifdef ENABLE_WALLET
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine){
     vector<vector<unsigned char> > vvch;
     bool found = false;
@@ -381,6 +373,21 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
     
     return found;
 }
+#endif
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
+    vector<vector<unsigned char> > vvch;
+    bool found = false;
+    if(IsSyscoinMintTx(rawTx.nVersion)){
+        found = AssetMintTxToJson(rawTx, output);
+    }
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
+        found = SysTxToJSON(rawTx, output);
+    }
+    
+    return found;
+}
+// TODO cleanup, this is to support disable-wallet build make sure to wrap around ENABLE_WALLET
+#ifdef ENABLE_WALLET
 bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     bool found = false;
@@ -390,6 +397,18 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwalle
         found = SysBurnTxToJSON(tx, output);        
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
+    return found;
+}
+#endif
+bool SysTxToJSON(const CTransaction& tx, UniValue& output)
+{
+    bool found = false;
+    if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetTxToJSON(tx, output);
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
+        found = SysBurnTxToJSON(tx, output);        
+    else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetAllocationTxToJSON(tx, output);
     return found;
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
@@ -440,49 +459,6 @@ int GenerateSyscoinGuid()
     while(rand <= SYSCOIN_TX_VERSION_MINT)
 	    rand = GetRand(std::numeric_limits<int>::max());
     return rand;
-}
-unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
-{
-	UniValue paramsUTXO(UniValue::VARR);
-	UniValue utxoParams(UniValue::VARR);
-	utxoParams.push_back("addr(" + strAddressFrom + ")");
-	paramsUTXO.push_back("start");
-	paramsUTXO.push_back(utxoParams);
-	JSONRPCRequest request;
-	request.params = paramsUTXO;
-	UniValue resUTXOs = scantxoutset(request);
-	UniValue utxoArray(UniValue::VARR);
-    if (resUTXOs.isObject()) {
-        const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
-        if (!resUtxoUnspents.isArray())
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
-        utxoArray = resUtxoUnspents.get_array();
-    }   
-    else
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
-        
-	unsigned int count = 0;
-	{
-		LOCK(mempool.cs);
-		for (unsigned int i = 0; i < utxoArray.size(); i++)
-		{
-			const UniValue& utxoObj = utxoArray[i].get_obj();
-			const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
-			const int& nOut = find_value(utxoObj, "vout").get_int();
-
-			const COutPoint &outPointToCheck = COutPoint(txid, nOut);
-			bool locked = false;
-			// spending as non allocation send while using a locked outpoint should be invalid
-			if (plockedoutpointsdb->ReadOutpoint(outPointToCheck, locked) && locked)
-				continue;
-			if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
-				continue;
-			if (outpoint.IsNull())
-				outpoint = outPointToCheck;
-			count++;
-		}
-	}
-	return count;
 }
 
 bool IsOutpointMature(const COutPoint& outpoint)
@@ -666,58 +642,6 @@ bool AssetTxToJSON(const CTransaction& tx, const int& nHeight, const uint256& bl
     }  
     entry.__pushKV("blockhash", blockhash.GetHex()); 
     return true;
-}
-UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
-{
-	if (precision < 0 || precision > 8)
-		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	bool sign = amount < 0;
-	int64_t n_abs = (sign ? -amount : amount);
-	int64_t quotient = n_abs;
-	int64_t divByAmount = 1;
-	int64_t remainder = 0;
-	string strPrecision = "0";
-	if (precision > 0) {
-		divByAmount = pow(10, precision);
-		quotient = n_abs / divByAmount;
-		remainder = n_abs % divByAmount;
-		strPrecision = itostr(precision);
-	}
-
-	return UniValue(UniValue::VNUM,
-		strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
-}
-CAmount AssetAmountFromValue(UniValue& value, int precision)
-{
-	if(precision < 0 || precision > 8)
-		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	if (!value.isNum() && !value.isStr())
-		throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
-	if (value.isStr() && value.get_str() == "-1") {
-		value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
-	}
-	CAmount amount;
-	if (!ParseFixedPoint(value.getValStr(), precision, &amount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
-	if (!AssetRange(amount))
-		throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
-	return amount;
-}
-bool AssetRange(const CAmount& amount, int precision)
-{
-
-	if (precision < 0 || precision > 8)
-		throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
-	bool sign = amount < 0;
-	int64_t n_abs = (sign ? -amount : amount);
-	int64_t quotient = n_abs;
-	if (precision > 0) {
-		int64_t divByAmount = pow(10, precision);
-		quotient = n_abs / divByAmount;
-	}
-	if (!AssetRange(quotient))
-		return false;
-	return true;
 }
 bool CAssetDB::Flush(const AssetMap &mapAssets){
     if(mapAssets.empty())
