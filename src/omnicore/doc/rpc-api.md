@@ -1092,7 +1092,7 @@ Note: the list of transactions is unordered and can contain invalid transactions
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_omni_listblocktransactions" 279007 300000
+$ omnicore-cli "omni_listblockstransactions" 279007 300000
 ```
 
 ---
