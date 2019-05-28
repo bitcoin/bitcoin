@@ -9,6 +9,7 @@
 #include <services/assetconsensus.h>
 #include <services/rpc/assetrpc.h>
 #include <chainparams.h>
+#include <rpc/server.h>
 using namespace std;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -20,7 +21,101 @@ extern std::unordered_set<std::string> assetAllocationConflicts;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 using namespace std;
+unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
+{
+    UniValue paramsUTXO(UniValue::VARR);
+    UniValue utxoParams(UniValue::VARR);
+    utxoParams.push_back("addr(" + strAddressFrom + ")");
+    paramsUTXO.push_back("start");
+    paramsUTXO.push_back(utxoParams);
+    JSONRPCRequest request;
+    request.params = paramsUTXO;
+    UniValue resUTXOs = scantxoutset(request);
+    UniValue utxoArray(UniValue::VARR);
+    if (resUTXOs.isObject()) {
+        const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
+        if (!resUtxoUnspents.isArray())
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
+        utxoArray = resUtxoUnspents.get_array();
+    }   
+    else
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
+        
+    unsigned int count = 0;
+    {
+        LOCK(mempool.cs);
+        for (unsigned int i = 0; i < utxoArray.size(); i++)
+        {
+            const UniValue& utxoObj = utxoArray[i].get_obj();
+            const uint256& txid = uint256S(find_value(utxoObj, "txid").get_str());
+            const int& nOut = find_value(utxoObj, "vout").get_int();
 
+            const COutPoint &outPointToCheck = COutPoint(txid, nOut);
+            bool locked = false;
+            // spending as non allocation send while using a locked outpoint should be invalid
+            if (plockedoutpointsdb->ReadOutpoint(outPointToCheck, locked) && locked)
+                continue;
+            if (mempool.mapNextTx.find(outPointToCheck) != mempool.mapNextTx.end())
+                continue;
+            if (outpoint.IsNull())
+                outpoint = outPointToCheck;
+            count++;
+        }
+    }
+    return count;
+}
+UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
+{
+    if (precision < 0 || precision > 8)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
+    bool sign = amount < 0;
+    int64_t n_abs = (sign ? -amount : amount);
+    int64_t quotient = n_abs;
+    int64_t divByAmount = 1;
+    int64_t remainder = 0;
+    string strPrecision = "0";
+    if (precision > 0) {
+        divByAmount = pow(10, precision);
+        quotient = n_abs / divByAmount;
+        remainder = n_abs % divByAmount;
+        strPrecision = itostr(precision);
+    }
+
+    return UniValue(UniValue::VNUM,
+        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
+}
+CAmount AssetAmountFromValue(UniValue& value, int precision)
+{
+    if(precision < 0 || precision > 8)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
+    if (!value.isNum() && !value.isStr())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
+    if (value.isStr() && value.get_str() == "-1") {
+        value.setInt((int64_t)(MAX_ASSET / ((int)pow(10, precision))));
+    }
+    CAmount amount;
+    if (!ParseFixedPoint(value.getValStr(), precision, &amount))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+    if (!AssetRange(amount))
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
+    return amount;
+}
+bool AssetRange(const CAmount& amount, int precision)
+{
+
+    if (precision < 0 || precision > 8)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
+    bool sign = amount < 0;
+    int64_t n_abs = (sign ? -amount : amount);
+    int64_t quotient = n_abs;
+    if (precision > 0) {
+        int64_t divByAmount = pow(10, precision);
+        quotient = n_abs / divByAmount;
+    }
+    if (!AssetRange(quotient))
+        return false;
+    return true;
+}
 UniValue tpstestinfo(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 0 != params.size())
@@ -523,6 +618,18 @@ UniValue syscoindecoderawtransaction(const JSONRPCRequest& request) {
     if(!DecodeSyscoinRawtransaction(rawTx, output))
         throw runtime_error("SYSCOIN_RPC_ERROR: ERRCODE: 5512 - " + _("Not a Syscoin transaction"));
     return output;
+}
+CAmount getaddressbalance(const string& strAddress)
+{
+    UniValue paramsUTXO(UniValue::VARR);
+    UniValue utxoParams(UniValue::VARR);
+    utxoParams.push_back("addr(" + strAddress + ")");
+    paramsUTXO.push_back("start");
+    paramsUTXO.push_back(utxoParams);
+    JSONRPCRequest request;
+    request.params = paramsUTXO;
+    UniValue resUTXOs = scantxoutset(request);
+    return AmountFromValue(find_value(resUTXOs.get_obj(), "total_amount"));
 }
 UniValue addressbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;

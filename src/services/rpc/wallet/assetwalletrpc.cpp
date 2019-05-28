@@ -8,9 +8,11 @@
 #include <rpc/util.h>
 #include <wallet/rpcwallet.h>
 #include <services/assetconsensus.h>
+#include <services/rpc/assetrpc.h>
 #include <keystore.h>
 #include <wallet/coincontrol.h>
 #include <iomanip>
+#include <rpc/server.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);

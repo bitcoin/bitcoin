@@ -9,6 +9,7 @@
 #include <validationinterface.h>
 #include <services/assetconsensus.h>
 #include <wallet/wallet.h>
+#include <services/rpc/assetrpc.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -239,7 +240,8 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
         oAssetAllocation.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
 	return true;
 }
-
+// TODO: clean this up copied to support disable-wallet build
+#ifdef ENABLE_WALLET
 bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     CAssetAllocation assetallocation;
@@ -297,6 +299,65 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
 	else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
 		entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
+    return true;
+}
+#endif
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
+{
+    CAssetAllocation assetallocation;
+    std::vector<unsigned char> vchEthAddress;
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+        if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
+        {
+            return false;
+        }
+    }
+    else
+        assetallocation = CAssetAllocation(tx);
+
+    if(assetallocation.assetAllocationTuple.IsNull())
+        return false;
+    CAsset dbAsset;
+    GetAsset(assetallocation.assetAllocationTuple.nAsset, dbAsset);
+    int nHeight = 0;
+    const uint256& txHash = tx.GetHash();
+    CBlockIndex* blockindex = nullptr;
+    uint256 blockhash;
+    if(pblockindexdb->ReadBlockHash(txHash, blockhash)){ 
+        LOCK(cs_main);
+        blockindex = LookupBlockIndex(blockhash);
+    }
+    if(blockindex)
+    {
+        nHeight = blockindex->nHeight;
+    }
+    entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
+    entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
+    entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
+    entry.__pushKV("symbol", dbAsset.strSymbol);
+    entry.__pushKV("txid", txHash.GetHex());
+    entry.__pushKV("height", nHeight);
+    entry.__pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
+    UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+    CAmount nTotal = 0;  
+    if (!assetallocation.listSendingAllocationAmounts.empty()) {
+        for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+            nTotal += amountTuple.second;
+            const string& strReceiver = amountTuple.first.ToString();
+            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+            oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
+            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
+            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+            
+        }
+    }
+    entry.__pushKV("allocations", oAssetAllocationReceiversArray);
+    entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
+    entry.__pushKV("blockhash", blockhash.GetHex()); 
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
+         entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+        entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
