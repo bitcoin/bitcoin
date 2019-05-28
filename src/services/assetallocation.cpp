@@ -8,6 +8,7 @@
 #include <future>
 #include <validationinterface.h>
 #include <services/assetconsensus.h>
+#include <wallet/wallet.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -239,7 +240,7 @@ bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAs
 	return true;
 }
 
-bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     CAssetAllocation assetallocation;
     std::vector<unsigned char> vchEthAddress;
@@ -281,10 +282,12 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
         for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
             nTotal += amountTuple.second;
             const string& strReceiver = amountTuple.first.ToString();
-            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
-            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
-            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);          
+            if(pwallet && filter_ismine && ::IsMine(*pwallet, amountTuple.first.GetScriptForDestination()) & *filter_ismine){
+                UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+                oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
+                oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
+                oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);      
+            }    
         }
     }
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);

@@ -7,7 +7,7 @@
 #include <services/assetconsensus.h>
 #include <validationinterface.h>
 #include <boost/thread.hpp>
-
+#include <wallet/wallet.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -369,19 +369,19 @@ bool IsAssetAllocationTx(const int &nVersion){
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
 }
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine){
     vector<vector<unsigned char> > vvch;
     bool found = false;
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
     else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
-        found = SysTxToJSON(rawTx, output);
+        found = SysTxToJSON(rawTx, output, pwallet, filter_ismine);
     }
     
     return found;
 }
-bool SysTxToJSON(const CTransaction& tx, UniValue& output)
+bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     bool found = false;
 	if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
@@ -389,7 +389,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
     else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
         found = SysBurnTxToJSON(tx, output);        
 	else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
-		found = AssetAllocationTxToJSON(tx, output);
+		found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
     return found;
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
