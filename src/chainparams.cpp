@@ -149,13 +149,13 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1552606661, 651899, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1552606662, 673052, 0x1e0fffff, 1, 50 * COIN);
         
-        uint256 hash;
-       /*CBlockHeader genesisHeader = genesis.GetBlockHeader();
+        /*uint256 hash;
+        CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000448444b0b3ddf48863024870d158bf48ce7f02a1d3093b01a84c1c1da42"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000001cab6418dbdbdc0255b5216938d0b1d93e9c4fbce43a1a8886eb2b4356f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         // TODO re-enable once we go live
