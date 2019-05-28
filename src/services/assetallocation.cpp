@@ -286,8 +286,8 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
                 UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
                 oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
                 oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
-                oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);      
-            }    
+                oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+            }
         }
     }
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
