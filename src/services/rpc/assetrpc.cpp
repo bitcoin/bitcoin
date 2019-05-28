@@ -19,7 +19,6 @@ extern bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool
 extern std::unordered_set<std::string> assetAllocationConflicts;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
-extern std::set<uint32_t> setFlaggedTxRoots;
 using namespace std;
 
 UniValue tpstestinfo(const JSONRPCRequest& request) {
@@ -992,7 +991,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     int highestBlock = params[1].get_int();
     const uint32_t nGethOldHeight = fGethCurrentHeight;
     UniValue ret(UniValue::VOBJ);
-     UniValue retArray(UniValue::VARR);
+    UniValue retArray(UniValue::VARR);
     if(highestBlock > 0){
         if(!pethereumtxrootsdb->PruneTxRoots(highestBlock))
         {
@@ -1033,12 +1032,14 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
                             {"", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "An array of [block number, tx root] ",
                                 {
                                     {"block_number", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The block height number"},
+                                    {"block_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the block"},
+                                    {"previous_hash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Hash of the previous block"},
                                     {"tx_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX root of the block height"},
                                     {"receipt_root", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The Ethereum TX Receipt root of the block height"}
                                 }
                             }
                         },
-                        "[block number, txroot, txreceiptroot] ..."
+                        "[blocknumber, blockhash, previoushash, txroot, txreceiptroot] ..."
                     }
                 },
                 RPCResult{
@@ -1047,8 +1048,8 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
                 "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
-                    + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+                    HelpExampleCli("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
+                    + HelpExampleRpc("syscoinsetethheaders", "\"[[7043888,\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\",\\\"0xd8ac75c7b4084c85a89d6e28219ff162661efb8b794d4b66e6e9ea52b4139b10\\\"],...]\"")
                 }
             }.ToString());  
 
@@ -1056,21 +1057,24 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
     const UniValue &headerArray = params[0].get_array();
     
     for(size_t i =0;i<headerArray.size();i++){
+        EthereumTxRoot txRoot;
         const UniValue &tupleArray = headerArray[i].get_array();
-        if(tupleArray.size() != 3)
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 3"));
+        if(tupleArray.size() != 5)
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Invalid size in a blocknumber/txroots input, should be size of 5"));
         const uint32_t &nHeight = (uint32_t)tupleArray[0].get_int();
-        string txRoot = tupleArray[1].get_str();
-        boost::erase_all(txRoot, "0x");  // strip 0x
-        const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
-        string txReceiptRoot = tupleArray[2].get_str();
+        string blockHash = tupleArray[1].get_str();
+        boost::erase_all(blockHash, "0x");  // strip 0x
+        txRoot.vchBlockHash = ParseHex(blockHash);
+        string prevHash = tupleArray[2].get_str();
+        boost::erase_all(prevHash, "0x");  // strip 0x
+        txRoot.vchPrevHash = ParseHex(prevHash);
+        string txRootStr = tupleArray[3].get_str();
+        boost::erase_all(txRootStr, "0x");  // strip 0x
+        txRoot.vchTxRoot = ParseHex(txRootStr);
+        string txReceiptRoot = tupleArray[4].get_str();
         boost::erase_all(txReceiptRoot, "0x");  // strip 0x
-        const vector<unsigned char> &vchTxReceiptRoot = ParseHex(txReceiptRoot);       
-        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(make_pair(vchTxRoot, vchTxReceiptRoot)));
-        // if tx root was flagged for retrieval, remove it from flagged object
-        auto it = setFlaggedTxRoots.find(nHeight);
-        if(it != setFlaggedTxRoots.end())
-            setFlaggedTxRoots.erase(it);
+        txRoot.vchReceiptRoot = ParseHex(txReceiptRoot);
+        txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(txRoot));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
     
@@ -1102,14 +1106,17 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
     }
     int nHeight = request.params[0].get_int();
     std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
-   
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(nHeight, vchTxRoots)){
+    EthereumTxRoot txRootDB;
+    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(nHeight, txRootDB)){
        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not read transaction roots");
     }
       
     UniValue ret(UniValue::VOBJ);  
-    ret.pushKV("txroot", HexStr(vchTxRoots.first));
-    ret.pushKV("receiptroot", HexStr(vchTxRoots.second));     
+    ret.pushKV("blockhash", HexStr(txRootDB.vchBlockHash)); 
+    ret.pushKV("prevhash", HexStr(txRootDB.vchPrevHash)); 
+    ret.pushKV("txroot", HexStr(txRootDB.vchTxRoot));
+    ret.pushKV("receiptroot", HexStr(txRootDB.vchReceiptRoot));
+    
     return ret;
 } 
 UniValue convertaddress(const JSONRPCRequest& request)
