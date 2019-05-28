@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 
     BOOST_CHECK(find_value(blocksArray[1].get_obj(), "from").get_int() == 707782);
     BOOST_CHECK(find_value(blocksArray[1].get_obj(), "to").get_int() == 709779);
-    
+
     // now fork and check it revalidates chain
     // 707771 (should be 707772) -> 707773 and 707773 (should be 707774) -> 707775
     BOOST_CHECK_NO_THROW(CallRPC("node1", "syscoinsetethheaders \"[[707773,\\\"707773\\\",\\\"707771\\\",\\\"a\\\",\\\"a\\\"],[707775,\\\"707775\\\",\\\"707773\\\",\\\"a\\\",\\\"a\\\"]]\""));
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     printf("syscoinsetethstatus2 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
-    
+
     BOOST_CHECK_EQUAL(blocksArray.size(), 4);
     // we should still have the missing ranges prior to the forks
     BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_int(),669780);
@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     
     // last missing range stays in the missing range list
     BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "from").get_int() , 707782);
-    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "to").get_int() , 709779);  
-}   
+    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "to").get_int() , 709779);
+}
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
 {
     printf("Running generate_asset_audittxroot1...\n");
