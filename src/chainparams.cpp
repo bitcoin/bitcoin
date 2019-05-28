@@ -128,12 +128,12 @@ public:
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("00000ad73a54e7b1af42bc3c6a917bfcb58f9580d4af1c972b776bfad04e9002"); //120
+        consensus.defaultAssumeValid = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
         consensus.nAuxpowChainId = 0x1000;
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.vchSYSXContract = ParseHex("4e9d1368ef1faff80bb7423423d113f0dd199318");
+        consensus.vchSYSXContract = ParseHex("955d508495dcbcc1da443f4c6806fe194cf3b95c");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -196,13 +196,6 @@ public:
                 {295000, uint256S("0x00000000000000004d9b4ef50f0f9d686fd69db2e03af35a100370c64632a983")},
             }
         };*/
-        /* Fake mainnet checkpoint data TODO: remove this when launching real mainnet */
-        checkpointData = {
-             {
-                 { 100, uint256S("000000b6d83d17213adea8032cdc3400c77dbdd3aa0a5864fe5d3ef90a5dfcca")},
-                 { 120, uint256S("00000ad73a54e7b1af42bc3c6a917bfcb58f9580d4af1c972b776bfad04e9002")},
-             }
-        };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000000000f1c54590ee18d15ec70e68c8cd4cfbadb1b4f11697eee
