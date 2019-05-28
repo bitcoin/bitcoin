@@ -8,7 +8,9 @@
 #include <future>
 #include <validationinterface.h>
 #include <services/assetconsensus.h>
+#ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
+#endif
 #include <services/rpc/assetrpc.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
