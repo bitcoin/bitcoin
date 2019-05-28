@@ -444,8 +444,8 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
             entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
         }
         entry.__pushKV("txid", txHash.GetHex());
-        entry.__pushKV("height", nHeight);       
-        entry.__pushKV("blockhash", blockhash.GetHex());   
+        entry.__pushKV("height", nHeight);
+        entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
@@ -456,9 +456,9 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         oSPVProofObj.__pushKV("receiptroot", HexStr(mintsyscoin.vchReceiptRoot)); 
         oSPVProofObj.__pushKV("ethblocknumber", (int)mintsyscoin.nBlockNumber); 
         entry.__pushKV("spv_proof", oSPVProofObj); 
-        return true;                                        
+        return true;
     } 
-    return false;                   
+    return false;
 }
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
     if (!mintsyscoin.IsNull() && ((tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull()) || tx.nVersion == SYSCOIN_TX_VERSION_MINT)) {
@@ -488,8 +488,8 @@ bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, 
             entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
         }
         entry.__pushKV("txid", tx.GetHash().GetHex());
-        entry.__pushKV("height", nHeight);        
-        entry.__pushKV("blockhash", blockhash.GetHex());   
+        entry.__pushKV("height", nHeight);
+        entry.__pushKV("blockhash", blockhash.GetHex());
         UniValue oSPVProofObj(UniValue::VOBJ);
         oSPVProofObj.__pushKV("txvalue", HexStr(mintsyscoin.vchTxValue));   
         oSPVProofObj.__pushKV("txparentnodes", HexStr(mintsyscoin.vchTxParentNodes)); 
