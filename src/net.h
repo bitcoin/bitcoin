@@ -214,7 +214,7 @@ public:
         bool operator() (const CNode*) const {return true;}
     };
 
-    constexpr static const CAllNodes AllNodes{};
+    static constexpr CAllNodes AllNodes{};
     
     struct CFullyConnectedOnly {
         bool operator() (const CNode* pnode) const {
@@ -222,7 +222,7 @@ public:
         }
     };
 
-    constexpr static const CFullyConnectedOnly FullyConnectedOnly{};
+    static constexpr CFullyConnectedOnly FullyConnectedOnly{};
 
     template<typename Callable>
     bool ForNode(const CService& addr, Callable&& func)
