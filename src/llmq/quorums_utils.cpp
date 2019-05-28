@@ -16,11 +16,11 @@ std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLM
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
     auto allMns = deterministicMNManager->GetListForBlock(blockHash);
-    auto modifier = ::SerializeHash(std::make_pair((uint8_t)llmqType, blockHash));
+    auto modifier = ::SerializeHash(std::make_pair(llmqType, blockHash));
     return allMns.CalculateQuorum(params.size, modifier);
 }
 
-uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
+uint256 CLLMQUtils::BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
 {
     CHashWriter hw(SER_NETWORK, 0);
     hw << llmqType;
@@ -34,7 +34,7 @@ uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHa
 uint256 CLLMQUtils::BuildSignHash(Consensus::LLMQType llmqType, const uint256& quorumHash, const uint256& id, const uint256& msgHash)
 {
     CHashWriter h(SER_GETHASH, 0);
-    h << (uint8_t)llmqType;
+    h << llmqType;
     h << quorumHash;
     h << id;
     h << msgHash;
@@ -89,7 +89,7 @@ std::set<size_t> CLLMQUtils::CalcDeterministicWatchConnections(Consensus::LLMQTy
     std::set<size_t> result;
     uint256 rnd = qwatchConnectionSeed;
     for (size_t i = 0; i < connectionCount; i++) {
-        rnd = ::SerializeHash(std::make_pair(rnd, std::make_pair((uint8_t)llmqType, blockHash)));
+        rnd = ::SerializeHash(std::make_pair(rnd, std::make_pair(llmqType, blockHash)));
         result.emplace(rnd.GetUint64(0) % memberCount);
     }
     return result;

@@ -34,7 +34,7 @@ typedef std::pair<uint256, uint16_t> SigShareKey;
 class CSigShare
 {
 public:
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint16_t quorumMember;
     uint256 id;
@@ -63,7 +63,7 @@ class CSigSesAnn
 {
 public:
     uint32_t sessionId{(uint32_t)-1};
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 id;
     uint256 msgHash;

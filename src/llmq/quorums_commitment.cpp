@@ -81,7 +81,7 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
 
     // sigs are only checked when the block is processed
     if (checkSigs) {
-        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash((uint8_t)params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
+        uint256 commitmentHash = CLLMQUtils::BuildCommitmentHash(params.type, quorumHash, validMembers, quorumPublicKey, quorumVvecHash);
 
         std::vector<CBLSPublicKey> memberPubKeys;
         for (size_t i = 0; i < members.size(); i++) {

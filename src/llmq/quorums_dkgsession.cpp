@@ -169,7 +169,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
     }
 
     CDKGContribution qc;
-    qc.llmqType = (uint8_t)params.type;
+    qc.llmqType = params.type;
     qc.quorumHash = quorumHash;
     qc.proTxHash = myProTxHash;
     qc.vvec = vvecContribution;
@@ -448,7 +448,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
     assert(AreWeMember());
 
     CDKGComplaint qc(params);
-    qc.llmqType = (uint8_t)params.type;
+    qc.llmqType = params.type;
     qc.quorumHash = quorumHash;
     qc.proTxHash = myProTxHash;
 
@@ -642,7 +642,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
     logger.Batch("sending justification for %d members", forMembers.size());
 
     CDKGJustification qj;
-    qj.llmqType = (uint8_t)params.type;
+    qj.llmqType = params.type;
     qj.quorumHash = quorumHash;
     qj.proTxHash = myProTxHash;
     qj.contributions.reserve(forMembers.size());
@@ -898,7 +898,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     logger.Batch("sending commitment");
 
     CDKGPrematureCommitment qc(params);
-    qc.llmqType = (uint8_t)params.type;
+    qc.llmqType = params.type;
     qc.quorumHash = quorumHash;
     qc.proTxHash = myProTxHash;
 

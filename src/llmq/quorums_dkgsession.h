@@ -36,7 +36,7 @@ public:
 class CDKGContribution
 {
 public:
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     BLSVerificationVectorPtr vvec;
@@ -88,7 +88,7 @@ public:
 class CDKGComplaint
 {
 public:
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<bool> badMembers;
@@ -123,7 +123,7 @@ public:
 class CDKGJustification
 {
 public:
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<std::pair<uint32_t, CBLSSecretKey>> contributions;
@@ -157,7 +157,7 @@ public:
 class CDKGPrematureCommitment
 {
 public:
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 proTxHash;
     std::vector<bool> validMembers;

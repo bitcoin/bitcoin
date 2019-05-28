@@ -59,7 +59,7 @@ void CRecoveredSigsDb::ConvertInvalidTimeKeys()
 
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
 
-    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
+    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (Consensus::LLMQType)0, uint256());
     pcursor->Seek(start);
 
     CDBBatch batch(db);
@@ -96,7 +96,7 @@ void CRecoveredSigsDb::AddVoteTimeKeys()
 
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
 
-    auto start = std::make_tuple(std::string("rs_v"), (uint8_t)0, uint256());
+    auto start = std::make_tuple(std::string("rs_v"), (Consensus::LLMQType)0, uint256());
     pcursor->Seek(start);
 
     CDBBatch batch(db);
@@ -108,7 +108,7 @@ void CRecoveredSigsDb::AddVoteTimeKeys()
             break;
         }
 
-        uint8_t llmqType = std::get<1>(k);
+        Consensus::LLMQType llmqType = std::get<1>(k);
         const uint256& id = std::get<2>(k);
 
         auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(curTime), llmqType, id);
@@ -127,7 +127,7 @@ void CRecoveredSigsDb::AddVoteTimeKeys()
 
 bool CRecoveredSigsDb::HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
-    auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id, msgHash);
+    auto k = std::make_tuple(std::string("rs_r"), llmqType, id, msgHash);
     return db.Exists(k);
 }
 
@@ -143,7 +143,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForId(Consensus::LLMQType llmqType, const 
     }
 
 
-    auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
     ret = db.Exists(k);
 
     LOCK(cs);
@@ -189,7 +189,7 @@ bool CRecoveredSigsDb::HasRecoveredSigForHash(const uint256& hash)
 
 bool CRecoveredSigsDb::ReadRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret)
 {
-    auto k = std::make_tuple(std::string("rs_r"), (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_r"), llmqType, id);
 
     CDataStream ds(SER_DISK, CLIENT_VERSION);
     if (!db.ReadDataStream(k, ds)) {
@@ -207,12 +207,12 @@ bool CRecoveredSigsDb::ReadRecoveredSig(Consensus::LLMQType llmqType, const uint
 bool CRecoveredSigsDb::GetRecoveredSigByHash(const uint256& hash, CRecoveredSig& ret)
 {
     auto k1 = std::make_tuple(std::string("rs_h"), hash);
-    std::pair<uint8_t, uint256> k2;
+    std::pair<Consensus::LLMQType, uint256> k2;
     if (!db.Read(k1, k2)) {
         return false;
     }
 
-    return ReadRecoveredSig((Consensus::LLMQType)k2.first, k2.second, ret);
+    return ReadRecoveredSig(k2.first, k2.second, ret);
 }
 
 bool CRecoveredSigsDb::GetRecoveredSigById(Consensus::LLMQType llmqType, const uint256& id, CRecoveredSig& ret)
@@ -260,7 +260,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 {
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
 
-    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (uint8_t)0, uint256());
+    auto start = std::make_tuple(std::string("rs_t"), (uint32_t)0, (Consensus::LLMQType)0, uint256());
     uint32_t endTime = (uint32_t)(GetAdjustedTime() - maxAge);
     pcursor->Seek(start);
 
@@ -277,7 +277,7 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
             break;
         }
 
-        toDelete.emplace_back((Consensus::LLMQType)std::get<2>(k), std::get<3>(k));
+        toDelete.emplace_back(std::get<2>(k), std::get<3>(k));
         toDelete2.emplace_back(k);
 
         pcursor->Next();
@@ -330,20 +330,20 @@ void CRecoveredSigsDb::CleanupOldRecoveredSigs(int64_t maxAge)
 
 bool CRecoveredSigsDb::HasVotedOnId(Consensus::LLMQType llmqType, const uint256& id)
 {
-    auto k = std::make_tuple(std::string("rs_v"), (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
     return db.Exists(k);
 }
 
 bool CRecoveredSigsDb::GetVoteForId(Consensus::LLMQType llmqType, const uint256& id, uint256& msgHashRet)
 {
-    auto k = std::make_tuple(std::string("rs_v"), (uint8_t)llmqType, id);
+    auto k = std::make_tuple(std::string("rs_v"), llmqType, id);
     return db.Read(k, msgHashRet);
 }
 
 void CRecoveredSigsDb::WriteVoteForId(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)
 {
-    auto k1 = std::make_tuple(std::string("rs_v"), (uint8_t)llmqType, id);
-    auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(GetAdjustedTime()), (uint8_t)llmqType, id);
+    auto k1 = std::make_tuple(std::string("rs_v"), llmqType, id);
+    auto k2 = std::make_tuple(std::string("rs_vt"), (uint32_t)htobe32(GetAdjustedTime()), llmqType, id);
 
     CDBBatch batch(db);
     batch.Write(k1, msgHash);
@@ -356,7 +356,7 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
 {
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
 
-    auto start = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (uint8_t)0, uint256());
+    auto start = std::make_tuple(std::string("rs_vt"), (uint32_t)0, (Consensus::LLMQType)0, uint256());
     uint32_t endTime = (uint32_t)(GetAdjustedTime() - maxAge);
     pcursor->Seek(start);
 
@@ -372,7 +372,7 @@ void CRecoveredSigsDb::CleanupOldVotes(int64_t maxAge)
             break;
         }
 
-        uint8_t llmqType = std::get<2>(k);
+        Consensus::LLMQType llmqType = std::get<2>(k);
         const uint256& id = std::get<3>(k);
 
         batch.Erase(k);
@@ -839,7 +839,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
     scores.reserve(quorums.size());
     for (size_t i = 0; i < quorums.size(); i++) {
         CHashWriter h(SER_NETWORK, 0);
-        h << (uint8_t)llmqType;
+        h << llmqType;
         h << quorums[i]->qc.quorumHash;
         h << selectionHash;
         scores.emplace_back(h.GetHash(), i);
