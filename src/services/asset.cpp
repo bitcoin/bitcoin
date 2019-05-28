@@ -394,7 +394,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwalle
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
     else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
-        found = SysBurnTxToJSON(tx, output);        
+        found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
     return found;
@@ -406,7 +406,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
     else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
-        found = SysBurnTxToJSON(tx, output);        
+        found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output);
     return found;
