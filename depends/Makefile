@@ -55,6 +55,11 @@ full_host_os:=$(subst $(host_arch)-$(host_vendor)-,,$(canonical_host))
 host_os:=$(findstring linux,$(full_host_os))
 host_os+=$(findstring darwin,$(full_host_os))
 host_os+=$(findstring mingw32,$(full_host_os))
+
+ifeq (android,$(findstring android,$(full_host_os)))
+host_os:=android
+endif
+
 host_os:=$(strip $(host_os))
 ifeq ($(host_os),)
 host_os=$(full_host_os)

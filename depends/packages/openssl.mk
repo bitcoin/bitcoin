@@ -57,6 +57,7 @@ $(package)_config_opts_riscv64_linux=linux-generic64
 $(package)_config_opts_x86_64_darwin=darwin64-x86_64-cc
 $(package)_config_opts_x86_64_mingw32=mingw64
 $(package)_config_opts_i686_mingw32=mingw
+$(package)_config_opts_android=linux-generic64
 endef
 
 define $(package)_preprocess_cmds
