@@ -1672,7 +1672,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
                     // get a range of -50 to +50 around effected tx root to minimize chance that you will be requesting 1 root at a time in a long range fork
                     // this is fine because relayer fetches 100 headers at a time anyway
                     vecMissingBlockRanges.emplace_back(make_pair(std::max(0,(int32_t)key-50), std::min((int32_t)key+50, (int32_t)nCurrentSyncHeight)));
-                    vecRemoveKeys.push_back(key);                  
+                    vecRemoveKeys.push_back(key);
                 }
             }
             nKeyIndex = key;   
