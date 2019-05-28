@@ -20,7 +20,6 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
-std::set<uint32_t> setFlaggedTxRoots;
 using namespace std;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
@@ -93,13 +92,13 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     
     // do this check only when not in IBD (initial block download) or litemode
     // if we are starting up and verifying the db also skip this check as fLoaded will be false until startup sequence is complete
-    std::pair<std::vector<unsigned char>,std::vector<unsigned char>> vchTxRoots;
+    EthereumTxRoot txRootDB;
    
     uint32_t cutoffHeight;
     const bool &ethTxRootShouldExist = !ibd && !fLiteMode && fLoaded && fGethSynced;
     // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
     // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, vchTxRoots)){
+    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
         if(ethTxRootShouldExist){
             errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Missing transaction root for SPV proof at Ethereum block: ") + itostr(mintSyscoin.nBlockNumber);
             bTxRootError = true;
@@ -152,25 +151,13 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     dev::RLP rlpTxRoot(&mintSyscoin.vchTxRoot);
     dev::RLP rlpReceiptRoot(&mintSyscoin.vchReceiptRoot);
 
-    if(!vchTxRoots.first.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.first){
+    if(!txRootDB.vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchTxRoot){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
-        bTxRootError = true;
-        // flag as mismatch to fetch again
-        auto it = setFlaggedTxRoots.emplace(mintSyscoin.nBlockNumber);
-        if(it.second){
-            LogPrint(BCLog::SYS, "Mismatching tx root at height %d added to the fetch list\n", mintSyscoin.nBlockNumber);
-        }
         return false;
     }
 
-    if(!vchTxRoots.second.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != vchTxRoots.second){
+    if(!txRootDB.vchReceiptRoot.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchReceiptRoot){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Receipt Roots");
-        bTxRootError = true;
-        // flag as mismatch to fetch again
-        auto it = setFlaggedTxRoots.emplace(mintSyscoin.nBlockNumber);
-        if(it.second){
-            LogPrint(BCLog::SYS, "Mismatching receipt root at height %d added to the fetch list\n", mintSyscoin.nBlockNumber);
-        }
         return false;
     } 
     
@@ -1636,41 +1623,56 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     }
     const uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
     std::vector<unsigned char> txPos;
-    std::set<uint32_t> setKeys;
-    // add flagged txroots that are Mismatching
-    for(const auto& flaggedHeight: setFlaggedTxRoots){
-        setKeys.emplace(flaggedHeight);
-    }
-    // sort keys numerically
-    while (pcursor->Valid()) {
-        boost::this_thread::interruption_point();
-        try {
-            if(!pcursor->GetKey(nKey)){
-                 pcursor->Next();
-                 continue;
+    std::map<uint32_t, EthereumTxRoot> mapTxRoots;
+    // put priority on flagged heights first
+    if(mapTxRoots.empty()){
+        // sort keys numerically
+        while (pcursor->Valid()) {
+            boost::this_thread::interruption_point();
+            try {
+                if(!pcursor->GetKey(nKey)){
+                     pcursor->Next();
+                     continue;
+                }
+                EthereumTxRoot txRoot;
+                pcursor->GetValue(txRoot);
+                mapTxRoots.emplace(nKey, txRoot);
+                pcursor->Next();
             }
-            setKeys.emplace(nKey);
-            pcursor->Next();
-        }
-        catch (std::exception &e) {
-            return;
-        }
-    } 
-    if(setKeys.size() < 2)
+            catch (std::exception &e) {
+                return;
+            }
+        } 
+    }
+    if(mapTxRoots.size() < 2)
         return;
-    std::set<uint32_t>::iterator setIt = setKeys.begin();
-    nKeyIndex = *setIt;
+    auto setIt = mapTxRoots.begin();
+    nKeyIndex = setIt->first;
     setIt++;
     // we should have at least MAX_ETHEREUM_TX_ROOTS roots available from the tip for consensus checks
     if(nCurrentSyncHeight >= MAX_ETHEREUM_TX_ROOTS && nKeyIndex > nKeyCutoff){
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
     }
+    std::vector<unsigned char> vchPrevHash;
     // find sequence gaps in sorted key set 
-    for (; setIt != setKeys.end(); ++setIt){
-            const uint32_t &key = *setIt;
+    for (; setIt != mapTxRoots.end(); ++setIt){
+            const uint32_t &key = setIt->first;
             const uint32_t &nNextKeyIndex = nKeyIndex+1;
             if (key != nNextKeyIndex && (key-1) >= nNextKeyIndex)
                 vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, key-1));
+            // if continious index we want to ensure hash chain is also continious
+            else{
+                // if prevhash of prev txroot != hash of this tx root then roll back to this point and request all headers to the tip
+                const EthereumTxRoot &txRoot = setIt->second;
+                auto prevRootPair = std::prev(setIt);
+                const EthereumTxRoot &txRootPrev = prevRootPair->second;
+                if(txRoot.vchPrevHash != txRootPrev.vchBlockHash){
+                    const uint32_t &prevKey = prevRootPair->first;
+                    vecMissingBlockRanges.emplace_back(make_pair(prevKey, nCurrentSyncHeight));
+                    LogPrint(BCLog::SYS, "Detected an Ethereum fork at height %d, rolling back and requesting block range (%d-%d)\n", prevKey, prevKey, nCurrentSyncHeight);
+                    break;
+                }
+            }
             nKeyIndex = key;   
     }  
 }

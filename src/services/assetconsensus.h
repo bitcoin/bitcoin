@@ -28,14 +28,30 @@ public:
 	bool FlushWrite(const std::vector<COutPoint> &lockedOutpoints);
 	bool FlushErase(const std::vector<COutPoint> &lockedOutpoints);
 };
-typedef std::unordered_map<uint32_t, std::pair<std::vector<unsigned char>, std::vector<unsigned char> > > EthereumTxRootMap;
+class EthereumTxRoot {
+    public:
+    std::vector<unsigned char> vchBlockHash;
+    std::vector<unsigned char> vchPrevHash;
+    std::vector<unsigned char> vchTxRoot;
+    std::vector<unsigned char> vchReceiptRoot;
+    
+    ADD_SERIALIZE_METHODS;
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action) {      
+        READWRITE(vchBlockHash);
+        READWRITE(vchPrevHash);
+        READWRITE(vchTxRoot);
+        READWRITE(vchReceiptRoot);
+    }
+};
+typedef std::unordered_map<uint32_t, EthereumTxRoot> EthereumTxRootMap;
 class CEthereumTxRootsDB : public CDBWrapper {
 public:
     CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
        Init();
     } 
-    bool ReadTxRoots(const uint32_t& nHeight, std::pair<std::vector<unsigned char>, std::vector<unsigned char> >& vchTxRoots) {
-        return Read(nHeight, vchTxRoots);
+    bool ReadTxRoots(const uint32_t& nHeight, EthereumTxRoot& txRoot) {
+        return Read(nHeight, txRoot);
     } 
     void AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t> > &vecMissingBlockRanges);
     bool Init();
