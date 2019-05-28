@@ -95,16 +95,22 @@ BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
     end = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
     printf("syscoinsetethstatus2 elasped time %lld\n", end-start);
     blocksArray = find_value(r.get_obj(), "missing_blocks").get_array();
-    // start from fork point all the way to the tip
-    BOOST_CHECK_EQUAL(blocksArray.size(), 2);
-    // we should still have the missing ranges prior to the fork
+    
+    BOOST_CHECK_EQUAL(blocksArray.size(), 4);
+    // we should still have the missing ranges prior to the forks
     BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "from").get_int(),669780);
     BOOST_CHECK_EQUAL(find_value(blocksArray[0].get_obj(), "to").get_int() ,707769);
-
-    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "from").get_int() , 707772);
-    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "to").get_int() , 709780);
     
+    // 707773 is affected, -50 is 707723 and +50 is 707823
+    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "from").get_int() , 707723);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[1].get_obj(), "to").get_int() , 707823);
     
+    BOOST_CHECK_EQUAL(find_value(blocksArray[2].get_obj(), "from").get_int() , 707725);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[2].get_obj(), "to").get_int() , 707825);
+    
+    // last missing range stays in the missing range list
+    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "from").get_int() , 707782);
+    BOOST_CHECK_EQUAL(find_value(blocksArray[3].get_obj(), "to").get_int() , 709779);  
 }   
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot1)
 {

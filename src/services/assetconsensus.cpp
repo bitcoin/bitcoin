@@ -153,11 +153,13 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
 
     if(!txRootDB.vchTxRoot.empty() && rlpTxRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchTxRoot){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Tx Roots");
+        bTxRootError = true; // roots can be wrong because geth may not give us affected headers post re-org
         return false;
     }
 
     if(!txRootDB.vchReceiptRoot.empty() && rlpReceiptRoot.toBytes(dev::RLP::VeryStrict) != txRootDB.vchReceiptRoot){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Mismatching Receipt Roots");
+        bTxRootError = true; // roots can be wrong because geth may not give us affected headers post re-org
         return false;
     } 
     
@@ -1653,6 +1655,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
         vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nKeyIndex-1));
     }
     std::vector<unsigned char> vchPrevHash;
+    std::vector<uint32_t> vecRemoveKeys;
     // find sequence gaps in sorted key set 
     for (; setIt != mapTxRoots.end(); ++setIt){
             const uint32_t &key = setIt->first;
@@ -1661,19 +1664,23 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
                 vecMissingBlockRanges.emplace_back(make_pair(nNextKeyIndex, key-1));
             // if continious index we want to ensure hash chain is also continious
             else{
-                // if prevhash of prev txroot != hash of this tx root then roll back to this point and request all headers to the tip
+                // if prevhash of prev txroot != hash of this tx root then request inconsistent roots again
                 const EthereumTxRoot &txRoot = setIt->second;
                 auto prevRootPair = std::prev(setIt);
                 const EthereumTxRoot &txRootPrev = prevRootPair->second;
                 if(txRoot.vchPrevHash != txRootPrev.vchBlockHash){
-                    const uint32_t &prevKey = prevRootPair->first;
-                    vecMissingBlockRanges.emplace_back(make_pair(prevKey, nCurrentSyncHeight));
-                    LogPrint(BCLog::SYS, "Detected an Ethereum fork at height %d, rolling back and requesting block range (%d-%d)\n", prevKey, prevKey, nCurrentSyncHeight);
-                    break;
+                    // get a range of -50 to +50 around effected tx root to minimize chance that you will be requesting 1 root at a time in a long range fork
+                    // this is fine because relayer fetches 100 headers at a time anyway
+                    vecMissingBlockRanges.emplace_back(make_pair(std::max(0,(int32_t)key-50), std::min((int32_t)key+50, (int32_t)nCurrentSyncHeight)));
+                    vecRemoveKeys.push_back(key);                  
                 }
             }
             nKeyIndex = key;   
-    }  
+    } 
+    if(!vecRemoveKeys.empty()){
+        LogPrint(BCLog::SYS, "Detected an %d inconsistent hash chains in Ethereum headers, removing...\n", vecRemoveKeys.size());
+        pethereumtxrootsdb->FlushErase(vecRemoveKeys); 
+    }
 }
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     if(vecHeightKeys.empty())

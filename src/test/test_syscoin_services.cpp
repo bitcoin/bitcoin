@@ -609,7 +609,7 @@ string SyscoinMint(const string& node, const string& address, const string& amou
     CAmount nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
     // ensure that block number you claim the burn is at least 1 hour old
     int heightPlus240 = height+ETHEREUM_CONFIRMS_REQUIRED;
-    string headerStr = "\"[[" + itostr(height) + ",\\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
+    string headerStr = "\"[[" + itostr(height) + ", \\\"" + itostr(height) + "\\\", \\\"" + itostr(height-1) + "\\\", \\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
  
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinsetethheaders " + headerStr));
