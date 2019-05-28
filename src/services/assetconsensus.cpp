@@ -1624,26 +1624,25 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     const uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
     std::vector<unsigned char> txPos;
     std::map<uint32_t, EthereumTxRoot> mapTxRoots;
-    // put priority on flagged heights first
-    if(mapTxRoots.empty()){
-        // sort keys numerically
-        while (pcursor->Valid()) {
-            boost::this_thread::interruption_point();
-            try {
-                if(!pcursor->GetKey(nKey)){
-                     pcursor->Next();
-                     continue;
-                }
-                EthereumTxRoot txRoot;
-                pcursor->GetValue(txRoot);
-                mapTxRoots.emplace(nKey, txRoot);
-                pcursor->Next();
+    
+    // sort keys numerically
+    while (pcursor->Valid()) {
+        boost::this_thread::interruption_point();
+        try {
+            if(!pcursor->GetKey(nKey)){
+                 pcursor->Next();
+                 continue;
             }
-            catch (std::exception &e) {
-                return;
-            }
-        } 
-    }
+            EthereumTxRoot txRoot;
+            pcursor->GetValue(txRoot);
+            mapTxRoots.emplace(nKey, txRoot);
+            pcursor->Next();
+        }
+        catch (std::exception &e) {
+            return;
+        }
+    } 
+    
     if(mapTxRoots.size() < 2)
         return;
     auto setIt = mapTxRoots.begin();
