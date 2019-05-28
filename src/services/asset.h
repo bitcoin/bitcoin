@@ -82,19 +82,19 @@ enum {
 
 class CAsset {
 public:
-	uint32_t nAsset;
-	CWitnessAddress witnessAddress;
+    uint32_t nAsset;
+    CWitnessAddress witnessAddress;
     CWitnessAddress witnessAddressTransfer;
-	std::vector<unsigned char> vchContract;
+    std::vector<unsigned char> vchContract;
     std::string strSymbol;
     uint256 txHash;
     unsigned int nHeight;
-	std::vector<unsigned char> vchPubData;
-	CAmount nBalance;
-	CAmount nTotalSupply;
-	CAmount nMaxSupply;
-	unsigned char nPrecision;
-	unsigned char nUpdateFlags;
+    std::vector<unsigned char> vchPubData;
+    CAmount nBalance;
+    CAmount nTotalSupply;
+    CAmount nMaxSupply;
+    unsigned char nPrecision;
+    unsigned char nUpdateFlags;
     char nDumurrageOrInterest;
     CAsset() {
         SetNull();
@@ -109,35 +109,35 @@ public:
         nAsset = 0;
         UnserializeFromTx(tx);
     }
-	inline void ClearAsset()
-	{
-		vchPubData.clear();
-		vchContract.clear();
+    inline void ClearAsset()
+    {
+        vchPubData.clear();
+        vchContract.clear();
         txHash.SetNull();
         witnessAddressTransfer.SetNull();
 
-	}
-	ADD_SERIALIZE_METHODS;
+    }
+    ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
-	inline void SerializationOp(Stream& s, Operation ser_action) {		
-		READWRITE(vchPubData);
-		READWRITE(txHash);
-		READWRITE(nAsset);
+    inline void SerializationOp(Stream& s, Operation ser_action) {		
+        READWRITE(vchPubData);
+        READWRITE(txHash);
+        READWRITE(nAsset);
         READWRITE(strSymbol);
-		READWRITE(witnessAddress);
+        READWRITE(witnessAddress);
         READWRITE(witnessAddressTransfer);
-		READWRITE(nBalance);
-		READWRITE(nTotalSupply);
-		READWRITE(nMaxSupply);
+        READWRITE(nBalance);
+        READWRITE(nTotalSupply);
+        READWRITE(nMaxSupply);
         READWRITE(nHeight);
-		READWRITE(nUpdateFlags);
-		READWRITE(nPrecision);
-		READWRITE(vchContract);   
+        READWRITE(nUpdateFlags);
+        READWRITE(nPrecision);
+        READWRITE(vchContract);   
         READWRITE(nDumurrageOrInterest); 
-	}
+    }
     inline friend bool operator==(const CAsset &a, const CAsset &b) {
         return (
-		a.nAsset == b.nAsset
+        a.nAsset == b.nAsset
         );
     }
 
@@ -145,11 +145,11 @@ public:
     inline friend bool operator!=(const CAsset &a, const CAsset &b) {
         return !(a == b);
     }
-	inline void SetNull() { ClearAsset(); nPrecision = 8; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; }
+    inline void SetNull() { ClearAsset(); nPrecision = 8; nMaxSupply = 0; nTotalSupply = 0; nBalance = 0; }
     inline bool IsNull() const { return (nBalance == 0 && nTotalSupply == 0 && nMaxSupply == 0); }
     bool UnserializeFromTx(const CTransaction &tx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
-	void Serialize(std::vector<unsigned char>& vchData);
+    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    void Serialize(std::vector<unsigned char>& vchData);
 };
 class CMintSyscoin {
 public:
