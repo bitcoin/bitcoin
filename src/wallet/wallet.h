@@ -79,6 +79,7 @@ class CReserveKey;
 class CScript;
 class CScheduler;
 class CTxMemPool;
+class CBlockPolicyEstimator;
 class CWalletTx;
 
 /** (client) version numbers for particular wallet features */
@@ -671,6 +672,8 @@ class CWallet : public CCryptoKeyStore, public CValidationInterface
 {
 private:
     static std::atomic<bool> fFlushScheduled;
+    std::atomic<bool> fAbortRescan;
+    std::atomic<bool> fScanningWallet;
 
     /**
      * Select a set of coins such that nValueRet >= nTargetValue and at least
@@ -806,6 +809,8 @@ public:
         nTimeFirstKey = 0;
         fBroadcastTransactions = false;
         nRelockTime = 0;
+        fAbortRescan = false;
+        fScanningWallet = false;
         fAnonymizableTallyCached = false;
         fAnonymizableTallyCachedNonDenom = false;
         vecAnonymizableTallyCached.clear();
@@ -880,6 +885,13 @@ public:
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
     void ListProTxCoins(std::vector<COutPoint>& vOutpts);
+
+    /*
+     * Rescan abort properties
+     */
+    void AbortRescan() { fAbortRescan = true; }
+    bool IsAbortingRescan() { return fAbortRescan; }
+    bool IsScanning() { return fScanningWallet; }
 
     /**
      * keystore implementation
@@ -1002,12 +1014,12 @@ public:
      * Estimate the minimum fee considering user set parameters
      * and the required fee
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool);
+    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator);
     /**
      * Estimate the minimum fee considering required fee and targetFee or if 0
      * then fee estimation for nConfirmTarget
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, CAmount targetFee);
+    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, CAmount targetFee);
     /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee

@@ -18,6 +18,7 @@
 #include "fs.h"
 #include "hash.h"
 #include "init.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/block.h"
@@ -101,7 +102,8 @@ uint256 hashAssumeValid;
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
-CTxMemPool mempool;
+CBlockPolicyEstimator feeEstimator;
+CTxMemPool mempool(&feeEstimator);
 std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);

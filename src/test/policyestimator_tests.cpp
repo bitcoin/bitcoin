@@ -15,7 +15,8 @@ BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    CTxMemPool mpool;
+    CBlockPolicyEstimator feeEst;
+    CTxMemPool mpool(&feeEst);
     TestMemPoolEntryHelper entry;
     CAmount basefee(2000);
     CAmount deltaFee(100);
@@ -77,16 +78,16 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             // At this point we should need to combine 5 buckets to get enough data points
             // So estimateFee(1,2,3) should fail and estimateFee(4) should return somewhere around
             // 8*baserate.  estimateFee(4) %'s are 100,100,100,100,90 = average 98%
-            BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
-            BOOST_CHECK(mpool.estimateFee(2) == CFeeRate(0));
-            BOOST_CHECK(mpool.estimateFee(3) == CFeeRate(0));
-            BOOST_CHECK(mpool.estimateFee(4).GetFeePerK() < 8*baseRate.GetFeePerK() + deltaFee);
-            BOOST_CHECK(mpool.estimateFee(4).GetFeePerK() > 8*baseRate.GetFeePerK() - deltaFee);
+            BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
+            BOOST_CHECK(feeEst.estimateFee(2) == CFeeRate(0));
+            BOOST_CHECK(feeEst.estimateFee(3) == CFeeRate(0));
+            BOOST_CHECK(feeEst.estimateFee(4).GetFeePerK() < 8*baseRate.GetFeePerK() + deltaFee);
+            BOOST_CHECK(feeEst.estimateFee(4).GetFeePerK() > 8*baseRate.GetFeePerK() - deltaFee);
             int answerFound;
-            BOOST_CHECK(mpool.estimateSmartFee(1, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(mpool.estimateSmartFee(3, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(mpool.estimateSmartFee(4, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
-            BOOST_CHECK(mpool.estimateSmartFee(8, &answerFound) == mpool.estimateFee(8) && answerFound == 8);
+            BOOST_CHECK(feeEst.estimateSmartFee(1, &answerFound, mpool) == feeEst.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(feeEst.estimateSmartFee(3, &answerFound, mpool) == feeEst.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(feeEst.estimateSmartFee(4, &answerFound, mpool) == feeEst.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(feeEst.estimateSmartFee(8, &answerFound, mpool) == feeEst.estimateFee(8) && answerFound == 8);
         }
     }
 
@@ -98,7 +99,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // Second highest feerate has 100% chance of being included by 2 blocks,
     // so estimateFee(2) should return 9*baseRate etc...
     for (int i = 1; i < 10;i++) {
-        origFeeEst.push_back(mpool.estimateFee(i).GetFeePerK());
+        origFeeEst.push_back(feeEst.estimateFee(i).GetFeePerK());
         if (i > 2) { // Fee estimates should be monotonically decreasing
             BOOST_CHECK(origFeeEst[i-1] <= origFeeEst[i-2]);
         }
@@ -117,10 +118,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     while (blocknum < 250)
         mpool.removeForBlock(block, ++blocknum);
 
-    BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
+    BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] + deltaFee);
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] + deltaFee);
+        BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
     }
 
 
@@ -140,8 +141,8 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 
     int answerFound;
     for (int i = 1; i < 10;i++) {
-        BOOST_CHECK(mpool.estimateFee(i) == CFeeRate(0) || mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
-        BOOST_CHECK(mpool.estimateSmartFee(i, &answerFound).GetFeePerK() > origFeeEst[answerFound-1] - deltaFee);
+        BOOST_CHECK(feeEst.estimateFee(i) == CFeeRate(0) || feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK(feeEst.estimateSmartFee(i, &answerFound, mpool).GetFeePerK() > origFeeEst[answerFound-1] - deltaFee);
     }
 
     // Mine all those transactions
@@ -156,9 +157,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     }
     mpool.removeForBlock(block, 265);
     block.clear();
-    BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
+    BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10;i++) {
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
     }
 
     // Mine 200 more blocks where everything is mined every block
@@ -178,9 +179,9 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         mpool.removeForBlock(block, ++blocknum);
         block.clear();
     }
-    BOOST_CHECK(mpool.estimateFee(1) == CFeeRate(0));
+    BOOST_CHECK(feeEst.estimateFee(1) == CFeeRate(0));
     for (int i = 2; i < 10; i++) {
-        BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK(feeEst.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
     }
 
     // Test that if the mempool is limited, estimateSmartFee won't return a value below the mempool min fee
@@ -189,8 +190,8 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     mpool.TrimToSize(1);
     BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[5]);
     for (int i = 1; i < 10; i++) {
-        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.estimateFee(i).GetFeePerK());
-        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
+        BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= feeEst.estimateFee(i).GetFeePerK());
+        BOOST_CHECK(feeEst.estimateSmartFee(i, NULL, mpool).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
     }
 }
 

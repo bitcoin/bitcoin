@@ -23,6 +23,7 @@
 #include "random.h"
 #include "netaddress.h"
 #include "bls/bls.h"
+#include "pubkey.h"
 
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/ordered_index.hpp"
@@ -533,8 +534,7 @@ public:
 
     /** Create a new CTxMemPool.
      */
-    CTxMemPool();
-    ~CTxMemPool();
+    CTxMemPool(CBlockPolicyEstimator* estimator = nullptr);
 
     /**
      * If sanity-checking is turned on, check makes sure the pool is
@@ -678,19 +678,6 @@ public:
     std::vector<TxMempoolInfo> infoAll() const;
 
     bool existsProviderTxConflict(const CTransaction &tx) const;
-
-    /** Estimate fee rate needed to get into the next nBlocks
-     *  If no answer can be given at nBlocks, return an estimate
-     *  at the lowest number of blocks where one can be given
-     */
-    CFeeRate estimateSmartFee(int nBlocks, int *answerFoundAtBlocks = NULL) const;
-
-    /** Estimate fee rate needed to get into the next nBlocks */
-    CFeeRate estimateFee(int nBlocks) const;
-
-    /** Write/Read estimates to disk */
-    bool WriteFeeEstimates(CAutoFile& fileout) const;
-    bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
     // returns share of the used memory to maximum allowed memory
