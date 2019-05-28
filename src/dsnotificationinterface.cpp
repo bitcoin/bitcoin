@@ -72,17 +72,12 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
 }
 
-void CDSNotificationInterface::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
-{
-    llmq::quorumInstantSendManager->SyncTransaction(tx, pindex, posInBlock);
-    llmq::chainLocksHandler->SyncTransaction(tx, pindex, posInBlock);
-    instantsend.SyncTransaction(tx, pindex, posInBlock);
-    CPrivateSend::SyncTransaction(tx, pindex, posInBlock);
-}
-
 void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& ptx)
 {
-    SyncTransaction(ptx);
+    llmq::quorumInstantSendManager->TransactionAddedToMempool(ptx);
+    llmq::chainLocksHandler->TransactionAddedToMempool(ptx);
+    CPrivateSend::TransactionAddedToMempool(ptx);
+    instantsend.SyncTransaction(ptx);
 }
 
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -95,18 +90,26 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
     // to abandon a transaction and then have it inadvertantly cleared by
     // the notification that the conflicted transaction was evicted.
 
+    llmq::quorumInstantSendManager->BlockConnected(pblock, pindex, vtxConflicted);
+    llmq::chainLocksHandler->BlockConnected(pblock, pindex, vtxConflicted);
+    CPrivateSend::BlockConnected(pblock, pindex, vtxConflicted);
+
     for (const CTransactionRef& ptx : vtxConflicted) {
-        SyncTransaction(ptx);
+        instantsend.SyncTransaction(ptx);
     }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        SyncTransaction(pblock->vtx[i], pindex, i);
+        instantsend.SyncTransaction(pblock->vtx[i], pindex, i);
     }
 }
 
-void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
 {
+    llmq::quorumInstantSendManager->BlockDisconnected(pblock, pindexDisconnected);
+    llmq::chainLocksHandler->BlockDisconnected(pblock, pindexDisconnected);
+    CPrivateSend::BlockDisconnected(pblock, pindexDisconnected);
+
     for (const CTransactionRef& ptx : pblock->vtx) {
-        SyncTransaction(ptx, pindex, -1);
+        instantsend.SyncTransaction(ptx, pindexDisconnected->pprev, -1);
     }
 }
 

@@ -949,29 +949,18 @@ void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, con
     mempool.AddTransactionsUpdated(1);
 }
 
-void CInstantSendManager::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
+void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex)
 {
     if (!IsNewInstantSendEnabled()) {
         return;
     }
 
     if (tx->IsCoinBase() || tx->vin.empty()) {
-        // coinbase can't and TXs with no inputs be locked
+        // coinbase and TXs with no inputs can't be locked
         return;
     }
 
     bool inMempool = mempool.get(tx->GetHash()) != nullptr;
-
-    // Are we called from validation.cpp/MemPoolConflictRemovalTracker?
-    // TODO refactor this when we backport the BlockConnected signal from Bitcoin, as it gives better info about
-    // conflicted TXs
-    bool isConflictRemoved = pindex == nullptr && posInBlock == -1 && !inMempool;
-
-    if (isConflictRemoved) {
-        LOCK(cs);
-        RemoveConflictedTx(*tx);
-        return;
-    }
 
     uint256 islockHash;
     {
@@ -980,11 +969,7 @@ void CInstantSendManager::SyncTransaction(const CTransactionRef& tx, const CBloc
 
         // update DB about when an IS lock was mined
         if (!islockHash.IsNull() && pindex) {
-            if (posInBlock == -1) {
-                db.RemoveInstantSendLockMined(islockHash, pindex->nHeight);
-            } else {
-                db.WriteInstantSendLockMined(islockHash, pindex->nHeight);
-            }
+            db.WriteInstantSendLockMined(islockHash, pindex->nHeight);
         }
     }
 
@@ -1001,10 +986,44 @@ void CInstantSendManager::SyncTransaction(const CTransactionRef& tx, const CBloc
     if (!chainlocked && islockHash.IsNull()) {
         // TX is not locked, so make sure it is tracked
         AddNonLockedTx(tx);
-        nonLockedTxs.at(tx->GetHash()).pindexMined = posInBlock != -1 ? pindex : nullptr;
+        nonLockedTxs.at(tx->GetHash()).pindexMined = pindex;
     } else {
         // TX is locked, so make sure we don't track it anymore
         RemoveNonLockedTx(tx->GetHash(), true);
+    }
+}
+
+void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
+{
+    ProcessNewTransaction(tx, nullptr);
+}
+
+void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+{
+    if (!IsNewInstantSendEnabled()) {
+        return;
+    }
+
+    if (!vtxConflicted.empty()) {
+        LOCK(cs);
+        for (const auto& tx : vtxConflicted) {
+            RemoveConflictedTx(*tx);
+        }
+    }
+
+    for (const auto& tx : pblock->vtx) {
+        ProcessNewTransaction(tx, pindex);
+    }
+}
+
+void CInstantSendManager::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+{
+    LOCK(cs);
+    for (auto& tx : pblock->vtx) {
+        auto islockHash = db.GetInstantSendLockHashByTxid(tx->GetHash());
+        if (!islockHash.IsNull()) {
+            db.RemoveInstantSendLockMined(islockHash, pindexDisconnected->nHeight);
+        }
     }
 }
 

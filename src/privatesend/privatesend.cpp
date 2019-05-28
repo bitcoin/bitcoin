@@ -509,16 +509,41 @@ void CPrivateSend::UpdatedBlockTip(const CBlockIndex* pindex)
     }
 }
 
-void CPrivateSend::SyncTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, int posInBlock)
+void CPrivateSend::UpdateDSTXConfirmedHeight(const CTransactionRef& tx, int nHeight)
 {
-    if (tx->IsCoinBase()) return;
+    AssertLockHeld(cs_mapdstx);
 
-    LOCK2(cs_main, cs_mapdstx);
+    auto it = mapDSTX.find(tx->GetHash());
+    if (it == mapDSTX.end()) {
+        return;
+    }
 
-    uint256 txHash = tx->GetHash();
-    if (!mapDSTX.count(txHash)) return;
+    it->second.SetConfirmedHeight(nHeight);
+    LogPrint(BCLog::PRIVATESEND, "CPrivateSend::%s -- txid=%s, nHeight=%d\n", __func__, tx->GetHash().ToString(), nHeight);
+}
 
-    // When tx is 0-confirmed or conflicted, posInBlock is SYNC_TRANSACTION_NOT_IN_BLOCK and nConfirmedHeight should be set to -1
-    mapDSTX[txHash].SetConfirmedHeight((posInBlock == -1 || pindex == nullptr) ? -1 : pindex->nHeight);
-    LogPrint(BCLog::PRIVATESEND, "CPrivateSend::SyncTransaction -- txid=%s\n", txHash.ToString());
+void CPrivateSend::TransactionAddedToMempool(const CTransactionRef& tx)
+{
+    LOCK(cs_mapdstx);
+    UpdateDSTXConfirmedHeight(tx, -1);
+}
+
+void CPrivateSend::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
+{
+    LOCK(cs_mapdstx);
+    for (const auto& tx : vtxConflicted) {
+        UpdateDSTXConfirmedHeight(tx, -1);
+    }
+
+    for (const auto& tx : pblock->vtx) {
+        UpdateDSTXConfirmedHeight(tx, pindex->nHeight);
+    }
+}
+
+void CPrivateSend::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
+{
+    LOCK(cs_mapdstx);
+    for (const auto& tx : pblock->vtx) {
+        UpdateDSTXConfirmedHeight(tx, -1);
+    }
 }
