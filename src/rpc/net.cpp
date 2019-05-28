@@ -459,6 +459,9 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"localrelay\": true|false,              (bool) true if transaction relay is requested from peers\n"
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
+            "  \"geth_sync_status\": xxxxxx,   (numeric) Sync status of Geth (Ethereum network). Valid values are: synced, syncing or waiting to sync...\n"
+            "  \"geth_total_blocks\": xxxxxx,  (numeric) The highest height seen on the Ethereum network by Geth\n"
+            "  \"geth_current_block\": xxxxxx, (numeric) The highest height of the block header of Ethereum that is stored in our database\n"
             "  \"networkactive\": true|false,           (bool) whether p2p networking is enabled\n"
             "  \"networks\": [                          (array) information per network\n"
             "  {\n"
@@ -502,6 +505,10 @@ static UniValue getnetworkinfo(const JSONRPCRequest& request)
         obj.pushKV("networkactive", g_connman->GetNetworkActive());
         obj.pushKV("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL));
     }
+    // SYSCOIN
+    obj.pushKV("geth_sync_status",  fGethSyncStatus);
+    obj.pushKV("geth_total_blocks",  (int)fGethSyncHeight);
+    obj.pushKV("geth_current_block",  (int)fGethCurrentHeight);
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));
