@@ -134,7 +134,7 @@ UniValue getnetworkghps(const JSONRPCRequest& request)
     return dNetworkGhps;
 }
 
-UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
+UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript, CWallet * const pwallet)
 {
     static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
@@ -167,6 +167,12 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
         if (pblock->nNonce == nInnerLoopCount) {
             continue;
         }
+
+        // peercoin: sign block
+        // rfc6: we sign proof of work blocks only before 0.8 fork
+        if (!IsBTC16BIPsEnabled(pblock->GetBlockTime()) && !SignBlock(*pblock, *pwallet))
+            throw JSONRPCError(-100, "Unable to sign block, wallet locked?");
+
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         if (!ProcessNewBlock(Params(), shared_pblock, true, nullptr))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
@@ -199,6 +205,11 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
             + HelpExampleCli("generatetoaddress", "11 \"myaddress\"")
         );
 
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
     int nGenerate = request.params[0].get_int();
     uint64_t nMaxTries = 1000000;
     if (!request.params[2].isNull()) {
@@ -213,7 +224,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
     std::shared_ptr<CReserveScript> coinbaseScript = std::make_shared<CReserveScript>();
     coinbaseScript->reserveScript = GetScriptForDestination(destination);
 
-    return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
+    return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false, pwallet);
 }
 
 UniValue getmininginfo(const JSONRPCRequest& request)
