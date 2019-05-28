@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <qt/guiutil.h>
 #include <qt/walletcontroller.h>
 
 #include <interfaces/handler.h>
@@ -13,10 +14,13 @@
 #include <QMessageBox>
 #include <QMutexLocker>
 #include <QThread>
+#include <QTimer>
 #include <QWindow>
 
 WalletController::WalletController(interfaces::Node& node, const PlatformStyle* platform_style, OptionsModel* options_model, QObject* parent)
     : QObject(parent)
+    , m_activity_thread(new QThread(this))
+    , m_activity_worker(new QObject)
     , m_node(node)
     , m_platform_style(platform_style)
     , m_options_model(options_model)
@@ -29,15 +33,17 @@ WalletController::WalletController(interfaces::Node& node, const PlatformStyle* 
         getOrCreateWallet(std::move(wallet));
     }
 
-    m_activity_thread.start();
+    m_activity_worker->moveToThread(m_activity_thread);
+    m_activity_thread->start();
 }
 
 // Not using the default destructor because not all member types definitions are
 // available in the header, just forward declared.
 WalletController::~WalletController()
 {
-    m_activity_thread.quit();
-    m_activity_thread.wait();
+    m_activity_thread->quit();
+    m_activity_thread->wait();
+    delete m_activity_worker;
 }
 
 std::vector<WalletModel*> WalletController::getWallets() const
@@ -55,13 +61,6 @@ std::vector<std::string> WalletController::getWalletsAvailableToOpen() const
         if (it != wallets.end()) wallets.erase(it);
     }
     return wallets;
-}
-
-OpenWalletActivity* WalletController::openWallet(const std::string& name, QWidget* parent)
-{
-    OpenWalletActivity* activity = new OpenWalletActivity(this, name);
-    activity->moveToThread(&m_activity_thread);
-    return activity;
 }
 
 void WalletController::closeWallet(WalletModel* wallet_model, QWidget* parent)
@@ -148,22 +147,82 @@ void WalletController::removeAndDeleteWallet(WalletModel* wallet_model)
 }
 
 
-OpenWalletActivity::OpenWalletActivity(WalletController* wallet_controller, const std::string& name)
-    : m_wallet_controller(wallet_controller)
-    , m_name(name)
-{}
+OpenWalletActivity::OpenWalletActivity(QWidget* parent)
+    : QObject(parent)
+    , m_parent(parent)
+{
+}
+
+void OpenWalletActivity::setPath(const std::string& path)
+{
+    m_path = path;
+}
+
+void OpenWalletActivity::setWalletController(WalletController* wallet_controller)
+{
+    m_wallet_controller = wallet_controller;
+}
+
+void OpenWalletActivity::showMessage(const QMessageBox::Icon& icon, const QString& text)
+{
+    QMessageBox box(m_parent);
+    box.setIcon(icon);
+    box.setText(tr("Open Wallet Failed"));
+    box.setInformativeText(text);
+    box.setStandardButtons(QMessageBox::Ok);
+    box.setDefaultButton(QMessageBox::Ok);
+    box.exec();
+}
+
+void OpenWalletActivity::showProgress()
+{
+    assert(!m_progress_dialog);
+    QString name = m_path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(m_path);
+    m_progress_dialog = new QProgressDialog(m_parent);
+    GUIUtil::PolishProgressDialog(m_progress_dialog);
+    m_progress_dialog->setLabelText(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
+    m_progress_dialog->setRange(0, 0);
+    m_progress_dialog->setCancelButton(nullptr);
+    m_progress_dialog->setWindowModality(Qt::ApplicationModal);
+    m_progress_dialog->show();
+}
+
+void OpenWalletActivity::hideProgress()
+{
+    assert(m_progress_dialog);
+    delete m_progress_dialog;
+    m_progress_dialog = nullptr;
+}
 
 void OpenWalletActivity::open()
 {
-    std::string error, warning;
-    std::unique_ptr<interfaces::Wallet> wallet = m_wallet_controller->m_node.loadWallet(m_name, error, warning);
-    if (!warning.empty()) {
-        Q_EMIT message(QMessageBox::Warning, QString::fromStdString(warning));
-    }
-    if (wallet) {
-        Q_EMIT opened(m_wallet_controller->getOrCreateWallet(std::move(wallet)));
-    } else {
-        Q_EMIT message(QMessageBox::Critical, QString::fromStdString(error));
-    }
-    Q_EMIT finished();
+    assert(m_wallet_controller);
+
+    QTimer::singleShot(0, m_wallet_controller->m_activity_worker, [this]() {
+        bool called = QMetaObject::invokeMethod(this, "showProgress", Qt::BlockingQueuedConnection);
+        assert(called);
+
+        std::string error, warning;
+        std::unique_ptr<interfaces::Wallet> wallet = m_wallet_controller->m_node.loadWallet(m_path, error, warning);
+
+        called = QMetaObject::invokeMethod(this, "hideProgress", Qt::BlockingQueuedConnection);
+        assert(called);
+
+        if (!warning.empty()) {
+            called = QMetaObject::invokeMethod(this, "showMessage", Qt::BlockingQueuedConnection,
+                Q_ARG(QMessageBox::Icon, QMessageBox::Warning),
+                Q_ARG(QString, QString::fromStdString(warning)));
+            assert(called);
+        }
+        if (wallet) {
+            Q_EMIT opened(m_wallet_controller->getOrCreateWallet(std::move(wallet)));
+        } else {
+            called = QMetaObject::invokeMethod(this, "showMessage", Qt::BlockingQueuedConnection,
+                Q_ARG(QMessageBox::Icon, QMessageBox::Critical),
+                Q_ARG(QString, QString::fromStdString(error)));
+            assert(called);
+        }
+
+        Q_EMIT finished();
+    });
 }

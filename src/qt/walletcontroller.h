@@ -14,6 +14,7 @@
 
 #include <QMessageBox>
 #include <QMutex>
+#include <QProgressDialog>
 #include <QThread>
 
 class OptionsModel;
@@ -43,7 +44,6 @@ public:
     std::vector<WalletModel*> getWallets() const;
     std::vector<std::string> getWalletsAvailableToOpen() const;
 
-    OpenWalletActivity* openWallet(const std::string& name, QWidget* parent = nullptr);
     void closeWallet(WalletModel* wallet_model, QWidget* parent = nullptr);
 
 private Q_SLOTS:
@@ -56,7 +56,8 @@ Q_SIGNALS:
     void coinsSent(WalletModel* wallet_model, SendCoinsRecipient recipient, QByteArray transaction);
 
 private:
-    QThread m_activity_thread;
+    QThread* const m_activity_thread;
+    QObject* const m_activity_worker;
     interfaces::Node& m_node;
     const PlatformStyle* const m_platform_style;
     OptionsModel* const m_options_model;
@@ -72,19 +73,28 @@ class OpenWalletActivity : public QObject
     Q_OBJECT
 
 public:
-    OpenWalletActivity(WalletController* wallet_controller, const std::string& name);
+    explicit OpenWalletActivity(QWidget* parent = nullptr);
 
-public Q_SLOTS:
+    void setPath(const std::string& path);
+    void setWalletController(WalletController* wallet_controller);
+
     void open();
 
+private Q_SLOTS:
+    void showMessage(const QMessageBox::Icon& icon, const QString& text);
+    void showProgress();
+    void hideProgress();
+
 Q_SIGNALS:
-    void message(QMessageBox::Icon icon, const QString text);
     void finished();
+    void message(QMessageBox::Icon icon, const QString text);
     void opened(WalletModel* wallet_model);
 
 private:
-    WalletController* const m_wallet_controller;
-    std::string const m_name;
+    QWidget* const m_parent;
+    std::string m_path;
+    WalletController* m_wallet_controller{nullptr};
+    QProgressDialog* m_progress_dialog{nullptr};
 };
 
 #endif // BITCOIN_QT_WALLETCONTROLLER_H

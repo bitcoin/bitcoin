@@ -382,31 +382,13 @@ void BitcoinGUI::createActions()
                     continue;
                 }
 
-                connect(action, &QAction::triggered, [this, name, path] {
-                    OpenWalletActivity* activity = m_wallet_controller->openWallet(path);
-
-                    QProgressDialog* dialog = new QProgressDialog(this);
-                    dialog->setLabelText(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
-                    dialog->setRange(0, 0);
-                    dialog->setCancelButton(nullptr);
-                    dialog->setWindowModality(Qt::ApplicationModal);
-                    dialog->show();
-
-                    connect(activity, &OpenWalletActivity::message, this, [this] (QMessageBox::Icon icon, QString text) {
-                        QMessageBox box;
-                        box.setIcon(icon);
-                        box.setText(tr("Open Wallet Failed"));
-                        box.setInformativeText(text);
-                        box.setStandardButtons(QMessageBox::Ok);
-                        box.setDefaultButton(QMessageBox::Ok);
-                        connect(this, &QObject::destroyed, &box, &QDialog::accept);
-                        box.exec();
-                    });
+                connect(action, &QAction::triggered, [this, path] {
+                    OpenWalletActivity* activity = new OpenWalletActivity(this);
                     connect(activity, &OpenWalletActivity::opened, this, &BitcoinGUI::setCurrentWallet);
                     connect(activity, &OpenWalletActivity::finished, activity, &QObject::deleteLater);
-                    connect(activity, &OpenWalletActivity::finished, dialog, &QObject::deleteLater);
-                    bool invoked = QMetaObject::invokeMethod(activity, "open");
-                    assert(invoked);
+                    activity->setWalletController(m_wallet_controller);
+                    activity->setPath(path);
+                    activity->open();
                 });
             }
             if (wallets.empty()) {
