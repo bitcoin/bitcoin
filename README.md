@@ -1,12 +1,5 @@
-Bitcoin-DNS
-=====================================
-
-
-https://bitcoincore.org
-
 Just Bitcoin, But with My DNS Seeder
 ------------------------------------
+![fork edits](https://s3.us-east-2.amazonaws.com/toshi-vision-assets/seed-edit.png)
 
-Seeder Url: seed.convex.city
-
-[Or find the project here.](https://github.com/ryan-lingle/bitcoin-dns-seeder)
+[find the seeder here](https://github.com/ryan-lingle/bitcoin-dns-seeder)
