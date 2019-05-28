@@ -1679,7 +1679,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
     } 
     if(!vecRemoveKeys.empty()){
         LogPrint(BCLog::SYS, "Detected an %d inconsistent hash chains in Ethereum headers, removing...\n", vecRemoveKeys.size());
-        pethereumtxrootsdb->FlushErase(vecRemoveKeys); 
+        pethereumtxrootsdb->FlushErase(vecRemoveKeys);
     }
 }
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
