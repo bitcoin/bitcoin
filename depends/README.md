@@ -30,8 +30,12 @@ Common `host-platform-triplets` for cross compilation are:
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `riscv32-linux-gnu` for Linux RISC-V 32 bit
 - `riscv64-linux-gnu` for Linux RISC-V 64 bit
+- `aarch64-linux-android` for Android ARM 64 bit
 
-No other options are needed, the paths are automatically configured.
+The paths are automatically configured and no other options are needed unless targeting Android.
+In that case one needs to set `ANDROID_API_LEVEL` and `ANDROID_TOOLCHAIN_BIN`:
+
+    make HOST=aarch64-linux-android ANDROID_API_LEVEL=28 ANDROID_TOOLCHAIN_BIN=/home/user/Android/Sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin NO_QT=1 NO_WALLET=1
 
 ### Install the required dependencies: Ubuntu & Debian
 
