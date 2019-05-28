@@ -384,22 +384,22 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
 bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwallet, const isminefilter* filter_ismine)
 {
     bool found = false;
-	if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
-		found = AssetTxToJSON(tx, output);
+    if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetTxToJSON(tx, output);
     else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
         found = SysBurnTxToJSON(tx, output);        
-	else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
-		found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
+    else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
+        found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
     return found;
 }
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
-{
-	std::vector< unsigned char> vchEthAddress;
-	int nOut;
-	// we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
-	if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
-		return false;
-	}
+    {
+    std::vector< unsigned char> vchEthAddress;
+    int nOut;
+    // we can expect a single data output and thus can expect getsyscoindata() to pass and give the ethereum address
+    if (!GetSyscoinData(tx, vchEthAddress, nOut) || vchEthAddress.size() != MAX_GUID_LENGTH) {
+        return false;
+    }
     int nHeight = 0;
     const uint256& txHash = tx.GetHash();
     CBlockIndex* blockindex = nullptr;
