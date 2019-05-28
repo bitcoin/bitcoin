@@ -11,12 +11,14 @@
 #include <services/graph.h>
 #include <txmempool.h>
 #include <services/witnessaddress.h>
+#include <script/ismine.h>
 class CTransaction;
 class CReserveKey;
 class CCoinsViewCache;
 class CBlock;
 class CAsset;
 class CMintSyscoin;
+class CWallet;
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry);
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight,  const uint256& blockhash, UniValue &entry);
 
@@ -166,7 +168,7 @@ public:
 bool GetAssetAllocation(const CAssetAllocationTuple& assetAllocationTuple,CAssetAllocation& txPos);
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oName);
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation);
-bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
+bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet = nullptr, const isminefilter* filter_ismine = nullptr);
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
 void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);

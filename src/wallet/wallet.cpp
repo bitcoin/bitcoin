@@ -1715,7 +1715,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
     }
     // SYSCOIN
     if(pwallet->IsAssetMine(*tx, filter)){
-        COutputEntry output = {CNoDestination(), 0, 0};
+        COutputEntry output = {CNoDestination(), nFee, 0};
         listReceived.push_back(output);
     }
 }

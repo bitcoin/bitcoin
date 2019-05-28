@@ -1345,7 +1345,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output))
+            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine))
                 entry.pushKV("systx", output);
             if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
                 continue;
@@ -1394,7 +1394,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output))
+            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine))
                 entry.pushKV("systx", output);
             if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
                 continue;

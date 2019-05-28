@@ -12,6 +12,7 @@
 #include <primitives/transaction.h>
 #include <services/assetallocation.h>
 #include <sys/types.h>
+#include <script/ismine.h>
 class CTransaction;
 class CReserveKey;
 class CCoinsViewCache;
@@ -50,7 +51,7 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
 bool GetSyscoinBurnData(const CScript &scriptPubKey, std::vector<std::vector<unsigned char> > &vchData);
 bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAllocation, std::vector<unsigned char> &vchEthAddress);
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress);
-bool SysTxToJSON(const CTransaction &tx, UniValue &entry);
+bool SysTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* const pwallet = nullptr, const isminefilter* filter_ismine = nullptr);
 bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry);
 bool IsOutpointMature(const COutPoint& outpoint);
 bool FlushSyscoinDBs();
@@ -335,7 +336,7 @@ bool BuildAssetJson(const CAsset& asset, UniValue& oName);
 UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
 CAmount AssetAmountFromValue(UniValue& value, int precision);
 bool AssetRange(const CAmount& amountIn, int precision);
-bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output);
+bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CWallet* const pwallet = nullptr, const isminefilter* filter_ismine = nullptr);
 void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid);
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
