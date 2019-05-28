@@ -42,7 +42,7 @@ void base_blob<BITS>::SetHex(const char* psz)
         psz++;
     psz--;
     unsigned char* p1 = (unsigned char*)data;
-    unsigned char* pend = p1 + WIDTH;
+    unsigned char* pend = p1 + WIDTH_8;
     while (psz >= pbegin && p1 < pend) {
         *p1 = ::HexDigit(*psz--);
         if (psz >= pbegin) {

@@ -18,9 +18,9 @@ template<unsigned int BITS>
 class base_blob
 {
 protected:
-    static constexpr int WIDTH = BITS / 8;
-    static constexpr int WORDS = BITS / 32;
-    uint8_t data[WIDTH];
+    static constexpr int WIDTH_8 = BITS / 8;
+    static constexpr int WIDTH_32 = BITS / 32;
+    uint8_t data[WIDTH_8];
 public:
     base_blob()
     {
@@ -31,7 +31,7 @@ public:
 
     bool IsNull() const
     {
-        for (int i = 0; i < WORDS; ++i)
+        for (int i = 0; i < WIDTH_32; ++i)
             if (((uint32_t*) data)[i] != 0)
                 return false;
         return true;
@@ -60,7 +60,7 @@ public:
 
     unsigned char* end()
     {
-        return &data[WIDTH];
+        return &data[WIDTH_8];
     }
 
     const unsigned char* begin() const
@@ -70,7 +70,7 @@ public:
 
     const unsigned char* end() const
     {
-        return &data[WIDTH];
+        return &data[WIDTH_8];
     }
 
     unsigned int size() const
