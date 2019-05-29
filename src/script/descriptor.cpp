@@ -878,24 +878,40 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
 
 } // namespace
 
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum)
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum)
 {
     Span<const char> sp(descriptor.data(), descriptor.size());
 
     // Checksum checks
     auto check_split = Split(sp, '#');
-    if (check_split.size() > 2) return nullptr; // Multiple '#' symbols
-    if (check_split.size() == 1 && require_checksum) return nullptr; // Missing checksum
+    if (check_split.size() > 2) {
+        error = "Multiple '#' symbols";
+        return nullptr;
+    }
+    if (check_split.size() == 1 && require_checksum) {
+        error = "Missing checksum";
+        return nullptr;
+    }
     if (check_split.size() == 2) {
-        if (check_split[1].size() != 8) return nullptr; // Unexpected length for checksum
+        if (check_split[1].size() != 8) {
+            error = "Unexpected length for checksum";
+            return nullptr;
+        }
         auto checksum = DescriptorChecksum(check_split[0]);
-        if (checksum.empty()) return nullptr; // Invalid characters in payload
-        if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) return nullptr; // Checksum mismatch
+        if (checksum.empty()) {
+            error = "Invalid characters in payload";
+            return nullptr;
+        }
+        if (!std::equal(checksum.begin(), checksum.end(), check_split[1].begin())) {
+            error = "Checksum mismatch";
+            return nullptr;
+        }
     }
     sp = check_split[0];
 
     auto ret = ParseScript(sp, ParseScriptContext::TOP, out);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
+    error = "Script parse failed";
     return nullptr;
 }
 

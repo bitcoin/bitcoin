@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,8 @@
 #include <script/script.h>
 #include <script/sign.h>
 
+#include <memory>
+#include <string>
 #include <vector>
 
 // Descriptors are strings that describe a set of scriptPubKeys, together with
@@ -70,7 +72,7 @@ struct Descriptor {
  * If a parse error occurs, or the checksum is missing/invalid, or anything
  * else is wrong, nullptr is returned.
  */
-std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, bool require_checksum = false);
+std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProvider& out, std::string& error, bool require_checksum = false);
 
 /** Find a descriptor for the specified script, using information from provider where possible.
  *
