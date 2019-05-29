@@ -226,7 +226,7 @@ UniValue gobject(const JSONRPCRequest& request)
              << ", txid  = " << tx->GetHash().GetHex()
              << std::endl; );*/
 
-        return tx.GetHash().ToString();
+        return tx->GetHash().ToString();
     }
 #endif // ENABLE_WALLET
 
