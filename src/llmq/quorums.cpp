@@ -32,7 +32,7 @@ CQuorumManager* quorumManager;
 static uint256 MakeQuorumKey(const CQuorum& q)
 {
     CHashWriter hw(SER_NETWORK, 0);
-    hw << (uint8_t)q.params.type;
+    hw << q.params.type;
     hw << q.qc.quorumHash;
     for (const auto& dmn : q.members) {
         hw << dmn->proTxHash;

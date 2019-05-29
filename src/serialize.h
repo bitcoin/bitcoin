@@ -720,20 +720,52 @@ template<typename Stream, typename T> void Unserialize(Stream& os, std::unique_p
 
 
 /**
- * If none of the specialized versions above matched, default to calling member function.
+ * If none of the specialized versions above matched and T is a class, default to calling member function.
  */
-template<typename Stream, typename T>
+template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
 inline void Serialize(Stream& os, const T& a)
 {
     a.Serialize(os);
 }
 
-template<typename Stream, typename T>
+template<typename Stream, typename T, typename std::enable_if<std::is_class<T>::value>::type* = nullptr>
 inline void Unserialize(Stream& is, T& a)
 {
     a.Unserialize(is);
 }
 
+/**
+ * If none of the specialized versions above matched and T is an enum, default to calling
+ * Serialize/Unserialze with the underlying type. This is only allowed when a specialized struct of is_serializable_enum<Enum>
+ * is found which derives from std::true_type. This is to ensure that enums are not serialized with the wrong type by
+ * accident.
+ */
+
+template<typename T> struct is_serializable_enum;
+template<typename T> struct is_serializable_enum : std::false_type {};
+
+template<typename Stream, typename T, typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
+inline void Serialize(Stream& s, T a )
+{
+    // If you ever get into this situation, it usaully means you forgot to declare is_serializable_enum for the desired enum type
+    static_assert(is_serializable_enum<T>::value);
+
+    typedef typename std::underlying_type<T>::type T2;
+    T2 b = (T2)a;
+    Serialize(s, b);
+}
+
+template<typename Stream, typename T, typename std::enable_if<std::is_enum<T>::value>::type* = nullptr>
+inline void Unserialize(Stream& s, T& a )
+{
+    // If you ever get into this situation, it usaully means you forgot to declare is_serializable_enum for the desired enum type
+    static_assert(is_serializable_enum<T>::value);
+
+    typedef typename std::underlying_type<T>::type T2;
+    T2 b;
+    Unserialize(s, b);
+    a = (T)b;
+}
 
 
 

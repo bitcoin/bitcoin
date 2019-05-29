@@ -21,7 +21,7 @@ namespace llmq
 class CRecoveredSig
 {
 public:
-    uint8_t llmqType;
+    Consensus::LLMQType llmqType;
     uint256 quorumHash;
     uint256 id;
     uint256 msgHash;

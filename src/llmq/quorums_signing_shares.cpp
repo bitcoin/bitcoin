@@ -998,7 +998,7 @@ bool CSigSharesManager::SendMessages()
 
             CSigSesAnn sigSesAnn;
             sigSesAnn.sessionId = session->sendSessionId;
-            sigSesAnn.llmqType = (uint8_t)session->llmqType;
+            sigSesAnn.llmqType = session->llmqType;
             sigSesAnn.quorumHash = session->quorumHash;
             sigSesAnn.id = session->id;
             sigSesAnn.msgHash = session->msgHash;
