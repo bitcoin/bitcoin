@@ -21,7 +21,8 @@
 
 #include <mach-o/dyld.h>
 
-namespace boost::detail {
+namespace boost {
+namespace detail {
 
 boost::filesystem::path executable_path_worker()
 {
@@ -62,6 +63,7 @@ boost::filesystem::path executable_path_worker()
     return ret;
 }
 
-} // namespace boost::detail
+} // namespace detail
+} // namespace boost
 
 #endif
