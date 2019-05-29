@@ -71,13 +71,24 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
 
     // Dash specific
     QSettings settings;
-    if (!settings.contains("bUseDarkSend"))
-        settings.setValue("bUseDarkSend", false);
-    if (!settings.contains("bUseInstantX"))
-        settings.setValue("bUseInstantX", false);
+    //TODO remove Darksend sometime after 0.14.1
+    if (settings.contains("bUseDarkSend")) {
+        settings.setValue("bUsePrivateSend", settings.value("bUseDarkSend").toBool());
+        settings.remove("bUseDarkSend");
+    }
+    if (!settings.contains("bUsePrivateSend"))
+        settings.setValue("bUsePrivateSend", false);
 
-    bool fUsePrivateSend = settings.value("bUseDarkSend").toBool();
-    bool fUseInstantSend = settings.value("bUseInstantX").toBool();
+    //TODO remove InstantX sometime after 0.14.1
+    if (settings.contains("bUseInstantX")) {
+        settings.setValue("bUseInstantSend", settings.value("bUseInstantX").toBool());
+        settings.remove("bUseInstantX");
+    }
+    if (!settings.contains("bUseInstantSend"))
+        settings.setValue("bUseInstantSend", false);
+
+    bool fUsePrivateSend = settings.value("bUsePrivateSend").toBool();
+    bool fUseInstantSend = settings.value("bUseInstantSend").toBool();
     if(fLiteMode) {
         ui->checkUsePrivateSend->setChecked(false);
         ui->checkUsePrivateSend->setVisible(false);
@@ -586,7 +597,7 @@ void SendCoinsDialog::setBalance(const CAmount& balance, const CAmount& unconfir
     {
 	    uint64_t bal = 0;
         QSettings settings;
-        settings.setValue("bUseDarkSend", ui->checkUsePrivateSend->isChecked());
+        settings.setValue("bUsePrivateSend", ui->checkUsePrivateSend->isChecked());
 	    if(ui->checkUsePrivateSend->isChecked()) {
 		    bal = anonymizedBalance;
 	    } else {
@@ -611,7 +622,7 @@ void SendCoinsDialog::updateDisplayUnit()
 void SendCoinsDialog::updateInstantSend()
 {
     QSettings settings;
-    settings.setValue("bUseInstantX", ui->checkUseInstantSend->isChecked());
+    settings.setValue("bUseInstantSend", ui->checkUseInstantSend->isChecked());
     CoinControlDialog::coinControl->fUseInstantSend = model->IsOldInstantSendEnabled() && ui->checkUseInstantSend->isChecked();
     coinControlUpdateLabels();
 }
