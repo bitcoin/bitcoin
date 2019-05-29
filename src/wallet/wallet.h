@@ -797,25 +797,6 @@ private:
     //! Unsets a wallet flag and saves it to disk
     void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
 
-    /** Add a KeyOriginInfo to the wallet */
-    bool AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info);
-
-    //! Adds a key to the store, and saves it to disk.
-    bool AddKeyPubKeyWithDB(WalletBatch &batch,const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
-    //! Adds a watch-only address to the store, and saves it to disk.
-    bool AddWatchOnlyWithDB(WalletBatch &batch, const CScript& dest, int64_t create_time) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-
-    void AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch);
-
-    bool SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose);
-
-    //! Adds a script to the store and saves it to disk
-    bool AddCScriptWithDB(WalletBatch& batch, const CScript& script);
-
-    //! Unsets a wallet flag and saves it to disk
-    void UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag);
-
     /** Interface for accessing chain state. */
     interfaces::Chain* m_chain;
 
