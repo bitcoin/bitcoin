@@ -320,7 +320,7 @@ bool CWallet::AddKeyPubKeyWithDB(WalletBatch& batch, const CKey& secret, const C
                                                  secret.GetPrivKey(),
                                                  mapKeyMetadata[pubkey.GetID()]);
     }
-    UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+    UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
     return true;
 }
 
@@ -362,12 +362,6 @@ void CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata&
     m_script_metadata[script_id] = meta;
 }
 
-// Writes a keymetadata for a public key. overwrite specifies whether to overwrite an existing metadata for that key if there exists one.
-bool CWallet::WriteKeyMetadata(const CKeyMetadata& meta, const CPubKey& pubkey, const bool overwrite)
-{
-    return WalletBatch(*database).WriteKeyMetadata(meta, pubkey, overwrite);
-}
-
 void CWallet::UpgradeKeyMetadata()
 {
     AssertLockHeld(cs_wallet);
@@ -376,7 +370,6 @@ void CWallet::UpgradeKeyMetadata()
     }
 
     std::unique_ptr<WalletBatch> batch = MakeUnique<WalletBatch>(*database);
-    size_t cnt = 0;
     for (auto& meta_pair : mapKeyMetadata) {
         CKeyMetadata& meta = meta_pair.second;
         if (!meta.hd_seed_id.IsNull() && !meta.has_key_origin && meta.hdKeypath != "s") { // If the hdKeypath is "s", that's the seed and it doesn't have a key origin
@@ -399,10 +392,6 @@ void CWallet::UpgradeKeyMetadata()
             CPubKey pubkey;
             if (GetPubKey(meta_pair.first, pubkey)) {
                 batch->WriteKeyMetadata(meta, pubkey, true);
-                if (++cnt % 1000 == 0) {
-                    // avoid creating overlarge in-memory batches in case the wallet contains large amounts of keys
-                    batch.reset(new WalletBatch(*database));
-                }
             }
         }
     }
@@ -433,10 +422,16 @@ void CWallet::UpdateTimeFirstKey(int64_t nCreateTime)
 
 bool CWallet::AddCScript(const CScript& redeemScript)
 {
+    WalletBatch batch(*database);
+    return AddCScriptWithDB(batch, redeemScript);
+}
+
+bool CWallet::AddCScriptWithDB(WalletBatch& batch, const CScript& redeemScript)
+{
     if (!CCryptoKeyStore::AddCScript(redeemScript))
         return false;
-    if (WalletBatch(*database).WriteCScript(Hash160(redeemScript), redeemScript)) {
-        UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+    if (batch.WriteCScript(Hash160(redeemScript), redeemScript)) {
+        UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
         return true;
     }
     return false;
@@ -457,18 +452,30 @@ bool CWallet::LoadCScript(const CScript& redeemScript)
     return CCryptoKeyStore::AddCScript(redeemScript);
 }
 
-bool CWallet::AddWatchOnly(const CScript& dest)
+bool CWallet::AddWatchOnlyWithDB(WalletBatch &batch, const CScript& dest)
 {
     if (!CCryptoKeyStore::AddWatchOnly(dest))
         return false;
     const CKeyMetadata& meta = m_script_metadata[CScriptID(dest)];
     UpdateTimeFirstKey(meta.nCreateTime);
     NotifyWatchonlyChanged(true);
-    if (WalletBatch(*database).WriteWatchOnly(dest, meta)) {
-        UnsetWalletFlag(WALLET_FLAG_BLANK_WALLET);
+    if (batch.WriteWatchOnly(dest, meta)) {
+        UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
         return true;
     }
     return false;
+}
+
+bool CWallet::AddWatchOnlyWithDB(WalletBatch &batch, const CScript& dest, int64_t create_time)
+{
+    m_script_metadata[CScriptID(dest)].nCreateTime = create_time;
+    return AddWatchOnlyWithDB(batch, dest);
+}
+
+bool CWallet::AddWatchOnly(const CScript& dest)
+{
+    WalletBatch batch(*database);
+    return AddWatchOnlyWithDB(batch, dest);
 }
 
 bool CWallet::AddWatchOnly(const CScript& dest, int64_t nCreateTime)
@@ -1543,9 +1550,15 @@ void CWallet::SetWalletFlag(uint64_t flags)
 
 void CWallet::UnsetWalletFlag(uint64_t flag)
 {
+    WalletBatch batch(*database);
+    UnsetWalletFlagWithDB(batch, flag);
+}
+
+void CWallet::UnsetWalletFlagWithDB(WalletBatch& batch, uint64_t flag)
+{
     LOCK(cs_wallet);
     m_wallet_flags &= ~flag;
-    if (!WalletBatch(*database).WriteWalletFlags(m_wallet_flags))
+    if (!batch.WriteWalletFlags(m_wallet_flags))
         throw std::runtime_error(std::string(__func__) + ": writing wallet flags failed");
 }
 
@@ -1602,6 +1615,80 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
         }
 
         nIn++;
+    }
+    return true;
+}
+
+bool CWallet::ImportScripts(const std::set<CScript> scripts)
+{
+    WalletBatch batch(*database);
+    for (const auto& entry : scripts) {
+        if (!HaveCScript(CScriptID(entry)) && !AddCScriptWithDB(batch, entry)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
+{
+    WalletBatch batch(*database);
+    for (const auto& entry : privkey_map) {
+        const CKey& key = entry.second;
+        CPubKey pubkey = key.GetPubKey();
+        const CKeyID& id = entry.first;
+        assert(key.VerifyPubKey(pubkey));
+        mapKeyMetadata[id].nCreateTime = timestamp;
+        // If the private key is not present in the wallet, insert it.
+        if (!HaveKey(id) && !AddKeyPubKeyWithDB(batch, key, pubkey)) {
+            return false;
+        }
+        UpdateTimeFirstKey(timestamp);
+    }
+    return true;
+}
+
+bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
+{
+    WalletBatch batch(*database);
+    for (const auto& entry : key_origins) {
+        AddKeyOriginWithDB(batch, entry.second.first, entry.second.second);
+    }
+    for (const CKeyID& id : ordered_pubkeys) {
+        auto entry = pubkey_map.find(id);
+        if (entry == pubkey_map.end()) {
+            continue;
+        }
+        const CPubKey& pubkey = entry->second;
+        CPubKey temp;
+        if (!GetPubKey(id, temp) && !AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
+            return false;
+        }
+        mapKeyMetadata[id].nCreateTime = timestamp;
+
+        // Add to keypool only works with pubkeys
+        if (add_keypool) {
+            AddKeypoolPubkeyWithDB(pubkey, internal, batch);
+            NotifyCanGetAddressesChanged();
+        }
+    }
+    return true;
+}
+
+bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool internal, const int64_t timestamp)
+{
+    WalletBatch batch(*database);
+    for (const CScript& script : script_pub_keys) {
+        if (!have_solving_data || !::IsMine(*this, script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
+            if (!AddWatchOnlyWithDB(batch, script, timestamp)) {
+                return false;
+            }
+        }
+        CTxDestination dest;
+        ExtractDestination(script, dest);
+        if (!internal && IsValidDestination(dest)) {
+            SetAddressBookWithDB(batch, dest, label, "receive");
+        }
     }
     return true;
 }
@@ -3149,8 +3236,7 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
     return DBErrors::LOAD_OK;
 }
 
-
-bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
+bool CWallet::SetAddressBookWithDB(WalletBatch& batch, const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
 {
     bool fUpdated = false;
     {
@@ -3163,9 +3249,15 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& s
     }
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
-    if (!strPurpose.empty() && !WalletBatch(*database).WritePurpose(EncodeDestination(address), strPurpose))
+    if (!strPurpose.empty() && !batch.WritePurpose(EncodeDestination(address), strPurpose))
         return false;
-    return WalletBatch(*database).WriteName(EncodeDestination(address), strName);
+    return batch.WriteName(EncodeDestination(address), strName);
+}
+
+bool CWallet::SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& strPurpose)
+{
+    WalletBatch batch(*database);
+    return SetAddressBookWithDB(batch, address, strName, strPurpose);
 }
 
 bool CWallet::DelAddressBook(const CTxDestination& address)
@@ -3313,13 +3405,6 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
     }
     NotifyCanGetAddressesChanged();
     return true;
-}
-
-void CWallet::AddKeypoolPubkey(const CPubKey& pubkey, const bool internal)
-{
-    WalletBatch batch(*database);
-    AddKeypoolPubkeyWithDB(pubkey, internal, batch);
-    NotifyCanGetAddressesChanged();
 }
 
 void CWallet::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch)
@@ -4443,12 +4528,12 @@ bool CWallet::GetKeyOrigin(const CKeyID& keyID, KeyOriginInfo& info) const
     return true;
 }
 
-bool CWallet::AddKeyOrigin(const CPubKey& pubkey, const KeyOriginInfo& info)
+bool CWallet::AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info)
 {
     LOCK(cs_wallet);
     std::copy(info.fingerprint, info.fingerprint + 4, mapKeyMetadata[pubkey.GetID()].key_origin.fingerprint);
     mapKeyMetadata[pubkey.GetID()].key_origin.path = info.path;
     mapKeyMetadata[pubkey.GetID()].has_key_origin = true;
     mapKeyMetadata[pubkey.GetID()].hdKeypath = WriteHDKeypath(info.path);
-    return WriteKeyMetadata(mapKeyMetadata[pubkey.GetID()], pubkey, true);
+    return batch.WriteKeyMetadata(mapKeyMetadata[pubkey.GetID()], pubkey, true);
 }
