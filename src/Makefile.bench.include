@@ -27,6 +27,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/crypto_hash.cpp \
   bench/data.cpp \
   bench/data.h \
+  bench/descriptors.cpp \
   bench/duplicate_inputs.cpp \
   bench/examples.cpp \
   bench/gcs_filter.cpp \
