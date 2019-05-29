@@ -731,22 +731,31 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(const Span<const char>& sp, bool per
 }
 
 /** Parse a script in a particular context. */
-std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out)
+static std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     auto expr = Expr(sp);
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = "Invalid pk() pubkey";
+            return nullptr;
+        }
         return MakeUnique<PKDescriptor>(std::move(pubkey));
     }
     if (Func("pkh", expr)) {
         auto pubkey = ParsePubkey(expr, ctx != ParseScriptContext::P2WSH, out);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = "Invalid pkh() pubkey";
+            return nullptr;
+        }
         return MakeUnique<PKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkey = ParsePubkey(expr, true, out);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = "Invalid combo() pubkey";
+            return nullptr;
+        }
         return MakeUnique<ComboDescriptor>(std::move(pubkey));
     }
     if (Func("multi", expr)) {
@@ -756,48 +765,70 @@ std::unique_ptr<DescriptorImpl> ParseScript(Span<const char>& sp, ParseScriptCon
         if (!ParseUInt32(std::string(threshold.begin(), threshold.end()), &thres)) return nullptr;
         size_t script_size = 0;
         while (expr.size()) {
-            if (!Const(",", expr)) return nullptr;
+            if (!Const(",", expr)) {
+                error = "Unexpected end to multi()";
+                return nullptr;
+            }
             auto arg = Expr(expr);
             auto pk = ParsePubkey(arg, ctx != ParseScriptContext::P2WSH, out);
-            if (!pk) return nullptr;
+            if (!pk) {
+                error = "Invalid multi() pubkey";
+                return nullptr;
+            }
             script_size += pk->GetSize() + 1;
             providers.emplace_back(std::move(pk));
         }
         if (providers.size() < 1 || providers.size() > 16 || thres < 1 || thres > providers.size()) return nullptr;
         if (ctx == ParseScriptContext::TOP) {
-            if (providers.size() > 3) return nullptr; // Not more than 3 pubkeys for raw multisig
+            if (providers.size() > 3) {
+                error = "More than 3 pubkeys for raw multisig";
+                return nullptr; // Not more than 3 pubkeys for raw multisig
+            }
         }
         if (ctx == ParseScriptContext::P2SH) {
-            if (script_size + 3 > 520) return nullptr; // Enforce P2SH script size limit
+            if (script_size + 3 > 520) {
+                error = "P2SH script size limit exceeded";
+                return nullptr; // Enforce P2SH script size limit
+            }
         }
         return MakeUnique<MultisigDescriptor>(thres, std::move(providers));
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
         auto pubkey = ParsePubkey(expr, false, out);
-        if (!pubkey) return nullptr;
+        if (!pubkey) {
+            error = "Invalid wpkh() pubkey";
+            return nullptr;
+        }
         return MakeUnique<WPKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
-        auto desc = ParseScript(expr, ParseScriptContext::P2SH, out);
+        auto desc = ParseScript(expr, ParseScriptContext::P2SH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<SHDescriptor>(std::move(desc));
     }
     if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
-        auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out);
+        auto desc = ParseScript(expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return MakeUnique<WSHDescriptor>(std::move(desc));
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {
         CTxDestination dest = DecodeDestination(std::string(expr.begin(), expr.end()));
-        if (!IsValidDestination(dest)) return nullptr;
+        if (!IsValidDestination(dest)) {
+            error = "Invalid addr() destination";
+            return nullptr;
+        }
         return MakeUnique<AddressDescriptor>(std::move(dest));
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
-        if (!IsHex(str)) return nullptr;
+        if (!IsHex(str)) {
+            error = "Non-hex raw() argument";
+            return nullptr;
+        }
         auto bytes = ParseHex(str);
         return MakeUnique<RawDescriptor>(CScript(bytes.begin(), bytes.end()));
     }
+    error = "Script parse failed";
     return nullptr;
 }
 
@@ -909,9 +940,8 @@ std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProv
     }
     sp = check_split[0];
 
-    auto ret = ParseScript(sp, ParseScriptContext::TOP, out);
+    auto ret = ParseScript(sp, ParseScriptContext::TOP, out, error);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
-    error = "Script parse failed";
     return nullptr;
 }
 
