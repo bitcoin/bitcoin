@@ -16,7 +16,8 @@
 
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 
-namespace boost::detail {
+namespace boost {
+namespace detail {
 
 boost::filesystem::path executable_path_worker()
 {
@@ -24,6 +25,7 @@ boost::filesystem::path executable_path_worker()
     return ret;
 }
 
-} // namespace boost::detail
+} // namespace detail
+} // namespace boost
 
 #endif
