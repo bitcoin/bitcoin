@@ -42,7 +42,6 @@ CGovernanceObject::CGovernanceObject() :
     fExpired(false),
     fUnparsable(false),
     mapCurrentMNVotes(),
-    cmmapOrphanVotes(),
     fileVotes()
 {
     // PARSE JSON DATA STORAGE (VCHDATA)
@@ -70,7 +69,6 @@ CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevision
     fExpired(false),
     fUnparsable(false),
     mapCurrentMNVotes(),
-    cmmapOrphanVotes(),
     fileVotes()
 {
     // PARSE JSON DATA STORAGE (VCHDATA)
@@ -98,7 +96,6 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other) :
     fExpired(other.fExpired),
     fUnparsable(other.fUnparsable),
     mapCurrentMNVotes(other.mapCurrentMNVotes),
-    cmmapOrphanVotes(other.cmmapOrphanVotes),
     fileVotes(other.fileVotes)
 {
 }
@@ -126,12 +123,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     if (!dmn) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
-        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
-        if (cmmapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
-            LogPrintf("%s\n", ostr.str());
-        } else {
-            LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-        }
+        exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
 
@@ -452,15 +444,13 @@ void CGovernanceObject::UpdateLocalValidity()
 
 bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollateral) const
 {
-    bool fMissingMasternode = false;
     bool fMissingConfirmations = false;
 
-    return IsValidLocally(strError, fMissingMasternode, fMissingConfirmations, fCheckCollateral);
+    return IsValidLocally(strError, fMissingConfirmations, fCheckCollateral);
 }
 
-bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral) const
+bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const
 {
-    fMissingMasternode = false;
     fMissingConfirmations = false;
 
     if (fUnparsable) {
@@ -717,35 +707,4 @@ void CGovernanceObject::UpdateSentinelVariables()
     if (GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsVoteReq) fCachedEndorsed = true;
 
     if (GetAbsoluteNoCount(VOTE_SIGNAL_VALID) >= nAbsVoteReq) fCachedValid = false;
-}
-
-void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
-{
-    int64_t nNow = GetAdjustedTime();
-    auto mnList = deterministicMNManager->GetListAtChainTip();
-    const vote_cmm_t::list_t& listVotes = cmmapOrphanVotes.GetItemList();
-    vote_cmm_t::list_cit it = listVotes.begin();
-    while (it != listVotes.end()) {
-        bool fRemove = false;
-        const COutPoint& key = it->key;
-        const vote_time_pair_t& pairVote = it->value;
-        const CGovernanceVote& vote = pairVote.first;
-        if (pairVote.second < nNow) {
-            fRemove = true;
-        } else if (!mnList.HasValidMNByCollateral(vote.GetMasternodeOutpoint())) {
-            ++it;
-            continue;
-        }
-        CGovernanceException exception;
-        if (!ProcessVote(nullptr, vote, exception, connman)) {
-            LogPrintf("CGovernanceObject::CheckOrphanVotes -- Failed to add orphan vote: %s\n", exception.what());
-        } else {
-            vote.Relay(connman);
-            fRemove = true;
-        }
-        ++it;
-        if (fRemove) {
-            cmmapOrphanVotes.Erase(key, pairVote);
-        }
-    }
 }

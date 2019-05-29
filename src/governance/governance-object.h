@@ -180,9 +180,6 @@ private:
 
     vote_m_t mapCurrentMNVotes;
 
-    /// Limited map of votes orphaned by MN
-    vote_cmm_t cmmapOrphanVotes;
-
     CGovernanceObjectVoteFile fileVotes;
 
 public:
@@ -267,7 +264,7 @@ public:
 
     bool IsValidLocally(std::string& strError, bool fCheckCollateral) const;
 
-    bool IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral) const;
+    bool IsValidLocally(std::string& strError, bool& fMissingConfirmations, bool fCheckCollateral) const;
 
     /// Check the collateral transaction for the budget proposal/finalized budget
     bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const;
@@ -350,8 +347,6 @@ private:
     // also for MNs that were removed from the list completely.
     // Returns deleted vote hashes.
     std::set<uint256> RemoveInvalidVotes(const COutPoint& mnOutpoint);
-
-    void CheckOrphanVotes(CConnman& connman);
 };
 
 

@@ -241,9 +241,6 @@ private:
     //   value - expiration time for deleted objects
     hash_time_m_t mapErasedGovernanceObjects;
 
-    object_info_m_t mapMasternodeOrphanObjects;
-    txout_int_m_t mapMasternodeOrphanCounter;
-
     object_m_t mapPostponedObjects;
     hash_s_t setAdditionalRelayObjects;
 
@@ -401,10 +398,6 @@ public:
         }
         return fOK;
     }
-
-    void CheckMasternodeOrphanVotes(CConnman& connman);
-
-    void CheckMasternodeOrphanObjects(CConnman& connman);
 
     void CheckPostponedObjects(CConnman& connman);
 

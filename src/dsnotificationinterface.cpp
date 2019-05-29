@@ -116,8 +116,6 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)
 {
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff);
-    governance.CheckMasternodeOrphanObjects(connman);
-    governance.CheckMasternodeOrphanVotes(connman);
     governance.UpdateCachesAndClean();
 }
 
