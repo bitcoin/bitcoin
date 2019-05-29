@@ -204,7 +204,7 @@
     <ItemGroup>
       <JsonTestFile Include="..\..\src\test\data\*.json" />
     </ItemGroup>
-    <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="namespace json_tests{ static unsigned const char %(JsonTestFile.Filename)[] = {" SourceFooter="};}" />
+    <HeaderFromHexdump RawFilePath="%(JsonTestFile.FullPath)" HeaderFilePath="%(JsonTestFile.FullPath).h" SourceHeader="#include &lt;string&gt;&#10; namespace json_tests{ static unsigned const char %(JsonTestFile.Filename)[] = {" SourceFooter="}; std::string hex_str_%(JsonTestFile.Filename)() { return std::string{%(JsonTestFile.Filename), %(JsonTestFile.Filename) + sizeof(%(JsonTestFile.Filename))}; }; }" />
   </Target>
   <Import Label="configTarget" Project="..\common.vcxproj" />
   <Import Label="hexdumpTarget" Project="..\msbuild\tasks\hexdump.targets" />

@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 // Goal: check that SignatureHash generates correct hash
 BOOST_AUTO_TEST_CASE(sighash_from_data)
 {
-    UniValue tests = read_json(std::string(json_tests::sighash, json_tests::sighash + sizeof(json_tests::sighash)));
+    UniValue tests = read_json(json_tests::hex_str_sighash());
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];

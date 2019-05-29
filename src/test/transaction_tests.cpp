@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
     // ... where all scripts are stringified scripts.
     //
     // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
-    UniValue tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
+    UniValue tests = read_json(json_tests::hex_str_tx_valid());
 
     ScriptError err;
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
     // ... where all scripts are stringified scripts.
     //
     // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
-    UniValue tests = read_json(std::string(json_tests::tx_invalid, json_tests::tx_invalid + sizeof(json_tests::tx_invalid)));
+    UniValue tests = read_json(json_tests::hex_str_tx_invalid());
 
     // Initialize to SCRIPT_ERR_OK. The tests expect err to be changed to a
     // value other than SCRIPT_ERR_OK.

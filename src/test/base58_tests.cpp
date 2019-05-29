@@ -20,7 +20,7 @@ BOOST_FIXTURE_TEST_SUITE(base58_tests, BasicTestingSetup)
 // Goal: test low-level base58 encoding functionality
 BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
+    UniValue tests = read_json(json_tests::hex_str_base58_encode_decode());
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         std::string strTest = test.write();
@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(base58_EncodeBase58)
 // Goal: test low-level base58 decoding functionality
 BOOST_AUTO_TEST_CASE(base58_DecodeBase58)
 {
-    UniValue tests = read_json(std::string(json_tests::base58_encode_decode, json_tests::base58_encode_decode + sizeof(json_tests::base58_encode_decode)));
+    UniValue tests = read_json(json_tests::hex_str_base58_encode_decode());
     std::vector<unsigned char> result;
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
