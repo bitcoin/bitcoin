@@ -273,6 +273,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
     {
         nHeight = blockindex->nHeight;
     }
+    bool isSenderMine = false;
     entry.__pushKV("txtype", assetAllocationFromTx(tx.nVersion));
     entry.__pushKV("asset_allocation", assetallocation.assetAllocationTuple.ToString());
     entry.__pushKV("asset_guid", (int)assetallocation.assetAllocationTuple.nAsset);
@@ -280,13 +281,16 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
     entry.__pushKV("txid", txHash.GetHex());
     entry.__pushKV("height", nHeight);
     entry.__pushKV("sender", assetallocation.assetAllocationTuple.witnessAddress.ToString());
+    if(pwallet && filter_ismine && ::IsMine(*pwallet, assetallocation.assetAllocationTuple.witnessAddress.GetScriptForDestination()) & *filter_ismine){
+        isSenderMine = true;
+    }
     UniValue oAssetAllocationReceiversArray(UniValue::VARR);
     CAmount nTotal = 0;  
     if (!assetallocation.listSendingAllocationAmounts.empty()) {
         for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
             nTotal += amountTuple.second;
             const string& strReceiver = amountTuple.first.ToString();
-            if(pwallet && filter_ismine && ::IsMine(*pwallet, amountTuple.first.GetScriptForDestination()) & *filter_ismine){
+            if(isSenderMine || (pwallet && filter_ismine && ::IsMine(*pwallet, amountTuple.first.GetScriptForDestination()) & *filter_ismine)){
                 UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
                 oAssetAllocationReceiversObj.__pushKV("address", strReceiver);
                 oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(amountTuple.second, dbAsset.nPrecision));
