@@ -29,6 +29,7 @@ bench_bench_dash_SOURCES = \
   bench/ccoins_caching.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/util_time.cpp \
   bench/base58.cpp \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
