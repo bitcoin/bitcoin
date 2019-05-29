@@ -20,22 +20,31 @@ class CSporkManager;
     Don't ever reuse these IDs for other sporks
     - This would result in old clients getting confused about which spork is for what
 */
-static const int SPORK_2_INSTANTSEND_ENABLED                            = 10001;
-static const int SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002;
-static const int SPORK_5_INSTANTSEND_MAX_VALUE                          = 10004;
-static const int SPORK_6_NEW_SIGS                                       = 10005;
-static const int SPORK_9_SUPERBLOCKS_ENABLED                            = 10008;
-static const int SPORK_12_RECONSIDER_BLOCKS                             = 10011;
-static const int SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014;
-static const int SPORK_16_INSTANTSEND_AUTOLOCKS                         = 10015;
-static const int SPORK_17_QUORUM_DKG_ENABLED                            = 10016;
-static const int SPORK_19_CHAINLOCKS_ENABLED                            = 10018;
-static const int SPORK_20_INSTANTSEND_LLMQ_BASED                        = 10019;
+enum SporkId : int32_t {
+    SPORK_2_INSTANTSEND_ENABLED                            = 10001,
+    SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
+    SPORK_5_INSTANTSEND_MAX_VALUE                          = 10004,
+    SPORK_6_NEW_SIGS                                       = 10005,
+    SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
+    SPORK_12_RECONSIDER_BLOCKS                             = 10011,
+    SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,
+    SPORK_16_INSTANTSEND_AUTOLOCKS                         = 10015,
+    SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
+    SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
+    SPORK_20_INSTANTSEND_LLMQ_BASED                        = 10019,
 
-static const int SPORK_START                                            = SPORK_2_INSTANTSEND_ENABLED;
-static const int SPORK_END                                              = SPORK_20_INSTANTSEND_LLMQ_BASED;
+    SPORK_INVALID                                          = -1,
+};
+template<> struct is_serializable_enum<SporkId> : std::true_type {};
 
-extern std::map<int, int64_t> mapSporkDefaults;
+struct CSporkDef
+{
+    SporkId sporkId{SPORK_INVALID};
+    int64_t defaultValue{0};
+    std::string name;
+};
+
+extern std::vector<CSporkDef> sporkDefs;
 extern CSporkManager sporkManager;
 
 /**
@@ -62,18 +71,18 @@ private:
     std::vector<unsigned char> vchSig;
 
 public:
-    int nSporkID;
+    SporkId nSporkID;
     int64_t nValue;
     int64_t nTimeSigned;
 
-    CSporkMessage(int nSporkID, int64_t nValue, int64_t nTimeSigned) :
+    CSporkMessage(SporkId nSporkID, int64_t nValue, int64_t nTimeSigned) :
         nSporkID(nSporkID),
         nValue(nValue),
         nTimeSigned(nTimeSigned)
         {}
 
     CSporkMessage() :
-        nSporkID(0),
+        nSporkID((SporkId)0),
         nValue(0),
         nTimeSigned(0)
         {}
@@ -137,9 +146,12 @@ class CSporkManager
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
+    std::unordered_map<SporkId, CSporkDef*> sporkDefsById;
+    std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
+
     mutable CCriticalSection cs;
     std::unordered_map<uint256, CSporkMessage> mapSporksByHash;
-    std::unordered_map<int, std::map<CKeyID, CSporkMessage> > mapSporksActive;
+    std::unordered_map<SporkId, std::map<CKeyID, CSporkMessage> > mapSporksActive;
 
     std::set<CKeyID> setSporkPubKeyIDs;
     int nMinSporkKeys;
@@ -149,11 +161,11 @@ private:
      * SporkValueIsActive is used to get the value agreed upon by the majority
      * of signed spork messages for a given Spork ID.
      */
-    bool SporkValueIsActive(int nSporkID, int64_t& nActiveValueRet) const;
+    bool SporkValueIsActive(SporkId nSporkID, int64_t& nActiveValueRet) const;
 
 public:
 
-    CSporkManager() {}
+    CSporkManager();
 
     ADD_SERIALIZE_METHODS;
 
@@ -209,13 +221,13 @@ public:
      *
      * Currently only used with Spork 12.
      */
-    void ExecuteSpork(int nSporkID, int nValue);
+    void ExecuteSpork(SporkId nSporkID, int nValue);
 
     /**
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign
      * and broadcast the spork message.
      */
-    bool UpdateSpork(int nSporkID, int64_t nValue, CConnman& connman);
+    bool UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& connman);
 
     /**
      * IsSporkActive returns a bool for time-based sporks, and should be used
@@ -226,23 +238,23 @@ public:
      * instead, and therefore this method doesn't make sense and should not be
      * used.
      */
-    bool IsSporkActive(int nSporkID);
+    bool IsSporkActive(SporkId nSporkID);
 
     /**
      * GetSporkValue returns the spork value given a Spork ID. If no active spork
      * message has yet been received by the node, it returns the default value.
      */
-    int64_t GetSporkValue(int nSporkID);
+    int64_t GetSporkValue(SporkId nSporkID);
 
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
      */
-    int GetSporkIDByName(const std::string& strName);
+    SporkId GetSporkIDByName(const std::string& strName);
 
     /**
      * GetSporkNameByID returns the spork name as a string, given a Spork ID.
      */
-    std::string GetSporkNameByID(int nSporkID);
+    std::string GetSporkNameByID(SporkId nSporkID);
 
     /**
      * GetSporkByHash returns a spork message given a hash of the spork message.
