@@ -79,6 +79,8 @@ The following can be set when running make: `make FOO=bar`
 <dd>If a source file can't be fetched, try here before giving up</dd>
 <dt>NO_QT</dt>
 <dd>Don't download/build/cache qt and its dependencies</dd>
+<dt>NO_ZMQ</dt>
+<dd>Don't download/build/cache packages needed for enabling zeromq</dd>
 <dt>NO_WALLET</dt>
 <dd>Don't download/build/cache libs needed to enable the wallet</dd>
 <dt>NO_UPNP</dt>
