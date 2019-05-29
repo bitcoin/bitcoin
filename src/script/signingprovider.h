@@ -83,9 +83,9 @@ struct FlatSigningProvider final : public SigningProvider
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
     bool GetKey(const CKeyID& keyid, CKey& key) const override;
     bool GetTaprootSpendData(const XOnlyPubKey& output_key, TaprootSpendData& spenddata) const override;
-};
 
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b);
+    void Merge(const FlatSigningProvider& other);
+};
 
 /** Fillable signing provider that keeps keys in an address->secret map */
 class FillableSigningProvider : public SigningProvider

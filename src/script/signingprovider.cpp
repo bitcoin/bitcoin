@@ -64,22 +64,15 @@ bool FlatSigningProvider::GetTaprootSpendData(const XOnlyPubKey& output_key, Tap
     return LookupHelper(tr_spenddata, output_key, spenddata);
 }
 
-FlatSigningProvider Merge(const FlatSigningProvider& a, const FlatSigningProvider& b)
+void FlatSigningProvider::Merge(const FlatSigningProvider& other)
 {
-    FlatSigningProvider ret;
-    ret.scripts = a.scripts;
-    ret.scripts.insert(b.scripts.begin(), b.scripts.end());
-    ret.pubkeys = a.pubkeys;
-    ret.pubkeys.insert(b.pubkeys.begin(), b.pubkeys.end());
-    ret.keys = a.keys;
-    ret.keys.insert(b.keys.begin(), b.keys.end());
-    ret.origins = a.origins;
-    ret.origins.insert(b.origins.begin(), b.origins.end());
-    ret.tr_spenddata = a.tr_spenddata;
-    for (const auto& [output_key, spenddata] : b.tr_spenddata) {
-        ret.tr_spenddata[output_key].Merge(spenddata);
+    scripts.insert(other.scripts.begin(), other.scripts.end());
+    pubkeys.insert(other.pubkeys.begin(), other.pubkeys.end());
+    keys.insert(other.keys.begin(), other.keys.end());
+    origins.insert(other.origins.begin(), other.origins.end());
+    for (const auto& [output_key, spenddata] : other.tr_spenddata) {
+        tr_spenddata[output_key].Merge(spenddata);
     }
-    return ret;
 }
 
 void FillableSigningProvider::ImplicitlyLearnRelatedKeyScripts(const CPubKey& pubkey)
