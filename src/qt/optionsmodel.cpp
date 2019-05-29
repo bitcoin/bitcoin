@@ -110,9 +110,9 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("nThreadsScriptVerif", DEFAULT_SCRIPTCHECK_THREADS);
     if (!m_node.softSetArg("-par", settings.value("nThreadsScriptVerif").toString().toStdString()))
         addOverriddenOption("-par");
-
-    if (!settings.contains("strDataDir"))
-        settings.setValue("strDataDir", GUIUtil::getDefaultDataDirectory());
+    // SYSCOIN
+    if (!settings.contains("strDataDirSyscoin"))
+        settings.setValue("strDataDirSyscoin", GUIUtil::getDefaultDataDirectory());
 
     // Wallet
 #ifdef ENABLE_WALLET
@@ -190,15 +190,15 @@ void OptionsModel::Reset()
     // Backup old settings to chain-specific datadir for troubleshooting
     BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
 
-    // Save the strDataDir setting
+    // SYSCOIN Save the strDataDirSyscoin setting
     QString dataDir = GUIUtil::getDefaultDataDirectory();
-    dataDir = settings.value("strDataDir", dataDir).toString();
+    dataDir = settings.value("strDataDirSyscoin", dataDir).toString();
 
     // Remove all entries from our QSettings object
     settings.clear();
 
-    // Set strDataDir
-    settings.setValue("strDataDir", dataDir);
+    // SYSCOIN Set strDataDirSyscoin
+    settings.setValue("strDataDirSyscoin", dataDir);
 
     // Set that this was reset
     settings.setValue("fReset", true);
