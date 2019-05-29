@@ -444,11 +444,6 @@ UniValue masternode(const JSONRPCRequest& request)
         strCommand = request.params[0].get_str();
     }
 
-#ifdef ENABLE_WALLET
-    if (strCommand == "start-many")
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "DEPRECATED, please use start-all instead");
-#endif // ENABLE_WALLET
-
     if (request.fHelp && strCommand.empty()) {
         masternode_help();
     }
