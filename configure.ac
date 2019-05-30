@@ -413,26 +413,86 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 )
 CXXFLAGS="$TEMP_CXXFLAGS"
 
-case $host in
-  *mingw*)
-    ;;
-  *)
-    TEMP_CXXFLAGS="$CXXFLAGS"
-    CXXFLAGS="$CXXFLAGS $AVX512_CXXFLAGS"
-    AC_MSG_CHECKING(for AVX512 intrinsics)
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-        #include <stdint.h>
-        #include <immintrin.h>
-      ]],[[
-        __m512i l = _mm512_set1_epi32(0);
-        return _mm_extract_epi32(_mm512_extracti32x4_epi32(l, 3), 3);
-      ]])],
-    [ AC_MSG_RESULT(yes); enable_avx512=yes; AC_DEFINE(ENABLE_AVX512, 1, [Define this symbol to build code that uses AVX512 intrinsics]) ],
-    [ AC_MSG_RESULT(no)]
-    )
-    CXXFLAGS="$TEMP_CXXFLAGS"
-    ;;
-esac
+TEMP_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS="$CXXFLAGS $AVX512_CXXFLAGS"
+AC_MSG_CHECKING(for AVX512 intrinsics)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+    #include <stdint.h>
+    #include <immintrin.h>
+    __m512i inline K(uint32_t x) { return _mm512_set1_epi32(x); }
+    __m512i inline Add(__m512i x, __m512i y) { return _mm512_add_epi32(x, y); }
+    __m512i inline Add(__m512i x, __m512i y, __m512i z) { return Add(Add(x, y), z); }
+    __m512i inline Add(__m512i x, __m512i y, __m512i z, __m512i w) { return Add(Add(x, y), Add(z, w)); }
+    __m512i inline Add(__m512i x, __m512i y, __m512i z, __m512i w, __m512i v) { return Add(Add(x, y, z), Add(w, v)); }
+    __m512i inline Inc(__m512i& x, __m512i y) { x = Add(x, y); return x; }
+    __m512i inline Inc(__m512i& x, __m512i y, __m512i z) { x = Add(x, y, z); return x; }
+    __m512i inline Inc(__m512i& x, __m512i y, __m512i z, __m512i w) { x = Add(x, y, z, w); return x; }
+    __m512i inline Xor(__m512i x, __m512i y) { return _mm512_xor_si512(x, y); }
+    __m512i inline Xor(__m512i x, __m512i y, __m512i z) { return Xor(Xor(x, y), z); }
+    __m512i inline Or(__m512i x, __m512i y) { return _mm512_or_si512(x, y); }
+    __m512i inline And(__m512i x, __m512i y) { return _mm512_and_si512(x, y); }
+    __m512i inline ShR(__m512i x, unsigned int n) { return _mm512_srli_epi32(x, n); }
+    template<int N> __m512i inline RoL(__m512i x) { return _mm512_rol_epi32(x, N); }
+    __m512i inline Ch(__m512i x, __m512i y, __m512i z) { return Xor(z, And(x, Xor(y, z))); }
+    __m512i inline Maj(__m512i x, __m512i y, __m512i z) { return Or(And(x, y), And(z, Or(x, y))); }
+    __m512i inline Sigma0(__m512i x) { return Xor(RoL<30>(x), RoL<19>(x), RoL<10>(x)); }
+    __m512i inline Sigma1(__m512i x) { return Xor(RoL<26>(x), RoL<21>(x), RoL<7>(x)); }
+    __m512i inline sigma0(__m512i x) { return Xor(RoL<25>(x), RoL<14>(x), ShR(x, 3)); }
+    __m512i inline sigma1(__m512i x) { return Xor(RoL<15>(x), RoL<13>(x), ShR(x, 10)); }
+
+    /** One round of SHA-256. */
+    void inline __attribute__((always_inline)) Round(__m512i a, __m512i b, __m512i c, __m512i& d, __m512i e, __m512i f, __m512i g, __m512i& h, __m512i k)
+    {
+        __m512i t1 = Add(h, Sigma1(e), Ch(e, f, g), k);
+        __m512i t2 = Add(Sigma0(a), Maj(a, b, c));
+        d = Add(d, t1);
+        h = Add(t1, t2);
+    }
+
+    __m512i inline Read16(int offset) {
+        return K(offset);
+    }
+  ]],[[
+    __m512i a = K(0x6a09e667ul);
+    __m512i b = K(0xbb67ae85ul);
+    __m512i c = K(0x3c6ef372ul);
+    __m512i d = K(0xa54ff53aul);
+    __m512i e = K(0x510e527ful);
+    __m512i f = K(0x9b05688cul);
+    __m512i g = K(0x1f83d9abul);
+    __m512i h = K(0x5be0cd19ul);
+
+    __m512i w0, w1, w2, w3, w4, w5, w6, w7, w8, w9, w10, w11, w12, w13, w14, w15;
+
+    Round(a, b, c, d, e, f, g, h, Add(K(0x428a2f98ul), w0 = Read16(0)));
+    Round(h, a, b, c, d, e, f, g, Add(K(0x71374491ul), w1 = Read16(4)));
+    Round(g, h, a, b, c, d, e, f, Add(K(0xb5c0fbcful), w2 = Read16(8)));
+    Round(f, g, h, a, b, c, d, e, Add(K(0xe9b5dba5ul), w3 = Read16(12)));
+    Round(e, f, g, h, a, b, c, d, Add(K(0x3956c25bul), w4 = Read16(16)));
+    Round(d, e, f, g, h, a, b, c, Add(K(0x59f111f1ul), w5 = Read16(20)));
+    Round(c, d, e, f, g, h, a, b, Add(K(0x923f82a4ul), w6 = Read16(24)));
+    Round(b, c, d, e, f, g, h, a, Add(K(0xab1c5ed5ul), w7 = Read16(28)));
+    Round(a, b, c, d, e, f, g, h, Add(K(0xd807aa98ul), w8 = Read16(32)));
+    Round(h, a, b, c, d, e, f, g, Add(K(0x12835b01ul), w9 = Read16(36)));
+    Round(g, h, a, b, c, d, e, f, Add(K(0x243185beul), w10 = Read16(40)));
+    Round(f, g, h, a, b, c, d, e, Add(K(0x550c7dc3ul), w11 = Read16(44)));
+    Round(e, f, g, h, a, b, c, d, Add(K(0x72be5d74ul), w12 = Read16(48)));
+    Round(d, e, f, g, h, a, b, c, Add(K(0x80deb1feul), w13 = Read16(52)));
+    Round(c, d, e, f, g, h, a, b, Add(K(0x9bdc06a7ul), w14 = Read16(56)));
+    Round(b, c, d, e, f, g, h, a, Add(K(0xc19bf174ul), w15 = Read16(60)));
+    Round(a, b, c, d, e, f, g, h, Add(K(0xe49b69c1ul), Inc(w0, sigma1(w14), w9, sigma0(w1))));
+    Round(h, a, b, c, d, e, f, g, Add(K(0xefbe4786ul), Inc(w1, sigma1(w15), w10, sigma0(w2))));
+    Round(g, h, a, b, c, d, e, f, Add(K(0x0fc19dc6ul), Inc(w2, sigma1(w0), w11, sigma0(w3))));
+    Round(f, g, h, a, b, c, d, e, Add(K(0x240ca1ccul), Inc(w3, sigma1(w1), w12, sigma0(w4))));
+    Round(e, f, g, h, a, b, c, d, Add(K(0x2de92c6ful), Inc(w4, sigma1(w2), w13, sigma0(w5))));
+    Round(d, e, f, g, h, a, b, c, Add(K(0x4a7484aaul), Inc(w5, sigma1(w3), w14, sigma0(w6))));
+
+    return _mm_extract_epi32(_mm512_extracti32x4_epi32(g, 3), 3);
+  ]])],
+[ AC_MSG_RESULT(yes); enable_avx512=yes; AC_DEFINE(ENABLE_AVX512, 1, [Define this symbol to build code that uses AVX512 intrinsics]) ],
+[ AC_MSG_RESULT(no)]
+)
+CXXFLAGS="$TEMP_CXXFLAGS"
 
 TEMP_CXXFLAGS="$CXXFLAGS"
 CXXFLAGS="$CXXFLAGS $SHANI_CXXFLAGS"
