@@ -631,7 +631,6 @@ private:
     std::atomic<bool> fScanningWallet{false}; // controlled by WalletRescanReserver
     std::atomic<int64_t> m_scanning_start{0};
     std::atomic<double> m_scanning_progress{0};
-    std::mutex mutexScanning;
     friend class WalletRescanReserver;
 
     //! the current wallet version: clients below this version are not able to load the wallet
@@ -1286,13 +1285,11 @@ public:
     bool reserve()
     {
         assert(!m_could_reserve);
-        std::lock_guard<std::mutex> lock(m_wallet.mutexScanning);
-        if (m_wallet.fScanningWallet) {
+        if (m_wallet.fScanningWallet.exchange(true)) {
             return false;
         }
         m_wallet.m_scanning_start = GetTimeMillis();
         m_wallet.m_scanning_progress = 0;
-        m_wallet.fScanningWallet = true;
         m_could_reserve = true;
         return true;
     }
@@ -1304,7 +1301,6 @@ public:
 
     ~WalletRescanReserver()
     {
-        std::lock_guard<std::mutex> lock(m_wallet.mutexScanning);
         if (m_could_reserve) {
             m_wallet.fScanningWallet = false;
         }
