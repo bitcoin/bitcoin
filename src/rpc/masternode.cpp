@@ -125,8 +125,8 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
 void masternode_list_help()
 {
     throw std::runtime_error(
-            "masternode list ( \"mode\" \"filter\" )\n"
-            "Get a list of masternodes in different modes. This call is identical to masternodelist call.\n"
+            "masternodelist ( \"mode\" \"filter\" )\n"
+            "Get a list of masternodes in different modes. This call is identical to 'masternode list' call.\n"
             "\nArguments:\n"
             "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
             "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
@@ -420,7 +420,7 @@ UniValue masternode_winners(const JSONRPCRequest& request)
 [[ noreturn ]] void masternode_help()
 {
     throw std::runtime_error(
-        "masternode \"command\"...\n"
+        "masternode \"command\" ...\n"
         "Set of commands to execute masternode related actions\n"
         "\nArguments:\n"
         "1. \"command\"        (string or set of strings, required) The command to execute\n"
