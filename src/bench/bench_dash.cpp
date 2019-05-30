@@ -11,6 +11,7 @@
 
 #include "bls/bls.h"
 
+void InitBLSTests();
 void CleanupBLSTests();
 void CleanupBLSDkgTests();
 
@@ -24,6 +25,7 @@ main(int argc, char** argv)
     ECCVerifyHandle verifyHandle;
 
     BLSInit();
+    InitBLSTests();
     SetupEnvironment();
     fPrintToDebugLog = false; // don't want to write to debug.log file
 

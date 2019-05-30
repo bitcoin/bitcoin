@@ -11,6 +11,11 @@
 
 CBLSWorker blsWorker;
 
+void InitBLSTests()
+{
+    blsWorker.Start();
+}
+
 void CleanupBLSTests()
 {
     blsWorker.Stop();
