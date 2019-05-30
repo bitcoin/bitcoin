@@ -63,7 +63,9 @@ would happen.
 
 See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.14.0.0...dashpay:v0.14.0.1).
 
-TODO
+- [`a2baa93ec`](https://github.com/dashpay/dash/commit/a2baa93ec) Only require valid collaterals for votes and triggers (#2947) (#2957)
+- [`b293e6dde`](https://github.com/dashpay/dash/commit/b293e6dde) Fix off-by-one error in InstantSend mining info removal when disconnecting blocks (#2951)
+- [`276b6e3a8`](https://github.com/dashpay/dash/commit/276b6e3a8) bump version to 0.14.0.1 and prepare release notes (#2952)
 
 Credits
 =======
