@@ -748,7 +748,7 @@ template<typename Stream, typename T, typename std::enable_if<std::is_enum<T>::v
 inline void Serialize(Stream& s, T a )
 {
     // If you ever get into this situation, it usaully means you forgot to declare is_serializable_enum for the desired enum type
-    static_assert(is_serializable_enum<T>::value);
+    static_assert(is_serializable_enum<T>::value, "Missing declararion of is_serializable_enum");
 
     typedef typename std::underlying_type<T>::type T2;
     T2 b = (T2)a;
@@ -759,7 +759,7 @@ template<typename Stream, typename T, typename std::enable_if<std::is_enum<T>::v
 inline void Unserialize(Stream& s, T& a )
 {
     // If you ever get into this situation, it usaully means you forgot to declare is_serializable_enum for the desired enum type
-    static_assert(is_serializable_enum<T>::value);
+    static_assert(is_serializable_enum<T>::value, "Missing declararion of is_serializable_enum");
 
     typedef typename std::underlying_type<T>::type T2;
     T2 b;
