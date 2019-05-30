@@ -25,6 +25,7 @@ class CGovernanceVote;
 
 static const int MIN_GOVERNANCE_PEER_PROTO_VERSION = 70213;
 static const int GOVERNANCE_FILTER_PROTO_VERSION = 70206;
+static const int GOVERNANCE_POSE_BANNED_VOTES_VERSION = 70215;
 
 static const double GOVERNANCE_FILTER_FP_RATE = 0.001;
 

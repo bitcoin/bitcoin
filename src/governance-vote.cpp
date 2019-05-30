@@ -120,8 +120,21 @@ void CGovernanceVote::Relay(CConnman& connman) const
         return;
     }
 
+    auto mnList = deterministicMNManager->GetListAtChainTip();
+    auto dmn = mnList.GetMNByCollateral(masternodeOutpoint);
+    if (!dmn) {
+        return;
+    }
+
+    // When this vote is from non-valid (PoSe banned) MN, we should only announce it to v0.14.0.1 nodes as older nodes
+    // will ban us otherwise.
+    int minVersion = MIN_GOVERNANCE_PEER_PROTO_VERSION;
+    if (!mnList.IsMNValid(dmn)) {
+        minVersion = GOVERNANCE_POSE_BANNED_VOTES_VERSION;
+    }
+
     CInv inv(MSG_GOVERNANCE_OBJECT_VOTE, GetHash());
-    connman.RelayInv(inv, MIN_GOVERNANCE_PEER_PROTO_VERSION);
+    connman.RelayInv(inv, minVersion);
 }
 
 void CGovernanceVote::UpdateHash() const
@@ -258,7 +271,7 @@ bool CGovernanceVote::IsValid(bool useVotingKey) const
         return false;
     }
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(masternodeOutpoint);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(masternodeOutpoint);
     if (!dmn) {
         LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
         return false;
