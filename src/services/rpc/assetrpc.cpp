@@ -905,9 +905,9 @@ UniValue listassetindex(const JSONRPCRequest& request) {
             "\nScan through all asset index and return paged results based on page number passed in. Requires assetindex config parameter enabled and optional assetindexpagesize which is 25 by default.\n",
             {
                 {"page", RPCArg::Type::NUM, "0", "Return specific page number of transactions. Lower page number means more recent transactions."},
-                {"options", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "A json object with options to filter results", 
+                {"options", RPCArg::Type::ARR, RPCArg::Optional::NO, "A json object with options to filter results", 
                     {
-                        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter."},
+                        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset GUID to filter."},
                         {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to filter.  Leave empty to scan globally through asset"}
                     }
                 }
@@ -931,10 +931,10 @@ UniValue listassetindex(const JSONRPCRequest& request) {
                  "]\n"
             },
             RPCExamples{
-                HelpExampleCli("listassetindex", "0 '{\"asset\":92922}'")
-                + HelpExampleCli("listassetindex", "2 '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
-                + HelpExampleRpc("listassetindex", "0, '{\"asset\":92922}'")
-                + HelpExampleRpc("listassetindex", "2, '{\"asset\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
+                HelpExampleCli("listassetindex", "0 '{\"asset_guid\":92922}'")
+                + HelpExampleCli("listassetindex", "2 '{\"asset_guid\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
+                + HelpExampleRpc("listassetindex", "0, '{\"asset_guid\":92922}'")
+                + HelpExampleRpc("listassetindex", "2, '{\"asset_guid\":92922, \"address\":\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"}'")
             }
         }.ToString());
     if(!fAssetIndex){
