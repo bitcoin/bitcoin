@@ -1000,8 +1000,8 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("assetallocationburn", "\"asset\" \"address\" \"amount\" \"ethereum_destination_address\"")
-                    + HelpExampleRpc("assetallocationburn", "\"asset\", \"address\", \"amount\", \"ethereum_destination_address\"")
+                    HelpExampleCli("assetallocationburn", "\"asset_guid\" \"address\" \"amount\" \"ethereum_destination_address\"")
+                    + HelpExampleRpc("assetallocationburn", "\"asset_guid\", \"address\", \"amount\", \"ethereum_destination_address\"")
                 }
             }.ToString());
 
