@@ -387,6 +387,7 @@ class CTransaction():
     def __init__(self, tx=None):
         if tx is None:
             self.nVersion = 1
+            self.nTime = int(time.time())
             self.vin = []
             self.vout = []
             self.wit = CTxWitness()
@@ -395,6 +396,7 @@ class CTransaction():
             self.hash = None
         else:
             self.nVersion = tx.nVersion
+            self.nTime = tx.nTime
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
@@ -404,6 +406,7 @@ class CTransaction():
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
+        self.nTime = struct.unpack("<I", f.read(4))[0]
         self.vin = deser_vector(f, CTxIn)
         flags = 0
         if len(self.vin) == 0:
@@ -425,6 +428,7 @@ class CTransaction():
     def serialize_without_witness(self):
         r = b""
         r += struct.pack("<i", self.nVersion)
+        r += struct.pack("<I", self.nTime)
         r += ser_vector(self.vin)
         r += ser_vector(self.vout)
         r += struct.pack("<I", self.nLockTime)
@@ -437,6 +441,7 @@ class CTransaction():
             flags |= 1
         r = b""
         r += struct.pack("<i", self.nVersion)
+        r += struct.pack("<I", self.nTime)
         if flags:
             dummy = []
             r += ser_vector(dummy)
@@ -482,8 +487,8 @@ class CTransaction():
         return True
 
     def __repr__(self):
-        return "CTransaction(nVersion=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
-            % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
+        return "CTransaction(nVersion=%i nTime=%i vin=%s vout=%s wit=%s nLockTime=%i)" \
+            % (self.nVersion, self.nTime, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
 
 
 class CBlockHeader():
@@ -558,10 +563,12 @@ class CBlock(CBlockHeader):
     def __init__(self, header=None):
         super(CBlock, self).__init__(header)
         self.vtx = []
+        self.vchBlockSig = b""
 
     def deserialize(self, f):
         super(CBlock, self).deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
+        self.vchBlockSig = deser_string(f)
 
     def serialize(self, with_witness=False):
         r = b""
@@ -570,6 +577,7 @@ class CBlock(CBlockHeader):
             r += ser_vector(self.vtx, "serialize_with_witness")
         else:
             r += ser_vector(self.vtx, "serialize_without_witness")
+        r += ser_string(self.vchBlockSig)
         return r
 
     # Calculate the merkle root given a vector of transaction hashes
