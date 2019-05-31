@@ -53,6 +53,7 @@ struct Params {
     double nSeniorityLevel1;
     unsigned int nSeniorityHeight2;
     double nSeniorityLevel2;
+    int nBridgeStartBlock;
         
     int nSuperblockStartBlock;
     int nSuperblockCycle; // in blocks
