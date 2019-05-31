@@ -795,8 +795,10 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
 
             nAsset = (uint32_t)assetObj.get_int();
         }
-        else
+        else{
+            LogPrint(BCLog::SYS, "ScanAssetIndex: failed, asset guid is not a number\n");
             return false;
+        }
 
         const UniValue &addressObj = find_value(oOptions, "address");
         if (addressObj.isStr()) {
@@ -809,8 +811,10 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
             assetTuple = CAssetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
         }
     }
-    else
+    else{
+        LogPrint(BCLog::SYS, "ScanAssetIndex: failed, options are not found\n");
         return false;
+    }
     vector<uint256> vecTX;
     int64_t pageFound;
     bool scanAllocation = !assetTuple.IsNull();
@@ -822,30 +826,28 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
         if(!ReadAssetPage(pageFound))
             return true;
     }
-    if(pageFound < page)
+    if(pageFound < page){
+        LogPrint(BCLog::SYS, "ScanAssetIndex: failed, no entries found in the page table pageFound %d vs %d page\n",pageFound, page);
         return false;
+    }
     // order by highest page first
     page = pageFound - page;
     if(scanAllocation){
-        if(!ReadIndexTXIDs(assetTuple, page, vecTX))
+        if(!ReadIndexTXIDs(assetTuple, page, vecTX)){
+            LogPrint(BCLog::SYS, "ScanAssetIndex: failed, cannot read TXIDs of allocation\n");
             return false;
+        }
     }
     else{
-        if(!ReadIndexTXIDs(nAsset, page, vecTX))
+        if(!ReadIndexTXIDs(nAsset, page, vecTX)){
+            LogPrint(BCLog::SYS, "ScanAssetIndex: failed, cannot read TXIDs of asset\n");
             return false;
+        }
     }
-    // reverse order LIFO
-    std::reverse(vecTX.begin(), vecTX.end());
-    uint256 block_hash;
     for(const uint256& txid: vecTX){
         UniValue oObj(UniValue::VOBJ);
         if(!ReadPayload(txid, oObj))
             continue;
-        if(pblockindexdb->ReadBlockHash(txid, block_hash)){
-            oObj.__pushKV("blockhash", block_hash.GetHex());        
-        }
-        else
-            oObj.__pushKV("blockhash", "");
            
         oRes.push_back(oObj);
     }
