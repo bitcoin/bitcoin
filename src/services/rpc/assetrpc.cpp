@@ -12,6 +12,7 @@
 #include <rpc/server.h>
 using namespace std;
 extern std::string EncodeDestination(const CTxDestination& dest);
+extern std::string EncodeDestinationBitcoin(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern UniValue DescribeAddress(const CTxDestination& dest);
@@ -1237,6 +1238,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
             },
             RPCResult{
                 "{\n"
+                "  \"bitcoinaddress\" : \"address\",   (string) The syscoin 3 or Bitcoin address validated\n"
                 "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
                 "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
                 "}\n"
@@ -1257,22 +1259,28 @@ UniValue convertaddress(const JSONRPCRequest& request)
     }
     std::string currentV4Address = "";
     std::string currentV3Address = "";
+    std::string currentBitcoinAddress = "";
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
         currentV4Address =  EncodeDestination(dest);
         currentV3Address =  EncodeDestination(PKHash(*witness_id));
+        currentBitcoinAddress = EncodeDestinationBitcoin(dest);
     }
     else if (auto key_id = boost::get<PKHash>(&dest)) {
         currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
         currentV3Address =  EncodeDestination(*key_id);
+        currentBitcoinAddress = EncodeDestinationBitcoin(*key_id);
     }
     else if (auto script_id = boost::get<ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
+        currentV4Address =  EncodeDestination(*script_id);
         currentV3Address =  currentV4Address;
+        currentBitcoinAddress = EncodeDestinationBitcoin(*script_id);
     }
     else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
         currentV4Address =  EncodeDestination(dest);
         currentV3Address =  currentV4Address;
-    }   
+        currentBitcoinAddress = EncodeDestinationBitcoin(dest);
+    }  
+    ret.pushKV("bitcoinaddress", currentBitcoinAddress); 
     ret.pushKV("v3address", currentV3Address);
     ret.pushKV("v4address", currentV4Address);
                        
