@@ -529,13 +529,11 @@ void CInstantSend::UpdateLockedTransaction(const CTxLockCandidate& txLockCandida
     if (!IsLockedInstantSendTransaction(txHash)) return; // not a locked tx, do not update/notify
 
 #ifdef ENABLE_WALLET
-    if (pwalletMain && pwalletMain->UpdatedTransaction(txHash)) {
-        // notify an external script once threshold is reached
-        std::string strCmd = GetArg("-instantsendnotify", "");
-        if (!strCmd.empty()) {
-            boost::replace_all(strCmd, "%s", txHash.GetHex());
-            boost::thread t(runCommand, strCmd); // thread runs free
-        }
+    // notify an external script once threshold is reached
+    std::string strCmd = GetArg("-instantsendnotify", "");
+    if (!strCmd.empty()) {
+        boost::replace_all(strCmd, "%s", txHash.GetHex());
+        boost::thread t(runCommand, strCmd); // thread runs free
     }
 #endif
 

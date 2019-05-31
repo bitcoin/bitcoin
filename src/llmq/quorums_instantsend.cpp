@@ -934,13 +934,11 @@ void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, con
         return;
     }
 
-    if (pwalletMain->UpdatedTransaction(tx->GetHash())) {
-        // notify an external script once threshold is reached
-        std::string strCmd = GetArg("-instantsendnotify", "");
-        if (!strCmd.empty()) {
-            boost::replace_all(strCmd, "%s", tx->GetHash().GetHex());
-            boost::thread t(runCommand, strCmd); // thread runs free
-        }
+    // notify an external script once threshold is reached
+    std::string strCmd = GetArg("-instantsendnotify", "");
+    if (!strCmd.empty()) {
+        boost::replace_all(strCmd, "%s", tx->GetHash().GetHex());
+        boost::thread t(runCommand, strCmd); // thread runs free
     }
 #endif
 
