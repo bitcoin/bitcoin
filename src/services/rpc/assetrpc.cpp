@@ -400,7 +400,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 			"Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
 			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n"
             "\nArguments:\n"
-            "1. \"asset\":      (numeric, required) The guid of the asset\n"
+            "1. \"asset_guid\":      (numeric, required) The guid of the asset\n"
             "2. \"address\":    (string, required) The address of the sender\n"
             "3. \"txid\":       (string, required) The transaction id of the assetallocationsend\n"   
             "\nResult:\n"
@@ -408,8 +408,8 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
             "  \"status\":      (numeric) The status level of the transaction\n"
             "}\n"
             "\nExamples:\n"
-            + HelpExampleCli("assetallocationsenderstatus", "\"asset\" \"address\" \"txid\"")
-            + HelpExampleRpc("assetallocationsenderstatus", "\"asset\", \"address\", \"txid\"")
+            + HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\"")
+            + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\"")
             );
 
 	const int &nAsset = params[0].get_int();
