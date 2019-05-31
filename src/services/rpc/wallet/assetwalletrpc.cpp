@@ -13,6 +13,7 @@
 #include <wallet/coincontrol.h>
 #include <iomanip>
 #include <rpc/server.h>
+#include <chainparams.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
@@ -405,7 +406,11 @@ UniValue syscoinmint(const JSONRPCRequest& request) {
     if(!fGethSynced){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
     }
-
+    int nBlocksLeftToEnable = ::ChainActive().Tip()->nHeight - (Params().GetConsensus().nBridgeStartBlock+500);
+    if(nBlocksLeftToEnable > 0)
+    {
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Bridge is not enabled yet. Blocks left to enable: ") + itostr(nBlocksLeftToEnable));
+    }
     CMintSyscoin mintSyscoin;
     mintSyscoin.nBlockNumber = nBlockNumber;
     mintSyscoin.vchTxValue = ParseHex(vchTxValue);
@@ -1139,6 +1144,12 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     string strWitness = params[11].get_str();
     if(!fGethSynced){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
+    }
+
+    int nBlocksLeftToEnable = ::ChainActive().Tip()->nHeight - (Params().GetConsensus().nBridgeStartBlock+500);
+    if(nBlocksLeftToEnable > 0)
+    {
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Bridge is not enabled yet. Blocks left to enable: ") + itostr(nBlocksLeftToEnable));
     }
     const CTxDestination &dest = DecodeDestination(strAddress);
     UniValue detail = DescribeAddress(dest);

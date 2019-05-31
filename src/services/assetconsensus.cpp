@@ -327,8 +327,14 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         }
         else if(IsSyscoinMintTx(tx.nVersion)) 
         {
-            errorMessage.clear();
-            good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
+            if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
+                errorMessage = "Bridge is disabled until blockheight 51000";
+                good = false;
+            }
+            else{
+                errorMessage.clear();
+                good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
+            }
         }
   
         if (!good || !errorMessage.empty()){
@@ -371,8 +377,14 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             } 
             else if(IsSyscoinMintTx(tx.nVersion))
             {
-                errorMessage.clear();
-                good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
+                if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
+                    errorMessage = "Bridge is disabled until blockheight 51000";
+                    good = false;
+                }
+                else{
+                    errorMessage.clear();
+                    good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
+                }
             }
              
                         

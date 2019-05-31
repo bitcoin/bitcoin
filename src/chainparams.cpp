@@ -135,6 +135,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.vchSYSXContract = ParseHex("df217a032f402eab70593c273714a12905c4d373");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
+        consensus.nBridgeStartBlock = 51000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -259,6 +260,7 @@ public:
         consensus.nLegacyBlocksBefore = 1;
         consensus.vchSYSXContract = ParseHex("46c6accc790ebd002c022057a14a7d247d5e5d37");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
+        consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
@@ -367,6 +369,7 @@ public:
         consensus.nLegacyBlocksBefore = 0;
         consensus.vchSYSXContract = ParseHex("5f6e74ba20bf26161612eac8f7e8b3b6c9baaadd");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
+        consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
         pchMessageStart[2] = 0xb5;
