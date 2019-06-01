@@ -119,6 +119,8 @@ test/cache/*
 src/test/node1/*
 src/test/node2/*
 src/test/node3/*
+src/test/mainnet1/*
+src/test/mainnet2/*
 src/qt/node1
 *.tmp
 *.ipch

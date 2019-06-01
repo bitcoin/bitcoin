@@ -48,8 +48,10 @@ JSON_TEST_FILES = \
   test/data/proposals_valid.json \
   test/data/proposals_invalid.json \
   test/data/utxo.json \
+  test/data/assetbalances.json \
   test/data/ethspv_valid.json \
-  test/data/ethspv_invalid.json
+  test/data/ethspv_invalid.json \
+  test/data/tx_valid.json
 
 RAW_TEST_FILES =
 
@@ -85,6 +87,7 @@ FUZZ_SUITE_LD_COMMON = \
 
 # test_syscoin binary #
 SYSCOIN_TESTS =\
+  test/syscoin_snapshot_tests.cpp \
   test/syscoin_asset_tests.cpp \
   test/syscoin_asset_allocation_tests.cpp \
   test/test_syscoin_services.cpp \

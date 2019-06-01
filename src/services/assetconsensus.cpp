@@ -29,7 +29,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
 
     if (!IsSyscoinTx(tx.nVersion))
         return true;
-    
+ 
     if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
         if(!DisconnectMintAsset(tx, mapAssetAllocations, vecMintKeys))
             return false;       
@@ -51,6 +51,10 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
                     return false;
             } else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE) {  
                 if(!DisconnectAssetUpdate(tx, mapAssets))
+                    return false;
+            }
+            else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER) {  
+                 if(!DisconnectAssetTransfer(tx, mapAssets))
                     return false;
             }
             else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
@@ -1105,6 +1109,36 @@ bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
     }         
     return true;  
 }
+bool DisconnectAssetTransfer(const CTransaction &tx, AssetMap &mapAssets){
+    
+    CAsset dbAsset;
+    CAsset theAsset(tx);
+    if(theAsset.IsNull()){
+        LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not decode asset\n");
+        return false;
+    }
+    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    auto mapAsset = result.first;
+    const bool &mapAssetNotFound = result.second;
+    if(mapAssetNotFound){
+        if (!GetAsset(theAsset.nAsset, dbAsset)) {
+            LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not get asset %d\n",theAsset.nAsset);
+            return false;               
+        } 
+        mapAsset->second = std::move(dbAsset);                    
+    }
+    CAsset& storedSenderRef = mapAsset->second; 
+    // theAsset.witnessAddress  is enforced to be the sender of the transfer which was the owner at the time of transfer
+    // so set it back to reverse the transfer
+    storedSenderRef.witnessAddress = theAsset.witnessAddress;   
+    if(fAssetIndex){
+        const uint256 &txid = tx.GetHash();
+        if(!passetindexdb->EraseIndexTXID(theAsset.nAsset, txid)){
+             LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not erase asset update from asset index\n");
+        }
+    }         
+    return true;  
+}
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
     
     CAsset theAsset(tx);
@@ -1289,7 +1323,6 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
     }
     CAsset &storedSenderAssetRef = mapAsset->second;
     if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER) {
-		
         if (theAsset.nAsset != storedSenderAssetRef.nAsset || storedSenderAssetRef.witnessAddress != theAsset.witnessAddress || !FindAssetOwnerInTx(inputs, tx, storedSenderAssetRef.witnessAddress))
         {
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot transfer this asset. Asset owner must sign off on this change");

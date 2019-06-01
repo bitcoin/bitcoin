@@ -30,6 +30,7 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	RandomInit();
 	ECC_Start();
 	StartNodes();
+    SelectParams(CBaseChainParams::REGTEST);
 	GenerateSpendableCoins();
 	printf("Running generate_big_assetdata...\n");
 	GenerateBlocks(5);
