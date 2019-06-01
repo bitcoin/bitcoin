@@ -1187,7 +1187,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
                     argv[0] = (char*)fpath.c_str();
                     execvp(argv[0], &argv[0]);
                     if (errno != 0) {
-                        LogPrintf("Geth not found in %s, giving up.", fpath.c_str());
+                        LogPrintf("Geth not found in %s, giving up.\n", fpath.c_str());
                     }
                 }
              }   
