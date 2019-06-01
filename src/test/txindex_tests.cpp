@@ -8,7 +8,6 @@
 #include <test/setup_common.h>
 #include <util/system.h>
 #include <util/time.h>
-#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
