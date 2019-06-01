@@ -131,27 +131,8 @@ Rebasing/Merging code
 
 ### More conflict context with `merge.conflictstyle diff3`
 
-For resolving merge/rebase conflicts, it can be useful to enable diff3 style using `git config merge.conflictstyle diff3`. Instead of
+For resolving merge/rebase conflicts, it can be useful to enable diff3 style using `git config merge.conflictstyle diff3`. 
 
-```diff
-<<<
-yours
-===
-theirs
->>>
-```
-
-  you will see
-
-```diff
-<<<
-yours
-|||
-original
-===
-theirs
->>>
-```
 
 This may make it much clearer what caused the conflict. In this style, you can often just look at what changed between *original* and *theirs*, and mechanically apply that to *yours* (or the other way around).
 

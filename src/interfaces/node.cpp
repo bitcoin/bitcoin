@@ -23,7 +23,6 @@
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <rpc/server.h>
-#include <scheduler.h>
 #include <shutdown.h>
 #include <sync.h>
 #include <txmempool.h>
