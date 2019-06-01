@@ -78,6 +78,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
 bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets);
+bool DisconnectAssetTransfer(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys);
 bool DisconnectMint(const CTransaction &tx, EthereumMintTxVec &vecMintKeys);

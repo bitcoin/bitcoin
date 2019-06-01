@@ -496,8 +496,12 @@ UniValue assetnew(const JSONRPCRequest& request) {
             }.ToString());
     string vchAddress = params[0].get_str();
     string strSymbol = params[1].get_str();
-    vector<unsigned char> vchPubData = vchFromString(params[2].get_str());
+    string strPubData = params[2].get_str();
+    if(strPubData == "''")
+        strPubData.clear();
     string strContract = params[3].get_str();
+    if(strContract == "''")
+        strContract.clear();
     if(!strContract.empty())
          boost::erase_all(strContract, "0x");  // strip 0x in hex str if exist
    
@@ -527,7 +531,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
     CAsset newAsset;
     newAsset.nAsset = GenerateSyscoinGuid();
     newAsset.strSymbol = strSymbol;
-    newAsset.vchPubData = vchPubData;
+    newAsset.vchPubData = vchFromString(strPubData);
     newAsset.vchContract = ParseHex(strContract);
     newAsset.witnessAddress = CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex));
     newAsset.nBalance = nBalance;
@@ -579,10 +583,13 @@ UniValue assetupdate(const JSONRPCRequest& request) {
             }.ToString());
     const int &nAsset = params[0].get_int();
     string strData = "";
-    string strPubData = "";
     string strCategory = "";
-    strPubData = params[1].get_str();
+    string strPubData = params[1].get_str();
+    if(strPubData == "''")
+        strPubData.clear();
     string strContract = params[2].get_str();
+    if(strContract == "''")
+        strContract.clear();
     if(!strContract.empty())
         boost::erase_all(strContract, "0x");  // strip 0x if exist
     vector<unsigned char> vchContract = ParseHex(strContract);
