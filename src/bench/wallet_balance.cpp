@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 #include <interfaces/chain.h>
-#include <key_io.h>
 #include <optional.h>
 #include <test/util.h>
 #include <validationinterface.h>

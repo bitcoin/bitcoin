@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 
-#include <validation.h>
 #include <base58.h>
 
 #include <array>

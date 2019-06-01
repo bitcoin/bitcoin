@@ -6,7 +6,6 @@
 #include <arith_uint256.h>
 
 #include <uint256.h>
-#include <util/strencodings.h>
 #include <crypto/common.h>
 
 #include <stdio.h>
