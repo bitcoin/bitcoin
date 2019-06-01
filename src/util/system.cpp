@@ -1139,7 +1139,7 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
     StopGethNode(pid);
         
     fs::path fpath = fs::system_complete(gethFilename);
-    fs::path fpathDefault = fs::system_complete("/usr/local/bin/syscoin_geth");
+    fs::path fpathDefault = fs::system_complete("/usr/local/bin/syscoin-geth");
     fs::path dataDir = GetDataDir(true) / "geth";
     
     #ifndef WIN32
