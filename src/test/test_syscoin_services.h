@@ -13,7 +13,7 @@ using namespace std;
  */
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true, bool readJson = true);
 UniValue CallExtRPC(const string &node, const string& command, const string& args="", bool readJson = true);
-void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="");
+void StartNode(const string &dataDir, bool regTest = true, const string& extraArgs="", bool reindex = false);
 void StopNode(const string &dataDir="node1", bool regtest = true);
 void StartNodes();
 void StartMainNetNodes();
