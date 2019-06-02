@@ -718,8 +718,7 @@ UniValue importwallet(const JSONRPCRequest& request)
         pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
         pwallet->UpdateTimeFirstKey(nTimeBegin);
     }
-    // SYSCOIN cannot call this out of scope will cause crash
-    //pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
+    pwallet->chain().showProgress("", 100, false); // hide progress dialog in GUI
     RescanWallet(*pwallet, reserver, nTimeBegin, false /* update */);
     pwallet->MarkDirty();
 
