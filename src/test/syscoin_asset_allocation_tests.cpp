@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	UniValue r;
 	printf("Running generate_asset_allocation_send_address...\n");
 	GenerateBlocks(5);
-    GenerateBlocks(101, "node2");
+    GenerateBlocks(5, "node2");
 	string newaddress1 = GetNewFundedAddress("node1");
     CallRPC("node2", "sendtoaddress " + newaddress1 + " 1", true, false);
     CallRPC("node2", "sendtoaddress " + newaddress1 + " 1", true, false);
@@ -219,6 +219,59 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 	// check just sender as well
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " ''"));
 	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
-    ECC_Stop();
+    
+}
+BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
+{
+	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
+	UniValue assetAllocationsInvalidatedResults, assetAllocationsNowResults, assetAllocationsValidatedResults;
+	UniValue r;
+	printf("Running generate_asset_consistency_check...\n");
+	GenerateBlocks(5);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockcount", true, false));
+	string strBeforeBlockCount = r.write();
+    // remove new line and string terminator
+    strBeforeBlockCount = strBeforeBlockCount.substr(1, strBeforeBlockCount.size() - 4);
+    
+	// first check around disconnect/connect by invalidating and revalidating an early block
+	BOOST_CHECK_NO_THROW(assetNowResults = CallRPC("node1", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_NO_THROW(assetAllocationsNowResults = CallRPC("node1", "listassetallocations " + itostr(INT_MAX) + " 0"));
+
+	// disconnect back to block 10 where no assets would have existed
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockhash 10", true, false));
+	string blockHashInvalidated = r.get_str();
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "invalidateblock " + blockHashInvalidated, true, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockcount", true, false));
+    string strAfterBlockCount = r.write();
+    strAfterBlockCount = strAfterBlockCount.substr(1, strAfterBlockCount.size() - 4);
+	BOOST_CHECK_EQUAL(strAfterBlockCount, "9");
+
+	UniValue emptyResult(UniValue::VARR);
+	BOOST_CHECK_NO_THROW(assetInvalidatedResults = CallRPC("node1", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetInvalidatedResults.write(), emptyResult.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsInvalidatedResults = CallRPC("node1", "listassetallocations " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetAllocationsInvalidatedResults.write(), emptyResult.write());
+
+	// reconnect to tip and ensure block count matches
+	BOOST_CHECK_NO_THROW(CallRPC("node1", "reconsiderblock " + blockHashInvalidated, true, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockcount", true, false));
+    string strRevalidatedBlockCount = r.write();
+    strRevalidatedBlockCount = strRevalidatedBlockCount.substr(1, strRevalidatedBlockCount.size() - 4);
+	BOOST_CHECK_EQUAL(strRevalidatedBlockCount, strBeforeBlockCount);
+
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node1", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("node1", "listassetallocations " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
+	// try to check after reindex
+	StopNode("node1");
+	StartNode("node1", true, "", true);
+
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("node1", "listassets " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("node1", "listassetallocations " + itostr(INT_MAX) + " 0"));
+	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
+	ECC_Stop();
 }
 BOOST_AUTO_TEST_SUITE_END ()

@@ -167,18 +167,7 @@ void GetAssetBalancesAndPrepareAsset()
 		const std::string &max_supply = find_value(assetBalances, "max_supply").get_str();
 		const int &nPrecision = find_value(assetBalances, "precision").get_int();
 		const UniValue& paymentAmounts = find_value(assetBalances, "allocations").get_array();
-		/*  "\nCreate a new asset\n",
-            {
-                {"address", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "An address that you own."},
-                {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
-                {"public_value", RPCArg::Type::STR, RPCArg::Optional::NO, "public data, 256 characters max."},
-                {"contract", RPCArg::Type::STR, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge."},
-                {"precision", RPCArg::Type::NUM, RPCArg::Optional::NO, "Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion."},
-                {"total_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped."},
-                {"max_supply", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be."},
-                {"update_flags", RPCArg::Type::NUM, RPCArg::Optional::NO, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract field, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all."},
-                {"witness", RPCArg::Type::STR, RPCArg::Optional::NO, "Witness address that will sign for web-of-trust notarization of this transaction."}
-            }*/
+
 		// string AssetNew(const string& node, const string& address, const string& pubdata = "''", const string& contract="''", const string& precision="8", const string& supply = "1", const string& maxsupply = "10", const string& updateflags = "31", const string& witness = "''", const string& symbol = "SYM",  bool bRegtest = true);
 		std::string guid = AssetNew("mainnet1", newaddress, publicvalue, "''", itostr(nPrecision), total_supply, max_supply, "31", "''", symbol, false);
 		printf("Created asset %s - %s with %d allocations\n", guid.c_str(), symbol.c_str(), paymentAmounts.size());
@@ -200,17 +189,68 @@ bool IsMainNetAlreadyCreated()
 	height = find_value(r.get_obj(), "blocks").get_int();
 	return height > 1;
 }
+void generate_snapshot_asset_consistency_check()
+{
+	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
+	UniValue assetAllocationsInvalidatedResults, assetAllocationsNowResults, assetAllocationsValidatedResults;
+	UniValue r;
+	printf("Running generate_snapshot_asset_consistency_check...\n");
+	GenerateBlocks(5);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getblockcount", false, false));
+	string strBeforeBlockCount = r.write();
+    // remove new line and string terminator
+    strBeforeBlockCount = strBeforeBlockCount.substr(1, strBeforeBlockCount.size() - 4);
+    
+	// first check around disconnect/connect by invalidating and revalidating an early block
+	BOOST_CHECK_NO_THROW(assetNowResults = CallRPC("mainnet1", "listassets " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_NO_THROW(assetAllocationsNowResults = CallRPC("mainnet1", "listassetallocations " + itostr(INT_MAX) + " 0", false));
+
+	// disconnect back to block 10 where no assets would have existed
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getblockhash 10", false, false));
+	string blockHashInvalidated = r.get_str();
+	BOOST_CHECK_NO_THROW(CallRPC("mainnet1", "invalidateblock " + blockHashInvalidated, false, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getblockcount", false, false));
+    string strAfterBlockCount = r.write();
+    strAfterBlockCount = strAfterBlockCount.substr(1, strAfterBlockCount.size() - 4);
+	BOOST_CHECK_EQUAL(strAfterBlockCount, "9");
+
+	UniValue emptyResult(UniValue::VARR);
+	BOOST_CHECK_NO_THROW(assetInvalidatedResults = CallRPC("mainnet1", "listassets " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_EQUAL(assetInvalidatedResults.write(), emptyResult.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsInvalidatedResults = CallRPC("mainnet1", "listassetallocations " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_EQUAL(assetAllocationsInvalidatedResults.write(), emptyResult.write());
+
+	// reconnect to tip and ensure block count matches
+	BOOST_CHECK_NO_THROW(CallRPC("mainnet1", "reconsiderblock " + blockHashInvalidated, false, false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getblockcount", false, false));
+    string strRevalidatedBlockCount = r.write();
+    strRevalidatedBlockCount = strRevalidatedBlockCount.substr(1, strRevalidatedBlockCount.size() - 4);
+	BOOST_CHECK_EQUAL(strRevalidatedBlockCount, strBeforeBlockCount);
+
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("mainnet1", "listassets " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("mainnet1", "listassetallocations " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
+	// try to check after reindex
+	StopNode("mainnet1", false);
+	StartNode("mainnet1", false, "", true);
+
+	BOOST_CHECK_NO_THROW(assetValidatedResults = CallRPC("mainnet1", "listassets " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_EQUAL(assetValidatedResults.write(), assetNowResults.write());
+	BOOST_CHECK_NO_THROW(assetAllocationsValidatedResults = CallRPC("mainnet1", "listassetallocations " + itostr(INT_MAX) + " 0", false));
+	BOOST_CHECK_EQUAL(assetAllocationsValidatedResults.write(), assetAllocationsNowResults.write());	
+}
 BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 {
-	
+	printf("Running generate_and_verify_snapshot...\n");
 	std::vector<PaymentAmount> paymentAmounts;
-	/*if(!IsMainNetAlreadyCreated())
+	if(!IsMainNetAlreadyCreated())
 	{
 		GetUTXOs(paymentAmounts);
 		GenerateSnapShot(paymentAmounts);
 		GetAssetBalancesAndPrepareAsset();
-		
-	}*/
-	GetAssetBalancesAndPrepareAsset();
+		generate_snapshot_asset_consistency_check();
+	}
 }
 BOOST_AUTO_TEST_SUITE_END ()
