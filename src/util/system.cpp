@@ -1139,64 +1139,63 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
     StopGethNode(pid);
         
     fs::path fpath = fs::system_complete(gethFilename);
+    fs::path fpathDefault = fs::system_complete("/usr/local/bin/syscoin-geth");
     fs::path dataDir = GetDataDir(true) / "geth";
     
     #ifndef WIN32
-            // Prevent killed child-processes remaining as "defunct"
-            struct sigaction sa;
-            sa.sa_handler = SIG_DFL;
-            sa.sa_flags = SA_NOCLDWAIT;
-          
-            sigaction( SIGCHLD, &sa, NULL ) ;
+    // Prevent killed child-processes remaining as "defunct"
+    struct sigaction sa;
+    sa.sa_handler = SIG_DFL;
+    sa.sa_flags = SA_NOCLDWAIT;
         
-        // Duplicate ("fork") the process. Will return zero in the child
-        // process, and the child's PID in the parent (or negative on error).
-        pid = fork() ;
-        if( pid < 0 ) {
-            LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
-            return false;
-        }
+    sigaction( SIGCHLD, &sa, NULL ) ;
+        
+    // Duplicate ("fork") the process. Will return zero in the child
+    // process, and the child's PID in the parent (or negative on error).
+    pid = fork() ;
+    if( pid < 0 ) {
+        LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
+        return false;
+    }
 
 	// TODO: sanitize environment variables as per
 	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
-        if( pid == 0 ) {
-            std::string portStr = std::to_string(websocketport);
-            if(bGethTestnet){
-                char * argv[] = {(char*)fpath.c_str(), (char*)"--rinkeby", 
-                    (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                    (char*)"--wsorigins", (char*)"*",
-                    (char*)"--syncmode", (char*)"light", 
-                    (char*)"--datadir", (char*)dataDir.c_str(),
-                    NULL };
+    if( pid == 0 ) {
+        // Order of looking for the geth binary:
+        // 1. /usr/local/bin/syscoin_geth
+        // 2. $path
+        // 3. current directory
+        // 4. bin/[os]/syscoin_geth
+        std::string portStr = std::to_string(websocketport);
+        char * argv[] = {(char*)fpathDefault.c_str(), 
+                bGethTestnet ? (char*)"--rinkeby" : (char*)"--networkid 1", 
+                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                (char*)"--wsorigins", (char*)"*",
+                (char*)"--syncmode", (char*)"light", 
+                (char*)"--datadir", (char*)dataDir.c_str(),
+                NULL };
+         execvp(argv[0], &argv[0]);
+         if (errno != 0) {
+             LogPrintf("Geth not found at %s, trying in $PATH\n", fpathDefault.c_str());
+	         argv[0] = (char*)"syscoin-geth";
+	         execvp(argv[0], &argv[0]);
+	         if (errno != 0) {
+	    	    LogPrintf("Geth not found in $PATH, trying in current dir\n");
+                execv(argv[0], &argv[0]);
+                if (errno != 0) {
+                    LogPrintf("Geth not found in current directory, trying in ./bin\n");
+                    argv[0] = (char*)fpath.c_str();
                     execvp(argv[0], &argv[0]);
-		    if (errno != 0) {
-			    LogPrintf("Geth not found at %s, trying in PATH\n", fpath.c_str());
-			    argv[0] = (char*)"syscoin-geth";
-			    execvp(argv[0], &argv[0]);
-			    if (errno != 0) {
-				    LogPrintf("Geth not found in PATH.  Geth not started\n");
-		            }
-		    }
-	    }
-            else{
-                char * argv[] = {(char*)fpath.c_str(), (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
-                    (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", (char*)"--datadir", (char*)dataDir.c_str(),
-                        NULL };
-                    execvp(argv[0], &argv[0]);
-		    if (errno != 0) {
-			    LogPrintf("Geth not found at %s, trying in PATH\n", fpath.c_str());
-			    argv[0] = (char*)"syscoin-geth";
-			    execvp(argv[0], &argv[0]);
-			    if (errno != 0) {
-				    LogPrintf("Geth not found in PATH.  Geth not started\n");
-		            }
-		    }
-            }
-        }
-        else{
-            boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
-            ofs << pid;
-        }
+                    if (errno != 0) {
+                        LogPrintf("Geth not found in %s, giving up.\n", fpath.c_str());
+                    }
+                }
+             }   
+         }
+    } else {
+        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
+        ofs << pid;
+    }
     #else
         std::string portStr = std::to_string(websocketport);
         std::string args = std::string("--ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
@@ -1228,10 +1227,10 @@ std::string GetRelayerFilename(){
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "./bin/osx/syscoin-relayer";
+        return "bin/osx/syscoin-relayer";
     #else
         // Linux
-        return "./bin/linux/syscoin-relayer";
+        return "bin/linux/syscoin-relayer";
     #endif
 }
 bool StopRelayerNode(pid_t &pid)
@@ -1281,6 +1280,7 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
         
     fs::path fpath = fs::system_complete(relayerFilename);
     #ifndef WIN32
+        fs::path fpathDefault = fs::system_complete("/usr/local/bin/syscoin-relayer");
         // Prevent killed child-processes remaining as "defunct"
         struct sigaction sa;
         sa.sa_handler = SIG_DFL;
@@ -1296,24 +1296,37 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
         }
 
         if( pid == 0 ) {
+        // Order of looking for the relayer binary:
+        // 1. /usr/local/bin/syscoin_relayer
+        // 2. $path
+        // 3. current directory
+        // 4. bin/[os]/syscoin_relayer
             std::string portStr = std::to_string(websocketport);
             std::string rpcPortStr = std::to_string(rpcport);
-            char * argv[] = {(char*)fpath.c_str(), 
+            char * argv[] = {(char*)fpathDefault.c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(), 
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             execvp(argv[0], &argv[0]);
-	    if (errno != 0) {
-		    LogPrintf("Relayer not found at %s, trying in PATH\n", fpath.c_str());
-		    argv[0] = (char*)"syscoin-relayer";
-		    execvp(argv[0], &argv[0]);
-		    if (errno != 0) {
-			    LogPrintf("Relayer not found in PATH.  Relayer not started\n");
+	        if (errno != 0) {
+		        LogPrintf("Relayer not found at %s, trying in $PATH\n", fpathDefault.c_str());
+		        argv[0] = (char*)"syscoin-relayer";
+		        execvp(argv[0], &argv[0]);
+		        if (errno != 0) {
+			        LogPrintf("Relayer not found in $PATH, trying in current directroy\n");
+                    execv(argv[0], &argv[0]);
+                    if (errno != 0) {
+                        LogPrintf("Relayer not found in current directory, trying bin/[os]\n");
+                        argv[0] = (char*)fpath.c_str();
+                        execvp(argv[0], &argv[0]);
+                        if (errno != 0) {
+                            LogPrintf("Relayer not found in %s, giving up.\n", fpath.c_str());
+                        }
+                    }
 	            }
-	    }
-        }
-        else{
+	        }
+        } else {
             boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
             ofs << pid;
         }
