@@ -104,12 +104,13 @@ $(OSX_APP)/Contents/Resources/syscoin.icns: $(OSX_INSTALLER_ICONS)
 
 $(OSX_APP)/Contents/MacOS/Syscoin-Qt: all-recursive
 	$(MKDIR_P) $(@D)
-	cp $(top_builddir)/src/bin/osx/syscoin-geth $@
-	cp $(top_builddir)/src/bin/osx/syscoin-relayer $@
-	cp $(top_builddir)/src/bin/osx/sha3.node $@
-	cp $(top_builddir)/src/bin/osx/bufferutil.node $@
-	cp $(top_builddir)/src/bin/osx/scrypt.node $@
-	cp $(top_builddir)/src/bin/osx/validation.node $@
+	$(MKDIR_P) $(@D)/bin
+	cp $(top_builddir)/src/bin/osx/syscoin-geth $(@D)/bin
+	cp $(top_builddir)/src/bin/osx/syscoin-relayer $(@D)/bin
+	cp $(top_builddir)/src/bin/osx/sha3.node $(@D)/bin
+	cp $(top_builddir)/src/bin/osx/bufferutil.node $(@D)/bin
+	cp $(top_builddir)/src/bin/osx/scrypt.node $(@D)/bin
+	cp $(top_builddir)/src/bin/osx/validation.node $(@D)/bin
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $(SYSCOIN_QT_BIN) $@
 
 $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
