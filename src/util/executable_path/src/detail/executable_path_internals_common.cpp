@@ -18,7 +18,7 @@
 #include <boost/locale.hpp>
 #include <boost/tokenizer.hpp>
 
-#if (BOOST_VERSION >= 106100)
+#if (BOOST_VERSION >= 106100 && BOOST_VERSION < 106400)
 #  include <boost/dll/runtime_symbol_info.hpp>
 #endif
 
@@ -33,8 +33,8 @@
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 
 
-namespace boost::detail {
-
+namespace boost {
+namespace detail {
 // NOLINTNEXTLINE(clang-diagnostic-unused-const-variable)
 const size_t buffer_size = 8192;
 const size_t default_converter_max_length = 6;
@@ -369,7 +369,7 @@ std::wstring search_path(const std::wstring& file)
     {
         namespace bp = boost::process;
         boost::filesystem::path p = bp::search_path(file);
-        ret = p.make_preferred().string();
+        ret = p.make_preferred().wstring();
     }
 #endif
     if (!ret.empty())
@@ -406,9 +406,9 @@ std::string executable_path_fallback(const char* argv0)
 {
     if (argv0 == nullptr || argv0[0] == 0)
     {
-#if (BOOST_VERSION >= 106100)
+#if (BOOST_VERSION >= 106100 && BOOST_VERSION < 106400)
 		boost::system::error_code ec;
-		const auto p = boost::dll::program_location(ec);
+		auto p = boost::dll::program_location(ec);
         if (ec.value() == boost::system::errc::success)
         {
             return p.make_preferred().string();
@@ -447,9 +447,9 @@ std::wstring executable_path_fallback(const wchar_t* argv0)
 {
     if (argv0 == nullptr || argv0[0] == 0)
     {
-#if (BOOST_VERSION >= 106100)
+#if (BOOST_VERSION >= 106100 && BOOST_VERSION < 106400)
 		boost::system::error_code ec;
-		const auto p = boost::dll::program_location(ec);
+		auto p = boost::dll::program_location(ec);
         if (ec.value() == boost::system::errc::success)
         {
             return p.make_preferred().wstring();
@@ -484,4 +484,5 @@ std::wstring executable_path_fallback(const wchar_t* argv0)
     return ret;
 }
 
-}  // namespace boost::detail
+}  // namespace detail
+} // namespace boost
