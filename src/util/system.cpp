@@ -1345,7 +1345,7 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
         return true;
     LogPrintf("%s: Starting relayer on port %d, rpcuser %s, rpcpassword %s, wsport %d...\n", __func__, rpcport, rpcuser, rpcpassword, websocketport);
     std::string relayerFilename = GetRelayerFilename();
-    
+    std::string infuraKey = "b3d07005e22f4127ba935ce09b9a2a8d"; // TODO: parameterize this later through config file
     // stop any relayer process  before starting
     StopRelayerNode(pid);
         
@@ -1392,30 +1392,35 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
             char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                       
@@ -1449,6 +1454,7 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
         std::string args =
 				std::string("--ethwsport ") + portStr +
                 std::string(" --datadir ") + dataDir.string() +
+                std::string(" --infurakey ") + infuraKey +
 				std::string(" --sysrpcuser ") + rpcuser +
 				std::string(" --sysrpcpw ") + rpcpassword +
 				std::string(" --sysrpcport ") + rpcPortStr; 
