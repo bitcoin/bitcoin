@@ -1390,27 +1390,32 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
             std::string portStr = std::to_string(websocketport);
             std::string rpcPortStr = std::to_string(rpcport);
             char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
             char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
-					(char*)"--ethwsport", (char*)portStr.c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                       
@@ -1442,7 +1447,8 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
 		std::string portStr = std::to_string(websocketport);
         std::string rpcPortStr = std::to_string(rpcport);
         std::string args =
-				std::string("--ethwsport ") + portStr + 
+				std::string("--ethwsport ") + portStr +
+                std::string(" --datadir ") + dataDir.string() +
 				std::string(" --sysrpcuser ") + rpcuser +
 				std::string(" --sysrpcpw ") + rpcpassword +
 				std::string(" --sysrpcport ") + rpcPortStr; 
