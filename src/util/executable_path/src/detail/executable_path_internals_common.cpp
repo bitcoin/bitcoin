@@ -18,11 +18,11 @@
 #include <boost/locale.hpp>
 #include <boost/tokenizer.hpp>
 
-#if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 61, 0))
+#if (BOOST_VERSION >= 106100)
 #  include <boost/dll/runtime_symbol_info.hpp>
 #endif
 
-#if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 64, 0))
+#if (BOOST_VERSION >= 106400)
 #  include <boost/process.hpp>
 #endif
 
@@ -320,7 +320,7 @@ std::string search_path(const std::string& file)
         return "";
     }
     std::string ret;
-#if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 64, 0))
+#if (BOOST_VERSION >= 106400)
     {
         namespace bp = boost::process;
         boost::filesystem::path p = bp::search_path(file);
@@ -365,7 +365,7 @@ std::wstring search_path(const std::wstring& file)
         return L"";
     }
     std::wstring ret;
-#if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 64, 0))
+#if (BOOST_VERSION >= 106400)
     {
         namespace bp = boost::process;
         boost::filesystem::path p = bp::search_path(file);
@@ -406,7 +406,7 @@ std::string executable_path_fallback(const char* argv0)
 {
     if (argv0 == nullptr || argv0[0] == 0)
     {
-#if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 61, 0))
+#if (BOOST_VERSION >= 106100)
 		boost::system::error_code ec;
 		const auto p = boost::dll::program_location(ec);
         if (ec.value() == boost::system::errc::success)
@@ -447,7 +447,7 @@ std::wstring executable_path_fallback(const wchar_t* argv0)
 {
     if (argv0 == nullptr || argv0[0] == 0)
     {
-#if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 61, 0))
+#if (BOOST_VERSION >= 106100)
 		boost::system::error_code ec;
 		const auto p = boost::dll::program_location(ec);
         if (ec.value() == boost::system::errc::success)
