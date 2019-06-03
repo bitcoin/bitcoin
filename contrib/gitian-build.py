@@ -22,6 +22,21 @@ def setup():
     else:
         programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
+    if not args.docker and not args.kvm:
+        # the version of lxc-start in Debian needs to run as root, so make sure
+        # that the build script can execute it without providing a password
+        subprocess.check_call(["echo '\
+%sudo ALL=NOPASSWD: /usr/bin/lxc-start\n\
+%sudo ALL=NOPASSWD: /usr/bin/lxc-execute' | sudo tee '/etc/sudoers.d/gitian-lxc'"], shell=True)
+        # make /etc/rc.local script that sets up bridge between guest and host
+        subprocess.check_call(["echo '\
+#!/bin/sh -e\n\
+brctl addbr br0\n\
+ip addr add 10.0.3.1/24 broadcast 10.0.3.255 dev br0\n\
+ip link set br0 up\n\
+firewall-cmd --zone=trusted --add-interface=br0\n\
+exit 0' | sudo tee '/etc/rc.local'"], shell=True)
+        subprocess.check_call(['sudo', 'chmod', '+x', '/etc/rc.local'])
     if not os.path.isdir('gitian.sigs'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin-core/gitian.sigs.git'])
     if not os.path.isdir('bitcoin-detached-sigs'):
