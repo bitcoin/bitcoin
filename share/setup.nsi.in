@@ -74,6 +74,13 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File @abs_top_srcdir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/syscoin-relayer@EXEEXT@
+    File @abs_top_srcdir@/release/syscoin-geth@EXEEXT@
+    File @abs_top_srcdir@/release/bufferutil.node
+    File @abs_top_srcdir@/release/scrypt.node
+    File @abs_top_srcdir@/release/sha3.node
+    File @abs_top_srcdir@/release/validation.node
+
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
@@ -127,6 +134,12 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\syscoin-relayer@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\syscoin-geth@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\bufferutil.node
+    Delete /REBOOTOK $INSTDIR\scrypt.node
+    Delete /REBOOTOK $INSTDIR\sha3.node
+    Delete /REBOOTOK $INSTDIR\validation.node
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
