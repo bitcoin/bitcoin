@@ -5,8 +5,8 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_EXECUTABLE_PATH_HPP_
-#define BOOST_EXECUTABLE_PATH_HPP_
+#ifndef SYSCOIN_UTIL_EXECUTABLE_PATH_INCLUDE_BOOST_EXECUTABLE_PATH_HPP
+#define SYSCOIN_UTIL_EXECUTABLE_PATH_INCLUDE_BOOST_EXECUTABLE_PATH_HPP
 
 #pragma once
 
@@ -17,4 +17,4 @@ std::string executable_path(const char* argv0);
 std::wstring executable_path(const wchar_t* argv0);
 } // namespace boost
 
-#endif // BOOST_EXECUTABLE_PATH_HPP_
+#endif // SYSCOIN_UTIL_EXECUTABLE_PATH_INCLUDE_BOOST_EXECUTABLE_PATH_HPP

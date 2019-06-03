@@ -588,14 +588,14 @@ libsyscoin_util_a_SOURCES = \
   util/url.cpp \
   util/validation.cpp \
   util/executable_path/src/executable_path.cpp \
-  util/executable_path/src/detail/executable_path_internals_BSD.cpp \
-  util/executable_path/src/detail/executable_path_internals_Common.cpp \
-  util/executable_path/src/detail/executable_path_internals_Linux.cpp \
-  util/executable_path/src/detail/executable_path_internals_Macintosh.cpp \
-  util/executable_path/src/detail/executable_path_internals_Other.cpp \
-  util/executable_path/src/detail/executable_path_internals_QNX.cpp \
-  util/executable_path/src/detail/executable_path_internals_Solaris.cpp \
-  util/executable_path/src/detail/executable_path_internals_Windows.cpp \
+  util/executable_path/src/detail/executable_path_internals_bsd.cpp \
+  util/executable_path/src/detail/executable_path_internals_common.cpp \
+  util/executable_path/src/detail/executable_path_internals_linux.cpp \
+  util/executable_path/src/detail/executable_path_internals_macintosh.cpp \
+  util/executable_path/src/detail/executable_path_internals_other.cpp \
+  util/executable_path/src/detail/executable_path_internals_qnx.cpp \
+  util/executable_path/src/detail/executable_path_internals_solaris.cpp \
+  util/executable_path/src/detail/executable_path_internals_windows.cpp \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
