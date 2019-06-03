@@ -23,8 +23,8 @@
 #endif
 #endif
 #if (BOOST_OS_BSD_FREE)
-namespace boost::detail {
-
+namespace boost {
+namespace detail {
 boost::filesystem::path executable_path_worker()
 {
     using char_vector = std::vector<char>;
@@ -59,11 +59,13 @@ boost::filesystem::path executable_path_worker()
     return ret;
 }
 
-} // namespace boost::detail
+} // namespace detail
+} // namespace boost
 
 #elif (BOOST_OS_BSD_NET)
 
-namespace boost::detail {
+namespace boost {
+namespace detail {
 
 boost::filesystem::path executable_path_worker()
 {
@@ -82,12 +84,14 @@ boost::filesystem::path executable_path_worker()
     return ret;
 }
 
-} // namespace boost::detail
+} // namespace detail
+} // namespace boost
 
 #elif BOOST_OS_BSD_DRAGONFLY
 
 
-namespace boost::detail {
+namespace boost {
+namespace detail {
 
 boost::filesystem::path executable_path_worker()
 {
@@ -125,8 +129,8 @@ boost::filesystem::path executable_path_worker()
     return ret;
 }
 
-} // namespace boost::detail
-
+} // namespace detail
+} // namespace boost
 #endif
 
 #endif

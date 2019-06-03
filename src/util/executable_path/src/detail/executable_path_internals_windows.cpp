@@ -21,7 +21,8 @@
 
 #include <windows.h>
 
-namespace boost::detail {
+namespace boost {
+namespace detail {
 
 const size_t buffer_size = 8192;
 
@@ -69,6 +70,7 @@ boost::filesystem::path executable_path_worker()
     return ret;
 }
 
-} // namespace boost::detail
+} // namespace detail
+} // namespace boost
 
 #endif
