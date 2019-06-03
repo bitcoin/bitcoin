@@ -1631,7 +1631,9 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
         nCurrentSyncHeight = fGethSyncHeight;
        
     }
-    const uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
+    uint32_t nKeyCutoff = nCurrentSyncHeight - MAX_ETHEREUM_TX_ROOTS;
+    if(nCurrentSyncHeight < MAX_ETHEREUM_TX_ROOTS)
+        nKeyCutoff = 0;
     std::vector<unsigned char> txPos;
     std::map<uint32_t, EthereumTxRoot> mapTxRoots;
     
