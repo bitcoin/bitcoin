@@ -19,7 +19,7 @@
 
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
 
-#include <Windows.h>
+#include <windows.h>
 
 namespace boost::detail {
 

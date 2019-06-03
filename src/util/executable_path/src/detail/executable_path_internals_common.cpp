@@ -29,7 +29,7 @@
 #endif
 
 #if (BOOST_OS_CYGWIN || BOOST_OS_WINDOWS)
-#  include <Windows.h>
+#  include <windows.h>
 #endif
 
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
