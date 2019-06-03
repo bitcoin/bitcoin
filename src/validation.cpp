@@ -3220,7 +3220,13 @@ bool ProcessNewBlockHeaders(uint32_t& nPoSTemperature, const uint256& lastAccept
     if (first_invalid != nullptr) first_invalid->SetNull();
     {
         LOCK(cs_main);
-        int n = 0;
+
+        int nCooling = POW_HEADER_COOLING;
+        if (headers[0].hashPrevBlock != lastAcceptedHeader) {
+            nPoSTemperature += nCooling;
+            nCooling = 0;
+        }
+
         for (const CBlockHeader& header : headers) {
             CBlockIndex *pindex = nullptr; // Use a temp pindex instead of ppindex to avoid a const_cast
             if (!g_chainstate.AcceptBlockHeader(header, header.nFlags & CBlockIndex::BLOCK_PROOF_OF_STAKE, state, chainparams, &pindex, fOldClient)) {
@@ -3231,12 +3237,8 @@ bool ProcessNewBlockHeaders(uint32_t& nPoSTemperature, const uint256& lastAccept
                 *ppindex = pindex;
             }
             bool fPoS = header.nFlags & CBlockIndex::BLOCK_PROOF_OF_STAKE;
-            nPoSTemperature += fPoS ? 1 : -POW_HEADER_COOLING;
-            // peer cannot cool himself by PoW headers from other branches
-            if (n == 0 && !fPoS && header.hashPrevBlock != lastAcceptedHeader)
-                nPoSTemperature += POW_HEADER_COOLING;
+            nPoSTemperature += fPoS ? 1 : -nCooling;
             nPoSTemperature = std::max((int)nPoSTemperature, 0);
-            n++;
         }
     }
     NotifyHeaderTip();

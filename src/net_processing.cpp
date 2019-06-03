@@ -2371,7 +2371,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         const CBlockIndex *pindex = nullptr;
         CValidationState state;
 
-        if (!ProcessNewBlockHeaders(pfrom->nPoSTemperature, pfrom->lastAcceptedHeader, {cmpctblock.header}, false, state, chainparams, &pindex)) {
+        if (!ProcessNewBlockHeaders(pfrom->nPoSTemperature, chainActive.Tip()->GetBlockHash(), {cmpctblock.header}, false, state, chainparams, &pindex)) {
             int nDoS;
             if (state.IsInvalid(nDoS)) {
                 if (nDoS > 0) {
@@ -2382,6 +2382,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     LogPrint(BCLog::NET, "Peer %d sent us invalid header via cmpctblock\n", pfrom->GetId());
                 }
                 return true;
+            }
+        }
+
+        if (pfrom->nPoSTemperature >= (uint32_t)MAX_CONSECUTIVE_POS_HEADERS) {
+            pfrom->nPoSTemperature = (MAX_CONSECUTIVE_POS_HEADERS*3)/4;
+            if (Params().NetworkIDString() != "test") {
+                g_connman->Ban(pfrom->addr, BanReasonNodeMisbehaving, gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME) * 7);
+                return error("too many consecutive pos headers");
             }
         }
 
