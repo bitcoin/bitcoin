@@ -1110,14 +1110,14 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         }
     }
     std::vector<std::pair<uint32_t, uint32_t> > vecMissingBlockRanges;
-    
+    pethereumtxrootsdb->AuditTxRootDB(vecMissingBlockRanges);
     fGethSyncStatus = status; 
-    if(!fGethSynced && fGethSyncStatus == "synced")  {     
+    if(!fGethSynced && fGethSyncStatus == "synced" && vecMissingBlockRanges.empty())  {     
         fGethSynced = true;
     }
-    if(fGethSynced){
-        pethereumtxrootsdb->AuditTxRootDB(vecMissingBlockRanges);
-    }
+
+   
+    
    
     for(const auto& range: vecMissingBlockRanges){
         UniValue retRange(UniValue::VOBJ);
