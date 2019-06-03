@@ -1652,9 +1652,10 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             return;
         }
     } 
-    
-    if(mapTxRoots.size() < 2)
+    while(mapTxRoots.size() < 2){
+        vecMissingBlockRanges.emplace_back(make_pair(nKeyCutoff, nCurrentSyncHeight));
         return;
+    }
     auto setIt = mapTxRoots.begin();
     nKeyIndex = setIt->first;
     setIt++;
