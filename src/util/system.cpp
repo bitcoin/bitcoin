@@ -69,9 +69,6 @@
 #include <boost/algorithm/string.hpp>
 #include <signal.h>
 #include <rpc/server.h>
-#if BOOST_VERSION >= 106100
-#include <boost/dll/runtime_symbol_info.hpp>
-#endif
 bool fMasternodeMode = false;
 bool fUnitTest = false;
 bool fTPSTest = false;
@@ -1144,7 +1141,7 @@ bool StopGethNode(pid_t &pid)
     return true;
 }
 
-bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
+bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
@@ -1153,12 +1150,8 @@ bool StartGethNode(pid_t &pid, bool bGethTestnet, int websocketport)
     
     // stop any geth nodes before starting
     StopGethNode(pid);
-    fs::path fpathDefault;
-    #if BOOST_VERSION >= 106100
-        fpathDefault = boost::dll::program_location().parent_path();
-    #else
-        fpathDefault = fs::system_complete("/usr/local/bin");
-    #endif
+    fs::path fpathDefault = exePath;
+    fpathDefault = fpathDefault.parent_path();
     
     fs::path dataDir = GetDataDir(true) / "geth";
 
@@ -1346,7 +1339,7 @@ bool StopRelayerNode(pid_t &pid)
     return true;
 }
 
-bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, int websocketport)
+bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
@@ -1356,12 +1349,8 @@ bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const
     // stop any relayer process  before starting
     StopRelayerNode(pid);
         
-    fs::path fpathDefault;
-    #if BOOST_VERSION >= 106100
-        fpathDefault = boost::dll::program_location().parent_path();
-    #else
-        fpathDefault = fs::system_complete("/usr/local/bin");
-    #endif
+    fs::path fpathDefault = exePath;
+    fpathDefault = fpathDefault.parent_path();
     
     fs::path dataDir = GetDataDir(true) / "geth";
 

@@ -256,10 +256,10 @@ void SyscoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     connect(this, &SyscoinApplication::splashFinished, splash, &SplashScreen::finish);
     connect(this, &SyscoinApplication::requestedShutdown, splash, &QWidget::close);
 }
-
-bool SyscoinApplication::baseInitialize()
+// SYSCOIN
+bool SyscoinApplication::baseInitialize(char* argv[])
 {
-    return m_node.baseInitialize();
+    return m_node.baseInitialize(argv);
 }
 
 void SyscoinApplication::startThread()
@@ -583,7 +583,8 @@ int GuiMain(int argc, char* argv[])
         // Perform base initialization before spinning up initialization/shutdown thread
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
-        if (app.baseInitialize()) {
+        // SYSCOIN
+        if (app.baseInitialize(argv)) {
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely...").arg(QObject::tr(PACKAGE_NAME)), (HWND)app.getMainWinId());

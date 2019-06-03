@@ -11,6 +11,7 @@
 #include <chainparams.h>
 #include <rpc/server.h>
 using namespace std;
+extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern std::string EncodeDestinationBitcoin(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
@@ -1061,12 +1062,12 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     StopGethNode(gethPID);
     int wsport = gArgs.GetArg("-gethwebsocketport", 8546);
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    if(!StartGethNode(gethPID, bGethTestnet, wsport))
+    if(!StartGethNode(exePath, gethPID, bGethTestnet, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
     int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
     const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
     const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
-    if(!StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword, wsport))
+    if(!StartRelayerNode(exePath, relayerPID, rpcport, rpcuser, rpcpassword, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     
     UniValue ret(UniValue::VOBJ);

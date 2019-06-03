@@ -74,7 +74,8 @@ void AppTests::appTests()
     m_app.createWindow(style.data());
     connect(&m_app, &SyscoinApplication::windowShown, this, &AppTests::guiTests);
     expectCallback("guiTests");
-    m_app.baseInitialize();
+    // SYSCOIN
+    m_app.baseInitialize(nullptr);
     m_app.requestInitialize();
     m_app.exec();
     m_app.requestShutdown();

@@ -134,7 +134,8 @@ static bool AppInit(int argc, char* argv[])
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
-        if (!AppInitBasicSetup())
+        // SYSCOIN
+        if (!AppInitBasicSetup(argv))
         {
             // InitError will have been called with detailed error, which ends up on console
             return false;
