@@ -5,7 +5,6 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/predef.h>
 
 #if (BOOST_OS_SOLARIS)
 
