@@ -16,13 +16,14 @@
 #include <boost/filesystem/path.hpp>
 
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
-
-#if (BOOST_OS_BSD_FREE)
-
+#if (BOOST_OS_BSD_FREE || BOOST_OS_BSD_DRAGONFLY)
 #include <sys/types.h>
-#include <sys/sysctl.h>
 #include <stdlib.h>
-
+#ifdef HAVE_SYSCTL_ARND
+#include <sys/sysctl.h>
+#endif
+#endif
+#if (BOOST_OS_BSD_FREE)
 namespace boost::detail {
 
 boost::filesystem::path executable_path_worker()
@@ -86,9 +87,6 @@ boost::filesystem::path executable_path_worker()
 
 #elif BOOST_OS_BSD_DRAGONFLY
 
-#include <sys/types.h>
-#include <sys/sysctl.h>
-#include <stdlib.h>
 
 namespace boost::detail {
 
