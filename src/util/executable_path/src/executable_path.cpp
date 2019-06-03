@@ -7,7 +7,6 @@
 
 #include <string>
 
-#include <boost/predef.h>
 
 #include <util/executable_path/include/boost/executable_path.hpp>
 #include <util/executable_path/include/boost/detail/executable_path_internals.hpp>

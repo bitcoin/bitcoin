@@ -5,7 +5,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <boost/predef.h>
+
 
 #if !( \
     BOOST_OS_ANDROID || BOOST_OS_BSD_DRAGONFLY || BOOST_OS_BSD_FREE || BOOST_OS_BSD_NET \

@@ -82,8 +82,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/tuple/tuple.hpp
     boost/tokenizer.hpp
     boost/locale.hpp
-    boost/predef.h
-    boost/version.hpp
     boost/filesystem/operations.hpp
     boost/filesystem/path.hpp
 )

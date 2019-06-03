@@ -16,8 +16,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/locale.hpp>
-#include <boost/predef.h>
-#include <boost/version.hpp>
 #include <boost/tokenizer.hpp>
 
 #if (BOOST_VERSION >= BOOST_VERSION_NUMBER(1, 61, 0))
