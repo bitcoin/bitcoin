@@ -3222,7 +3222,7 @@ bool ProcessNewBlockHeaders(uint32_t& nPoSTemperature, const uint256& lastAccept
         LOCK(cs_main);
 
         int nCooling = POW_HEADER_COOLING;
-        if (headers[0].hashPrevBlock != lastAcceptedHeader) {
+        if (headers[0].hashPrevBlock != lastAcceptedHeader && !lastAcceptedHeader.IsNull()) {
             nPoSTemperature += nCooling;
             nCooling = 0;
         }
