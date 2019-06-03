@@ -1341,6 +1341,7 @@ void BitcoinGUI::showProgress(const QString &title, int nProgress)
         if (progressDialog) {
             progressDialog->close();
             progressDialog->deleteLater();
+            progressDialog = nullptr;
         }
     } else if (progressDialog) {
         progressDialog->setValue(nProgress);
