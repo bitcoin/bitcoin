@@ -70,9 +70,10 @@ public:
     void initParameterInteraction() override { InitParameterInteraction(); }
     std::string getWarnings(const std::string& type) override { return GetWarnings(type); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }
-    bool baseInitialize() override
+    // SYSCOIN
+    bool baseInitialize(char* argv[]) override
     {
-        return AppInitBasicSetup() && AppInitParameterInteraction() && AppInitSanityChecks() &&
+        return AppInitBasicSetup(argv) && AppInitParameterInteraction() && AppInitSanityChecks() &&
                AppInitLockDataDirectory();
     }
     bool appInitMain() override { return AppInitMain(m_interfaces); }

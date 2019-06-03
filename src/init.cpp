@@ -90,6 +90,9 @@
 #include <services/assetconsensus.h>
 #include <services/rpc/wallet/assetwalletrpc.h>
 #include <key_io.h>
+#include <util/executable_path/include/boost/executable_path.hpp>
+#include <util/executable_path/include/boost/detail/executable_path_internals.hpp>
+std::string exePath = "";
 extern AssetBalanceMap mempoolMapAssetBalances;
 extern ArrivalTimesMapImpl arrivalTimesMap; 
 extern CCriticalSection cs_assetallocation;
@@ -1005,9 +1008,12 @@ std::vector<BlockFilterType> g_enabled_filter_types;
     // The log was successful, terminate now.
     std::terminate();
 };
-
-bool AppInitBasicSetup()
+// SYSCOIN
+bool AppInitBasicSetup(char* argv[])
 {
+    // SYSCOIN
+    if(argv != nullptr)
+        exePath = boost::executable_path(argv[0]);
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
     // Turn off Microsoft heap dump noise
@@ -2098,11 +2104,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     #ifdef ENABLE_WALLET
     int wsport = gArgs.GetArg("-gethwebsocketport", 8546);
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    StartGethNode(gethPID, bGethTestnet, wsport);
+    StartGethNode(exePath, gethPID, bGethTestnet, wsport);
 	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
 	const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
 	const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
-	StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword, wsport);
+	StartRelayerNode(exePath, relayerPID, rpcport, rpcuser, rpcpassword, wsport);
     
     #endif // ENABLE_WALLET
     for (const auto& client : interfaces.chain_clients) {

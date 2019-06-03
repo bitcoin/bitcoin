@@ -75,7 +75,8 @@ public:
     virtual uint32_t getLogCategories() = 0;
 
     //! Initialize app dependencies.
-    virtual bool baseInitialize() = 0;
+    // SYSCOIN
+    virtual bool baseInitialize(char* argv[]) = 0;
 
     //! Start node.
     virtual bool appInitMain() = 0;

@@ -81,6 +81,13 @@ EXPECTED_BOOST_INCLUDES=(
     boost/throw_exception.hpp
     boost/tuple/tuple.hpp
     boost/dll/runtime_symbol_info.hpp
+    boost/process.hpp
+    boost/tokenizer.hpp
+    boost/locale.hpp
+    boost/predef.h
+    boost/version.hpp
+    boost/filesystem/operations.hpp
+    boost/filesystem/path.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do

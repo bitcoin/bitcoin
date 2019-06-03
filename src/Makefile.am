@@ -250,6 +250,8 @@ SYSCOIN_CORE_H = \
   util/time.h \
   util/url.h \
   util/validation.h \
+  util/executable_path/include/boost/executable_path.hpp \
+  util/executable_path/include/boost/detail/executable_path_internals.hpp \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -585,6 +587,15 @@ libsyscoin_util_a_SOURCES = \
   util/time.cpp \
   util/url.cpp \
   util/validation.cpp \
+  util/executable_path/src/executable_path.cpp \
+  util/executable_path/src/detail/executable_path_internals_BSD.cpp \
+  util/executable_path/src/detail/executable_path_internals_Common.cpp \
+  util/executable_path/src/detail/executable_path_internals_Linux.cpp \
+  util/executable_path/src/detail/executable_path_internals_Macintosh.cpp \
+  util/executable_path/src/detail/executable_path_internals_Other.cpp \
+  util/executable_path/src/detail/executable_path_internals_QNX.cpp \
+  util/executable_path/src/detail/executable_path_internals_Solaris.cpp \
+  util/executable_path/src/detail/executable_path_internals_Windows.cpp \
   $(SYSCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
