@@ -300,7 +300,6 @@ bool CMasternode::IsValidNetAddr(CService addrIn)
 masternode_info_t CMasternode::GetInfo() const
 {
     masternode_info_t info{*this};
-    info.nTimeLastPing = lastPing.sigTime;
     info.fInfoValid = true;
     return info;
 }

@@ -125,7 +125,6 @@ struct masternode_info_t
     int nPingRetries = 0;
     int64_t nTimeLastChecked = 0;
     int64_t nTimeLastPaid = 0;
-    int64_t nTimeLastPing = 0; //* not in CMN
     bool fInfoValid = false; //* not in CMN
 };
 enum state {
