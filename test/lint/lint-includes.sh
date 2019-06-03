@@ -80,8 +80,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/multiprecision/cpp_int.hpp
     boost/throw_exception.hpp
     boost/tuple/tuple.hpp
-    boost/dll/runtime_symbol_info.hpp
-    boost/process.hpp
     boost/tokenizer.hpp
     boost/locale.hpp
     boost/predef.h
