@@ -88,4 +88,10 @@ elif PYTHONWARNINGS="ignore" flake8 --version | grep -q "Python 2"; then
     exit 0
 fi
 
-PYTHONWARNINGS="ignore" git ls-files "*.py" | xargs flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")
+PYTHONWARNINGS="ignore" flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; echo "${enabled[*]}")$(
+    if [[ $# == 0 ]]; then
+        git ls-files "*.py"
+    else
+        echo "$@"
+    fi
+)
