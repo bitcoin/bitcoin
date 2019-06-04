@@ -1096,7 +1096,6 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
                     continue;
                 }
                 tallyitem& item = mapTally[isMineResult.destination];
-                item.nAmount += isMineResult.amount;
                 item.nConf = std::min(item.nConf, nDepth);
                 item.txids.push_back(wtx.GetHash());
                 if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
