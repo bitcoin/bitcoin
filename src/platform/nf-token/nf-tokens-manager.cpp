@@ -324,7 +324,7 @@ namespace Platform
             assert(rangeSize >= 0);
 
             long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
-            long reverseEnd = rangeSize < rangeSize - startFrom + count ? 0 : reverseBegin - count;
+            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
             auto begin = std::prev(originalRange.second, reverseBegin);
             auto end = std::prev(originalRange.second, reverseEnd);
 
@@ -357,7 +357,7 @@ namespace Platform
             assert(rangeSize >= 0);
 
             long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
-            long reverseEnd = rangeSize < rangeSize - startFrom + count ? 0 : reverseBegin - count;
+            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
             auto begin = std::prev(second, reverseBegin);
             auto end = std::prev(second, reverseEnd);
 
@@ -378,31 +378,25 @@ namespace Platform
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                                        CKeyID keyId,
                                                        int height,
-                                                       int count,
-                                                       int startFrom) const
+                                                       int count) const
     {
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto originalRange = m_nfTokensIndexSet.get<Tags::OwnerId>().equal_range(keyId);
-            //std::sort(originalRange.first, originalRange.second, [](const NfTokenIndex & left, const NfTokenIndex & right) -> bool
-            //{
-            //    return left.BlockIndex()->nHeight > right.BlockIndex()->nHeight;
-            //});
+            NftIndexForwardRange finalRange(originalRange.first, originalRange.second);
 
-            int skipped = 0;
             int processed = 0;
-            for (auto it = originalRange.first; it != originalRange.second || processed != count; ++it)
+            for (auto it = finalRange.begin(); it != finalRange.end(); ++it)
             {
-                if (it->BlockIndex()->nHeight < height && skipped < startFrom)
+                if (it->BlockIndex()->nHeight <= height)
                 {
-                    skipped++;
-                }
-                else if (it->BlockIndex()->nHeight < height && skipped == startFrom)
-                {
-                    if (!nftIndexHandler(*it))
+                    if (nftIndexHandler(*it))
                         processed++;
                     else
                         LogPrintf("%s: NFT index processing failed.", __func__);
+
+                    if (processed == count)
+                        break;
                 }
             }
         }
@@ -417,31 +411,25 @@ namespace Platform
                                                        uint64_t nftProtoId,
                                                        CKeyID keyId,
                                                        int height,
-                                                       int count,
-                                                       int startFrom) const
+                                                       int count) const
     {
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto originalRange = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().equal_range(std::make_tuple(nftProtoId, keyId));
-            //std::sort(originalRange.first, originalRange.second), [](const NfTokenIndex & left, const NfTokenIndex & right) -> bool
-            //{
-            //    return left.BlockIndex()->nHeight > right.BlockIndex()->nHeight;
-            //});
+            NftIndexForwardRange finalRange(originalRange.first, originalRange.second);
 
-            int skipped = 0;
             int processed = 0;
-            for (auto it = originalRange.first; it != originalRange.second || processed != count; ++it)
+            for (auto it = finalRange.begin(); it != finalRange.end(); ++it)
             {
-                if (it->BlockIndex()->nHeight < height && skipped < startFrom)
+                if (it->BlockIndex()->nHeight <= height)
                 {
-                    skipped++;
-                }
-                else if (it->BlockIndex()->nHeight < height && skipped == startFrom)
-                {
-                    if (!nftIndexHandler(*it))
+                    if (nftIndexHandler(*it))
                         processed++;
                     else
                         LogPrintf("%s: NFT index processing failed.", __func__);
+
+                    if (processed == count)
+                        break;
                 }
             }
         }

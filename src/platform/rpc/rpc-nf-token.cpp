@@ -178,9 +178,10 @@ List the most recent 20 NFT records
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
 
         static const int defaultTxsCount = 20;
-        int count = (params.size() > 4) ? params[3].get_int() : defaultTxsCount;
-        int startFrom = (params.size() > 5) ? params[4].get_int() : 0;
-        bool regTxOnly = (params.size() > 6) ? ParseBoolV(params[1], "regTxOnly") : false;
+        static const int defaultStartFrom = 20;
+        int count = (params.size() > 4) ? ParseInt32V(params[4], "count") : defaultTxsCount;
+        int startFrom = (params.size() > 5) ? ParseInt32V(params[5], "from") : defaultStartFrom;
+        bool regTxOnly = (params.size() > 6) ? ParseBoolV(params[6], "regTxOnly") : false;
 
         json_spirit::Array nftList;
 
@@ -204,9 +205,9 @@ List the most recent 20 NFT records
         else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && filterKeyId.IsNull())
             NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, height, count, startFrom);
         else if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count, startFrom);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count);
         else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count, startFrom);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count);
 
         return nftList;
     }

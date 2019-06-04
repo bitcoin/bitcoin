@@ -207,6 +207,7 @@ namespace Platform
             std::size_t TotalSupply(uint64_t protocolId) const;
 
             using NftIndexRange = boost::any_range<const NfTokenIndex &, boost::bidirectional_traversal_tag>;
+            using NftIndexForwardRange = boost::any_range<const NfTokenIndex &, boost::forward_traversal_tag>;
 
             void ProcessFullNftIndexRange(std::function<bool(const NfTokenIndex &)> nftIndexHandler) const;
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
@@ -223,15 +224,13 @@ namespace Platform
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               CKeyID keyId,
                                               int height,
-                                              int count,
-                                              int startFrom) const;
+                                              int count) const;
 
             void ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                               uint64_t nftProtoId,
                                               CKeyID keyId,
                                               int height,
-                                              int count,
-                                              int startFrom) const;
+                                              int count) const;
 
             /// Delete a specified nf-token
             bool Delete(uint64_t protocolId, const uint256 & tokenId);
