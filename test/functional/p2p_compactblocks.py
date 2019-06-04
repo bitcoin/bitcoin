@@ -11,6 +11,7 @@ Version 2 compact blocks are post-segwit (wtxids)
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.key import CECKey
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
 from test_framework.script import CScript, OP_TRUE, OP_DROP
 
@@ -98,16 +99,20 @@ class CompactBlocksTest(BitcoinTestFramework):
         # TODO: Rewrite this test to support SegWit being always active.
         self.extra_args = [["-vbparams=segwit:0:0"], ["-vbparams=segwit:0:999999999999", "-txindex", "-deprecatedrpc=addwitnessaddress"]]
         self.utxos = []
+        self.coinbase_key = CECKey()
+        self.coinbase_key.set_secretbytes(b"horsebattery")
+        self.coinbase_pubkey = self.coinbase_key.get_pubkey()
 
     def build_block_on_tip(self, node, segwit=False):
         height = node.getblockcount()
         tip = node.getbestblockhash()
         mtp = node.getblockheader(tip)['mediantime']
-        block = create_block(int(tip, 16), create_coinbase(height + 1), mtp + 1)
+        block = create_block(int(tip, 16), create_coinbase(height + 1, self.coinbase_pubkey, mtp), mtp + 1)
         block.nVersion = 4
         if segwit:
             add_witness_commitment(block)
         block.solve()
+        block.vchBlockSig = self.coinbase_key.sign(bytes.fromhex(block.hash)[::-1])
         return block
 
     # Create 10 more anyone-can-spend utxo's for testing.

@@ -34,7 +34,7 @@ MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version 
 MAX_INV_SZ = 50000
 MAX_BLOCK_BASE_SIZE = 1000000
 
-COIN = 100000000 # 1 btc in satoshis
+COIN = 1000000 # 1 btc in satoshis
 
 NODE_NETWORK = (1 << 0)
 # NODE_GETUTXO = (1 << 1)
@@ -504,6 +504,7 @@ class CBlockHeader():
             self.nNonce = header.nNonce
             self.sha256 = header.sha256
             self.hash = header.hash
+            self.nFlags = header.nFlags
             self.calc_sha256()
 
     def set_null(self):
@@ -513,6 +514,7 @@ class CBlockHeader():
         self.nTime = 0
         self.nBits = 0
         self.nNonce = 0
+        self.nFlags = 0
         self.sha256 = None
         self.hash = None
 
