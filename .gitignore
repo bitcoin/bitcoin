@@ -1,16 +1,14 @@
-*.sublime-project
-*.sublime-workspace
-todo.txt
-reset-files.bash
-
 *.tar.gz
 
 *.exe
 src/syscoin
 src/syscoind
+src/syscoinbench
 src/syscoin-cli
 src/syscoin-tx
+src/syscoin-wallet
 src/test/test_syscoin
+src/test/test_syscoin_fuzzy
 src/qt/test/test_syscoin-qt
 src/bench/bench_syscoin
 
@@ -48,7 +46,12 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
-libconftest.dylib*
+
+src/qt/syscoin-qt.config
+src/qt/syscoin-qt.creator
+src/qt/syscoin-qt.creator.user
+src/qt/syscoin-qt.files
+src/qt/syscoin-qt.includes
 
 .deps
 .dirstamp
@@ -61,11 +64,10 @@ libconftest.dylib*
 *.pyc
 *.o
 *.o-*
-*.patch
-.syscoin
 *.a
 *.pb.cc
 *.pb.h
+*.dat
 
 *.log
 *.trs
@@ -73,6 +75,10 @@ libconftest.dylib*
 
 *.json.h
 *.raw.h
+
+# Only ignore unexpected patches
+*.patch
+!depends/patches/*.patch
 
 #libtool object files
 *.lo
@@ -83,11 +89,11 @@ libconftest.dylib*
 Makefile
 syscoin-qt
 Syscoin-Qt.app
+background.tiff*
 
 # Unit-tests
 Makefile.test
 syscoin-qt_test
-src/test/buildenv.py
 
 # Resources cpp
 qrc_*.cpp
@@ -108,28 +114,27 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-syscoind-for-test.sh
-qa/pull-tester/tests_config.py
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
-qa/tmp
-cache/
-share/SyscoindComparisonTool.jar
+test/config.ini
+test/cache/*
+src/test/node1/*
+src/test/node2/*
+src/test/node3/*
+src/test/mainnet1/*
+src/test/mainnet2/*
+src/qt/node1
+*.tmp
+*.ipch
+*.bin
 
 !src/leveldb*/Makefile
 
-.cproject
-.project
-.autotools
 /doc/doxygen/
 
 libsyscoinconsensus.pc
-src/qt/syscoin-qt.bash
-qa/pull-tester/tests-config.sh
-
-#development symlinks
-syscoin-cli
-syscoind
-syscoin-qt
-make
 contrib/devtools/split-debug.sh
+
+# Output from running db4 installation
+db4/
+
+# clang-check
+*.plist

@@ -1,53 +1,52 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2011-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h"
-#endif
+#include <qt/syscoingui.h>
 
-#include "syscoingui.h"
-
-#include "syscoinunits.h"
-#include "clientmodel.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "modaloverlay.h"
-#include "networkstyle.h"
-#include "notificator.h"
-#include "openuridialog.h"
-#include "optionsdialog.h"
-#include "optionsmodel.h"
-#include "platformstyle.h"
-#include "rpcconsole.h"
-#include "utilitydialog.h"
+#include <qt/syscoinunits.h>
+#include <qt/clientmodel.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/modaloverlay.h>
+#include <qt/networkstyle.h>
+#include <qt/notificator.h>
+#include <qt/openuridialog.h>
+#include <qt/optionsdialog.h>
+#include <qt/optionsmodel.h>
+#include <qt/platformstyle.h>
+#include <qt/rpcconsole.h>
+#include <qt/utilitydialog.h>
 
 #ifdef ENABLE_WALLET
-#include "walletframe.h"
-#include "walletmodel.h"
+#include <qt/walletcontroller.h>
+#include <qt/walletframe.h>
+#include <qt/walletmodel.h>
+#include <qt/walletview.h>
 #endif // ENABLE_WALLET
 
 #ifdef Q_OS_MAC
-#include "macdockiconhandler.h"
+#include <qt/macdockiconhandler.h>
 #endif
 
-#include "chainparams.h"
-#include "init.h"
-#include "ui_interface.h"
-#include "util.h"
-#include "masternode-sync.h"
-#include "masternodelist.h"
+#include <chain.h>
+#include <chainparams.h>
+#include <interfaces/handler.h>
+#include <interfaces/node.h>
+#include <ui_interface.h>
+#include <util/system.h>
 
 #include <iostream>
+#include <memory>
 
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDateTime>
 #include <QDesktopWidget>
 #include <QDragEnterEvent>
 #include <QListWidget>
+#include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QMimeData>
@@ -57,16 +56,15 @@
 #include <QStackedWidget>
 #include <QStatusBar>
 #include <QStyle>
+#include <QSystemTrayIcon>
 #include <QTimer>
 #include <QToolBar>
-#include <QVBoxLayout>
-
-#if QT_VERSION < 0x050000
-#include <QTextDocument>
-#include <QUrl>
-#else
 #include <QUrlQuery>
-#endif
+#include <QVBoxLayout>
+#include <QWindow>
+// SYSCOIN
+#include <masternodesync.h>
+#include <qt/masternodelist.h>
 
 const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #if defined(Q_OS_MAC)
@@ -78,97 +76,34 @@ const std::string SyscoinGUI::DEFAULT_UIPLATFORM =
 #endif
         ;
 
-/** Display name for default wallet name. Uses tilde to avoid name
- * collisions in the future with additional wallets */
-const QString SyscoinGUI::DEFAULT_WALLET = "~Default";
-
-SyscoinGUI::SyscoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
+SyscoinGUI::SyscoinGUI(interfaces::Node& node, const PlatformStyle *_platformStyle, const NetworkStyle *networkStyle, QWidget *parent) :
     QMainWindow(parent),
-    enableWallet(false),
-    clientModel(0),
-    walletFrame(0),
-    unitDisplayControl(0),
-    labelWalletEncryptionIcon(0),
-    labelWalletHDStatusIcon(0),
-    labelConnectionsIcon(0),
-    labelBlocksIcon(0),
-    progressBarLabel(0),
-    progressBar(0),
-    progressDialog(0),
-    appMenuBar(0),
-    overviewAction(0),
-    historyAction(0),
-    masternodeAction(0),
-    quitAction(0),
-    sendCoinsAction(0),
-    sendCoinsMenuAction(0),
-    usedSendingAddressesAction(0),
-    usedReceivingAddressesAction(0),
-    signMessageAction(0),
-    verifyMessageAction(0),
-    aboutAction(0),
-    receiveCoinsAction(0),
-    receiveCoinsMenuAction(0),
-    optionsAction(0),
-    toggleHideAction(0),
-    encryptWalletAction(0),
-    backupWalletAction(0),
-    changePassphraseAction(0),
-    aboutQtAction(0),
-    openRPCConsoleAction(0),
-    openAction(0),
-    showHelpMessageAction(0),
-    showPrivateSendHelpAction(0),
-    trayIcon(0),
-    trayIconMenu(0),
-    dockIconMenu(0),
-    notificator(0),
-    rpcConsole(0),
-    helpMessageDialog(0),
-    modalOverlay(0),
-    prevBlocks(0),
-    spinnerFrame(0),
-    platformStyle(_platformStyle)
+    m_node(node),
+    trayIconMenu{new QMenu()},
+    platformStyle(_platformStyle),
+    m_network_style(networkStyle)
 {
-    /* Open CSS when configured */
-    this->setStyleSheet(GUIUtil::loadStyleSheet());
+    QSettings settings;
+    if (!restoreGeometry(settings.value("MainWindowGeometry").toByteArray())) {
+        // Restore failed (perhaps missing setting), center the window
+        move(QApplication::desktop()->availableGeometry().center() - frameGeometry().center());
+    }
 
-    GUIUtil::restoreWindowGeometry("nWindow", QSize(850, 550), this);
-
-    QString windowTitle = tr(PACKAGE_NAME) + " - ";
 #ifdef ENABLE_WALLET
     enableWallet = WalletModel::isWalletEnabled();
 #endif // ENABLE_WALLET
-    if(enableWallet)
-    {
-        windowTitle += tr("Wallet");
-    } else {
-        windowTitle += tr("Node");
-    }
-    QString userWindowTitle = QString::fromStdString(GetArg("-windowtitle", ""));
-    if(!userWindowTitle.isEmpty()) windowTitle += " - " + userWindowTitle;
-    windowTitle += " " + networkStyle->getTitleAddText();
-#ifndef Q_OS_MAC
-    QApplication::setWindowIcon(networkStyle->getTrayAndWindowIcon());
-    setWindowIcon(networkStyle->getTrayAndWindowIcon());
-#else
-    MacDockIconHandler::instance()->setIcon(networkStyle->getAppIcon());
-#endif
-    setWindowTitle(windowTitle);
+    QApplication::setWindowIcon(m_network_style->getTrayAndWindowIcon());
+    setWindowIcon(m_network_style->getTrayAndWindowIcon());
+    updateWindowTitle();
 
-#if defined(Q_OS_MAC) && QT_VERSION < 0x050000
-    // This property is not implemented in Qt 5. Setting it has no effect.
-    // A replacement API (QtMacUnifiedToolBar) is available in QtMacExtras.
-    setUnifiedTitleAndToolBarOnMac(true);
-#endif
-
-    rpcConsole = new RPCConsole(_platformStyle, 0);
-    helpMessageDialog = new HelpMessageDialog(this, HelpMessageDialog::cmdline);
+    rpcConsole = new RPCConsole(node, _platformStyle, nullptr);
+    helpMessageDialog = new HelpMessageDialog(node, this, false);
 #ifdef ENABLE_WALLET
     if(enableWallet)
     {
-        /** Create wallet frame*/
+        /** Create wallet frame and make it the central widget */
         walletFrame = new WalletFrame(_platformStyle, this);
+        setCentralWidget(walletFrame);
     } else
 #endif // ENABLE_WALLET
     {
@@ -176,6 +111,7 @@ SyscoinGUI::SyscoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
          * the central widget is the rpc console.
          */
         setCentralWidget(rpcConsole);
+        Q_EMIT consoleShown(rpcConsole);
     }
 
     // Accept D&D of URIs
@@ -192,7 +128,10 @@ SyscoinGUI::SyscoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     createToolBars();
 
     // Create system tray icon and notification
-    createTrayIcon(networkStyle);
+    if (QSystemTrayIcon::isSystemTrayAvailable()) {
+        createTrayIcon();
+    }
+    notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
 
     // Create status bar
     statusBar();
@@ -210,8 +149,8 @@ SyscoinGUI::SyscoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     unitDisplayControl = new UnitDisplayStatusBarControl(platformStyle);
     labelWalletEncryptionIcon = new QLabel();
     labelWalletHDStatusIcon = new QLabel();
-    labelConnectionsIcon = new GUIUtil::ClickableLabel();
-
+    labelProxyIcon = new GUIUtil::ClickableLabel();
+    connectionsControl = new GUIUtil::ClickableLabel();
     labelBlocksIcon = new GUIUtil::ClickableLabel();
     if(enableWallet)
     {
@@ -221,26 +160,27 @@ SyscoinGUI::SyscoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
         frameBlocksLayout->addWidget(labelWalletEncryptionIcon);
         frameBlocksLayout->addWidget(labelWalletHDStatusIcon);
     }
+    frameBlocksLayout->addWidget(labelProxyIcon);
     frameBlocksLayout->addStretch();
-    frameBlocksLayout->addWidget(labelConnectionsIcon);
+    frameBlocksLayout->addWidget(connectionsControl);
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
-    progressBarLabel->setVisible(true);
+    progressBarLabel->setVisible(false);
     progressBar = new GUIUtil::ProgressBar();
     progressBar->setAlignment(Qt::AlignCenter);
-    progressBar->setVisible(true);
+    progressBar->setVisible(false);
 
     // Override style sheet for progress bar for styles that have a segmented progress bar,
     // as they make the text unreadable (workaround for issue #1071)
-    // See https://qt-project.org/doc/qt-4.8/gallery.html
+    // See https://doc.qt.io/qt-5/gallery.html
     QString curStyle = QApplication::style()->metaObject()->className();
     if(curStyle == "QWindowsStyle" || curStyle == "QWindowsXPStyle")
     {
-        progressBar->setStyleSheet("QProgressBar { background-color: #F8F8F8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #00CCFF, stop: 1 #33CCFF); border-radius: 7px; margin: 0px; }");
+        progressBar->setStyleSheet("QProgressBar { background-color: #e8e8e8; border: 1px solid grey; border-radius: 7px; padding: 1px; text-align: center; } QProgressBar::chunk { background: QLinearGradient(x1: 0, y1: 0, x2: 1, y2: 0, stop: 0 #FF8000, stop: 1 orange); border-radius: 7px; margin: 0px; }");
     }
 
     statusBar()->addWidget(progressBarLabel);
@@ -256,16 +196,24 @@ SyscoinGUI::SyscoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     // Subscribe to notifications from core
     subscribeToCoreSignals();
 
-    // Jump to peers tab by clicking on connections icon
-    connect(labelConnectionsIcon, SIGNAL(clicked(QPoint)), this, SLOT(showPeers()));
+    connect(connectionsControl, &GUIUtil::ClickableLabel::clicked, [this] {
+        m_node.setNetworkActive(!m_node.getNetworkActive());
+    });
+    connect(labelProxyIcon, &GUIUtil::ClickableLabel::clicked, [this] {
+        openOptionsDialogWithTab(OptionsDialog::TAB_NETWORK);
+    });
 
     modalOverlay = new ModalOverlay(this->centralWidget());
 #ifdef ENABLE_WALLET
     if(enableWallet) {
-        connect(walletFrame, SIGNAL(requestedSyncWarningInfo()), this, SLOT(showModalOverlay()));
-        connect(labelBlocksIcon, SIGNAL(clicked(QPoint)), this, SLOT(showModalOverlay()));
-        connect(progressBar, SIGNAL(clicked(QPoint)), this, SLOT(showModalOverlay()));
+        connect(walletFrame, &WalletFrame::requestedSyncWarningInfo, this, &SyscoinGUI::showModalOverlay);
+        connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &SyscoinGUI::showModalOverlay);
+        connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &SyscoinGUI::showModalOverlay);
     }
+#endif
+
+#ifdef Q_OS_MAC
+    m_app_nap_inhibitor = new CAppNapInhibitor;
 #endif
 }
 
@@ -274,10 +222,12 @@ SyscoinGUI::~SyscoinGUI()
     // Unsubscribe from notifications from core
     unsubscribeFromCoreSignals();
 
-    GUIUtil::saveWindowGeometry("nWindow", this);
+    QSettings settings;
+    settings.setValue("MainWindowGeometry", saveGeometry());
     if(trayIcon) // Hide tray icon, as deleting will let it linger until quit (on Ubuntu)
         trayIcon->hide();
 #ifdef Q_OS_MAC
+    delete m_app_nap_inhibitor;
     delete appMenuBar;
     MacDockIconHandler::cleanup();
 #endif
@@ -289,63 +239,47 @@ void SyscoinGUI::createActions()
 {
     QActionGroup *tabGroup = new QActionGroup(this);
 
-    QString theme = GUIUtil::getThemeName();
-    overviewAction = new QAction(QIcon(":/icons/" + theme + "/overview"), tr("&Overview"), this);
+    overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    overviewAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_1));
-#else
     overviewAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_1));
-#endif
     tabGroup->addAction(overviewAction);
 
-    sendCoinsAction = new QAction(QIcon(":/icons/" + theme + "/send"), tr("&Send"), this);
+    sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
     sendCoinsAction->setStatusTip(tr("Send coins to a Syscoin address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    sendCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_2));
-#else
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
-#endif
     tabGroup->addAction(sendCoinsAction);
 
-    sendCoinsMenuAction = new QAction(QIcon(":/icons/" + theme + "/send"), sendCoinsAction->text(), this);
+    sendCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/send"), sendCoinsAction->text(), this);
     sendCoinsMenuAction->setStatusTip(sendCoinsAction->statusTip());
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
-    receiveCoinsAction = new QAction(QIcon(":/icons/" + theme + "/receiving_addresses"), tr("&Receive"), this);
+    receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and syscoin: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    receiveCoinsAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_3));
-#else
     receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_3));
-#endif
     tabGroup->addAction(receiveCoinsAction);
 
-    receiveCoinsMenuAction = new QAction(QIcon(":/icons/" + theme + "/receiving_addresses"), receiveCoinsAction->text(), this);
+    receiveCoinsMenuAction = new QAction(platformStyle->TextColorIcon(":/icons/receiving_addresses"), receiveCoinsAction->text(), this);
     receiveCoinsMenuAction->setStatusTip(receiveCoinsAction->statusTip());
     receiveCoinsMenuAction->setToolTip(receiveCoinsMenuAction->statusTip());
 
-    historyAction = new QAction(QIcon(":/icons/" + theme + "/history"), tr("&Transactions"), this);
+    historyAction = new QAction(platformStyle->SingleColorIcon(":/icons/history"), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
-#ifdef Q_OS_MAC
-    historyAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_4));
-#else
     historyAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_4));
-#endif
     tabGroup->addAction(historyAction);
 
 #ifdef ENABLE_WALLET
+   // SYSCOIN
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeAction = new QAction(QIcon(":/icons/" + theme + "/masternodes"), tr("&Masternodes"), this);
+        masternodeAction = new QAction(QIcon(":/icons/masternodes"), tr("&Masternodes"), this);
         masternodeAction->setStatusTip(tr("Browse masternodes"));
         masternodeAction->setToolTip(masternodeAction->statusTip());
         masternodeAction->setCheckable(true);
@@ -355,145 +289,157 @@ void SyscoinGUI::createActions()
         masternodeAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_5));
 #endif
         tabGroup->addAction(masternodeAction);
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
+        connect(masternodeAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+        connect(masternodeAction, &QAction::triggered,  [this]{ gotoMasternodePage(); });
     }
-
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(overviewAction, SIGNAL(triggered()), this, SLOT(gotoOverviewPage()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(sendCoinsAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
-    connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(sendCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoSendCoinsPage()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(receiveCoinsAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
-    connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+    connect(overviewAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(overviewAction, &QAction::triggered, this, &SyscoinGUI::gotoOverviewPage);
+    connect(sendCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(sendCoinsAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
+    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(sendCoinsMenuAction, &QAction::triggered, [this]{ gotoSendCoinsPage(); });
+    connect(receiveCoinsAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(receiveCoinsAction, &QAction::triggered, this, &SyscoinGUI::gotoReceiveCoinsPage);
+    connect(receiveCoinsMenuAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(receiveCoinsMenuAction, &QAction::triggered, this, &SyscoinGUI::gotoReceiveCoinsPage);
+    connect(historyAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+    connect(historyAction, &QAction::triggered, this, &SyscoinGUI::gotoHistoryPage);
 #endif // ENABLE_WALLET
 
-    quitAction = new QAction(QIcon(":/icons/" + theme + "/quit"), tr("E&xit"), this);
+    quitAction = new QAction(platformStyle->TextColorIcon(":/icons/quit"), tr("E&xit"), this);
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(QIcon(":/icons/" + theme + "/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about Syscoin Core"));
+    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
-    aboutQtAction = new QAction(QIcon(":/icons/" + theme + "/about_qt"), tr("About &Qt"), this);
+    aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
-    optionsAction = new QAction(QIcon(":/icons/" + theme + "/options"), tr("&Options..."), this);
+    optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
-    toggleHideAction = new QAction(QIcon(":/icons/" + theme + "/about"), tr("&Show / Hide"), this);
+    toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
-    encryptWalletAction = new QAction(QIcon(":/icons/" + theme + "/lock_closed"), tr("&Encrypt Wallet..."), this);
+    encryptWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/lock_closed"), tr("&Encrypt Wallet..."), this);
     encryptWalletAction->setStatusTip(tr("Encrypt the private keys that belong to your wallet"));
     encryptWalletAction->setCheckable(true);
-    backupWalletAction = new QAction(QIcon(":/icons/" + theme + "/filesave"), tr("&Backup Wallet..."), this);
+    backupWalletAction = new QAction(platformStyle->TextColorIcon(":/icons/filesave"), tr("&Backup Wallet..."), this);
     backupWalletAction->setStatusTip(tr("Backup wallet to another location"));
-    changePassphraseAction = new QAction(QIcon(":/icons/" + theme + "/key"), tr("&Change Passphrase..."), this);
+    changePassphraseAction = new QAction(platformStyle->TextColorIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
-    unlockWalletAction = new QAction(tr("&Unlock Wallet..."), this);
-    unlockWalletAction->setToolTip(tr("Unlock wallet"));
-    lockWalletAction = new QAction(tr("&Lock Wallet"), this);
-    signMessageAction = new QAction(QIcon(":/icons/" + theme + "/edit"), tr("Sign &message..."), this);
+    signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
     signMessageAction->setStatusTip(tr("Sign messages with your Syscoin addresses to prove you own them"));
-    verifyMessageAction = new QAction(QIcon(":/icons/" + theme + "/transaction_0"), tr("&Verify message..."), this);
+    verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Syscoin addresses"));
 
-    openInfoAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Information"), this);
-    openInfoAction->setStatusTip(tr("Show diagnostic information"));
-    openRPCConsoleAction = new QAction(QIcon(":/icons/" + theme + "/debugwindow"), tr("&Debug console"), this);
-    openRPCConsoleAction->setStatusTip(tr("Open debugging console"));
-    openGraphAction = new QAction(QIcon(":/icons/" + theme + "/connect_4"), tr("&Network Monitor"), this);
-    openGraphAction->setStatusTip(tr("Show network monitor"));
-    openPeersAction = new QAction(QIcon(":/icons/" + theme + "/connect_4"), tr("&Peers list"), this);
-    openPeersAction->setStatusTip(tr("Show peers info"));
-    openRepairAction = new QAction(QIcon(":/icons/" + theme + "/options"), tr("Wallet &Repair"), this);
-    openRepairAction->setStatusTip(tr("Show wallet repair options"));
-    openConfEditorAction = new QAction(QIcon(":/icons/" + theme + "/edit"), tr("Open Wallet &Configuration File"), this);
-    openConfEditorAction->setStatusTip(tr("Open configuration file"));
-    openMNConfEditorAction = new QAction(QIcon(":/icons/" + theme + "/edit"), tr("Open &Masternode Configuration File"), this);
-    openMNConfEditorAction->setStatusTip(tr("Open Masternode configuration file"));    
-    showBackupsAction = new QAction(QIcon(":/icons/" + theme + "/browse"), tr("Show Automatic &Backups"), this);
-    showBackupsAction->setStatusTip(tr("Show automatically created wallet backups"));
-    // initially disable the debug window menu items
-    openInfoAction->setEnabled(false);
+    openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
+    openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
+    // initially disable the debug window menu item
     openRPCConsoleAction->setEnabled(false);
-    openGraphAction->setEnabled(false);
-    openPeersAction->setEnabled(false);
-    openRepairAction->setEnabled(false);
+    openRPCConsoleAction->setObjectName("openRPCConsoleAction");
 
-    usedSendingAddressesAction = new QAction(QIcon(":/icons/" + theme + "/address-book"), tr("&Sending addresses..."), this);
+    usedSendingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Sending addresses"), this);
     usedSendingAddressesAction->setStatusTip(tr("Show the list of used sending addresses and labels"));
-    usedReceivingAddressesAction = new QAction(QIcon(":/icons/" + theme + "/address-book"), tr("&Receiving addresses..."), this);
+    usedReceivingAddressesAction = new QAction(platformStyle->TextColorIcon(":/icons/address-book"), tr("&Receiving addresses"), this);
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
-    openAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_DirOpenIcon), tr("Open &URI..."), this);
+    openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
     openAction->setStatusTip(tr("Open a syscoin: URI or payment request"));
 
-    showHelpMessageAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&Command-line options"), this);
+    m_open_wallet_action = new QAction(tr("Open Wallet"), this);
+    m_open_wallet_action->setMenu(new QMenu(this));
+    m_open_wallet_action->setStatusTip(tr("Open a wallet"));
+
+    m_close_wallet_action = new QAction(tr("Close Wallet..."), this);
+    m_close_wallet_action->setStatusTip(tr("Close wallet"));
+
+    showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Syscoin command-line options").arg(tr(PACKAGE_NAME)));
 
-    showPrivateSendHelpAction = new QAction(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation), tr("&PrivateSend information"), this);
-    showPrivateSendHelpAction->setMenuRole(QAction::NoRole);
-    showPrivateSendHelpAction->setStatusTip(tr("Show the PrivateSend basic information"));
-
-    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
-    connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
-    connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-    connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
-    connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
-    connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
-    connect(showPrivateSendHelpAction, SIGNAL(triggered()), this, SLOT(showPrivateSendHelpClicked()));
-
-    // Jump directly to tabs in RPC-console
-    connect(openInfoAction, SIGNAL(triggered()), this, SLOT(showInfo()));
-    connect(openRPCConsoleAction, SIGNAL(triggered()), this, SLOT(showConsole()));
-    connect(openGraphAction, SIGNAL(triggered()), this, SLOT(showGraph()));
-    connect(openPeersAction, SIGNAL(triggered()), this, SLOT(showPeers()));
-    connect(openRepairAction, SIGNAL(triggered()), this, SLOT(showRepair()));
-
-    // Open configs and backup folder from menu
-    connect(openConfEditorAction, SIGNAL(triggered()), this, SLOT(showConfEditor()));
-    connect(openMNConfEditorAction, SIGNAL(triggered()), this, SLOT(showMNConfEditor()));
-    connect(showBackupsAction, SIGNAL(triggered()), this, SLOT(showBackups()));
-
-    // Get restart command-line parameters and handle restart
-    connect(rpcConsole, SIGNAL(handleRestart(QStringList)), this, SLOT(handleRestart(QStringList)));
-    
+    connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
+    connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
+    connect(aboutQtAction, &QAction::triggered, qApp, QApplication::aboutQt);
+    connect(optionsAction, &QAction::triggered, this, &SyscoinGUI::optionsClicked);
+    connect(toggleHideAction, &QAction::triggered, this, &SyscoinGUI::toggleHidden);
+    connect(showHelpMessageAction, &QAction::triggered, this, &SyscoinGUI::showHelpMessageClicked);
+    connect(openRPCConsoleAction, &QAction::triggered, this, &SyscoinGUI::showDebugWindow);
     // prevents an open debug window from becoming stuck/unusable on client shutdown
-    connect(quitAction, SIGNAL(triggered()), rpcConsole, SLOT(hide()));
+    connect(quitAction, &QAction::triggered, rpcConsole, &QWidget::hide);
 
 #ifdef ENABLE_WALLET
     if(walletFrame)
     {
-        connect(encryptWalletAction, SIGNAL(triggered(bool)), walletFrame, SLOT(encryptWallet(bool)));
-        connect(backupWalletAction, SIGNAL(triggered()), walletFrame, SLOT(backupWallet()));
-        connect(changePassphraseAction, SIGNAL(triggered()), walletFrame, SLOT(changePassphrase()));
-        connect(unlockWalletAction, SIGNAL(triggered()), walletFrame, SLOT(unlockWallet()));
-        connect(lockWalletAction, SIGNAL(triggered()), walletFrame, SLOT(lockWallet()));
-        connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
-        connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
-        connect(usedSendingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedSendingAddresses()));
-        connect(usedReceivingAddressesAction, SIGNAL(triggered()), walletFrame, SLOT(usedReceivingAddresses()));
-        connect(openAction, SIGNAL(triggered()), this, SLOT(openClicked()));
+        connect(encryptWalletAction, &QAction::triggered, walletFrame, &WalletFrame::encryptWallet);
+        connect(backupWalletAction, &QAction::triggered, walletFrame, &WalletFrame::backupWallet);
+        connect(changePassphraseAction, &QAction::triggered, walletFrame, &WalletFrame::changePassphrase);
+        connect(signMessageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+        connect(signMessageAction, &QAction::triggered, [this]{ gotoSignMessageTab(); });
+        connect(verifyMessageAction, &QAction::triggered, [this]{ showNormalIfMinimized(); });
+        connect(verifyMessageAction, &QAction::triggered, [this]{ gotoVerifyMessageTab(); });
+        connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
+        connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
+        connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
+        connect(m_open_wallet_action->menu(), &QMenu::aboutToShow, [this] {
+            m_open_wallet_action->menu()->clear();
+            std::vector<std::string> available_wallets = m_wallet_controller->getWalletsAvailableToOpen();
+            std::vector<std::string> wallets = m_node.listWalletDir();
+            for (const auto& path : wallets) {
+                QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
+                QAction* action = m_open_wallet_action->menu()->addAction(name);
+
+                if (std::find(available_wallets.begin(), available_wallets.end(), path) == available_wallets.end()) {
+                    // This wallet is already loaded
+                    action->setEnabled(false);
+                    continue;
+                }
+
+                connect(action, &QAction::triggered, [this, name, path] {
+                    OpenWalletActivity* activity = m_wallet_controller->openWallet(path);
+
+                    QProgressDialog* dialog = new QProgressDialog(this);
+                    dialog->setLabelText(tr("Opening Wallet <b>%1</b>...").arg(name.toHtmlEscaped()));
+                    dialog->setRange(0, 0);
+                    dialog->setCancelButton(nullptr);
+                    dialog->setWindowModality(Qt::ApplicationModal);
+                    dialog->show();
+
+                    connect(activity, &OpenWalletActivity::message, this, [this] (QMessageBox::Icon icon, QString text) {
+                        QMessageBox box;
+                        box.setIcon(icon);
+                        box.setText(tr("Open Wallet Failed"));
+                        box.setInformativeText(text);
+                        box.setStandardButtons(QMessageBox::Ok);
+                        box.setDefaultButton(QMessageBox::Ok);
+                        connect(this, &QObject::destroyed, &box, &QDialog::accept);
+                        box.exec();
+                    });
+                    connect(activity, &OpenWalletActivity::opened, this, &SyscoinGUI::setCurrentWallet);
+                    connect(activity, &OpenWalletActivity::finished, activity, &QObject::deleteLater);
+                    connect(activity, &OpenWalletActivity::finished, dialog, &QObject::deleteLater);
+                    bool invoked = QMetaObject::invokeMethod(activity, "open");
+                    assert(invoked);
+                });
+            }
+            if (wallets.empty()) {
+                QAction* action = m_open_wallet_action->menu()->addAction(tr("No wallets available"));
+                action->setEnabled(false);
+            }
+        });
+        connect(m_close_wallet_action, &QAction::triggered, [this] {
+            m_wallet_controller->closeWallet(walletFrame->currentWalletModel(), this);
+        });
     }
 #endif // ENABLE_WALLET
 
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_I), this, SLOT(showInfo()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this, SLOT(showConsole()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_G), this, SLOT(showGraph()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_P), this, SLOT(showPeers()));
-    new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_R), this, SLOT(showRepair()));
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_C), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindowActivateConsole);
+    connect(new QShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_D), this), &QShortcut::activated, this, &SyscoinGUI::showDebugWindow);
 }
 
 void SyscoinGUI::createMenuBar()
@@ -510,13 +456,13 @@ void SyscoinGUI::createMenuBar()
     QMenu *file = appMenuBar->addMenu(tr("&File"));
     if(walletFrame)
     {
+        file->addAction(m_open_wallet_action);
+        file->addAction(m_close_wallet_action);
+        file->addSeparator();
         file->addAction(openAction);
         file->addAction(backupWalletAction);
         file->addAction(signMessageAction);
         file->addAction(verifyMessageAction);
-        file->addSeparator();
-        file->addAction(usedSendingAddressesAction);
-        file->addAction(usedReceivingAddressesAction);
         file->addSeparator();
     }
     file->addAction(quitAction);
@@ -526,29 +472,69 @@ void SyscoinGUI::createMenuBar()
     {
         settings->addAction(encryptWalletAction);
         settings->addAction(changePassphraseAction);
-        settings->addAction(unlockWalletAction);
-        settings->addAction(lockWalletAction);
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
 
-    if(walletFrame)
-    {
-        QMenu *tools = appMenuBar->addMenu(tr("&Tools"));
-        tools->addAction(openInfoAction);
-        tools->addAction(openRPCConsoleAction);
-        tools->addAction(openGraphAction);
-        tools->addAction(openPeersAction);
-        tools->addAction(openRepairAction);
-        tools->addSeparator();
-        tools->addAction(openConfEditorAction);
-        tools->addAction(openMNConfEditorAction);
-        tools->addAction(showBackupsAction);
+    QMenu* window_menu = appMenuBar->addMenu(tr("&Window"));
+
+    QAction* minimize_action = window_menu->addAction(tr("Minimize"));
+    minimize_action->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_M));
+    connect(minimize_action, &QAction::triggered, [] {
+        qApp->focusWindow()->showMinimized();
+    });
+    connect(qApp, &QApplication::focusWindowChanged, [minimize_action] (QWindow* window) {
+        minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
+    });
+
+#ifdef Q_OS_MAC
+    QAction* zoom_action = window_menu->addAction(tr("Zoom"));
+    connect(zoom_action, &QAction::triggered, [] {
+        QWindow* window = qApp->focusWindow();
+        if (window->windowState() != Qt::WindowMaximized) {
+            window->showMaximized();
+        } else {
+            window->showNormal();
+        }
+    });
+
+    connect(qApp, &QApplication::focusWindowChanged, [zoom_action] (QWindow* window) {
+        zoom_action->setEnabled(window != nullptr);
+    });
+#else
+    QAction* restore_action = window_menu->addAction(tr("Restore"));
+    connect(restore_action, &QAction::triggered, [] {
+        qApp->focusWindow()->showNormal();
+    });
+
+    connect(qApp, &QApplication::focusWindowChanged, [restore_action] (QWindow* window) {
+        restore_action->setEnabled(window != nullptr);
+    });
+#endif
+
+    if (walletFrame) {
+        window_menu->addSeparator();
+        QAction* main_window_action = window_menu->addAction(tr("Main Window"));
+        connect(main_window_action, &QAction::triggered, [this] {
+            GUIUtil::bringToFront(this);
+        });
+
+        window_menu->addSeparator();
+        window_menu->addAction(usedSendingAddressesAction);
+        window_menu->addAction(usedReceivingAddressesAction);
+    }
+
+    window_menu->addSeparator();
+    for (RPCConsole::TabTypes tab_type : rpcConsole->tabs()) {
+        QAction* tab_action = window_menu->addAction(rpcConsole->tabTitle(tab_type));
+        connect(tab_action, &QAction::triggered, [this, tab_type] {
+            rpcConsole->setTabFocus(tab_type);
+            showDebugWindow();
+        });
     }
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     help->addAction(showHelpMessageAction);
-    help->addAction(showPrivateSendHelpAction);
     help->addSeparator();
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
@@ -556,36 +542,45 @@ void SyscoinGUI::createMenuBar()
 
 void SyscoinGUI::createToolBars()
 {
-#ifdef ENABLE_WALLET
     if(walletFrame)
     {
-        QToolBar *toolbar = new QToolBar(tr("Tabs toolbar"));
+        QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+        appToolBar = toolbar;
+        toolbar->setContextMenuPolicy(Qt::PreventContextMenu);
+        toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
+        // SYSCOIN
         QSettings settings;
         if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction)
         {
             toolbar->addAction(masternodeAction);
         }
-        toolbar->setMovable(false); // remove unused icon in upper left corner
         overviewAction->setChecked(true);
 
-        /** Create additional container for toolbar and walletFrame and make it the central widget.
-            This is a workaround mostly for toolbar styling on Mac OS but should work fine for every other OSes too.
-        */
-        QVBoxLayout *layout = new QVBoxLayout;
-        layout->addWidget(toolbar);
-        layout->addWidget(walletFrame);
-        layout->setSpacing(0);
-        layout->setContentsMargins(QMargins());
-        QWidget *containerWidget = new QWidget();
-        containerWidget->setLayout(layout);
-        setCentralWidget(containerWidget);
+#ifdef ENABLE_WALLET
+        QWidget *spacer = new QWidget();
+        spacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        toolbar->addWidget(spacer);
+
+        m_wallet_selector = new QComboBox();
+        m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SyscoinGUI::setCurrentWalletBySelectorIndex);
+
+        m_wallet_selector_label = new QLabel();
+        m_wallet_selector_label->setText(tr("Wallet:") + " ");
+        m_wallet_selector_label->setBuddy(m_wallet_selector);
+
+        m_wallet_selector_label_action = appToolBar->addWidget(m_wallet_selector_label);
+        m_wallet_selector_action = appToolBar->addWidget(m_wallet_selector);
+
+        m_wallet_selector_label_action->setVisible(false);
+        m_wallet_selector_action->setVisible(false);
+#endif
     }
-#endif // ENABLE_WALLET
 }
 
 void SyscoinGUI::setClientModel(ClientModel *_clientModel)
@@ -595,47 +590,30 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
     {
         // Create system tray menu (or setup the dock menu) that late to prevent users from calling actions,
         // while the client has not yet fully loaded
-        if (trayIcon) {
-            // do so only if trayIcon is already set
-            trayIconMenu = new QMenu(this);
-            trayIcon->setContextMenu(trayIconMenu);
-            createIconMenu(trayIconMenu);
-
-#ifndef Q_OS_MAC
-            // Show main window on tray icon click
-            // Note: ignore this on Mac - this is not the way tray should work there
-            connect(trayIcon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
-                    this, SLOT(trayIconActivated(QSystemTrayIcon::ActivationReason)));
-#else
-            // Note: On Mac, the dock icon is also used to provide menu functionality
-            // similar to one for tray icon
-            MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
-            dockIconHandler->setMainWindow((QMainWindow *)this);
-            dockIconMenu = dockIconHandler->dockMenu();
- 
-            createIconMenu(dockIconMenu);
-#endif
-        }
+        createTrayIconMenu();
 
         // Keep up to date with client
         updateNetworkState();
-        setNumConnections(_clientModel->getNumConnections());
-        connect(_clientModel, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
-        connect(_clientModel, SIGNAL(networkActiveChanged(bool)), this, SLOT(setNetworkActive(bool)));
+        connect(_clientModel, &ClientModel::numConnectionsChanged, this, &SyscoinGUI::setNumConnections);
+        connect(_clientModel, &ClientModel::networkActiveChanged, this, &SyscoinGUI::setNetworkActive);
 
         modalOverlay->setKnownBestHeight(_clientModel->getHeaderTipHeight(), QDateTime::fromTime_t(_clientModel->getHeaderTipTime()));
-        setNumBlocks(_clientModel->getNumBlocks(), _clientModel->getLastBlockDate(), _clientModel->getVerificationProgress(NULL), false);
-        connect(_clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double,bool)), this, SLOT(setNumBlocks(int,QDateTime,double,bool)));
-
-        connect(_clientModel, SIGNAL(additionalDataSyncProgressChanged(double)), this, SLOT(setAdditionalDataSyncProgress(double)));
-
+        setNumBlocks(m_node.getNumBlocks(), QDateTime::fromTime_t(m_node.getLastBlockTime()), m_node.getVerificationProgress(), false);
+        connect(_clientModel, &ClientModel::numBlocksChanged, this, &SyscoinGUI::setNumBlocks);
+        // SYSCOIN
+        connect(_clientModel, &ClientModel::additionalDataSyncProgressChanged, this, &SyscoinGUI::setAdditionalDataSyncProgress);
         // Receive and report messages from client model
-        connect(_clientModel, SIGNAL(message(QString,QString,unsigned int)), this, SLOT(message(QString,QString,unsigned int)));
+        connect(_clientModel, &ClientModel::message, [this](const QString &title, const QString &message, unsigned int style){
+            this->message(title, message, style);
+        });
 
         // Show progress dialog
-        connect(_clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
+        connect(_clientModel, &ClientModel::showProgress, this, &SyscoinGUI::showProgress);
 
         rpcConsole->setClientModel(_clientModel);
+
+        updateProxyIcon();
+
 #ifdef ENABLE_WALLET
         if(walletFrame)
         {
@@ -643,13 +621,12 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
         }
 #endif // ENABLE_WALLET
         unitDisplayControl->setOptionsModel(_clientModel->getOptionsModel());
-        
+
         OptionsModel* optionsModel = _clientModel->getOptionsModel();
-        if(optionsModel)
-        {
+        if (optionsModel && trayIcon) {
             // be aware of the tray icon disable state change reported by the OptionsModel object.
-            connect(optionsModel,SIGNAL(hideTrayIconChanged(bool)),this,SLOT(setTrayIconVisible(bool)));
-        
+            connect(optionsModel, &OptionsModel::hideTrayIconChanged, this, &SyscoinGUI::setTrayIconVisible);
+
             // initialize the disable state of the tray icon with the current value in the model.
             setTrayIconVisible(optionsModel->getHideTrayIcon());
         }
@@ -670,31 +647,72 @@ void SyscoinGUI::setClientModel(ClientModel *_clientModel)
         }
 #endif // ENABLE_WALLET
         unitDisplayControl->setOptionsModel(nullptr);
-
-#ifdef Q_OS_MAC
-        if(dockIconMenu)
-        {
-            // Disable context menu on dock icon
-            dockIconMenu->clear();
-        }
-#endif
     }
 }
 
 #ifdef ENABLE_WALLET
-bool SyscoinGUI::addWallet(const QString& name, WalletModel *walletModel)
+void SyscoinGUI::setWalletController(WalletController* wallet_controller)
 {
-    if(!walletFrame)
-        return false;
-    setWalletActionsEnabled(true);
-    return walletFrame->addWallet(name, walletModel);
+    assert(!m_wallet_controller);
+    assert(wallet_controller);
+
+    m_wallet_controller = wallet_controller;
+
+    connect(wallet_controller, &WalletController::walletAdded, this, &SyscoinGUI::addWallet);
+    connect(wallet_controller, &WalletController::walletRemoved, this, &SyscoinGUI::removeWallet);
+
+    for (WalletModel* wallet_model : m_wallet_controller->getWallets()) {
+        addWallet(wallet_model);
+    }
 }
 
-bool SyscoinGUI::setCurrentWallet(const QString& name)
+void SyscoinGUI::addWallet(WalletModel* walletModel)
 {
-    if(!walletFrame)
-        return false;
-    return walletFrame->setCurrentWallet(name);
+    if (!walletFrame) return;
+    const QString display_name = walletModel->getDisplayName();
+    setWalletActionsEnabled(true);
+    rpcConsole->addWallet(walletModel);
+    walletFrame->addWallet(walletModel);
+    m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
+    if (m_wallet_selector->count() == 2) {
+        m_wallet_selector_label_action->setVisible(true);
+        m_wallet_selector_action->setVisible(true);
+    }
+}
+
+void SyscoinGUI::removeWallet(WalletModel* walletModel)
+{
+    if (!walletFrame) return;
+    int index = m_wallet_selector->findData(QVariant::fromValue(walletModel));
+    m_wallet_selector->removeItem(index);
+    if (m_wallet_selector->count() == 0) {
+        setWalletActionsEnabled(false);
+    } else if (m_wallet_selector->count() == 1) {
+        m_wallet_selector_label_action->setVisible(false);
+        m_wallet_selector_action->setVisible(false);
+    }
+    rpcConsole->removeWallet(walletModel);
+    walletFrame->removeWallet(walletModel);
+    updateWindowTitle();
+}
+
+void SyscoinGUI::setCurrentWallet(WalletModel* wallet_model)
+{
+    if (!walletFrame) return;
+    walletFrame->setCurrentWallet(wallet_model);
+    for (int index = 0; index < m_wallet_selector->count(); ++index) {
+        if (m_wallet_selector->itemData(index).value<WalletModel*>() == wallet_model) {
+            m_wallet_selector->setCurrentIndex(index);
+            break;
+        }
+    }
+    updateWindowTitle();
+}
+
+void SyscoinGUI::setCurrentWalletBySelectorIndex(int index)
+{
+    WalletModel* wallet_model = m_wallet_selector->itemData(index).value<WalletModel*>();
+    if (wallet_model) setCurrentWallet(wallet_model);
 }
 
 void SyscoinGUI::removeAllWallets()
@@ -714,6 +732,7 @@ void SyscoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
+    // SYSCOIN
     QSettings settings;
     if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
         masternodeAction->setEnabled(enabled);
@@ -726,42 +745,57 @@ void SyscoinGUI::setWalletActionsEnabled(bool enabled)
     usedSendingAddressesAction->setEnabled(enabled);
     usedReceivingAddressesAction->setEnabled(enabled);
     openAction->setEnabled(enabled);
+    m_close_wallet_action->setEnabled(enabled);
 }
 
-void SyscoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
+void SyscoinGUI::createTrayIcon()
 {
-    trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + networkStyle->getTitleAddText();
-    trayIcon->setToolTip(toolTip);
-    trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
-    trayIcon->hide();
-    notificator = new Notificator(QApplication::applicationName(), trayIcon, this);
+    assert(QSystemTrayIcon::isSystemTrayAvailable());
+
+#ifndef Q_OS_MAC
+    if (QSystemTrayIcon::isSystemTrayAvailable()) {
+        trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
+        QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + m_network_style->getTitleAddText();
+        trayIcon->setToolTip(toolTip);
+    }
+#endif
 }
 
-void SyscoinGUI::createIconMenu(QMenu *pmenu)
+void SyscoinGUI::createTrayIconMenu()
 {
-    // Configuration of the tray icon (or dock icon) icon menu
-    pmenu->addAction(toggleHideAction);
-    pmenu->addSeparator();
-    pmenu->addAction(sendCoinsMenuAction);
-    pmenu->addAction(receiveCoinsMenuAction);
-    pmenu->addSeparator();
-    pmenu->addAction(signMessageAction);
-    pmenu->addAction(verifyMessageAction);
-    pmenu->addSeparator();
-    pmenu->addAction(optionsAction);
-    pmenu->addAction(openInfoAction);
-    pmenu->addAction(openRPCConsoleAction);
-    pmenu->addAction(openGraphAction);
-    pmenu->addAction(openPeersAction);
-    pmenu->addAction(openRepairAction);
-    pmenu->addSeparator();
-    pmenu->addAction(openConfEditorAction);
-    pmenu->addAction(openMNConfEditorAction);
-    pmenu->addAction(showBackupsAction);
-#ifndef Q_OS_MAC // This is built-in on Mac
-    pmenu->addSeparator();
-    pmenu->addAction(quitAction);
+#ifndef Q_OS_MAC
+    // return if trayIcon is unset (only on non-macOSes)
+    if (!trayIcon)
+        return;
+
+    trayIcon->setContextMenu(trayIconMenu.get());
+    connect(trayIcon, &QSystemTrayIcon::activated, this, &SyscoinGUI::trayIconActivated);
+#else
+    // Note: On macOS, the Dock icon is used to provide the tray's functionality.
+    MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
+    connect(dockIconHandler, &MacDockIconHandler::dockIconClicked, this, &SyscoinGUI::macosDockIconActivated);
+    trayIconMenu->setAsDockMenu();
+#endif
+
+    // Configuration of the tray icon (or Dock icon) menu
+#ifndef Q_OS_MAC
+    // Note: On macOS, the Dock icon's menu already has Show / Hide action.
+    trayIconMenu->addAction(toggleHideAction);
+    trayIconMenu->addSeparator();
+#endif
+    if (enableWallet) {
+        trayIconMenu->addAction(sendCoinsMenuAction);
+        trayIconMenu->addAction(receiveCoinsMenuAction);
+        trayIconMenu->addSeparator();
+        trayIconMenu->addAction(signMessageAction);
+        trayIconMenu->addAction(verifyMessageAction);
+        trayIconMenu->addSeparator();
+        trayIconMenu->addAction(openRPCConsoleAction);
+    }
+    trayIconMenu->addAction(optionsAction);
+#ifndef Q_OS_MAC // This is built-in on macOS
+    trayIconMenu->addSeparator();
+    trayIconMenu->addAction(quitAction);
 #endif
 }
 
@@ -774,16 +808,17 @@ void SyscoinGUI::trayIconActivated(QSystemTrayIcon::ActivationReason reason)
         toggleHidden();
     }
 }
+#else
+void SyscoinGUI::macosDockIconActivated()
+{
+    show();
+    activateWindow();
+}
 #endif
 
 void SyscoinGUI::optionsClicked()
 {
-    if(!clientModel || !clientModel->getOptionsModel())
-        return;
-
-    OptionsDialog dlg(this, enableWallet);
-    dlg.setModel(clientModel->getOptionsModel());
-    dlg.exec();
+    openOptionsDialogWithTab(OptionsDialog::TAB_MAIN);
 }
 
 void SyscoinGUI::aboutClicked()
@@ -791,75 +826,25 @@ void SyscoinGUI::aboutClicked()
     if(!clientModel)
         return;
 
-    HelpMessageDialog dlg(this, HelpMessageDialog::about);
+    HelpMessageDialog dlg(m_node, this, true);
     dlg.exec();
 }
 
 void SyscoinGUI::showDebugWindow()
 {
-    rpcConsole->showNormal();
-    rpcConsole->show();
-    rpcConsole->raise();
-    rpcConsole->activateWindow();
+    GUIUtil::bringToFront(rpcConsole);
+    Q_EMIT consoleShown(rpcConsole);
 }
 
-void SyscoinGUI::showInfo()
-{
-    rpcConsole->setTabFocus(RPCConsole::TAB_INFO);
-    showDebugWindow();
-}
-
-void SyscoinGUI::showConsole()
+void SyscoinGUI::showDebugWindowActivateConsole()
 {
     rpcConsole->setTabFocus(RPCConsole::TAB_CONSOLE);
     showDebugWindow();
 }
 
-void SyscoinGUI::showGraph()
-{
-    rpcConsole->setTabFocus(RPCConsole::TAB_GRAPH);
-    showDebugWindow();
-}
-
-void SyscoinGUI::showPeers()
-{
-    rpcConsole->setTabFocus(RPCConsole::TAB_PEERS);
-    showDebugWindow();
-}
-
-void SyscoinGUI::showRepair()
-{
-    rpcConsole->setTabFocus(RPCConsole::TAB_REPAIR);
-    showDebugWindow();
-}
-
-void SyscoinGUI::showConfEditor()
-{
-    GUIUtil::openConfigfile();
-}
-
-void SyscoinGUI::showMNConfEditor()
-{
-    GUIUtil::openMNConfigfile();
-}
-
-void SyscoinGUI::showBackups()
-{
-    GUIUtil::showBackups();
-}
-
 void SyscoinGUI::showHelpMessageClicked()
 {
     helpMessageDialog->show();
-}
-
-void SyscoinGUI::showPrivateSendHelpClicked()
-{
-    if(!clientModel)
-        return;
-
-    HelpMessageDialog dlg(this, HelpMessageDialog::pshelp);
-    dlg.exec();
 }
 
 #ifdef ENABLE_WALLET
@@ -871,7 +856,16 @@ void SyscoinGUI::openClicked()
         Q_EMIT receivedURI(dlg.getURI());
     }
 }
+// SYSCOIN
 
+void SyscoinGUI::gotoMasternodePage()
+{
+    QSettings settings;
+    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
+        masternodeAction->setChecked(true);
+        if (walletFrame) walletFrame->gotoMasternodePage();
+    }
+}
 void SyscoinGUI::gotoOverviewPage()
 {
     overviewAction->setChecked(true);
@@ -882,15 +876,6 @@ void SyscoinGUI::gotoHistoryPage()
 {
     historyAction->setChecked(true);
     if (walletFrame) walletFrame->gotoHistoryPage();
-}
-
-void SyscoinGUI::gotoMasternodePage()
-{
-    QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool() && masternodeAction) {
-        masternodeAction->setChecked(true);
-        if (walletFrame) walletFrame->gotoMasternodePage();
-    }
 }
 
 void SyscoinGUI::gotoReceiveCoinsPage()
@@ -920,24 +905,29 @@ void SyscoinGUI::updateNetworkState()
 {
     int count = clientModel->getNumConnections();
     QString icon;
-    QString theme = GUIUtil::getThemeName();
     switch(count)
     {
-    case 0: icon = ":/icons/" + theme + "/connect_0"; break;
-    case 1: case 2: case 3: icon = ":/icons/" + theme + "/connect_1"; break;
-    case 4: case 5: case 6: icon = ":/icons/" + theme + "/connect_2"; break;
-    case 7: case 8: case 9: icon = ":/icons/" + theme + "/connect_3"; break;
-    default: icon = ":/icons/" + theme + "/connect_4"; break;
+    case 0: icon = ":/icons/connect_0"; break;
+    case 1: case 2: case 3: icon = ":/icons/connect_1"; break;
+    case 4: case 5: case 6: icon = ":/icons/connect_2"; break;
+    case 7: case 8: case 9: icon = ":/icons/connect_3"; break;
+    default: icon = ":/icons/connect_4"; break;
     }
 
-    if (clientModel->getNetworkActive()) {
-        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Syscoin network", "", count));
+    QString tooltip;
+
+    if (m_node.getNetworkActive()) {
+        tooltip = tr("%n active connection(s) to Syscoin network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
     } else {
-        labelConnectionsIcon->setToolTip(tr("Network activity disabled"));
-        icon = ":/icons/" + theme + "/network_disabled";
+        tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
+        icon = ":/icons/network_disabled";
     }
 
-    labelConnectionsIcon->setPixmap(platformStyle->SingleColorIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+    // Don't word-wrap this (fixed-width) tooltip
+    tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
+    connectionsControl->setToolTip(tooltip);
+
+    connectionsControl->setPixmap(platformStyle->SingleColorIcon(icon).pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
 }
 
 void SyscoinGUI::setNumConnections(int count)
@@ -959,8 +949,24 @@ void SyscoinGUI::updateHeadersSyncProgressLabel()
         progressBarLabel->setText(tr("Syncing Headers (%1%)...").arg(QString::number(100.0 / (headersTipHeight+estHeadersLeft)*headersTipHeight, 'f', 1)));
 }
 
+void SyscoinGUI::openOptionsDialogWithTab(OptionsDialog::Tab tab)
+{
+    if (!clientModel || !clientModel->getOptionsModel())
+        return;
+
+    OptionsDialog dlg(this, enableWallet);
+    dlg.setCurrentTab(tab);
+    dlg.setModel(clientModel->getOptionsModel());
+    dlg.exec();
+}
+
 void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool header)
 {
+// Disabling macOS App Nap on initial sync, disk and reindex operations.
+#ifdef Q_OS_MAC
+    (m_node.isInitialBlockDownload() || m_node.getReindex() || m_node.getImporting()) ? m_app_nap_inhibitor->disableAppNap() : m_app_nap_inhibitor->enableAppNap();
+#endif
+
     if (modalOverlay)
     {
         if (header)
@@ -977,7 +983,7 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     // Acquire current block source
     enum BlockSource blockSource = clientModel->getBlockSource();
     switch (blockSource) {
-        case BLOCK_SOURCE_NETWORK:
+        case BlockSource::NETWORK:
             if (header) {
                 updateHeadersSyncProgressLabel();
                 return;
@@ -985,17 +991,17 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
             progressBarLabel->setText(tr("Synchronizing with network..."));
             updateHeadersSyncProgressLabel();
             break;
-        case BLOCK_SOURCE_DISK:
+        case BlockSource::DISK:
             if (header) {
                 progressBarLabel->setText(tr("Indexing blocks on disk..."));
             } else {
                 progressBarLabel->setText(tr("Processing blocks on disk..."));
             }
             break;
-        case BLOCK_SOURCE_REINDEX:
+        case BlockSource::REINDEX:
             progressBarLabel->setText(tr("Reindexing blocks on disk..."));
             break;
-        case BLOCK_SOURCE_NONE:
+        case BlockSource::NONE:
             if (header) {
                 return;
             }
@@ -1011,24 +1017,21 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     tooltip = tr("Processed %n block(s) of transaction history.", "", count);
 
     // Set icon state: spinning if catching up, tick otherwise
-    QString theme = GUIUtil::getThemeName();
+    if (secs < MAX_BLOCK_TIME_GAP) {
+        tooltip = tr("Up to date") + QString(".<br>") + tooltip;
+        labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
 
 #ifdef ENABLE_WALLET
-    if (walletFrame)
-    {
-        if(secs < 25*60) // 90*60 in syscoin
+        if(walletFrame)
         {
+            walletFrame->showOutOfSyncWarning(false);
             modalOverlay->showHide(true, true);
-            // TODO instead of hiding it forever, we should add meaningful information about MN sync to the overlay
-            modalOverlay->hideForever();
         }
-        else
-        {
-            modalOverlay->showHide();
-        }
-    }
 #endif // ENABLE_WALLET
 
+        progressBarLabel->setVisible(false);
+        progressBar->setVisible(false);
+    }
     if(!masternodeSync.IsBlockchainSynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
@@ -1053,6 +1056,7 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
         if(walletFrame)
         {
             walletFrame->showOutOfSyncWarning(true);
+            modalOverlay->showHide();
         }
 #endif // ENABLE_WALLET
 
@@ -1063,7 +1067,6 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     } else if (fLiteMode) {
         setAdditionalDataSyncProgress(1);
     }
-
     // Don't word-wrap this (fixed-width) tooltip
     tooltip = QString("<nobr>") + tooltip + QString("</nobr>");
 
@@ -1071,7 +1074,7 @@ void SyscoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
 }
-
+// SYSCOIN
 void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 {
     if(!clientModel)
@@ -1086,8 +1089,6 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
     QString tooltip;
 
-    // Set icon state: spinning if catching up, tick otherwise
-    QString theme = GUIUtil::getThemeName();
 
     QString strSyncStatus;
     tooltip = tr("Up to date") + QString(".<br>") + tooltip;
@@ -1100,7 +1101,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     if(masternodeSync.IsSynced()) {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
-        labelBlocksIcon->setPixmap(QIcon(":/icons/" + theme + "/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+        labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
     } else {
 
         labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(QString(
@@ -1124,10 +1125,9 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
 }
-
 void SyscoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Syscoin Core"); // default title
+    QString strTitle = tr("Syscoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -1153,7 +1153,7 @@ void SyscoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Syscoin Core - "
+    // Append title to "Syscoin - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
@@ -1175,13 +1175,14 @@ void SyscoinGUI::message(const QString &title, const QString &message, unsigned 
             buttons = QMessageBox::Ok;
 
         showNormalIfMinimized();
-        QMessageBox mBox((QMessageBox::Icon)nMBoxIcon, strTitle, message, buttons, this);
+        QMessageBox mBox(static_cast<QMessageBox::Icon>(nMBoxIcon), strTitle, message, buttons, this);
+        mBox.setTextFormat(Qt::PlainText);
         int r = mBox.exec();
-        if (ret != NULL)
+        if (ret != nullptr)
             *ret = r == QMessageBox::Ok;
     }
     else
-        notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message);
+        notificator->notify(static_cast<Notificator::Class>(nNotifyIcon), strTitle, message);
 }
 
 void SyscoinGUI::changeEvent(QEvent *e)
@@ -1195,7 +1196,12 @@ void SyscoinGUI::changeEvent(QEvent *e)
             QWindowStateChangeEvent *wsevt = static_cast<QWindowStateChangeEvent*>(e);
             if(!(wsevt->oldState() & Qt::WindowMinimized) && isMinimized())
             {
-                QTimer::singleShot(0, this, SLOT(hide()));
+                QTimer::singleShot(0, this, &SyscoinGUI::hide);
+                e->ignore();
+            }
+            else if((wsevt->oldState() & Qt::WindowMinimized) && !isMinimized())
+            {
+                QTimer::singleShot(0, this, &SyscoinGUI::show);
                 e->ignore();
             }
         }
@@ -1229,22 +1235,21 @@ void SyscoinGUI::closeEvent(QCloseEvent *event)
 void SyscoinGUI::showEvent(QShowEvent *event)
 {
     // enable the debug window when the main window shows up
-    openInfoAction->setEnabled(true);
     openRPCConsoleAction->setEnabled(true);
-    openGraphAction->setEnabled(true);
-    openPeersAction->setEnabled(true);
-    openRepairAction->setEnabled(true);
     aboutAction->setEnabled(true);
     optionsAction->setEnabled(true);
 }
 
 #ifdef ENABLE_WALLET
-void SyscoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)
+void SyscoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label, const QString& walletName)
 {
     // On new transaction, make an info balloon
     QString msg = tr("Date: %1\n").arg(date) +
-                  tr("Amount: %1\n").arg(SyscoinUnits::formatWithUnit(unit, amount, true)) +
-                  tr("Type: %1\n").arg(type);
+                  tr("Amount: %1\n").arg(SyscoinUnits::formatWithUnit(unit, amount, true));
+    if (m_node.getWallets().size() > 1 && !walletName.isEmpty()) {
+        msg += tr("Wallet: %1\n").arg(walletName);
+    }
+    msg += tr("Type: %1\n").arg(type);
     if (!label.isEmpty())
         msg += tr("Label: %1\n").arg(label);
     else if (!address.isEmpty())
@@ -1265,7 +1270,7 @@ void SyscoinGUI::dropEvent(QDropEvent *event)
 {
     if(event->mimeData()->hasUrls())
     {
-        Q_FOREACH(const QUrl &uri, event->mimeData()->urls())
+        for (const QUrl &uri : event->mimeData()->urls())
         {
             Q_EMIT receivedURI(uri.toString());
         }
@@ -1298,12 +1303,10 @@ bool SyscoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
     return false;
 }
 
-void SyscoinGUI::setHDStatus(int hdEnabled)
+void SyscoinGUI::setHDStatus(bool privkeyDisabled, int hdEnabled)
 {
-    QString theme = GUIUtil::getThemeName();
-
-    labelWalletHDStatusIcon->setPixmap(platformStyle->SingleColorIcon(hdEnabled ? ":/icons/" + theme + "/hd_enabled" : ":/icons/" + theme + "/hd_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-    labelWalletHDStatusIcon->setToolTip(hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
+    labelWalletHDStatusIcon->setPixmap(platformStyle->SingleColorIcon(privkeyDisabled ? ":/icons/eye" : hdEnabled ? ":/icons/hd_enabled" : ":/icons/hd_disabled").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+    labelWalletHDStatusIcon->setToolTip(privkeyDisabled ? tr("Private key <b>disabled</b>") : hdEnabled ? tr("HD key generation is <b>enabled</b>") : tr("HD key generation is <b>disabled</b>"));
 
     // eventually disable the QLabel to set its opacity to 50%
     labelWalletHDStatusIcon->setEnabled(hdEnabled);
@@ -1311,74 +1314,93 @@ void SyscoinGUI::setHDStatus(int hdEnabled)
 
 void SyscoinGUI::setEncryptionStatus(int status)
 {
-    QString theme = GUIUtil::getThemeName();
     switch(status)
     {
     case WalletModel::Unencrypted:
         labelWalletEncryptionIcon->hide();
         encryptWalletAction->setChecked(false);
         changePassphraseAction->setEnabled(false);
-        unlockWalletAction->setVisible(false);
-        lockWalletAction->setVisible(false);
         encryptWalletAction->setEnabled(true);
         break;
     case WalletModel::Unlocked:
         labelWalletEncryptionIcon->show();
-        labelWalletEncryptionIcon->setPixmap(QIcon(":/icons/" + theme + "/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelWalletEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
-        unlockWalletAction->setVisible(false);
-        lockWalletAction->setVisible(true);
-        encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
-        break;
-    case WalletModel::UnlockedForMixingOnly:
-        labelWalletEncryptionIcon->show();
-        labelWalletEncryptionIcon->setPixmap(QIcon(":/icons/" + theme + "/lock_open").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>unlocked</b> for mixing only"));
-        encryptWalletAction->setChecked(true);
-        changePassphraseAction->setEnabled(true);
-        unlockWalletAction->setVisible(true);
-        lockWalletAction->setVisible(true);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
     case WalletModel::Locked:
         labelWalletEncryptionIcon->show();
-        labelWalletEncryptionIcon->setPixmap(QIcon(":/icons/" + theme + "/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelWalletEncryptionIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/lock_closed").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
         labelWalletEncryptionIcon->setToolTip(tr("Wallet is <b>encrypted</b> and currently <b>locked</b>"));
         encryptWalletAction->setChecked(true);
         changePassphraseAction->setEnabled(true);
-        unlockWalletAction->setVisible(true);
-        lockWalletAction->setVisible(false);
         encryptWalletAction->setEnabled(false); // TODO: decrypt currently not supported
         break;
     }
 }
+
+void SyscoinGUI::updateWalletStatus()
+{
+    if (!walletFrame) {
+        return;
+    }
+    WalletView * const walletView = walletFrame->currentWalletView();
+    if (!walletView) {
+        return;
+    }
+    WalletModel * const walletModel = walletView->getWalletModel();
+    setEncryptionStatus(walletModel->getEncryptionStatus());
+    setHDStatus(walletModel->privateKeysDisabled(), walletModel->wallet().hdEnabled());
+}
 #endif // ENABLE_WALLET
+
+void SyscoinGUI::updateProxyIcon()
+{
+    std::string ip_port;
+    bool proxy_enabled = clientModel->getProxyInfo(ip_port);
+
+    if (proxy_enabled) {
+        if (labelProxyIcon->pixmap() == nullptr) {
+            QString ip_port_q = QString::fromStdString(ip_port);
+            labelProxyIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/proxy").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+            labelProxyIcon->setToolTip(tr("Proxy is <b>enabled</b>: %1").arg(ip_port_q));
+        } else {
+            labelProxyIcon->show();
+        }
+    } else {
+        labelProxyIcon->hide();
+    }
+}
+
+void SyscoinGUI::updateWindowTitle()
+{
+    QString window_title = tr(PACKAGE_NAME);
+#ifdef ENABLE_WALLET
+    if (walletFrame) {
+        WalletModel* const wallet_model = walletFrame->currentWalletModel();
+        if (wallet_model && !wallet_model->getWalletName().isEmpty()) {
+            window_title += " - " + wallet_model->getDisplayName();
+        }
+    }
+#endif
+    if (!m_network_style->getTitleAddText().isEmpty()) {
+        window_title += " - " + m_network_style->getTitleAddText();
+    }
+    setWindowTitle(window_title);
+}
 
 void SyscoinGUI::showNormalIfMinimized(bool fToggleHidden)
 {
     if(!clientModel)
         return;
 
-    // activateWindow() (sometimes) helps with keyboard focus on Windows
-    if (isHidden())
-    {
-        show();
-        activateWindow();
-    }
-    else if (isMinimized())
-    {
-        showNormal();
-        activateWindow();
-    }
-    else if (GUIUtil::isObscured(this))
-    {
-        raise();
-        activateWindow();
-    }
-    else if(fToggleHidden)
+    if (!isHidden() && !isMinimized() && !GUIUtil::isObscured(this) && fToggleHidden) {
         hide();
+    } else {
+        GUIUtil::bringToFront(this);
+    }
 }
 
 void SyscoinGUI::toggleHidden()
@@ -1388,7 +1410,7 @@ void SyscoinGUI::toggleHidden()
 
 void SyscoinGUI::detectShutdown()
 {
-    if (ShutdownRequested())
+    if (m_node.shutdownRequested())
     {
         if(rpcConsole)
             rpcConsole->hide();
@@ -1398,25 +1420,22 @@ void SyscoinGUI::detectShutdown()
 
 void SyscoinGUI::showProgress(const QString &title, int nProgress)
 {
-    if (nProgress == 0)
-    {
-        progressDialog = new QProgressDialog(title, "", 0, 100);
+    if (nProgress == 0) {
+        progressDialog = new QProgressDialog(title, QString(), 0, 100);
+        GUIUtil::PolishProgressDialog(progressDialog);
         progressDialog->setWindowModality(Qt::ApplicationModal);
         progressDialog->setMinimumDuration(0);
-        progressDialog->setCancelButton(0);
         progressDialog->setAutoClose(false);
         progressDialog->setValue(0);
-    }
-    else if (nProgress == 100)
-    {
-        if (progressDialog)
-        {
+    } else if (nProgress == 100) {
+        if (progressDialog) {
             progressDialog->close();
             progressDialog->deleteLater();
+            progressDialog = nullptr;
         }
-    }
-    else if (progressDialog)
+    } else if (progressDialog) {
         progressDialog->setValue(nProgress);
+    }
 }
 
 void SyscoinGUI::setTrayIconVisible(bool fHideTrayIcon)
@@ -1433,7 +1452,7 @@ void SyscoinGUI::showModalOverlay()
         modalOverlay->toggleVisibility();
 }
 
-static bool ThreadSafeMessageBox(SyscoinGUI *gui, const std::string& message, const std::string& caption, unsigned int style)
+static bool ThreadSafeMessageBox(SyscoinGUI* gui, const std::string& message, const std::string& caption, unsigned int style)
 {
     bool modal = (style & CClientUIInterface::MODAL);
     // The SECURE flag has no effect in the Qt GUI.
@@ -1453,43 +1472,29 @@ static bool ThreadSafeMessageBox(SyscoinGUI *gui, const std::string& message, co
 void SyscoinGUI::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.ThreadSafeMessageBox.connect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
-    uiInterface.ThreadSafeQuestion.connect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
+    m_handler_message_box = m_node.handleMessageBox(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+    m_handler_question = m_node.handleQuestion(std::bind(ThreadSafeMessageBox, this, std::placeholders::_1, std::placeholders::_3, std::placeholders::_4));
 }
 
 void SyscoinGUI::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.ThreadSafeMessageBox.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _2, _3));
-    uiInterface.ThreadSafeQuestion.disconnect(boost::bind(ThreadSafeMessageBox, this, _1, _3, _4));
-}
-
-void SyscoinGUI::toggleNetworkActive()
-{
-    if (clientModel) {
-        clientModel->setNetworkActive(!clientModel->getNetworkActive());
-    }
-}
-
-/** Get restart command-line parameters and request restart */
-void SyscoinGUI::handleRestart(QStringList args)
-{
-    if (!ShutdownRequested())
-        Q_EMIT requestedRestart(args);
+    m_handler_message_box->disconnect();
+    m_handler_question->disconnect();
 }
 
 UnitDisplayStatusBarControl::UnitDisplayStatusBarControl(const PlatformStyle *platformStyle) :
-    optionsModel(0),
-    menu(0)
+    optionsModel(nullptr),
+    menu(nullptr)
 {
     createContextMenu();
     setToolTip(tr("Unit to show amounts in. Click to select another unit."));
     QList<SyscoinUnits::Unit> units = SyscoinUnits::availableUnits();
     int max_width = 0;
     const QFontMetrics fm(font());
-    Q_FOREACH (const SyscoinUnits::Unit unit, units)
+    for (const SyscoinUnits::Unit unit : units)
     {
-        max_width = qMax(max_width, fm.width(SyscoinUnits::name(unit)));
+        max_width = qMax(max_width, fm.width(SyscoinUnits::longName(unit)));
     }
     setMinimumSize(max_width, 0);
     setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -1506,13 +1511,13 @@ void UnitDisplayStatusBarControl::mousePressEvent(QMouseEvent *event)
 void UnitDisplayStatusBarControl::createContextMenu()
 {
     menu = new QMenu(this);
-    Q_FOREACH(SyscoinUnits::Unit u, SyscoinUnits::availableUnits())
+    for (const SyscoinUnits::Unit u : SyscoinUnits::availableUnits())
     {
-        QAction *menuAction = new QAction(QString(SyscoinUnits::name(u)), this);
+        QAction *menuAction = new QAction(QString(SyscoinUnits::longName(u)), this);
         menuAction->setData(QVariant(u));
         menu->addAction(menuAction);
     }
-    connect(menu,SIGNAL(triggered(QAction*)),this,SLOT(onMenuSelection(QAction*)));
+    connect(menu, &QMenu::triggered, this, &UnitDisplayStatusBarControl::onMenuSelection);
 }
 
 /** Lets the control know about the Options Model (and its signals) */
@@ -1523,7 +1528,7 @@ void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *_optionsModel)
         this->optionsModel = _optionsModel;
 
         // be aware of a display unit change reported by the OptionsModel object.
-        connect(_optionsModel,SIGNAL(displayUnitChanged(int)),this,SLOT(updateDisplayUnit(int)));
+        connect(_optionsModel, &OptionsModel::displayUnitChanged, this, &UnitDisplayStatusBarControl::updateDisplayUnit);
 
         // initialize the display units label with the current value in the model.
         updateDisplayUnit(_optionsModel->getDisplayUnit());
@@ -1533,7 +1538,7 @@ void UnitDisplayStatusBarControl::setOptionsModel(OptionsModel *_optionsModel)
 /** When Display Units are changed on OptionsModel it will refresh the display text of the control on the status bar */
 void UnitDisplayStatusBarControl::updateDisplayUnit(int newUnits)
 {
-    setText(SyscoinUnits::name(newUnits));
+    setText(SyscoinUnits::longName(newUnits));
 }
 
 /** Shows context menu with Display Unit options by the mouse coordinates */

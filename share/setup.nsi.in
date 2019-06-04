@@ -5,7 +5,6 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@.@CLIENT_VERSION_BUILD@
 !define COMPANY "@PACKAGE_NAME@ project"
 !define URL @PACKAGE_URL@
 
@@ -20,7 +19,8 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER "@PACKAGE_NAME@"
-!define MUI_FINISHPAGE_RUN $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
+!define MUI_FINISHPAGE_RUN "$WINDIR\explorer.exe"
+!define MUI_FINISHPAGE_RUN_PARAMETERS $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
 !define MUI_UNWELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
@@ -48,22 +48,22 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-${VERSION}-win@WINDOWS_BITS@-setup.exe
+OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\SyscoinCore
+InstallDir $PROGRAMFILES64\Syscoin
 !else
-InstallDir $PROGRAMFILES\SyscoinCore
+InstallDir $PROGRAMFILES\Syscoin
 !endif
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion ${VERSION}
+VIProductVersion @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@.@CLIENT_VERSION_BUILD@
 VIAddVersionKey ProductName "@PACKAGE_NAME@"
-VIAddVersionKey ProductVersion "${VERSION}"
+VIAddVersionKey ProductVersion "@PACKAGE_VERSION@"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
-VIAddVersionKey FileVersion "${VERSION}"
+VIAddVersionKey FileVersion "@PACKAGE_VERSION@"
 VIAddVersionKey FileDescription ""
 VIAddVersionKey LegalCopyright ""
 InstallDirRegKey HKCU "${REGKEY}" Path
@@ -74,13 +74,21 @@ Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
     File @abs_top_srcdir@/release/@SYSCOIN_GUI_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/syscoin-relayer@EXEEXT@
+    File @abs_top_srcdir@/release/syscoin-geth@EXEEXT@
+    File @abs_top_srcdir@/release/bufferutil.node
+    File @abs_top_srcdir@/release/scrypt.node
+    File @abs_top_srcdir@/release/sha3.node
+    File @abs_top_srcdir@/release/validation.node
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\daemon
     File @abs_top_srcdir@/release/@SYSCOIN_DAEMON_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/@SYSCOIN_CLI_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@SYSCOIN_TX_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@SYSCOIN_WALLET_TOOL_NAME@@EXEEXT@
     SetOutPath $INSTDIR\doc
-    File /r @abs_top_srcdir@/doc\*.*
+    File /r /x Makefile* @abs_top_srcdir@/doc\*.*
     SetOutPath $INSTDIR
     WriteRegStr HKCU "${REGKEY}\Components" Main 1
 SectionEnd
@@ -96,7 +104,7 @@ Section -post SEC0001
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
-    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "${VERSION}"
+    WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayVersion "@PACKAGE_VERSION@"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" Publisher "${COMPANY}"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" URLInfoAbout "${URL}"
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayIcon $INSTDIR\uninstall.exe
@@ -107,10 +115,6 @@ Section -post SEC0001
     WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:Syscoin"
     WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
     WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@" "%1"'
-
-    # Delete old key (before we switched to PACKAGE_TARNAME, which is set to 'syscoincore' now, we had 'syscoin' hardcoded)
-    # TODO remove this line sometime later
-    DeleteRegKey HKCR "syscoin"
 SectionEnd
 
 # Macro for selecting uninstaller sections
@@ -129,6 +133,12 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\syscoin-relayer@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\syscoin-geth@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\bufferutil.node
+    Delete /REBOOTOK $INSTDIR\scrypt.node
+    Delete /REBOOTOK $INSTDIR\sha3.node
+    Delete /REBOOTOK $INSTDIR\validation.node
     Delete /REBOOTOK $INSTDIR\COPYING.txt
     Delete /REBOOTOK $INSTDIR\readme.txt
     RMDir /r /REBOOTOK $INSTDIR\daemon
@@ -150,9 +160,6 @@ Section -un.post UNSEC0001
     DeleteRegKey /IfEmpty HKCU "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKCU "${REGKEY}"
     DeleteRegKey HKCR "@PACKAGE_TARNAME@"
-    # Delete old key (before we switched to PACKAGE_TARNAME, which is set to 'syscoincore' now, we had 'syscoin' hardcoded)
-    # TODO remove this line sometime later
-    DeleteRegKey HKCR "syscoin"
     RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
     RmDir /REBOOTOK $INSTDIR
     Push $R0

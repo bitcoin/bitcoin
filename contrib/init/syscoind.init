@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-#  syscoind The Syscoin Core server.
+#  syscoind The syscoin core server.
 #
 #
 # chkconfig: 345 80 20

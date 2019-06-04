@@ -3,14 +3,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "qrdialog.h"
-#include "ui_qrdialog.h"
+#include <qt/qrdialog.h>
+#include <qt/forms/ui_qrdialog.h>
 
-#include "syscoinunits.h"
-#include "guiconstants.h"
-#include "guiutil.h"
-#include "optionsmodel.h"
-#include "walletmodel.h"
+#include <qt/syscoinunits.h>
+#include <qt/guiconstants.h>
+#include <qt/guiutil.h>
+#include <qt/optionsmodel.h>
+#include <qt/walletmodel.h>
 
 #include <QClipboard>
 #include <QDrag>
@@ -23,7 +23,7 @@
 #endif
 
 #if defined(HAVE_CONFIG_H)
-#include "config/syscoin-config.h" /* for USE_QRCODE */
+#include <config/syscoin-config.h> /* for USE_QRCODE */
 #endif
 
 #ifdef USE_QRCODE
@@ -35,10 +35,10 @@ QRGeneralImageWidget::QRGeneralImageWidget(QWidget *parent):
 {
     contextMenu = new QMenu(this);
     QAction *saveImageAction = new QAction(tr("&Save Image..."), this);
-    connect(saveImageAction, SIGNAL(triggered()), this, SLOT(saveImage()));
+    connect(saveImageAction, &QAction::triggered, this, &QRGeneralImageWidget::saveImage);
     contextMenu->addAction(saveImageAction);
     QAction *copyImageAction = new QAction(tr("&Copy Image"), this);
-    connect(copyImageAction, SIGNAL(triggered()), this, SLOT(copyImage()));
+    connect(copyImageAction, &QAction::triggered, this, &QRGeneralImageWidget::copyImage);
     contextMenu->addAction(copyImageAction);
 }
 
@@ -102,7 +102,7 @@ QRDialog::QRDialog(QWidget *parent) :
     ui->lblQRCode->setVisible(false);
 #endif
 
-    connect(ui->button_saveImage, SIGNAL(clicked()), ui->lblQRCode, SLOT(saveImage()));
+    connect(ui->button_saveImage, &QPushButton::clicked, ui->lblQRCode, &QRGeneralImageWidget::saveImage);
 }
 
 QRDialog::~QRDialog()
@@ -115,7 +115,7 @@ void QRDialog::setModel(OptionsModel *model)
     this->model = model;
 
     if (model)
-        connect(model, SIGNAL(displayUnitChanged(int)), this, SLOT(update()));
+        connect(model, &OptionsModel::displayUnitChanged, this, &QRDialog::update);
 
     // update the display unit if necessary
     update();

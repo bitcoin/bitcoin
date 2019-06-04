@@ -1,10 +1,10 @@
-#ifndef MASTERNODELIST_H
-#define MASTERNODELIST_H
+#ifndef SYSCOIN_QT_MASTERNODELIST_H
+#define SYSCOIN_QT_MASTERNODELIST_H
 
-#include "primitives/transaction.h"
-#include "platformstyle.h"
-#include "sync.h"
-#include "util.h"
+#include <primitives/transaction.h>
+#include <qt/platformstyle.h>
+#include <sync.h>
+#include <interfaces/wallet.h>
 
 #include <QMenu>
 #include <QTimer>
@@ -37,8 +37,8 @@ public:
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void ShowQRCode(std::string strAlias);
-    void StartAlias(std::string strAlias);
-    void StartAll(std::string strCommand = "start-all");
+    void StartAlias(interfaces::Wallet& wallet, std::string strAlias);
+    void StartAll(interfaces::Wallet& wallet, std::string strCommand = "start-all");
 
 private:
     QMenu *contextMenu;
@@ -77,4 +77,4 @@ private Q_SLOTS:
     void on_tableWidgetMyMasternodes_itemSelectionChanged();
     void on_UpdateButton_clicked();
 };
-#endif // MASTERNODELIST_H
+#endif // SYSCOIN_QT_MASTERNODELIST_H

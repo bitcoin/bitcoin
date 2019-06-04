@@ -3,13 +3,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SPORK_H
-#define SPORK_H
+#ifndef SYSCOIN_SPORK_H
+#define SYSCOIN_SPORK_H
 
-#include "hash.h"
-#include "net.h"
-#include "utilstrencodings.h"
-#include "key.h"
+#include <hash.h>
+#include <net.h>
+#include <util/strencodings.h>
+#include <key.h>
 
 class CSporkMessage;
 class CSporkManager;
@@ -18,9 +18,6 @@ class CSporkManager;
     Don't ever reuse these IDs for other sporks
     - This would result in old clients getting confused about which spork is for what
 */
-static const int SPORK_2_INSTANTSEND_ENABLED                            = 10001;
-static const int SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002;
-static const int SPORK_5_INSTANTSEND_MAX_VALUE                          = 10004;
 static const int SPORK_6_NEW_SIGS                                       = 10005;
 static const int SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT                 = 10007;
 static const int SPORK_9_SUPERBLOCKS_ENABLED                            = 10008;
@@ -28,7 +25,7 @@ static const int SPORK_10_MASTERNODE_PAY_UPDATED_NODES                  = 10009;
 static const int SPORK_12_RECONSIDER_BLOCKS                             = 10011;
 static const int SPORK_14_REQUIRE_SENTINEL_FLAG                         = 10013;
 
-static const int SPORK_START                                            = SPORK_2_INSTANTSEND_ENABLED;
+static const int SPORK_START                                            = SPORK_6_NEW_SIGS;
 static const int SPORK_END                                              = SPORK_14_REQUIRE_SENTINEL_FLAG;
 
 extern std::map<int, int64_t> mapSporkDefaults;
@@ -110,4 +107,4 @@ public:
     bool SetPrivKey(const std::string& strPrivKey);
 };
 
-#endif
+#endif // SYSCOIN_SPORK_H

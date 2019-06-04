@@ -1,17 +1,16 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_ADDRDB_H
 #define SYSCOIN_ADDRDB_H
 
-#include "serialize.h"
+#include <fs.h>
+#include <serialize.h>
 
 #include <string>
 #include <map>
-#include <boost/filesystem/path.hpp>
 
 class CSubNet;
 class CAddrMan;
@@ -38,10 +37,15 @@ public:
         SetNull();
     }
 
-    CBanEntry(int64_t nCreateTimeIn)
+    explicit CBanEntry(int64_t nCreateTimeIn)
     {
         SetNull();
         nCreateTime = nCreateTimeIn;
+    }
+
+    explicit CBanEntry(int64_t n_create_time_in, BanReason ban_reason_in) : CBanEntry(n_create_time_in)
+    {
+        banReason = ban_reason_in;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -62,7 +66,7 @@ public:
         banReason = BanReasonUnknown;
     }
 
-    std::string banReasonToString()
+    std::string banReasonToString() const
     {
         switch (banReason) {
         case BanReasonNodeMisbehaving:
@@ -81,21 +85,21 @@ typedef std::map<CSubNet, CBanEntry> banmap_t;
 class CAddrDB
 {
 private:
-    boost::filesystem::path pathAddr;
+    fs::path pathAddr;
 public:
     CAddrDB();
     bool Write(const CAddrMan& addr);
     bool Read(CAddrMan& addr);
-    bool Read(CAddrMan& addr, CDataStream& ssPeers);
+    static bool Read(CAddrMan& addr, CDataStream& ssPeers);
 };
 
 /** Access to the banlist database (banlist.dat) */
 class CBanDB
 {
 private:
-    boost::filesystem::path pathBanlist;
+    const fs::path m_ban_list_path;
 public:
-    CBanDB();
+    explicit CBanDB(fs::path ban_list_path);
     bool Write(const banmap_t& banSet);
     bool Read(banmap_t& banSet);
 };

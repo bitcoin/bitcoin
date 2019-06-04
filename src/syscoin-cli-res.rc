@@ -17,7 +17,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Syscoin"
-            VALUE "FileDescription",    "syscoin-cli (JSON-RPC client for Syscoin Core)"
+            VALUE "FileDescription",    "syscoin-cli (JSON-RPC client for " PACKAGE_NAME ")"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "syscoin-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR

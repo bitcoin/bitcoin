@@ -1,20 +1,12 @@
-Wallet Tools
----------------------
-
-### [SpendFrom](/contrib/spendfrom) ###
-
-Use the raw transactions API to send coins received on a particular
-address (or addresses).
-
 Repository Tools
 ---------------------
 
 ### [Developer tools](/contrib/devtools) ###
 Specific tools for developers working on this repository.
-Contains the script `github-merge.sh` for merging github pull requests securely and signing them using GPG.
+Contains the script `github-merge.py` for merging GitHub pull requests securely and signing them using GPG.
 
 ### [Verify-Commits](/contrib/verify-commits) ###
-Tool to verify that every merge commit was signed by a developer using the above `github-merge.sh` script.
+Tool to verify that every merge commit was signed by a developer using the above `github-merge.py` script.
 
 ### [Linearize](/contrib/linearize) ###
 Construct a linear, no-fork, best version of the blockchain.
@@ -29,18 +21,22 @@ Utility to generate the pnSeed[] array that is compiled into the client.
 Build Tools and Keys
 ---------------------
 
-### [Debian](/contrib/debian) ###
-Contains files used to package syscoind/syscoin-qt
-for Debian-based Linux systems. If you compile syscoind/syscoin-qt yourself, there are some useful files here.
+### Packaging ###
+The [Debian](/contrib/debian) subfolder contains the copyright file.
+
+All other packaging related files can be found in the [syscoin-core/packaging](https://github.com/syscoin-core/packaging) repository.
 
 ### [Gitian-descriptors](/contrib/gitian-descriptors) ###
-Gavin's notes on getting gitian builds up and running using KVM.
+Files used during the gitian build process. For more information about gitian, see the [the Syscoin Core documentation repository](https://github.com/syscoin-core/docs).
 
-### [Gitian-downloader](/contrib/gitian-downloader)
-Various PGP files of core developers. 
+### [Gitian-keys](/contrib/gitian-keys)
+PGP keys used for signing Syscoin Core [Gitian release](/doc/release-process.md) results.
 
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
+
+### [Gitian-build](/contrib/gitian-build.py) ###
+Script for running full Gitian builds.
 
 Test and Verify Tools 
 ---------------------
@@ -48,16 +44,5 @@ Test and Verify Tools
 ### [TestGen](/contrib/testgen) ###
 Utilities to generate test vectors for the data-driven Syscoin tests.
 
-### [Test Patches](/contrib/test-patches) ###
-These patches are applied when the automated pull-tester
-tests each pull and when master is tested using jenkins.
-
-### [Verify SF Binaries](/contrib/verifysfbinaries) ###
-This script attempts to download and verify the signature file SHA256SUMS.asc from SourceForge.
-
-Command Line Tools
----------------------
-
-### [Bash Completion](/contrib/bash-completion.md) ###
-Bash completion scripts for `syscoind` and `syscoin-cli`.
-
+### [Verify Binaries](/contrib/verifybinaries) ###
+This script attempts to download and verify the signature file SHA256SUMS.asc from syscoin.org.

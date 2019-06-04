@@ -1,24 +1,22 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+﻿// Copyright (c) 2014-2017 The Dash Core developers
 // Copyright (c) 2017-2018 The Syscoin Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef GOVERNANCE_H
-#define GOVERNANCE_H
+#ifndef SYSCOIN_GOVERNANCE_H
+#define SYSCOIN_GOVERNANCE_H
 
 //#define ENABLE_SYS_DEBUG
 
-#include "bloom.h"
-#include "cachemap.h"
-#include "cachemultimap.h"
-#include "chain.h"
-#include "governance-exceptions.h"
-#include "governance-object.h"
-#include "governance-vote.h"
-#include "net.h"
-#include "sync.h"
-#include "timedata.h"
-#include "util.h"
+#include <bloom.h>
+#include <cachemap.h>
+#include <cachemultimap.h>
+#include <chain.h>
+#include <governanceexceptions.h>
+#include <governanceobject.h>
+#include <governancevote.h>
+#include <net.h>
+#include <sync.h>
 
 #include <univalue.h>
 
@@ -318,7 +316,7 @@ public:
     {
         LOCK(cs);
 
-        LogPrint("gobject", "Governance object manager was cleared\n");
+        LogPrint(BCLog::GOBJECT, "Governance object manager was cleared\n");
         mapObjects.clear();
         mapErasedGovernanceObjects.clear();
         cmapVoteToObject.Clear();
@@ -447,4 +445,4 @@ private:
 
 };
 
-#endif
+#endif // SYSCOIN_GOVERNANCE_H

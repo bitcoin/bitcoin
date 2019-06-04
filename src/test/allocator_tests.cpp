@@ -1,12 +1,13 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2012-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "util.h"
+#include <util/system.h>
 
-#include "support/allocators/secure.h"
-#include "test/test_syscoin.h"
+#include <support/allocators/secure.h>
+#include <test/setup_common.h>
+
+#include <memory>
 
 #include <boost/test/unit_test.hpp>
 
@@ -63,10 +64,10 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     BOOST_CHECK(b.stats().used == 128);
     b.free(a3);
     BOOST_CHECK(b.stats().used == 0);
-    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0);
+    BOOST_CHECK_EQUAL(b.stats().chunks_used, 0U);
     BOOST_CHECK(b.stats().total == synth_size);
     BOOST_CHECK(b.stats().free == synth_size);
-    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1);
+    BOOST_CHECK_EQUAL(b.stats().chunks_free, 1U);
 
     std::vector<void*> addr;
     BOOST_CHECK(b.alloc(0) == nullptr); // allocating 0 always returns nullptr
@@ -104,13 +105,13 @@ BOOST_AUTO_TEST_CASE(arena_tests)
     // Go entirely wild: free and alloc interleaved,
     // generate targets and sizes using pseudo-randomness.
     for (int x=0; x<2048; ++x)
-        addr.push_back(0);
+        addr.push_back(nullptr);
     uint32_t s = 0x12345678;
     for (int x=0; x<5000; ++x) {
         int idx = s & (addr.size()-1);
         if (s & 0x80000000) {
             b.free(addr[idx]);
-            addr[idx] = 0;
+            addr[idx] = nullptr;
         } else if(!addr[idx]) {
             addr[idx] = b.alloc((s >> 16) & 2047);
         }
@@ -132,7 +133,7 @@ class TestLockedPageAllocator: public LockedPageAllocator
 {
 public:
     TestLockedPageAllocator(int count_in, int lockedcount_in): count(count_in), lockedcount(lockedcount_in) {}
-    void* AllocateLocked(size_t len, bool *lockingSuccess)
+    void* AllocateLocked(size_t len, bool *lockingSuccess) override
     {
         *lockingSuccess = false;
         if (count > 0) {
@@ -143,14 +144,14 @@ public:
                 *lockingSuccess = true;
             }
 
-            return reinterpret_cast<void*>(0x08000000 + (count<<24)); // Fake address, do not actually use this memory
+            return reinterpret_cast<void*>(uint64_t{static_cast<uint64_t>(0x08000000) + (count << 24)}); // Fake address, do not actually use this memory
         }
-        return 0;
+        return nullptr;
     }
-    void FreeLocked(void* addr, size_t len)
+    void FreeLocked(void* addr, size_t len) override
     {
     }
-    size_t GetLimit()
+    size_t GetLimit() override
     {
         return std::numeric_limits<size_t>::max();
     }
@@ -162,7 +163,7 @@ private:
 BOOST_AUTO_TEST_CASE(lockedpool_tests_mock)
 {
     // Test over three virtual arenas, of which one will succeed being locked
-    std::unique_ptr<LockedPageAllocator> x(new TestLockedPageAllocator(3, 1));
+    std::unique_ptr<LockedPageAllocator> x = MakeUnique<TestLockedPageAllocator>(3, 1);
     LockedPool pool(std::move(x));
     BOOST_CHECK(pool.stats().total == 0);
     BOOST_CHECK(pool.stats().locked == 0);
