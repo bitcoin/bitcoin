@@ -270,6 +270,7 @@ The list of files should be:
 bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz
 bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
 bitcoin-${VERSION}-i686-pc-linux-gnu.tar.gz
+bitcoin-${VERSION}-riscv64-linux-gnu.tar.gz
 bitcoin-${VERSION}-x86_64-linux-gnu.tar.gz
 bitcoin-${VERSION}-osx64.tar.gz
 bitcoin-${VERSION}-osx.dmg
