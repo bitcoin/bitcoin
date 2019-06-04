@@ -124,8 +124,9 @@ class FullBlockTest(ComparisonTestFramework):
             block.hashMerkleRoot = block.calc_merkle_root()
         if solve:
             # add peercoin signature
-            block.vchBlockSig = self.coinbase_key.sign(bytes.fromhex(block.hash))
             block.solve()
+            block.vchBlockSig = self.coinbase_key.sign(bytes.fromhex(block.hash)[::-1])
+
         self.tip = block
         self.block_heights[block.sha256] = height
         assert number not in self.blocks
@@ -167,6 +168,7 @@ class FullBlockTest(ComparisonTestFramework):
             old_sha256 = block.sha256
             block.hashMerkleRoot = block.calc_merkle_root()
             block.solve()
+            block.vchBlockSig = self.coinbase_key.sign(bytes.fromhex(block.hash)[::-1])
             # Update the internal state just like in next_block
             self.tip = block
             if block.sha256 != old_sha256:
