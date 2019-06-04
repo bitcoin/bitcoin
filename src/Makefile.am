@@ -163,7 +163,7 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   pow.h \
   ldpc/utility_function/Def_Lish.h \
-  ldpc/utility_function/Memory_Manage.happ \
+  ldpc/utility_function/Memory_Manage.hpp \
   ldpc/utility_function/sha256.hpp \
   ldpc/decoder/LDPC.cpp \
   ldpc/block/BlockHeader.cpp \
