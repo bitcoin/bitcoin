@@ -103,13 +103,14 @@ ArgsManager gArgs;
     #include <errno.h>
     #include <assert.h>
     #include <process.h>
-    pid_t fork(const std::string &app, const std::string &arg)
+    pid_t fork(std::string app, const std::string &arg)
     {
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
         ZeroMemory(&si, sizeof(si));
         si.cb = sizeof(si);
+        app = "'"+app+"'";
         //Prepare CreateProcess args
         std::wstring app_w(app.length(), L' '); // Make room for characters
         std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
