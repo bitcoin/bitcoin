@@ -1405,8 +1405,8 @@ CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensus
         return 50*COIN;
     if (nHeight == 1)
     {
-        // SYSCOIN 4 snapshot TODO update before release
-        nTotalRewardWithMasternodes = 533000000 * COIN;
+        // SYSCOIN 4 snapshot
+        nTotalRewardWithMasternodes = 554200000 * COIN;
         return nTotalRewardWithMasternodes;
     }
 
