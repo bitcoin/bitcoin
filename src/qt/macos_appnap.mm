@@ -7,6 +7,7 @@
 #include <AvailabilityMacros.h>
 #include <Foundation/NSProcessInfo.h>
 #include <Foundation/Foundation.h>
+#include <IOKit/pwr_mgt/IOPMLib.h>
 
 class CAppNapInhibitor::CAppNapImpl
 {
@@ -52,8 +53,30 @@ public:
         }
     }
 
+    void enableIdleSleepPrevention()
+    {
+        if (m_assertion_id) return;
+
+        CFStringRef reasonForActivity = CFSTR("Downloading blockchain");
+
+        IOPMAssertionCreateWithName(
+          kIOPMAssertionTypeNoIdleSleep,
+          kIOPMAssertionLevelOn,
+          reasonForActivity,
+          &m_assertion_id);
+    }
+
+    void disableIdleSleepPrevention()
+    {
+        if (!m_assertion_id) return;
+
+        IOPMAssertionRelease(m_assertion_id);
+        m_assertion_id = 0;
+    }
+
 private:
     NSObject* activityId{nil};
+    IOPMAssertionID m_assertion_id{0};
 };
 
 CAppNapInhibitor::CAppNapInhibitor() : impl(new CAppNapImpl()) {}
@@ -64,7 +87,9 @@ void CAppNapInhibitor::setAppNapEnabled(bool enabled)
 {
     if (enabled) {
         impl->enableAppNap();
+        impl->enableIdleSleepPrevention();
     } else {
         impl->disableAppNap();
+        impl->disableIdleSleepPrevention();
     }
 }
