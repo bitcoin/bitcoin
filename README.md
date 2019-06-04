@@ -16,7 +16,7 @@ software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
 the Syscoin Core software, see https://syscoin.org/, or read the
-[original whitepaper](https://syscoin.org/syscoin.pdf).
+[original whitepaper](https://syscoin.org/zdag_syscoin_whitepaper.pdf).
 
 Syscoin is a merge-minable SHA256 coin which provides an array of useful services which leverage the bitcoin protocol and blockchain technology.
 
