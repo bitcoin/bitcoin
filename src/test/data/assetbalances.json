@@ -1,21 +1,10 @@
 [
   {
-    "symbol": "AGX",
-    "publicvalue": "agx digital silver token",
-    "address": "Sg7Ez3eJ2Cw1XQnVweFdcBcnD5T239QdvR",
-    "balance": "1.00000000",
-    "total_supply": "1.00000000",
-    "max_supply": "9999999999.00000000",
-    "precision": 8,
-    "allocations": [
-    ]
-  }, 
-  {
     "symbol": "CPS",
     "publicvalue": "CoinPayments Coin",
     "address": "Sf1BBHFPDjrEBtcKVozuK6XE1SsmXD2sGy",
     "balance": "0.00000000",
-    "total_supply": "2095916000.36568158",
+    "total_supply": "2096755212.38840414",
     "max_supply": "9999999999.00000000",
     "precision": 8,
     "allocations": [
@@ -33,7 +22,7 @@
       }, 
       {
         "address": "SSDBKshVMyQbxPJq3Ut27Qb5BpGfgYu4Mz",
-        "balance": 209160.60131505
+        "balance": 0.56749099
       }, 
       {
         "address": "SU8dpeTXVJQt1JE5KEutyAGzUL2JkFH9fX",
@@ -92,10 +81,6 @@
         "balance": 5.63731073
       }, 
       {
-        "address": "SRfneyPP842tGDtZK6mWPif8hMMGoXjx1B",
-        "balance": 132221.60901824
-      }, 
-      {
         "address": "SUqsSohToHZq4kqZtVTUrPYoeLcqLC1kXM",
         "balance": 139.73511000
       }, 
@@ -144,10 +129,6 @@
         "balance": 14691.19433760
       }, 
       {
-        "address": "SaQNitgxKxSbCzgzFiFf4n1KyBLhhnZuFW",
-        "balance": 79445.68326710
-      }, 
-      {
         "address": "SeWDioSGQPRamSndWU9KsdZrfHfaQckQN3",
         "balance": 1.00000000
       }, 
@@ -178,22 +159,6 @@
       {
         "address": "SRSKpQgBvXkJprj9ccSRXsV1yfPcj7Px5Z",
         "balance": 0.56172141
-      }, 
-      {
-        "address": "SMpM6r3Mkf4KVhbsvZQo5bZ17TJC3nP3M2",
-        "balance": 30997.83883798
-      }, 
-      {
-        "address": "STLwc2z3nNmZfynRjriMY9mQZ9eaehzzaK",
-        "balance": 70739.47107115
-      }, 
-      {
-        "address": "SgmZyuwHf7y45cxLAiHjm6jqTG5AdAK7fu",
-        "balance": 56798.19174530
-      }, 
-      {
-        "address": "Sj4pVQQjTzrQ86G53Mo1eE9cDPiMk9ECy5",
-        "balance": 56798.19174530
       }, 
       {
         "address": "Se7Snw9RKoWAdgBMWpQo4RxEp85vtdokEL",
@@ -261,11 +226,7 @@
       }, 
       {
         "address": "SkKp9qmL29KFWA11e7Zeda6VnEozGzStHr",
-        "balance": 55000.00000000
-      }, 
-      {
-        "address": "SQrP7HLTsnHv1g8eDZQCy6qcS5px91HZrL",
-        "balance": 288.74401413
+        "balance": 60776.41668328
       }, 
       {
         "address": "SP2VaEkYZzELXNU4NPGzuQXJbKdW7ieWbM",
@@ -273,7 +234,7 @@
       }, 
       {
         "address": "SVKtAD39gWWd8Tqyyards4e5NYjK5BpCxz",
-        "balance": 33856.47729854
+        "balance": 0.79243711
       }, 
       {
         "address": "ST5FECrWeBYoUNeHaUVh5gtZwFR9LRf8HW",
@@ -329,31 +290,11 @@
       }, 
       {
         "address": "SVJKmBGZnuyzkUMDtnJGbKtEqB9pk8hcEb",
-        "balance": 64.22604469
+        "balance": 80.07897247
       }, 
       {
         "address": "SVgtBVKz5LkBuY48i8yg8fSJoFTFeE4gTZ",
-        "balance": 65336.05963997
-      }, 
-      {
-        "address": "SfmPbVNeLgz7g7xmXgX5WbTYZWg41YPHTz",
-        "balance": 0.74511270
-      }, 
-      {
-        "address": "SR5jL4z5wuA5Fe5TPLXKrfm7jqpY4W3RVo",
-        "balance": 0.74524975
-      }, 
-      {
-        "address": "Sfu7NNCPKFzAedJb4WV857QN1UqPNj39w1",
-        "balance": 601.29605674
-      }, 
-      {
-        "address": "SaLhpdNdPijZpuf8sHa2yqzVpmL4aqCKjX",
-        "balance": 0.74511270
-      }, 
-      {
-        "address": "SRs7HyvrvH8cgSGt6UGpMqYLktBCv6iRev",
-        "balance": 600.12603329
+        "balance": 71907.95672348
       }, 
       {
         "address": "SRbgNXm28YeWRtTMPUxU6nAc2RYCzZmv92",
@@ -361,7 +302,7 @@
       }, 
       {
         "address": "SXgtsAzmJNU5qkiBe8tpW8LwUvMEAEjYdc",
-        "balance": 65469.65954278
+        "balance": 72015.24951904
       }, 
       {
         "address": "SZwhBrZjXyqP5fDDd9hZFxtykqD8NN1CcZ",
@@ -369,7 +310,7 @@
       }, 
       {
         "address": "SRyGQHy8PSc6mH9RLPPeEwsiiDEYiQMvwA",
-        "balance": 226272.33860394
+        "balance": 0.18163057
       }, 
       {
         "address": "SaTTJf6tvBE35QqWuCKUGwPZRhjUpc83Gb",
@@ -397,7 +338,7 @@
       }, 
       {
         "address": "SZXWNZE79FDUygGMZ2KkcGk4LeB4y9VyFV",
-        "balance": 65206.91083453
+        "balance": 71726.50439349
       }, 
       {
         "address": "SfwcNKnpJCTuX4wB5DzX12VJ67UJ25STMj",
@@ -425,7 +366,7 @@
       }, 
       {
         "address": "SXugwhHjtcFVpRMGnsETZMH6bmRxjpEkwJ",
-        "balance": 35.70653434
+        "balance": 39.29831970
       }, 
       {
         "address": "SZAoXvHBocY9W3EcagU21FSgo7SmVqZrbZ",
@@ -433,7 +374,7 @@
       }, 
       {
         "address": "SQktKPKFn6U2xBV15oRR9mzVagtRq1MoJU",
-        "balance": 65376.68975730
+        "balance": 71913.29255623
       }, 
       {
         "address": "SStq5rhawEPYWZaxmc2e1xuf67i5wNDMeB",
@@ -441,7 +382,7 @@
       }, 
       {
         "address": "SNHYPuZmcdeJXCowqAPKPJSApfuz622DWA",
-        "balance": 65521.32007653
+        "balance": 72112.43487662
       }, 
       {
         "address": "Sjd1cLDAy3rctXMNFTBvLAs7BaekYNHcyU",
@@ -477,7 +418,7 @@
       }, 
       {
         "address": "SdHxpSz9RERxVBRbzDtSYJ3WPzC9SE3oB8",
-        "balance": 479013.56744218
+        "balance": 87942.85208882
       }, 
       {
         "address": "SYUVxCtSUKJDr7SmM3LDgbiQw1w51k5Wem",
@@ -545,11 +486,7 @@
       }, 
       {
         "address": "SRhPSkZVymTHNJVRniQaqZYGjmcVjTr147",
-        "balance": 23671.16674717
-      }, 
-      {
-        "address": "SWQWfCpzMuNrTavegVguVXDHWCDezm8TjD",
-        "balance": 57940.89540152
+        "balance": 0.15951986
       }, 
       {
         "address": "SjHjwNca8mz9kWi9H91P4HVJw8aZ1aafjz",
@@ -569,7 +506,7 @@
       }, 
       {
         "address": "SVU6HERzrKn71KU4ousHZ4WNWXHwbS2j5T",
-        "balance": 11829.21115057
+        "balance": 1.82123454
       }, 
       {
         "address": "SgtGgePD6iN91NAQsDLG8vLL2bDqwdURAi",
@@ -664,10 +601,6 @@
         "balance": 861.58987430
       }, 
       {
-        "address": "SjVtGLPqkgYQctPXifoCkPghRq4itHNVKc",
-        "balance": 3781.40220959
-      }, 
-      {
         "address": "Sdc1sm9w9tCjD1kttSWyymnY46DRrffWvY",
         "balance": 56549.70695615
       }, 
@@ -678,10 +611,6 @@
       {
         "address": "ShtSaoc69ytXu3qA8BGF226fGEHktC9EAK",
         "balance": 56710.29347022
-      }, 
-      {
-        "address": "SWE3xdUq9JSTbzkAz7qXvWFZEVKm5BCzD8",
-        "balance": 56402.64299772
       }, 
       {
         "address": "Sk4mjz2nadu7BrNUjv37ooo2bT5p84mjGJ",
@@ -702,10 +631,6 @@
       {
         "address": "SZksrHhiVuYgWnYbaekz4WM38Q1fnPgSRV",
         "balance": 57545.34475271
-      }, 
-      {
-        "address": "SRUjfKPVGMPiFcSkyFg1wKzCDfYRMBiSnR",
-        "balance": 24385.31882839
       }, 
       {
         "address": "SUnFQj6FYUKrpLDd4mCh6MAsxR9LnrKKW1",
@@ -744,12 +669,8 @@
         "balance": 8.35989664
       }, 
       {
-        "address": "SiwgDXN1T7fjkY4LePJn6aTncCMQqWvfwV",
-        "balance": 59337.45430791
-      }, 
-      {
         "address": "SbdMfAjBqvMiHn6BuETQVbozc7ybfrXAEb",
-        "balance": 60000.00000000
+        "balance": 66002.69767569
       }, 
       {
         "address": "SMZf7rWEN3KoHEBBPtvqgHyBrez4U3prPm",
@@ -769,7 +690,7 @@
       }, 
       {
         "address": "STg9pdjBYga7mCcGWEs6QxsVpZnuzcY7kX",
-        "balance": 65360.58147601
+        "balance": 71895.88148224
       }, 
       {
         "address": "SWE4Qs2hkobtsZ9r6BSKYsWBs7yTcBkuAp",
@@ -834,18 +755,6 @@
       {
         "address": "Sibq5KPMNu4sB5GmgyL3zs6389sbLYKVeJ",
         "balance": 69474.38060743
-      }, 
-      {
-        "address": "SWR7ED6UVxymHWkPcH3AKP17dEVZFNFHTt",
-        "balance": 66934.18693101
-      }, 
-      {
-        "address": "SP3GqMmrAHXDA9UYeUKXrpUNhdcowVTG6v",
-        "balance": 56402.64299772
-      }, 
-      {
-        "address": "SMvgaBTMkLf1DJqpjzXoxL1fqXQxwYawRP",
-        "balance": 56402.64299772
       }, 
       {
         "address": "SPM4YLydzSY8hRJw7utuKC5CDCnLPtD3Qg",
@@ -988,6 +897,10 @@
         "balance": 61819.13771982
       }, 
       {
+        "address": "Sa9EhmRLQHwboD1ig4pEpk7kqiwbJaRwBE",
+        "balance": 1020625.99949707
+      }, 
+      {
         "address": "SbmPC6zGUTNDR6M7pwyhR1GSER3EELANg4",
         "balance": 560.31081384
       }, 
@@ -1013,7 +926,7 @@
       }, 
       {
         "address": "SN3SZWhQxTSBiLCaZ4BrFByTcfY2yx55NB",
-        "balance": 65415.48204170
+        "balance": 71956.88753415
       }, 
       {
         "address": "SZaNWN9rxf8FBfLzy4qG1mm268YxxABuhw",
@@ -1061,7 +974,7 @@
       }, 
       {
         "address": "SVq3PLwn6YTyVDJkCCwjPK631F6VLj2UVf",
-        "balance": 1070.56498467
+        "balance": 1334.64769578
       }, 
       {
         "address": "SR4vEhVmH4QkAhMpxTKj9r2xQ3iMeRbafe",
@@ -1080,16 +993,8 @@
         "balance": 81.64434771
       }, 
       {
-        "address": "SZc8jmSDiguXAR25FAeT1mTNY7CNCsvksR",
-        "balance": 66934.50530208
-      }, 
-      {
         "address": "SeRYdh5g3qhdovKC9zsQ5Q6r48tSgvPEbD",
         "balance": 57497.12959741
-      }, 
-      {
-        "address": "Si8RQmkEEQFCKEbNK7XLnJLkWe8J8FZyxo",
-        "balance": 66937.94380593
       }, 
       {
         "address": "STCgTBbaZ5fu8MWUxdfoKpH9jUWw34pQqg",
@@ -1245,7 +1150,7 @@
       }, 
       {
         "address": "SauBkMujMSE5phnfBXy9jXnJzpXTXEScKV",
-        "balance": 65103.47664377
+        "balance": 71652.28584906
       }, 
       {
         "address": "Sb5HSCGagA39RXsgGyfu15gATeY8fcLJe8",
@@ -1266,10 +1171,6 @@
       {
         "address": "SS1JgaWQJA8fGdyhSPQEgeXuVYEYBdwaMR",
         "balance": 1164.10955514
-      }, 
-      {
-        "address": "SbU6tvHsb7NaK9CqztGdcXDVZwTd3mwJHP",
-        "balance": 2260.20148201
       }, 
       {
         "address": "SVLX8v1CA2DypeF3g5apG5Edd3KWFVyn9E",
@@ -1297,11 +1198,11 @@
       }, 
       {
         "address": "SgDVA57Zu9w8fQKTsMpE5ssVNw25y6B7u2",
-        "balance": 67184.66943046
+        "balance": 0.49324688
       }, 
       {
         "address": "Sb6hQanhwS5PPiMvhpS6FTFtprrnHZjwhm",
-        "balance": 67010.12472748
+        "balance": 0.95965461
       }, 
       {
         "address": "SR2UZt7ynFoKzeV8RftueRUkK77jUQeFQQ",
@@ -1310,10 +1211,6 @@
       {
         "address": "SgRUB7HXTX4xQcAiEyEYnFhKohVPXymip1",
         "balance": 0.23501713
-      }, 
-      {
-        "address": "SSe7GPQoTMRp8BrV3saHU4MgJ1doh3y7uU",
-        "balance": 71777.48663582
       }, 
       {
         "address": "ScKavGKYUhRkJNqGDgPvm48if2yAQo8yLn",
@@ -1357,7 +1254,7 @@
       }, 
       {
         "address": "SRMMnXTAf1szyp7GemNinfQU4mteFwQhWf",
-        "balance": 82875.84607333
+        "balance": 0.56316969
       }, 
       {
         "address": "SPMqtXiThFhRge815Q86xDvhYMhoTWMFdx",
@@ -1517,15 +1414,11 @@
       }, 
       {
         "address": "SiYqUZZ6hsK3SUZdzYKiG7Jhgbiaz6hFui",
-        "balance": 1497.43701834
+        "balance": 1000.43701834
       }, 
       {
         "address": "SUqGLynLfhLwVVyaiXWb2tuqozJnxwxg4a",
         "balance": 61601.63847570
-      }, 
-      {
-        "address": "SPmrkvgcvSMWNUuRdwTtog7y66vx3cociu",
-        "balance": 58412.04392612
       }, 
       {
         "address": "Sgmvu6EiiwkgehANrGTSHDGouUQBNJpVit",
@@ -1585,11 +1478,7 @@
       }, 
       {
         "address": "SXjA6Mx3ervkJeue2iYmAmzQWGQ9HKHk8k",
-        "balance": 1049.72094111
-      }, 
-      {
-        "address": "SdC4Q2Qw9YUGWnaLJ3RpeAKfnNie76gvC4",
-        "balance": 66937.91196714
+        "balance": 1308.77148417
       }, 
       {
         "address": "SharJZ9byUrZMw8bHTte2ZpBfC5j6yRweY",
@@ -1629,7 +1518,7 @@
       }, 
       {
         "address": "SeEjY2nmgLyp7YAjvpJQPZ15CrdZXrjcAi",
-        "balance": 65008.30319134
+        "balance": 71507.76722880
       }, 
       {
         "address": "SXqmf3FrWs9MHCeon4RPj467HiSUbpgjah",
@@ -1817,7 +1706,7 @@
       }, 
       {
         "address": "SRzEYc6aAtuM5tQUGVJi2drha3EmiV66Ls",
-        "balance": 65220.54008041
+        "balance": 0.54008041
       }, 
       {
         "address": "STt3WcsN1YL1jQHBZFhHPKPBRAr8oNPpnh",
@@ -1904,16 +1793,8 @@
         "balance": 28.69524802
       }, 
       {
-        "address": "SfNuzoxcuDv375UM1J3MoBgKEETg5iZQ6w",
-        "balance": 100000.54776743
-      }, 
-      {
         "address": "SkFjQcnTMjtb41kVBSqdkNrszcGWmSNgUL",
         "balance": 0.51949991
-      }, 
-      {
-        "address": "SjthMSwVms3DBJvvo83n5ZMRDozLSvNsqT",
-        "balance": 1095253.38050306
       }, 
       {
         "address": "SNpMB6SuyTSeTxZjECEKsPUGXEfri18Azi",
@@ -2018,14 +1899,6 @@
       {
         "address": "SYx37V6FecbbXVJ54ZCTC2wPwWmqkQVVT1",
         "balance": 57545.34475271
-      }, 
-      {
-        "address": "Se8UJSUUdBauDj6vvekec1sS3Jxf6vWavZ",
-        "balance": 82576.30357758
-      }, 
-      {
-        "address": "SSo3CLELLQb51mBnkPZ92HVy5T3mrKJdTx",
-        "balance": 23806.88381439
       }, 
       {
         "address": "SUr8oV64Bz3jy7VtxEuyvd8uj8EmE8oBeU",
@@ -2192,16 +2065,12 @@
         "balance": 2.32152183
       }, 
       {
-        "address": "SeXrr5XBdaE4rVoBscxptgty6nSuuoXmuU",
-        "balance": 1641.76214068
-      }, 
-      {
         "address": "SVDBkHEE4wXDMAYikLuPT5gcQrzqM5Hv1e",
         "balance": 0.72190719
       }, 
       {
         "address": "SXHoj18F6AV57f4M5hnAADQrqwRmtLYeMu",
-        "balance": 2152.45425980
+        "balance": 0.25963118
       }, 
       {
         "address": "SgbCXdF4o1GM7H9W49GqMK6QFyvRZNxp29",
@@ -2221,7 +2090,7 @@
       }, 
       {
         "address": "Sg8Z9GY5zQy3APpD72sEG97LYJGL7PiynR",
-        "balance": 1.17141027
+        "balance": 0.15307850
       }, 
       {
         "address": "SUPb94x59witSgjx2rxTBLToBVPYLgnqQC",
@@ -2266,14 +2135,6 @@
       {
         "address": "SdsWFW2eNdYVxbRsNUwZioAJisQpMqp5ey",
         "balance": 70896.90672172
-      }, 
-      {
-        "address": "ScrynunRcXhSq37c3HsSBcgsdTkVkEQyB8",
-        "balance": 140091.61136381
-      }, 
-      {
-        "address": "SeZSWf5qhefMCtYeML6SR4kcrvd9YhmVuv",
-        "balance": 70536.58419521
       }, 
       {
         "address": "SToDy124xtB5AVu5DH8FEiF9ivpSNayrjH",
@@ -2338,10 +2199,6 @@
       {
         "address": "SkVBWxJLH9pgnrd5cY27Gi7J9pLgSTvrfy",
         "balance": 124.00008490
-      }, 
-      {
-        "address": "STAf12eta5CyF1ZGQZhsKNCCVdsSFz7kYU",
-        "balance": 746923.42184296
       }, 
       {
         "address": "SZF5pNUsp5mQRVuh2aeGNLsUhPyHfMzTah",
@@ -2432,10 +2289,6 @@
         "balance": 0.64590768
       }, 
       {
-        "address": "Sa19bc8WnRrjnPvKdmzThvqUpcDNguSESg",
-        "balance": 599.16787700
-      }, 
-      {
         "address": "SNVgaYZoP8k5Wgtp2GKg23VgJ6F7mWTePv",
         "balance": 70865.11468664
       }, 
@@ -2444,32 +2297,12 @@
         "balance": 0.50864738
       }, 
       {
-        "address": "SWkHyqpyn9piFxKmgWQbsyWAPT4ccDKWdV",
-        "balance": 576.41785948
-      }, 
-      {
-        "address": "SVDNwXtLuWrkxLp1Vzk1VpoDQGDJuL66Te",
-        "balance": 580.84377166
-      }, 
-      {
-        "address": "SWnpytPuhgv1Wn8546PbNtdBwk1GzdPrJw",
-        "balance": 579.59441434
-      }, 
-      {
-        "address": "SPvvSRbMANrT8D3K7a7sXQ5dghvTPX3qJn",
-        "balance": 284.03183025
-      }, 
-      {
         "address": "Sa9FrFmm1qb5PbmMM8X4xcecipv8XRpKMo",
         "balance": 3.28864004
       }, 
       {
         "address": "SQ9nEFnXKw3SwUav3vdTw1MkBBnLxrkU82",
         "balance": 3645746.97106275
-      }, 
-      {
-        "address": "SSoFUCf9GHqYU5c17kLZRz9QdFRnkFJ3PE",
-        "balance": 70579.81157953
       }, 
       {
         "address": "SVbRr6kgjSUDypRHrp547R2joyymDbbdYF",
@@ -2502,10 +2335,6 @@
       {
         "address": "SXQryPZAVRAdLsYHqWoFFBLtN2FXdjDwUb",
         "balance": 931550.71648396
-      }, 
-      {
-        "address": "SdZnmQ3td9nYG3jnH1RP6jmHE2odSn6PZr",
-        "balance": 16912.46729606
       }, 
       {
         "address": "SV49M9kMxv3VsrQj5fL22Pq9Q9x3iYDB1a",
@@ -2565,7 +2394,7 @@
       }, 
       {
         "address": "SfJjymCvinuKpvyKcWNk2addetNpGznGwU",
-        "balance": 18127.66850154
+        "balance": 0.17955157
       }, 
       {
         "address": "SVVztQMYM1UFXdLBDVciZrZEpYcjKikhj7",
@@ -2585,7 +2414,7 @@
       }, 
       {
         "address": "SVyTHp85q9PkJrDKMrWFthHewNn61iDwkT",
-        "balance": 8341.57678181
+        "balance": 9693.52081196
       }, 
       {
         "address": "Sh8nCxRbJsaK8wrEDELKiiXQMvoEtNUdyJ",
@@ -2712,16 +2541,8 @@
         "balance": 82.37333577
       }, 
       {
-        "address": "SfJ7V6msYNRJwgkLupRUN435i6ZSYqvtm3",
-        "balance": 57237.69428021
-      }, 
-      {
         "address": "SRPyhNmzsoQWZ4Y4fGjxChj7myEPi6e1F4",
         "balance": 57662.54493271
-      }, 
-      {
-        "address": "SaPKY9Q5kd9W2oYDFqhKYKKviRsnzFEFwr",
-        "balance": 57252.34430271
       }, 
       {
         "address": "SPPJgYXYzZiNcAh8tUdQPUATjtQWV7TS4d",
@@ -2777,7 +2598,7 @@
       }, 
       {
         "address": "SPRcZMVmWAssa8BGaavXn5PqRud7AdkbcB",
-        "balance": 65862.35444595
+        "balance": 1058.92754105
       }, 
       {
         "address": "STij964eGh8mBhpc3L6URn8fFWNHhMDL2Z",
@@ -2829,7 +2650,7 @@
       }, 
       {
         "address": "SgubV1xzq9SeVCnWGzwYTLtRQ9SVm2sRcV",
-        "balance": 636.99879022
+        "balance": 576595.98337168
       }, 
       {
         "address": "SaqEXSWS2EZtpfq7iKmsZsBEE3dit8NfSL",
@@ -2908,10 +2729,6 @@
         "balance": 12689.32536480
       }, 
       {
-        "address": "Sj9gi6Y8dDzedHq9g7z9inPS4xS3jwf8CB",
-        "balance": 66899.22503690
-      }, 
-      {
         "address": "SMoih9Xx54D2QsPyuti4U8bLFvmPiDFJqL",
         "balance": 0.79459521
       }, 
@@ -2970,10 +2787,6 @@
       {
         "address": "SfEegvCiE13sgZ8Lm3K87ZoQK3U982dfBK",
         "balance": 56637.04335772
-      }, 
-      {
-        "address": "Sj3DEEZbBqH1rYU3mf1fHM77ybhMEMdzG9",
-        "balance": 56429.71624122
       }, 
       {
         "address": "Sgg61cEDB3KguA8jLqUivr3C3eaDzQKmdB",
@@ -3052,14 +2865,6 @@
         "balance": 563.72751719
       }, 
       {
-        "address": "SU7EahL3jsdQqNTu9Htj9CocZfAb6ueBtZ",
-        "balance": 57061.89401021
-      }, 
-      {
-        "address": "SWQSeXyPxEeWyiEejFJoxng5CGt1UtPj9k",
-        "balance": 6275.63474122
-      }, 
-      {
         "address": "Se9FQFp2ijrswJYXHwqTPr9x2uYqUiEc7p",
         "balance": 1.12749037
       }, 
@@ -3096,10 +2901,6 @@
         "balance": 10457.26695613
       }, 
       {
-        "address": "SWnXnHaHNTNufrLFLEQaTbAqz8SzCFRznL",
-        "balance": 56385.65565780
-      }, 
-      {
         "address": "STW4BRLuGP1RHGinwtBSP67HYUBBG7oBkY",
         "balance": 29.80625241
       }, 
@@ -3122,10 +2923,6 @@
       {
         "address": "ScLXXuVuHx93yv6NgGSdRzgKPfLzKnosBB",
         "balance": 70843.11772259
-      }, 
-      {
-        "address": "ScqC9R5AbeLpQkKaQW2knwess7E6oLqN8p",
-        "balance": 70114.60463366
       }, 
       {
         "address": "Sd7vgErirvuTTLrxRrZ12yDhYrqiumwNJZ",
@@ -3261,7 +3058,7 @@
       }, 
       {
         "address": "SUSRfmWeuxDVECi6MGhSQB9Qmcht8qgcsE",
-        "balance": 99781.34317331
+        "balance": 116068.74811854
       }, 
       {
         "address": "SPzcBmDgcCDY8CjaEPw3mCRt7rtPXNefpG",
@@ -3324,10 +3121,6 @@
         "balance": 33824.00581103
       }, 
       {
-        "address": "SVahtLkHdxb4x9xHd86WH9zKMzBdEnswC8",
-        "balance": 5.63536944
-      }, 
-      {
         "address": "Sh1EUL1auAubKey2EJZTFYDqZvq6YenUrj",
         "balance": 5.63113323
       }, 
@@ -3353,7 +3146,7 @@
       }, 
       {
         "address": "SPG1eEqtV5dHm5cfMTvZSwViYEcvZJXv5P",
-        "balance": 2436574.48035706
+        "balance": 1416585.48035706
       }, 
       {
         "address": "SSsdSwmAQXudDU7Av1HUPL9dawAxn9vTDq",
@@ -3369,7 +3162,7 @@
       }, 
       {
         "address": "SYTV4imix3ZD1A5o6Yz196vyL49fVjf4Bg",
-        "balance": 14.09149881
+        "balance": 17.56911301
       }, 
       {
         "address": "SibayzKx2hgS7yxpaxTNqPAcYS6E337RVQ",
@@ -3380,16 +3173,12 @@
         "balance": 40300.84390172
       }, 
       {
-        "address": "SUoPyr9zo4SxjnGUV6YHhuKo176cDDreHb",
-        "balance": 157943.89777033
-      }, 
-      {
         "address": "ScF81J6ZnMQsZLkpU3WcUBpLYUqs6EDiCF",
         "balance": 299.96738950
       }, 
       {
         "address": "SS6vLgrG2Ceh3Atrk44zJ9SauXZmgYE4fH",
-        "balance": 0.64716735
+        "balance": 0.69801218
       }, 
       {
         "address": "SQawiDCQCUnNf5YBWdphyr6L7NE8FJAizM",
@@ -3442,10 +3231,6 @@
       {
         "address": "ScJGeT2bCE39E8ppSP7dtkK6fcPnoHaTY8",
         "balance": 0.28303052
-      }, 
-      {
-        "address": "SiCUfWuWisHrFfQiBNG2JKMF5YFNDFD83m",
-        "balance": 46889.30816791
       }, 
       {
         "address": "SfFwCPb8zcaDPqskxi2Ft7x5fxPEhKKQ48",
@@ -3520,10 +3305,6 @@
         "balance": 7635.50424867
       }, 
       {
-        "address": "SVJ4ZraQQ9ytWG7E53BqNLHmsk2GY8by8Q",
-        "balance": 136890.13841143
-      }, 
-      {
         "address": "SetDxZrEr6bY2Cf5Zjpo2P3JmoRFc4zbu7",
         "balance": 56988.64389771
       }, 
@@ -3566,10 +3347,6 @@
       {
         "address": "Sa4555khnHVrxGf4FQeLrga32ixF3E7MWv",
         "balance": 2305.12608352
-      }, 
-      {
-        "address": "SgZkzGmqieZy18SDmf5V1vzmHt6YeMmnZt",
-        "balance": 71554.35492002
       }, 
       {
         "address": "SjjWG4rgxATcTVtTXwtosVq2pfM6D73CYU",
@@ -3664,12 +3441,8 @@
         "balance": 1601.55737169
       }, 
       {
-        "address": "SS5oWwMt4qTBAytGTXP5fGmCC5tgh6WFfy",
-        "balance": 5.58568962
-      }, 
-      {
         "address": "SfBc5b7FGokNAY2spfzi1gfRmXAMMVbkBj",
-        "balance": 1983136152.24538494
+        "balance": 1990052594.12521465
       }, 
       {
         "address": "SdErVLuPnckyznqG55BQmspxGChB7MKmd2",
@@ -3701,7 +3474,7 @@
       }, 
       {
         "address": "SXeexBnKYsyCBCJ3QJk7Cx9touYrYAjr2i",
-        "balance": 2372281.85967855
+        "balance": 1190820.17246335
       }, 
       {
         "address": "SdNsfBZ2Sgihj1PgVGKbvWo5z5hKqC7mFU",
@@ -3709,7 +3482,7 @@
       }, 
       {
         "address": "SNvydPtwyassFXvHfrC3WiZdgjDsKYWEqJ",
-        "balance": 2881.40579053
+        "balance": 3351.83441960
       }, 
       {
         "address": "SX8bB4yKvj6dDJTaJqfSFmSkKc8z6qsWXZ",
@@ -3725,7 +3498,7 @@
       }, 
       {
         "address": "SVbDMRYsYy3CMjib3s6JcYhyJTfyNBtTig",
-        "balance": 706053.39282269
+        "balance": 763797.57527089
       }, 
       {
         "address": "SYE7q5yEH2c12pVvSb954HLW2pcN1phefD",
@@ -3754,10 +3527,6 @@
       {
         "address": "SY4DLvpJBFxcVyqDEoADZ3iNjDLSCvJ2hf",
         "balance": 3458.50459015
-      }, 
-      {
-        "address": "SefzAQgDCAZAK4XaDRJu37szYg24qhmxgU",
-        "balance": 2248.16866203
       }, 
       {
         "address": "SPnxVgC3L2pg5QhTcDXcDYHq9Ls2CGsurk",
@@ -3796,16 +3565,8 @@
         "balance": 57.33533943
       }, 
       {
-        "address": "SXC2vFRnur27RnmkmtDFbryMM9D2MShJv3",
-        "balance": 570.30065537
-      }, 
-      {
         "address": "SPLFfWLZUoHD5Gjwak2c72ituhjCGaudBU",
         "balance": 70865.11468664
-      }, 
-      {
-        "address": "SN1QYkc7gS4Tvs6Q5btkLLk1vk93pL1Ntf",
-        "balance": 17658.84722870
       }, 
       {
         "address": "Se7hMhyrVxTThzpYn19TpoPrjwGi5GBcdz",

@@ -414,7 +414,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
     // Check initial balance from one mature coinbase transaction.
     // SYSCOIN
-    BOOST_CHECK_EQUAL(555000000 * COIN, wallet->GetAvailableBalance());
+    BOOST_CHECK_EQUAL(542000000 * COIN, wallet->GetAvailableBalance());
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the
