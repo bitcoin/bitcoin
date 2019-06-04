@@ -13,8 +13,7 @@ public:
     explicit CAppNapInhibitor();
     ~CAppNapInhibitor();
 
-    void disableAppNap();
-    void enableAppNap();
+    void setAppNapEnabled(bool enabled);
 
 private:
     class CAppNapImpl;

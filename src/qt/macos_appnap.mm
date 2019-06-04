@@ -53,19 +53,18 @@ public:
     }
 
 private:
-    NSObject* activityId;
+    NSObject* activityId{nil};
 };
 
 CAppNapInhibitor::CAppNapInhibitor() : impl(new CAppNapImpl()) {}
 
 CAppNapInhibitor::~CAppNapInhibitor() = default;
 
-void CAppNapInhibitor::disableAppNap()
+void CAppNapInhibitor::setAppNapEnabled(bool enabled)
 {
-    impl->disableAppNap();
-}
-
-void CAppNapInhibitor::enableAppNap()
-{
-    impl->enableAppNap();
+    if (enabled) {
+        impl->enableAppNap();
+    } else {
+        impl->disableAppNap();
+    }
 }
