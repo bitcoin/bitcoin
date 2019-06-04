@@ -1090,17 +1090,23 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
 
         // SYSCOIN if asset send check receivers instead of syscoin dust output
         std::vector<IsAssetMineSelection> IsAssetMineResults;
-        if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
-            for(auto isMineResult: IsAssetMineResults){
-                if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
-                    continue;
-                }
-                tallyitem& item = mapTally[isMineResult.destination];
-                item.nConf = std::min(item.nConf, nDepth);
-                item.txids.push_back(wtx.GetHash());
-                if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
-                    item.fIsWatchonly = true;
-            }          
+        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
+            LogPrintf("listreceivedbyaddress found asset send!\n");
+            if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
+                LogPrintf("listreceivedbyaddress is asset mine!\n");
+                for(auto isMineResult: IsAssetMineResults){
+                    if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
+                        continue;
+                    }
+                    tallyitem& item = mapTally[isMineResult.destination];
+                    item.nConf = std::min(item.nConf, nDepth);
+                    item.txids.push_back(wtx.GetHash());
+                    LogPrintf("listreceivedbyaddress pushing back is mine tx %s!\n", wtx.GetHash().GetHex());
+                    if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
+                        item.fIsWatchonly = true;
+                }          
+                
+            }
             continue;
         }
         for (const CTxOut& txout : wtx.tx->vout)
