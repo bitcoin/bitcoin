@@ -112,7 +112,6 @@ ArgsManager gArgs;
         GetStartupInfoW (&si);
         si.cb = sizeof(si); 
         size_t start_pos = 0;
-        arg = "\"" + arg + "\"";
         //Prepare CreateProcess args
         std::wstring app_w(app.length(), L' '); // Make room for characters
         std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
@@ -132,8 +131,8 @@ ArgsManager gArgs;
             return 0;
         }
         pid_t pid = (pid_t)pi.dwProcessId;
-        //CloseHandle(pi.hProcess);
-        //CloseHandle(pi.hThread);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
         return pid;
     }
 #endif
