@@ -23,15 +23,15 @@ Syscoin is a merge-minable SHA256 coin which provides an array of useful service
 888 million total coins (deflation 5 percent per year, deflation on all payouts)
 Block time: 60 seconds target
 Rewards: 38.5 Syscoins per block deflated 5 percent per year.
-10 percent to governance proposals (TBD Syscoins / block).
-22.5 percent to miner (TBD Syscoins / block)
-67.5 percent to masternode (TBD Syscoins / block)
+10 percent to governance proposals
+22.5 percent to miner
+67.5 percent to masternode
 SHA256 Proof of Work
 Mineable either exclusively or via merge-mining any SHA256 PoW coin
 Masternode collateral requirement: 100000 Syscoins
 Masternode seniority: 35% increase after 1 year, 100% increase after 2.5 years
 Governance proposals payout schedule: every month
-Governance funding per round (TBD Syscoins per month)
+Governance funding per round (Approx. 2m Syscoins per month to start)
 Consensus enforced segwit (all transactions have witness programs except coinbase)
 Codebase based off of latest Bitcoin Core (https://github.com/bitcoin/bitcoin)
 Services include:
