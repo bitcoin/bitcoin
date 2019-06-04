@@ -109,6 +109,10 @@ ArgsManager gArgs;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
         ZeroMemory(&si, sizeof(si));
+        GetStartupInfo (&si);
+        si.cb = sizeof(si); 
+        app = std::replace(app.begin(), app.end(), '\\', "\\\\");
+        app = "\"" + app + "\"";
         //Prepare CreateProcess args
         std::wstring app_w(app.length(), L' '); // Make room for characters
         std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
