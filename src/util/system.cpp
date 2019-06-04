@@ -112,7 +112,7 @@ ArgsManager gArgs;
         GetStartupInfoW (&si);
         si.cb = sizeof(si); 
         size_t start_pos = 0;
-        std::string from = "\\";
+        std::string from = '\\';
         std::string to = "\\\\";
         while((start_pos = app.find(from, start_pos)) != std::string::npos) {
             app.replace(start_pos, from.length(), to);
