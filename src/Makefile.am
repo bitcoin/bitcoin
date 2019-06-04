@@ -162,6 +162,11 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
+  ldpc/utility_function/Def_Lish.h \
+  ldpc/utility_function/Memory_Manage.happ \
+  ldpc/utility_function/sha256.hpp \
+  ldpc/decoder/LDPC.cpp \
+  ldpc/block/BlockHeader.cpp \
   protocol.h \
   psbt.h \
   random.h \
@@ -267,6 +272,10 @@ libbitcoin_server_a_SOURCES = \
   policy/policy.cpp \
   policy/rbf.cpp \
   pow.cpp \
+  ldpc/utility_function/Memory_Manage.cpp \
+  ldpc/utility_function/sha256.cpp \
+  ldpc/decoder/LDPC.cpp \
+  ldpc/block/BlockHeader.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
