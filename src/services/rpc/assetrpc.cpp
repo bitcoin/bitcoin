@@ -1060,7 +1060,7 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     
     StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
-    int wsport = gArgs.GetArg("-gethwebsocketport", 8546);
+    int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     if(!StartGethNode(exePath, gethPID, bGethTestnet, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
