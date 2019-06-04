@@ -39,19 +39,40 @@ string CWitnessAddress::ToString() const {
     return "";
 }
 CScript CWitnessAddress::GetScriptForDestination() const {
+    CTxDestination destination;
     CScript script;
-    if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
-        return script;
-    
-    if(nVersion == 0){
-        if (vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
-            return ::GetScriptForDestination(WitnessV0KeyHash(vchWitnessProgram));
-        }
-        else if (vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
-            return ::GetScriptForDestination(WitnessV0ScriptHash(vchWitnessProgram));
+    if(GetDestination(destination)){
+        return ::GetScriptForDestination(destination);     
+    }
+    return script;
+}
+CScript CWitnessAddress::GetScriptForDestination(CTxDestination& destination) const {
+    CScript script;
+    if(GetDestination(destination)){
+        if(!destination.empty()){
+            return ::GetScriptForDestination(destination);     
         }
     }
     return script;
+}
+bool CWitnessAddress::GetDestination(CTxDestination & destination) const {
+    CScript script;
+    if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
+        return false;
+    
+    if(nVersion == 0){
+        if (vchWitnessProgram.size() == WITNESS_V0_KEYHASH_SIZE) {
+            destination = WitnessV0KeyHash(vchWitnessProgram);
+        }
+        else if (vchWitnessProgram.size() == WITNESS_V0_SCRIPTHASH_SIZE) {
+            destination = WitnessV0ScriptHash(vchWitnessProgram);
+        }
+        else
+            return false;
+    }
+    else
+        return false;
+    return true;
 }
 bool CWitnessAddress::IsValid() const {
     const size_t& size = vchWitnessProgram.size();

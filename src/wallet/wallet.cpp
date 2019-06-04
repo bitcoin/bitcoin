@@ -1397,6 +1397,27 @@ bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter) co
     }
     return false;
 }
+bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter, std::vector<IsAssetMineSelection> &addresses) const {
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
+        CAssetAllocation assetallocation(tx);
+        if(!assetallocation.assetAllocationTuple.IsNull()){
+            if (!assetallocation.listSendingAllocationAmounts.empty()) {
+                for (auto& amountTuple : assetallocation.listSendingAllocationAmounts) {
+                    CTxDestination destination;
+                    const isminefilter &isMineFilteredResult = ::IsMine(*this, amountTuple.first.GetScriptForDestination(destination));
+                    if (isMineFilteredResult & filter){
+                        IsAssetMineSelection isMineSelection;
+                        isMineSelection.destination = destination;
+                        isMineSelection.amount = amountTuple.second;
+                        isMineSelection.minefilter = isMineFilteredResult;
+                        addresses.emplace_back(isMineSelection);
+                    }
+                }
+            }
+        }
+    }
+    return !addresses.empty();
+}
 bool CWallet::IsMine(const CTransaction& tx) const
 {
     for (const CTxOut& txout : tx.vout)
