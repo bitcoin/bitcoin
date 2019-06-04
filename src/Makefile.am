@@ -95,7 +95,7 @@ if BUILD_SYSCOIN_TX
 endif
 if ENABLE_WALLET
 if BUILD_SYSCOIN_WALLET
-  bin_PROGRAMS += syscoin-wallet syscoinbench
+  bin_PROGRAMS += syscoin-wallet
 endif
 endif
 
