@@ -3,13 +3,13 @@ Syscoin Core
 
 Setup
 ---------------------
-Syscoin Core is the original Syscoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Syscoin transactions (which is currently more than 100 GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Syscoin Core is the original Syscoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Syscoin transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download Syscoin Core, visit [syscoincore.org](https://syscoincore.org/en/releases/).
+To download Syscoin Core, visit [syscoincore.org](https://syscoincore.org/en/download/).
 
 Running
 ---------------------
-The following are some helpful notes on how to run Syscoin on your native platform.
+The following are some helpful notes on how to run Syscoin Core on your native platform.
 
 ### Unix
 
@@ -22,40 +22,42 @@ Unpack the files into a directory and run:
 
 Unpack the files into a directory, and then run syscoin-qt.exe.
 
-### OS X
+### macOS
 
-Drag Syscoin-Core to your applications folder, and then run Syscoin-Core.
+Drag Syscoin Core to your applications folder, and then run Syscoin Core.
 
 ### Need Help?
 
 * See the documentation at the [Syscoin Wiki](https://en.syscoin.it/wiki/Main_Page)
 for help and more information.
-* Ask for help on [#syscoin](http://webchat.freenode.net?channels=syscoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=syscoin).
-* Ask for help on the [SyscoinTalk](https://syscointalk.org/) forums, in the [Technical Support board](https://syscointalk.org/index.php?board=4.0).
+* Ask for help on [#syscoin](http://webchat.freenode.net?channels=syscoin) on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net?channels=syscoin).
+* Ask for help on the [BitcoinTalk](https://syscointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
 
 Building
 ---------------------
-The following are developer notes on how to build Syscoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Syscoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
-- [OS X Build Notes](build-osx.md)
+- [macOS Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
 - [Windows Build Notes](build-windows.md)
+- [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
-- [Gitian Building Guide](gitian-building.md)
+- [Gitian Building Guide (External Link)](https://github.com/bitcoin-core/docs/blob/master/gitian-building.md)
 
 Development
 ---------------------
 The Syscoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
+- [Productivity Notes](productivity.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/syscoin/doxygen/)
+- [Source Code Documentation (External Link)](https://dev.visucore.com/bitcoin/doxygen/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
-- [Travis CI](travis-ci.md)
+- [JSON-RPC Interface](JSON-RPC-interface.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
@@ -64,17 +66,19 @@ The Syscoin repo's [root README](/README.md) contains relevant information on th
 
 ### Resources
 * Discuss on the [SyscoinTalk](https://syscointalk.org/) forums, in the [Development & Technical Discussion board](https://syscointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #syscoin-core-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=syscoin-core-dev).
-* Discuss general Syscoin development on #syscoin-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=syscoin-dev).
+* Discuss project-specific development on #syscoin-core-dev on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net/?channels=syscoin-core-dev).
+* Discuss general Syscoin development on #syscoin-dev on Freenode. If you don't have an IRC client, use [webchat here](http://webchat.freenode.net/?channels=syscoin-dev).
 
 ### Miscellaneous
 - [Assets Attribution](assets-attribution.md)
+- [syscoin.conf Configuration File](syscoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [ZMQ](zmq.md)
+- [PSBT support](psbt.md)
 
 License
 ---------------------

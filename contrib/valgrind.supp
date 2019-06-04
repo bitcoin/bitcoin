@@ -1,4 +1,4 @@
-# Valgrind suppressions file for Bitcoin.
+# Valgrind suppressions file for Syscoin.
 #
 # Includes known Valgrind warnings in our dependencies that cannot be fixed
 # in-tree.

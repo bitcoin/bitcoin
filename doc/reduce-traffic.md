@@ -19,8 +19,7 @@ This is *not* a hard limit; only a threshold to minimize the outbound
 traffic. When the limit is about to be reached, the uploaded data is cut by no
 longer serving historic blocks (blocks older than one week).
 Keep in mind that new nodes require other nodes that are willing to serve
-historic blocks. **The recommended minimum is 144 blocks per day (max. 144MB
-per day)**
+historic blocks.
 
 Whitelisted peers will never be disconnected, although their traffic counts for
 calculating the target.
@@ -36,3 +35,16 @@ blocks and transactions to fewer nodes.
 Reducing the maximum connected nodes to a minimum could be desirable if traffic
 limits are tiny. Keep in mind that syscoin's trustless model works best if you are
 connected to a handful of nodes.
+
+## 4. Turn off transaction relay (`-blocksonly`)
+
+Forwarding transactions to peers increases the P2P traffic. To only sync blocks
+with other peers, you can disable transaction relay.
+
+Be reminded of the effects of this setting.
+
+- Fee estimation will no longer work.
+- Not relaying other's transactions could hurt your privacy if used while a
+  wallet is loaded or if you use the node to broadcast transactions.
+- It makes block propagation slower because compact block relay can only be
+  used when transaction relay is enabled.

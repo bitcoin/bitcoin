@@ -1,10 +1,9 @@
-// Copyright (c) 2014-2017 The Bitcoin Core developers
-// Copyright (c) 2014-2015 The Syscoin Core developers
+// Copyright (c) 2014-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_COMMON_H
-#define BITCOIN_CRYPTO_COMMON_H
+#ifndef SYSCOIN_CRYPTO_COMMON_H
+#define SYSCOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config/syscoin-config.h>
@@ -101,4 +100,4 @@ uint64_t static inline CountBits(uint64_t x)
     return ret;
 }
 
-#endif // BITCOIN_CRYPTO_COMMON_H
+#endif // SYSCOIN_CRYPTO_COMMON_H

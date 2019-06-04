@@ -1,6 +1,5 @@
 /**********************************************************************
  * Copyright (c) 2013-2015 Pieter Wuille                              *
-  * Copyright (c) 2014-2015 The Syscoin Core developers                *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -14,7 +13,7 @@
 #include "testrand.h"
 #include "hash.h"
 
-static secp256k1_rfc6979_hmac_sha256_t secp256k1_test_rng;
+static secp256k1_rfc6979_hmac_sha256 secp256k1_test_rng;
 static uint32_t secp256k1_test_rng_precomputed[8];
 static int secp256k1_test_rng_precomputed_used = 8;
 static uint64_t secp256k1_test_rng_integer;

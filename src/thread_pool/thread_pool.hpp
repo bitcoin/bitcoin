@@ -23,7 +23,7 @@ using ThreadPool = ThreadPoolImpl<FixedFunction<void(), 128>,
  * It is highly scalable and fast.
  * It is header only.
  * It implements both work-stealing and work-distribution balancing
- * startegies.
+ * strategies.
  * It implements cooperative scheduling strategy for tasks.
  */
 template <typename Task, template<typename> class Queue>
@@ -47,7 +47,7 @@ public:
     ~ThreadPoolImpl();
 
     /**
-     * @brief Move assignment implementaion.
+     * @brief Move assignment implementation.
      */
     ThreadPoolImpl& operator=(ThreadPoolImpl&& rhs) noexcept;
 

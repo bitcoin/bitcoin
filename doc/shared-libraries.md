@@ -7,11 +7,11 @@ The purpose of this library is to make the verification functionality that is cr
 
 ### API
 
-The interface is defined in the C header `syscoinconsensus.h` located in  `src/script/syscoinconsensus.h`.
+The interface is defined in the C header `syscoinconsensus.h` located in `src/script/syscoinconsensus.h`.
 
 #### Version
 
-`syscoinconsensus_version` returns an `unsigned int` with the API version *(currently at an experimental `0`)*.
+`syscoinconsensus_version` returns an `unsigned int` with the API version *(currently `1`)*.
 
 #### Script Validation
 

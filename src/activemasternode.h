@@ -3,13 +3,13 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef ACTIVEMASTERNODE_H
-#define ACTIVEMASTERNODE_H
+#ifndef SYSCOIN_ACTIVEMASTERNODE_H
+#define SYSCOIN_ACTIVEMASTERNODE_H
 
-#include "chainparams.h"
-#include "key.h"
-#include "net.h"
-#include "primitives/transaction.h"
+#include <chainparams.h>
+#include <key.h>
+#include <net.h>
+#include <primitives/transaction.h>
 
 class CActiveMasternode;
 
@@ -37,9 +37,7 @@ private:
     masternode_type_enum_t eType;
 
     bool fPingerEnabled;
-
-    /// Ping Masternode
-    bool SendMasternodePing(CConnman& connman);
+    
 
     //  sentinel ping data
     int64_t nSentinelPingTime;
@@ -56,7 +54,8 @@ public:
 
     int nState; // should be one of ACTIVE_MASTERNODE_XXXX
     std::string strNotCapableReason;
-
+    /// Ping Masternode
+    bool SendMasternodePing(CConnman& connman);
 
     CActiveMasternode()
         : eType(MASTERNODE_UNKNOWN),
@@ -84,4 +83,4 @@ private:
     void ManageStateRemote();
 };
 
-#endif
+#endif // SYSCOIN_ACTIVEMASTERNODE_H

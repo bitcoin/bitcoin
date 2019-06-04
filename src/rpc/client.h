@@ -1,14 +1,13 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2016 The Syscoin Core developers
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_RPCCLIENT_H
-#define SYSCOIN_RPCCLIENT_H
+#ifndef SYSCOIN_RPC_CLIENT_H
+#define SYSCOIN_RPC_CLIENT_H
 
 #include <univalue.h>
-class JSONRPCRequest;
+
 /** Convert positional arguments to command-specific RPC representation */
 UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 
@@ -19,6 +18,5 @@ UniValue RPCConvertNamedValues(const std::string& strMethod, const std::vector<s
  * as well as objects and arrays.
  */
 UniValue ParseNonRFCJSONValue(const std::string& strVal);
-extern UniValue getaddressbalance(const JSONRPCRequest& request);
-extern UniValue getaddressutxos(const JSONRPCRequest& request);
-#endif // SYSCOIN_RPCCLIENT_H
+
+#endif // SYSCOIN_RPC_CLIENT_H

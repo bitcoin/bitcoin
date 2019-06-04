@@ -1,89 +1,125 @@
-Syscoin Core version 0.12.1 is now available from:
+*After branching off for a major version release of Bitcoin Core, use this
+template to create the initial release notes draft.*
 
-  <https://www.syscoin.org/downloads/>
+*The release notes draft is a temporary file that can be added to by anyone. See
+[/doc/developer-notes.md#release-notes](/doc/developer-notes.md#release-notes)
+for the process.*
 
+*Create the draft, named* "*version* Release Notes Draft"
+*(e.g. "0.20.0 Release Notes Draft"), as a collaborative wiki in:*
 
+https://github.com/bitcoin-core/bitcoin-devwiki/wiki/
 
+*Before the final release, move the notes back to this git repository.*
 
-Older releases
---------------
+*version* Release Notes Draft
+===============================
 
-Syscoin was previously known as Darkcoin.
+Syscoin Core version *version* is now available from:
 
-Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
-which was first released on Jan/18/2014.
+  <https://syscoincore.org/bin/syscoin-core-*version*/>
 
-### Downgrade to a version < 0.12.0
+This is a new major version release, including new features, various bugfixes
+and performance improvements, as well as updated translations.
 
-Because release 0.12.0 and later will obfuscate the chainstate on every
-fresh sync or reindex, the chainstate is not backwards-compatible with
-pre-0.12 versions of Syscoin Core or other software.
+Please report bugs using the issue tracker at GitHub:
 
-If you want to downgrade after you have done a reindex with 0.12.0 or later,
-you will need to reindex when you first start Syscoin Core version 0.11 or
-earlier.
+  <https://github.com/syscoin/syscoin/issues>
+
+To receive security and update notifications, please subscribe to:
+
+  <https://syscoincore.org/en/list/announcements/join/>
+
+How to Upgrade
+==============
+
+If you are running an older version, shut it down. Wait until it has completely
+shut down (which might take a few minutes for older versions), then run the
+installer (on Windows) or just copy over `/Applications/Syscoin-Qt` (on Mac)
+or `syscoind`/`syscoin-qt` (on Linux).
+
+Upgrading directly from a version of Syscoin Core that has reached its EOL is
+possible, but might take some time if the datadir needs to be migrated.  Old
+wallet versions of Syscoin Core are generally supported.
+
+Downgrading warning
+-------------------
+
+The chainstate database for this release is not compatible with previous
+releases, so if you run 0.15 and then decide to switch back to any
+older version, you will need to run the old release with the `-reindex-chainstate`
+option to rebuild the chainstate data structures in the old format.
+
+If your node has pruning enabled, this will entail re-downloading and
+processing the entire blockchain.
+
+Compatibility
+==============
+
+Syscoin Core is supported and extensively tested on operating systems using
+the Linux kernel, macOS 10.10+, and Windows 7 and newer.  It is not recommended
+to use Syscoin Core on unsupported systems.
+
+Syscoin Core should also work on most other Unix-like systems but is not
+frequently tested on them.
+
+From 0.17.0 onwards, macOS <10.10 is no longer supported.  0.17.0 is
+built using Qt 5.9.x, which doesn't support versions of macOS older than
+10.10.  Additionally, Syscoin Core does not yet change appearance when
+macOS "dark mode" is activated.
+
+In addition to previously-supported CPU platforms, this release's
+pre-compiled distribution also provides binaries for the RISC-V
+platform.
 
 Notable changes
 ===============
 
-Example item
----------------------------------------
+New RPCs
+--------
 
-Example text.
+- `getbalances` returns an object with all balances (`mine`,
+  `untrusted_pending` and `immature`). Please refer to the RPC help of
+  `getbalances` for details. The new RPC is intended to replace
+  `getunconfirmedbalance` and the balance fields in `getwalletinfo`, as well as
+  `getbalance`. The old calls may be removed in a future version.
 
-0.12.1 Change log
+Updated RPCs
+------------
+
+Note: some low-level RPC changes mainly useful for testing are described in the
+Low-level Changes section below.
+
+* The `sendmany` RPC had an argument `minconf` that was not well specified and
+  would lead to RPC errors even when the wallet's coin selection would succeed.
+  The `sendtoaddress` RPC never had this check, so to normalize the behavior,
+  `minconf` is now ignored in `sendmany`. If the coin selection does not
+  succeed due to missing coins, it will still throw an RPC error. Be reminded
+  that coin selection is influenced by the `-spendzeroconfchange`,
+  `-limitancestorcount`, `-limitdescendantcount` and `-walletrejectlongchains`
+  command line arguments.
+
+
+Low-level changes
 =================
 
-Detailed release notes follow. This overview includes changes that affect
-behavior, not code moves, refactors and string updates. For convenience in locating
-the code changes and accompanying discussion, both the pull request and
-git merge commit are mentioned.
+Configuration
+------------
 
-### RPC and REST
+* An error is issued where previously a warning was issued when a setting in
+  the config file was specified in the default section, but not overridden for
+  the selected network. This change takes only effect if the selected network
+  is not mainnet.
 
-Asm script outputs replacements for OP_NOP2 and OP_NOP3
--------------------------------------------------------
+Wallet
+------
 
-OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
-65](https://github.com/syscoin/bips/blob/master/bip-0065.mediawiki)
-
-OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP 
-112](https://github.com/syscoin/bips/blob/master/bip-0112.mediawiki)
-
-The following outputs are affected by this change:
-- RPC `getrawtransaction` (in verbose mode)
-- RPC `decoderawtransaction`
-- RPC `decodescript`
-- REST `/rest/tx/` (JSON format)
-- REST `/rest/block/` (JSON format when including extended tx details)
-- `syscoin-tx -json`
-
-### ZMQ
-
-Each ZMQ notification now contains an up-counting sequence number that allows
-listeners to detect lost notifications.
-The sequence number is always the last element in a multi-part ZMQ notification and
-therefore backward compatible.
-Each message type has its own counter.
-(https://github.com/syscoin/syscoin/pull/7762)
-
-### Configuration and command-line options
-
-### Block and transaction handling
-
-### P2P protocol and network code
-
-### Validation
-
-### Build system
-
-### Wallet
-
-### GUI
-
-### Tests and QA
-
-### Miscellaneous
+- When in pruned mode, a rescan that was triggered by an `importwallet`,
+  `importpubkey`, `importaddress`, or `importprivkey` RPC will only fail when
+  blocks have been pruned. Previously it would fail when `-prune` has been set.
+  This change allows to set `-prune` to a high value (e.g. the disk size) and
+  the calls to any of the import RPCs would fail when the first block is
+  pruned.
 
 Credits
 =======
@@ -91,25 +127,4 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/syscoin/).
-
-Darkcoin tree 0.9.x was the open source implementation of masternodes based on
-the 0.8.x tree and was first released on Mar/13/2014.
-
-Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
-which was released open source on Sep/25/2014.
-
-Syscoin Core tree 0.11.x was a fork of Syscoin Core tree 0.9, Darkcoin was rebranded
-to Syscoin.
-
-Syscoin Core tree 0.12.0.x was a fork of Syscoin Core tree 0.10.
-
-These release are considered obsolete. Old changelogs can be found here:
-
-- [v0.12.0](release-notes/syscoin/release-notes-0.12.0.md) released ???/??/2015
-- [v0.11.2](release-notes/syscoin/release-notes-0.11.2.md) released Mar/25/2015
-- [v0.11.1](release-notes/syscoin/release-notes-0.11.1.md) released Feb/10/2015
-- [v0.11.0](release-notes/syscoin/release-notes-0.11.0.md) released Jan/15/2015
-- [v0.10.x](release-notes/syscoin/release-notes-0.10.0.md) released Sep/25/2014
-- [v0.9.x](release-notes/syscoin/release-notes-0.9.0.md) released Mar/13/2014
-
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/syscoin/syscoin/).

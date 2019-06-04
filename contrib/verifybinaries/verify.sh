@@ -1,5 +1,5 @@
-#!/bin/bash
-# Copyright (c) 2016 The Bitcoin Core developers
+#!/usr/bin/env bash
+# Copyright (c) 2016 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,6 +11,7 @@
 ###   The script returns 0 if everything passes the checks. It returns 1 if either the
 ###   signature check or the hash check doesn't pass. If an error occurs the return value is 2
 
+export LC_ALL=C
 function clean_up {
    for file in $*
    do
@@ -123,7 +124,7 @@ if [ $RET -ne 0 ]; then
       echo "Bad signature."
    elif [ $RET -eq 2 ]; then
       #or if a gpg error has occurred
-      echo "gpg error. Do you have the Bitcoin Core binary release signing key installed?"
+      echo "gpg error. Do you have the Syscoin Core binary release signing key installed?"
    fi
 
    echo "gpg output:"

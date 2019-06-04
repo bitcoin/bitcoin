@@ -1,14 +1,13 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
-// Copyright (c) 2014-2017 The Syscoin Core developers
+// Copyright (c) 2009-2013 The Syscoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef SYSCOIN_PRIMITIVES_PUREHEADER_H
 #define SYSCOIN_PRIMITIVES_PUREHEADER_H
-#include "serialize.h"
-#include "uint256.h"
+
+#include <serialize.h>
+#include <uint256.h>
 
 /**
  * A block header without auxpow information.  This "intermediate step"
@@ -107,7 +106,10 @@ public:
      * Extract the chain ID.
      * @return The chain ID encoded in the version.
      */
-    int32_t GetChainId() const;
+    inline int32_t GetChainId() const
+    {
+        return nVersion / VERSION_CHAIN_START;
+    }
 
     /**
      * Set the chain ID.  This is used for the test suite.

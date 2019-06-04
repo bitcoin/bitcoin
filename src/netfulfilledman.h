@@ -3,12 +3,12 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef NETFULFILLEDMAN_H
-#define NETFULFILLEDMAN_H
+#ifndef SYSCOIN_NETFULFILLEDMAN_H
+#define SYSCOIN_NETFULFILLEDMAN_H
 
-#include "netaddress.h"
-#include "serialize.h"
-#include "sync.h"
+#include <netaddress.h>
+#include <serialize.h>
+#include <sync.h>
 
 class CNetFulfilledRequestManager;
 extern CNetFulfilledRequestManager netfulfilledman;
@@ -49,4 +49,4 @@ public:
     void DoMaintenance() { CheckAndRemove(); }
 };
 
-#endif
+#endif // SYSCOIN_NETFULFILLEDMAN_H

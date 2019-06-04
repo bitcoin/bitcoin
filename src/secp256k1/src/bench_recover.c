@@ -1,6 +1,5 @@
 /**********************************************************************
  * Copyright (c) 2014-2015 Pieter Wuille                              *
-  * Copyright (c) 2014-2015 The Syscoin Core developers                *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -14,11 +13,11 @@ typedef struct {
     secp256k1_context *ctx;
     unsigned char msg[32];
     unsigned char sig[64];
-} bench_recover_t;
+} bench_recover_data;
 
 void bench_recover(void* arg) {
     int i;
-    bench_recover_t *data = (bench_recover_t*)arg;
+    bench_recover_data *data = (bench_recover_data*)arg;
     secp256k1_pubkey pubkey;
     unsigned char pubkeyc[33];
 
@@ -39,7 +38,7 @@ void bench_recover(void* arg) {
 
 void bench_recover_setup(void* arg) {
     int i;
-    bench_recover_t *data = (bench_recover_t*)arg;
+    bench_recover_data *data = (bench_recover_data*)arg;
 
     for (i = 0; i < 32; i++) {
         data->msg[i] = 1 + i;
@@ -50,7 +49,7 @@ void bench_recover_setup(void* arg) {
 }
 
 int main(void) {
-    bench_recover_t data;
+    bench_recover_data data;
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
 

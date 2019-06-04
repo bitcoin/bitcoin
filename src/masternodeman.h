@@ -3,11 +3,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef MASTERNODEMAN_H
-#define MASTERNODEMAN_H
+#ifndef SYSCOIN_MASTERNODEMAN_H
+#define SYSCOIN_MASTERNODEMAN_H
 
-#include "masternode.h"
-#include "sync.h"
+#include <masternode.h>
+#include <sync.h>
 
 class CMasternodeMan;
 class CConnman;
@@ -74,12 +74,10 @@ private:
     bool fMasternodesRemoved;
 
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
-
+    
     int64_t nLastSentinelPingTime;
 
     friend class CMasternodeSync;
-    /// Find an entry
-    CMasternode* Find(const COutPoint& outpoint);
 
     bool GetMasternodeScores(const uint256& nBlockHash, score_pair_vec_t& vecMasternodeScoresRet, int nMinProtocol = 0);
 
@@ -95,8 +93,6 @@ public:
     std::map<uint256, CMasternodePing> mapSeenMasternodePing;
     // Keep track of all verifications I've seen
     std::map<uint256, CMasternodeVerification> mapSeenMasternodeVerification;
-    // keep track of dsq count to prevent masternodes from gaming darksend queue
-    int64_t nDsqCount;
 
 
     ADD_SERIALIZE_METHODS;
@@ -120,7 +116,6 @@ public:
         READWRITE(mMnbRecoveryRequests);
         READWRITE(mMnbRecoveryGoodReplies);
         READWRITE(nLastSentinelPingTime);
-        READWRITE(nDsqCount);
 
         READWRITE(mapSeenMasternodeBroadcast);
         READWRITE(mapSeenMasternodePing);
@@ -130,7 +125,9 @@ public:
     }
 
     CMasternodeMan();
-
+    /// Find an entry
+    CMasternode* Find(const COutPoint& outpoint);
+    
     /// Add an entry
     bool Add(CMasternode &mn);
 
@@ -139,11 +136,9 @@ public:
     void AskForMnb(CNode *pnode, const uint256 &hash);
 
     bool PoSeBan(const COutPoint &outpoint);
-    bool AllowMixing(const COutPoint &outpoint);
-    bool DisallowMixing(const COutPoint &outpoint);
 
     /// Check all Masternodes
-    void Check();
+    void Check(bool fForce = false);
 
     /// Check all Masternodes and remove inactive
     void CheckAndRemove(CConnman& connman);
@@ -226,14 +221,14 @@ public:
         return vecTmp;;
     }
 
-    bool IsSentinelPingActive();
+    bool IsSentinelPingActive();    
     void UpdateLastSentinelPingTime();
     bool AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash);
     void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
     void CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce);
 
-    bool IsMasternodePingedWithin(const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1);
+    bool IsMasternodePingedWithin(const CMasternode* pmn, const COutPoint& outpoint, int nSeconds, int64_t nTimeToCheckAt = -1) const;
     void SetMasternodeLastPing(const COutPoint& outpoint, const CMasternodePing& mnp);
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
@@ -250,4 +245,4 @@ public:
     void DoMaintenance(CConnman &connman);
 };
 
-#endif
+#endif // SYSCOIN_MASTERNODEMAN_H

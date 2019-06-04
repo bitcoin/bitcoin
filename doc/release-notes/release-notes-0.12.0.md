@@ -104,9 +104,6 @@ announcing their headers directly, instead of just announcing the hash. In a
 reorganization, all new headers are sent, instead of just the new tip. This
 can often prevent an extra roundtrip before the actual block is downloaded.
 
-With this change, pruning nodes are now able to relay new blocks to compatible
-peers.
-
 Memory pool limiting
 --------------------
 
@@ -187,6 +184,14 @@ combination of data pushes and numeric constant opcodes (OP_1 to OP_16) after
 the OP_RETURN. The limit on OP_RETURN output size is now applied to the entire
 serialized scriptPubKey, 83 bytes by default. (the previous 80 byte default plus
 three bytes overhead)
+
+Relay: New and only new blocks relayed when pruning
+---------------------------------------------------
+
+When running in pruned mode, the client will now relay new blocks. When
+responding to the `getblocks` message, only hashes of blocks that are on disk
+and are likely to remain there for some reasonable time window (1 hour) will be
+returned (previously all relevant hashes were returned).
 
 Relay and Mining: Priority transactions
 ---------------------------------------
@@ -405,9 +410,9 @@ arbitrary TCP connections inside SSL. On e.g. Ubuntu it can be installed with:
 
     sudo apt-get install stunnel4
 
-Then, to tunnel a SSL connection on 28332 to a RPC server bound on localhost on port 18332 do:
+Then, to tunnel a SSL connection on 28370 to a RPC server bound on localhost on port 18370 do:
 
-    stunnel -d 28332 -r 127.0.0.1:18332 -p stunnel.pem -P ''
+    stunnel -d 28370 -r 127.0.0.1:18370 -p stunnel.pem -P ''
 
 It can also be set up system-wide in inetd style.
 
@@ -425,8 +430,8 @@ caching. A sample config for apache2 could look like:
     SSLCertificateKeyFile /etc/apache2/ssl/server.key
 
     <Location /syscoinrpc>
-        ProxyPass http://127.0.0.1:8332/
-        ProxyPassReverse http://127.0.0.1:8332/
+        ProxyPass http://127.0.0.1:8370/
+        ProxyPassReverse http://127.0.0.1:8370/
         # optional enable digest auth
         # AuthType Digest
         # ...
@@ -841,7 +846,7 @@ Thanks to everyone who directly contributed to this release:
 - kazcw
 - Kevin Cooper
 - lpescher
-- Luke Syscoinjr
+- Luke Dashjr
 - MarcoFalke
 - Mark Friedenbach
 - Matt
@@ -887,5 +892,3 @@ Thanks to everyone who directly contributed to this release:
 - zathras-crypto
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/syscoin/).
-
-

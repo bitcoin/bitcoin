@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "test/test_syscoin_services.h"
-#include "data/utxo.json.h"
-#include "utiltime.h"
-#include "rpc/server.h"
+#include <test/test_syscoin_services.h>
+#include <data/utxo.json.h>
+#include <util/time.h>
+#include <rpc/server.h>
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
 using namespace std;
@@ -21,7 +21,7 @@ struct PaymentAmount
 void SendSnapShotPayment(const std::string &strSend, const std::string &asset, const std::string &alias, const std::string &memo)
 {
 	currentTx++;
-	std::string strSendMany = "assetsend " + asset + " " + strSend + "}]\" " + memo + " ''";
+	std::string strSendMany = "assetsendmany " + asset + " " + strSend + "}]\" " + memo + " ''";
 	UniValue r;
 	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
 }
@@ -33,7 +33,7 @@ void GenerateAirDrop(const std::vector<PaymentAmount> &paymentAmounts, const CAm
 	string assetName = "asset";
 	string aliasName = "alias";
 	string memo = assetName+"-AIRDROP";
-	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "assetinfo " + assetName + " true", false));
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "assetinfo " + assetName, false));
 
 	if (!find_value(r.get_obj(), "inputs").get_array().empty())
 	{
@@ -107,13 +107,13 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts, CAmount& nTotal)
 		}
 		nTotal += amountInSys1;
 		BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "validateaddress " + test[0].get_str(), false));
-		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() !+ "");
+		BOOST_CHECK(find_value(r.get_obj(), "alias").get_str() != "");
 		countTx++;
 		payment.alias = find_value(r.get_obj(), "alias").get_str();
         payment.amount = amountInSys1;
 		paymentAmounts.push_back(payment);
     }
-	printf("Read %d total utxo sets, rejected %d, valid aliases %d, total amount %lld\n", rejectTx+countTx, rejectTx, countTx);
+	printf("Read %d total utxo sets, rejected %d, total amount %lld\n", rejectTx+countTx, rejectTx, countTx);
 }
 bool IsMainNetAlreadyCreated()
 {
