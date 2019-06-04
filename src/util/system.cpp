@@ -109,7 +109,6 @@ ArgsManager gArgs;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
         ZeroMemory(&si, sizeof(si));
-        si.cb = sizeof(si);
         app = "\""+app+"\"";
         //Prepare CreateProcess args
         std::wstring app_w(app.length(), L' '); // Make room for characters
@@ -121,7 +120,7 @@ ArgsManager gArgs;
         std::wstring input = app_w + L" " + arg_w;
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW escaped app %s arg %s\n",app, arg);
+        LogPrintf("CreateProcessW app %s arg %s\n",app, arg);
         int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
               CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
@@ -1159,14 +1158,19 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
 
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
+    attempt1 = attempt1.make_preferred();
     // current executable path + bin/[os]/syscoin-geth
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
+    attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = gethFilename;
+    attempt3 = attempt3.make_preferred();
     // $path + bin/[os]/syscoin-geth
     fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
+    attempt4 = attempt4.make_preferred();
     // /usr/local/bin/syscoin-geth
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
+    attempt5 = attempt5.make_preferred();
 
 
     
@@ -1357,14 +1361,19 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
 
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
+    attempt1 = attempt1.make_preferred();
     // current executable path + bin/[os]/syscoin-relayer
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
+    attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = relayerFilename;
+    attempt3 = attempt3.make_preferred();
     // $path + bin/[os]/syscoin-relayer
     fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
+    attempt4 = attempt4.make_preferred();
     // /usr/local/bin/syscoin-relayer
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
+    attempt5 = attempt5.make_preferred();
 
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
