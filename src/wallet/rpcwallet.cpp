@@ -1075,7 +1075,6 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
         filtered_address = DecodeDestination(params[3].get_str());
         has_filtered_address = true;
     }
-
     // Tally
     std::map<CTxDestination, tallyitem> mapTally;
     for (const std::pair<const uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
@@ -1089,6 +1088,22 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
         if (nDepth < nMinDepth)
             continue;
 
+        // SYSCOIN if asset send check receivers instead of syscoin dust output
+        std::vector<IsAssetMineSelection> IsAssetMineResults;
+        if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
+            for(auto isMineResult: IsAssetMineResults){
+                if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
+                    continue;
+                }
+                tallyitem& item = mapTally[isMineResult.destination];
+                item.nAmount += isMineResult.amount;
+                item.nConf = std::min(item.nConf, nDepth);
+                item.txids.push_back(wtx.GetHash());
+                if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
+                    item.fIsWatchonly = true;
+            }          
+            continue;
+        }
         for (const CTxOut& txout : wtx.tx->vout)
         {
             CTxDestination address;
