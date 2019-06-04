@@ -109,7 +109,7 @@ ArgsManager gArgs;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
         ZeroMemory(&si, sizeof(si));
-        GetStartupInfo (&si);
+        GetStartupInfoW (&si);
         si.cb = sizeof(si); 
         app = std::replace(app.begin(), app.end(), '\\', "\\\\");
         app = "\"" + app + "\"";
