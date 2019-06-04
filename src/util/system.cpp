@@ -125,15 +125,15 @@ ArgsManager gArgs;
         const wchar_t* app_const = app_w.c_str();
         LogPrintf("CreateProcessW app %s arg %s\n",app, arg);
         int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
-              CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+              CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
         if(!result)
         {
             LogPrintf("CreateProcess failed (%d)\n", GetLastError());
             return 0;
         }
         pid_t pid = (pid_t)pi.dwProcessId;
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
+        //CloseHandle(pi.hProcess);
+        //CloseHandle(pi.hThread);
         return pid;
     }
 #endif
