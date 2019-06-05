@@ -228,7 +228,7 @@ const char *uvTypeName(UniValue::VType t)
     }
 
     // not reached
-    return NULL;
+    return nullptr;
 }
 
 const UniValue& find_value(const UniValue& obj, const std::string& name)
