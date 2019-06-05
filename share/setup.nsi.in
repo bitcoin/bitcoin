@@ -77,8 +77,8 @@ Section -Main SEC0000
     File /oname=COPYING.txt @abs_top_srcdir@/COPYING
     File /oname=readme.txt @abs_top_srcdir@/doc/README_windows.txt
     SetOutPath $INSTDIR\resources\win64
-    File @abs_top_srcdir@/release/syscoin-relayer.node@EXEEXT@
-    File @abs_top_srcdir@/release/syscoin-geth.node@EXEEXT@
+    File @abs_top_srcdir@/release/srelayer.node@EXEEXT@
+    File @abs_top_srcdir@/release/sgeth.node@EXEEXT@
     File @abs_top_srcdir@/release/bufferutil.node
     File @abs_top_srcdir@/release/scrypt.node
     File @abs_top_srcdir@/release/sha3.node
@@ -134,8 +134,8 @@ done${UNSECTION_ID}:
 # Uninstaller sections
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK $INSTDIR\@SYSCOIN_GUI_NAME@@EXEEXT@
-    Delete /REBOOTOK $INSTDIR\resources\win64\syscoin-relayer.node@EXEEXT@
-    Delete /REBOOTOK $INSTDIR\resources\win64\syscoin-geth.node@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\resources\win64\srelayer.node@EXEEXT@
+    Delete /REBOOTOK $INSTDIR\resources\win64\sgeth.node@EXEEXT@
     Delete /REBOOTOK $INSTDIR\resources\win64\bufferutil.node
     Delete /REBOOTOK $INSTDIR\resources\win64\scrypt.node
     Delete /REBOOTOK $INSTDIR\resources\win64\sha3.node

@@ -81,8 +81,8 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
-	cp $(top_builddir)/src/resources/win64/syscoin-geth.node.exe $(top_builddir)/release
-	cp $(top_builddir)/src/resources/win64/syscoin-relayer.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/sgeth.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/srelayer.node.exe $(top_builddir)/release
 	cp $(top_builddir)/src/resources/win64/sha3.node $(top_builddir)/release
 	cp $(top_builddir)/src/resources/win64/bufferutil.node $(top_builddir)/release
 	cp $(top_builddir)/src/resources/win64/scrypt.node $(top_builddir)/release
@@ -111,8 +111,8 @@ $(OSX_APP)/Contents/MacOS/Syscoin-Qt: all-recursive
 	$(MKDIR_P) $(@D)
 	$(MKDIR_P) $(@D)/resources
 	$(MKDIR_P) $(@D)/resources/osx
-	cp $(top_builddir)/src/resources/osx/syscoin-geth.node $(@D)/resources/osx
-	cp $(top_builddir)/src/resources/osx/syscoin-relayer.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/sgeth.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/srelayer.node $(@D)/resources/osx
 	cp $(top_builddir)/src/resources/osx/sha3.node $(@D)/resources/osx
 	cp $(top_builddir)/src/resources/osx/bufferutil.node $(@D)/resources/osx
 	cp $(top_builddir)/src/resources/osx/scrypt.node $(@D)/resources/osx
