@@ -1085,27 +1085,27 @@ void KillProcess(const pid_t& pid){
 std::string GetGethFilename(){
     // For Windows:
     #ifdef WIN32
-       return "syscoin-geth.exe";
+       return "syscoin-geth.node.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "syscoin-geth";
+        return "syscoin-geth.node";
     #else
         // Linux
-        return "syscoin-geth";
+        return "syscoin-geth.node";
     #endif
 }
 std::string GetGethAndRelayerFilepath(){
     // For Windows:
     #ifdef WIN32
-       return "/bin/win64/";
+       return "/resources/win64/";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "/bin/osx/";
+        return "/resources/osx/";
     #else
         // Linux
-        return "/bin/linux/";
+        return "/resources/linux/";
     #endif
 }
 bool StopGethNode(pid_t &pid)
@@ -1161,16 +1161,16 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/syscoin-geth
+    // current executable path + resources/[os]/syscoin-geth.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = gethFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/syscoin-geth
+    // $path + resources/[os]/syscoin-geth.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/syscoin-geth
+    // /usr/local/bin/syscoin-geth.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt5 = attempt5.make_preferred();
 
@@ -1198,9 +1198,9 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     if( pid == 0 ) {
         // Order of looking for the geth binary:
         // 1. current executable directory
-        // 2. current executable directory/bin/[os]/syscoin_geth
+        // 2. current executable directory/resources/[os]/syscoin_geth
         // 3. $path
-        // 4. $path/bin/[os]/syscoin_geth
+        // 4. $path/resources/[os]/syscoin_geth
         // 5. /usr/local/bin/syscoin_geth
         std::string portStr = std::to_string(websocketport);
         char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
@@ -1301,14 +1301,14 @@ fs::path GetRelayerPidFile()
 std::string GetRelayerFilename(){
     // For Windows:
     #ifdef WIN32
-       return "syscoin-relayer.exe";
+       return "syscoin-relayer.node.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "syscoin-relayer";
+        return "syscoin-relayer.node";
     #else
         // Linux
-        return "syscoin-relayer";
+        return "syscoin-relayer.node";
     #endif
 }
 bool StopRelayerNode(pid_t &pid)
@@ -1364,16 +1364,16 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/syscoin-relayer
+    // current executable path + resources/[os]/syscoin-relayer.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = relayerFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/syscoin-relayer
+    // $path + resources/[os]/syscoin-relayer.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/syscoin-relayer
+    // /usr/local/bin/syscoin-relayer.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt5 = attempt5.make_preferred();
 
@@ -1395,9 +1395,9 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
         if( pid == 0 ) {
             // Order of looking for the relayer binary:
             // 1. current executable directory
-            // 2. current executable directory/bin/[os]/syscoin_relayer
+            // 2. current executable directory/resources/[os]/syscoin_relayer
             // 3. $path
-            // 4. $path/bin/[os]/syscoin_relayer
+            // 4. $path/resources/[os]/syscoin_relayer
             // 5. /usr/local/bin/syscoin_relayer
             std::string portStr = std::to_string(websocketport);
             std::string rpcPortStr = std::to_string(rpcport);

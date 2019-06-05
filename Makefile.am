@@ -81,12 +81,12 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/syscoin-geth.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/syscoin-relayer.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/sha3.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/bufferutil.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/scrypt.node $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/validation.node $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/syscoin-geth.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/syscoin-relayer.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/sha3.node $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/bufferutil.node $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/scrypt.node $(top_builddir)/release
+	cp $(top_builddir)/src/resources/win64/validation.node $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
@@ -109,12 +109,14 @@ $(OSX_APP)/Contents/Resources/syscoin.icns: $(OSX_INSTALLER_ICONS)
 
 $(OSX_APP)/Contents/MacOS/Syscoin-Qt: all-recursive
 	$(MKDIR_P) $(@D)
-	cp $(top_builddir)/src/bin/osx/syscoin-geth $(@D)
-	cp $(top_builddir)/src/bin/osx/syscoin-relayer $(@D)
-	cp $(top_builddir)/src/bin/osx/sha3.node $(@D)
-	cp $(top_builddir)/src/bin/osx/bufferutil.node $(@D)
-	cp $(top_builddir)/src/bin/osx/scrypt.node $(@D)
-	cp $(top_builddir)/src/bin/osx/validation.node $(@D)
+	$(MKDIR_P) $(@D)/resources
+	$(MKDIR_P) $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/syscoin-geth.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/syscoin-relayer.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/sha3.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/bufferutil.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/scrypt.node $(@D)/resources/osx
+	cp $(top_builddir)/src/resources/osx/validation.node $(@D)/resources/osx
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $(SYSCOIN_QT_BIN) $@
 
 $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
