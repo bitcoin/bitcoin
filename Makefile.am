@@ -97,12 +97,12 @@ $(OSX_APP)/Contents/PkgInfo:
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
-	cp $(top_builddir)/bin/osx/sgeth.node $(@D)
-	cp $(top_builddir)/bin/osx/srelayer.node $(@D)
-	cp $(top_builddir)/bin/osx/sha3.node $(@D)
-	cp $(top_builddir)/bin/osx/bufferutil.node $(@D)
-	cp $(top_builddir)/bin/osx/scrypt.node $(@D)
-	cp $(top_builddir)/bin/osx/validation.node $(@D)
+	cp $(top_builddir)/src/bin/osx/sgeth.node $(@D)
+	cp $(top_builddir)/src/bin/osx/srelayer.node $(@D)
+	cp $(top_builddir)/src/bin/osx/sha3.node $(@D)
+	cp $(top_builddir)/src/bin/osx/bufferutil.node $(@D)
+	cp $(top_builddir)/src/bin/osx/scrypt.node $(@D)
+	cp $(top_builddir)/src/bin/osx/validation.node $(@D)
 	@touch $@ 
 
 $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
