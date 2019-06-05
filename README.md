@@ -31,7 +31,9 @@ Mineable either exclusively or via merge-mining any SHA256 PoW coin
 Masternode collateral requirement: 100000 Syscoins
 Masternode seniority: 35% increase after 1 year, 100% increase after 2.5 years
 Governance proposals payout schedule: every month
+There is a 5% deflation per year on Syscoin
 Governance funding per round (Approx. 2m Syscoins per month to start)
+Governance funding gets 5% deflation per round (superblock)
 Consensus enforced segwit (all transactions have witness programs except coinbase)
 Codebase based off of latest Bitcoin Core (https://github.com/bitcoin/bitcoin)
 Services include:
@@ -42,6 +44,24 @@ Trustless sidechain access to Ethereum and back through a custom permissionless/
 Decentralized governance (blockchain pays for work via proposals and masternode votes)
 Digital asset creation and management
 
+Governance formula:
+
+ ```       
+  A = Accrued Amount (principal + interest)
+  P = Principal Amount
+  r = Annual Monthly Interest Rate as a decimal
+  r = R/100
+  t = Time Involved in months(superblock number).
+  n = number of compounding periods per unit t; at the END of each period (1 in our case)
+  nSuperblock = Superblock index in question
+
+  let A = 2000000.0 COINS;
+  let r = 0.05;
+  let t = nSuperblock - 1;
+  let P = A * pow(1.0 - r, t);
+
+  P is the amount of funding for nSuperblock round
+```
 License
 -------
 
