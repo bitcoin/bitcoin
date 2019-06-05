@@ -1085,14 +1085,14 @@ void KillProcess(const pid_t& pid){
 std::string GetGethFilename(){
     // For Windows:
     #ifdef WIN32
-       return "syscoin-geth.node.exe";
+       return "sgeth.node.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "syscoin-geth.node";
+        return "sgeth.node";
     #else
         // Linux
-        return "syscoin-geth.node";
+        return "sgeth.node";
     #endif
 }
 std::string GetGethAndRelayerFilepath(){
@@ -1161,16 +1161,16 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + resources/[os]/syscoin-geth.node
+    // current executable path + resources/[os]/sgeth.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = gethFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + resources/[os]/syscoin-geth.node
+    // $path + resources/[os]/sgeth.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/syscoin-geth.node
+    // /usr/local/bin/sgeth.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt5 = attempt5.make_preferred();
 
@@ -1301,14 +1301,14 @@ fs::path GetRelayerPidFile()
 std::string GetRelayerFilename(){
     // For Windows:
     #ifdef WIN32
-       return "syscoin-relayer.node.exe";
+       return "srelayer.node.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "syscoin-relayer.node";
+        return "srelayer.node";
     #else
         // Linux
-        return "syscoin-relayer.node";
+        return "srelayer.node";
     #endif
 }
 bool StopRelayerNode(pid_t &pid)
@@ -1364,16 +1364,16 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + resources/[os]/syscoin-relayer.node
+    // current executable path + resources/[os]/srelayer.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = relayerFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + resources/[os]/syscoin-relayer.node
+    // $path + resources/[os]/srelayer.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/syscoin-relayer.node
+    // /usr/local/bin/srelayer.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt5 = attempt5.make_preferred();
 

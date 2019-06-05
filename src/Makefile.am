@@ -733,15 +733,15 @@ endif
 # syscoin pre-built binaries #
 dist_bin_SCRIPTS =
 if TARGET_WINDOWS
-  dist_bin_SCRIPTS += resources/win64/syscoin-geth.node.exe resources/win64/syscoin-relayer.node.exe
+  dist_bin_SCRIPTS += resources/win64/sgeth.node.exe resources/win64/srelayer.node.exe
   dist_bin_SCRIPTS += resources/win64/sha3.node resources/win64/bufferutil.node resources/win64/scrypt.node resources/win64/validation.node
 endif
 if TARGET_LINUX
-  dist_bin_SCRIPTS += resources/linux/syscoin-geth.node resources/linux/syscoin-relayer.node
+  dist_bin_SCRIPTS += resources/linux/sgeth.node resources/linux/srelayer.node
   dist_bin_SCRIPTS += resources/linux/sha3.node resources/linux/bufferutil.node resources/linux/scrypt.node resources/linux/validation.node
 endif
 if TARGET_DARWIN
-  dist_bin_SCRIPTS += resources/osx/syscoin-geth.node resources/osx/syscoin-relayer.node
+  dist_bin_SCRIPTS += resources/osx/sgeth.node resources/osx/srelayer.node
   dist_bin_SCRIPTS += resources/osx/sha3.node resources/osx/bufferutil.node resources/osx/scrypt.node resources/osx/validation.node
 endif
 
