@@ -92,7 +92,7 @@ class CreateWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
         # Encrypt the wallet
-        w5.encryptwallet('pass')
+        assert_raises_rpc_error(-16, "Error: wallet does not contain private keys, nothing to encrypt.", w5.encryptwallet, 'pass')
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getnewaddress)
         assert_raises_rpc_error(-4, "Error: This wallet has no available keys", w5.getrawchangeaddress)
 
