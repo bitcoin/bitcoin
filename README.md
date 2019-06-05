@@ -33,7 +33,7 @@ Masternode seniority: 35% increase after 1 year, 100% increase after 2.5 years
 Governance proposals payout schedule: every month
 There is a 5% deflation per year on Syscoin
 Governance funding per round (Approx. 2m Syscoins per month to start)
-Governance funding gets 5% deflation per round (superblock)
+Governance funding gets 5% deflation per round (superblock). See formula below.
 Consensus enforced segwit (all transactions have witness programs except coinbase)
 Codebase based off of latest Bitcoin Core (https://github.com/bitcoin/bitcoin)
 Services include:
