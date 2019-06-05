@@ -50,9 +50,8 @@ Governance formula:
   A = Accrued Amount (principal + interest)
   P = Principal Amount
   r = Annual Monthly Interest Rate as a decimal
-  r = R/100
+  r = r/100
   t = Time Involved in months(superblock number).
-  n = number of compounding periods per unit t; at the END of each period (1 in our case)
   nSuperblock = Superblock index in question
 
   let A = 2000000.0 COINS;
