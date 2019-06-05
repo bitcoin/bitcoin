@@ -1098,14 +1098,14 @@ std::string GetGethFilename(){
 std::string GetGethAndRelayerFilepath(){
     // For Windows:
     #ifdef WIN32
-       return "/resources/win64/";
+       return "/bin/win64/";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "/resources/osx/";
+        return "/bin/osx/";
     #else
         // Linux
-        return "/resources/linux/";
+        return "/bin/linux/";
     #endif
 }
 bool StopGethNode(pid_t &pid)
@@ -1161,19 +1161,21 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + resources/[os]/sgeth.node
+    // current executable path + bin/[os]/sgeth.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = gethFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + resources/[os]/sgeth.node
+    // $path + bin/[os]/sgeth.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
     attempt4 = attempt4.make_preferred();
     // /usr/local/bin/sgeth.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt5 = attempt5.make_preferred();
-
+    // ../Resources
+    fs::path attempt6 = fs::system_complete("../Resources/").string() + gethFilename;
+    attempt6 = attempt6.make_preferred();
 
     
   
@@ -1198,10 +1200,11 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     if( pid == 0 ) {
         // Order of looking for the geth binary:
         // 1. current executable directory
-        // 2. current executable directory/resources/[os]/syscoin_geth
+        // 2. current executable directory/bin/[os]/syscoin_geth
         // 3. $path
-        // 4. $path/resources/[os]/syscoin_geth
+        // 4. $path/bin/[os]/syscoin_geth
         // 5. /usr/local/bin/syscoin_geth
+        // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
         char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
                 (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
@@ -1237,7 +1240,14 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
-                NULL };                                                     
+                NULL };   
+        char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
+                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                (char*)"--wsorigins", (char*)"*",
+                (char*)"--syncmode", (char*)"light", 
+                (char*)"--datadir", (char*)dataDir.c_str(),
+                NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
             LogPrintf("Geth not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
@@ -1252,7 +1262,11 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
                         LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
                         execvp(argvAttempt5[0], &argvAttempt5[0]);
                         if (errno != 0) {
-                            LogPrintf("Geth not found in %s, giving up.\n", argvAttempt5[0]);
+                            LogPrintf("Geth not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                            execvp(argvAttempt6[0], &argvAttempt6[0]);
+                            if (errno != 0) {
+                                LogPrintf("Geth not found in %s, giving up.\n", argvAttempt6[0]);
+                            }
                         }
                     }
                 }
@@ -1364,19 +1378,21 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + resources/[os]/srelayer.node
+    // current executable path + bin/[os]/srelayer.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = relayerFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + resources/[os]/srelayer.node
+    // $path + bin/[os]/srelayer.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
     attempt4 = attempt4.make_preferred();
     // /usr/local/bin/srelayer.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt5 = attempt5.make_preferred();
-
+    // ../Resources
+    fs::path attempt6 = fs::system_complete("../Resources/").string() + relayerFilename;
+    attempt6 = attempt6.make_preferred();
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
         struct sigaction sa;
@@ -1395,9 +1411,9 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
         if( pid == 0 ) {
             // Order of looking for the relayer binary:
             // 1. current executable directory
-            // 2. current executable directory/resources/[os]/syscoin_relayer
+            // 2. current executable directory/bin/[os]/syscoin_relayer
             // 3. $path
-            // 4. $path/resources/[os]/syscoin_relayer
+            // 4. $path/bin/[os]/syscoin_relayer
             // 5. /usr/local/bin/syscoin_relayer
             std::string portStr = std::to_string(websocketport);
             std::string rpcPortStr = std::to_string(rpcport);
@@ -1435,7 +1451,14 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                       
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL }; 
+            char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
+					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
+					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                                          
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
 		        LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
@@ -1450,7 +1473,11 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
                             LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
                             execvp(argvAttempt5[0], &argvAttempt5[0]);
                             if (errno != 0) {
-                                LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt5[0]);
+                                LogPrintf("Relayer not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                                execvp(argvAttempt6[0], &argvAttempt6[0]);
+                                if (errno != 0) {
+                                    LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt6[0]);
+                                }
                             }
                         }
                     }
