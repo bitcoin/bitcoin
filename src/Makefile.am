@@ -733,7 +733,7 @@ endif
 # syscoin pre-built binaries #
 dist_bin_SCRIPTS =
 if TARGET_WINDOWS
-  dist_bin_SCRIPTS += resources/win64/syscoin-geth.exe resources/win64/syscoin-relayer.node.exe
+  dist_bin_SCRIPTS += resources/win64/syscoin-geth.node.exe resources/win64/syscoin-relayer.node.exe
   dist_bin_SCRIPTS += resources/win64/sha3.node resources/win64/bufferutil.node resources/win64/scrypt.node resources/win64/validation.node
 endif
 if TARGET_LINUX
