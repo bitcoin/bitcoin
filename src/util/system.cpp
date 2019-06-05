@@ -1174,7 +1174,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt5 = attempt5.make_preferred();
     // ../Resources
-    fs::path attempt6 = fs::system_complete("../Resources/").string() + gethFilename;
+    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
     attempt6 = attempt6.make_preferred();
 
     
@@ -1391,7 +1391,7 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt5 = attempt5.make_preferred();
     // ../Resources
-    fs::path attempt6 = fs::system_complete("../Resources/").string() + relayerFilename;
+    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
     attempt6 = attempt6.make_preferred();
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
