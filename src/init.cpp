@@ -1450,7 +1450,8 @@ bool AppInitMain(InitInterfaces& interfaces)
      * that the server is there and will be ready later).  Warmup mode will
      * be disabled when initialisation is finished.
      */
-    if (gArgs.GetBoolArg("-server", false))
+    // SYSCOIN
+    if (gArgs.GetBoolArg("-server", true))
     {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
         if (!AppInitServers())
@@ -2101,7 +2102,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
     // SYSCOIN
-    #ifdef ENABLE_WALLET
     int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     StartGethNode(exePath, gethPID, bGethTestnet, wsport);
@@ -2110,7 +2110,6 @@ bool AppInitMain(InitInterfaces& interfaces)
 	const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
 	StartRelayerNode(exePath, relayerPID, rpcport, rpcuser, rpcpassword, wsport);
     
-    #endif // ENABLE_WALLET
     for (const auto& client : interfaces.chain_clients) {
         client->start(scheduler);
     }
