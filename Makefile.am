@@ -95,14 +95,15 @@ $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
 
+SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sgeth.node \
+	$(top_builddir)/src/bin/osx/srelayer.node \
+	$(top_builddir)/src/bin/osx/sha3.node \
+	$(top_builddir)/src/bin/osx/bufferutil.node \
+	$(top_builddir)/src/bin/osx/scrypt.node \
+	$(top_builddir)/src/bin/osx/validation.node
+
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
-	cp $(top_builddir)/src/bin/osx/sgeth.node $(@D)
-	cp $(top_builddir)/src/bin/osx/srelayer.node $(@D)
-	cp $(top_builddir)/src/bin/osx/sha3.node $(@D)
-	cp $(top_builddir)/src/bin/osx/bufferutil.node $(@D)
-	cp $(top_builddir)/src/bin/osx/scrypt.node $(@D)
-	cp $(top_builddir)/src/bin/osx/validation.node $(@D)
 	@touch $@ 
 
 $(OSX_APP)/Contents/Info.plist: $(OSX_PLIST)
@@ -130,7 +131,7 @@ osx_volname:
 
 if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING) $(OSX_BACKGROUND_IMAGE)
-	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME)
+	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME) -add-resources $(SYSCOIN_GETH_BINS)
 
 $(OSX_BACKGROUND_IMAGE).png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
 	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 36 -p 36 -o $@
