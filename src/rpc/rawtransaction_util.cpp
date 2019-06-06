@@ -8,11 +8,12 @@
 #include <coins.h>
 #include <core_io.h>
 #include <key_io.h>
-#include <keystore.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
+#include <script/sign.h>
+#include <script/signingprovider.h>
 #include <tinyformat.h>
 #include <univalue.h>
 #include <util/rbf.h>

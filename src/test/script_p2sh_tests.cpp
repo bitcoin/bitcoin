@@ -4,13 +4,13 @@
 
 #include <consensus/tx_verify.h>
 #include <key.h>
-#include <keystore.h>
 #include <validation.h>
 #include <policy/policy.h>
 #include <script/script.h>
 #include <script/script_error.h>
 #include <policy/settings.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <test/setup_common.h>
 
 #include <vector>

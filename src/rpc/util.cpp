@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <key_io.h>
-#include <keystore.h>
 #include <outputtype.h>
+#include <script/signingprovider.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <tinyformat.h>
