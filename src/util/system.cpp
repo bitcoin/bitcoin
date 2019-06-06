@@ -103,6 +103,7 @@ ArgsManager gArgs;
     #include <errno.h>
     #include <assert.h>
     #include <process.h>
+    #include <Shlwapi.h>
     pid_t fork(std::string app, std::string arg)
     {
         std::string appQuoted = "\"" + app + "\"";
@@ -114,20 +115,28 @@ ArgsManager gArgs;
         si.cb = sizeof(si); 
         size_t start_pos = 0;
         //Prepare CreateProcess args
-        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
-        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
-
         std::wstring app_w(app.length(), L' '); // Make room for characters
         std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
 
         std::wstring arg_w(arg.length(), L' '); // Make room for characters
         std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
 
-        std::wstring input = appQuoted_w + L" " + arg_w;
-        wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
-        const wchar_t* app_const = app_w.c_str();
         LogPrintf("CreateProcessW app %s %s\n",app,arg);
-        int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
+
+        wchar_t path[MAX_PATH+3];
+        PathCanonicalize(path, app_w.c_str());
+        path[sizeof(path)/sizeof(path[0]) - 1] = _T('\0');
+
+        // Make sure that the exe is specified without quotes.
+        PathUnquoteSpaces(path);
+        const std::wstring exe = path;
+
+        // Make sure that the cmdLine specifies the path to the executable using
+        // quotes if necessary.
+        PathQuoteSpaces(path);
+        std::wstring cmdLine = path + std::wstring(_T(" ")) + arg_w;
+
+        int result = CreateProcess(exe.c_str(), const_cast<wchar_t *>(cmdLine.c_str()), NULL, NULL, FALSE, 
               CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
         {
