@@ -222,13 +222,13 @@ void CCoinsViewDBCursor::Next()
     }
 }
 
-bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
+bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockInfo) {
     CDBBatch batch(*this);
     for (std::vector<std::pair<int, const CBlockFileInfo*> >::const_iterator it=fileInfo.begin(); it != fileInfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_FILES, it->first), *it->second);
     }
     batch.Write(DB_LAST_BLOCK, nLastFile);
-    for (std::vector<const CBlockIndex*>::const_iterator it=blockinfo.begin(); it != blockinfo.end(); it++) {
+    for (std::vector<const CBlockIndex*>::const_iterator it=blockInfo.begin(); it != blockInfo.end(); it++) {
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
     return WriteBatch(batch, true);
@@ -255,7 +255,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
     // Load mapBlockIndex
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
-        if (ShutdownRequested()) return false;
+        if (ShutdownRequested())
+            return false;
         std::pair<char, uint256> key;
         if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;

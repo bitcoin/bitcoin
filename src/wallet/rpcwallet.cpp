@@ -1464,8 +1464,8 @@ UniValue listtransactions(const JSONRPCRequest& request)
     if (!request.params[2].isNull())
         nFrom = request.params[2].get_int();
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[3].isNull())
-        if(request.params[3].get_bool())
+    if (!request.params[3].isNull())
+        if (request.params[3].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
     if (nCount < 0)
@@ -1486,7 +1486,8 @@ UniValue listtransactions(const JSONRPCRequest& request)
         {
             CWalletTx *const pwtx = (*it).second;
             ListTransactions(*locked_chain, pwallet, *pwtx, 0, true, ret, filter, filter_label);
-            if ((int)ret.size() >= (nCount+nFrom)) break;
+            if ((int)ret.size() >= (nCount+nFrom))
+                break;
         }
     }
 
@@ -1504,8 +1505,10 @@ UniValue listtransactions(const JSONRPCRequest& request)
     std::vector<UniValue>::iterator last = arrTmp.begin();
     std::advance(last, nFrom+nCount);
 
-    if (last != arrTmp.end()) arrTmp.erase(last, arrTmp.end());
-    if (first != arrTmp.begin()) arrTmp.erase(arrTmp.begin(), first);
+    if (last != arrTmp.end())
+        arrTmp.erase(last, arrTmp.end());
+    if (first != arrTmp.begin())
+        arrTmp.erase(arrTmp.begin(), first);
 
     std::reverse(arrTmp.begin(), arrTmp.end()); // Return oldest to newest
 
@@ -1655,7 +1658,8 @@ static UniValue listsinceblock(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
     ret.pushKV("transactions", transactions);
-    if (include_removed) ret.pushKV("removed", removed);
+    if (include_removed)
+        ret.pushKV("removed", removed);
     ret.pushKV("lastblock", lastblock.GetHex());
 
     return ret;
@@ -1731,8 +1735,8 @@ static UniValue gettransaction(const JSONRPCRequest& request)
     uint256 hash(ParseHashV(request.params[0], "txid"));
 
     isminefilter filter = ISMINE_SPENDABLE;
-    if(!request.params[1].isNull())
-        if(request.params[1].get_bool())
+    if (!request.params[1].isNull())
+        if (request.params[1].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
     UniValue entry(UniValue::VOBJ);
