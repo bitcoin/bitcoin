@@ -28,11 +28,11 @@ void auxMiningCheck()
   if (g_connman->GetNodeCount (CConnman::CONNECTIONS_ALL) == 0
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
-                        "Namecoin is not connected!");
+                        "Syscoin is not connected!");
 
-  if (IsInitialBlockDownload () && !Params ().MineBlocksOnDemand ())
+  if (::ChainstateActive().IsInitialBlockDownload() && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_IN_INITIAL_DOWNLOAD,
-                        "Namecoin is downloading blocks...");
+                        "Syscoin is downloading blocks...");
 
   /* This should never fail, since the chain is already
      past the point of merge-mining start.  Check nevertheless.  */
