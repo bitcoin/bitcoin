@@ -16,7 +16,7 @@
 #include <boost/signals2/signal.hpp>
 
 /** Basic key store, that keeps keys in an address->secret map */
-class CBasicKeyStore : public SigningProvider
+class FillableSigningProvider : public SigningProvider
 {
 protected:
     mutable CCriticalSection cs_KeyStore;
@@ -52,6 +52,6 @@ public:
 };
 
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
-CKeyID GetKeyForDestination(const CBasicKeyStore& store, const CTxDestination& dest);
+CKeyID GetKeyForDestination(const FillableSigningProvider& store, const CTxDestination& dest);
 
 #endif // BITCOIN_KEYSTORE_H

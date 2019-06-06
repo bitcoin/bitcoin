@@ -112,7 +112,7 @@ public:
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
  */
-class CCryptoKeyStore : public CBasicKeyStore
+class CCryptoKeyStore : public FillableSigningProvider
 {
 private:
 
