@@ -6,8 +6,6 @@
 #include <util/system.h>
 
 #include <chainparamsbase.h>
-#include <random.h>
-#include <serialize.h>
 #include <util/strencodings.h>
 
 #include <stdarg.h>
@@ -105,6 +103,7 @@ ArgsManager gArgs;
     #include <process.h>
     pid_t fork(std::string app, std::string arg)
     {
+        std::string appQuoted = "\"" + app + "\"";
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
@@ -113,16 +112,19 @@ ArgsManager gArgs;
         si.cb = sizeof(si); 
         size_t start_pos = 0;
         //Prepare CreateProcess args
+        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
+        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
+
         std::wstring app_w(app.length(), L' '); // Make room for characters
         std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
 
         std::wstring arg_w(arg.length(), L' '); // Make room for characters
         std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
 
-        std::wstring input = app_w + L" " + arg_w;
+        std::wstring input = appQuoted_w + L" " + arg_w;
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW app %s arg %s\n",app, arg);
+        LogPrintf("CreateProcessW app %s %s\n",app,arg);
         int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
               CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
@@ -1085,14 +1087,14 @@ void KillProcess(const pid_t& pid){
 std::string GetGethFilename(){
     // For Windows:
     #ifdef WIN32
-       return "syscoin-geth.exe";
+       return "sgeth.node.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "syscoin-geth";
+        return "sgeth.node";
     #else
         // Linux
-        return "syscoin-geth";
+        return "sgeth.node";
     #endif
 }
 std::string GetGethAndRelayerFilepath(){
@@ -1161,19 +1163,21 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + gethFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/syscoin-geth
+    // current executable path + bin/[os]/sgeth.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + gethFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = gethFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/syscoin-geth
+    // $path + bin/[os]/sgeth.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + gethFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/syscoin-geth
+    // /usr/local/bin/sgeth.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + gethFilename;
     attempt5 = attempt5.make_preferred();
-
+    // ../Resources
+    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + gethFilename;
+    attempt6 = attempt6.make_preferred();
 
     
   
@@ -1202,6 +1206,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
         // 3. $path
         // 4. $path/bin/[os]/syscoin_geth
         // 5. /usr/local/bin/syscoin_geth
+        // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
         char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
                 (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
@@ -1237,7 +1242,14 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
-                NULL };                                                     
+                NULL };   
+        char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
+                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+                (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
+                (char*)"--wsorigins", (char*)"*",
+                (char*)"--syncmode", (char*)"light", 
+                (char*)"--datadir", (char*)dataDir.c_str(),
+                NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
             LogPrintf("Geth not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
@@ -1252,7 +1264,11 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
                         LogPrintf("Geth not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
                         execvp(argvAttempt5[0], &argvAttempt5[0]);
                         if (errno != 0) {
-                            LogPrintf("Geth not found in %s, giving up.\n", argvAttempt5[0]);
+                            LogPrintf("Geth not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                            execvp(argvAttempt6[0], &argvAttempt6[0]);
+                            if (errno != 0) {
+                                LogPrintf("Geth not found in %s, giving up.\n", argvAttempt6[0]);
+                            }
                         }
                     }
                 }
@@ -1301,14 +1317,14 @@ fs::path GetRelayerPidFile()
 std::string GetRelayerFilename(){
     // For Windows:
     #ifdef WIN32
-       return "syscoin-relayer.exe";
+       return "srelayer.node.exe";
     #endif    
     #ifdef MAC_OSX
         // Mac
-        return "syscoin-relayer";
+        return "srelayer.node";
     #else
         // Linux
-        return "syscoin-relayer";
+        return "srelayer.node";
     #endif
 }
 bool StopRelayerNode(pid_t &pid)
@@ -1364,19 +1380,21 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
     // current executable path
     fs::path attempt1 = fpathDefault.string() + "/" + relayerFilename;
     attempt1 = attempt1.make_preferred();
-    // current executable path + bin/[os]/syscoin-relayer
+    // current executable path + bin/[os]/srelayer.node
     fs::path attempt2 = fpathDefault.string() + GetGethAndRelayerFilepath() + relayerFilename;
     attempt2 = attempt2.make_preferred();
     // $path
     fs::path attempt3 = relayerFilename;
     attempt3 = attempt3.make_preferred();
-    // $path + bin/[os]/syscoin-relayer
+    // $path + bin/[os]/srelayer.node
     fs::path attempt4 = GetGethAndRelayerFilepath() + relayerFilename;
     attempt4 = attempt4.make_preferred();
-    // /usr/local/bin/syscoin-relayer
+    // /usr/local/bin/srelayer.node
     fs::path attempt5 = fs::system_complete("/usr/local/bin/").string() + relayerFilename;
     attempt5 = attempt5.make_preferred();
-
+    // ../Resources
+    fs::path attempt6 = fpathDefault.string() + fs::system_complete("/../Resources/").string() + relayerFilename;
+    attempt6 = attempt6.make_preferred();
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
         struct sigaction sa;
@@ -1435,7 +1453,14 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                       
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL }; 
+            char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
+                    (char*)"--infurakey", (char*)infuraKey.c_str(),
+					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
+					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                                          
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
 		        LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
@@ -1450,7 +1475,11 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
                             LogPrintf("Relayer not found at %s, trying in /usr/local/bin folder\n", argvAttempt4[0]);
                             execvp(argvAttempt5[0], &argvAttempt5[0]);
                             if (errno != 0) {
-                                LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt5[0]);
+                                LogPrintf("Relayer not found at %s, trying in ../Resources\n", argvAttempt4[0]);
+                                execvp(argvAttempt6[0], &argvAttempt6[0]);
+                                if (errno != 0) {
+                                    LogPrintf("Relayer not found in %s, giving up.\n", argvAttempt6[0]);
+                                }
                             }
                         }
                     }

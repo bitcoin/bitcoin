@@ -4,8 +4,6 @@
 
 #include <qt/syscoinunits.h>
 
-#include <primitives/transaction.h>
-
 #include <QStringList>
 
 SyscoinUnits::SyscoinUnits(QObject *parent):

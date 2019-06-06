@@ -283,7 +283,7 @@ def main():
         message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
         message += get_acks_from_comments(head_commit=subprocess.check_output([GIT,'log','-1','--pretty=format:%H',head_branch]).decode('utf-8')[:6], comments=comments)
         try:
-            subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','-m',message.encode('utf-8'),head_branch])
+            subprocess.check_call([GIT,'merge','-q','--commit','--no-edit','--no-ff','--no-gpg-sign','-m',message.encode('utf-8'),head_branch])
         except subprocess.CalledProcessError:
             print("ERROR: Cannot be merged cleanly.",file=stderr)
             subprocess.check_call([GIT,'merge','--abort'])
@@ -307,7 +307,7 @@ def main():
             print("ERROR: Unable to compute tree hash")
             sys.exit(4)
         try:
-            subprocess.check_call([GIT,'commit','--amend','-m',message.encode('utf-8')])
+            subprocess.check_call([GIT,'commit','--amend','--no-gpg-sign','-m',message.encode('utf-8')])
         except subprocess.CalledProcessError:
             print("ERROR: Cannot update message.", file=stderr)
             sys.exit(4)

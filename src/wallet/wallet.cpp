@@ -14,17 +14,12 @@
 #include <key.h>
 #include <key_io.h>
 #include <keystore.h>
-#include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
-#include <policy/rbf.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 #include <script/descriptor.h>
 #include <script/script.h>
-#include <shutdown.h>
-#include <timedata.h>
-#include <txmempool.h>
 #include <util/bip32.h>
 #include <util/error.h>
 #include <util/fees.h>

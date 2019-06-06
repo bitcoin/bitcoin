@@ -16,7 +16,6 @@
 #include <util/bip32.h>
 #include <util/system.h>
 #include <util/time.h>
-#include <validation.h>
 #include <wallet/wallet.h>
 
 #include <wallet/rpcwallet.h>

@@ -4,7 +4,6 @@
 
 #include <bench/bench.h>
 
-#include <validation.h>
 #include <bech32.h>
 #include <util/strencodings.h>
 

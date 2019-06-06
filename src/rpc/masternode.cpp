@@ -177,8 +177,8 @@ UniValue masternode(const JSONRPCRequest& request)
         obj.pushKV("protocol",      mnInfo.nProtocolVersion);
         obj.pushKV("outpoint",      mnInfo.outpoint.ToStringShort());
         obj.pushKV("payee",         EncodeDestination(PKHash(mnInfo.pubKeyCollateralAddress)));
-        obj.pushKV("lastseen",      mnInfo.nTimeLastPaid);
-        int64_t activeTime = (int64_t)(mnInfo.nTimeLastPaid - mnInfo.sigTime);
+        obj.pushKV("lastseen",      mnInfo.nTimeLastPing);
+        int64_t activeTime = (int64_t)(mnInfo.nTimeLastPing - mnInfo.sigTime);
         if(activeTime <= 0)
             activeTime = (int64_t)(GetAdjustedTime() - mnInfo.sigTime);
         obj.pushKV("activeseconds", activeTime);

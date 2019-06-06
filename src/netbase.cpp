@@ -5,10 +5,7 @@
 
 #include <netbase.h>
 
-#include <hash.h>
 #include <sync.h>
-#include <uint256.h>
-#include <random.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
