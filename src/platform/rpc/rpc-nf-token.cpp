@@ -209,9 +209,9 @@ List the most recent 20 NFT records
         else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && filterKeyId.IsNull())
             NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, height, count, startFrom);
         else if (nftProtoId == NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, filterKeyId, height, count, startFrom);
         else if (nftProtoId != NfToken::UNKNOWN_TOKEN_PROTOCOL && !filterKeyId.IsNull())
-            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count);
+            NfTokensManager::Instance().ProcessNftIndexRangeByHeight(nftIndexHandler, nftProtoId, filterKeyId, height, count, startFrom);
 
         return nftList;
     }

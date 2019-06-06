@@ -91,30 +91,20 @@ namespace Platform
     {
         assert(!regTxId.IsNull());
 
-        const auto & regTxIndex = m_nfTokensIndexSet.get<Tags::RegTxHash>();
-        const auto it = regTxIndex.find(regTxId);
-        if (it != regTxIndex.end())
+        if (PlatformDb::Instance().OptimizeSpeed())
         {
-            return *it;
+            const auto &regTxIndex = m_nfTokensIndexSet.get<Tags::RegTxHash>();
+            const auto it = regTxIndex.find(regTxId);
+            if (it != regTxIndex.end())
+            {
+                return *it;
+            }
         }
-
-        // TODO; implement the db processing
-        return NfTokenIndex();
-    }
-
-    std::weak_ptr<const NfToken> NfTokensManager::GetNfToken(uint64_t protocolId, const uint256 & tokenId)
-    {
-        assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
-        assert(!tokenId.IsNull());
-
-        NfTokensIndexSet::const_iterator it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        if (it != m_nfTokensIndexSet.end())
+        else /// PlatformDb::Instance().OptimizeRam() is on
         {
-            return it->NfTokenPtr();
+            std::string error = std::string(__func__) + " is implemented only for speed optimized node instances. Change the conf and restart your node.";
+            throw std::runtime_error(error);
         }
-
-        /// PlatformDb::Instance().OptimizeRam() is on
-        return GetNftIndexFromDb(protocolId, tokenId).NfTokenPtr();
     }
 
     bool NfTokensManager::Contains(uint64_t protocolId, const uint256 & tokenId, int height)
@@ -378,26 +368,27 @@ namespace Platform
     void NfTokensManager::ProcessNftIndexRangeByHeight(std::function<bool(const NfTokenIndex &)> nftIndexHandler,
                                                        CKeyID keyId,
                                                        int height,
-                                                       int count) const
+                                                       int count,
+                                                       int startFrom) const
     {
         if (PlatformDb::Instance().OptimizeSpeed())
         {
-            auto originalRange = m_nfTokensIndexSet.get<Tags::OwnerId>().equal_range(keyId);
-            NftIndexForwardRange finalRange(originalRange.first, originalRange.second);
+            auto first = m_nfTokensIndexSet.get<Tags::OwnerId>().lower_bound(std::make_tuple(keyId, 0));
+            auto second = m_nfTokensIndexSet.get<Tags::OwnerId>().upper_bound(std::make_tuple(keyId, height));
 
-            int processed = 0;
-            for (auto it = finalRange.begin(); it != finalRange.end(); ++it)
+            long rangeSize = std::distance(first, second);
+            assert(rangeSize >= 0);
+
+            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
+            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
+            auto begin = std::prev(second, reverseBegin);
+            auto end = std::prev(second, reverseEnd);
+
+            NftIndexRange finalRange(begin, end);
+            for (const auto & nftIndex : finalRange)
             {
-                if (it->BlockIndex()->nHeight <= height)
-                {
-                    if (nftIndexHandler(*it))
-                        processed++;
-                    else
-                        LogPrintf("%s: NFT index processing failed.", __func__);
-
-                    if (processed == count)
-                        break;
-                }
+                if (!nftIndexHandler(nftIndex))
+                    LogPrintf("%s: NFT index processing failed.", __func__);
             }
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
@@ -411,26 +402,27 @@ namespace Platform
                                                        uint64_t nftProtoId,
                                                        CKeyID keyId,
                                                        int height,
-                                                       int count) const
+                                                       int count,
+                                                       int startFrom) const
     {
         if (PlatformDb::Instance().OptimizeSpeed())
         {
-            auto originalRange = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().equal_range(std::make_tuple(nftProtoId, keyId));
-            NftIndexForwardRange finalRange(originalRange.first, originalRange.second);
+            auto first = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().lower_bound(std::make_tuple(nftProtoId, keyId, 0));
+            auto second = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().upper_bound(std::make_tuple(nftProtoId, keyId, height));
 
-            int processed = 0;
-            for (auto it = finalRange.begin(); it != finalRange.end(); ++it)
+            long rangeSize = std::distance(first, second);
+            assert(rangeSize >= 0);
+
+            long reverseBegin = rangeSize < startFrom ? rangeSize : startFrom;
+            long reverseEnd = rangeSize < startFrom + count ? 0 : reverseBegin - count;
+            auto begin = std::prev(second, reverseBegin);
+            auto end = std::prev(second, reverseEnd);
+
+            NftIndexRange finalRange(begin, end);
+            for (const auto & nftIndex : finalRange)
             {
-                if (it->BlockIndex()->nHeight <= height)
-                {
-                    if (nftIndexHandler(*it))
-                        processed++;
-                    else
-                        LogPrintf("%s: NFT index processing failed.", __func__);
-
-                    if (processed == count)
-                        break;
-                }
+                if (!nftIndexHandler(nftIndex))
+                    LogPrintf("%s: NFT index processing failed.", __func__);
             }
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
