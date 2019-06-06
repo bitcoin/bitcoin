@@ -1089,11 +1089,9 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
             continue;
 
         // SYSCOIN if asset send check receivers instead of syscoin dust output
-        /*std::vector<IsAssetMineSelection> IsAssetMineResults;
+        std::vector<IsAssetMineSelection> IsAssetMineResults;
         if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
-            LogPrintf("listreceivedbyaddress found asset send!\n");
             if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
-                LogPrintf("listreceivedbyaddress is asset mine!\n");
                 for(auto isMineResult: IsAssetMineResults){
                     if (has_filtered_address && !(filtered_address == isMineResult.destination)) {
                         continue;
@@ -1101,34 +1099,32 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
                     tallyitem& item = mapTally[isMineResult.destination];
                     item.nConf = std::min(item.nConf, nDepth);
                     item.txids.push_back(wtx.GetHash());
-                    LogPrintf("listreceivedbyaddress pushing back is mine tx %s!\n", wtx.GetHash().GetHex());
                     if (isMineResult.minefilter & ISMINE_WATCH_ONLY)
                         item.fIsWatchonly = true;
                 }          
-                
             }
-            continue;
-        }*/
-        for (const CTxOut& txout : wtx.tx->vout)
-        {
-            CTxDestination address;
-            if (!ExtractDestination(txout.scriptPubKey, address))
-                continue;
+        }
+        else{
+            for (const CTxOut& txout : wtx.tx->vout)
+            {
+                CTxDestination address;
+                if (!ExtractDestination(txout.scriptPubKey, address))
+                    continue;
 
-            if (has_filtered_address && !(filtered_address == address)) {
-                continue;
+                if (has_filtered_address && !(filtered_address == address)) {
+                    continue;
+                }
+
+                isminefilter mine = IsMine(*pwallet, address);
+                if(!(mine & filter))
+                    continue;
+                tallyitem& item = mapTally[address];
+                item.nAmount += txout.nValue;
+                item.nConf = std::min(item.nConf, nDepth);
+                item.txids.push_back(wtx.GetHash());
+                if (mine & ISMINE_WATCH_ONLY)
+                    item.fIsWatchonly = true;
             }
-
-            isminefilter mine = IsMine(*pwallet, address);
-            if(!(mine & filter))
-                continue;
-
-            tallyitem& item = mapTally[address];
-            item.nAmount += txout.nValue;
-            item.nConf = std::min(item.nConf, nDepth);
-            item.txids.push_back(wtx.GetHash());
-            if (mine & ISMINE_WATCH_ONLY)
-                item.fIsWatchonly = true;
         }
     }
 
@@ -1151,6 +1147,9 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
     for (auto item_it = start; item_it != end; ++item_it)
     {
         const CTxDestination& address = item_it->first;
+        // SYSCOIN we don't want to show send address book entries regardless of if fIncludeEmpty is set
+        if(item_it->second.purpose == "send")
+            continue;
         const std::string& label = item_it->second.name;
         auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
