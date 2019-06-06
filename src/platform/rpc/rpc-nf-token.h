@@ -21,6 +21,10 @@ namespace Platform
     void GetNfTokenByTxIdHelp();
     json_spirit::Value NfTokenTotalSupply(const json_spirit::Array& params, bool fHelp);
     void NfTokenTotalSupplyHelp();
+    json_spirit::Value NfTokenBalanceOf(const json_spirit::Array& params, bool fHelp);
+    void NfTokenBalanceOfHelp();
+    json_spirit::Value NfTokenOwnerOf(const json_spirit::Array& params, bool fHelp);
+    void NfTokenOwnerOfHelp();
 }
 
 #endif // CROWN_PLATFORM_RPC_NF_TOKEN_H

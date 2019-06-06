@@ -12,7 +12,7 @@
 
 json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
 {
-    std::string command = Platform::GetCommand(params, "usage: nftoken register|list|get|getbytxid|totalsupply");
+    std::string command = Platform::GetCommand(params, "usage: nftoken register|list|get|getbytxid|totalsupply|balanceof|ownerof");
 
     if (command == "register")
         return Platform::RegisterNfToken(params, fHelp);
@@ -24,6 +24,10 @@ json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
         return Platform::GetNfTokenByTxId(params,fHelp);
     else if (command == "totalsupply")
         return Platform::NfTokenTotalSupply(params, fHelp);
+    else if (command == "balanceof")
+        return Platform::NfTokenBalanceOf(params, fHelp);
+    else if (command == "ownerof")
+        return Platform::NfTokenOwnerOf(params, fHelp);
 
     throw std::runtime_error("Invalid command: " + command);
 }
@@ -226,8 +230,8 @@ Arguments:
 
 Examples:
 )"
- + HelpExampleCli("nftoken", R"(get "doc" "a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8")")
- + HelpExampleRpc("nftoken", R"(get "doc" "a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8")");
++ HelpExampleCli("nftoken", R"(get "doc" "a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8")")
++ HelpExampleRpc("nftoken", R"(get "doc" "a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8")");
 
         throw std::runtime_error(helpMessage);
     }
@@ -258,8 +262,8 @@ Arguments:
 
 Examples:
 )"
- + HelpExampleCli("nftoken", R"(get "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")")
- + HelpExampleRpc("nftoken", R"(get "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")");
++ HelpExampleCli("nftoken", R"(get "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")")
++ HelpExampleRpc("nftoken", R"(get "3840804e62350b6337ca0b4653547477aa46dab2677c0514a8dccf80b51a899a")");
 
         throw std::runtime_error(helpMessage);
     }
@@ -296,7 +300,7 @@ Examples:
 
     json_spirit::Value NfTokenTotalSupply(const json_spirit::Array& params, bool fHelp)
     {
-        if (fHelp)
+        if (fHelp || params.empty() || params.size() > 2)
             NfTokenTotalSupplyHelp();
 
         std::size_t totalSupply = 0;
@@ -311,5 +315,81 @@ Examples:
         }
 
         return totalSupply;
+    }
+
+    void NfTokenBalanceOfHelp()
+    {
+        static std::string helpMessage = R"(nftoken balanceof
+Get balance of tokens belonging to a certain address within a protocol set or in a global set
+
+Arguments:
+1. "nfTokenOwnerAddr" (string, required) The token owner address, it can be used in any operations with the token.
+                      The private key belonging to this address may be or may be not known in your wallet.
+2. "nfTokenProtocol"  (string, optional) The non-fungible token protocol symbol of the registered token record
+                      The protocol name must be valid and registered previously.
+
+Examples:
+Display balance of "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
+)"
++ HelpExampleCli("nftoken", R"(balanceof "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" within global protocol context)")
++ R"(Display balance of "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address within the "doc" protocol context
+)"
++ HelpExampleRpc("nftoken", R"(balanceof "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" "doc")");
+
+        throw std::runtime_error(helpMessage);
+    }
+
+    json_spirit::Value NfTokenBalanceOf(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() < 2 || params.size() > 3)
+            NfTokenBalanceOfHelp();
+
+        CKeyID filterKeyId = ParsePubKeyIDFromAddress(params[1].get_str(), "nfTokenOwnerAddr");
+        std::size_t balance = 0;
+
+        if (params.size() == 3)
+        {
+            uint64_t tokenProtocolId = StringToProtocolName(params[2].get_str().c_str());
+            balance = NfTokensManager::Instance().BalanceOf(tokenProtocolId, filterKeyId);
+        }
+        else
+        {
+            balance = NfTokensManager::Instance().BalanceOf(filterKeyId);
+        }
+
+        return balance;
+    }
+
+    void NfTokenOwnerOfHelp()
+    {
+        static std::string helpMessage = R"(nftoken ownerof
+Get address of the NFT owner by using its protocol symbol and token ID
+
+1. "nfTokenProtocol"  (string, required) The non-fungible token protocol symbol of the registered token record
+                      The protocol name must be valid and registered previously.
+2. "nfTokenId"        (string, required) The token id in hex.
+                      The token id must be registered previously.
+
+Examples:
+)"
++ HelpExampleCli("nftoken", R"(ownerof "doc" "a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8")")
++ HelpExampleRpc("nftoken", R"(ownerof "doc" "a103d4bdfaa7d22591c4dacda81ba540e37f705bae41681c082b102e647aa8e8")");
+
+        throw std::runtime_error(helpMessage);
+    }
+
+    json_spirit::Value NfTokenOwnerOf(const json_spirit::Array& params, bool fHelp)
+    {
+        if (fHelp || params.size() != 3)
+            NfTokenOwnerOfHelp();
+
+        uint64_t tokenProtocolId = StringToProtocolName(params[1].get_str().c_str());
+        uint256 tokenId = ParseHashV(params[2].get_str(), "nfTokenId");
+
+        CKeyID ownerId = NfTokensManager::Instance().OwnerOf(tokenProtocolId, tokenId);
+        if (ownerId.IsNull())
+            throw std::runtime_error("Can't find an NFT record: " + std::to_string(tokenProtocolId) + " " + tokenId.ToString());
+
+        return CBitcoinAddress(ownerId).ToString();
     }
 }
