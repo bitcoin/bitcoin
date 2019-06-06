@@ -105,7 +105,7 @@ ArgsManager gArgs;
     #include <process.h>
     pid_t fork(std::string app, std::string arg)
     {
-        arg = "\"" + app + "\" " + arg;
+        std::string appQuoted = "\"" + app + "\"";
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
@@ -114,16 +114,19 @@ ArgsManager gArgs;
         si.cb = sizeof(si); 
         size_t start_pos = 0;
         //Prepare CreateProcess args
+        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
+        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
+
         std::wstring app_w(app.length(), L' '); // Make room for characters
         std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
 
         std::wstring arg_w(arg.length(), L' '); // Make room for characters
         std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
 
-        std::wstring input = app_w + L" " + arg_w;
+        std::wstring input = appQuoted_w + L" " + arg_w;
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW app %s\n",arg);
+        LogPrintf("CreateProcessW app %s\n",input.c_str());
         int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
               CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
