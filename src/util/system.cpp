@@ -105,7 +105,7 @@ ArgsManager gArgs;
     #include <process.h>
     pid_t fork(std::string app, std::string arg)
     {
-        app = "\"" + app + " " + arg + "\"";
+        app = app + " " + arg;
         PROCESS_INFORMATION pi;
         STARTUPINFOW si;
         ZeroMemory(&pi, sizeof(pi));
@@ -123,7 +123,7 @@ ArgsManager gArgs;
         std::wstring input = app_w + L" " + arg_w;
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW app %s\n",app, arg);
+        LogPrintf("CreateProcessW app %s\n",app);
         int result = CreateProcessW(app_const, NULL, NULL, NULL, FALSE, 
               CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
