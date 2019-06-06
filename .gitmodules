@@ -1,0 +1,3 @@
+[submodule "src/ldpc"]
+	path = src/ldpc
+	url = https://github.com/harryoh/ldpc.git
