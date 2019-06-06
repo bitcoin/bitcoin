@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_ISMINE_H
-#define BITCOIN_SCRIPT_ISMINE_H
+#ifndef BITCOIN_WALLET_ISMINE_H
+#define BITCOIN_WALLET_ISMINE_H
 
 #include <script/standard.h>
 
@@ -15,7 +15,7 @@ class CKeyStore;
 class CScript;
 
 /** IsMine() return codes */
-enum isminetype
+enum isminetype : unsigned int
 {
     ISMINE_NO         = 0,
     ISMINE_WATCH_ONLY = 1 << 0,
@@ -50,4 +50,4 @@ struct CachableAmount
     }
 };
 
-#endif // BITCOIN_SCRIPT_ISMINE_H
+#endif // BITCOIN_WALLET_ISMINE_H

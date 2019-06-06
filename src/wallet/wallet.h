@@ -11,7 +11,6 @@
 #include <interfaces/handler.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
-#include <script/ismine.h>
 #include <script/sign.h>
 #include <streams.h>
 #include <tinyformat.h>
@@ -21,6 +20,7 @@
 #include <validationinterface.h>
 #include <wallet/coinselection.h>
 #include <wallet/crypter.h>
+#include <wallet/ismine.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
