@@ -81,12 +81,12 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
-	cp $(top_builddir)/sgeth.node.exe $(top_builddir)/release
-	cp $(top_builddir)/srelayer.node.exe $(top_builddir)/release
-	cp $(top_builddir)/sha3.node $(top_builddir)/release
-	cp $(top_builddir)/bufferutil.node $(top_builddir)/release
-	cp $(top_builddir)/scrypt.node $(top_builddir)/release
-	cp $(top_builddir)/validation.node $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/sgeth.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/srelayer.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/sha3.node $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/bufferutil.node $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/scrypt.node $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/validation.node $(top_builddir)/release
 	@test -f $(MAKENSIS) && $(MAKENSIS) -V2 $(top_builddir)/share/setup.nsi || \
 	  echo error: could not build $@
 	@echo built $@
