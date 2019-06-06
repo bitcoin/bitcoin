@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(sign)
     // scriptPubKey: HASH160 <hash> EQUAL
 
     // Test SignSignature() (and therefore the version of Solver() that signs transactions)
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CKey key[4];
     for (int i = 0; i < 4; i++)
     {
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(set)
 {
     LOCK(cs_main);
     // Test the CScript::Set* methods
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CKey key[4];
     std::vector<CPubKey> keys;
     for (int i = 0; i < 4; i++)
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     LOCK(cs_main);
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
-    CBasicKeyStore keystore;
+    FillableSigningProvider keystore;
     CKey key[6];
     std::vector<CPubKey> keys;
     for (int i = 0; i < 6; i++)

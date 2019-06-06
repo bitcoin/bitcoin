@@ -1296,7 +1296,7 @@ public:
     /**
      * Explicitly make the wallet learn the related scripts for outputs to the
      * given key. This is purely to make the wallet file compatible with older
-     * software, as CBasicKeyStore automatically does this implicitly for all
+     * software, as FillableSigningProvider automatically does this implicitly for all
      * keys now.
      */
     void LearnRelatedScripts(const CPubKey& key, OutputType);

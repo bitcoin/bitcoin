@@ -217,7 +217,7 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
 {
     LOCK(cs_KeyStore);
     if (!IsCrypted()) {
-        return CBasicKeyStore::AddKeyPubKey(key, pubkey);
+        return FillableSigningProvider::AddKeyPubKey(key, pubkey);
     }
 
     if (IsLocked()) {
@@ -253,7 +253,7 @@ bool CCryptoKeyStore::HaveKey(const CKeyID &address) const
 {
     LOCK(cs_KeyStore);
     if (!IsCrypted()) {
-        return CBasicKeyStore::HaveKey(address);
+        return FillableSigningProvider::HaveKey(address);
     }
     return mapCryptedKeys.count(address) > 0;
 }
@@ -262,7 +262,7 @@ bool CCryptoKeyStore::GetKey(const CKeyID &address, CKey& keyOut) const
 {
     LOCK(cs_KeyStore);
     if (!IsCrypted()) {
-        return CBasicKeyStore::GetKey(address, keyOut);
+        return FillableSigningProvider::GetKey(address, keyOut);
     }
 
     CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
@@ -279,7 +279,7 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
 {
     LOCK(cs_KeyStore);
     if (!IsCrypted())
-        return CBasicKeyStore::GetPubKey(address, vchPubKeyOut);
+        return FillableSigningProvider::GetPubKey(address, vchPubKeyOut);
 
     CryptedKeyMap::const_iterator mi = mapCryptedKeys.find(address);
     if (mi != mapCryptedKeys.end())
@@ -288,14 +288,14 @@ bool CCryptoKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) co
         return true;
     }
     // Check for watch-only pubkeys
-    return CBasicKeyStore::GetPubKey(address, vchPubKeyOut);
+    return FillableSigningProvider::GetPubKey(address, vchPubKeyOut);
 }
 
 std::set<CKeyID> CCryptoKeyStore::GetKeys() const
 {
     LOCK(cs_KeyStore);
     if (!IsCrypted()) {
-        return CBasicKeyStore::GetKeys();
+        return FillableSigningProvider::GetKeys();
     }
     std::set<CKeyID> set_address;
     for (const auto& mi : mapCryptedKeys) {

@@ -557,7 +557,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
 
     if (!registers.count("privatekeys"))
         throw std::runtime_error("privatekeys register variable must be set.");
-    CBasicKeyStore tempKeystore;
+    FillableSigningProvider tempKeystore;
     UniValue keysObj = registers["privatekeys"];
 
     for (unsigned int kidx = 0; kidx < keysObj.size(); kidx++) {
@@ -631,7 +631,7 @@ static void MutateTxSign(CMutableTransaction& tx, const std::string& flagStr)
         }
     }
 
-    const CBasicKeyStore& keystore = tempKeystore;
+    const FillableSigningProvider& keystore = tempKeystore;
 
     bool fHashSingle = ((nHashType & ~SIGHASH_ANYONECANPAY) == SIGHASH_SINGLE);
 
