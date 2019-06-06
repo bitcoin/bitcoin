@@ -174,7 +174,7 @@ bool CBasicKeyStore::HaveWatchOnly() const
     return (!setWatchOnly.empty());
 }
 
-CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
+CKeyID GetKeyForDestination(const CBasicKeyStore& store, const CTxDestination& dest)
 {
     // Only supports destinations which map to single public keys, i.e. P2PKH,
     // P2WPKH, and P2SH-P2WPKH.
@@ -197,7 +197,7 @@ CKeyID GetKeyForDestination(const CKeyStore& store, const CTxDestination& dest)
     return CKeyID();
 }
 
-bool HaveKey(const CKeyStore& store, const CKey& key)
+bool HaveKey(const CBasicKeyStore& store, const CKey& key)
 {
     CKey key2;
     key2.Set(key.begin(), key.end(), !key.IsCompressed());
