@@ -103,7 +103,7 @@ ArgsManager gArgs;
     #include <errno.h>
     #include <assert.h>
     #include <process.h>
-    #include "Shlwapi.h"
+    #include <shlwapi.h>
     pid_t fork(std::string app, std::string arg)
     {
         std::string appQuoted = "\"" + app + "\"";
