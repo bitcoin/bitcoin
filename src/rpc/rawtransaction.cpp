@@ -10,7 +10,6 @@
 #include <core_io.h>
 #include <index/txindex.h>
 #include <key_io.h>
-#include <keystore.h>
 #include <merkleblock.h>
 #include <node/coin.h>
 #include <node/psbt.h>
@@ -24,6 +23,7 @@
 #include <script/script.h>
 #include <script/script_error.h>
 #include <script/sign.h>
+#include <script/signingprovider.h>
 #include <script/standard.h>
 #include <uint256.h>
 #include <util/moneystr.h>
