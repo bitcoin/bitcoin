@@ -1194,12 +1194,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
         CPubKey pubkey = key.GetPubKey();
         CKeyID id = pubkey.GetID();
 
-        // Check if this private key corresponds to a public key from the descriptor
-        if (!pubkey_map.count(id)) {
-            warnings.push_back("Ignoring irrelevant private key.");
-        } else {
-            privkey_map.emplace(id, key);
-        }
+        privkey_map.emplace(id, key);
     }
 
     // Check if all the public keys have corresponding private keys in the import for spendability.
@@ -1237,11 +1232,6 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         const std::string& label = data.exists("label") ? data["label"].get_str() : "";
         const bool add_keypool = data.exists("keypool") ? data["keypool"].get_bool() : false;
 
-        // Add to keypool only works with privkeys disabled
-        if (add_keypool && !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Keys can only be imported to the keypool when private keys are disabled");
-        }
-
         ImportData import_data;
         std::map<CKeyID, CPubKey> pubkey_map;
         std::map<CKeyID, CKey> privkey_map;
@@ -1276,10 +1266,11 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
         if (!pwallet->ImportScripts(import_data.import_scripts)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
         }
-        if (!pwallet->ImportPrivKeys(privkey_map, timestamp)) {
+        if (!pwallet->ImportPrivKeys(privkey_map, add_keypool, internal, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
         }
-        if (!pwallet->ImportPubKeys(ordered_pubkeys, pubkey_map, import_data.key_origins, add_keypool, internal, timestamp)) {
+        // Add pubkey to keypool only if no private keys are imported
+        if (!pwallet->ImportPubKeys(ordered_pubkeys, pubkey_map, import_data.key_origins, add_keypool && privkey_map.empty(), internal, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");
         }
         if (!pwallet->ImportScriptPubKeys(label, script_pub_keys, have_solving_data, internal, timestamp)) {

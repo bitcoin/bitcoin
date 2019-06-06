@@ -1630,7 +1630,7 @@ bool CWallet::ImportScripts(const std::set<CScript> scripts)
     return true;
 }
 
-bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
+bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const bool add_keypool, const bool internal, const int64_t timestamp)
 {
     WalletBatch batch(*database);
     for (const auto& entry : privkey_map) {
@@ -1642,6 +1642,9 @@ bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const in
         // If the private key is not present in the wallet, insert it.
         if (!HaveKey(id) && !AddKeyPubKeyWithDB(batch, key, pubkey)) {
             return false;
+        }
+        if (add_keypool) {
+             AddKeypoolPubkeyWithDB(pubkey, internal, batch);
         }
         UpdateTimeFirstKey(timestamp);
     }
@@ -1666,7 +1669,7 @@ bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const st
         }
         mapKeyMetadata[id].nCreateTime = timestamp;
 
-        // Add to keypool only works with pubkeys
+        // Add pubkey to keypool
         if (add_keypool) {
             AddKeypoolPubkeyWithDB(pubkey, internal, batch);
             NotifyCanGetAddressesChanged();

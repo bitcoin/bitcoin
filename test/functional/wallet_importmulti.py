@@ -722,57 +722,66 @@ class ImportMultiTest(BitcoinTestFramework):
         self.nodes[1].createwallet(wallet_name="noprivkeys", disable_private_keys=True)
         wrpc = self.nodes[1].get_wallet_rpc("noprivkeys")
 
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
+        addr1 = self.nodes[0].getnewaddress("", "bech32")
+        addr2 = self.nodes[0].getnewaddress("", "bech32")
+        priv1 = self.nodes[0].dumpprivkey(addr1)
+        priv2 = self.nodes[0].dumpprivkey(addr2)
         pub1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
         pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
         result = wrpc.importmulti(
             [{
                 'desc': descsum_create('wpkh(' + pub1 + ')'),
                 'keypool': True,
-                "timestamp": "now",
+                'timestamp': 'now'
             },
             {
                 'desc': descsum_create('wpkh(' + pub2 + ')'),
                 'keypool': True,
-                "timestamp": "now",
+                'internal': True,
+                'timestamp': 'now'
             }]
         )
         assert result[0]['success']
         assert result[1]['success']
-        assert_equal(wrpc.getwalletinfo()["keypoolsize"], 2)
-        newaddr1 = wrpc.getnewaddress()
+        assert_equal(wrpc.getwalletinfo()["keypoolsize"], 1)
+        assert_equal(wrpc.getwalletinfo()["keypoolsize_hd_internal"], 1)
+        newaddr1 = wrpc.getnewaddress("", "bech32")
         assert_equal(addr1, newaddr1)
-        newaddr2 = wrpc.getnewaddress()
+        newaddr2 = wrpc.getrawchangeaddress("bech32")
         assert_equal(addr2, newaddr2)
 
-        # Import some public keys to the internal keypool of a no privkey wallet
-        self.log.info("Adding pubkey to internal keypool of disableprivkey wallet")
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
-        pub1 = self.nodes[0].getaddressinfo(addr1)['pubkey']
-        pub2 = self.nodes[0].getaddressinfo(addr2)['pubkey']
+        # Import those pubkeys to keypool of a (blank) wallet with private keys
+        self.nodes[1].createwallet(wallet_name="blank", disable_private_keys=False, blank=True)
+        self.log.info("Pubkeys can be added to the keypool of a (blank) wallet with private keys")
+        wrpc = self.nodes[1].get_wallet_rpc("blank")
+        assert wrpc.getwalletinfo()['private_keys_enabled']
         result = wrpc.importmulti(
             [{
-                'desc': descsum_create('wpkh(' + pub1 + ')'),
+                'desc': descsum_create('wpkh(' + pub1 + ')'), # priv1
+                'keys': [priv1],
                 'keypool': True,
-                'internal': True,
-                "timestamp": "now",
+                'timestamp': 'now',
             },
             {
-                'desc': descsum_create('wpkh(' + pub2 + ')'),
+                'desc': descsum_create('wpkh(' + pub2 + ')'), # priv2
+                'keys': [priv2],
                 'keypool': True,
                 'internal': True,
-                "timestamp": "now",
+                'timestamp': 'now',
             }]
         )
         assert result[0]['success']
         assert result[1]['success']
-        assert_equal(wrpc.getwalletinfo()["keypoolsize_hd_internal"], 2)
-        newaddr1 = wrpc.getrawchangeaddress()
+        assert 'warnings' not in result[0]
+        assert 'warnings' not in result[1]
+
+        assert_equal(wrpc.getwalletinfo()["keypoolsize"], 1)
+        assert_equal(wrpc.getwalletinfo()["keypoolsize_hd_internal"], 1)
+        assert(wrpc.getaddressinfo(newaddr1)['ismine'])
+        assert(wrpc.getaddressinfo(newaddr2)['ismine'])
+        newaddr1 = wrpc.getnewaddress("", "bech32")
         assert_equal(addr1, newaddr1)
-        newaddr2 = wrpc.getrawchangeaddress()
-        assert_equal(addr2, newaddr2)
+        assert_raises_rpc_error(-4, "This wallet has no available keys", wrpc.getnewaddress, "", "bech32")
 
         # Import a multisig and make sure the keys don't go into the keypool
         self.log.info('Imported scripts with pubkeys should not have their pubkeys go into the keypool')
@@ -789,20 +798,6 @@ class ImportMultiTest(BitcoinTestFramework):
         )
         assert result[0]['success']
         assert_equal(wrpc.getwalletinfo()["keypoolsize"], 0)
-
-        # Cannot import those pubkeys to keypool of wallet with privkeys
-        self.log.info("Pubkeys cannot be added to the keypool of a wallet with private keys")
-        wrpc = self.nodes[1].get_wallet_rpc("")
-        assert wrpc.getwalletinfo()['private_keys_enabled']
-        result = wrpc.importmulti(
-            [{
-                'desc': descsum_create('wpkh(' + pub1 + ')'),
-                'keypool': True,
-                "timestamp": "now",
-            }]
-        )
-        assert_equal(result[0]['error']['code'], -8)
-        assert_equal(result[0]['error']['message'], "Keys can only be imported to the keypool when private keys are disabled")
 
         # Make sure ranged imports import keys in order
         self.log.info('Key ranges should be imported in order')
