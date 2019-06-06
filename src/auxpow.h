@@ -33,7 +33,7 @@ static const unsigned char pchMergedMiningHeader[] = { 0xfa, 0xbe, 'm', 'm' };
 
 /**
  * Data for the merge-mining auxpow.  This uses a merkle tx (the parent block's
- * coinbase tx) and a second merkle branch to link the actual Namecoin block
+ * coinbase tx) and a second merkle branch to link the actual Syscoin block
  * header to the parent block header, which is mined to satisfy the PoW.
  */
 class CAuxPow

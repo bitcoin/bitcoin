@@ -61,7 +61,7 @@ void StartNodes()
 	node1LastBlock = 0;
 	node2LastBlock = 0;
 	node3LastBlock = 0;
-	StopMainNetNodes();
+	//StopMainNetNodes();
 	printf("Starting 3 nodes in a regtest setup...\n");
 	StartNode("node1");
     BOOST_CHECK_NO_THROW(CallExtRPC("node1", "generate", "5"));
@@ -1118,9 +1118,9 @@ SyscoinTestingSetup::~SyscoinTestingSetup()
 }
 SyscoinMainNetSetup::SyscoinMainNetSetup()
 {
-	StartMainNetNodes();
+	//StartMainNetNodes();
 }
 SyscoinMainNetSetup::~SyscoinMainNetSetup()
 {
-	StopMainNetNodes();
+	//StopMainNetNodes();
 }

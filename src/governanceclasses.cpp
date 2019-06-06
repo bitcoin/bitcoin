@@ -519,7 +519,7 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     }
     const int nSuperblock = nBlockHeight / consensusParams.nSuperblockCycle;
     CAmount nPaymentsLimit;
-    if(nSuperblock > 36){
+    if(nSuperblock > 120){
     	// some part of all blocks issued during the cycle goes to superblock, see GetBlockSubsidy
     	CAmount nTotalRewardWithMasternodes;
     	const CAmount &nSuperblockPartOfSubsidy = GetBlockSubsidy(nBlockHeight, consensusParams, nTotalRewardWithMasternodes, true);
@@ -530,127 +530,366 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
         switch(nSuperblock)
         {
             case 1:
-                nPaymentsLimit = 2000000*COIN;
-                break;
+                        nPaymentsLimit =  1500000.00 *COIN;
+                        break;
             case 2:
-                nPaymentsLimit = 1900000*COIN;
-                break;
+                        nPaymentsLimit =  1470000.00 *COIN;
+                        break;
             case 3:
-                nPaymentsLimit = 1805000*COIN;
-                break; 
+                        nPaymentsLimit =  1440600.00 *COIN;
+                        break;
             case 4:
-                nPaymentsLimit = 1714750*COIN;
-                break;
+                        nPaymentsLimit =  1411788.00 *COIN;
+                        break;
             case 5:
-                nPaymentsLimit = 1629012.50*COIN;
-                break;
+                        nPaymentsLimit =  1383552.24 *COIN;
+                        break;
             case 6:
-                nPaymentsLimit = 1547561.88*COIN;
-                break;
+                        nPaymentsLimit =  1355881.20 *COIN;
+                        break;
             case 7:
-                nPaymentsLimit = 1470183.78*COIN;
-                break; 
+                        nPaymentsLimit =  1328763.57 *COIN;
+                        break;
             case 8:
-                nPaymentsLimit = 1396674.59*COIN;
-                break; 
+                        nPaymentsLimit =  1302188.30 *COIN;
+                        break;
             case 9:
-                nPaymentsLimit = 1326840.86*COIN;
-                break;
+                        nPaymentsLimit =  1276144.53 *COIN;
+                        break;
             case 10:
-                nPaymentsLimit = 1260498.82*COIN;
-                break;
+                        nPaymentsLimit =  1186814.42 *COIN;
+                        break;
             case 11:
-                nPaymentsLimit = 1197473.88*COIN;
-                break; 
+                        nPaymentsLimit =  1103737.41 *COIN;
+                        break;
             case 12:
-                nPaymentsLimit = 1137600.18*COIN;
-                break; 
+                        nPaymentsLimit =  1026475.79 *COIN;
+                        break;
             case 13:
-                nPaymentsLimit = 1080720.18*COIN;
-                break;
+                        nPaymentsLimit =  954622.48 *COIN;
+                        break;
             case 14:
-                nPaymentsLimit = 1026684.17*COIN;
-                break;
+                        nPaymentsLimit =  840067.79 *COIN;
+                        break;
             case 15:
-                nPaymentsLimit = 975349.96*COIN;
-                break; 
+                        nPaymentsLimit =  739259.65 *COIN;
+                        break;
             case 16:
-                nPaymentsLimit = 926582.46*COIN;
-                break; 
+                        nPaymentsLimit =  650548.49 *COIN;
+                        break;
             case 17:
-                nPaymentsLimit = 880253.34*COIN;
-                break;
+                        nPaymentsLimit =  572482.67 *COIN;
+                        break;
             case 18:
-                nPaymentsLimit = 836240.67*COIN;
-                break;
+                        nPaymentsLimit =  503784.75 *COIN;
+                        break;
             case 19:
-                nPaymentsLimit = 794428.64*COIN;
-                break; 
+                        nPaymentsLimit =  443330.58 *COIN;
+                        break;
             case 20:
-                nPaymentsLimit = 754707.21*COIN;
-                break; 
+                        nPaymentsLimit =  376831.00 *COIN;
+                        break;
             case 21:
-                nPaymentsLimit = 716971.84*COIN;
-                break;
+                        nPaymentsLimit =  320306.35 *COIN;
+                        break;
             case 22:
-                nPaymentsLimit = 681123.25*COIN;
-                break;
+                        nPaymentsLimit =  272260.39 *COIN;
+                        break;
             case 23:
-                nPaymentsLimit = 647067.09*COIN;
-                break; 
+                        nPaymentsLimit =  231421.33 *COIN;
+                        break;
             case 24:
-                nPaymentsLimit = 614713.74*COIN;
-                break;
+                        nPaymentsLimit =  196708.13 *COIN;
+                        break;
             case 25:
-                nPaymentsLimit = 583978.05*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 26:
-                nPaymentsLimit = 554779.15*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 27:
-                nPaymentsLimit = 527040.19*COIN;
-                break; 
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 28:
-                nPaymentsLimit = 500688.18*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 29:
-                nPaymentsLimit = 475653.77*COIN;
-                break; 
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 30:
-                nPaymentsLimit = 451871.08*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 31:
-                nPaymentsLimit = 429277.53*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 32:
-                nPaymentsLimit = 407813.65*COIN;
-                break; 
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 33:
-                nPaymentsLimit = 387422.97*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 34:
-                nPaymentsLimit = 368051.82*COIN;
-                break;
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 35:
-                nPaymentsLimit = 349649.23*COIN;
-                break;    
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
             case 36:
-                nPaymentsLimit = 332166.77*COIN;
-                break;                                                                                                                                                       
+                        nPaymentsLimit =  151767.00 *COIN;
+                        break;
+            case 37:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 38:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 39:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 40:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 41:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 42:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 43:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 44:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 45:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 46:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 47:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 48:
+                        nPaymentsLimit =  144178.65 *COIN;
+                        break;
+            case 49:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 50:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 51:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 52:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 53:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 54:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 55:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 56:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 57:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 58:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 59:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 60:
+                        nPaymentsLimit =  136969.72 *COIN;
+                        break;
+            case 61:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 62:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 63:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 64:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 65:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 66:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 67:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 68:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 69:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 70:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 71:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 72:
+                        nPaymentsLimit =  130121.23 *COIN;
+                        break;
+            case 73:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 74:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 75:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 76:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 77:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 78:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 79:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 80:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 81:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 82:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 83:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 84:
+                        nPaymentsLimit =  123615.17 *COIN;
+                        break;
+            case 85:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 86:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 87:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 88:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 89:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 90:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 91:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 92:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 93:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 94:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 95:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 96:
+                        nPaymentsLimit =  117434.41 *COIN;
+                        break;
+            case 97:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 98:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 99:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 100:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 101:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 102:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 103:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 104:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 105:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 106:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 107:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 108:
+                        nPaymentsLimit =  111562.69 *COIN;
+                        break;
+            case 109:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 110:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 111:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 112:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 113:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 114:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 115:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 116:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 117:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 118:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 119:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;
+            case 120:
+                        nPaymentsLimit =  105984.56 *COIN;
+                        break;                                                                                                                                         
         }
-        /*  
-            A = Accrued Amount (principal + interest)
-            P = Principal Amount
-            r = Annual Monthly Interest Rate as a decimal
-            r = R/100
-            t = Time Involved in months(superblock number).
-            n = number of compounding periods per unit t; at the END of each period (1 in our case)
-        */
-        const double& A = 2000000.0*COIN;
-        const double& r = 0.05;
-        const double& t = (double)nSuperblock - 1;
-        const double& P = A * pow(1.0 - r, t);
-        nPaymentsLimit = (CAmount)P; 
     }
     LogPrint(BCLog::GOBJECT, "CSuperblock::GetPaymentsLimit -- Valid superblock height %d, payments max %lld\n", nBlockHeight, nPaymentsLimit);
 

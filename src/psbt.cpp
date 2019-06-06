@@ -2,9 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <coins.h>
-#include <consensus/tx_verify.h>
-#include <policy/policy.h>
 #include <psbt.h>
 #include <util/strencodings.h>
 

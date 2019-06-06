@@ -5,7 +5,6 @@
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
-#include <init.h>
 #include <qt/syscoin.h>
 #include <qt/syscoingui.h>
 #include <qt/networkstyle.h>
@@ -15,9 +14,6 @@
 
 #if defined(HAVE_CONFIG_H)
 #include <config/syscoin-config.h>
-#endif
-#ifdef ENABLE_WALLET
-#include <wallet/db.h>
 #endif
 
 #include <QAction>

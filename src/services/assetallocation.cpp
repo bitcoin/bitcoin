@@ -12,12 +12,13 @@
 #include <wallet/wallet.h>
 #endif
 #include <services/rpc/assetrpc.h>
+#include <rpc/server.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 extern UniValue ValueFromAmount(const CAmount& amount);
 extern UniValue DescribeAddress(const CTxDestination& dest);
 extern void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
-
+extern UniValue convertaddress(const JSONRPCRequest& request);
 CCriticalSection cs_assetallocation;
 CCriticalSection cs_assetallocationarrival;
 using namespace std;
@@ -652,7 +653,13 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 				const UniValue &owner = ownersArray[i].get_obj();
 				const UniValue &ownerStr = find_value(owner, "address");
 				if (ownerStr.isStr()) {
-                    const CTxDestination &dest = DecodeDestination(ownerStr.get_str());
+                    UniValue requestParam(UniValue::VARR);
+                    requestParam.push_back(ownerStr.get_str());
+                    JSONRPCRequest jsonRequest;
+                    jsonRequest.params = requestParam;
+                    const UniValue &convertedAddressValue = convertaddress(jsonRequest);
+                    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();
+                    const CTxDestination &dest = DecodeDestination(v4address);                   
                     UniValue detail = DescribeAddress(dest);
                     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
                         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));

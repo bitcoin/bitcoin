@@ -23,6 +23,66 @@ extern std::unordered_set<std::string> assetAllocationConflicts;
 // SYSCOIN service rpc functions
 extern UniValue sendrawtransaction(const JSONRPCRequest& request);
 using namespace std;
+UniValue convertaddress(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            RPCHelpMan{"convertaddress",
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}
+            },
+            RPCResult{
+                "{\n"
+                "  \"bitcoinaddress\" : \"address\",   (string) The syscoin 3 or Bitcoin address validated\n"
+                "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
+                "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
+                "}\n"
+            },
+            RPCExamples{
+                HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+                + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+            }
+            }.ToString());
+    }
+    
+    UniValue ret(UniValue::VOBJ);
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+    std::string currentV4Address = "";
+    std::string currentV3Address = "";
+    std::string currentBitcoinAddress = "";
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
+        currentV4Address =  EncodeDestination(dest);
+        currentV3Address =  EncodeDestination(PKHash(*witness_id));
+        currentBitcoinAddress = EncodeDestinationBitcoin(dest);
+    }
+    else if (auto key_id = boost::get<PKHash>(&dest)) {
+        currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
+        currentV3Address =  EncodeDestination(*key_id);
+        currentBitcoinAddress = EncodeDestinationBitcoin(*key_id);
+    }
+    else if (auto script_id = boost::get<ScriptHash>(&dest)) {
+        currentV4Address =  EncodeDestination(*script_id);
+        currentV3Address =  currentV4Address;
+        currentBitcoinAddress = EncodeDestinationBitcoin(*script_id);
+    }
+    else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
+        currentV4Address =  EncodeDestination(dest);
+        currentV3Address =  currentV4Address;
+        currentBitcoinAddress = EncodeDestinationBitcoin(dest);
+    }  
+    ret.pushKV("bitcoinaddress", currentBitcoinAddress); 
+    ret.pushKV("v3address", currentV3Address);
+    ret.pushKV("v4address", currentV4Address);
+                       
+    
+    return ret;
+}
 unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 {
     UniValue paramsUTXO(UniValue::VARR);
@@ -362,7 +422,13 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
     }       
-    const CTxDestination &dest = DecodeDestination(params[0].get_str());
+    UniValue requestParam(UniValue::VARR);
+    requestParam.push_back(params[0].get_str());
+    JSONRPCRequest jsonRequest;
+    jsonRequest.params = requestParam;
+    const UniValue &convertedAddressValue = convertaddress(jsonRequest);
+    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();
+    const CTxDestination &dest = DecodeDestination(v4address);
     UniValue detail = DescribeAddress(dest);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
@@ -990,8 +1056,14 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
             }.ToString());
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
-    }       
-    const CTxDestination &dest = DecodeDestination(params[0].get_str());
+    }  
+    UniValue requestParam(UniValue::VARR);
+    requestParam.push_back(params[0].get_str());
+    JSONRPCRequest jsonRequest;
+    jsonRequest.params = requestParam;
+    const UniValue &convertedAddressValue = convertaddress(jsonRequest);     
+    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();    
+    const CTxDestination &dest = DecodeDestination(v4address);
     UniValue detail = DescribeAddress(dest);
     if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
@@ -1065,8 +1137,8 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     if(!StartGethNode(exePath, gethPID, bGethTestnet, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
     int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-    const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
-    const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
+    const std::string& rpcuser = gArgs.GetArg("-rpcuser", "");
+    const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "");
     if(!StartRelayerNode(exePath, relayerPID, rpcport, rpcuser, rpcpassword, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     
@@ -1228,66 +1300,7 @@ UniValue syscoingettxroots(const JSONRPCRequest& request)
     
     return ret;
 } 
-UniValue convertaddress(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
-            RPCHelpMan{"convertaddress",
-            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
-            {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}
-            },
-            RPCResult{
-                "{\n"
-                "  \"bitcoinaddress\" : \"address\",   (string) The syscoin 3 or Bitcoin address validated\n"
-                "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
-                "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
-                "}\n"
-            },
-            RPCExamples{
-                HelpExampleCli("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-                + HelpExampleRpc("convertaddress", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
-            }
-            }.ToString());
-    }
-    
-    UniValue ret(UniValue::VOBJ);
-    CTxDestination dest = DecodeDestination(request.params[0].get_str());
 
-    // Make sure the destination is valid
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
-    }
-    std::string currentV4Address = "";
-    std::string currentV3Address = "";
-    std::string currentBitcoinAddress = "";
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
-        currentV3Address =  EncodeDestination(PKHash(*witness_id));
-        currentBitcoinAddress = EncodeDestinationBitcoin(dest);
-    }
-    else if (auto key_id = boost::get<PKHash>(&dest)) {
-        currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
-        currentV3Address =  EncodeDestination(*key_id);
-        currentBitcoinAddress = EncodeDestinationBitcoin(*key_id);
-    }
-    else if (auto script_id = boost::get<ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(*script_id);
-        currentV3Address =  currentV4Address;
-        currentBitcoinAddress = EncodeDestinationBitcoin(*script_id);
-    }
-    else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
-        currentV3Address =  currentV4Address;
-        currentBitcoinAddress = EncodeDestinationBitcoin(dest);
-    }  
-    ret.pushKV("bitcoinaddress", currentBitcoinAddress); 
-    ret.pushKV("v3address", currentV3Address);
-    ret.pushKV("v4address", currentV4Address);
-                       
-    
-    return ret;
-}
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames

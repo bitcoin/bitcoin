@@ -13,8 +13,6 @@
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
-#include <hash.h>
-#include <net.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <pow.h>
@@ -24,7 +22,6 @@
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/validation.h>
-#include <validationinterface.h>
 
 #include <algorithm>
 #include <queue>
@@ -177,9 +174,9 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if(fLiteMode){
              throw std::runtime_error("You cannot mine in lite mode, set litemode=0 in your conf file!");
         }
-        if(fGethSyncStatus != "synced"){
+        /*if(fGethSyncStatus != "synced"){
             throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
-        }
+        }*/
     }
     // Update coinbase transaction with additional info about masternode and governance payments,
     // get some info back to pass to getblocktemplate

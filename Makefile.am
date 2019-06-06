@@ -81,8 +81,8 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/syscoin-geth.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/syscoin-relayer.exe $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/sgeth.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/srelayer.node.exe $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/sha3.node $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/bufferutil.node $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/scrypt.node $(top_builddir)/release
@@ -94,6 +94,13 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
+
+SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sgeth.node \
+	$(top_builddir)/src/bin/osx/srelayer.node \
+	$(top_builddir)/src/bin/osx/sha3.node \
+	$(top_builddir)/src/bin/osx/bufferutil.node \
+	$(top_builddir)/src/bin/osx/scrypt.node \
+	$(top_builddir)/src/bin/osx/validation.node
 
 $(OSX_APP)/Contents/Resources/empty.lproj:
 	$(MKDIR_P) $(@D)
@@ -109,12 +116,6 @@ $(OSX_APP)/Contents/Resources/syscoin.icns: $(OSX_INSTALLER_ICONS)
 
 $(OSX_APP)/Contents/MacOS/Syscoin-Qt: all-recursive
 	$(MKDIR_P) $(@D)
-	cp $(top_builddir)/src/bin/osx/syscoin-geth $(@D)
-	cp $(top_builddir)/src/bin/osx/syscoin-relayer $(@D)
-	cp $(top_builddir)/src/bin/osx/sha3.node $(@D)
-	cp $(top_builddir)/src/bin/osx/bufferutil.node $(@D)
-	cp $(top_builddir)/src/bin/osx/scrypt.node $(@D)
-	cp $(top_builddir)/src/bin/osx/validation.node $(@D)
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM)  $(SYSCOIN_QT_BIN) $@
 
 $(OSX_APP)/Contents/Resources/Base.lproj/InfoPlist.strings:
@@ -130,7 +131,7 @@ osx_volname:
 
 if BUILD_DARWIN
 $(OSX_DMG): $(OSX_APP_BUILT) $(OSX_PACKAGING) $(OSX_BACKGROUND_IMAGE)
-	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME)
+	$(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -add-qt-tr $(OSX_QT_TRANSLATIONS) -translations-dir=$(QT_TRANSLATION_DIR) -dmg -fancy $(OSX_FANCY_PLIST) -verbose 2 -volname $(OSX_VOLNAME) -add-resources $(SYSCOIN_GETH_BINS)
 
 $(OSX_BACKGROUND_IMAGE).png: contrib/macdeploy/$(OSX_BACKGROUND_SVG)
 	sed 's/PACKAGE_NAME/$(PACKAGE_NAME)/' < "$<" | $(RSVG_CONVERT) -f png -d 36 -p 36 -o $@
@@ -164,7 +165,7 @@ $(APP_DIST_DIR)/.DS_Store: $(OSX_DSSTORE_GEN)
 	$(PYTHON) $< "$@" "$(OSX_VOLNAME)"
 
 $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Syscoin-Qt: $(OSX_APP_BUILT) $(OSX_PACKAGING)
-	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2
+	INSTALLNAMETOOL=$(INSTALLNAMETOOL)  OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) -translations-dir=$(QT_TRANSLATION_DIR) -add-qt-tr $(OSX_QT_TRANSLATIONS) -verbose 2 -add-resources $(SYSCOIN_GETH_BINS)
 
 deploydir: $(APP_DIST_EXTRAS)
 endif
