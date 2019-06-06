@@ -51,7 +51,6 @@
 #include <util/moneystr.h>
 #include <util/validation.h>
 #include <validationinterface.h>
-#include <warnings.h>
 #include <walletinitinterface.h>
 #include <stdint.h>
 #include <stdio.h>

@@ -7,7 +7,6 @@
 #include <util/bip32.h>
 #include <util/strencodings.h>
 #include <wallet/psbtwallet.h>
-#include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 #include <univalue.h>
 

@@ -1,10 +1,8 @@
 #include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
-#include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/node.h>
-#include <base58.h>
 #include <qt/bitcoinamountfield.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
