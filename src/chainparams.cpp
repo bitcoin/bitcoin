@@ -133,9 +133,9 @@ public:
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.vchSYSXContract = ParseHex("3cfa0c6c1ab06cee1ed593500eddb6a7161ef37e");
+        consensus.vchSYSXContract = ParseHex("197a2f58c94eff4b2c6ae0922fbc840080f839c2");
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
-        consensus.nBridgeStartBlock = 51000;
+        consensus.nBridgeStartBlock = 75000;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
