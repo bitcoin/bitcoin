@@ -126,7 +126,7 @@ ArgsManager gArgs;
         std::wstring input = appQuoted_w + L" " + arg_w;
         wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
         const wchar_t* app_const = app_w.c_str();
-        LogPrintf("CreateProcessW app %s\n",input.c_str());
+        LogPrintf("CreateProcessW app %s %s\n",app,arg);
         int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
               CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
         if(!result)
