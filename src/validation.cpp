@@ -902,7 +902,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                             pool.ClearPrioritisation(hash);
                             // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
                             CValidationState stateDummy;
-                            FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
+                            ::ChainstateActive().FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
                             break;
                         }
                         
@@ -937,7 +937,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                                 pool.ClearPrioritisation(hash);
                                 // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
                                 CValidationState stateDummy;
-                                FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
+                                ::ChainstateActive().FlushStateToDisk(chainparams, stateDummy, FlushStateMode::PERIODIC);
                             }
                         }
                     }
