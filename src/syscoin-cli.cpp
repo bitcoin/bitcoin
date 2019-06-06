@@ -324,13 +324,14 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
     // Get credentials
     std::string strRPCUserColonPass;
     bool failedToGetAuthCookie = false;
-    if (gArgs.GetArg("-rpcpassword", "") == "") {
+    // SYSCOIN
+    if (gArgs.GetArg("-rpcpassword", "p") == "") {
         // Try fall back to cookie-based authentication if no password is provided
         if (!GetAuthCookie(&strRPCUserColonPass)) {
             failedToGetAuthCookie = true;
         }
     } else {
-        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "u") + ":" + gArgs.GetArg("-rpcpassword", "p");
     }
 
     struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req.get());
