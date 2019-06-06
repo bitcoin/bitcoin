@@ -7,7 +7,6 @@
 
 #include <coins.h>
 #include <core_io.h>
-#include <interfaces/chain.h>
 #include <key_io.h>
 #include <keystore.h>
 #include <policy/policy.h>

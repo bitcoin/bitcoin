@@ -6,7 +6,6 @@
 #include <rpc/blockchain.h>
 
 #include <amount.h>
-#include <base58.h>
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -15,7 +14,6 @@
 #include <core_io.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
-#include <index/txindex.h>
 #include <key_io.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
