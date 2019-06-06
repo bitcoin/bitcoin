@@ -319,23 +319,21 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     QStringList formatted;
     for (const SendCoinsRecipient &rcp : currentTransaction.getRecipients())
     {
-        // generate bold amount string with wallet name in case of multiwallet
-        QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
+        // generate amount string with wallet name in case of multiwallet
+        QString amount = BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         if (model->isMultiwallet()) {
-            amount.append(" <u>"+tr("from wallet %1").arg(GUIUtil::HtmlEscape(model->getWalletName()))+"</u> ");
+            amount.append(tr(" from wallet '%1'").arg(model->getWalletName()));
         }
-        amount.append("</b> ");
-        // generate monospace address string
-        QString address = "<span style='font-family: monospace;'>" + rcp.address;
-        address.append("</span>");
+
+        // generate address string
+        QString address = rcp.address;
 
         QString recipientElement;
-        recipientElement = "<br />";
 
         {
             if(rcp.label.length() > 0) // label with address
             {
-                recipientElement.append(tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label)));
+                recipientElement.append(tr("%1 to '%2'").arg(amount, rcp.label));
                 recipientElement.append(QString(" (%1)").arg(address));
             }
             else // just address
@@ -347,21 +345,14 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     }
 
     // Limit number of displayed entries
-    int messageEntries = formatted.size();
-    int displayedEntries = 0;
-    for(int i = 0; i < formatted.size(); i++){
-        if(i >= MAX_SEND_POPUP_ENTRIES){
-            formatted.removeLast();
-            i--;
-        }
-        else{
-            displayedEntries = i+1;
-        }
+    QStringList formatted_short(formatted);
+    if (formatted_short.size() > MAX_SEND_POPUP_ENTRIES) {
+        formatted_short.erase(formatted_short.begin() + MAX_SEND_POPUP_ENTRIES, formatted_short.end());
     }
 
     QString questionString = tr("Are you sure you want to send?");
     questionString.append("<br /><br />");
-    questionString.append(formatted.join("<br />"));
+    questionString.append(formatted_short.join("<br />"));
     questionString.append("<br />");
 
     QString strCoinJoinName = QString::fromStdString(gCoinJoinName);
@@ -371,6 +362,9 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     } else {
         questionString.append(tr("using") + " <b>" + tr("any available funds") + "</b>");
     }
+
+    int messageEntries = formatted.size();
+    int displayedEntries = formatted_short.size();
 
     if (displayedEntries < messageEntries) {
         questionString.append("<br />");
@@ -437,9 +431,14 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     questionString.append(QString("<br /><span style='font-size:10pt; font-weight:normal;'>(=%1)</span>")
         .arg(alternativeUnits.join(" " + tr("or") + " ")));
 
-    // Display message box
-    SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
-        questionString, SEND_CONFIRM_DELAY, this);
+    QString informative_text;
+    QString detailed_text;
+    if (formatted.size() > 1) {
+        informative_text = tr("To review recipient list click \"Show Details...\"");
+        detailed_text = formatted.join("\n\n");
+    }
+
+    SendConfirmationDialog confirmationDialog(tr("Confirm send coins"), questionString, informative_text, detailed_text, SEND_CONFIRM_DELAY, this);
     confirmationDialog.exec();
     QMessageBox::StandardButton retval = static_cast<QMessageBox::StandardButton>(confirmationDialog.result());
 
@@ -954,11 +953,16 @@ void SendCoinsDialog::keepChangeAddressChanged(bool checked)
     fKeepChangeAddress = checked;
 }
 
-SendConfirmationDialog::SendConfirmationDialog(const QString &title, const QString &text, int _secDelay,
-    QWidget *parent) :
-    QMessageBox(QMessageBox::Question, title, text, QMessageBox::Yes | QMessageBox::Cancel, parent), secDelay(_secDelay)
+SendConfirmationDialog::SendConfirmationDialog(const QString& title, const QString& text, const QString& informative_text, const QString& detailed_text, int _secDelay, QWidget* parent)
+    : QMessageBox(parent), secDelay(_secDelay)
 {
     GUIUtil::updateFonts();
+    setIcon(QMessageBox::Question);
+    setWindowTitle(title); // On macOS, the window title is ignored (as required by the macOS Guidelines).
+    setText(text);
+    setInformativeText(informative_text);
+    setDetailedText(detailed_text);
+    setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
     setDefaultButton(QMessageBox::Cancel);
     yesButton = button(QMessageBox::Yes);
     updateYesButton();
