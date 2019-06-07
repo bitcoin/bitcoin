@@ -1165,8 +1165,7 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
 
     const UniValue& priv_keys = data.exists("keys") ? data["keys"].get_array() : UniValue();
 
-    // Expand all descriptors to get public keys and scripts.
-    // TODO: get private keys from descriptors too
+    // Expand all descriptors to get public keys and scripts, and private keys if available.
     for (int i = range_start; i <= range_end; ++i) {
         FlatSigningProvider out_keys;
         std::vector<CScript> scripts_temp;
@@ -1180,7 +1179,10 @@ static UniValue ProcessImportDescriptor(ImportData& import_data, std::map<CKeyID
             import_data.import_scripts.emplace(x.second);
         }
 
+        parsed_desc->ExpandPrivate(i, keys, out_keys);
+
         std::copy(out_keys.pubkeys.begin(), out_keys.pubkeys.end(), std::inserter(pubkey_map, pubkey_map.end()));
+        std::copy(out_keys.keys.begin(), out_keys.keys.end(), std::inserter(privkey_map, privkey_map.end()));
         import_data.key_origins.insert(out_keys.origins.begin(), out_keys.origins.end());
     }
 
