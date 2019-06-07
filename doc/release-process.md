@@ -41,10 +41,12 @@ Release Process
 #### After branch-off (on master)
 
 - Update the version of `contrib/gitian-descriptors/*.yml`.
+- Update the versions in `SECURITY.md` as per the software lifecycle [maintenance policy](https://bitcoincore.org/en/lifecycle/#maintenance-period), generally bumping all up one major version.
 
 #### After branch-off (on the major release branch)
 
 - Update the versions and the link to the release notes draft in `doc/release-notes.md`.
+- Delete `SECURITY.md`.
 
 #### Before final release
 
