@@ -2,6 +2,8 @@
 
 ## Supported Versions
 
+Versions of Bitcoin Core that are currently supported with security updates:
+
 | Version | Supported          |
 | ------- | ------------------ |
 | 0.18    | :white_check_mark: |
