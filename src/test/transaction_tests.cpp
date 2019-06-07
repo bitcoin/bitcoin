@@ -10,7 +10,7 @@
 #include <checkqueue.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
-#include <core_io.h>
+#include <core_read.h>
 #include <key.h>
 #include <keystore.h>
 #include <validation.h>

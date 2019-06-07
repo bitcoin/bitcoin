@@ -6,7 +6,7 @@
 
 #include <banman.h>
 #include <clientversion.h>
-#include <core_io.h>
+#include <core_write.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>

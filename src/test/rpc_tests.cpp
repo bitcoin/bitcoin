@@ -6,7 +6,7 @@
 #include <rpc/client.h>
 #include <rpc/util.h>
 
-#include <core_io.h>
+#include <core_write.h>
 #include <init.h>
 #include <interfaces/chain.h>
 

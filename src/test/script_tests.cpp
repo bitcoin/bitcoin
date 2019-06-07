@@ -4,7 +4,8 @@
 
 #include <test/data/script_tests.json.h>
 
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <key.h>
 #include <keystore.h>
 #include <script/script.h>

@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <core_io.h>
+#include <core_read.h>
 
 #include <primitives/block.h>
 #include <primitives/transaction.h>

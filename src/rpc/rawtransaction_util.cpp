@@ -6,7 +6,8 @@
 #include <rpc/rawtransaction_util.h>
 
 #include <coins.h>
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <key_io.h>
 #include <keystore.h>
 #include <policy/policy.h>

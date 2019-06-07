@@ -7,7 +7,8 @@
 #include <coins.h>
 #include <compat/byteswap.h>
 #include <consensus/validation.h>
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <index/txindex.h>
 #include <key_io.h>
 #include <keystore.h>

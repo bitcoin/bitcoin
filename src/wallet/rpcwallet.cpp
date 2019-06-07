@@ -5,7 +5,8 @@
 
 #include <amount.h>
 #include <consensus/validation.h>
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
