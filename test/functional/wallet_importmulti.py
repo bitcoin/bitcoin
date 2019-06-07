@@ -620,6 +620,10 @@ class ImportMultiTest(BitcoinTestFramework):
                      solvable=True,
                      ismine=True)
 
+        # dump the private key to ensure it matches what was imported
+        privkey = self.nodes[1].dumpprivkey(address)
+        assert_equal(privkey, wif_priv)
+
         # Test importing of a P2PKH address via descriptor
         key = get_key(self.nodes[0])
         self.log.info("Should import a p2pkh address from descriptor")
