@@ -52,6 +52,7 @@ namespace Platform
 
     bool NfTokensManager::AddNfToken(const NfToken & nfToken, const CTransaction & tx, const CBlockIndex * pindex)
     {
+        LOCK(m_cs);
         assert(nfToken.tokenProtocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!nfToken.tokenId.IsNull());
         assert(!nfToken.tokenOwnerKeyId.IsNull());
@@ -74,6 +75,7 @@ namespace Platform
 
     NfTokenIndex NfTokensManager::GetNfTokenIndex(uint64_t protocolId, const uint256 & tokenId)
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
 
@@ -89,6 +91,7 @@ namespace Platform
 
     NfTokenIndex NfTokensManager::GetNfTokenIndex(const uint256 & regTxId)
     {
+        LOCK(m_cs);
         assert(!regTxId.IsNull());
 
         if (PlatformDb::Instance().OptimizeSpeed())
@@ -109,6 +112,7 @@ namespace Platform
 
     bool NfTokensManager::Contains(uint64_t protocolId, const uint256 & tokenId, int height)
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
         assert(height >= 0);
@@ -121,6 +125,7 @@ namespace Platform
 
     bool NfTokensManager::Contains(uint64_t protocolId, const uint256 & tokenId)
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
         return this->Contains(protocolId, tokenId, m_tipHeight);
@@ -128,6 +133,7 @@ namespace Platform
 
     CKeyID NfTokensManager::OwnerOf(uint64_t protocolId, const uint256 & tokenId)
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
 
@@ -143,6 +149,7 @@ namespace Platform
 
     std::size_t NfTokensManager::BalanceOf(uint64_t protocolId, const CKeyID & ownerId) const
     {
+        LOCK(m_cs);
         // TODO: put my addresses balance into db
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
@@ -168,6 +175,7 @@ namespace Platform
 
     std::size_t NfTokensManager::BalanceOf(const CKeyID & ownerId) const
     {
+        LOCK(m_cs);
         // TODO: put my addresses balance into db
         assert(!ownerId.IsNull());
 
@@ -189,6 +197,7 @@ namespace Platform
 
     std::vector<std::weak_ptr<const NfToken> > NfTokensManager::NfTokensOf(uint64_t protocolId, const CKeyID & ownerId) const
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
 
@@ -207,6 +216,7 @@ namespace Platform
 
     std::vector<std::weak_ptr<const NfToken> > NfTokensManager::NfTokensOf(const CKeyID & ownerId) const
     {
+        LOCK(m_cs);
         assert(!ownerId.IsNull());
 
         const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
@@ -224,6 +234,7 @@ namespace Platform
 
     std::vector<uint256> NfTokensManager::NfTokenIdsOf(uint64_t protocolId, const CKeyID & ownerId) const
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!ownerId.IsNull());
 
@@ -241,6 +252,7 @@ namespace Platform
 
     std::vector<uint256> NfTokensManager::NfTokenIdsOf(const CKeyID & ownerId) const
     {
+        LOCK(m_cs);
         assert(!ownerId.IsNull());
 
         const NftIndexByOwnerId & ownerIndex = m_nfTokensIndexSet.get<Tags::OwnerId>();
@@ -262,6 +274,7 @@ namespace Platform
 
     std::size_t NfTokensManager::TotalSupply(uint64_t protocolId) const
     {
+        LOCK(m_cs);
         auto it = m_protocolsTotalSupply.find(protocolId);
         if (it == m_protocolsTotalSupply.end())
         {
@@ -274,6 +287,7 @@ namespace Platform
 
     void NfTokensManager::ProcessFullNftIndexRange(std::function<bool(const NfTokenIndex &)> nftIndexHandler) const
     {
+        LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             for (const auto & nftIndex : m_nfTokensIndexSet)
@@ -303,6 +317,7 @@ namespace Platform
                                                        int count,
                                                        int startFrom) const
     {
+        LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto originalRange = m_nfTokensIndexSet.get<Tags::Height>().range(
@@ -338,6 +353,7 @@ namespace Platform
                                                       int count,
                                                       int startFrom) const
     {
+        LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto first = m_nfTokensIndexSet.get<Tags::ProtocolIdHeight>().lower_bound(std::make_tuple(nftProtoId, 0));
@@ -371,6 +387,7 @@ namespace Platform
                                                        int count,
                                                        int startFrom) const
     {
+        LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto first = m_nfTokensIndexSet.get<Tags::OwnerId>().lower_bound(std::make_tuple(keyId, 0));
@@ -405,6 +422,7 @@ namespace Platform
                                                        int count,
                                                        int startFrom) const
     {
+        LOCK(m_cs);
         if (PlatformDb::Instance().OptimizeSpeed())
         {
             auto first = m_nfTokensIndexSet.get<Tags::ProtocolIdOwnerId>().lower_bound(std::make_tuple(nftProtoId, keyId, 0));
@@ -439,6 +457,7 @@ namespace Platform
 
     bool NfTokensManager::Delete(uint64_t protocolId, const uint256 & tokenId, int height)
     {
+        LOCK(m_cs);
         assert(protocolId != NfToken::UNKNOWN_TOKEN_PROTOCOL);
         assert(!tokenId.IsNull());
         assert(height >= 0);
@@ -456,6 +475,7 @@ namespace Platform
 
     void NfTokensManager::UpdateBlockTip(const CBlockIndex * pindex)
     {
+        LOCK(m_cs);
         assert(pindex != nullptr);
         if (pindex != nullptr)
         {

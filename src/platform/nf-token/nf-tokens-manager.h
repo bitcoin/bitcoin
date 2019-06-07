@@ -9,6 +9,7 @@
 #include <boost/range/adaptors.hpp>
 #include <boost/range/any_range.hpp>
 
+#include "sync.h"
 #include "chain.h"
 #include "nf-token-multiindex-utils.h"
 #include "nf-token-index.h"
@@ -255,6 +256,7 @@ namespace Platform
             NfTokensIndexSet m_nfTokensIndexSet;
             int m_tipHeight{-1};
             uint256 m_tipBlockHash;
+            mutable CCriticalSection m_cs;
 
             std::unordered_map<uint64_t, std::size_t> m_protocolsTotalSupply;
 
