@@ -11,7 +11,7 @@
 #include <chainparams.h>
 #include <coins.h>
 #include <consensus/validation.h>
-#include <core_io.h>
+#include <core_write.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
 #include <key.h>

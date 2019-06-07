@@ -6,7 +6,7 @@
 #include <test/setup_common.h>
 
 #include <blockfilter.h>
-#include <core_io.h>
+#include <core_read.h>
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>

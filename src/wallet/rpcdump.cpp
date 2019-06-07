@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <core_io.h>
+#include <core_read.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <merkleblock.h>

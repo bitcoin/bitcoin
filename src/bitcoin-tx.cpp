@@ -9,10 +9,9 @@
 #include <clientversion.h>
 #include <coins.h>
 #include <consensus/consensus.h>
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <key_io.h>
-#include <keystore.h>
-#include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
 #include <script/script.h>

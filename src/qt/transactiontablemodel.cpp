@@ -13,7 +13,7 @@
 #include <qt/transactionrecord.h>
 #include <qt/walletmodel.h>
 
-#include <core_io.h>
+#include <core_write.h>
 #include <interfaces/handler.h>
 #include <uint256.h>
 

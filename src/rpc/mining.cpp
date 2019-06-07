@@ -9,7 +9,8 @@
 #include <consensus/consensus.h>
 #include <consensus/params.h>
 #include <consensus/validation.h>
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <key_io.h>
 #include <miner.h>
 #include <net.h>

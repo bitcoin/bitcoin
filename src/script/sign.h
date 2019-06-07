@@ -10,7 +10,6 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
-#include <streams.h>
 
 class CKey;
 class CKeyID;

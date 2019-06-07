@@ -12,6 +12,7 @@
 #include <interfaces/chain.h>
 #include <policy/policy.h>
 #include <rpc/request.h>
+#include <script/sign.h>
 #include <test/setup_common.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>

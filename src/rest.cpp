@@ -5,7 +5,8 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <core_io.h>
+#include <core_read.h>
+#include <core_write.h>
 #include <httpserver.h>
 #include <index/txindex.h>
 #include <primitives/block.h>
