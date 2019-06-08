@@ -271,6 +271,10 @@ void CQuorumBlockProcessor::UpgradeDB()
     if (chainActive.Height() >= Params().GetConsensus().DIP0003EnforcementHeight) {
         auto pindex = chainActive[Params().GetConsensus().DIP0003EnforcementHeight];
         while (pindex) {
+            if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
+                // Too late, we already pruned blocks we needed to reprocess commitments
+                throw std::runtime_error(std::string(__func__) + ": Quorum Commitments DB upgrade failed, you need to re-download the blockchain");
+            }
             CBlock block;
             bool r = ReadBlockFromDisk(block, pindex, Params().GetConsensus());
             assert(r);
