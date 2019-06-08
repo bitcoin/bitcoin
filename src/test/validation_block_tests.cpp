@@ -128,7 +128,6 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         BuildChain(Params().GenesisBlock().GetHash(), 100, 15, 10, 500, blocks);
     }
 
-    bool ignored;
     CValidationState state;
     std::vector<CBlockHeader> headers;
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
@@ -137,7 +136,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     BOOST_CHECK(ProcessNewBlockHeaders(headers, state, Params()));
 
     // Connect the genesis block and drain any outstanding events
-    BOOST_CHECK(ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true, &ignored));
+    ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), true).wait();
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -155,18 +154,16 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     std::vector<std::thread> threads;
     for (int i = 0; i < 10; i++) {
         threads.emplace_back([&blocks]() {
-            bool ignored;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
-                ProcessNewBlock(Params(), block, true, &ignored);
+                ProcessNewBlock(Params(), block, true);
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
-                    bool processed = ProcessNewBlock(Params(), block, true, &ignored);
-                    assert(processed);
+                    ProcessNewBlock(Params(), block, true).wait();
                 }
             }
         });

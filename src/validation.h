@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <atomic>
 #include <exception>
+#include <future>
 #include <map>
 #include <memory>
 #include <set>
@@ -208,15 +209,17 @@ static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 550 * 1024 * 1024;
  * Note that we guarantee that either the proof-of-work is valid on pblock, or
  * (and possibly also) BlockChecked will have been called.
  *
- * May not be called in a
- * validationinterface callback.
+ * May not be called in a validationinterface callback.
+ *
+ * Do NOT block on the returned future waiting for it to resolve as this may
+ * introduce deadlocks (in the case you are holding any mutexes which are
+ * also taken in validationinterface callbacks).
  *
  * @param[in]   pblock  The block we want to process.
  * @param[in]   fForceProcessing Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @param[out]  fNewBlock A boolean which is set to indicate if the block was first received via this call
- * @return True if state.IsValid()
+ * @return      A future which complets with a boolean which is set to indicate if the block was first received via this call
  */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing, bool* fNewBlock) LOCKS_EXCLUDED(cs_main);
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing) LOCKS_EXCLUDED(cs_main);
 
 /**
  * Process incoming block headers.
