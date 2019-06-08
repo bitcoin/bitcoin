@@ -1349,6 +1349,8 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             entry.pushKV("amount", ValueFromAmount(-s.amount));
             if (pwallet->mapAddressBook.count(s.destination)) {
                 entry.pushKV("label", pwallet->mapAddressBook[s.destination].name);
+                // SYSCOIN support label as account for exchanges
+                entry.pushKV("account", pwallet->mapAddressBook[s.destination].name);
             }
             entry.pushKV("vout", s.vout);
             entry.pushKV("fee", ValueFromAmount(-nFee));
@@ -1400,6 +1402,8 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             entry.pushKV("amount", ValueFromAmount(r.amount));
             if (pwallet->mapAddressBook.count(r.destination)) {
                 entry.pushKV("label", label);
+                // SYSCOIN support label as account for exchanges
+                entry.pushKV("account", label);
             }
             entry.pushKV("vout", r.vout);
             if (fLong)
@@ -3824,6 +3828,8 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     ret.pushKVs(detail);
     if (pwallet->mapAddressBook.count(dest)) {
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
+        // SYSCOIN support label as account for exchanges
+        ret.pushKV("account", pwallet->mapAddressBook[dest].name);
     }
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     const CKeyMetadata* meta = nullptr;
