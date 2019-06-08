@@ -111,7 +111,7 @@ public:
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyHeaderTip;
 
     /** Masternode list has changed */
-    boost::signals2::signal<void (void)> NotifyMasternodeListChanged;
+    boost::signals2::signal<void (const CDeterministicMNList&)> NotifyMasternodeListChanged;
 
     /** Additional data sync progress changed */
     boost::signals2::signal<void (double nSyncProgress)> NotifyAdditionalDataSyncProgressChanged;
