@@ -5,6 +5,7 @@
 #include <consensus/tx_check.h>
 
 #include <primitives/transaction.h>
+#include <consensus/consensus.h>
 #include <consensus/validation.h>
 
 bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fCheckDuplicateInputs)
@@ -43,7 +44,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state, bool fChe
 
     if (tx.IsCoinBase())
     {
-        if (tx.vin[0].scriptSig.size() < 2 || tx.vin[0].scriptSig.size() > 100)
+        if (tx.vin[0].scriptSig.size() < MIN_COINBASE_TX_VIN_SCRIPTSIG_SIZE || tx.vin[0].scriptSig.size() > MAX_COINBASE_TX_VIN_SCRIPTSIG_SIZE)
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-cb-length");
     }
     else
