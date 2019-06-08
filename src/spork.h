@@ -37,6 +37,17 @@ enum SporkId : int32_t {
 };
 template<> struct is_serializable_enum<SporkId> : std::true_type {};
 
+namespace std
+{
+    template<> struct hash<SporkId>
+    {
+        std::size_t operator()(SporkId const& id) const noexcept
+        {
+            return std::hash<int>{}(id);
+        }
+    };
+}
+
 struct CSporkDef
 {
     SporkId sporkId{SPORK_INVALID};
