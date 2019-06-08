@@ -144,7 +144,6 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
-bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
@@ -554,7 +553,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     // insecure.
                     bool fReplacementOptOut = true;
                     // SYSCOIN asset allocation transactions should use CPFP not RBF
-                    if (fEnableReplacement && !IsAssetAllocationTx(tx.nVersion) && !IsAssetAllocationTx(ptxConflicting->nVersion))
+                    if (!IsAssetAllocationTx(tx.nVersion) && !IsAssetAllocationTx(ptxConflicting->nVersion))
                     {
                         for (const CTxIn &_txin : ptxConflicting->vin)
                         {
