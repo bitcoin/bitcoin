@@ -3005,6 +3005,12 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         std::shared_ptr<CBlock> pblock = std::make_shared<CBlock>();
         vRecv >> *pblock;
 
+        // Call CheckBlock before we hit cs_main so that we can (hopefully) get
+        // the fChecked flag cached in the pblock while the validation thread is
+        // processing some other block.
+        CValidationState statedummy;
+        CheckBlock(*pblock, statedummy, chainparams.GetConsensus(), true, true);
+
         LogPrint(BCLog::NET, "received block %s peer=%d\n", pblock->GetHash().ToString(), pfrom->GetId());
 
         bool forceProcessing = false;
