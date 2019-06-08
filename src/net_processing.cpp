@@ -238,6 +238,17 @@ namespace {
 
 namespace {
 /**
+ * Maintain state about nodes, protected by our own lock. Historically we put all
+ * peer tracking state in CNodeState, however this results in significant cs_main
+ * contention. Thus, new state tracking should go here, and we should eventually
+ * move most (non-validation-specific) state here.
+ */
+struct CPeerState {
+    CPeerState() {}
+};
+
+
+/**
  * Maintain validation-specific state about nodes, protected by cs_main, instead
  * by CNode's own locks. This simplifies asynchronous operation, where
  * processing of incoming data is done after the ProcessMessage call returns,
@@ -429,7 +440,20 @@ struct CNodeState {
 // Keeps track of the time (in microseconds) when transactions were requested last time
 limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs_main)(MAX_INV_SZ);
 
+/** Note that this must be locked BEFORE cs_main! */
+RecursiveMutex cs_peerstate;
+
 /** Map maintaining per-node state. */
+static std::map<NodeId, CPeerState> mapPeerState GUARDED_BY(cs_peerstate);
+
+static CPeerState *PeerState(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate) LOCKS_EXCLUDED(cs_main) {
+    std::map<NodeId, CPeerState>::iterator it = mapPeerState.find(pnode);
+    if (it == mapPeerState.end())
+        return nullptr;
+    return &it->second;
+}
+
+/** Map maintaining new per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
 
 static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
@@ -810,6 +834,11 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         LOCK(cs_main);
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
     }
+    {
+        LOCK(cs_peerstate);
+        mapPeerState.emplace_hint(mapPeerState.end(), nodeid, CPeerState{});
+    }
+
     if(!pnode->fInbound)
         PushNodeVersion(pnode, connman, GetTime());
 }
@@ -829,6 +858,11 @@ void PeerLogicValidation::ReattemptInitialBroadcast(CScheduler& scheduler) const
 
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
     fUpdateConnectionTime = false;
+
+    LOCK(cs_peerstate);
+    CPeerState* peerstate = PeerState(nodeid);
+    assert(peerstate != nullptr);
+
     LOCK(cs_main);
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
@@ -851,6 +885,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
     assert(g_outbound_peers_with_protect_from_disconnect >= 0);
 
     mapNodeState.erase(nodeid);
+    mapPeerState.erase(nodeid);
 
     if (mapNodeState.empty()) {
         // Do a consistency check after the last peer is removed.
@@ -858,6 +893,7 @@ void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTim
         assert(nPreferredDownload == 0);
         assert(nPeersWithValidatedDownloads == 0);
         assert(g_outbound_peers_with_protect_from_disconnect == 0);
+        assert(mapPeerState.empty());
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
@@ -2100,7 +2136,7 @@ static void ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainPa
     connman->PushMessage(pfrom, std::move(msg));
 }
 
-bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
+bool ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
@@ -3007,7 +3043,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
         } // cs_main
 
         if (fProcessBLOCKTXN)
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, mempool, connman, banman, interruptMsgProc);
+            return ProcessMessage(pfrom, peerstate, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, mempool, connman, banman, interruptMsgProc);
 
         if (fRevertToHeaderProcessing) {
             // Headers received from HB compact block peers are permitted to be
@@ -3456,6 +3492,8 @@ bool PeerLogicValidation::CheckIfBanned(CNode* pnode)
 bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
     const CChainParams& chainparams = Params();
+    LOCK(cs_peerstate);
+    CPeerState* peerstate = PeerState(pfrom->GetId());
     //
     // Message format
     //  (4) message start
@@ -3535,7 +3573,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     bool fRet = false;
     try
     {
-        fRet = ProcessMessage(pfrom, msg_type, vRecv, msg.m_time, chainparams, m_mempool, connman, m_banman, interruptMsgProc);
+        fRet = ProcessMessage(pfrom, peerstate, msg_type, vRecv, msg.m_time, chainparams, m_mempool, connman, m_banman, interruptMsgProc);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())
@@ -3720,6 +3758,9 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
         // If we get here, the outgoing message serialization version is set and can't change.
         const CNetMsgMaker msgMaker(pto->GetSendVersion());
+
+        LOCK(cs_peerstate);
+        CPeerState* peerstate = PeerState(pto->GetId());
 
         //
         // Message: ping
