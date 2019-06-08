@@ -505,7 +505,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     // Don't hold cs while calling signals
     if (diff.HasChanges()) {
         GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff);
-        uiInterface.NotifyMasternodeListChanged();
+        uiInterface.NotifyMasternodeListChanged(newList);
     }
 
     if (nHeight == consensusParams.DIP0003EnforcementHeight) {
@@ -550,7 +550,7 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
     if (diff.HasChanges()) {
         auto inversedDiff = curList.BuildDiff(prevList);
         GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff);
-        uiInterface.NotifyMasternodeListChanged();
+        uiInterface.NotifyMasternodeListChanged(prevList);
     }
 
     const auto& consensusParams = Params().GetConsensus();
