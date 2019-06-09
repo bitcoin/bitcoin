@@ -42,6 +42,7 @@ extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
 extern void EraseOrphansFor(NodeId peer);
 extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 extern void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="");
+extern CCriticalSection cs_peerstate ACQUIRED_BEFORE(cs_main);
 
 struct COrphanTx {
     CTransactionRef tx;
@@ -228,7 +229,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     }
     {
@@ -245,7 +246,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     dummyNode2.nVersion = 1;
     dummyNode2.fSuccessfullyConnected = true;
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode2.GetId(), 50);
     }
     {
@@ -255,7 +256,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     BOOST_CHECK(!banman->IsBanned(addr2)); // 2 not banned yet...
     BOOST_CHECK(banman->IsBanned(addr1));  // ... but 1 still should be
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode2.GetId(), 50);
     }
     {
@@ -284,7 +285,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     dummyNode1.nVersion = 1;
     dummyNode1.fSuccessfullyConnected = true;
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode1.GetId(), 100);
     }
     {
@@ -293,7 +294,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     BOOST_CHECK(!banman->IsBanned(addr1));
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode1.GetId(), 10);
     }
     {
@@ -302,7 +303,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     }
     BOOST_CHECK(!banman->IsBanned(addr1));
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode1.GetId(), 1);
     }
     {
@@ -334,7 +335,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     dummyNode.fSuccessfullyConnected = true;
 
     {
-        LOCK(cs_main);
+        LOCK(cs_peerstate);
         Misbehaving(dummyNode.GetId(), 100);
     }
     {
@@ -356,7 +357,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 static CTransactionRef RandomOrphan()
 {
     std::map<uint256, COrphanTx>::iterator it;
-    LOCK2(cs_main, g_cs_orphans);
+    LOCK(g_cs_orphans);
     it = mapOrphanTransactions.lower_bound(InsecureRand256());
     if (it == mapOrphanTransactions.end())
         it = mapOrphanTransactions.begin();
