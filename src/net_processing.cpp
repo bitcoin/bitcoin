@@ -220,6 +220,9 @@ struct CPeerState {
     //! String name of this peer (debugging/logging purposes).
     const std::string name;
 
+    //! List of asynchronously-determined block rejections to notify this peer about.
+    std::vector<CBlockReject> rejects;
+
     //! Whether this peer should be disconnected and banned (unless whitelisted).
     bool fShouldBan;
     //! Accumulated misbehaviour score for this peer.
@@ -265,8 +268,6 @@ struct CNodeState {
     const CService address;
     //! Whether we have a fully established connection.
     bool fCurrentlyConnected;
-    //! List of asynchronously-determined block rejections to notify this peer about.
-    std::vector<CBlockReject> rejects;
     //! The best known block we know this peer has announced.
     const CBlockIndex *pindexBestKnownBlock;
     //! The hash of the last unknown block this peer has announced.
@@ -1308,29 +1309,29 @@ static void BlockChecked(const CBlock& block, const CValidationState& state, CCo
     const uint256 hash(block.GetHash());
     std::map<uint256, std::pair<NodeId, bool>>::iterator it = mapBlockSource.find(hash);
 
-    if (state.IsInvalid()) {
-        // Don't send reject message with code 0 or an internal reject code.
-        if (it != mapBlockSource.end() && State(it->second.first) && state.GetRejectCode() > 0 && state.GetRejectCode() < REJECT_INTERNAL) {
-            CBlockReject reject = {(unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), hash};
-            State(it->second.first)->rejects.push_back(reject);
-            MaybePunishNode(/*nodeid=*/ it->second.first, state, /*via_compact_block=*/ !it->second.second);
+    if (it != mapBlockSource.end()) {
+        if (state.IsInvalid()) {
+            CPeerState *peerstate = PeerState(it->second.first);
+            // Don't send reject message with code 0 or an internal reject code.
+            if (peerstate && state.GetRejectCode() > 0 && state.GetRejectCode() < REJECT_INTERNAL) {
+                CBlockReject reject = {(unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), hash};
+                peerstate->rejects.push_back(reject);
+                MaybePunishNode(/*nodeid=*/ it->second.first, state, /*via_compact_block=*/ !it->second.second);
+            }
         }
-    }
-    // Check that:
-    // 1. The block is valid
-    // 2. We're not in initial block download
-    // 3. This is currently the best block we're aware of. We haven't updated
-    //    the tip yet so we have no way to check this directly here. Instead we
-    //    just check that there are currently no other blocks in flight.
-    else if (state.IsValid() &&
-             !::ChainstateActive().IsInitialBlockDownload() &&
-             mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
-        if (it != mapBlockSource.end()) {
+        // Check that:
+        // 1. The block is valid
+        // 2. We're not in initial block download
+        // 3. This is currently the best block we're aware of. We haven't updated
+        //    the tip yet so we have no way to check this directly here. Instead we
+        //    just check that there are currently no other blocks in flight.
+        else if (state.IsValid() &&
+                 !::ChainstateActive().IsInitialBlockDownload() &&
+                 mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
             MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first, connman);
         }
-    }
-    if (it != mapBlockSource.end())
         mapBlockSource.erase(it);
+    }
 }
 
 void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationState& state) {
@@ -3285,19 +3286,17 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
     return true;
 }
 
-bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main, cs_peerstate)
+bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate)
 {
-    AssertLockHeld(cs_main);
     AssertLockHeld(cs_peerstate);
-    CNodeState &state = *State(pnode->GetId());
     CPeerState &peerstate = *PeerState(pnode->GetId());
 
     if (enable_bip61) {
-        for (const CBlockReject& reject : state.rejects) {
+        for (const CBlockReject& reject : peerstate.rejects) {
             connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, std::string(NetMsgType::BLOCK), reject.chRejectCode, reject.strRejectReason, reject.hashBlock));
         }
     }
-    state.rejects.clear();
+    peerstate.rejects.clear();
 
     if (peerstate.fShouldBan) {
         peerstate.fShouldBan = false;
@@ -3385,13 +3384,10 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     if (IsPendingBlockValidation(pfrom, peerstate)) {
         return false;
     }
-    {
-        // Somewhat annoyingly, tests currently rely on any pending bans/disconnects
-        // being processed prior to any pong responses, thus if we were waiting on a
-        // block validation to complete, we need to recheck bans.
-        LOCK(cs_main);
-        SendRejectsAndCheckIfBanned(pfrom, m_enable_bip61);
-    }
+    // Somewhat annoyingly, tests currently rely on any pending bans/disconnects
+    // being processed prior to any pong responses, thus if we were waiting on a
+    // block validation to complete, we need to recheck bans.
+    SendRejectsAndCheckIfBanned(pfrom, m_enable_bip61);
 
     if (pfrom->fDisconnect)
         return false;
@@ -3494,7 +3490,6 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
         LogPrint(BCLog::NET, "%s(%s, %u bytes) FAILED peer=%d\n", __func__, SanitizeString(strCommand), nMessageSize, pfrom->GetId());
     }
 
-    LOCK(cs_main);
     SendRejectsAndCheckIfBanned(pfrom, m_enable_bip61);
 
     return fMoreWork;

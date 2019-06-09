@@ -13,6 +13,9 @@
 
 extern CCriticalSection cs_main;
 
+/** Note that this must be locked BEFORE cs_main! */
+extern CCriticalSection cs_peerstate ACQUIRED_BEFORE(cs_main);
+
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default number of orphan+recently-replaced txn to keep around for block reconstruction */
@@ -26,7 +29,7 @@ private:
     CConnman* const connman;
     BanMan* const m_banman;
 
-    bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    bool SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_bip61) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate);
 public:
     PeerLogicValidation(CConnman* connman, BanMan* banman, CScheduler &scheduler, bool enable_bip61);
 
