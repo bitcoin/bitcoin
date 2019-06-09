@@ -24,6 +24,8 @@ extern ArrivalTimesMapImpl arrivalTimesMap;
 extern CCriticalSection cs_assetallocationarrival;
 extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc);
 extern bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
+extern CAmount AssetAmountFromValue(UniValue& value, int precision);
+extern UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(const JSONRPCRequest& request);
@@ -827,16 +829,21 @@ UniValue assetsend(const JSONRPCRequest& request) {
                 }
 
             }.ToString());
-    CAmount nAmount = AmountFromValue(request.params[2]);
+    const uint32_t &nAsset = params[0].get_int();
+	CAsset theAsset;
+	if (!GetAsset(nAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));            
+    UniValue amountValue = request.params[2];
+    CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetsend");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", ValueFromAmount(nAmount));
+    outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back(params[0].get_int());
+    paramsFund.push_back((int)nAsset);
     paramsFund.push_back(output);
     paramsFund.push_back("");
     JSONRPCRequest requestMany;
@@ -1241,16 +1248,21 @@ UniValue assetallocationsend(const JSONRPCRequest& request) {
                     + HelpExampleRpc("assetallocationsend", "\"assetguid\", \"addressfrom\", \"address\", \"amount\"")
                 }
             }.ToString());
-    CAmount nAmount = AmountFromValue(params[3]);
+    const uint32_t &nAsset = params[0].get_int();
+	CAsset theAsset;
+	if (!GetAsset(nAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));            
+    UniValue amountValue = request.params[3];
+    CAmount nAmount = AssetAmountFromValue(amountValue, theAsset.nPrecision);
     if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for assetallocationsend");          
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("address", params[2].get_str());
-    outputObj.__pushKV("amount", ValueFromAmount(nAmount));
+    outputObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back(params[0].get_int());
+    paramsFund.push_back((int)nAsset);
     paramsFund.push_back(params[1].get_str());
     paramsFund.push_back(output);
     paramsFund.push_back("");
