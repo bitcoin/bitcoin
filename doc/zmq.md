@@ -64,6 +64,9 @@ Currently, the following notifications are supported:
     -zmqpubrawtx=address
     -zmqpubassetallocation=address
     -zmqpubassetrecord=address
+    -pubwalletstatus=address
+    -pubethstatus=address
+    -pubnetworkstatus=address
   
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.

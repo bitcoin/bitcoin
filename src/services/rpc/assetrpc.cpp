@@ -10,6 +10,7 @@
 #include <services/rpc/assetrpc.h>
 #include <chainparams.h>
 #include <rpc/server.h>
+#include <validationinterface.h>
 using namespace std;
 extern std::string exePath;
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -1187,9 +1188,6 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     if(!fGethSynced && fGethSyncStatus == "synced" && vecMissingBlockRanges.empty())  {     
         fGethSynced = true;
     }
-
-   
-    
    
     for(const auto& range: vecMissingBlockRanges){
         UniValue retRange(UniValue::VOBJ);
@@ -1199,6 +1197,14 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     }
     LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     ret.__pushKV("missing_blocks", retArray);
+    if(fZMQEthStatus){
+        UniValue oEthStatus(UniValue::VOBJ);
+        oEthStatus.__pushKV("geth_sync_status",  fGethSyncStatus);
+        oEthStatus.__pushKV("geth_total_blocks",  (int)fGethSyncHeight);
+        oEthStatus.__pushKV("geth_current_block",  (int)fGethCurrentHeight);
+        oEthStatus.push_back(ret);
+        GetMainSignals().NotifySyscoinUpdate(oEthStatus.write().c_str(), "ethstatus");
+    }    
     return ret;
 }
 UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
@@ -1258,7 +1264,6 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         txRootMap.emplace(std::piecewise_construct,  std::forward_as_tuple(nHeight),  std::forward_as_tuple(txRoot));
     } 
     bool res = pethereumtxrootsdb->FlushWrite(txRootMap);
-    
     UniValue ret(UniValue::VOBJ);
     ret.__pushKV("status", res? "success": "fail");
     return ret;

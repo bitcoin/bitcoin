@@ -549,6 +549,9 @@ void SetupServerArgs()
 
 #if ENABLE_ZMQ
     // SYSCOIN
+    gArgs.AddArg("-zmqpubwalletstatus=<address>", _("Enable publish wallet status (when wallet loads and is ready) in <address>"), false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubethstatus=<address>", _("Enable publish Ethereum status updates in <address>"), false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubpubnetworkstatus=<address>", _("Enable publish network updates when a peer is connected or disconnected in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubassetrecord=<address>", _("Enable publish raw asset payload in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", false, OptionsCategory::ZMQ);
@@ -561,6 +564,9 @@ void SetupServerArgs()
     gArgs.AddArg("-zmqpubrawtxhwm=<n>", strprintf("Set publish raw transaction outbound message high water mark (default: %d)", CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM), false, OptionsCategory::ZMQ);
 #else
     // SYSCOIN
+    hidden_args.emplace_back("-zmqpubwalletstatus=<address>");
+    hidden_args.emplace_back("-zmqpubpubethstatus=<address>");
+    hidden_args.emplace_back("-zmqpubpubnetworkstatus=<address>");
     hidden_args.emplace_back("-zmqpubassetallocation=<address>");
     hidden_args.emplace_back("-zmqpubassetrecord=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
@@ -1911,7 +1917,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     fLogThreadpool = LogAcceptCategory(BCLog::THREADPOOL);
     fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
     fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
-    
+    fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");
+    fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
+    fZMQNetworkStatus = gArgs.IsArgSet("-zmqpubnetworkstatus");
+
     fAssetIndexPageSize = gArgs.GetArg("-assetindexpagesize", 25);
     if(fAssetIndexPageSize < 10 || fAssetIndexPageSize > 1000){
         return InitError(_("Asset index page size is invalid, must be between 10 and 1000."));

@@ -50,6 +50,10 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     // SYSCOIN
     factories["pubassetallocation"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubassetrecord"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
+    factories["pubwalletstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
+    factories["pubethstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
+    factories["pubnetworkstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
+
     for (const auto& entry : factories)
     {
         std::string arg("-zmq" + entry.first);
