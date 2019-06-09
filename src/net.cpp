@@ -958,7 +958,12 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
     CAddress addr_bind = GetBindAddress(hSocket);
 
-    CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
+    ServiceFlags nodeLocalServices = nLocalServices;
+    if (whitelisted) 
+    {
+        nodeLocalServices = ServiceFlags(nodeLocalServices | NODE_BLOOM);
+    }
+    CNode* pnode = new CNode(id, nodeLocalServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", true);
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
     pnode->m_prefer_evict = bannedlevel > 0;
