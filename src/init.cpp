@@ -551,7 +551,7 @@ void SetupServerArgs()
     // SYSCOIN
     gArgs.AddArg("-zmqpubwalletstatus=<address>", _("Enable publish wallet status (when wallet loads and is ready) in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubethstatus=<address>", _("Enable publish Ethereum status updates in <address>"), false, OptionsCategory::ZMQ);
-    gArgs.AddArg("-zmqpubpubnetworkstatus=<address>", _("Enable publish network updates when a peer is connected or disconnected in <address>"), false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubnetworkstatus=<address>", _("Enable publish network updates when a peer is connected or disconnected in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubassetrecord=<address>", _("Enable publish raw asset payload in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", false, OptionsCategory::ZMQ);
@@ -565,8 +565,8 @@ void SetupServerArgs()
 #else
     // SYSCOIN
     hidden_args.emplace_back("-zmqpubwalletstatus=<address>");
-    hidden_args.emplace_back("-zmqpubpubethstatus=<address>");
-    hidden_args.emplace_back("-zmqpubpubnetworkstatus=<address>");
+    hidden_args.emplace_back("-zmqpubethstatus=<address>");
+    hidden_args.emplace_back("-zmqpubnetworkstatus=<address>");
     hidden_args.emplace_back("-zmqpubassetallocation=<address>");
     hidden_args.emplace_back("-zmqpubassetrecord=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
