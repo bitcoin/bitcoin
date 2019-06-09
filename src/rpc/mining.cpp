@@ -736,6 +736,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     RegisterValidationInterface(&sc);
     CValidationState dos_state;
     bool new_block = ProcessNewBlock(Params(), blockptr, dos_state, /* fForceProcessing */ true).get();
+    SyncWithValidationInterfaceQueue();
     UnregisterValidationInterface(&sc);
     if (!new_block && dos_state.IsValid()) {
         return "duplicate";

@@ -226,8 +226,14 @@ struct CPeerState {
     std::future<bool> pending_block_processing;
     //! The hash of the block which is pending download.
     uint256 pending_block_hash;
+    //! Once we've finished processing a block from this peer, we must still wait for
+    //! any related callbacks to fire (to ensure, specifically, that rejects go out
+    //! in order, though this may grow to include more such events in the future).
+    bool pending_event_wait;
 
-    CPeerState() {}
+    CPeerState() {
+        pending_event_wait = false;
+    }
 };
 
 
@@ -3331,9 +3337,26 @@ bool static IsPendingBlockValidation(CNode* pfrom, CPeerState* peerstate) EXCLUS
             }
             peerstate->pending_block_processing = std::future<bool>();
             peerstate->pending_block_hash = uint256();
-            return false;
+
+            // We need to wait for BlockChecked to fire, so we don't re-enable
+            // this peer until the current pending validationinterface callbacks
+            // drain. This ensures bans and reject messages happen in order, as
+            // expected by some of our functional tests.
+            peerstate->pending_event_wait = true;
+            NodeId node_id = pfrom->GetId();
+            CallFunctionInValidationInterfaceQueue([node_id] {
+                LOCK(cs_peerstate);
+                CPeerState* peerstate = PeerState(node_id);
+                if (peerstate != nullptr) {
+                    peerstate->pending_event_wait = false;
+                    g_connman->WakeMessageHandler();
+                }
+            });
+            return true;
         } else { return true; }
-    } else { return false; }
+    } else {
+        return peerstate->pending_event_wait;
+    }
 }
 
 bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)

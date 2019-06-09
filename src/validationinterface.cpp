@@ -5,6 +5,7 @@
 
 #include <validationinterface.h>
 
+#include <consensus/validation.h>
 #include <primitives/block.h>
 #include <scheduler.h>
 #include <txmempool.h>
@@ -173,8 +174,10 @@ void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
     });
 }
 
-void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& state) {
-    m_internals->BlockChecked(block, state);
+void CMainSignals::BlockChecked(const std::shared_ptr<const CBlock> &pblock, const CValidationState& state) {
+    m_internals->m_schedulerClient.AddToProcessQueue([pblock, state, this] {
+        m_internals->BlockChecked(*pblock, state);
+    });
 }
 
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {

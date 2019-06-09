@@ -2365,7 +2365,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     {
         CCoinsViewCache view(&CoinsTip());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
-        GetMainSignals().BlockChecked(blockConnecting, state);
+        GetMainSignals().BlockChecked(pthisBlock, state);
         if (!rv) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
