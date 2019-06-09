@@ -22,7 +22,7 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
 
     // Start thread to generate notifications
     std::thread gen{[&] {
-        const CBlock block_dummy;
+        const std::shared_ptr<const CBlock> block_dummy = std::make_shared<const CBlock>();
         const BlockValidationState state_dummy;
         while (generate) {
             GetMainSignals().BlockChecked(block_dummy, state_dummy);
@@ -63,7 +63,7 @@ public:
     }
     static void Call()
     {
-        CBlock block;
+        std::shared_ptr<const CBlock> block = std::make_shared<CBlock>();
         BlockValidationState state;
         GetMainSignals().BlockChecked(block, state);
     }

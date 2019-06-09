@@ -165,6 +165,8 @@ protected:
      * If the provided BlockValidationState IsValid, the provided block
      * is guaranteed to be the current best block at the time the
      * callback was generated (not necessarily now)
+     *
+     * Called on a background thread.
      */
     virtual void BlockChecked(const CBlock&, const BlockValidationState&) {}
     /**
@@ -207,7 +209,7 @@ public:
     void BlockConnected(const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex);
     void BlockDisconnected(const std::shared_ptr<const CBlock> &, const CBlockIndex* pindex);
     void ChainStateFlushed(const CBlockLocator &);
-    void BlockChecked(const CBlock&, const BlockValidationState&);
+    void BlockChecked(const std::shared_ptr<const CBlock> &, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
     void BlockProcessed();
 };
