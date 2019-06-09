@@ -749,6 +749,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
     bool new_block = ProcessNewBlock(Params(), blockptr, /* fForceProcessing */ true).get();
+    SyncWithValidationInterfaceQueue();
     UnregisterValidationInterface(&sc);
     LOCK(cs_main);
     const CBlockIndex* pindex = LookupBlockIndex(blockptr->GetHash());

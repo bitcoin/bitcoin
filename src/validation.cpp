@@ -2293,7 +2293,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
     {
         CCoinsViewCache view(pcoinsTip.get());
         bool rv = ConnectBlock(blockConnecting, state, pindexNew, view, chainparams);
-        GetMainSignals().BlockChecked(blockConnecting, state);
+        GetMainSignals().BlockChecked(pthisBlock, state);
         if (!rv) {
             if (state.IsInvalid())
                 InvalidBlockFound(pindexNew, state);
@@ -3475,7 +3475,7 @@ void CChainState::ProcessBlockValidationQueue()
                 ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
             }
             if (!ret) {
-                GetMainSignals().BlockChecked(*pblock, state);
+                GetMainSignals().BlockChecked(pblock, state);
                 error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
                 result_promise.set_value(fNewBlock);
                 continue;
