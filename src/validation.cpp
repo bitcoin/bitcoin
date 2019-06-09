@@ -3430,46 +3430,85 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     return true;
 }
 
-std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing)
+void CChainState::ProcessBlockValidationQueue()
+{
+    while (true) {
+        LimitValidationInterfaceQueue();
+
+        std::shared_ptr<const CBlock> pblock;
+        bool fForceProcessing;
+        std::promise<bool> result_promise;
+        {
+            std::unique_lock<CCriticalSection> lock(m_cs_block_validation_queue);
+            if (m_block_validation_queue.empty()) {
+                m_cv_block_validation_queue.wait_for(lock, std::chrono::seconds(1));
+            }
+            if (ShutdownRequested())
+                break;
+            boost::this_thread::interruption_point();
+            if (m_block_validation_queue.empty()) {
+                continue;
+            }
+
+            std::tuple<std::shared_ptr<const CBlock>, bool, std::promise<bool>>& tuple = m_block_validation_queue.front();
+            pblock = std::move(std::get<0>(tuple));
+            fForceProcessing = std::get<1>(tuple);
+            result_promise = std::move(std::get<2>(tuple));
+            m_block_validation_queue.pop_front();
+        }
+
+        CChainParams chainparams = Params();
+        bool fNewBlock = false;
+        {
+            CBlockIndex *pindex = nullptr;
+            CValidationState state;
+
+            // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
+            // Therefore, the following critical section must include the CheckBlock() call as well.
+            LOCK(cs_main);
+
+            // Ensure that CheckBlock() passes before calling AcceptBlock, as
+            // belt-and-suspenders.
+            bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
+            if (ret) {
+                // Store to disk
+                ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
+            }
+            if (!ret) {
+                GetMainSignals().BlockChecked(*pblock, state);
+                error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
+                result_promise.set_value(fNewBlock);
+                continue;
+            }
+        }
+
+        NotifyHeaderTip();
+
+        CValidationState state; // Only used to report errors, not invalidity - ignore it
+        if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock))
+            error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
+
+        result_promise.set_value(fNewBlock);
+    }
+}
+
+std::future<bool> CChainState::ProcessNewBlock(const std::shared_ptr<const CBlock> pblock, bool fForceProcessing)
 {
     AssertLockNotHeld(cs_main);
 
     std::promise<bool> result_promise;
     std::future<bool> result = result_promise.get_future();
-    bool fNewBlock = false;
-
     {
-        CBlockIndex *pindex = nullptr;
-        CValidationState state;
-
-        // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
-        // Therefore, the following critical section must include the CheckBlock() call as well.
-        LOCK(cs_main);
-
-        // Ensure that CheckBlock() passes before calling AcceptBlock, as
-        // belt-and-suspenders.
-        bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
-        if (ret) {
-            // Store to disk
-            ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
-        }
-        if (!ret) {
-            GetMainSignals().BlockChecked(*pblock, state);
-            error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
-            result_promise.set_value(fNewBlock);
-            return result;
-        }
+        LOCK(m_cs_block_validation_queue);
+        m_block_validation_queue.emplace_back(std::move(pblock), fForceProcessing, std::move(result_promise));
     }
-
-    result_promise.set_value(fNewBlock);
-
-    NotifyHeaderTip();
-
-    CValidationState state; // Only used to report errors, not invalidity - ignore it
-    if (!::ChainstateActive().ActivateBestChain(state, chainparams, pblock))
-        error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
-
+    m_cv_block_validation_queue.notify_one();
     return result;
+}
+
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, bool fForceProcessing)
+{
+    return ::ChainstateActive().ProcessNewBlock(pblock, fForceProcessing);
 }
 
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)

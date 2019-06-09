@@ -78,6 +78,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     threadGroup.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
+    threadGroup.create_thread(std::function<void()>(std::bind(&CChainState::ProcessBlockValidationQueue, &ChainstateActive())));
+
     mempool.setSanityCheck(1.0);
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
     pcoinsdbview.reset(new CCoinsViewDB(1 << 23, true));
