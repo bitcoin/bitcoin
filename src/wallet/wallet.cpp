@@ -39,6 +39,7 @@
 #include <services/assetconsensus.h>
 #include <util/system.h>
 #include <masternodeconfig.h>
+extern void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet);
 static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
 
 static CCriticalSection cs_wallets;
@@ -936,6 +937,8 @@ bool CWallet::MarkReplaced(const uint256& originalHash, const uint256& newHash)
 
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
+    // SYSCOIN
+    auto locked_chain = chain().lock();
     LOCK(cs_wallet);
 
     WalletBatch batch(*database, "r+", fFlushOnClose);
@@ -1014,7 +1017,13 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
         std::thread t(runCommand, strCmd);
         t.detach(); // thread runs free
     }
-
+    // SYSCOIN
+    if(fZMQWalletRawTx)
+    {
+        UniValue ret(UniValue::VARR);
+        ListTransactions(*locked_chain, this, wtx, 0, true, ret, ISMINE_SPENDABLE | ISMINE_WATCH_ONLY, nullptr);
+        GetMainSignals().NotifySyscoinUpdate(ret.write().c_str(), "walletrawtx");
+    }
     return true;
 }
 

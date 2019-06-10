@@ -67,6 +67,7 @@ Currently, the following notifications are supported:
     -pubwalletstatus=address
     -pubethstatus=address
     -pubnetworkstatus=address
+    -pubwalletrawtx=address
   
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
