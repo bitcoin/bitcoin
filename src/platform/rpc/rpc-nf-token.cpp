@@ -12,9 +12,9 @@
 
 json_spirit::Value nftoken(const json_spirit::Array& params, bool fHelp)
 {
-    std::string command = Platform::GetCommand(params, "usage: nftoken register|list|get|getbytxid|totalsupply|balanceof|ownerof");
+    std::string command = Platform::GetCommand(params, "usage: nftoken register(issue)|list|get|getbytxid|totalsupply|balanceof|ownerof");
 
-    if (command == "register")
+    if (command == "register" || command == "issue")
         return Platform::RegisterNfToken(params, fHelp);
     else if (command == "list")
         return Platform::ListNfTokenTxs(params, fHelp);
@@ -37,7 +37,7 @@ namespace Platform
     void RegisterNfTokenHelp()
     {
         static std::string helpMessage =
-                "nftoken register \"nfTokenProtocol\" \"tokenId\" \"tokenOwnerAddr\" \"tokenMetadataAdminAddr\" \"metadata\"\n"
+                "nftoken register/issue \"nfTokenProtocol\" \"tokenId\" \"tokenOwnerAddr\" \"tokenMetadataAdminAddr\" \"metadata\"\n"
                 "Creates and sends a new non-fungible token transaction.\n"
                 "\nArguments:\n"
                 "1. \"nfTokenProtocol\"           (string, required) A non-fungible token protocol symbol to use in the token creation.\n"
