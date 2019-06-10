@@ -554,6 +554,7 @@ void SetupServerArgs()
     gArgs.AddArg("-zmqpubnetworkstatus=<address>", _("Enable publish network updates when a peer is connected or disconnected in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubassetallocation=<address>", _("Enable publish raw asset allocation payload in <address>"), false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubassetrecord=<address>", _("Enable publish raw asset payload in <address>"), false, OptionsCategory::ZMQ);
+    gArgs.AddArg("-zmqpubwalletrawtx=<address>", "Enable publish raw wallet transaction in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashblock=<address>", "Enable publish hash block in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubhashtx=<address>", "Enable publish hash transaction in <address>", false, OptionsCategory::ZMQ);
     gArgs.AddArg("-zmqpubrawblock=<address>", "Enable publish raw block in <address>", false, OptionsCategory::ZMQ);
@@ -569,6 +570,7 @@ void SetupServerArgs()
     hidden_args.emplace_back("-zmqpubnetworkstatus=<address>");
     hidden_args.emplace_back("-zmqpubassetallocation=<address>");
     hidden_args.emplace_back("-zmqpubassetrecord=<address>");
+    hidden_args.emplace_back("-zmqpubwalletrawtx=<address>");
     hidden_args.emplace_back("-zmqpubhashblock=<address>");
     hidden_args.emplace_back("-zmqpubhashtx=<address>");
     hidden_args.emplace_back("-zmqpubrawblock=<address>");
@@ -1920,6 +1922,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     fZMQWalletStatus = gArgs.IsArgSet("-zmqpubwalletstatus");
     fZMQEthStatus = gArgs.IsArgSet("-zmqpubethstatus");
     fZMQNetworkStatus = gArgs.IsArgSet("-zmqpubnetworkstatus");
+    fZMQWalletRawTx = gArgs.IsArgSet("-zmqpubwalletrawtx");
 
     fAssetIndexPageSize = gArgs.GetArg("-assetindexpagesize", 25);
     if(fAssetIndexPageSize < 10 || fAssetIndexPageSize > 1000){
