@@ -161,7 +161,7 @@ UniValue debug(const JSONRPCRequest& request)
         }
     }
 
-    return "Debug mode: " + ListActiveLogCategories();
+    return "Debug mode: " + ListActiveLogCategoriesString();
 }
 
 UniValue mnsync(const JSONRPCRequest& request)
