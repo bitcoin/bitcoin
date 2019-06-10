@@ -1194,7 +1194,7 @@ uint32_t getCategoryMask(UniValue cats) {
     cats = cats.get_array();
     uint32_t mask = 0;
     for (unsigned int i = 0; i < cats.size(); ++i) {
-        uint32_t flag = 0;
+        uint64_t flag = 0;
         std::string cat = cats[i].get_str();
         if (!GetLogCategory(&flag, &cat)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "unknown logging category " + cat);
