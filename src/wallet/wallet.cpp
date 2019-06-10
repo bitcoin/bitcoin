@@ -4474,6 +4474,12 @@ void CWallet::LockMasternodeOutputs(){
             LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
         }
     }
+    if(fZMQWalletStatus){
+        UniValue oWalletState(UniValue::VOBJ);
+        oWalletState.pushKV("name", GetName());
+        oWalletState.pushKV("status", "ready");
+        GetMainSignals().NotifySyscoinUpdate(oWalletState.write().c_str(), "walletstatus");
+    }
 }
 void CWallet::postInitProcess()
 {

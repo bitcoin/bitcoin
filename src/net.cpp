@@ -994,6 +994,13 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
+    // SYSCOIN
+    if(fZMQNetworkStatus){
+        UniValue oNetworkStatus(UniValue::VOBJ);
+        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
+        oNetworkStatus.pushKV("status", "AcceptConnection");
+        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
+    } 
 }
 
 void CConnman::DisconnectNodes()
@@ -1057,6 +1064,13 @@ void CConnman::DisconnectNodes()
                 }
             }
         }
+    }
+    // SYSCOIN
+    if(fZMQNetworkStatus){
+        UniValue oNetworkStatus(UniValue::VOBJ);
+        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
+        oNetworkStatus.pushKV("status", "DisconnectNodes");
+        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
     }
 }
 
