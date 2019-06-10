@@ -62,7 +62,7 @@ std::string GetWarnings(const std::string& strFor)
     if (strMintWarning != "")
     {
         nPriority = 0;
-        strStatusBar = strRPC = strGUI = strMintWarning;
+        strStatusBar = strRPC = strMintWarning;
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(strMintWarning.c_str());
     }
 
@@ -72,7 +72,7 @@ std::string GetWarnings(const std::string& strFor)
     if (strCheckpointWarning != "")
     {
         nPriority = 900;
-        strStatusBar = strRPC = strGUI = strCheckpointWarning;
+        strStatusBar = strRPC = strCheckpointWarning;
         strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(strMintWarning.c_str());
     }
 #endif
@@ -115,7 +115,8 @@ std::string GetWarnings(const std::string& strFor)
             if (alert.AppliesToMe() && alert.nPriority > nPriority)
             {
                 nPriority = alert.nPriority;
-                strStatusBar = strGUI = alert.strStatusBar;
+                strStatusBar = alert.strStatusBar;
+                strGUI += (strGUI.empty() ? "" : uiAlertSeperator) + _(strStatusBar.c_str());
             }
         }
     }
