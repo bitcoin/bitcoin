@@ -9,6 +9,9 @@ export LC_ALL=C
 if [ "$TRAVIS_OS_NAME" == "osx" ]; then
   # update first to install required ruby dependency
   travis_retry brew update
+  travis_retry brew reinstall git -- --with-pcre2 # for  --perl-regexp
+  travis_retry brew install grep # gnu grep for --perl-regexp support
+  PATH="$(brew --prefix grep)/libexec/gnubin:$PATH"
   travis_retry brew install shellcheck
   travis_retry brew upgrade python
   PATH="$(brew --prefix python)/bin:$PATH"
