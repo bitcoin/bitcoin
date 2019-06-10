@@ -10,4 +10,4 @@ export DOCKER_NAME_TAG=ubuntu:16.04
 export PACKAGES="clang llvm python3-zmq qtbase5-dev qttools5-dev-tools libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev"
 export NO_DEPENDS=1
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-zmq --disable-wallet --with-gui=qt5 CPPFLAGS=-DDEBUG_LOCKORDER --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
+export BITCOIN_CONFIG="--enable-zmq --disable-wallet --with-gui=qt5 CPPFLAGS='-DARENA_DEBUG -DDEBUG_LOCKORDER' --with-sanitizers=thread --disable-hardening --disable-asm CC=clang CXX=clang++"
