@@ -289,6 +289,7 @@ UniValue tpstestadd(const JSONRPCRequest& request) {
 	result.__pushKV("status", "success");
 	return result;
 }
+
 UniValue assetallocationbalance(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
@@ -334,6 +335,64 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
 
     UniValue oRes(UniValue::VOBJ);
     oRes.__pushKV("amount", ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
+    return oRes;
+}
+
+UniValue assetallocationbalances(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 2 != params.size())
+        throw runtime_error(
+            RPCHelpMan{"assetallocationbalances",
+                "\nShow stored balance of multiple asset allocations.\n",
+                {
+                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
+                    {"addresses", RPCArg::Type::ARR, RPCArg::Optional::NO, "The addresses owning the allocations",
+                                {
+                                    {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
+                                },
+                    }
+                },
+                RPCResult{
+                "{\n"
+                "  \"address1\": xx,       (numeric) The balance of a single asset allocation.\n"
+                "  \"address2\": xx        (numeric) The balance of a single asset allocation.\n"
+                "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("assetallocationbalances","\"asset_guid\" \"[\\\"address1\\\",\\\"address2\\\"]\"")
+                    + HelpExampleRpc("assetallocationbalances", "\"asset_guid\", \"[\\\"address1\\\",\\\"address2\\\"]\"")
+                }
+            }.ToString());
+
+    const int &nAsset = params[0].get_int();
+    const UniValue &headerArray = params[1].get_array();
+
+    CAsset theAsset;
+    if (!GetAsset(nAsset, theAsset))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1508 - " + _("Could not find a asset with this key"));
+
+    UniValue oRes(UniValue::VOBJ);
+    for(size_t i =0;i<headerArray.size();i++){
+        string strAddressFrom = headerArray[i].get_str();
+        string witnessProgramHex = "";
+        unsigned char witnessVersion = 0;
+        if(strAddressFrom != "burn"){
+            const CTxDestination &dest = DecodeDestination(strAddressFrom);
+            UniValue detail = DescribeAddress(dest);
+            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+                continue;
+            witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+            witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
+        }
+
+        UniValue oAssetAllocation(UniValue::VOBJ);
+        const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
+        CAssetAllocation txPos;
+        if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
+            continue;
+
+        oRes.__pushKV(strAddressFrom, ValueFromAssetAmount(txPos.nBalance, theAsset.nPrecision));
+    }
     return oRes;
 }
 
@@ -1320,6 +1379,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
     { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
+    { "syscoin",            "assetallocationbalances",          &assetallocationbalances,       {"asset_guid","addresses"} },
     { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid"}},
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
