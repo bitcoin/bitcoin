@@ -9,6 +9,7 @@
 #include <chain.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <ldpc/LDPC.h>
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -88,4 +89,10 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
         return false;
 
     return true;
+}
+
+bool CheckProofOfWork(uint256 currHash, uint256 prevHash, unsigned int nBits)
+{
+  LDPC *ldpc = new LDPC;
+  return ldpc->CheckProofOfWork(currHash, prevHash, nBits);
 }
