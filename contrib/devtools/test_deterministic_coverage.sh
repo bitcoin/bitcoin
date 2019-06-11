@@ -15,6 +15,7 @@ GCOV_EXECUTABLE="gcov"
 # TODO this list is likely incomplete / incorrect for Dash
 # Disable tests known to cause non-deterministic behaviour and document the source or point of non-determinism.
 NON_DETERMINISTIC_TESTS=(
+    "blockfilter_index_tests/blockfilter_index_initial_sync"  # src/checkqueue.h: In CCheckQueue::Loop(): while (queue.empty()) { ... }
     "coinselector_tests/knapsack_solver_test"                 # coinselector_tests.cpp: if (equal_sets(setCoinsRet, setCoinsRet2))
     "denialofservice_tests/DoS_mapOrphans"                    # denialofservice_tests.cpp: it = mapOrphanTransactions.lower_bound(InsecureRand256());
     "fs_tests/fsbridge_fstream"                               # deterministic test failure?
