@@ -81,8 +81,8 @@ $(SYSCOIN_WIN_INSTALLER): all-recursive
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_CLI_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_TX_BIN) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(SYSCOIN_WALLET_BIN) $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/sgeth.node.exe $(top_builddir)/release
-	cp $(top_builddir)/src/bin/win64/srelayer.node.exe $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/sysgeth.nod.exe $(top_builddir)/release
+	cp $(top_builddir)/src/bin/win64/sysrelayer.nod.exe $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/sha3.node $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/bufferutil.node $(top_builddir)/release
 	cp $(top_builddir)/src/bin/win64/scrypt.node $(top_builddir)/release
@@ -95,8 +95,8 @@ $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
 
-SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sgeth.node \
-	$(top_builddir)/src/bin/osx/srelayer.node \
+SYSCOIN_GETH_BINS =	$(top_builddir)/src/bin/osx/sysgeth.nod \
+	$(top_builddir)/src/bin/osx/sysrelayer.nod \
 	$(top_builddir)/src/bin/osx/sha3.node \
 	$(top_builddir)/src/bin/osx/bufferutil.node \
 	$(top_builddir)/src/bin/osx/scrypt.node \
