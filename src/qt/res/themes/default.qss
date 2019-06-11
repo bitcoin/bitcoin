@@ -57,7 +57,7 @@ QLineEdit, QTextEdit, QPlainTextEdit {
     border: 1px solid #666666;
 }
 
-QSpinBox, QDoubleSpinBox   {
+AmountSpinBox, QDoubleSpinBox   {
     background: #ffffff;
     border-radius: 0px;
     border: 1px solid #666666;
@@ -65,7 +65,7 @@ QSpinBox, QDoubleSpinBox   {
 }
 
 /* Up and down values eg. PPC units on send */
-QSpinBox::up-button, QDoubleSpinBox::up-button   {
+AmountSpinBox::up-button, QDoubleSpinBox::up-button   {
     subcontrol-origin: border;
     subcontrol-position: top right;
     background: #ffffff;
@@ -73,17 +73,17 @@ QSpinBox::up-button, QDoubleSpinBox::up-button   {
     border: 1px solid #8C8C8C;
 }
 
-QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover   {
+AmountSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover   {
     background: #E3E3E3;
 }
 
-QSpinBox::up-arrow, QDoubleSpinBox::up-arrow   {
+AmountSpinBox::up-arrow, QDoubleSpinBox::up-arrow   {
     image: url(:/controls/caret-up);
     width: 7px;
     height: 7px;
 }
 
-QSpinBox::down-button, QDoubleSpinBox::down-button   {
+AmountSpinBox::down-button, QDoubleSpinBox::down-button   {
     subcontrol-origin: border;
     subcontrol-position: bottom right; /* position at bottom right corner */
     background: #ffffff;
@@ -91,12 +91,12 @@ QSpinBox::down-button, QDoubleSpinBox::down-button   {
     border: 1px solid #666666;
 }
 
-QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover   {
+AmountSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover   {
     background: #E3E3E3;
 }
 
 
-QSpinBox::down-arrow, QDoubleSpinBox::down-arrow   {
+AmountSpinBox::down-arrow, QDoubleSpinBox::down-arrow   {
     image: url(:/controls/caret-down);
     width: 7px;
     height: 7px;
@@ -283,7 +283,7 @@ QDialog#SendCoinsDialog QLabel#labelBalance {
 }
 
 QFrame#SendCoinsEntry {
-    background: #E3E3E3;
+    background-image: url(:/images/transparent);
 }
 
 /* Multisig Page */

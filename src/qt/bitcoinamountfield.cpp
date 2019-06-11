@@ -25,7 +25,7 @@ public:
     explicit AmountSpinBox(QWidget *parent):
         QAbstractSpinBox(parent),
         currentUnit(BitcoinUnits::BTC),
-        singleStep(100000) // satoshis
+        singleStep(10000) // satoshis
     {
         setAlignment(Qt::AlignRight);
 
