@@ -513,6 +513,10 @@ void WriteAssetIndexTXID(const uint32_t& nAsset, const uint256& txid){
 }
 void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash) {
 	if (fZMQAsset || fAssetIndex) {
+        if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),dbAsset.nAsset) == fAssetIndexGuids.end()){
+            LogPrint(BCLog::SYS, "Asset cannot be indexed because it is not set in -assetindexguids list\n");
+            return;
+        }
 		UniValue oName(UniValue::VOBJ);
         // assetsends write allocation indexes
         if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND && AssetTxToJSON(tx, nHeight, blockhash, oName)){
@@ -520,10 +524,6 @@ void CAssetDB::WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, co
                 GetMainSignals().NotifySyscoinUpdate(oName.write().c_str(), "assetrecord");
             if(fAssetIndex)
             {
-                if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),dbAsset.nAsset) == fAssetIndexGuids.end()){
-                    LogPrint(BCLog::SYS, "Asset cannot be indexed because it is not set in -assetindexguids list\n");
-                    return;
-                }
                 const uint256& txid = tx.GetHash();
                 WriteAssetIndexTXID(dbAsset.nAsset, txid);
                 if(!passetindexdb->WritePayload(txid, oName))
@@ -655,6 +655,8 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
     std::vector<uint32_t> emptyVec;
     if(fAssetIndex){
         for (const auto &key : mapAssets) {
+            if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.first) == fAssetIndexGuids.end())
+                continue;
             auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
             std::vector<uint32_t> &assetGuids = it.first->second;
             // if wasn't found and was added to the map
@@ -692,6 +694,8 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
 			batch.Write(key.first, key.second);
 		}
         if(fAssetIndex){
+            if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.first) == fAssetIndexGuids.end())
+                continue;
             auto it = mapGuids.find(key.second.witnessAddress.ToString());
             if(it == mapGuids.end())
                 continue;
