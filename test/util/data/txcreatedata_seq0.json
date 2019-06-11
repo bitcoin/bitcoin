@@ -1,6 +1,7 @@
 {
     "txid": "8df6ed527472542dd5e137c242a7c5a9f337ac34f7b257ae4af886aeaebb51b0",
     "version": 2,
+    "size": 85,
     "locktime": 0,
     "vin": [
         {
@@ -16,6 +17,7 @@
     "vout": [
         {
             "value": 0.18,
+            "valueSat": 18000000,
             "n": 0,
             "scriptPubKey": {
                 "asm": "OP_DUP OP_HASH160 1fc11f39be1729bf973a7ab6a615ca4729d64574 OP_EQUALVERIFY OP_CHECKSIG",

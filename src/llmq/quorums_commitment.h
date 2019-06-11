@@ -11,6 +11,8 @@
 
 #include "bls/bls.h"
 
+#include "univalue.h"
+
 namespace llmq
 {
 
@@ -52,8 +54,6 @@ public:
     bool VerifyNull() const;
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
-    void ToJson(UniValue& obj) const;
-
 public:
     ADD_SERIALIZE_METHODS
 
@@ -86,6 +86,17 @@ public:
         }
         return true;
     }
+
+    void ToJson(UniValue& obj) const
+    {
+        obj.setObject();
+        obj.push_back(Pair("version", (int)nVersion));
+        obj.push_back(Pair("llmqType", (int)llmqType));
+        obj.push_back(Pair("quorumHash", quorumHash.ToString()));
+        obj.push_back(Pair("signersCount", CountSigners()));
+        obj.push_back(Pair("validMembersCount", CountValidMembers()));
+        obj.push_back(Pair("quorumPublicKey", quorumPublicKey.ToString()));
+    }
 };
 
 class CFinalCommitmentTxPayload
@@ -109,7 +120,16 @@ public:
         READWRITE(commitment);
     }
 
-    void ToJson(UniValue& obj) const;
+    void ToJson(UniValue& obj) const
+    {
+        obj.setObject();
+        obj.push_back(Pair("version", (int)nVersion));
+        obj.push_back(Pair("height", (int)nHeight));
+
+        UniValue qcObj;
+        commitment.ToJson(qcObj);
+        obj.push_back(Pair("commitment", qcObj));
+    }
 };
 
 bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state);

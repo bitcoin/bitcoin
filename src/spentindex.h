@@ -96,6 +96,11 @@ struct CSpentIndexKeyCompare
     }
 };
 
+struct CSpentIndexTxInfo
+{
+    std::map<CSpentIndexKey, CSpentIndexValue, CSpentIndexKeyCompare> mSpentInfo;
+};
+
 struct CTimestampIndexIteratorKey {
     unsigned int timestamp;
 

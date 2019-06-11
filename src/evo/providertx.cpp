@@ -421,28 +421,6 @@ std::string CProRegTx::ToString() const
         nVersion, collateralOutpoint.ToStringShort(), addr.ToString(), (double)nOperatorReward / 100, CBitcoinAddress(keyIDOwner).ToString(), pubKeyOperator.ToString(), CBitcoinAddress(keyIDVoting).ToString(), payee);
 }
 
-void CProRegTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("version", nVersion));
-    obj.push_back(Pair("collateralHash", collateralOutpoint.hash.ToString()));
-    obj.push_back(Pair("collateralIndex", (int)collateralOutpoint.n));
-    obj.push_back(Pair("service", addr.ToString(false)));
-    obj.push_back(Pair("ownerAddress", CBitcoinAddress(keyIDOwner).ToString()));
-    obj.push_back(Pair("votingAddress", CBitcoinAddress(keyIDVoting).ToString()));
-
-    CTxDestination dest;
-    if (ExtractDestination(scriptPayout, dest)) {
-        CBitcoinAddress bitcoinAddress(dest);
-        obj.push_back(Pair("payoutAddress", bitcoinAddress.ToString()));
-    }
-    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
-    obj.push_back(Pair("operatorReward", (double)nOperatorReward / 100));
-
-    obj.push_back(Pair("inputsHash", inputsHash.ToString()));
-}
-
 std::string CProUpServTx::ToString() const
 {
     CTxDestination dest;
@@ -453,21 +431,6 @@ std::string CProUpServTx::ToString() const
 
     return strprintf("CProUpServTx(nVersion=%d, proTxHash=%s, addr=%s, operatorPayoutAddress=%s)",
         nVersion, proTxHash.ToString(), addr.ToString(), payee);
-}
-
-void CProUpServTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("version", nVersion));
-    obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-    obj.push_back(Pair("service", addr.ToString(false)));
-    CTxDestination dest;
-    if (ExtractDestination(scriptOperatorPayout, dest)) {
-        CBitcoinAddress bitcoinAddress(dest);
-        obj.push_back(Pair("operatorPayoutAddress", bitcoinAddress.ToString()));
-    }
-    obj.push_back(Pair("inputsHash", inputsHash.ToString()));
 }
 
 std::string CProUpRegTx::ToString() const
@@ -482,34 +445,8 @@ std::string CProUpRegTx::ToString() const
         nVersion, proTxHash.ToString(), pubKeyOperator.ToString(), CBitcoinAddress(keyIDVoting).ToString(), payee);
 }
 
-void CProUpRegTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("version", nVersion));
-    obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-    obj.push_back(Pair("votingAddress", CBitcoinAddress(keyIDVoting).ToString()));
-    CTxDestination dest;
-    if (ExtractDestination(scriptPayout, dest)) {
-        CBitcoinAddress bitcoinAddress(dest);
-        obj.push_back(Pair("payoutAddress", bitcoinAddress.ToString()));
-    }
-    obj.push_back(Pair("pubKeyOperator", pubKeyOperator.ToString()));
-    obj.push_back(Pair("inputsHash", inputsHash.ToString()));
-}
-
 std::string CProUpRevTx::ToString() const
 {
     return strprintf("CProUpRevTx(nVersion=%d, proTxHash=%s, nReason=%d)",
         nVersion, proTxHash.ToString(), nReason);
-}
-
-void CProUpRevTx::ToJson(UniValue& obj) const
-{
-    obj.clear();
-    obj.setObject();
-    obj.push_back(Pair("version", nVersion));
-    obj.push_back(Pair("proTxHash", proTxHash.ToString()));
-    obj.push_back(Pair("reason", (int)nReason));
-    obj.push_back(Pair("inputsHash", inputsHash.ToString()));
 }
