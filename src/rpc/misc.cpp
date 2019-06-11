@@ -577,21 +577,22 @@ static UniValue echo(const JSONRPCRequest& request)
 
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "control",            "getmemoryinfo",          &getmemoryinfo,          {"mode"} },
-    { "control",            "logging",                &logging,                {"include", "exclude"}},
-    { "util",               "validateaddress",        &validateaddress,        {"address"} },
-    { "util",               "createmultisig",         &createmultisig,         {"nrequired","keys","address_type"} },
-    { "util",               "deriveaddresses",        &deriveaddresses,        {"descriptor", "range"} },
-    { "util",               "getdescriptorinfo",      &getdescriptorinfo,      {"descriptor"} },
-    { "util",               "verifymessage",          &verifymessage,          {"address","signature","message"} },
-    { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
+{ //  category              name                            actor (function)            argNames
+  //  --------------------- ------------------------        -----------------------     ----------
+    { "control",            "getmemoryinfo",                &getmemoryinfo,             {"mode"} },
+    { "control",            "logging",                      &logging,                   {"include", "exclude"}},
+    { "util",               "validateaddress",              &validateaddress,           {"address"} },
+    { "util",               "createmultisig",               &createmultisig,            {"nrequired","keys","address_type"} },
+    { "util",               "deriveaddresses",              &deriveaddresses,           {"descriptor", "range"} },
+    { "util",               "getdescriptorinfo",            &getdescriptorinfo,         {"descriptor"} },
+    { "util",               "verifymessage",                &verifymessage,             {"address","signature","message"} },
+    { "util",               "signmessagewithprivkey",       &signmessagewithprivkey,    {"privkey","message"} },
+    { "util",               "signmessagewithprivatekey",    &signmessagewithprivkey,    {"privkey", "message"} },
 
     /* Not shown in help */
-    { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},
-    { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "setmocktime",                  &setmocktime,               {"timestamp"}},
+    { "hidden",             "echo",                         &echo,                      {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "echojson",                     &echo,                      {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
 };
 // clang-format on
 
