@@ -45,7 +45,7 @@ Decentralized governance (blockchain pays for work via proposals and masternode 
 Digital asset creation and management
 
 Governance formula:
-We have implemented a % decline schedule — starting the first month with 1 500 000 SYS and ending on the 24th month with 196.708 SYS. After that period, the superblock starts with 151 767 SYS a month and will decline 5% every year. Read more about it here: https://medium.com/@syscoin/syscoin-4-0-rewards-specifications-a3dc01d85adf
+We have implemented a % decline schedule — starting the first month with 1500000 SYS and ending on the 24th month with 196708 SYS. After that period, the superblock starts with 151767 SYS a month and will decline 5% every year. Read more about it here: https://medium.com/@syscoin/syscoin-4-0-rewards-specifications-a3dc01d85adf
 
 License
 -------
