@@ -1335,6 +1335,7 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwal
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
     // SYSCOIN
+    const uint256 &txHash = (*wtx.tx).GetHash();
     std::map<uint256, bool> mapSysTx = std::map<uint256, bool>();
     // Sent
     if (!filter_label)
@@ -1361,11 +1362,12 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwal
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine))
+            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
                 entry.pushKV("systx", output);
-            if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                continue;
-            mapSysTx[tx.GetHash()] = true;   
+                if (mapSysTx.find(txHash) != mapSysTx.end())
+                    continue;
+                mapSysTx[txHash] = true;
+            }
             ret.push_back(entry);
         }
     }
@@ -1412,11 +1414,13 @@ void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwal
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine))
+            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
                 entry.pushKV("systx", output);
-            if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                continue;
-            mapSysTx[tx.GetHash()] = true;  
+                if (mapSysTx.find(txHash) != mapSysTx.end())
+                    continue;
+                mapSysTx[txHash] = true;  
+            }
+           
             ret.push_back(entry);
         }
     }
