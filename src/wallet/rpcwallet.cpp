@@ -1324,7 +1324,8 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
  * @param  filter_ismine  The "is mine" filter flags.
  * @param  filter_label   Optional label string to filter incoming transactions.
  */
-static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
+// SYSCOIN non static
+void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* const pwallet, const CWalletTx& wtx, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter_ismine, const std::string* filter_label) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet)
 {
     CAmount nFee;
     std::list<COutputEntry> listReceived;
@@ -1334,6 +1335,7 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
 
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
     // SYSCOIN
+    const uint256 &txHash = (*wtx.tx).GetHash();
     std::map<uint256, bool> mapSysTx = std::map<uint256, bool>();
     // Sent
     if (!filter_label)
@@ -1360,11 +1362,12 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine))
+            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
                 entry.pushKV("systx", output);
-            if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                continue;
-            mapSysTx[tx.GetHash()] = true;   
+                if (mapSysTx.find(txHash) != mapSysTx.end())
+                    continue;
+                mapSysTx[txHash] = true;
+            }
             ret.push_back(entry);
         }
     }
@@ -1411,11 +1414,13 @@ static void ListTransactions(interfaces::Chain::Lock& locked_chain, CWallet* con
             // SYSCOIN
             const CTransaction& tx = *wtx.tx;
             UniValue output(UniValue::VOBJ);
-            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine))
+            if(DecodeSyscoinRawtransaction(tx, output, pwallet, &filter_ismine)){
                 entry.pushKV("systx", output);
-            if (mapSysTx.find(tx.GetHash()) != mapSysTx.end())
-                continue;
-            mapSysTx[tx.GetHash()] = true;  
+                if (mapSysTx.find(txHash) != mapSysTx.end())
+                    continue;
+                mapSysTx[txHash] = true;  
+            }
+           
             ret.push_back(entry);
         }
     }

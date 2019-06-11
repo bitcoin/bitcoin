@@ -53,6 +53,7 @@ CZMQNotificationInterface* CZMQNotificationInterface::Create()
     factories["pubwalletstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubethstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
     factories["pubnetworkstatus"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
+    factories["pubwalletrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawSyscoinNotifier>;
 
     for (const auto& entry : factories)
     {
