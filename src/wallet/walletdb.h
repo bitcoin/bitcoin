@@ -17,6 +17,21 @@
 #include <utility>
 #include <vector>
 
+/**
+ * Overview of wallet database classes:
+ *
+ * - CDBEnv is an environment in which the database exists (has no analog in dbwrapper.h)
+ * - CWalletDBWrapper represents a wallet database (similar to CDBWrapper in dbwrapper.h)
+ * - CDB is a low-level database transaction (similar to CDBBatch in dbwrapper.h)
+ * - CWalletDB is a modifier object for the wallet, and encapsulates a database
+ *   transaction as well as methods to act on the database (no analog in
+ *   dbwrapper.h)
+ *
+ * The latter two are named confusingly, in contrast to what the names CDB
+ * and CWalletDB suggest they are transient transaction objects and don't
+ * represent the database itself.
+ */
+
 static const bool DEFAULT_FLUSHWALLET = true;
 
 class CAccount;
@@ -73,11 +88,16 @@ public:
     }
 };
 
-/** Access to the wallet database */
-class CWalletDB : public CDB
+/** Access to the wallet database.
+ * This should really be named CWalletDBBatch, as it represents a single transaction at the
+ * database. It will be committed when the object goes out of scope.
+ * Optionally (on by default) it will flush to disk as well.
+ */
+class CWalletDB
 {
 public:
-    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool _fFlushOnClose = true) : CDB(strFilename, pszMode, _fFlushOnClose)
+    CWalletDB(CWalletDBWrapper& dbw, const char* pszMode = "r+", bool _fFlushOnClose = true) :
+        batch(dbw, pszMode, _fFlushOnClose)
     {
     }
 
@@ -151,7 +171,20 @@ public:
 
     static void IncrementUpdateCounter();
     static unsigned int GetUpdateCounter();
+
+    //! Begin a new transaction
+    bool TxnBegin();
+    //! Commit current transaction
+    bool TxnCommit();
+    //! Abort current transaction
+    bool TxnAbort();
+    //! Read wallet version
+    bool ReadVersion(int& nVersion);
+    //! Write wallet version
+    bool WriteVersion(int nVersion);
 private:
+    CDB batch;
+
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
 };

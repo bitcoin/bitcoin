@@ -12,7 +12,6 @@
 #endif
 
 #include "amount.h"
-#include "chain.h"
 #include "coins.h"
 #include "fs.h"
 #include "protocol.h" // For CMessageHeader::MessageStartChars
