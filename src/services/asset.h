@@ -207,6 +207,9 @@ public:
     bool ReadAssetsByAddress(const CWitnessAddress &address, std::vector<uint32_t> &assetGuids){
         return Read(address, assetGuids);
     }
+     bool ExistsAssetsByAddress(const CWitnessAddress &address){
+        return Exists(address);
+    }   
 	void WriteAssetIndex(const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash);
 	bool ScanAssets(const int count, const int from, const UniValue& oOptions, UniValue& oRes);
     bool Flush(const AssetMap &mapAssets);

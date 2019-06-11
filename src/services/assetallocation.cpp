@@ -154,17 +154,25 @@ void CAssetAllocation::Serialize( vector<unsigned char> &vchData) {
 }
 void CAssetAllocationDB::WriteMintIndex(const CTransaction& tx, const CMintSyscoin& mintSyscoin, const int &nHeight, const uint256& blockhash){
     if (fZMQAssetAllocation || fAssetIndex) {
+        if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(), mintSyscoin.assetAllocationTuple.nAsset) == fAssetIndexGuids.end()){
+            LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because it is not set in -assetindexguids list\n");
+            return;
+        }
         UniValue output(UniValue::VOBJ);
         if(AssetMintTxToJson(tx, mintSyscoin, nHeight, blockhash, output)){
             if(fZMQAssetAllocation)
                 GetMainSignals().NotifySyscoinUpdate(output.write().c_str(), "assetallocation");
             if(fAssetIndex)
-                WriteAssetIndexForAllocation(mintSyscoin, tx.GetHash(), output);  
+                WriteAssetIndexForAllocation(mintSyscoin, tx.GetHash(), output); 
         }
     }
 }
 void CAssetAllocationDB::WriteAssetAllocationIndex(const CTransaction &tx, const CAsset& dbAsset, const int &nHeight, const uint256& blockhash) {
 	if (fZMQAssetAllocation || fAssetIndex) {
+        if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(),fAssetIndexGuids.end(),dbAsset.nAsset) == fAssetIndexGuids.end()){
+            LogPrint(BCLog::SYS, "Asset allocation cannot be indexed because it is not set in -assetindexguids list\n");
+            return;
+        }
 		UniValue oName(UniValue::VOBJ);
         CAssetAllocation allocation;
         if(AssetAllocationTxToJSON(tx, dbAsset, nHeight, blockhash, oName, allocation)){
@@ -585,6 +593,8 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
         for (const auto &key : mapAssetAllocations) {
             auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.assetAllocationTuple.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
             std::vector<uint32_t> &assetGuids = it.first->second;
+            if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.second.assetAllocationTuple.nAsset) == fAssetIndexGuids.end())
+                continue;
             // if wasn't found and was added to the map
             if(it.second)
                 ReadAssetsByAddress(key.second.assetAllocationTuple.witnessAddress, assetGuids);
@@ -620,6 +630,8 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
             batch.Write(key.second.assetAllocationTuple, key.second);
         }
         if(fAssetIndex){
+            if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.second.assetAllocationTuple.nAsset) == fAssetIndexGuids.end())
+                continue;
             auto it = mapGuids.find(key.second.assetAllocationTuple.witnessAddress.ToString());
             if(it == mapGuids.end())
                 continue;
