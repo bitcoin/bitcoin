@@ -206,6 +206,13 @@ struct CBlockReject {
  * move most (non-validation-specific) state here.
  */
 struct CPeerState {
+    //! If this peer generated some headers for us to add, we store the resulting
+    //! future here and wait for it to complete before we process more data from this
+    //! peer.
+    std::future<bool> pending_block_processing;
+    //! The hash of the block which is pending download.
+    uint256 pending_block_hash;
+
     CPeerState() {}
 };
 
@@ -2717,8 +2724,15 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
         std::map<uint256, std::pair<NodeId, std::list<QueuedBlock>::iterator> >::iterator blockInFlightIt = mapBlocksInFlight.find(pindex->GetBlockHash());
         bool fAlreadyInFlight = blockInFlightIt != mapBlocksInFlight.end();
 
-        if (pindex->nStatus & BLOCK_HAVE_DATA) // Nothing to do here
+        if (pindex->nStatus & BLOCK_HAVE_DATA) { // Nothing to do here
+            if (fAlreadyInFlight) {
+                // There is a possibility the block was opportunistically reconstructed
+                // from another peer while we were waiting for the block to come in here.
+                // Thus, we need to wipe its in-flight state.
+                MarkBlockAsReceived(pindex->GetBlockHash());
+            }
             return true;
+        }
 
         if (pindex->nChainWork <= ::ChainActive().Tip()->nChainWork || // We know something better
                 pindex->nTx != 0) { // We had this block at some point, but pruned it
@@ -2848,21 +2862,8 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            bool fNewBlock = ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true).get();
-            if (fNewBlock) {
-                pfrom->nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
-            LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
-            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
-                // Clear download state for this block, which is in
-                // process from some other peer.  We do this after calling
-                // ProcessNewBlock so that a malleated cmpctblock announcement
-                // can't be used to interfere with block relay.
-                MarkBlockAsReceived(pblock->GetHash());
-            }
+            peerstate->pending_block_hash = pblock->GetHash();
+            peerstate->pending_block_processing = ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true);
         }
         return true;
     }
@@ -2887,6 +2888,16 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             if (it == mapBlocksInFlight.end() || !it->second.second->partialBlock ||
                     it->second.first != pfrom->GetId()) {
                 LogPrint(BCLog::NET, "Peer %d sent us block transactions for block we weren't expecting\n", pfrom->GetId());
+                return true;
+            }
+
+            const CBlockIndex* pindex = LookupBlockIndex(resp.blockhash);
+            if (pindex && pindex->nStatus & BLOCK_HAVE_DATA) { // Nothing to do here
+                // There is a possibility the block was opportunistically reconstructed
+                // from another peer while we were waiting for the block to come in here.
+                // Thus, we may want to just skip processing (and potentially downloading
+                // the full block in case of a shortid collision).
+                MarkBlockAsReceived(pindex->GetBlockHash());
                 return true;
             }
 
@@ -2936,13 +2947,8 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            bool fNewBlock = ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true).get();
-            if (fNewBlock) {
-                pfrom->nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+            peerstate->pending_block_hash = pblock->GetHash();
+            peerstate->pending_block_processing = ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true);
         }
         return true;
     }
@@ -2997,13 +3003,8 @@ bool static ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::strin
             // so the race between here and cs_main in ProcessNewBlock is fine.
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
-        bool fNewBlock = ProcessNewBlock(chainparams, pblock, forceProcessing).get();
-        if (fNewBlock) {
-            pfrom->nLastBlockTime = GetTime();
-        } else {
-            LOCK(cs_main);
-            mapBlockSource.erase(pblock->GetHash());
-        }
+        peerstate->pending_block_hash = hash;
+        peerstate->pending_block_processing = ProcessNewBlock(chainparams, pblock, forceProcessing);
         return true;
     }
 
@@ -3264,6 +3265,24 @@ bool PeerLogicValidation::SendRejectsAndCheckIfBanned(CNode* pnode, bool enable_
     return false;
 }
 
+bool IsPendingBlockValidation(CNode* pfrom, CPeerState* peerstate) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate)
+{
+    if (peerstate->pending_block_processing.valid()) {
+        if (peerstate->pending_block_processing.wait_for(std::chrono::duration<int>::zero()) == std::future_status::ready) {
+            bool fNewBlock = peerstate->pending_block_processing.get();
+            if (fNewBlock) {
+                pfrom->nLastBlockTime = GetTime();
+            } else {
+                LOCK(cs_main);
+                mapBlockSource.erase(peerstate->pending_block_hash);
+            }
+            peerstate->pending_block_processing = std::future<bool>();
+            peerstate->pending_block_hash = uint256();
+            return false;
+        } else { return true; }
+    } else { return false; }
+}
+
 bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& interruptMsgProc)
 {
     const CChainParams& chainparams = Params();
@@ -3289,6 +3308,17 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
         for (const CTransactionRef& removedTx : removed_txn) {
             AddToCompactExtraTransactions(removedTx);
         }
+    }
+
+    if (IsPendingBlockValidation(pfrom, peerstate)) {
+        return false;
+    }
+    {
+        // Somewhat annoyingly, tests currently rely on any pending bans/disconnects
+        // being processed prior to any pong responses, thus if we were waiting on a
+        // block validation to complete, we need to recheck bans.
+        LOCK(cs_main);
+        SendRejectsAndCheckIfBanned(pfrom, m_enable_bip61);
     }
 
     if (pfrom->fDisconnect)
@@ -3562,6 +3592,10 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
         LOCK(cs_peerstate);
         CPeerState* peerstate = PeerState(pto->GetId());
+
+        if (IsPendingBlockValidation(pto, peerstate)) {
+            return true;
+        }
 
         //
         // Message: ping
