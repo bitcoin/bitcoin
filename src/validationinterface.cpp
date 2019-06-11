@@ -254,3 +254,9 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
     LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
 }
+
+void CMainSignals::BlockProcessed() {
+    m_internals->m_schedulerClient.AddToProcessQueue([this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockProcessed(); });
+    });
+}

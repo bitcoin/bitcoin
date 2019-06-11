@@ -3855,6 +3855,7 @@ void CChainState::ProcessBlockValidationQueue()
             error("%s: ActivateBestChain failed (%s)", __func__, state.ToString());
 
         result_promise.set_value(true);
+        GetMainSignals().BlockProcessed();
         LimitValidationInterfaceQueue();
     }
 }

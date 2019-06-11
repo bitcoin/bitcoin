@@ -1427,6 +1427,14 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const BlockValidatio
     ::BlockChecked(block, state, connman);
 }
 
+/**
+ * Wake up message handler once a block has been processed to process the
+ * next message from the peer that sent us that block.
+ */
+void PeerLogicValidation::BlockProcessed() {
+    connman->WakeMessageHandler();
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // Messages

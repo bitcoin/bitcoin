@@ -171,6 +171,12 @@ protected:
      * Notifies listeners that a block which builds directly on our current tip
      * has been received and connected to the headers tree, though not validated yet */
     virtual void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& block) {};
+    /**
+     * Notifies listeners that a block which was submitted has been fully processed.
+     *
+     * Called on a background thread.
+     */
+    virtual void BlockProcessed() {}
     friend class CMainSignals;
 };
 
@@ -203,6 +209,7 @@ public:
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
+    void BlockProcessed();
 };
 
 CMainSignals& GetMainSignals();
