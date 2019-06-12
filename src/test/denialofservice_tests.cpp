@@ -98,11 +98,11 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 
     // Test starts here
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in getheaders
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_vSend);
+        LOCK(dummyNode1.cs_vSend);
         BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
         dummyNode1.vSendMsg.clear();
     }
@@ -111,17 +111,17 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     // Wait 21 minutes
     SetMockTime(nStartTime+21*60);
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in getheaders
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_vSend);
+        LOCK(dummyNode1.cs_vSend);
         BOOST_CHECK(dummyNode1.vSendMsg.size() > 0);
     }
     // Wait 3 more minutes
     SetMockTime(nStartTime+24*60);
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in disconnect
     }
     BOOST_CHECK(dummyNode1.fDisconnect == true);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
         Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(banman->IsBanned(addr1));
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
         Misbehaving(dummyNode2.GetId(), 50);
     }
     {
-        LOCK2(cs_main, dummyNode2.cs_sendProcessing);
+        LOCK(dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
     BOOST_CHECK(!banman->IsBanned(addr2)); // 2 not banned yet...
@@ -262,7 +262,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
         Misbehaving(dummyNode2.GetId(), 50);
     }
     {
-        LOCK2(cs_main, dummyNode2.cs_sendProcessing);
+        LOCK(dummyNode2.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
     }
     BOOST_CHECK(banman->IsBanned(addr2));
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         Misbehaving(dummyNode1.GetId(), 100);
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(!banman->IsBanned(addr1));
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         Misbehaving(dummyNode1.GetId(), 10);
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(!banman->IsBanned(addr1));
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
         Misbehaving(dummyNode1.GetId(), 1);
     }
     {
-        LOCK2(cs_main, dummyNode1.cs_sendProcessing);
+        LOCK(dummyNode1.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
     }
     BOOST_CHECK(banman->IsBanned(addr1));
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
         Misbehaving(dummyNode.GetId(), 100);
     }
     {
-        LOCK2(cs_main, dummyNode.cs_sendProcessing);
+        LOCK(dummyNode.cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode));
     }
     BOOST_CHECK(banman->IsBanned(addr));
