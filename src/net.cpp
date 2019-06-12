@@ -1064,13 +1064,13 @@ void CConnman::DisconnectNodes()
                 }
             }
         }
-    }
-    // SYSCOIN
-    if(fZMQNetworkStatus){
-        UniValue oNetworkStatus(UniValue::VOBJ);
-        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
-        oNetworkStatus.pushKV("status", "DisconnectNodes");
-        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
+        // SYSCOIN
+        if(!vNodesDisconnectedCopy.empty() && fZMQNetworkStatus){
+            UniValue oNetworkStatus(UniValue::VOBJ);
+            oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
+            oNetworkStatus.pushKV("status", "DisconnectNodes");
+            GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
+        }
     }
 }
 
