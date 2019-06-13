@@ -1123,7 +1123,7 @@ bool CTxLockVote::CheckSignature() const
 
     CBLSSignature sig;
     sig.SetBuf(vchMasternodeSignature);
-    if (!sig.IsValid() || !sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator, hash)) {
+    if (!sig.IsValid() || !sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), hash)) {
         LogPrintf("CTxLockVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }

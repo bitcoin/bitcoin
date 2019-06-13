@@ -747,7 +747,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
             continue;
         }
 
-        if (!islock.sig.GetSig().IsValid()) {
+        if (!islock.sig.Get().IsValid()) {
             batchVerifier.badSources.emplace(nodeId);
             continue;
         }
@@ -765,7 +765,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
             return false;
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, islock.txid);
-        batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig.GetSig(), quorum->qc.quorumPublicKey);
+        batchVerifier.PushMessage(nodeId, hash, signHash, islock.sig.Get(), quorum->qc.quorumPublicKey);
 
         // We can reconstruct the CRecoveredSig objects from the islock and pass it to the signing manager, which
         // avoids unnecessary double-verification of the signature. We however only do this when verification here

@@ -27,7 +27,7 @@ public:
     uint256 proRegTxHash;
     uint256 confirmedHash;
     CService service;
-    CBLSPublicKey pubKeyOperator;
+    CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     bool isValid;
 

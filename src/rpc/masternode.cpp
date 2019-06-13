@@ -574,7 +574,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
                            CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString() << " " <<
                            CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString() << " " <<
                            collateralAddressStr << " " <<
-                           dmn->pdmnState->pubKeyOperator.ToString();
+                           dmn->pdmnState->pubKeyOperator.Get().ToString();
             std::string strInfo = streamInfo.str();
             if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
                 strOutpoint.find(strFilter) == std::string::npos) return;
@@ -588,7 +588,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             objMN.push_back(Pair("owneraddress", CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString()));
             objMN.push_back(Pair("votingaddress", CBitcoinAddress(dmn->pdmnState->keyIDVoting).ToString()));
             objMN.push_back(Pair("collateraladdress", collateralAddressStr));
-            objMN.push_back(Pair("pubkeyoperator", dmn->pdmnState->pubKeyOperator.ToString()));
+            objMN.push_back(Pair("pubkeyoperator", dmn->pdmnState->pubKeyOperator.Get().ToString()));
             obj.push_back(Pair(strOutpoint, objMN));
         } else if (strMode == "lastpaidblock") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
@@ -605,7 +605,7 @@ UniValue masternodelist(const JSONRPCRequest& request)
             obj.push_back(Pair(strOutpoint, CBitcoinAddress(dmn->pdmnState->keyIDOwner).ToString()));
         } else if (strMode == "pubkeyoperator") {
             if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) return;
-            obj.push_back(Pair(strOutpoint, dmn->pdmnState->pubKeyOperator.ToString()));
+            obj.push_back(Pair(strOutpoint, dmn->pdmnState->pubKeyOperator.Get().ToString()));
         } else if (strMode == "status") {
             std::string strStatus = dmnToStatus(dmn);
             if (strFilter !="" && strStatus.find(strFilter) == std::string::npos &&

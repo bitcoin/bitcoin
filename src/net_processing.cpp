@@ -2174,7 +2174,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 // we have no idea about (e.g we were offline)? How to handle them?
             }
 
-            if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
+            if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
                 LogPrint("privatesend", "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
                 return false;
             }

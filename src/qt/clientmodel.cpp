@@ -355,14 +355,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
 
 static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
 {
-    static int64_t nLastMasternodeUpdateNotification = 0;
-    int64_t now = GetTimeMillis();
-    // if we are in-sync, update the UI regardless of last update time
-    // no need to refresh masternode list/stats as often as blocks etc.
-    if (masternodeSync.IsBlockchainSynced() || now - nLastMasternodeUpdateNotification > MODEL_UPDATE_DELAY*4*5) {
-        clientmodel->setMasternodeList(newList);
-        nLastMasternodeUpdateNotification = now;
-    }
+    clientmodel->setMasternodeList(newList);
 }
 
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)

@@ -88,7 +88,7 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
             if (!signers[i]) {
                 continue;
             }
-            memberPubKeys.emplace_back(members[i]->pdmnState->pubKeyOperator);
+            memberPubKeys.emplace_back(members[i]->pdmnState->pubKeyOperator.Get());
         }
 
         if (!membersSig.VerifySecureAggregated(memberPubKeys, commitmentHash)) {
