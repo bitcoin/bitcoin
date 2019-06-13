@@ -91,10 +91,11 @@ int dashconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int 
         if (GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) != txToLen)
             return set_error(err, dashconsensus_ERR_TX_SIZE_MISMATCH);
 
-         // Regardless of the verification result, the tx did not error.
-         set_error(err, dashconsensus_ERR_OK);
+        // Regardless of the verification result, the tx did not error.
+        set_error(err, dashconsensus_ERR_OK);
 
-        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, TransactionSignatureChecker(&tx, nIn), NULL);
+        PrecomputedTransactionData txdata(tx);
+        return VerifyScript(tx.vin[nIn].scriptSig, CScript(scriptPubKey, scriptPubKey + scriptPubKeyLen), flags, TransactionSignatureChecker(&tx, nIn, txdata), NULL);
     } catch (const std::exception&) {
         return set_error(err, dashconsensus_ERR_TX_DESERIALIZE); // Error deserializing
     }
