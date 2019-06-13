@@ -1022,7 +1022,10 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     {
         UniValue ret(UniValue::VARR);
         ListTransactions(*locked_chain, this, wtx, 0, true, ret, ISMINE_SPENDABLE | ISMINE_WATCH_ONLY, nullptr);
-        GetMainSignals().NotifySyscoinUpdate(ret.write().c_str(), "walletrawtx");
+        std::string retString = ret.write();
+        // just make sure we have some data to send
+        if(retString.size() < 10)
+            GetMainSignals().NotifySyscoinUpdate(ret.write().c_str(), "walletrawtx");
     }
     return true;
 }
