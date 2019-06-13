@@ -148,6 +148,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
+        req->WriteHeader("Content-Type", "text/plain");
         req->WriteReply(HTTP_BAD_METHOD, "JSONRPC server handles only POST requests");
         return false;
     }
