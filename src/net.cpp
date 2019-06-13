@@ -571,18 +571,13 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     nRecvBytes += nBytes;
     while (nBytes > 0) {
         // absorb network data
-        int handled;
-        if (!m_deserializer->in_data)
-            handled = m_deserializer->readHeader(pch, nBytes);
-        else
-            handled = m_deserializer->readData(pch, nBytes);
-
+        int handled = m_deserializer->Read(pch, nBytes);
         if (handled < 0) {
             m_deserializer->Reset();
             return false;
         }
 
-        if (m_deserializer->in_data && m_deserializer->hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (m_deserializer->OversizedMessageDetected()) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
             m_deserializer->Reset();
             return false;
@@ -591,13 +586,13 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         pch += handled;
         nBytes -= handled;
 
-        if (m_deserializer->complete()) {
+        if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
             CNetMessage msg = m_deserializer->GetMessage(Params().MessageStart(), nTimeMicros);
 
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(m_deserializer->hdr.pchCommand);
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.m_command);
             if (i == mapRecvBytesPerMsgCmd.end())
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
@@ -639,7 +634,7 @@ int CNode::GetSendVersion() const
     return nSendVersion;
 }
 
-int TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
+int V1TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
 {
     // copy data to temporary parsing buffer
     unsigned int nRemaining = 24 - nHdrPos;
@@ -670,7 +665,7 @@ int TransportDeserializer::readHeader(const char *pch, unsigned int nBytes)
     return nCopy;
 }
 
-int TransportDeserializer::readData(const char *pch, unsigned int nBytes)
+int V1TransportDeserializer::readData(const char *pch, unsigned int nBytes)
 {
     unsigned int nRemaining = hdr.nMessageSize - nDataPos;
     unsigned int nCopy = std::min(nRemaining, nBytes);
@@ -687,15 +682,15 @@ int TransportDeserializer::readData(const char *pch, unsigned int nBytes)
     return nCopy;
 }
 
-const uint256& TransportDeserializer::GetMessageHash() const
+const uint256& V1TransportDeserializer::GetMessageHash() const
 {
-    assert(complete());
+    assert(Complete());
     if (data_hash.IsNull())
         hasher.Finalize(data_hash.begin());
     return data_hash;
 }
 
-CNetMessage TransportDeserializer::GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) {
+CNetMessage V1TransportDeserializer::GetMessage(const CMessageHeader::MessageStartChars& message_start, int64_t time) {
     // decompose a single CNetMessage from the TransportDeserializer
     CNetMessage msg(std::move(vRecv));
 
@@ -2708,7 +2703,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
 
-    m_deserializer = MakeUnique<TransportDeserializer>(TransportDeserializer(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+    m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
 }
 
 CNode::~CNode()
