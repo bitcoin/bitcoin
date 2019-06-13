@@ -838,7 +838,7 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
             "getmerkleblocks \"filter\" \"hash\" ( count )\n"
-            "\nReturns an array of items with information about <count> merkleblocks starting from <hash> which match <filter>.\n"
+            "\nReturns an array of hex-encoded merkleblocks for <count> blocks starting from <hash> which match <filter>.\n"
             "\nArguments:\n"
             "1. \"filter\"        (string, required) The hex encoded bloom filter\n"
             "2. \"hash\"          (string, required) The block hash\n"
@@ -899,16 +899,25 @@ UniValue getmerkleblocks(const JSONRPCRequest& request)
 
     for (; pblockindex; pblockindex = chainActive.Next(pblockindex))
     {
+        if (--nCount < 0) {
+            break;
+        }
+
         if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) {
             // this shouldn't happen, we already checked pruning case earlier
             throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
         }
+
+        CMerkleBlock merkleblock(block, filter);
+        if (merkleblock.vMatchedTxn.empty()) {
+            // ignore blocks that do not match the filter
+            continue;
+        }
+
         CDataStream ssMerkleBlock(SER_NETWORK, PROTOCOL_VERSION);
-        ssMerkleBlock << CMerkleBlock(block, filter);
+        ssMerkleBlock << merkleblock;
         std::string strHex = HexStr(ssMerkleBlock);
         arrMerkleBlocks.push_back(strHex);
-        if (--nCount <= 0)
-            break;
     }
     return arrMerkleBlocks;
 }
