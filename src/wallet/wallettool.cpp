@@ -24,7 +24,7 @@ static void WalletToolReleaseWallet(CWallet* wallet)
 static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::path& path)
 {
     if (fs::exists(path)) {
-        fprintf(stderr, "Error: File exists already\n");
+        tfm::format(std::cerr, "Error: File exists already\n");
         return nullptr;
     }
     // dummy chain interface
@@ -33,7 +33,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     bool first_run = true;
     DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
     if (load_wallet_ret != DBErrors::LOAD_OK) {
-        fprintf(stderr, "Error creating %s", name.c_str());
+        tfm::format(std::cerr, "Error creating %s", name.c_str());
         return nullptr;
     }
 
@@ -43,7 +43,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     CPubKey seed = wallet_instance->GenerateNewSeed();
     wallet_instance->SetHDSeed(seed);
 
-    fprintf(stdout, "Topping up keypool...\n");
+    tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
     return wallet_instance;
 }
@@ -51,7 +51,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
 static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::path& path)
 {
     if (!fs::exists(path)) {
-        fprintf(stderr, "Error: Wallet files does not exist\n");
+        tfm::format(std::cerr, "Error: Wallet files does not exist\n");
         return nullptr;
     }
 
@@ -63,28 +63,28 @@ static std::shared_ptr<CWallet> LoadWallet(const std::string& name, const fs::pa
         bool first_run;
         load_wallet_ret = wallet_instance->LoadWallet(first_run);
     } catch (const std::runtime_error&) {
-        fprintf(stderr, "Error loading %s. Is wallet being used by another process?\n", name.c_str());
+        tfm::format(std::cerr, "Error loading %s. Is wallet being used by another process?\n", name.c_str());
         return nullptr;
     }
 
     if (load_wallet_ret != DBErrors::LOAD_OK) {
         wallet_instance = nullptr;
         if (load_wallet_ret == DBErrors::CORRUPT) {
-            fprintf(stderr, "Error loading %s: Wallet corrupted", name.c_str());
+            tfm::format(std::cerr, "Error loading %s: Wallet corrupted", name.c_str());
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NONCRITICAL_ERROR) {
-            fprintf(stderr, "Error reading %s! All keys read correctly, but transaction data"
+            tfm::format(std::cerr, "Error reading %s! All keys read correctly, but transaction data"
                             " or address book entries might be missing or incorrect.",
                 name.c_str());
         } else if (load_wallet_ret == DBErrors::TOO_NEW) {
-            fprintf(stderr, "Error loading %s: Wallet requires newer version of %s",
+            tfm::format(std::cerr, "Error loading %s: Wallet requires newer version of %s",
                 name.c_str(), PACKAGE_NAME);
             return nullptr;
         } else if (load_wallet_ret == DBErrors::NEED_REWRITE) {
-            fprintf(stderr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
+            tfm::format(std::cerr, "Wallet needed to be rewritten: restart %s to complete", PACKAGE_NAME);
             return nullptr;
         } else {
-            fprintf(stderr, "Error loading %s", name.c_str());
+            tfm::format(std::cerr, "Error loading %s", name.c_str());
             return nullptr;
         }
     }
@@ -96,12 +96,12 @@ static void WalletShowInfo(CWallet* wallet_instance)
 {
     LOCK(wallet_instance->cs_wallet);
 
-    fprintf(stdout, "Wallet info\n===========\n");
-    fprintf(stdout, "Encrypted: %s\n", wallet_instance->IsCrypted() ? "yes" : "no");
-    fprintf(stdout, "HD (hd seed available): %s\n", wallet_instance->GetHDChain().seed_id.IsNull() ? "no" : "yes");
-    fprintf(stdout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
-    fprintf(stdout, "Transactions: %zu\n", wallet_instance->mapWallet.size());
-    fprintf(stdout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
+    tfm::format(std::cout, "Wallet info\n===========\n");
+    tfm::format(std::cout, "Encrypted: %s\n", wallet_instance->IsCrypted() ? "yes" : "no");
+    tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->GetHDChain().seed_id.IsNull() ? "no" : "yes");
+    tfm::format(std::cout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
+    tfm::format(std::cout, "Transactions: %zu\n", wallet_instance->mapWallet.size());
+    tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
 }
 
 bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
@@ -116,12 +116,12 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         }
     } else if (command == "info") {
         if (!fs::exists(path)) {
-            fprintf(stderr, "Error: no wallet file at %s\n", name.c_str());
+            tfm::format(std::cerr, "Error: no wallet file at %s\n", name.c_str());
             return false;
         }
         std::string error;
         if (!WalletBatch::VerifyEnvironment(path, error)) {
-            fprintf(stderr, "Error loading %s. Is wallet being used by other process?\n", name.c_str());
+            tfm::format(std::cerr, "Error loading %s. Is wallet being used by other process?\n", name.c_str());
             return false;
         }
         std::shared_ptr<CWallet> wallet_instance = LoadWallet(name, path);
@@ -129,7 +129,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
         WalletShowInfo(wallet_instance.get());
         wallet_instance->Flush(true);
     } else {
-        fprintf(stderr, "Invalid command: %s\n", command.c_str());
+        tfm::format(std::cerr, "Invalid command: %s\n", command.c_str());
         return false;
     }
 
