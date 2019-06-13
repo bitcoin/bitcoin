@@ -2167,7 +2167,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true; // not an error
             }
 
-            auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMNByCollateral(dstx.masternodeOutpoint);
+            auto dmn = deterministicMNManager->GetListAtChainTip().GetMNByCollateral(dstx.masternodeOutpoint);
             if(!dmn) {
                 LogPrint(BCLog::PRIVATESEND, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;

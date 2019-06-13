@@ -72,7 +72,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMN(mnauth.proRegTxHash);
+        auto dmn = mnList.GetMN(mnauth.proRegTxHash);
         if (!dmn) {
             LOCK(cs_main);
             // in case he was unlucky and not up to date, just let him be connected as a regular node, which gives him
