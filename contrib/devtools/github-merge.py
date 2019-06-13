@@ -32,11 +32,11 @@ BASH = os.getenv('BASH','bash')
 # OS specific configuration for terminal attributes
 ATTR_RESET = ''
 ATTR_PR = ''
-COMMIT_FORMAT = '%h %s (%an)%d'
+COMMIT_FORMAT = '%H %s (%an)%d'
 if os.name == 'posix': # if posix, assume we can use basic terminal escapes
     ATTR_RESET = '\033[0m'
     ATTR_PR = '\033[1;36m'
-    COMMIT_FORMAT = '%C(bold blue)%h%Creset %s %C(cyan)(%an)%Creset%C(green)%d%Creset'
+    COMMIT_FORMAT = '%C(bold blue)%H%Creset %s %C(cyan)(%an)%Creset%C(green)%d%Creset'
 
 def git_config_get(option, default=None):
     '''
@@ -279,7 +279,7 @@ def main():
         else:
             firstline = 'Merge #%s' % (pull,)
         message = firstline + '\n\n'
-        message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%h %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
+        message += subprocess.check_output([GIT,'log','--no-merges','--topo-order','--pretty=format:%H %s (%an)',base_branch+'..'+head_branch]).decode('utf-8')
         message += '\n\nPull request description:\n\n  ' + body.replace('\n', '\n  ') + '\n'
         message += get_acks_from_comments(head_commit=subprocess.check_output([GIT,'log','-1','--pretty=format:%H',head_branch]).decode('utf-8')[:6], comments=comments)
         try:
