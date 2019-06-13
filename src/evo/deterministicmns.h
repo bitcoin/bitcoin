@@ -306,6 +306,7 @@ public:
     CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
+    CDeterministicMNCPtr GetMNByService(const CService& service) const;
     CDeterministicMNCPtr GetValidMNByService(const CService& service) const;
     CDeterministicMNCPtr GetMNPayee() const;
 

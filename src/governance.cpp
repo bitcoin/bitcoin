@@ -491,11 +491,11 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     auto mnList = deterministicMNManager->GetListAtChainTip();
     std::map<COutPoint, CDeterministicMNCPtr> mapMasternodes;
     if (mnCollateralOutpointFilter.IsNull()) {
-        mnList.ForEachMN(true, [&](const CDeterministicMNCPtr& dmn) {
+        mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
             mapMasternodes.emplace(dmn->collateralOutpoint, dmn);
         });
     } else {
-        auto dmn = mnList.GetValidMNByCollateral(mnCollateralOutpointFilter);
+        auto dmn = mnList.GetMNByCollateral(mnCollateralOutpointFilter);
         if (dmn) {
             mapMasternodes.emplace(dmn->collateralOutpoint, dmn);
         }

@@ -121,7 +121,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetValidMNByCollateral(vote.GetMasternodeOutpoint());
+    auto dmn = mnList.GetMNByCollateral(vote.GetMasternodeOutpoint());
 
     if (!dmn) {
         std::ostringstream ostr;
@@ -235,7 +235,7 @@ void CGovernanceObject::ClearMasternodeVotes()
 
     vote_m_it it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
-        if (!mnList.HasValidMNByCollateral(it->first)) {
+        if (!mnList.HasMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
         } else {

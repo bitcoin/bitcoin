@@ -1887,7 +1887,7 @@ void CConnman::ThreadOpenConnections()
         {
             CAddrInfo addr = addrman.Select(fFeeler);
 
-            bool isMasternode = mnList.GetValidMNByService(addr) != nullptr;
+            bool isMasternode = mnList.GetMNByService(addr) != nullptr;
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()))
@@ -2079,7 +2079,7 @@ void CConnman::ThreadOpenMasternodeConnections()
             std::vector<CService> pending;
             for (const auto& group : masternodeQuorumNodes) {
                 for (const auto& proRegTxHash : group.second) {
-                    auto dmn = mnList.GetValidMN(proRegTxHash);
+                    auto dmn = mnList.GetMN(proRegTxHash);
                     if (!dmn) {
                         continue;
                     }
@@ -2797,7 +2797,7 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
     uint256 assumedProTxHash;
     if (pnode->verifiedProRegTxHash.IsNull() && !pnode->fInbound) {
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMNByService(pnode->addr);
+        auto dmn = mnList.GetMNByService(pnode->addr);
         if (dmn == nullptr) {
             // This is definitely not a masternode
             return false;
