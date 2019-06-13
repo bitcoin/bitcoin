@@ -274,6 +274,16 @@ public:
     //! Destructor. If a key has been reserved and not KeepKey'ed, it will be returned to the keypool
     ~CReserveKey()
     {
+        if (nIndex != -1) {
+            LogPrintf("Warning! A CReserveKey was not dealt with until destructor. This is a bug. Please report this if possible, e.g. here: %s%s", PACKAGE_BUGREPORT, "/new\?title=wallet:%20ReserveKey%20was%20not%20dealt%20with%20until%20destructor\n");
+#ifdef DEBUG
+            // To avoid accidental key re-use, we should attempt to have the creator
+            // have it returned or kept before its destructor is called.
+            // TODO: Fix the lifecycle of this object to be less error-prone!
+            assert(false);
+#endif
+
+        }
         ReturnKey();
     }
 
