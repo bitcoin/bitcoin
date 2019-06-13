@@ -1,0 +1,74 @@
+version: v1.0
+name: Bitcoin Core
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+
+blocks:
+  - name: Compile and test Bitcoin-Core
+    task:
+      jobs:
+      - name: x86_64 Linux Ubuntu 18.04 depends tests
+        env_vars:
+        - name: TARGET_HOST
+          value: x86_64-linux-gnu
+        - name: PACKAGES
+          value: ""
+        - name: RUN_UNIT_TESTS
+          value: "true"
+        - name: RUN_FUNCTIONAL_TESTS
+          value: "true"
+        - name: BITCOIN_CONFIG
+          value: "--disable-dependency-tracking --enable-zmq --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-debug"
+        commands:
+          - checkout
+          - set -o errexit; source .semaphore/update_build_test.sh
+      - name: ARM Linux Ubuntu 18.04 depends tests
+        env_vars:
+        - name: TARGET_HOST
+          value: arm-linux-gnueabihf
+        - name: PACKAGES
+          value: "g++-arm-linux-gnueabihf"
+        - name: RUN_UNIT_TESTS
+          value: "false"
+        - name: RUN_FUNCTIONAL_TESTS
+          value: "false"
+        - name: BITCOIN_CONFIG
+          value: "--disable-dependency-tracking --enable-glibc-back-compat --enable-reduce-exports CXXFLAGS=-Wno-psabi"
+        commands:
+          - checkout
+          - set -o errexit; source .semaphore/update_build_test.sh
+      - name: Win64 Ubuntu 18.04 depends
+        env_vars:
+        - name: TARGET_HOST
+          value: x86_64-w64-mingw32
+        - name: PACKAGES
+          value: "nsis g++-mingw-w64-x86-64 wine-binfmt wine64"
+        - name: RUN_UNIT_TESTS
+          value: "false"
+        - name: RUN_FUNCTIONAL_TESTS
+          value: "false"
+        - name: BITCOIN_CONFIG
+          value: "--enable-reduce-exports --disable-gui-tests"
+        commands:
+          - checkout
+          - set -o errexit; source .semaphore/update_build_test.sh
+      - name: X86 Ubuntu system libs
+        env_vars:
+        - name: TARGET_HOST
+          value: system
+        - name: PACKAGES
+          value: "python3-zmq libdb-dev libdb++-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev qtbase5-dev qttools5-dev-tools protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev"
+        - name: RUN_UNIT_TESTS
+          value: "false"
+        - name: RUN_FUNCTIONAL_TESTS
+          value: "false"
+        - name: BITCOIN_CONFIG
+          value: "--enable-reduce-exports --disable-gui-tests --with-gui=qt5 --with-incompatible-bdb"
+        commands:
+          - g++ --version
+          - sem-version cpp 6
+          - g++ --version
+          - checkout
+          - set -o errexit; source .semaphore/update_build_test.sh
