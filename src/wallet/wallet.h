@@ -577,6 +577,7 @@ public:
     {
         return (GetDebit(filter) > 0);
     }
+    bool IsAllFromMe(const isminefilter& filter) const;
 
     // True if only scriptSigs are different
     bool IsEquivalentTo(const CWalletTx& tx) const;

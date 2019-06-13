@@ -1735,9 +1735,10 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
     listSent.clear();
 
     // Compute fee:
-    CAmount nDebit = GetDebit(filter);
-    if (nDebit > 0) // debit>0 means we signed/sent this transaction
+    bool fIsAllFromMe = IsAllFromMe(filter);
+    if (fIsAllFromMe)
     {
+        CAmount nDebit = GetDebit(filter);
         CAmount nValueOut = tx->GetValueOut();
         nFee = nDebit - nValueOut;
     }
@@ -1750,7 +1751,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
         // Only need to handle txouts if AT LEAST one of these is true:
         //   1) they debit from us (sent)
         //   2) the output is to us (received)
-        if (nDebit > 0)
+        if (fIsAllFromMe)
         {
             // Don't report 'change' txouts
             if (pwallet->IsChange(txout))
@@ -1772,7 +1773,7 @@ void CWalletTx::GetAmounts(std::list<COutputEntry>& listReceived,
         COutputEntry output = {address, txout.nValue, (int)i};
 
         // If we are debited by the transaction, add the output as a "sent" entry
-        if (nDebit > 0)
+        if (fIsAllFromMe)
             listSent.push_back(output);
 
         // If we are receiving the output, add it as a "received" entry
@@ -2001,6 +2002,11 @@ std::set<uint256> CWalletTx::GetConflicts() const
         result.erase(myHash);
     }
     return result;
+}
+
+bool CWalletTx::IsAllFromMe(const isminefilter& filter) const
+{
+    return pwallet->IsAllFromMe(*tx, filter);
 }
 
 CAmount CWalletTx::GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate) const

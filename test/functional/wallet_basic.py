@@ -496,6 +496,33 @@ class WalletTest(BitcoinTestFramework):
         self.nodes[0].setlabel(change, 'foobar')
         assert_equal(self.nodes[0].getaddressinfo(change)['ischange'], False)
 
+        # Test gettransaction for showing CoinJoin transaction. See issue #14136.
+        # Build a tx where inputs = [10 mine, 10 not-mine] and outputs = [15 mine, 4.99 not-mine].
+        # The amount returned by gettransaction is expected to be 15 - 10 = 5.
+        input_address_1 = self.nodes[1].getnewaddress()
+        input_address_2 = self.nodes[2].getnewaddress()
+        output_address_1 = self.nodes[1].getnewaddress()
+        output_address_2 = self.nodes[2].getnewaddress()
+        input_privkey_1 = self.nodes[1].dumpprivkey(input_address_1)
+        input_privkey_2 = self.nodes[2].dumpprivkey(input_address_2)
+        txid = self.nodes[1].sendmany('', {input_address_1: 10, input_address_2: 10})
+        tx_obj = self.nodes[1].getrawtransaction(txid, 1)
+        inputs = []
+        for utxo in tx_obj['vout']:
+            address = utxo['scriptPubKey']['addresses'][0]
+            if address == input_address_1 or address == input_address_2:
+                inputs.append({"txid": txid, "vout": utxo['n']})
+        outputs = [{output_address_1: 15}, {output_address_2: 4.99}]
+        tx = self.nodes[1].createrawtransaction(inputs, outputs)
+        tx = self.nodes[1].signrawtransactionwithkey(tx, [input_privkey_1, input_privkey_2])['hex']
+        txid = self.nodes[1].sendrawtransaction(tx)
+        tx_obj = self.nodes[1].gettransaction(txid)
+        assert_equal(tx_obj['amount'], Decimal('5.00000000'))
+        assert_equal(tx_obj['fee'], Decimal('0E-8'))
+        assert_equal(tx_obj['trusted'], False)
+        assert_equal(len(tx_obj['details']), 1)
+        assert_equal(tx_obj['details'][0]['category'], 'receive')
+        assert_equal(tx_obj['details'][0]['amount'], Decimal('15.00000000'))
 
 if __name__ == '__main__':
     WalletTest().main()
