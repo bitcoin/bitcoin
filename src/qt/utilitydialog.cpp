@@ -124,7 +124,7 @@ HelpMessageDialog::~HelpMessageDialog()
 void HelpMessageDialog::printToConsole()
 {
     // On other operating systems, the expected action is to print the message to the console.
-    fprintf(stdout, "%s\n", qPrintable(text));
+    tfm::format(std::cout, "%s\n", qPrintable(text));
 }
 
 void HelpMessageDialog::showOrPrint()
