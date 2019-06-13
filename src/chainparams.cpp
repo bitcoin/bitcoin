@@ -111,35 +111,13 @@ public:
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 3;
 
-        //Todo: Remove
-#if 0
-        uint nonce = 1;
         LDPC *ldpc = new LDPC;
-        ldpc->set_difficulty(32, 3, 6);
-        ldpc->initialization();
-        ldpc->generate_seed((char*)uint256S("0").ToString().c_str());
-        ldpc->generate_H();
-        ldpc->generate_Q();
+        genesis = CreateGenesisBlock(1558627231, 1, 0x1f0fffff, 1, 50 * COIN);
+        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
+            ++genesis.nNonce;
+            assert(genesis.nNonce);
+        }
 
-        ldpc->print_Q(NULL, 1);
-        ldpc->print_Q(NULL, 2);
-
-         while(1) {
-             genesis = CreateGenesisBlock(1558627231, nonce, 0x1f0fffff, 1, 50 * COIN);
-             std::cout << genesis.GetHash().ToString() << std::endl;
-             ldpc->generate_hv((unsigned char*)genesis.GetHash().ToString().c_str());
-             ldpc->decoding();
-             if (ldpc->decision())
-             {
-                 printf("codeword is founded with nonce = %d\n", nonce);
-                 break;
-             }
-             nonce++;
-         }
-        assert(1 == 0);
-#endif
-
-        genesis = CreateGenesisBlock(1558627231, 609, 0x1f0fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("d09dab40960e08af30c7cdc1bf2fbc5c955f6be09a2a051f961cfdf9e507149d"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
