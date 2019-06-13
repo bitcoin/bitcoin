@@ -5,6 +5,7 @@
 #ifndef BITCOIN_UTIL_CHECK_H
 #define BITCOIN_UTIL_CHECK_H
 
+#include <config/bitcoin-config.h>
 #include <tinyformat.h>
 
 #include <stdexcept>
@@ -36,6 +37,58 @@ class NonFatalCheckError : public std::runtime_error
                     (#condition),                                 \
                     PACKAGE_BUGREPORT));                          \
         }                                                         \
+    } while (false)
+
+/**
+ * ASSUME(expression)
+ *
+ * ASSUME(...) is used to document assumptions.
+ *
+ * Bitcoin Core is always compiled with assertions enabled. assert(...)
+ * is thus only appropriate for documenting critical assumptions
+ * where a failed assumption should lead to immediate abortion also
+ * in production environments.
+ *
+ * ASSUME(...) works like assert(...) if -DABORT_ON_FAILED_ASSUME
+ * and is side-effect safe.
+ *
+ * More specifically:
+ *
+ * * If compiled with -DABORT_ON_FAILED_ASSUME (set by --enable-debug
+ *   and --enable-fuzz): Evaluate expression and abort if expression is
+ *   false.
+ *
+ * * Otherwise:
+ *   Evaluate expression and continue execution.
+ *
+ * ABORT_ON_FAILED_ASSUME should not be set in production environments.
+ *
+ * Example
+ * =======
+ * int main(void) {
+ *     ASSUME(IsFoo());
+ *     ...
+ * }
+ *
+ * If !IsFoo() and -DABORT_ON_FAILED_ASSUME, then:
+ *     filename.cpp:123: main: ASSUME(IsFoo()) failed.
+ *     Aborted
+ * Otherwise the execution continues.
+ */
+
+#ifdef ABORT_ON_FAILED_ASSUME
+#define ACTION_ON_FAILED_ASSUME std::abort();
+#else
+#define ACTION_ON_FAILED_ASSUME
+#endif
+
+#define ASSUME(expression)                                                                               \
+    do {                                                                                                 \
+        if (!(expression)) {                                                                             \
+            tfm::format(std::cerr, "%s:%d: %s: ASSUME(%s) failed. You may report this issue here: %s\n", \
+                __FILE__, __LINE__, __func__, #expression, PACKAGE_BUGREPORT);                           \
+            ACTION_ON_FAILED_ASSUME                                                                      \
+        }                                                                                                \
     } while (false)
 
 #endif // BITCOIN_UTIL_CHECK_H
