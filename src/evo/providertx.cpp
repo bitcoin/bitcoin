@@ -257,7 +257,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
         if (!CheckInputsHash(tx, ptx, state)) {
             return false;
         }
-        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator, state)) {
+        if (!CheckHashSig(ptx, mn->pdmnState->pubKeyOperator.Get(), state)) {
             return false;
         }
     }
@@ -376,7 +376,7 @@ bool CheckProUpRevTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
 
         if (!CheckInputsHash(tx, ptx, state))
             return false;
-        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator, state))
+        if (!CheckHashSig(ptx, dmn->pdmnState->pubKeyOperator.Get(), state))
             return false;
     }
 

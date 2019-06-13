@@ -12,7 +12,7 @@
 #include <QTimer>
 #include <QWidget>
 
-#define MASTERNODELIST_UPDATE_SECONDS 15
+#define MASTERNODELIST_UPDATE_SECONDS 3
 #define MASTERNODELIST_FILTER_COOLDOWN_SECONDS 3
 
 namespace Ui
@@ -42,6 +42,7 @@ public:
 private:
     QMenu* contextMenuDIP3;
     int64_t nTimeFilterUpdatedDIP3;
+    int64_t nTimeUpdatedDIP3;
     bool fFilterUpdatedDIP3;
 
     QTimer* timer;
@@ -54,9 +55,11 @@ private:
 
     QString strCurrentFilterDIP3;
 
+    bool mnListChanged;
+
     CDeterministicMNCPtr GetSelectedDIP3MN();
 
-    void updateDIP3List(bool fForce);
+    void updateDIP3List();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
@@ -70,7 +73,7 @@ private Q_SLOTS:
     void copyProTxHash_clicked();
     void copyCollateralOutpoint_clicked();
 
+    void handleMasternodeListChanged();
     void updateDIP3ListScheduled();
-    void updateDIP3ListForced();
 };
 #endif // MASTERNODELIST_H

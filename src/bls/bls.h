@@ -310,29 +310,34 @@ protected:
 };
 
 #ifndef BUILD_BITCOIN_INTERNAL
-class CBLSLazySignature
+template<typename BLSObject>
+class CBLSLazyWrapper
 {
 private:
     mutable std::mutex mutex;
 
-    mutable char buf[BLS_CURVE_SIG_SIZE];
+    mutable char buf[BLSObject::SerSize];
     mutable bool bufValid{false};
 
-    mutable CBLSSignature sig;
-    mutable bool sigInitialized{false};
+    mutable BLSObject obj;
+    mutable bool objInitialized{false};
+
+    mutable uint256 hash;
 
 public:
-    CBLSLazySignature()
+    CBLSLazyWrapper()
     {
         memset(buf, 0, sizeof(buf));
+        // the all-zero buf is considered a valid buf, but the resulting object will return false for IsValid
+        bufValid = true;
     }
 
-    CBLSLazySignature(const CBLSLazySignature& r)
+    CBLSLazyWrapper(const CBLSLazyWrapper& r)
     {
         *this = r;
     }
 
-    CBLSLazySignature& operator=(const CBLSLazySignature& r)
+    CBLSLazyWrapper& operator=(const CBLSLazyWrapper& r)
     {
         std::unique_lock<std::mutex> l(r.mutex);
         bufValid = r.bufValid;
@@ -341,12 +346,13 @@ public:
         } else {
             memset(buf, 0, sizeof(buf));
         }
-        sigInitialized = r.sigInitialized;
-        if (r.sigInitialized) {
-            sig = r.sig;
+        objInitialized = r.objInitialized;
+        if (r.objInitialized) {
+            obj = r.obj;
         } else {
-            sig.Reset();
+            obj.Reset();
         }
+        hash = r.hash;
         return *this;
     }
 
@@ -354,12 +360,13 @@ public:
     inline void Serialize(Stream& s) const
     {
         std::unique_lock<std::mutex> l(mutex);
-        if (!sigInitialized && !bufValid) {
-            throw std::ios_base::failure("sig and buf not initialized");
+        if (!objInitialized && !bufValid) {
+            throw std::ios_base::failure("obj and buf not initialized");
         }
         if (!bufValid) {
-            sig.GetBuf(buf, sizeof(buf));
+            obj.GetBuf(buf, sizeof(buf));
             bufValid = true;
+            hash = uint256();
         }
         s.write(buf, sizeof(buf));
     }
@@ -370,12 +377,78 @@ public:
         std::unique_lock<std::mutex> l(mutex);
         s.read(buf, sizeof(buf));
         bufValid = true;
-        sigInitialized = false;
+        objInitialized = false;
+        hash = uint256();
     }
 
-    void SetSig(const CBLSSignature& _sig);
-    const CBLSSignature& GetSig() const;
+    void Set(const BLSObject& _obj)
+    {
+        std::unique_lock<std::mutex> l(mutex);
+        bufValid = false;
+        objInitialized = true;
+        obj = _obj;
+        hash = uint256();
+    }
+    const BLSObject& Get() const
+    {
+        std::unique_lock<std::mutex> l(mutex);
+        static BLSObject invalidObj;
+        if (!bufValid && !objInitialized) {
+            return invalidObj;
+        }
+        if (!objInitialized) {
+            obj.SetBuf(buf, sizeof(buf));
+            if (!obj.CheckMalleable(buf, sizeof(buf))) {
+                bufValid = false;
+                objInitialized = false;
+                obj = invalidObj;
+            } else {
+                objInitialized = true;
+            }
+        }
+        return obj;
+    }
+
+    bool operator==(const CBLSLazyWrapper& r) const
+    {
+        if (bufValid && r.bufValid) {
+            return memcmp(buf, r.buf, sizeof(buf)) == 0;
+        }
+        if (objInitialized && r.objInitialized) {
+            return obj == r.obj;
+        }
+        return Get() == r.Get();
+    }
+
+    bool operator!=(const CBLSLazyWrapper& r) const
+    {
+        return !(*this == r);
+    }
+
+    uint256 GetHash() const
+    {
+        std::unique_lock<std::mutex> l(mutex);
+        if (!bufValid) {
+            obj.GetBuf(buf, sizeof(buf));
+            bufValid = true;
+            hash = uint256();
+        }
+        if (hash.IsNull()) {
+            UpdateHash();
+        }
+        return hash;
+    }
+private:
+    void UpdateHash() const
+    {
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss.write(buf, sizeof(buf));
+        hash = ss.GetHash();
+    }
 };
+typedef CBLSLazyWrapper<CBLSSignature> CBLSLazySignature;
+typedef CBLSLazyWrapper<CBLSPublicKey> CBLSLazyPublicKey;
+typedef CBLSLazyWrapper<CBLSSecretKey> CBLSLazySecretKey;
 #endif
 
 typedef std::vector<CBLSId> BLSIdVector;

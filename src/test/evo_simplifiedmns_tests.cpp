@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         CBLSSecretKey sk;
         sk.SetBuf(skBuf, sizeof(skBuf));
 
-        smle.pubKeyOperator = sk.GetPublicKey();
+        smle.pubKeyOperator.Set(sk.GetPublicKey());
         smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
 

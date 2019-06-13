@@ -589,7 +589,7 @@ bool CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
 
             // we didn't check this earlier because we use a lazy BLS signature and tried to avoid doing the expensive
             // deserialization in the message thread
-            if (!sigShare.sigShare.GetSig().IsValid()) {
+            if (!sigShare.sigShare.Get().IsValid()) {
                 BanNode(nodeId);
                 // don't process any additional shares from this node
                 break;
@@ -605,7 +605,7 @@ bool CSigSharesManager::ProcessPendingSigShares(CConnman& connman)
                 assert(false);
             }
 
-            batchVerifier.PushMessage(nodeId, sigShare.GetKey(), sigShare.GetSignHash(), sigShare.sigShare.GetSig(), pubKeyShare);
+            batchVerifier.PushMessage(nodeId, sigShare.GetKey(), sigShare.GetSignHash(), sigShare.sigShare.Get(), pubKeyShare);
             verifyCount++;
         }
     }
@@ -735,7 +735,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
         idsForRecovery.reserve((size_t) quorum->params.threshold);
         for (auto it = sigShares->begin(); it != sigShares->end() && sigSharesForRecovery.size() < quorum->params.threshold; ++it) {
             auto& sigShare = it->second;
-            sigSharesForRecovery.emplace_back(sigShare.sigShare.GetSig());
+            sigSharesForRecovery.emplace_back(sigShare.sigShare.Get());
             idsForRecovery.emplace_back(CBLSId::FromHash(quorum->members[sigShare.quorumMember]->proTxHash));
         }
 
@@ -762,7 +762,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     rs.quorumHash = quorum->qc.quorumHash;
     rs.id = id;
     rs.msgHash = msgHash;
-    rs.sig.SetSig(recoveredSig);
+    rs.sig.Set(recoveredSig);
     rs.UpdateHash();
 
     // There should actually be no need to verify the self-recovered signatures as it should always succeed. Let's
@@ -1422,8 +1422,8 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
     sigShare.quorumMember = (uint16_t)memberIdx;
     uint256 signHash = CLLMQUtils::BuildSignHash(sigShare);
 
-    sigShare.sigShare.SetSig(skShare.Sign(signHash));
-    if (!sigShare.sigShare.GetSig().IsValid()) {
+    sigShare.sigShare.Set(skShare.Sign(signHash));
+    if (!sigShare.sigShare.Get().IsValid()) {
         LogPrintf("CSigSharesManager::%s -- failed to sign sigShare. signHash=%s, id=%s, msgHash=%s, time=%s\n", __func__,
                   signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), t.count());
         return;

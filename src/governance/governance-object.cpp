@@ -490,8 +490,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingConf
         }
 
         // Check that we have a valid MN signature
-        if (!CheckSignature(dmn->pdmnState->pubKeyOperator)) {
-            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.ToString();
+        if (!CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
             return false;
         }
 

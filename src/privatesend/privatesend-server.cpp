@@ -121,7 +121,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         auto dmn = mnList.GetValidMNByCollateral(dsq.masternodeOutpoint);
         if (!dmn) return;
 
-        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator)) {
+        if (!dsq.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
             LOCK(cs_main);
             Misbehaving(pfrom->id, 10);
             return;

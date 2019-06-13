@@ -31,8 +31,8 @@ UniValue CRecoveredSig::ToJson() const
     ret.push_back(Pair("quorumHash", quorumHash.ToString()));
     ret.push_back(Pair("id", id.ToString()));
     ret.push_back(Pair("msgHash", msgHash.ToString()));
-    ret.push_back(Pair("sig", sig.GetSig().ToString()));
-    ret.push_back(Pair("hash", sig.GetSig().GetHash().ToString()));
+    ret.push_back(Pair("sig", sig.Get().ToString()));
+    ret.push_back(Pair("hash", sig.Get().GetHash().ToString()));
     return ret;
 }
 
@@ -575,13 +575,13 @@ bool CSigningManager::ProcessPendingRecoveredSigs(CConnman& connman)
 
         for (auto& recSig : v) {
             // we didn't verify the lazy signature until now
-            if (!recSig.sig.GetSig().IsValid()) {
+            if (!recSig.sig.Get().IsValid()) {
                 batchVerifier.badSources.emplace(nodeId);
                 break;
             }
 
             const auto& quorum = quorums.at(std::make_pair((Consensus::LLMQType)recSig.llmqType, recSig.quorumHash));
-            batchVerifier.PushMessage(nodeId, recSig.GetHash(), CLLMQUtils::BuildSignHash(recSig), recSig.sig.GetSig(), quorum->qc.quorumPublicKey);
+            batchVerifier.PushMessage(nodeId, recSig.GetHash(), CLLMQUtils::BuildSignHash(recSig), recSig.sig.Get(), quorum->qc.quorumPublicKey);
             verifyCount++;
         }
     }
