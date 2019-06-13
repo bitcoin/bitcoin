@@ -70,7 +70,7 @@ static bool AppInit(int argc, char* argv[])
     SetupServerArgs();
     std::string error;
     if (!gArgs.ParseParameters(argc, argv, error)) {
-        fprintf(stderr, "Error parsing command line arguments: %s\n", error.c_str());
+        tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error.c_str());
         return false;
     }
 
@@ -88,7 +88,7 @@ static bool AppInit(int argc, char* argv[])
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
-        fprintf(stdout, "%s", strUsage.c_str());
+        tfm::format(std::cout, "%s", strUsage.c_str());
         return true;
     }
 
@@ -96,25 +96,25 @@ static bool AppInit(int argc, char* argv[])
     {
         if (!fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
+            tfm::format(std::cerr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
         if (!gArgs.ReadConfigFiles(error, true)) {
-            fprintf(stderr, "Error reading configuration file: %s\n", error.c_str());
+            tfm::format(std::cerr, "Error reading configuration file: %s\n", error.c_str());
             return false;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
         try {
             SelectParams(gArgs.GetChainName());
         } catch (const std::exception& e) {
-            fprintf(stderr, "Error: %s\n", e.what());
+            tfm::format(std::cerr, "Error: %s\n", e.what());
             return false;
         }
 
         // Error out when loose non-argument tokens are encountered on command line
         for (int i = 1; i < argc; i++) {
             if (!IsSwitchChar(argv[i][0])) {
-                fprintf(stderr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
+                tfm::format(std::cerr, "Error: Command line contains unexpected token '%s', see bitcoind -h for a list of options.\n", argv[i]);
                 return false;
             }
         }
@@ -146,18 +146,18 @@ static bool AppInit(int argc, char* argv[])
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
-            fprintf(stdout, "Bitcoin server starting\n");
+            tfm::format(std::cout, "Bitcoin server starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)
-                fprintf(stderr, "Error: daemon() failed: %s\n", strerror(errno));
+                tfm::format(std::cerr, "Error: daemon() failed: %s\n", strerror(errno));
                 return false;
             }
 #if defined(MAC_OSX)
 #pragma GCC diagnostic pop
 #endif
 #else
-            fprintf(stderr, "Error: -daemon is not supported on this operating system\n");
+            tfm::format(std::cerr, "Error: -daemon is not supported on this operating system\n");
             return false;
 #endif // HAVE_DECL_DAEMON
         }
