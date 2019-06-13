@@ -130,7 +130,9 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
         const std::vector<unsigned char>& pubkey_prefix = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
-        if (data.size() == hash.size() + pubkey_prefix.size() && std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin())) {
+        // SYSCOIN
+        const std::vector<unsigned char>& pubkey_prefix_btc = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_BTC);
+        if (data.size() == hash.size() + pubkey_prefix.size() && (std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin()) || std::equal(pubkey_prefix_btc.begin(), pubkey_prefix_btc.end(), data.begin()))) {
             std::copy(data.begin() + pubkey_prefix.size(), data.end(), hash.begin());
             return PKHash(hash);
         }
