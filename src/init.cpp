@@ -152,14 +152,13 @@ NODISCARD static bool CreatePidFile()
         ifs.close();
         boost::filesystem::remove(GetPidFile()); 
     }
-    FILE* file = fsbridge::fopen(GetPidFile(), "w");
+    fsbridge::ofstream file{GetPidFile()};
     if (file) {
 #ifdef WIN32
-        fprintf(file, "%d\n", GetCurrentProcessId());
+        tfm::format(file, "%d\n", GetCurrentProcessId());
 #else
-        fprintf(file, "%d\n", getpid());
+        tfm::format(file, "%d\n", getpid());
 #endif
-        fclose(file);
         return true;
     } else {
         return InitError(strprintf(_("Unable to create the PID file '%s': %s"), GetPidFile().string(), std::strerror(errno)));
