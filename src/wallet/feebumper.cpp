@@ -281,9 +281,6 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
         return Result::WALLET_ERROR;
     }
 
-    // If change key hasn't been ReturnKey'ed by this point, we take it out of keypool
-    reservedest.KeepDestination();
-
     // Write back new fee if successful
     new_fee = fee_ret;
 
