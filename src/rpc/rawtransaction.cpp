@@ -742,8 +742,8 @@ static UniValue signrawtransactionwithkey(const JSONRPCRequest& request)
             "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("signrawtransactionwithkey", "\"myhex\"")
-            + HelpExampleRpc("signrawtransactionwithkey", "\"myhex\"")
+                    HelpExampleCli("signrawtransactionwithkey", "\"myhex\" \"[\\\"key1\\\",\\\"key2\\\"]\"")
+            + HelpExampleRpc("signrawtransactionwithkey", "\"myhex\", \"[\\\"key1\\\",\\\"key2\\\"]\"")
                 },
             }.ToString());
 
