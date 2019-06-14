@@ -1212,47 +1212,53 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
         // 5. /usr/local/bin/syscoin_geth
         // 6. ../Resources
         std::string portStr = std::to_string(websocketport);
-        char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
-                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+        char * argvAttempt1[13] = {(char*)attempt1.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
                 NULL };
-        char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
-                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+        char * argvAttempt2[13] = {(char*)attempt2.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
                 NULL };
-        char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
-                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+        char * argvAttempt3[13] = {(char*)attempt3.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
                 NULL };
-        char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
-                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+        char * argvAttempt4[13] = {(char*)attempt4.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
                 NULL };
-        char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
-                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+        char * argvAttempt5[13] = {(char*)attempt5.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
                 NULL };   
-        char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
-                (char*)"--networkid", bGethTestnet ? (char*)"4" : (char*)"1",
+        char * argvAttempt6[13] = {(char*)attempt6.string().c_str(), 
                 (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), 
                 (char*)"--wsorigins", (char*)"*",
                 (char*)"--syncmode", (char*)"light", 
                 (char*)"--datadir", (char*)dataDir.c_str(),
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                bGethTestnet?(char*)"--bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303": NULL,
                 NULL };                                                                   
         execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
         if (errno != 0) {
@@ -1286,7 +1292,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, in
         std::string portStr = std::to_string(websocketport);
         std::string args = std::string("--ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light --datadir ") +  dataDir.string();
         if(bGethTestnet) {
-            args += std::string(" --rinkeby");
+            args += std::string(" --rinkeby --bootnodes=enode://a24ac7c5484ef4ed0c5eb2d36620ba4e4aa13b8c84684e1b4aab0cebea2ae45cb4d375b77eab56516d34bfbd3c1a833fc51296ff084b770b94fb9028c4d25ccf@52.169.42.101:30303");
         }
         pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
@@ -1366,7 +1372,7 @@ bool StopRelayerNode(pid_t &pid)
     return true;
 }
 
-bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, int websocketport)
+bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
@@ -1429,42 +1435,48 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), 
+                    (char*)"--gethtestnet", bGethTestnet?(char*)"1": (char*)"0", NULL };
             char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--gethtestnet", bGethTestnet?(char*)"1": (char*)"0", NULL };
             char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--gethtestnet", bGethTestnet?(char*)"1": (char*)"0", NULL };
             char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--gethtestnet", bGethTestnet?(char*)"1": (char*)"0", NULL };
             char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL }; 
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--gethtestnet", bGethTestnet?(char*)"1": (char*)"0", NULL };
             char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
 					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
 					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
-					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), NULL };                                                                          
+					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
+                    (char*)"--gethtestnet", bGethTestnet?(char*)"1": (char*)"0", NULL };
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
 	        if (errno != 0) {
 		        LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", argvAttempt1[0]);
@@ -1502,7 +1514,8 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
                 std::string(" --infurakey ") + infuraKey +
 				std::string(" --sysrpcuser ") + rpcuser +
 				std::string(" --sysrpcpw ") + rpcpassword +
-				std::string(" --sysrpcport ") + rpcPortStr; 
+				std::string(" --sysrpcport ") + rpcPortStr +
+                std::string(" --gethtestnet ") + bGethTestnet? "1":"0"; 
         pid = fork(attempt1.string(), args);
         if( pid <= 0 ) {
             LogPrintf("Relayer not found at %s, trying in current direction bin folder\n", attempt1.string());

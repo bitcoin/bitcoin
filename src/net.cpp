@@ -1064,13 +1064,13 @@ void CConnman::DisconnectNodes()
                 }
             }
         }
-    }
-    // SYSCOIN
-    if(fZMQNetworkStatus){
-        UniValue oNetworkStatus(UniValue::VOBJ);
-        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
-        oNetworkStatus.pushKV("status", "DisconnectNodes");
-        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
+        // SYSCOIN
+        if(!vNodesDisconnectedCopy.empty() && fZMQNetworkStatus){
+            UniValue oNetworkStatus(UniValue::VOBJ);
+            oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
+            oNetworkStatus.pushKV("status", "DisconnectNodes");
+            GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
+        }
     }
 }
 
@@ -2023,6 +2023,13 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
+    // SYSCOIN
+    if(fZMQNetworkStatus){
+        UniValue oNetworkStatus(UniValue::VOBJ);
+        oNetworkStatus.pushKV("connections", (int)GetNodeCount(CConnman::CONNECTIONS_ALL));
+        oNetworkStatus.pushKV("status", "AcceptConnection");
+        GetMainSignals().NotifySyscoinUpdate(oNetworkStatus.write().c_str(), "networkstatus");
+    } 
 }
 // SYSCOIN
 void CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
