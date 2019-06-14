@@ -522,7 +522,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
             "\nArguments:\n"
             "1. \"asset_guid\":      (numeric, required) The guid of the asset\n"
             "2. \"address\":    (string, required) The address of the sender\n"
-            "3. \"txid\":       (string, required) The transaction id of the assetallocationsend\n"   
+            "3. \"txid\":       (string, not-required) The transaction id of the assetallocationsend\n"   
             "\nResult:\n"
             "{\n"
             "  \"status\":      (numeric) The status level of the transaction\n"
