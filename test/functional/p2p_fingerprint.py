@@ -35,7 +35,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
     def build_chain(self, nblocks, prev_hash, prev_height, prev_median_time):
         blocks = []
         for _ in range(nblocks):
-            coinbase = create_coinbase(prev_height + 1)
+            coinbase = create_coinbase(prev_height + 1, None, prev_median_time)
             block_time = prev_median_time + 1
             block = create_block(int(prev_hash, 16), coinbase, block_time)
             block.solve()
