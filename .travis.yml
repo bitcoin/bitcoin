@@ -31,8 +31,8 @@ language: minimal
 cache:
   ccache: true
   directories:
-    - depends/built
-    - depends/sdk-sources
+    - $TRAVIS_BUILD_DIR/depends/built
+    - $TRAVIS_BUILD_DIR/depends/sdk-sources
     - $HOME/.ccache
 stages:
   - lint
