@@ -53,7 +53,6 @@ protected:
     virtual void NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
     virtual void SetBestChain(const CBlockLocator &locator) {}
-    virtual bool UpdatedTransaction(const uint256 &hash) { return false;}
     virtual void Inventory(const uint256 &hash) {}
     virtual void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) {}
     virtual void BlockChecked(const CBlock&, const CValidationState&) {}
@@ -92,8 +91,6 @@ struct CMainSignals {
     boost::signals2::signal<void(const CTransaction &currentTx, const CTransaction &previousTx)> NotifyInstantSendDoubleSpendAttempt;
     /** Notifies listeners that the MN list changed */
     boost::signals2::signal<void(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)> NotifyMasternodeListChanged;
-    /** Notifies listeners of an updated transaction without new data (for now: a coinbase potentially becoming visible). */
-    boost::signals2::signal<bool (const uint256 &)> UpdatedTransaction;
     /** Notifies listeners of a new active block chain. */
     boost::signals2::signal<void (const CBlockLocator &)> SetBestChain;
     /** Notifies listeners about an inventory item being seen on the network. */
