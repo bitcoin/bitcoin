@@ -470,6 +470,60 @@ BOOST_FIXTURE_TEST_CASE(wallet_disableprivkeys, TestChain100Setup)
     BOOST_CHECK(!wallet->GetKeyFromPool(pubkey, false));
 }
 
+// This tests the possible conflict between maxtxfee and mintxfee/paytxfee
+BOOST_FIXTURE_TEST_CASE(wallet_maxfee, TestChain100Setup)
+{
+    // Mine a block, setup the wallet and scan to get some balance
+    CreateAndProcessBlock({}, GetScriptForRawPubKey(coinbaseKey.GetPubKey()));
+    auto chain = interfaces::MakeChain();
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+    bool firstRun;
+    wallet->LoadWallet(firstRun);
+    AddKey(*wallet, coinbaseKey);
+    WalletRescanReserver reserver(wallet.get());
+    reserver.reserve();
+    CWallet::ScanResult result = wallet->ScanForWalletTransactions(::ChainActive().Genesis()->GetBlockHash(), {} /* stop_block */, reserver, false /* update */);
+    BOOST_CHECK_EQUAL(result.status, CWallet::ScanResult::SUCCESS);
+
+    // Create a transaction with a lot of outputs so it's big enough to trigger the error at
+    // the configured paytxfee and mintxfee levels.
+    std::vector<CRecipient> recips = {};
+    recips.resize(8000, CRecipient{GetScriptForRawPubKey({}), 5000, false /* subtract fee */});
+
+    // First try a normal transaction. This should succeed.
+    CTransactionRef tx;
+    CReserveKey reservekey(wallet.get());
+    CAmount fee;
+    int changePos = -1;
+    std::string error;
+    CCoinControl dummy;
+    {
+        auto locked_chain = chain->lock();
+        bool result = wallet->CreateTransaction(*locked_chain, recips, tx, reservekey, fee, changePos, error, dummy);
+        BOOST_CHECK(result);
+    }
+
+    // Then increase m_pay_tx_fee to a height that ensures the transaction's fee, when capped at maxtxfee, is lower than
+    // m_pay_tx_fee per kB
+    wallet->m_pay_tx_fee = CFeeRate(CAmount(5000000));
+    {
+        auto locked_chain = chain->lock();
+        bool result = wallet->CreateTransaction(*locked_chain, recips, tx, reservekey, fee, changePos, error, dummy);
+        BOOST_CHECK(!result);
+        BOOST_CHECK_EQUAL(error, "Fee rate too low after limiting to -maxtxfee");
+    }
+
+    // Reset m_pay_tx_fee to the default and then increase m_min_fee. Should trigger the same error
+    wallet->m_pay_tx_fee = CFeeRate(CAmount(0));
+    wallet->m_min_fee = CFeeRate(CAmount(5000000));
+    {
+        auto locked_chain = chain->lock();
+        bool result = wallet->CreateTransaction(*locked_chain, recips, tx, reservekey, fee, changePos, error, dummy);
+        BOOST_CHECK(!result);
+        BOOST_CHECK_EQUAL(error, "Fee rate too low after limiting to -maxtxfee");
+    }
+}
+
 // Explicit calculation which is used to test the wallet constant
 // We get the same virtual size due to rounding(weight/4) for both use_max_sig values
 static size_t CalculateNestedKeyhashInputSize(bool use_max_sig)

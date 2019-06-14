@@ -139,6 +139,7 @@ BASE_SCRIPTS = [
     'rpc_deprecated.py',
     'wallet_disable.py',
     'rpc_net.py',
+    'wallet_maxtxfee.py',
     'wallet_keypool.py',
     'p2p_mempool.py',
     'p2p_blocksonly.py',

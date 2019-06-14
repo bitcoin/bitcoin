@@ -2959,6 +2959,19 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                     return false;
                 }
 
+                // If the fee was capped to MAXTXFEE and this results in a too low fee rate given our current
+                // configuration, abort.
+                if (feeCalc.reason == FeeReason::MAXTXFEE) {
+                    if (nFeeNeeded < m_pay_tx_fee.GetFee(nBytes)) {
+                        strFailReason = _("Fee rate too low after limiting to -maxtxfee");
+                        return false;
+                    }
+                    if (nFeeNeeded < m_min_fee.GetFee(nBytes)) {
+                        strFailReason = _("Fee rate too low after limiting to -maxtxfee");
+                        return false;
+                    }
+                }
+
                 if (nFeeRet >= nFeeNeeded) {
                     // Reduce fee to only the needed amount if possible. This
                     // prevents potential overpayment in fees if the coins
