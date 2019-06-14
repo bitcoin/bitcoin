@@ -512,25 +512,29 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
 UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
 	if (request.fHelp || 3 != params.size())
-		throw runtime_error("assetallocationsenderstatus <asset_guid> <address> <txid>\n"
-			"Show status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
-			"Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
-			"Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
-			"Level 0 means OK.\n"
-			"Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
-			"Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n"
-            "\nArguments:\n"
-            "1. \"asset_guid\":      (numeric, required) The guid of the asset\n"
-            "2. \"address\":    (string, required) The address of the sender\n"
-            "3. \"txid\":       (string, not-required) The transaction id of the assetallocationsend\n"   
-            "\nResult:\n"
-            "{\n"
-            "  \"status\":      (numeric) The status level of the transaction\n"
-            "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\"")
-            + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\"")
-            );
+		throw runtime_error(
+            RPCHelpMan{"assetallocationsenderstatus",
+                "\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
+                "Return value is in the status field and can represent 3 levels(0, 1 or 2)\n"
+                "Level -1 means not found, not a ZDAG transaction, perhaps it is already confirmed.\n"
+                "Level 0 means OK.\n"
+                "Level 1 means warning (checked that in the mempool there are more spending balances than current POW sender balance). An active stance should be taken and perhaps a deeper analysis as to potential conflicts related to the sender.\n"
+                "Level 2 means an active double spend was found and any depending asset allocation sends are also flagged as dangerous and should wait for POW confirmation before proceeding.\n",
+                {
+                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the sender"},
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The transaction id of the assetallocationsend"}
+                },
+                RPCResult{
+                    "{\n"
+                    "  \"status\":      (numeric) The status level of the transaction\n"
+                    "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\"")
+                    + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\"")
+                }
+            }.ToString());
 
 	const int &nAsset = params[0].get_int();
 	string strAddressSender = params[1].get_str();
