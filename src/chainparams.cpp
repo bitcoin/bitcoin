@@ -7,6 +7,7 @@
 
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
+#include <ldpc/LDPC.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
@@ -110,9 +111,16 @@ public:
         m_assumed_blockchain_size = 240;
         m_assumed_chain_state_size = 3;
 
-        genesis = CreateGenesisBlock(1558627231, 12195, 0x1f0fffff, 1, 50 * COIN);
+        LDPC *ldpc = new LDPC;
+        genesis = CreateGenesisBlock(1558627231, 1, 0x1d00ffff, 1, 50 * COIN);
+        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
+            ++genesis.nNonce;
+            assert(genesis.nNonce);
+        }
+
+        // std::cout << "mainnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("000f6f008adc3e46d39cf603552b2bd26cd92d48428804571cbb4d090d630e07"));
+        assert(consensus.hashGenesisBlock == uint256S("fe1b954fadf6da0c8b622024b58482edff1a805792d118714ffdb40bd7f6497d"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
@@ -149,7 +157,7 @@ public:
 
         checkpointData = {
             {
-                { 0, uint256S("000f6f008adc3e46d39cf603552b2bd26cd92d48428804571cbb4d090d630e07")},
+                { 0, uint256S("fe1b954fadf6da0c8b622024b58482edff1a805792d118714ffdb40bd7f6497d")},
             }
         };
 
@@ -214,9 +222,16 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1558627231, 12195, 0x1f0fffff, 1, 50 * COIN);
+        LDPC *ldpc = new LDPC;
+        genesis = CreateGenesisBlock(1560518777, 1, 0x1d00ffff, 1, 50 * COIN);
+        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
+            ++genesis.nNonce;
+            assert(genesis.nNonce);
+        }
+        
+        // std::cout << "testnet n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("000f6f008adc3e46d39cf603552b2bd26cd92d48428804571cbb4d090d630e07"));
+        assert(consensus.hashGenesisBlock == uint256S("43ca60a124681075949cf2296e7fab4fc30740892cf1409626a8a90629cbb988"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear();
@@ -248,7 +263,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("000f6f008adc3e46d39cf603552b2bd26cd92d48428804571cbb4d090d630e07")},
+                {0, uint256S("43ca60a124681075949cf2296e7fab4fc30740892cf1409626a8a90629cbb988")},
             }
         };
 
@@ -311,9 +326,16 @@ public:
 
         UpdateVersionBitsParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1558627231, 0, 0x207fffff, 1, 50 * COIN);
+        LDPC *ldpc = new LDPC;
+        genesis = CreateGenesisBlock(1560519259, 0, 0x207fffff, 1, 50 * COIN);
+        while (!ldpc->CheckProofOfWork(genesis.GetHash(), genesis.hashPrevBlock, genesis.nBits)) {
+            ++genesis.nNonce;
+            assert(genesis.nNonce);
+        }
+
+        // std::cout << "regtest n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("599f0835587c8d88ae8cd7b8775800afc2a7f7c2efbf94fa9f6146fae5dd1931"));
+        assert(consensus.hashGenesisBlock == uint256S("07b8d2650524f9665b0a47909d2779da07d807df5b7f997859e6004956d6b3e0"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
@@ -325,7 +347,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("599f0835587c8d88ae8cd7b8775800afc2a7f7c2efbf94fa9f6146fae5dd1931")},
+                {0, uint256S("07b8d2650524f9665b0a47909d2779da07d807df5b7f997859e6004956d6b3e0")},
             }
         };
 

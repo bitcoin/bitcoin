@@ -162,11 +162,6 @@ BITCOIN_CORE_H = \
   policy/policy.h \
   policy/rbf.h \
   pow.h \
-  ldpc/utility_function/Def_Lish.h \
-  ldpc/utility_function/Memory_Manage.hpp \
-  ldpc/utility_function/sha256.hpp \
-  ldpc/decoder/LDPC.cpp \
-  ldpc/block/BlockHeader.cpp \
   protocol.h \
   psbt.h \
   random.h \
@@ -272,10 +267,6 @@ libbitcoin_server_a_SOURCES = \
   policy/policy.cpp \
   policy/rbf.cpp \
   pow.cpp \
-  ldpc/utility_function/Memory_Manage.cpp \
-  ldpc/utility_function/sha256.cpp \
-  ldpc/decoder/LDPC.cpp \
-  ldpc/block/BlockHeader.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/mining.cpp \
@@ -418,6 +409,12 @@ libbitcoin_consensus_a_SOURCES = \
   uint256.h \
   util/strencodings.cpp \
   util/strencodings.h \
+  ldpc/Memory_Manage.h \
+  ldpc/Memory_Manage.cpp \
+  ldpc/sha256.h \
+  ldpc/sha256.cpp \
+  ldpc/LDPC.h \
+  ldpc/LDPC.cpp \
   version.h
 
 # common: shared between bitcoind, and bitcoin-qt and non-server tools
