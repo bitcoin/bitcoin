@@ -1,0 +1,36 @@
+#include <windows.h>                // needed for VERSIONINFO
+#include "../version.h"             // Omni Core version information
+#include "../../clientversion.h"    // Bitcoin Core version information
+
+#define VER_PRODUCTVERSION     OMNICORE_VERSION_MAJOR,OMNICORE_VERSION_MINOR,OMNICORE_VERSION_PATCH
+#define VER_PRODUCTVERSION_STR STRINGIZE(OMNICORE_VERSION_MAJOR) "." STRINGIZE(OMNICORE_VERSION_MINOR) "." STRINGIZE(OMNICORE_VERSION_PATCH)
+#define VER_FILEVERSION        VER_PRODUCTVERSION
+#define VER_FILEVERSION_STR    VER_PRODUCTVERSION_STR
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+FILEOS          VOS_NT_WINDOWS32
+FILETYPE        VFT_APP
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904E4" // U.S. English - multilingual (hex)
+        BEGIN
+            VALUE "CompanyName",        "Omni Foundation"
+            VALUE "FileDescription",    "Omni Core daemon (OSS daemon/client for Bitcoin and the Omni Layer)"
+            VALUE "FileVersion",        VER_FILEVERSION_STR
+            VALUE "InternalName",       "omnicored"
+            VALUE "LegalCopyright",     COPYRIGHT_STR
+            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "OriginalFilename",   "omnicored.exe"
+            VALUE "ProductName",        "Omni Core daemon"
+            VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1252 // language neutral - multilingual (decimal)
+    END
+END
