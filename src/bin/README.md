@@ -24,6 +24,6 @@ Relayer
 
 Source: [Github](https://www.github.com/syscoin/relayer/)
 Version: 1.0.14
-MD5 (relayer-linux) = c71e8970adfabaec669e7757d6f37beb
-MD5 (relayer-macos) = f98d28cbc521e9919ed6c8b944b74943
-MD5 (relayer-win.exe) = 891de2fdf681917cac98247e544999a0
+MD5 (relayer-linux) = ce4f59849e6ec4e76f041b6af4ed947f
+MD5 (relayer-macos) = 1addc70482fede29384de849c8460693
+MD5 (relayer-win.exe) = 8140d01066fb4df866154ea8e0ef30d8
