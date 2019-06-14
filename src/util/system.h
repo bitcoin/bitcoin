@@ -133,7 +133,7 @@ bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet = f
 bool StopGethNode(pid_t &pid);
 fs::path GetRelayerPidFile();
 std::string GeteRelayerFilename();
-bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, int websocketport=8646);
+bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, bool bGethTestnet, int websocketport=8646);
 bool StopRelayerNode(pid_t &pid);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
