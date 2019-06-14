@@ -166,11 +166,19 @@ bool LDPC::generate_H()
   {
     /*generate each permutation order using seed*/
     col_order.clear();
-    for (int j = 0; j <this->n; j++)
+    for (int j = 0; j < this->n; j++)
       col_order.push_back(j);
 
+    /* Todo: Fix
     std::shuffle(col_order.begin(), col_order.end(), rng);
-
+     */
+    int o = seed % k;
+    for (int j = 1; j < col_order.size(); j++) {
+      if (j % o == 0) {
+        std::swap(col_order[j], col_order[j-1]);
+      }
+    }
+    
     for (int j = 0; j <this->n; j++)
     {
       int index = (col_order.at(j) / this->wr + k * i);

@@ -118,8 +118,9 @@ public:
             assert(genesis.nNonce);
         }
 
+        // std::cout << "n: " << genesis.nNonce << " Hash: " << genesis.GetHash().ToString() << std::endl;
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("d09dab40960e08af30c7cdc1bf2fbc5c955f6be09a2a051f961cfdf9e507149d"));
+        assert(consensus.hashGenesisBlock == uint256S("abf982dd8772516406cde0f3babf89af5d1de360ce6277bd42df4fb5c0fbbb88"));
         assert(genesis.hashMerkleRoot == uint256S("15d2f927fe3eafe88ce0b4ccf267727ed306295051339a16e0b95067e65bead8"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
