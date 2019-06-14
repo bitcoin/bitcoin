@@ -171,10 +171,7 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
         bech32_hrp = "sys";
-
-        base58Prefixes[PUBKEY_ADDRESS_BTC] = std::vector<unsigned char>(1,0);
-        bech32_hrp_btc = "bc";
-
+        
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
         fDefaultConsistencyChecks = false;
@@ -284,8 +281,7 @@ public:
 
         bech32_hrp = "tsys";
 
-        base58Prefixes[PUBKEY_ADDRESS_BTC] = std::vector<unsigned char>(1,111);
-        bech32_hrp_btc = "tb";
+
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
@@ -407,9 +403,7 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
         bech32_hrp = "sysrt";
-
-        base58Prefixes[PUBKEY_ADDRESS_BTC] = std::vector<unsigned char>(1,111);
-        bech32_hrp_btc = "bcrt";
+        
         /* enable fallback fee on regtest */
         m_fallback_fee_enabled = true;
     }
