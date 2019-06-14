@@ -5290,9 +5290,17 @@ void CWallet::NotifyTransactionLock(const CTransaction &tx, const llmq::CInstant
 {
     LOCK(cs_wallet);
     // Only notify UI if this transaction is in this wallet
-    std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(tx.GetHash());
+    uint256 txHash = tx.GetHash();
+    std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txHash);
     if (mi != mapWallet.end()){
+        NotifyTransactionChanged(this, txHash, CT_UPDATED);
         NotifyISLockReceived();
+        // notify an external script
+        std::string strCmd = GetArg("-instantsendnotify", "");
+        if (!strCmd.empty()) {
+            boost::replace_all(strCmd, "%s", txHash.GetHex());
+            boost::thread t(runCommand, strCmd); // thread runs free
+        }
     }
 }
 
