@@ -88,6 +88,28 @@ jobs:
       script:
         - set -o errexit; source ./ci/extended_lint/06_script.sh
 
+    - stage: extended-lint
+      name: 'lint macOS 10.12 (compat)'
+      os: osx
+      # Use the earliest macOS that can build our lint dependencies:
+      # Xcode 8.3.3, macOS 10.12, JDK 1.8.0_112-b16
+      # https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
+      osx_image: xcode8.3
+      # TODO: if you're updating osx_image, try using "rvm:" to supply the
+      # version of ruby required by homebrew. Despite this "rvm:" declaration,
+      # brew update installs ruby 2.3.7 as its first action.
+      language: ruby
+      rvm:
+        - 2.3.7
+      env:
+      cache: false
+      install:
+        - set -o errexit; source ./ci/lint/04_install.sh
+      before_script:
+        - set -o errexit; source ./ci/lint/05_before_script.sh
+      script:
+        - set -o errexit; source ./ci/lint/06_script.sh
+
     - stage: test
       name: 'ARM  [GOAL: install]  [no unit or functional tests]'
       env: >-
