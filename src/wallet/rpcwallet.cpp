@@ -360,6 +360,8 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
         throw std::runtime_error(
             RPCHelpMan{"sendtoaddress",
                 "\nSend an amount to a given address." +
+                // SYSCOIN
+                "\nNote: Outputs in addresses associated to Assets will not be selected. To send money from an address with Assets please use sendfrom." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send to."},
