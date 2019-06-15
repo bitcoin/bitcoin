@@ -2407,9 +2407,9 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             int witnessversion = 0;
             std::vector<unsigned char> witnessprogram;
             // if asset index and coincontrol is not enabled or not selecting this output and this is a witness program, check to ensure the address doesn't belong to an asset
-            if (fAssetIndex && passetdb != nullptr && (!coinControl || !coinControl->HasSelected() || !coinControl->IsSelected(COutPoint(entry.first, i)) && wtx.tx->vout[i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram))){
+            if (fAssetIndex && passetdb != nullptr && passetallocationdb != nullptr && (!coinControl || !coinControl->HasSelected() || !coinControl->IsSelected(COutPoint(entry.first, i))) && wtx.tx->vout[i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)){
                 CWitnessAddress witnessAddress(witnessversion, witnessprogram);
-                if(passetdb->ExistsAssetsByAddress(witnessAddress)){
+                if(passetdb->ExistsAssetsByAddress(witnessAddress) || passetallocationdb->ExistsAssetsByAddress(witnessAddress)){
                     WalletLogPrintf("Ignoring fund addr connected to asset(s): %s\n", witnessAddress.ToString());
                     continue;
                 }
