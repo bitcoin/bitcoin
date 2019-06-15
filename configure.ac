@@ -1693,6 +1693,7 @@ echo "  sanitizers    = $use_sanitizers"
 echo "  debug enabled = $enable_debug"
 echo "  gprof enabled = $enable_gprof"
 echo "  werror        = $enable_werror"
+echo "  rust enabled  = $use_rust"
 echo
 echo "  target os     = $TARGET_OS"
 echo "  build os      = $BUILD_OS"
