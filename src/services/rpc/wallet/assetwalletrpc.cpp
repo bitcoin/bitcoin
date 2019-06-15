@@ -150,7 +150,7 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                 "\nFunds a new syscoin transaction with inputs used from wallet or an array of addresses specified. Note that any inputs to the transaction added prior to calling this will not be accounted and new outputs will be added every time you call this function.\n",
                 {
                     {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The raw syscoin transaction output given from rpc"},
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address belonging to this asset transaction."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address funding this transaction."},
                     {"output_index", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Output index from available UTXOs in address. Defaults to selecting all that are needed to fund the transaction."}
                 },
                 RPCResult{
@@ -1355,7 +1355,52 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 
 	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK, strWitness, vecSend);
 }
+UniValue sendfrom(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 3)
+        throw std::runtime_error(
+            RPCHelpMan{"sendfrom",
+                "\nSend an amount to a given address from a specified address.",   
+                {
+                    {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address is sending from."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send to."},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"}
+                },
+                RPCResult{
+                "{\n"
+                "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
+                "}\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("sendfrom", "\"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+                    + HelpExampleCli("sendfrom", "\"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+                    + HelpExampleCli("sendfrom", "\"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+                    + HelpExampleRpc("sendfrom", "\"sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1")
+                }
+            }.ToString()); 
 
+    CTxDestination from = DecodeDestination(request.params[0].get_str());
+    if (!IsValidDestination(from)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid from address");
+    }
+
+    CTxDestination dest = DecodeDestination(request.params[1].get_str());
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid to address");
+    }
+
+    // Amount
+    CAmount nAmount = AmountFromValue(request.params[2]);
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+
+    CScript scriptPubKey = GetScriptForDestination(dest);
+    CRecipient recipient = {scriptPubKey, nAmount, false};
+	std::vector<CRecipient> vecSend;
+	vecSend.push_back(recipient);
+    std::string strWitness ="";
+    return syscointxfund_helper(EncodeDestination(from), 0, strWitness, vecSend);
+}
 
 // clang-format off
 static const CRPCCommand commands[] =
@@ -1376,6 +1421,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetallocationlock",              &assetallocationlock,           {"asset_guid","address","txid","output_index","witness"}},
     { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address_sender","address_receiver","amount"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"asset_guid","address","inputs","witness"}},
+    { "syscoinwallet",            "sendfrom",                         &sendfrom,                      {"funding_address","address","amount"}},
 };
 // clang-format on
 

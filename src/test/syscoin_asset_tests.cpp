@@ -6,6 +6,7 @@
 #include <test/data/ethspv_valid.json.h>
 #include <util/time.h>
 #include <rpc/server.h>
+#include <rpc/util.h>
 #include <services/asset.h>
 #include <base58.h>
 #include <chainparams.h>
@@ -50,6 +51,109 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
+}
+BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
+{
+    UniValue r;
+    printf("Running generate_asset_address_spend...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+    // fund asset+allocation on addresses and try to spend from those addresses it should be disallowed
+    string creatoraddress = GetNewFundedAddress("node3");
+    string useraddress = GetNewFundedAddress("node3");
+
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getbalance"));
+    std::string resBalance = r.write();
+    CAmount nAmount = AmountFromValue(resBalance) - 3*COIN; // 3 coins for fees
+    std::string strAmount = ValueFromAmount(nAmount).write();
+    CAmount nAmountHalf = nAmount/2;
+    std::string strAmountHalf = ValueFromAmount(nAmountHalf).write();
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	std::string newaddress = r.get_str();
+    CallRPC("node3", "sendtoaddress " + creatoraddress + " " + strAmountHalf, true, false);
+    CallRPC("node3", "sendtoaddress " + useraddress + " " + strAmountHalf, true, false);
+    GenerateBlocks(5, "node3");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
+    CAmount nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
+    BOOST_CHECK_EQUAL(nAmountBalance, nAmountHalf);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
+    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
+    BOOST_CHECK_EQUAL(nAmountBalance, nAmountHalf);
+
+    string assetguid = AssetNew("node3", creatoraddress, "pubdata", "0x931D387731bBbC988B312206c74F77D004D6B84b");
+
+    AssetSend("node3", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress + "\\\",\\\"amount\\\":0.5}]\"");
+ 
+    // try to send coins and see it doesn't go through because balances are the same
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
+    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
+    
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	newaddress = r.get_str();
+
+
+    CallRPC("node3", "sendtoaddress " + useraddress + " " + strAmountHalf, true, false);
+    GenerateBlocks(5, "node3");
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
+    CAmount nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+    BOOST_CHECK_EQUAL(nAmountBalance, nAmountBalanceAfter);
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
+    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
+    
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	newaddress = r.get_str();
+
+    CallRPC("node3", "sendtoaddress " + creatoraddress + " " + strAmountHalf, true, false);
+    GenerateBlocks(5, "node3");
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
+    nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+    BOOST_CHECK_EQUAL(nAmountBalance, nAmountBalanceAfter);
+
+    // clear the allocation so we can send the sys again from useraddress
+    AssetAllocationTransfer(false, "node3", assetguid, useraddress, "\"[{\\\"address\\\":\\\"" + creatoraddress + "\\\",\\\"amount\\\":0.5}]\"");
+
+    // try again and this time should pass
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
+    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
+    
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	newaddress = r.get_str();
+
+    CallRPC("node3", "sendtoaddress " + creatoraddress + " " + strAmountHalf, true, false);
+    GenerateBlocks(5, "node3");
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + useraddress));
+    nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+    // would have completely spent funds from this address to pay the creatoraddress
+    BOOST_CHECK_EQUAL(0, nAmountBalanceAfter);
+
+    // sendfrom should work on creatoraddress because we use create a manual raw tx sourced from creatoraddress which doesn't hit the auto-selection wallet algorithm
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
+    nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
+    
+    BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "getnewaddress"));
+	newaddress = r.get_str();
+
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendfrom " + creatoraddress + " " + useraddress + " " + strAmountHalf));
+    string hex_str = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "signrawtransactionwithwallet " + hex_str));
+    hex_str = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendrawtransaction " + hex_str, true, false));
+   
+    GenerateBlocks(5, "node3");
+
+    BOOST_CHECK_NO_THROW(r = CallRPC("node3", "addressbalance " + creatoraddress));
+    nAmountBalanceAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+    // now creator address should be down about half the coins (half coins + fees in sendfrom) since it got all of the them in the previous sendtoaddress that worked
+    BOOST_CHECK((nAmountBalance - nAmountHalf) > nAmountBalanceAfter);
+    BOOST_CHECK((nAmountBalance - nAmountHalf - nAmountBalanceAfter) < 0.001*COIN);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_audittxroot)
 {
