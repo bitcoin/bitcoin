@@ -2698,6 +2698,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     std::vector<CInputCoin> vValue;
     CAmount nTotalLower = 0;
 
+    if (fUseInstantSend) {
+        coinLowestLarger->txout.nValue = sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE) * COIN;
+    }
+
     random_shuffle(vCoins.begin(), vCoins.end(), GetRandInt);
 
     int tryDenomStart = 0;
