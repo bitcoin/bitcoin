@@ -41,12 +41,10 @@ Release Process
 #### After branch-off (on master)
 
 - Update the version of `contrib/gitian-descriptors/*.yml`.
-- Update the versions in `SECURITY.md` as per the software lifecycle [maintenance policy](https://bitcoincore.org/en/lifecycle/#maintenance-period), generally bumping all up one major version.
 
 #### After branch-off (on the major release branch)
 
 - Update the versions and the link to the release notes draft in `doc/release-notes.md`.
-- Delete `SECURITY.md`.
 
 #### Before final release
 
@@ -324,6 +322,9 @@ bitcoin.org (see below for bitcoin.org update instructions).
 - Update other repositories and websites for new version
 
   - bitcoincore.org blog post
+
+  - bitcoincore.org maintained versions update:
+    [table](https://github.com/bitcoin-core/bitcoincore.org/commits/master/_includes/posts/maintenance-table.md)
 
   - bitcoincore.org RPC documentation update
 
