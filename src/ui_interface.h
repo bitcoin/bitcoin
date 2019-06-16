@@ -6,6 +6,9 @@
 #ifndef BITCOIN_UI_INTERFACE_H
 #define BITCOIN_UI_INTERFACE_H
 
+#include <tinyformat.h>
+#include <util/system.h>
+
 #include <functional>
 #include <memory>
 #include <stdint.h>
@@ -130,5 +133,21 @@ void InitWarning(const std::string& str);
 bool InitError(const std::string& str);
 
 extern CClientUIInterface uiInterface;
+
+/** Show bilingual error message **/
+template <typename... Args>
+bool InitError(const bilingual_str& fmt, const Args&... args)
+{
+    const std::string noui_message = tfm::format(fmt.original_str, args...);
+    const std::string translated_message = tfm::format(fmt.translated_str, args...);
+    std::string ui_message;
+    if (noui_message == translated_message) {
+        ui_message = noui_message;
+    } else {
+        ui_message = translated_message + "\n\n" + _("Original message:") + "\n" + noui_message;
+    }
+    uiInterface.ThreadSafeBilingualMessageBox(noui_message, ui_message, "", CClientUIInterface::MSG_ERROR);
+    return false;
+}
 
 #endif // BITCOIN_UI_INTERFACE_H
