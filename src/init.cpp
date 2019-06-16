@@ -745,7 +745,8 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
  */
 static bool InitSanityCheck()
 {
-    if(!ECC_InitSanityCheck()) {
+    if (!ECC_InitSanityCheck()) {
+        // This message is intentionally untranslated because the error is extremely rare.
         InitError("Elliptic curve cryptography sanity check failure. Aborting.");
         return false;
     }
@@ -754,6 +755,7 @@ static bool InitSanityCheck()
         return false;
 
     if (!Random_SanityCheck()) {
+        // This message is intentionally untranslated because the error is extremely rare.
         InitError("OS cryptographic RNG sanity check failure. Aborting.");
         return false;
     }
@@ -915,8 +917,10 @@ bool AppInitBasicSetup()
     SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 #endif
 
-    if (!SetupNetworking())
+    if (!SetupNetworking()) {
+        // This message is intentionally untranslated because the error is extremely rare.
         return InitError("Initializing networking failed");
+    }
 
 #ifndef WIN32
     if (!gArgs.GetBoolArg("-sysperms", false)) {

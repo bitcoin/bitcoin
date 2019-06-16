@@ -23,7 +23,8 @@ On a high level, these strings are to be translated:
 
 ### GUI strings
 
-Anything that appears to the user in the GUI is to be translated. This includes labels, menu items, button texts, tooltips and window titles.
+Do not translate extremely rare or technical errors. These cases must be commented in the code explicitly.
+Anything else that appears to the user in the GUI is to be translated. This includes labels, menu items, button texts, tooltips and window titles.
 This includes messages passed to the GUI through the UI interface through `InitMessage`, `ThreadSafeMessageBox` or `ShowProgress`.
 
 General recommendations
