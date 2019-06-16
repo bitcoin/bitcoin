@@ -412,7 +412,7 @@ public:
     TorController(struct event_base* base, const std::string& target);
     ~TorController();
 
-    /** Get name fo file to store private key in */
+    /** Get name of file to store private key in */
     fs::path GetPrivateKeyFile();
 
     /** Reconnect, after getting disconnected */
