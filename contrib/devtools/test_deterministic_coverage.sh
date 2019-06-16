@@ -15,6 +15,7 @@ GCOV_EXECUTABLE="gcov"
 # Disable tests known to cause non-deterministic behaviour and document the source or point of non-determinism.
 NON_DETERMINISTIC_TESTS=(
     "blockfilter_index_tests/blockfilter_index_initial_sync"  # src/checkqueue.h: In CCheckQueue::Loop(): while (queue.empty()) { ... }
+    "coins_tests/updatecoins_simulation_test"                 # coinstest_cpp: if (utxoset.count(utxod->first)) {
     "coinselector_tests/knapsack_solver_test"                 # coinselector_tests.cpp: if (equal_sets(setCoinsRet, setCoinsRet2))
     "denialofservice_tests/DoS_mapOrphans"                    # denialofservice_tests.cpp: it = mapOrphanTransactions.lower_bound(InsecureRand256());
     "fs_tests/fsbridge_fstream"                               # deterministic test failure?
