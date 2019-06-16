@@ -1232,7 +1232,7 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
  * Handle invalid block rejection and consequent peer banning, maintain which
  * peers announce compact blocks.
  */
-void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationState& state) {
+static void BlockChecked(const CBlock& block, const CValidationState& state, CConnman* connman) {
     LOCK(cs_main);
 
     const uint256 hash(block.GetHash());
@@ -1261,6 +1261,10 @@ void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationSta
     }
     if (it != mapBlockSource.end())
         mapBlockSource.erase(it);
+}
+
+void PeerLogicValidation::BlockChecked(const CBlock& block, const CValidationState& state) {
+    ::BlockChecked(block, state, connman);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2819,15 +2823,19 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
+            CValidationState dos_state;
+            ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
+            if (fNewBlock && dos_state.IsValid()) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
+                if (!dos_state.IsValid()) {
+                    BlockChecked(*pblock, dos_state, connman);
+                }
                 LOCK(cs_main);
                 mapBlockSource.erase(pblock->GetHash());
             }
-            LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
-            if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
+            if (dos_state.IsValid()) {
+                LOCK(cs_main);
                 // Clear download state for this block, which is in
                 // process from some other peer.  We do this after calling
                 // ProcessNewBlock so that a malleated cmpctblock announcement
@@ -2908,10 +2916,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            ProcessNewBlock(chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
+            CValidationState dos_state;
+            ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true, &fNewBlock);
+            if (fNewBlock && dos_state.IsValid()) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
+                if (!dos_state.IsValid()) {
+                    BlockChecked(*pblock, dos_state, connman);
+                }
                 LOCK(cs_main);
                 mapBlockSource.erase(pblock->GetHash());
             }
@@ -2970,10 +2982,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         bool fNewBlock = false;
-        ProcessNewBlock(chainparams, pblock, forceProcessing, &fNewBlock);
-        if (fNewBlock) {
+        CValidationState dos_state;
+        ProcessNewBlock(chainparams, pblock, dos_state, forceProcessing, &fNewBlock);
+        if (fNewBlock && dos_state.IsValid()) {
             pfrom->nLastBlockTime = GetTime();
         } else {
+            if (!dos_state.IsValid()) {
+                BlockChecked(*pblock, dos_state, connman);
+            }
             LOCK(cs_main);
             mapBlockSource.erase(pblock->GetHash());
         }

@@ -176,7 +176,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     uint256 chainA_last_header = last_header;
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+        CValidationState dos_state;
+        BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        BOOST_REQUIRE(dos_state.IsValid());
 
         const CBlockIndex* block_index;
         {
@@ -192,7 +194,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     uint256 chainB_last_header = last_header;
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+        CValidationState dos_state;
+        BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        BOOST_REQUIRE(dos_state.IsValid());
 
         const CBlockIndex* block_index;
         {
@@ -219,10 +223,12 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     }
 
     // Reorg back to chain A.
-     for (size_t i = 2; i < 4; i++) {
-         const auto& block = chainA[i];
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
-     }
+    for (size_t i = 2; i < 4; i++) {
+        const auto& block = chainA[i];
+        CValidationState dos_state;
+        BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        BOOST_REQUIRE(dos_state.IsValid());
+    }
 
      // Check that chain A and B blocks can be retrieved.
      chainA_last_header = last_header;

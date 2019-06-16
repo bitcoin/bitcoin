@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <consensus/tx_verify.h>
+#include <consensus/validation.h>
 #include <miner.h>
 #include <policy/policy.h>
 #include <script/standard.h>
@@ -247,7 +248,9 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             pblock->nNonce = blockinfo[i].nonce;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
-        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
+        CValidationState dos_state;
+        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, dos_state, true, nullptr));
+        BOOST_CHECK(dos_state.IsValid());
         pblock->hashPrevBlock = pblock->GetHash();
     }
 
