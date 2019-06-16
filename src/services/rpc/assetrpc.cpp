@@ -1192,10 +1192,7 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     if(!StartGethNode(exePath, gethPID, bGethTestnet, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
-    int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-    const std::string& rpcuser = gArgs.GetArg("-rpcuser", "");
-    const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "");
-    if(!StartRelayerNode(exePath, relayerPID, rpcport, rpcuser, rpcpassword, bGethTestnet, wsport))
+    if(!StartRelayerNode(exePath, relayerPID, rpcport, bGethTestnet, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     
     UniValue ret(UniValue::VOBJ);
