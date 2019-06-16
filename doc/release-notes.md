@@ -90,7 +90,7 @@ Updated RPCs
 Note: some low-level RPC changes mainly useful for testing are described in the
 Low-level Changes section below.
 
-* The `sendmany` RPC had an argument `minconf` that was not well specified and
+- The `sendmany` RPC had an argument `minconf` that was not well specified and
   would lead to RPC errors even when the wallet's coin selection would succeed.
   The `sendtoaddress` RPC never had this check, so to normalize the behavior,
   `minconf` is now ignored in `sendmany`. If the coin selection does not
@@ -106,10 +106,21 @@ Low-level changes
 Configuration
 ------------
 
-* An error is issued where previously a warning was issued when a setting in
+- An error is issued where previously a warning was issued when a setting in
   the config file was specified in the default section, but not overridden for
   the selected network. This change takes only effect if the selected network
   is not mainnet.
+
+Network
+-------
+
+- When fetching a transaction announced by multiple peers, previous versions of
+  Bitcoin Core would sequentially attempt to download the transaction from each
+  announcing peer until the transaction is received, in the order that those
+  peers' announcements were received.  In this release, the download logic has
+  changed to randomize the fetch order across peers and to prefer sending
+  download requests to outbound peers over inbound peers. This fixes an issue
+  where inbound peers can prevent a node from getting a transaction.
 
 Wallet
 ------
