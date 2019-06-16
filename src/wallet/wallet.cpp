@@ -2403,17 +2403,6 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
 
             bool solvable = IsSolvable(*this, wtx.tx->vout[i].scriptPubKey);
             bool spendable = ((mine & ISMINE_SPENDABLE) != ISMINE_NO) || (((mine & ISMINE_WATCH_ONLY) != ISMINE_NO) && (coinControl && coinControl->fAllowWatchOnly && solvable));
-            // SYSCOIN
-            int witnessversion = 0;
-            std::vector<unsigned char> witnessprogram;
-            // if asset index and coincontrol is not enabled or not selecting this output and this is a witness program, check to ensure the address doesn't belong to an asset
-            if (fAssetIndex && passetdb != nullptr && passetallocationdb != nullptr && (!coinControl || !coinControl->HasSelected() || !coinControl->IsSelected(COutPoint(entry.first, i))) && wtx.tx->vout[i].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)){
-                CWitnessAddress witnessAddress(witnessversion, witnessprogram);
-                if(passetdb->ExistsAssetsByAddress(witnessAddress) || passetallocationdb->ExistsAssetsByAddress(witnessAddress)){
-                    WalletLogPrintf("Ignoring fund addr connected to asset(s): %s\n", witnessAddress.ToString());
-                    continue;
-                }
-            }
 
             vCoins.push_back(COutput(&wtx, i, nDepth, spendable, solvable, safeTx, (coinControl && coinControl->fAllowWatchOnly)));
 
