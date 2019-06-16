@@ -3,7 +3,13 @@ hights
 mor
 mut
 objext
-unparseable
 unselect
 useable
 setban
+wit
+unparseable
+copyable
+cachable
+errorstring
+keyserver
+homogenous
