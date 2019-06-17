@@ -8,6 +8,7 @@
 #include <interfaces/chain.h>
 #include <scheduler.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <wallet/wallet.h>
 
 bool VerifyWallets(interfaces::Chain& chain, const std::vector<std::string>& wallet_files)
