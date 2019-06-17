@@ -21,10 +21,14 @@ namespace Platform
     class PlatformDb : public TransactionLevelDBWrapper
     {
     public:
-        static PlatformDb & CreateInstance(size_t nCacheSize, bool fMemory = false, bool fWipe = false)
+        static PlatformDb & CreateInstance(
+                size_t nCacheSize,
+                PlatformOpt optSetting = PlatformOpt::OptSpeed,
+                bool fMemory = false,
+                bool fWipe = false)
         {
             if (s_instance == nullptr)
-                s_instance.reset(new PlatformDb(nCacheSize, fMemory, fWipe));
+                s_instance.reset(new PlatformDb(nCacheSize, optSetting, fMemory, fWipe));
             return *s_instance;
         }
 
@@ -57,7 +61,12 @@ namespace Platform
         bool ReadTotalSupply(std::size_t & count, uint64_t nftProtocolId = NfToken::UNKNOWN_TOKEN_PROTOCOL);
 
     private:
-        explicit PlatformDb(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+        explicit PlatformDb(
+                size_t nCacheSize,
+                PlatformOpt optSetting = PlatformOpt::OptSpeed,
+                bool fMemory = false,
+                bool fWipe = false
+                );
 
     public:
         static const char DB_NFT;

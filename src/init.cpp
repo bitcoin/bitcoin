@@ -469,6 +469,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -rpcthreads=<n>        " + strprintf(_("Set the number of threads to service RPC calls (default: %d)"), 4) + "\n";
     strUsage += "  -rpckeepalive          " + strprintf(_("RPC support for HTTP persistent connections (default: %d)"), 1) + "\n";
 
+    strUsage += "\n" + _("Platform options:") + "\n";
+    strUsage += "  -platformoptram=<n>            " + strprintf(_("Optimize the platform server RAM usage (but respond much slower) or optimize speed (server latency) (0-1, default: %u)"), 0) + "\n";
+
     strUsage += "\n" + _("RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)") + "\n";
     strUsage += "  -rpcssl                                  " + _("Use OpenSSL (https) for JSON-RPC connections") + "\n";
     strUsage += "  -rpcsslcertificatechainfile=<file.cert>  " + strprintf(_("Server certificate file (default: %s)"), "server.cert") + "\n";
@@ -1245,6 +1248,9 @@ bool AppInit2(boost::thread_group& threadGroup)
         }
     }
 
+    bool platformOptRam = GetBoolArg("-platformoptram", false);
+    Platform::PlatformOpt opt = platformOptRam ? Platform::PlatformOpt::OptRam : Platform::PlatformOpt::OptSpeed;
+
     // cache size calculations
     int64_t nTotalCache = (GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -1280,7 +1286,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pblocktree;
                 Platform::PlatformDb::DestroyInstance();
 
-                Platform::PlatformDb::CreateInstance(nPlatformDbCache, false, fReindex);
+                Platform::PlatformDb::CreateInstance(nPlatformDbCache, opt, false, fReindex);
                 pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
                 pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);

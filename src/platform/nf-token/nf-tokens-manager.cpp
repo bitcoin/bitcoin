@@ -342,7 +342,7 @@ namespace Platform
         }
         else /// PlatformDb::Instance().OptimizeRam() is on
         {
-            std::string error = std::string(__func__) + "is implemented only for speed optimized node instances. Change the conf and restart your node.";
+            std::string error = std::string(__func__) + " is implemented only for speed optimized node instances. Change the conf and restart your node.";
             throw std::runtime_error(error);
         }
     }

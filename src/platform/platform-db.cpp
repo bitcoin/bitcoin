@@ -13,9 +13,10 @@ namespace Platform
     /*static*/ const char PlatformDb::DB_NFT = 'n';
     /*static*/ const char PlatformDb::DB_PROTO_TOTAL = 't';
 
-    PlatformDb::PlatformDb(size_t nCacheSize, bool fMemory, bool fWipe)
+    PlatformDb::PlatformDb(size_t nCacheSize, PlatformOpt optSetting, bool fMemory, bool fWipe)
     : TransactionLevelDBWrapper("platform", nCacheSize, fMemory, fWipe)
     {
+        m_optSetting = optSetting;
     }
 
     void PlatformDb::ProcessPlatformDbGuts(std::function<bool(const leveldb::Iterator &)> processor)
