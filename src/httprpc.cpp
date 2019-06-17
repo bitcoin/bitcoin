@@ -5,19 +5,20 @@
 #include <httprpc.h>
 
 #include <chainparams.h>
+#include <crypto/hmac_sha256.h>
 #include <httpserver.h>
 #include <key_io.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
 #include <sync.h>
-#include <util/system.h>
-#include <util/strencodings.h>
 #include <ui_interface.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <util/translation.h>
 #include <walletinitinterface.h>
-#include <crypto/hmac_sha256.h>
-#include <stdio.h>
 
 #include <memory>
+#include <stdio.h>
 
 #include <boost/algorithm/string.hpp> // boost::trim
 
