@@ -279,6 +279,7 @@ UtxoData::iterator FindRandomFrom(const std::set<COutPoint> &utxoSet) {
 BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 {
     SeedInsecureRand(/* deterministic */ true);
+    g_mock_deterministic_tests = true;
 
     bool spent_a_duplicate_coinbase = false;
     // A simple map to track what we expect the cache stack to represent.
@@ -473,6 +474,8 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
 
     // Verify coverage.
     BOOST_CHECK(spent_a_duplicate_coinbase);
+
+    g_mock_deterministic_tests = false;
 }
 
 BOOST_AUTO_TEST_CASE(ccoins_serialization)
