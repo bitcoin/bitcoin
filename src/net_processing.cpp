@@ -144,6 +144,8 @@ std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 void EraseOrphansFor(NodeId peer);
 
+/** Note that this must be locked BEFORE cs_main! */
+RecursiveMutex cs_peerstate ACQUIRED_BEFORE(cs_main);
 /** Increase a node's misbehavior score. */
 void Misbehaving(NodeId nodeid, int howmuch, const std::string& message="") EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -163,16 +165,11 @@ namespace {
      * ProcessNewBlock state.IsValid()). See the ProcessNewBlock docs for
      * more info.
      *
-     * TODO: There is currently a race on the above - we add to this map
-     * before calling PNB and then remove it if the block was malleated. We
-     * should be able to just not add it to the map if the block is malleated.
-     * (This is fixed later in this patch set, so should never hit master!)
-     *
      * However, things which are not on our best chain but were written to
      * disk anyway may sit around in here forever, so be careful relying on
      * its size for any decisions.
      */
-    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
+    std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_peerstate);
 
     /**
      * Filter for transactions that were recently rejected by
@@ -467,9 +464,6 @@ struct CNodeState {
 // Keeps track of the time (in microseconds) when transactions were requested last time
 limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs_main)(MAX_INV_SZ);
 
-/** Note that this must be locked BEFORE cs_main! */
-RecursiveMutex cs_peerstate;
-
 /** Map maintaining per-node state. */
 static std::map<NodeId, CPeerState> mapPeerState GUARDED_BY(cs_peerstate);
 
@@ -686,7 +680,7 @@ static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIV
 
 /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
  *  at most count entries. */
-static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<const CBlockIndex*>& vBlocks, NodeId& nodeStaller, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate, cs_main)
 {
     if (count == 0)
         return;
@@ -1400,6 +1394,7 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
  * be OK if it was sent over compact blocks).
  */
 static void BlockChecked(const CBlock& block, const BlockValidationState& state, CConnman* connman) {
+    LOCK(cs_peerstate);
     LOCK(cs_main);
 
     const uint256 hash(block.GetHash());
@@ -1809,7 +1804,7 @@ inline void static SendBlockTransactions(const CBlock& block, const BlockTransac
     connman->PushMessage(pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
-bool static ProcessHeadersMessage(CNode* pfrom, CConnman* connman, CTxMemPool& mempool, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool via_compact_block)
+bool static ProcessHeadersMessage(CNode* pfrom, CConnman* connman, CTxMemPool& mempool, const std::vector<CBlockHeader>& headers, const CChainParams& chainparams, bool via_compact_block) EXCLUSIVE_LOCKS_REQUIRED(cs_peerstate)
 {
     const CNetMsgMaker msgMaker(pfrom->GetSendVersion());
     size_t nCount = headers.size();
@@ -2062,7 +2057,6 @@ void static BlockProcessed(CNode* pfrom, CConnman* connman, CPeerState* peerstat
         // This clears the block from mapBlockSource.
         BlockChecked(*pblock, state, connman);
         // Block was valid but we've seen it before. Clear it from mapBlockSource.
-        LOCK(cs_main);
         ::mapBlockSource.erase(pblock->GetHash());
     } else {
         peerstate->pending_block_hash = pblock->GetHash();
@@ -3093,10 +3087,6 @@ bool ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::string& msg_
         if (fBlockReconstructed) {
             // If we got here, we were able to optimistically reconstruct a
             // block that is in flight from some other peer.
-            {
-                LOCK(cs_main);
-                mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom->GetId(), false));
-            }
             // Setting fForceProcessing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
             // unrequested blocks that might be trying to waste our resources
@@ -3106,6 +3096,7 @@ bool ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::string& msg_
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
+            mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom->GetId(), false));
             BlockValidationState dos_state;
             std::future<bool> block_future = ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true);
             BlockProcessed(pfrom, connman, peerstate, pblock, dos_state, block_future);
@@ -3176,16 +3167,13 @@ bool ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::string& msg_
                 // updated, etc.
                 MarkBlockAsReceived(resp.blockhash); // it is now an empty pointer
                 fBlockRead = true;
-                // mapBlockSource is used for potentially punishing peers and
-                // updating which peers send us compact blocks, so the race
-                // between here and cs_main in ProcessNewBlock is fine.
-                // BIP 152 permits peers to relay compact blocks after validating
-                // the header only; we should not punish peers if the block turns
-                // out to be invalid.
-                mapBlockSource.emplace(resp.blockhash, std::make_pair(pfrom->GetId(), false));
             }
         } // Don't hold cs_main when we call into ProcessNewBlock
         if (fBlockRead) {
+            // BIP 152 permits peers to relay compact blocks after validating
+            // the header only; we should not punish peers if the block turns
+            // out to be invalid.
+            mapBlockSource.emplace(resp.blockhash, std::make_pair(pfrom->GetId(), false));
             // Since we requested this block (it was in mapBlocksInFlight), force it to be processed,
             // even if it would not be a candidate for new tip (missing previous block, chain not long enough, etc)
             // This bypasses some anti-DoS logic in AcceptBlock (eg to prevent
@@ -3245,11 +3233,16 @@ bool ProcessMessage(CNode* pfrom, CPeerState* peerstate, const std::string& msg_
             // Also always process if we requested the block explicitly, as we may
             // need it even though it is not a candidate for a new best tip.
             forceProcessing |= MarkBlockAsReceived(hash);
-            // mapBlockSource is only used for punishing peers and setting
-            // which peers send us compact blocks, so the race between here and
-            // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
+        // Note that ProcessNewBlock only guarantees that we have no need to ever re-download
+        // this block in case forceProcessing is set to true or the future returns true, but
+        // adding to mapBlockSource will prevent us from re-downloading this block until the
+        // future completes. This is ok, as, if we requested the block we'll set forceProcessing,
+        // and if the block is the same or higher work as our tip the block will be accepted
+        // (and the future will return true). Thus, a peer sending us an unsolicited block can
+        // force us to use FindNextBlocksToDownload to fetch a block, but only if that block
+        // has less work than our current tip.
+        mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         BlockValidationState dos_state;
         std::future<bool> block_future = ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/forceProcessing);
         BlockProcessed(pfrom, connman, peerstate, pblock, dos_state, block_future);
@@ -3533,7 +3526,6 @@ bool static IsPendingBlockValidation(CConnman* connman, CNode* pfrom, CPeerState
             if (fNewBlock) {
                 pfrom->nLastBlockTime = GetTime();
             } else {
-                LOCK(cs_main);
                 mapBlockSource.erase(peerstate->pending_block_hash);
             }
             peerstate->pending_block_processing = std::future<bool>();
