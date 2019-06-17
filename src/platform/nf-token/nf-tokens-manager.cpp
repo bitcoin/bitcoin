@@ -462,14 +462,28 @@ namespace Platform
         assert(!tokenId.IsNull());
         assert(height >= 0);
 
-        auto it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
-        if (it != m_nfTokensIndexSet.end() && it->BlockIndex()->nHeight <= height)
+        if (PlatformDb::Instance().OptimizeSpeed())
         {
-            m_nfTokensIndexSet.erase(it);
-            PlatformDb::Instance().EraseNftDiskIndex(protocolId, tokenId);
-            this->UpdateTotalSupply(protocolId, false);
-            return true;
+            auto it = m_nfTokensIndexSet.find(std::make_tuple(protocolId, tokenId));
+            if (it != m_nfTokensIndexSet.end() && it->BlockIndex()->nHeight <= height)
+            {
+                m_nfTokensIndexSet.erase(it);
+                PlatformDb::Instance().EraseNftDiskIndex(protocolId, tokenId);
+                this->UpdateTotalSupply(protocolId, false);
+                return true;
+            }
         }
+        else /// PlatformDb::Instance().OptimizeRam() is on
+        {
+            auto index = PlatformDb::Instance().ReadNftIndex(protocolId, tokenId);
+            if (!index.IsNull())
+            {
+                PlatformDb::Instance().EraseNftDiskIndex(protocolId, tokenId);
+                this->UpdateTotalSupply(protocolId, false);
+                return true;
+            }
+        }
+
         return false;
     }
 
