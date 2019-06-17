@@ -150,7 +150,6 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         BuildChain(Params().GenesisBlock().GetHash(), 100, 15, 10, 500, blocks);
     }
 
-    bool ignored;
     CValidationState state;
     std::vector<CBlockHeader> headers;
     std::transform(blocks.begin(), blocks.end(), std::back_inserter(headers), [](std::shared_ptr<const CBlock> b) { return b->GetBlockHeader(); });
@@ -160,7 +159,8 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 
     // Connect the genesis block and drain any outstanding events
     CValidationState dos_state;
-    BOOST_CHECK(ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), dos_state, true, &ignored));
+    ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), dos_state, true).wait();
+    BOOST_CHECK(dos_state.IsValid());
     SyncWithValidationInterfaceQueue();
 
     // subscribe to events (this subscriber will validate event ordering)
@@ -178,22 +178,24 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     std::vector<std::thread> threads;
     for (int i = 0; i < 10; i++) {
         threads.emplace_back([&blocks]() {
-            bool ignored;
+            std::vector<std::future<bool>> thread_futures;
             FastRandomContext insecure;
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
                 CValidationState dos_state;
-                ProcessNewBlock(Params(), block, dos_state, true, &ignored);
+                thread_futures.push_back(ProcessNewBlock(Params(), block, dos_state, true));
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
                     CValidationState dos_state;
-                    bool processed = ProcessNewBlock(Params(), block, dos_state, true, &ignored);
-                    assert(processed);
+                    thread_futures.push_back(ProcessNewBlock(Params(), block, dos_state, true));
                     assert(dos_state.IsValid());
                 }
+            }
+            for (std::future<bool>& future: thread_futures) {
+                future.wait();
             }
         });
     }
@@ -231,9 +233,10 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
 {
     bool ignored;
-    auto ProcessBlock = [&ignored](std::shared_ptr<const CBlock> block) -> bool {
+    auto ProcessBlock = [](std::shared_ptr<const CBlock> block) -> bool {
         CValidationState dos_state;
-        return ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true, /* fNewBlock */ &ignored);
+        ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true).wait();
+        return dos_state.IsValid();
     };
 
     // Process all mined blocks

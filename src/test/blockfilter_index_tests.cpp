@@ -177,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
         CValidationState dos_state;
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        ProcessNewBlock(Params(), block, dos_state, true).wait();
         BOOST_REQUIRE(dos_state.IsValid());
 
         const CBlockIndex* block_index;
@@ -195,7 +195,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
         CValidationState dos_state;
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        ProcessNewBlock(Params(), block, dos_state, true).wait();
         BOOST_REQUIRE(dos_state.IsValid());
 
         const CBlockIndex* block_index;
@@ -226,7 +226,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
     for (size_t i = 2; i < 4; i++) {
         const auto& block = chainA[i];
         CValidationState dos_state;
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, dos_state, true, nullptr));
+        ProcessNewBlock(Params(), block, dos_state, true).wait();
         BOOST_REQUIRE(dos_state.IsValid());
     }
 

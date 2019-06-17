@@ -165,7 +165,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     CValidationState dos_state;
-    ProcessNewBlock(chainparams, shared_pblock, dos_state, true, nullptr);
+    ProcessNewBlock(chainparams, shared_pblock, dos_state, true).wait();
 
     CBlock result = block;
     return result;

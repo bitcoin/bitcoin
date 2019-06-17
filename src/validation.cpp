@@ -3507,13 +3507,16 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, CValidationState& state, bool fForceProcessing, bool *fNewBlock)
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, CValidationState& state, bool fForceProcessing)
 {
     AssertLockNotHeld(cs_main);
 
+    std::promise<bool> result_promise;
+    std::future<bool> result = result_promise.get_future();
+    bool fNewBlock = false;
+
     {
         CBlockIndex *pindex = nullptr;
-        if (fNewBlock) *fNewBlock = false;
 
         // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
         // Therefore, the following critical section must include the CheckBlock() call as well.
@@ -3524,20 +3527,24 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
         if (ret) {
             // Store to disk
-            ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, fNewBlock);
+            ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
         }
         if (!ret) {
-            return error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
+            error("%s: AcceptBlock FAILED (%s)", __func__, FormatStateMessage(state));
+            result_promise.set_value(fNewBlock);
+            return result;
         }
     }
+
+    result_promise.set_value(fNewBlock);
 
     NotifyHeaderTip();
 
     CValidationState dummy_state; // Only used to report errors, not invalidity - ignore it
     if (!::ChainstateActive().ActivateBestChain(dummy_state, chainparams, pblock))
-        return error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
+        error("%s: ActivateBestChain failed (%s)", __func__, FormatStateMessage(state));
 
-    return true;
+    return result;
 }
 
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)

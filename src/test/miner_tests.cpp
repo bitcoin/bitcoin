@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         CValidationState dos_state;
-        BOOST_CHECK(ProcessNewBlock(chainparams, shared_pblock, dos_state, true, nullptr));
+        ProcessNewBlock(chainparams, shared_pblock, dos_state, true).wait();
         BOOST_CHECK(dos_state.IsValid());
         pblock->hashPrevBlock = pblock->GetHash();
     }
