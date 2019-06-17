@@ -7,11 +7,12 @@
 #include <interfaces/chain.h>
 #include <net.h>
 #include <outputtype.h>
-#include <util/system.h>
 #include <util/moneystr.h>
-#include <walletinitinterface.h>
+#include <util/system.h>
+#include <util/translation.h>
 #include <wallet/wallet.h>
 #include <wallet/walletutil.h>
+#include <walletinitinterface.h>
 
 class WalletInit : public WalletInitInterface {
 public:

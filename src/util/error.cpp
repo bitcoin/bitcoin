@@ -4,7 +4,9 @@
 
 #include <util/error.h>
 
+#include <tinyformat.h>
 #include <util/system.h>
+#include <util/translation.h>
 
 std::string TransactionErrorString(const TransactionError err)
 {

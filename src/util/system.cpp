@@ -7,6 +7,7 @@
 
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
+#include <util/translation.h>
 
 #include <stdarg.h>
 

@@ -4,6 +4,8 @@
 
 #include <qt/bitcoin.h>
 
+#include <util/translation.h>
+
 #include <QCoreApplication>
 
 #include <functional>
