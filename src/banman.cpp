@@ -9,6 +9,7 @@
 #include <ui_interface.h>
 #include <util/system.h>
 #include <util/time.h>
+#include <util/translation.h>
 
 
 BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time)

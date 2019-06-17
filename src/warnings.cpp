@@ -3,9 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <warnings.h>
+
 #include <sync.h>
 #include <util/system.h>
-#include <warnings.h>
+#include <util/translation.h>
 
 static RecursiveMutex cs_warnings;
 static std::string strMiscWarning GUARDED_BY(cs_warnings);
