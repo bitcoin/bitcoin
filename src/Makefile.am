@@ -181,6 +181,7 @@ BITCOIN_CORE_H = \
   rpc/util.h \
   scheduler.h \
   script/descriptor.h \
+  script/keyorigin.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
