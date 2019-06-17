@@ -3035,7 +3035,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
             BlockValidationState dos_state;
-            bool fNewBlock = ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true);
+            bool fNewBlock = ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true).get();
             BlockProcessed(pfrom, connman, pblock, dos_state, fNewBlock);
 
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
@@ -3121,7 +3121,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
             BlockValidationState dos_state;
-            bool fNewBlock = ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true);
+            bool fNewBlock = ProcessNewBlock(chainparams, pblock, dos_state, /*fForceProcessing=*/true).get();
             BlockProcessed(pfrom, connman, pblock, dos_state, fNewBlock);
         }
         return true;
@@ -3179,7 +3179,7 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             mapBlockSource.emplace(hash, std::make_pair(pfrom->GetId(), true));
         }
         BlockValidationState dos_state;
-        bool fNewBlock = ProcessNewBlock(chainparams, pblock, dos_state, forceProcessing);
+        bool fNewBlock = ProcessNewBlock(chainparams, pblock, dos_state, forceProcessing).get();
         BlockProcessed(pfrom, connman, pblock, dos_state, fNewBlock);
         return true;
     }

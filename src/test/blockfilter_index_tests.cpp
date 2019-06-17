@@ -172,7 +172,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
         BlockValidationState dos_state;
-        ProcessNewBlock(Params(), block, dos_state, true);
+        ProcessNewBlock(Params(), block, dos_state, true).wait();
         BOOST_REQUIRE(dos_state.IsValid());
     }
     for (size_t i = 0; i < 2; i++) {
@@ -192,7 +192,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
         BlockValidationState dos_state;
-        ProcessNewBlock(Params(), block, dos_state, true);
+        ProcessNewBlock(Params(), block, dos_state, true).wait();
         BOOST_REQUIRE(dos_state.IsValid());
     }
     for (size_t i = 0; i < 3; i++) {
@@ -225,7 +225,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     for (size_t i = 2; i < 4; i++) {
         const auto& block = chainA[i];
         BlockValidationState dos_state;
-        ProcessNewBlock(Params(), block, dos_state, true);
+        ProcessNewBlock(Params(), block, dos_state, true).wait();
         BOOST_REQUIRE(dos_state.IsValid());
     }
 

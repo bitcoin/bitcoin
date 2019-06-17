@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
 
     // Connect the genesis block and drain any outstanding events
     BlockValidationState dos_state;
-    ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), dos_state, true);
+    ProcessNewBlock(Params(), std::make_shared<CBlock>(Params().GenesisBlock()), dos_state, true).wait();
     BOOST_CHECK(dos_state.IsValid());
     SyncWithValidationInterfaceQueue();
 
@@ -189,14 +189,14 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
             for (int i = 0; i < 1000; i++) {
                 auto block = blocks[insecure.randrange(blocks.size() - 1)];
                 BlockValidationState dos_state;
-                ProcessNewBlock(Params(), block, dos_state, true);
+                ProcessNewBlock(Params(), block, dos_state, true).wait();
             }
 
             // to make sure that eventually we process the full chain - do it here
             for (auto block : blocks) {
                 if (block->vtx.size() == 1) {
                     BlockValidationState dos_state;
-                    ProcessNewBlock(Params(), block, dos_state, true);
+                    ProcessNewBlock(Params(), block, dos_state, true).wait();
                     assert(dos_state.IsValid());
                 }
             }
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
     bool ignored;
     auto ProcessBlock = [&ignored](std::shared_ptr<const CBlock> block) -> bool {
         BlockValidationState dos_state;
-        ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true);
+        ProcessNewBlock(Params(), block, dos_state, /* fForceProcessing */ true).wait();
         return dos_state.IsValid();
     };
 

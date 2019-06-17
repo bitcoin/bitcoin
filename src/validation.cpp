@@ -3812,10 +3812,12 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     return true;
 }
 
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& dos_state, bool fForceProcessing)
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& dos_state, bool fForceProcessing)
 {
     AssertLockNotHeld(cs_main);
 
+    std::promise<bool> result_promise;
+    std::future<bool> result = result_promise.get_future();
     bool fNewBlock = false;
 
     {
@@ -3834,9 +3836,12 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         }
         if (!ret) {
             error("%s: AcceptBlock FAILED (%s)", __func__, dos_state.ToString());
-            return fNewBlock;
+            result_promise.set_value(fNewBlock);
+            return result;
         }
     }
+
+    result_promise.set_value(fNewBlock);
 
     NotifyHeaderTip();
 
@@ -3844,7 +3849,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!::ChainstateActive().ActivateBestChain(dummy_state, chainparams, pblock))
         error("%s: ActivateBestChain failed (%s)", __func__, dummy_state.ToString());
 
-    return fNewBlock;
+    return result;
 }
 
 bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)

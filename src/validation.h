@@ -25,6 +25,7 @@
 #include <serialize.h>
 
 #include <atomic>
+#include <future>
 #include <map>
 #include <memory>
 #include <set>
@@ -161,20 +162,23 @@ extern uint64_t nPruneTarget;
  * best chain soon, or fForceProcessing is set), but pblock has been mutated,
  * state is guaranteed to be some non-IsValid() state.
  *
- * If fForceProcessing is set (or the function returns true), and
- * state.IsValid(), barring pruning and a desire to re-download a pruned block,
- * there should never be any reason to re-ProcessNewBlock any block with the
- * same hash.
+ * If fForceProcessing is set (or the future returns true), and state.IsValid(),
+ * barring pruning and a desire to re-download a pruned block, there should
+ * never be any reason to re-ProcessNewBlock any block with the same hash.
  *
  * May not be called in a validationinterface callback.
+ *
+ * Do NOT block on the returned future waiting for it to resolve as this may
+ * introduce deadlocks (in the case you are holding any mutexes which are
+ * also taken in validationinterface callbacks).
  *
  * @param[in]   pblock            The block we want to process.
  * @param[out]  state             Only used for failures in CheckBlock/AcceptBlock. For failure in block connection,
  *                                a CValidationInterface BlockChecked callback is used to notify clients of validity.
  * @param[in]   fForceProcessing  Process this block even if unrequested; used for non-network block sources and whitelisted peers.
- * @returns     If the block was first received via this call
+ * @returns      A future which completes with a boolean which is set to indicate if the block was first received via this call
  */
-bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& state, bool fForceProcessing) LOCKS_EXCLUDED(cs_main);
+std::future<bool> ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<const CBlock> pblock, BlockValidationState& state, bool fForceProcessing) LOCKS_EXCLUDED(cs_main);
 
 /**
  * Process incoming block headers.
