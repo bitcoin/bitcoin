@@ -29,13 +29,14 @@ namespace Platform
         /// Metadata buffer
         std::vector<unsigned char> metadata;
 
-        static const uint64_t UNKNOWN_TOKEN_PROTOCOL = -1;
+        static const uint64_t UNKNOWN_TOKEN_PROTOCOL = static_cast<uint64_t >(-1);
 
     public:
         ADD_SERIALIZE_METHODS
         template<typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
         {
+            //TODO: maybe optimize writing on disk of token-id and protocol-id since it's a key in the db (or reg-tx-hash depending on the key)
             READWRITE(tokenProtocolId);
             READWRITE(tokenId);
             READWRITE(tokenOwnerKeyId);

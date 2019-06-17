@@ -175,7 +175,7 @@ bool ParseBoolV(const Value& v, const std::string &strName)
  * Note: This interface may still be subject to change.
  */
 
-string CRPCTable::help(string strCommand) const
+string CRPCTable::help(const string & strCommand, const string & strSubCommand) const
 {
     string strRet;
     string category;
@@ -203,6 +203,8 @@ string CRPCTable::help(string strCommand) const
         try
         {
             Array params;
+            if (!strSubCommand.empty())
+                params.push_back(strSubCommand);
             rpcfn_type pfn = pcmd->actor;
             if (setDone.insert(pfn).second)
                 (*pfn)(params, true);
@@ -237,7 +239,7 @@ string CRPCTable::help(string strCommand) const
 
 Value help(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
             "help ( \"command\" )\n"
             "\nList all commands, or get help for a specified command.\n"
@@ -248,10 +250,13 @@ Value help(const Array& params, bool fHelp)
         );
 
     string strCommand;
+    string strSubCommand;
     if (params.size() > 0)
         strCommand = params[0].get_str();
+    if (params.size() > 1)
+        strSubCommand = params[1].get_str();
 
-    return tableRPC.help(strCommand);
+    return tableRPC.help(strCommand, strSubCommand);
 }
 
 

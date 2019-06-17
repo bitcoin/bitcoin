@@ -7,6 +7,7 @@
 #define CROWN_PLATFORM_UTILS_H
 
 #include <cstdint>
+#include <string>
 
 namespace Platform
 {

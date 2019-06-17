@@ -17,6 +17,7 @@
 #include <string.h>
 #include <utility>
 #include <vector>
+#include <tuple>
 
 #include "prevector.h"
 
@@ -478,6 +479,13 @@ template<typename Stream, typename K, typename T> void Serialize(Stream& os, con
 template<typename Stream, typename K, typename T> void Unserialize(Stream& is, std::pair<K, T>& item, int nType, int nVersion);
 
 /**
+ * tuple
+ */
+template<typename K, typename T1, typename T2> unsigned int GetSerializeSize(const std::tuple<K, T1, T2>& item, int nType, int nVersion);
+template<typename Stream, typename K, typename T1, typename T2> void Serialize(Stream& os, const std::tuple<K, T1, T2>& item, int nType, int nVersion);
+template<typename Stream, typename K, typename T1, typename T2> void Unserialize(Stream& is, std::tuple<K, T1, T2>& item, int nType, int nVersion);
+
+/**
  * map
  */
 template<typename K, typename T, typename Pred, typename A> unsigned int GetSerializeSize(const std::map<K, T, Pred, A>& m, int nType, int nVersion);
@@ -755,6 +763,32 @@ void Unserialize(Stream& is, std::pair<K, T>& item, int nType, int nVersion)
 }
 
 
+/**
+ * tuple
+ */
+template<typename K, typename T1, typename T2>
+unsigned int GetSerializeSize(const std::tuple<K, T1, T2>& item, int nType, int nVersion)
+{
+    return GetSerializeSize(std::get<0>(item), nType, nVersion) +
+           GetSerializeSize(std::get<1>(item), nType, nVersion) +
+           GetSerializeSize(std::get<2>(item), nType, nVersion);
+}
+
+template<typename Stream, typename K, typename T1, typename T2>
+void Serialize(Stream& os, const std::tuple<K, T1, T2>& item, int nType, int nVersion)
+{
+    Serialize(os, std::get<0>(item), nType, nVersion);
+    Serialize(os, std::get<1>(item), nType, nVersion);
+    Serialize(os, std::get<2>(item), nType, nVersion);
+}
+
+template<typename Stream, typename K, typename T1, typename T2>
+void Unserialize(Stream& is, std::tuple<K, T1, T2>& item, int nType, int nVersion)
+{
+    Unserialize(is, std::get<0>(item), nType, nVersion);
+    Unserialize(is, std::get<1>(item), nType, nVersion);
+    Unserialize(is, std::get<2>(item), nType, nVersion);
+}
 
 /**
  * map
