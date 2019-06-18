@@ -12,7 +12,6 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
-#include <vector>
 
 class uint256;
 

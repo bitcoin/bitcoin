@@ -12,6 +12,7 @@
 #include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
+#include <chrono>
 #include <ctime>
 #include <tinyformat.h>
 

@@ -9,8 +9,6 @@
 #include <scheduler.h>
 #include <txmempool.h>
 
-#include <list>
-#include <atomic>
 #include <future>
 #include <utility>
 

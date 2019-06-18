@@ -37,8 +37,6 @@
 
 #include <univalue.h>
 
-#include <functional>
-
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 static inline bool GetAvoidReuseFlag(CWallet * const pwallet, const UniValue& param) {

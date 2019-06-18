@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 #include <string>
-#include <chrono>
 
 /**
  * DEPRECATED

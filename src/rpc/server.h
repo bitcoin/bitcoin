@@ -10,7 +10,6 @@
 #include <rpc/request.h>
 #include <uint256.h>
 
-#include <list>
 #include <map>
 #include <stdint.h>
 #include <string>

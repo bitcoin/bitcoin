@@ -46,8 +46,6 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
-#include <future>
-#include <sstream>
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>

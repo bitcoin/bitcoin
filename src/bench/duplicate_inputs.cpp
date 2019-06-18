@@ -11,10 +11,6 @@
 #include <txmempool.h>
 #include <validation.h>
 
-#include <list>
-#include <vector>
-
-
 static void DuplicateInputs(benchmark::State& state)
 {
     const CScript SCRIPT_PUB{CScript(OP_TRUE)};

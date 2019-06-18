@@ -24,7 +24,6 @@
 #include <util/validation.h>
 
 #include <algorithm>
-#include <queue>
 #include <utility>
 
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)

@@ -5,8 +5,6 @@
 #ifndef BITCOIN_WALLETINITINTERFACE_H
 #define BITCOIN_WALLETINITINTERFACE_H
 
-#include <string>
-
 class CScheduler;
 class CRPCTable;
 struct InitInterfaces;

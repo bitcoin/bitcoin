@@ -10,7 +10,6 @@
 #endif
 
 #include <stdarg.h>
-#include <string>
 
 #if ENABLE_ZMQ
 #include <zmq.h>

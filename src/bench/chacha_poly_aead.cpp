@@ -2,8 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <iostream>
-
 #include <bench/bench.h>
 #include <crypto/chacha_poly_aead.h>
 #include <crypto/poly1305.h> // for the POLY1305_TAGLEN constant

@@ -7,8 +7,6 @@
 
 #include <tinyformat.h>
 
-#include <utility>
-
 /**
  * Bilingual messages:
  *   - in GUI: user's native language + untranslated (i.e. English)
