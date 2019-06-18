@@ -850,8 +850,8 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
 void CPrivateSendServer::PushStatus(CNode* pnode, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, CConnman& connman)
 {
     if (!pnode) return;
-    CNetMsgMaker msgMaker(pnode->GetSendVersion());
-    connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSTATUSUPDATE, nSessionID, (int)nState, (int)vecEntries.size(), (int)nStatusUpdate, (int)nMessageID));
+    CPrivateSendStatusUpdate psssup(nSessionID, nState, 0, nStatusUpdate, nMessageID);
+    connman.PushMessage(pnode, CNetMsgMaker(pnode->GetSendVersion()).Make(NetMsgType::DSSTATUSUPDATE, psssup));
 }
 
 void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& connman, PoolMessage nMessageID)
@@ -899,7 +899,7 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
     for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&nMessageID, &connman, this](CNode* pnode) {
             CNetMsgMaker msgMaker(pnode->GetSendVersion());
-            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID, (int)nMessageID));
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSCOMPLETE, nSessionID, nMessageID));
             return true;
         });
         if (!fOk) {
