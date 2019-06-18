@@ -116,8 +116,6 @@ static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
-/** Default for -mempoolreplacement */
-static const bool DEFAULT_ENABLE_REPLACEMENT = true;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
 
@@ -160,7 +158,6 @@ extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 /** If the tip is older than this (in seconds), the node is considered to be in initial block download. */
 extern int64_t nMaxTipAge;
-extern bool fEnableReplacement;
 
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
 extern uint256 hashAssumeValid;
