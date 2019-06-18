@@ -228,7 +228,8 @@ def main():
 def run_tests(test_list, src_dir, build_dir, exeext, jobs=1, enable_coverage=False, args=[]):
     # Warn if dashd is already running (unix only)
     try:
-        if subprocess.check_output(["pidof", "dashd"]) is not None:
+        pidof_output = subprocess.check_output(["pidof", "dashd"])
+        if not (pidof_output is None or pidof_output == b''):
             print("%sWARNING!%s There is already a dashd process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except (OSError, subprocess.SubprocessError):
         pass
