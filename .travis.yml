@@ -56,7 +56,8 @@ runtests: &runtests
     - $DOCKER_RUN_IN_BUILDER ./ci/build_depends.sh
     - $DOCKER_RUN_IN_BUILDER ./ci/build_src.sh
     - $DOCKER_RUN_IN_BUILDER ./ci/test_unittests.sh
-    - $DOCKER_RUN_IN_BUILDER ./ci/test_integrationtests.sh --jobs=3
+    - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude pruning,dbcrash"; fi
+    - $DOCKER_RUN_IN_BUILDER ./ci/test_integrationtests.sh --jobs=3 ${extended}
 
 builddocker: &builddocker
   stage: build docker
