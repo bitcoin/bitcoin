@@ -93,7 +93,7 @@ void StopNodes()
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs, bool reindex)
 {
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -daemon -server -debug=0 -concurrentprocessing=1 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -daemon -server -debug=syscoin -concurrentprocessing=1 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (reindex)

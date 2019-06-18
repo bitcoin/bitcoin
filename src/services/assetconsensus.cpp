@@ -302,126 +302,65 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     }
     return true;
 }
-bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, bool &bOverflow, int nHeight, const CBlock& block, const bool &bSanity, const bool &bMiner, std::vector<uint256> &txsToRemove)
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const bool &bSanity)
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
-	std::vector<COutPoint> vecLockedOutpoints;
+    std::vector<COutPoint> vecLockedOutpoints;
+    bool bOverflow;
+    return CheckSyscoinInputs(false, tx, state, inputs, fJustCheck, bOverflow, nHeight, uint256(), bSanity, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
+}
+bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, bool &bOverflow, int nHeight, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+{
     if (nHeight == 0)
         nHeight = ::ChainActive().Height()+1;
     std::string errorMessage;
     bool good = true;
     bool bTxRootError = false;
     bOverflow=false;
-    if (block.vtx.empty()) {  
-        if(tx.IsCoinBase())
-            return true;
-		if (!IsSyscoinTx(tx.nVersion))
-			return true;
-        if (IsAssetAllocationTx(tx.nVersion))
-        {
-            errorMessage.clear();
-            good = CheckAssetAllocationInputs(tx, inputs, fJustCheck, nHeight, uint256(), mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanity, bMiner);
-        }
-        else if (IsAssetTx(tx.nVersion))
-        {
-            errorMessage.clear();
-            good = CheckAssetInputs(tx, inputs, fJustCheck, nHeight, uint256(), mapAssets, mapAssetAllocations, errorMessage, bSanity, bMiner);
-        }
-        else if(IsSyscoinMintTx(tx.nVersion)) 
-        {
-            if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
-                errorMessage = "Bridge is disabled until blockheight 51000";
-                good = false;
-            }
-            else{
-                errorMessage.clear();
-                good = CheckSyscoinMint(ibd, tx, errorMessage, fJustCheck, bSanity, bMiner, nHeight, uint256(), mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
-            }
-        }
-  
-        if (!good || !errorMessage.empty()){
-            if(bTxRootError)
-                return state.Error(errorMessage);
-            else
-                return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INVALID, errorMessage);
-        }
-      
+    good = true;
+    if(!IsSyscoinTx(tx.nVersion))
         return true;
+    // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode if blockhash isn't null
+    const bool &bSanityInternal = blockHash.IsNull()? bSanity: fJustCheck;
+    const bool &bJustCheckInternal = blockHash.IsNull()? fJustCheck: false;
+    if (IsAssetAllocationTx(tx.nVersion))
+    {
+        good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
+
     }
-    else if (!block.vtx.empty()) {
-        const uint256& blockHash = block.GetHash();
-        std::vector<std::pair<uint256, uint256> > blockIndex;
-        for (unsigned int i = 0; i < block.vtx.size(); i++)
-        {
-
-            good = true;
-            const CTransaction &tx = *(block.vtx[i]);    
-            if(!bMiner && !fJustCheck && !bSanity){
-                const uint256& txHash = tx.GetHash(); 
-                blockIndex.push_back(std::make_pair(txHash, blockHash));
-            }  
-            if(tx.IsCoinBase()) 
-                continue;
-
-            if(!IsSyscoinTx(tx.nVersion))
-                continue;      
-            if (IsAssetAllocationTx(tx.nVersion))
-            {
-                errorMessage.clear();
-                // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode
-                good = CheckAssetAllocationInputs(tx, inputs, false, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, fJustCheck, bMiner);
-
-            }
-            else if (IsAssetTx(tx.nVersion))
-            {
-                errorMessage.clear();
-                good = CheckAssetInputs(tx, inputs, false, nHeight, blockHash, mapAssets, mapAssetAllocations, errorMessage, fJustCheck, bMiner);
-            } 
-            else if(IsSyscoinMintTx(tx.nVersion))
-            {
-                if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
-                    errorMessage = "Bridge is disabled until blockheight 51000";
-                    good = false;
-                }
-                else{
-                    errorMessage.clear();
-                    good = CheckSyscoinMint(ibd, tx, errorMessage, false, fJustCheck, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
-                }
-            }
-             
-                        
-            if (!good)
-            {
-                if (!errorMessage.empty()) {
-                    // if validation fails we should not include this transaction in a block
-                    if(bMiner){
-                        good = true;
-                        errorMessage.clear();
-                        txsToRemove.push_back(tx.GetHash());
-                        continue;
-                    }
-                }
-                
-            } 
+    else if (IsAssetTx(tx.nVersion))
+    {
+        good = CheckAssetInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, errorMessage, bSanityInternal, bMiner);
+    } 
+    else if(IsSyscoinMintTx(tx.nVersion))
+    {
+        if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
+            errorMessage = "Bridge is disabled until blockheight 75000";
+            good = false;
         }
-                        
-        if(!bSanity && !fJustCheck){
-            if(!bMiner && pblockindexdb){
-                if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
-                    good = false;
-                    errorMessage = "Error flushing to asset dbs";
-                }
-            }
-        }        
-        if (!good || !errorMessage.empty()){
-            if(bTxRootError)
-                return state.Error(errorMessage);
-            else
-                return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
+        else{
+            good = CheckSyscoinMint(ibd, tx, errorMessage, bJustCheckInternal, bSanityInternal, bMiner, nHeight, blockHash, mapAssets, mapAssetAllocations, vecMintKeys, bTxRootError);
         }
+    }              
+    if (!good)
+    {
+        if (!errorMessage.empty()) {
+            // if validation fails we should not include this transaction in a block
+            if(bMiner){
+                return false;
+            }
+        }
+    } 
+    
+    if (!good || !errorMessage.empty()){
+        if(bTxRootError)
+            return state.Error(errorMessage);
+        else
+            return state.Invalid(bOverflow? ValidationInvalidReason::TX_CONFLICT: ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, errorMessage);
     }
+    
     return true;
 }
 
