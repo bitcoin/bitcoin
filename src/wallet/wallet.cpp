@@ -3513,6 +3513,27 @@ bool CWallet::GetKeyFromPool(CPubKey& result, bool internal)
     return true;
 }
 
+bool CWallet::GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error)
+{
+    LOCK(cs_wallet);
+    error.clear();
+    if (!IsLocked()) {
+        TopUpKeyPool();
+    }
+
+    // Generate a new key that is added to wallet
+    CPubKey new_key;
+    if (!GetKeyFromPool(new_key)) {
+        error = "Error: Keypool ran out, please call keypoolrefill first";
+        return false;
+    }
+    LearnRelatedScripts(new_key, type);
+    dest = GetDestinationForKey(new_key, type);
+
+    SetAddressBook(dest, label, "receive");
+    return true;
+}
+
 static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
     if (setKeyPool.empty()) {
         return GetTime();

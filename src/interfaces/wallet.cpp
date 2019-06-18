@@ -140,9 +140,11 @@ public:
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
     std::string getWalletName() override { return m_wallet->GetName(); }
-    bool getKeyFromPool(bool internal, CPubKey& pub_key) override
+    bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) override
     {
-        return m_wallet->GetKeyFromPool(pub_key, internal);
+        LOCK(m_wallet->cs_wallet);
+        std::string error;
+        return m_wallet->GetNewDestination(type, label, dest, error);
     }
     bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetPubKey(address, pub_key); }
     bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetKey(address, key); }
