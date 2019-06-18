@@ -85,11 +85,11 @@ static constexpr size_t DUMMY_NESTED_P2WPKH_INPUT_SIZE = 91;
 
 class CCoinControl;
 class COutput;
-class CReserveKey;
 class CScript;
 class CWalletTx;
 struct FeeCalculation;
 enum class FeeEstimateMode;
+class ReserveDestination;
 
 /** (client) version numbers for particular wallet features */
 enum WalletFeature
@@ -234,55 +234,57 @@ public:
     }
 };
 
-/** A wrapper to reserve a key from a wallet keypool
+/** A wrapper to reserve an address from a wallet
  *
- * CReserveKey is used to reserve a key from the keypool. It is passed around
+ * ReserveDestination is used to reserve an address. It is passed around
  * during the CreateTransaction/CommitTransaction procedure.
  *
- * Instantiating a CReserveKey does not reserve a keypool key. To do so,
- * GetReservedKey() needs to be called on the object. Once a key has been
- * reserved, call KeepKey() on the CReserveKey object to make sure it is not
- * returned to the keypool. Call ReturnKey() to return the key to the keypool
- * so it can be re-used (for example, if the key was used in a new transaction
+ * Instantiating a ReserveDestination does not reserve an address. To do so,
+ * GetReservedDestination() needs to be called on the object. Once an address has been
+ * reserved, call KeepDestination() on the ReserveDestination object to make sure it is not
+ * returned. Call ReturnDestination() to return the address so it can be re-used (for
+ * example, if the address was used in a new transaction
  * and that transaction was not completed and needed to be aborted).
  *
- * If a key is reserved and KeepKey() is not called, then the key will be
- * returned to the keypool when the CReserveObject goes out of scope.
+ * If an address is reserved and KeepDestination() is not called, then the address will be
+ * returned when the ReserveDestination goes out of scope.
  */
-class CReserveKey
+class ReserveDestination
 {
 protected:
-    //! The wallet to reserve the keypool key from
+    //! The wallet to reserve from
     CWallet* pwallet;
-    //! The index of the key in the keypool
+    //! The index of the address's key in the keypool
     int64_t nIndex{-1};
-    //! The public key
+    //! The public key for the address
     CPubKey vchPubKey;
+    //! The destination
+    CTxDestination address;
     //! Whether this is from the internal (change output) keypool
     bool fInternal{false};
 
 public:
-    //! Construct a CReserveKey object. This does NOT reserve a key from the keypool yet
-    explicit CReserveKey(CWallet* pwalletIn)
+    //! Construct a ReserveDestination object. This does NOT reserve an address yet
+    explicit ReserveDestination(CWallet* pwalletIn)
     {
         pwallet = pwalletIn;
     }
 
-    CReserveKey(const CReserveKey&) = delete;
-    CReserveKey& operator=(const CReserveKey&) = delete;
+    ReserveDestination(const ReserveDestination&) = delete;
+    ReserveDestination& operator=(const ReserveDestination&) = delete;
 
     //! Destructor. If a key has been reserved and not KeepKey'ed, it will be returned to the keypool
-    ~CReserveKey()
+    ~ReserveDestination()
     {
-        ReturnKey();
+        ReturnDestination();
     }
 
-    //! Reserve a key from the keypool
-    bool GetReservedKey(CPubKey &pubkey, bool internal = false);
-    //! Return a key to the keypool
-    void ReturnKey();
-    //! Keep the key. Do not return it to the keypool when this object goes out of scope
-    void KeepKey();
+    //! Reserve an address
+    bool GetReservedDestination(const OutputType type, CTxDestination& pubkey, bool internal);
+    //! Return reserved address
+    void ReturnDestination();
+    //! Keep the address. Do not return it's key to the keypool when this object goes out of scope
+    void KeepDestination();
 };
 
 /** Address book data */
@@ -1056,9 +1058,9 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
-    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
+    bool CreateTransaction(interfaces::Chain::Lock& locked_chain, const std::vector<CRecipient>& vecSend, CTransactionRef& tx, ReserveDestination& reservedest, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl& coin_control, bool sign = true);
-    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, CReserveKey& reservekey, CValidationState& state);
+    bool CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::vector<std::pair<std::string, std::string>> orderForm, ReserveDestination& reservedest, CValidationState& state);
 
     bool DummySignTx(CMutableTransaction &txNew, const std::set<CTxOut> &txouts, bool use_max_sig = false) const
     {

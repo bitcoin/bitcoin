@@ -272,17 +272,17 @@ Result CreateRateBumpTransaction(CWallet* wallet, const uint256& txid, const CCo
     new_coin_control.m_min_depth = 1;
 
     CTransactionRef tx_new = MakeTransactionRef();
-    CReserveKey reservekey(wallet);
+    ReserveDestination reservedest(wallet);
     CAmount fee_ret;
     int change_pos_in_out = -1; // No requested location for change
     std::string fail_reason;
-    if (!wallet->CreateTransaction(*locked_chain, recipients, tx_new, reservekey, fee_ret, change_pos_in_out, fail_reason, new_coin_control, false)) {
+    if (!wallet->CreateTransaction(*locked_chain, recipients, tx_new, reservedest, fee_ret, change_pos_in_out, fail_reason, new_coin_control, false)) {
         errors.push_back("Unable to create transaction: " + fail_reason);
         return Result::WALLET_ERROR;
     }
 
     // If change key hasn't been ReturnKey'ed by this point, we take it out of keypool
-    reservekey.KeepKey();
+    reservedest.KeepDestination();
 
     // Write back new fee if successful
     new_fee = fee_ret;
@@ -330,9 +330,9 @@ Result CommitTransaction(CWallet* wallet, const uint256& txid, CMutableTransacti
     mapValue_t mapValue = oldWtx.mapValue;
     mapValue["replaces_txid"] = oldWtx.GetHash().ToString();
 
-    CReserveKey reservekey(wallet);
+    ReserveDestination reservedest(wallet);
     CValidationState state;
-    if (!wallet->CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, reservekey, state)) {
+    if (!wallet->CommitTransaction(tx, std::move(mapValue), oldWtx.vOrderForm, reservedest, state)) {
         // NOTE: CommitTransaction never returns false, so this should never happen.
         errors.push_back(strprintf("The transaction was rejected: %s", FormatStateMessage(state)));
         return Result::WALLET_ERROR;
