@@ -2699,7 +2699,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const int nConfMin
     CAmount nTotalLower = 0;
 
     // TODO: drop SPORK_5_INSTANTSEND_MAX_VALUE spork
-    if (fUseInstantSend && nTargetValue > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE) * COIN) {
+    if (fUseInstantSend && nTargetValue > sporkManager.GetSporkValue(SPORK_5_INSTANTSEND_MAX_VALUE) * COIN && llmq::IsOldInstantSendEnabled()) {
         return false;
     }
 
