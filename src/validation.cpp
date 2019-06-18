@@ -827,8 +827,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             control.Add(vChecks);   
             if (!control.Wait())
                 return false;
-            bool bOverflow = false;
-            if (!CheckSyscoinInputs(false, tx, state, view, true, bOverflow, ::ChainActive().Height(), CBlock(), bSanityCheck)) {
+            if (!CheckSyscoinInputs(tx, state, view, true, ::ChainActive().Height(), bSanityCheck)) {
                 return error("mandatory-syscoin-inputs-check-failed (%s)", state.GetRejectReason());
             }
         } 
@@ -923,8 +922,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         thisSyscoinCheckCount += 1;
                     }
                     {
-                        bool bOverflow = false;
-                        if (!CheckSyscoinInputs(false, txIn, validationState, coinsViewCache, true, bOverflow, ::ChainActive().Height(), CBlock()))
+                        if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, ::ChainActive().Height()))
                         {
                             nLastMultithreadMempoolFailure = GetTime();
                             LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
@@ -1934,7 +1932,6 @@ static int64_t nTimeIndex = 0;
 static int64_t nTimeCallbacks = 0;
 static int64_t nTimeTotal = 0;
 static int64_t nBlocksTotal = 0;
-
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins.
  *  Validity checks that depend on the UTXO set are also done; ConnectBlock()
  *  can fail if those validity checks fail (among other reasons). */
@@ -2028,10 +2025,6 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     }
 
     bool bOverflow = false;
-    // SYSCOIN
-    if (!CheckSyscoinInputs(IsInitialBlockDownload(), *block.vtx[0], state, view, fJustCheck, bOverflow, pindex->nHeight, block))
-        return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());
-    
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint(BCLog::BENCH, "    - Fork checks: %.2fms [%.2fs (%.2fms/blk)]\n", MILLI * (nTime2 - nTime1), nTimeForks * MICRO, nTimeForks * MILLI / nBlocksTotal);
@@ -2046,6 +2039,14 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     int64_t nSigOpsCost = 0;
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
     std::vector<PrecomputedTransactionData> txdata;
+    // SYSCOIN
+    const bool & ibd = IsInitialBlockDownload();
+    AssetAllocationMap mapAssetAllocations;
+    AssetMap mapAssets;
+    EthereumMintTxVec vecMintKeys;
+    std::vector<COutPoint> vecLockedOutpoints;
+    std::vector<std::pair<uint256, uint256> > blockIndex; 
+    const uint256& blockHash = block.GetHash();
     txdata.reserve(block.vtx.size()); // Required so that pointers to individual PrecomputedTransactionData don't get invalidated
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
@@ -2117,6 +2118,13 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                     tx.GetHash().ToString(), FormatStateMessage(state));
             }
             control.Add(vChecks);
+            // SYSCOIN
+            if(!fJustCheck){
+                const uint256& txHash = tx.GetHash(); 
+                blockIndex.emplace_back(std::make_pair(txHash, blockHash));
+            } 
+            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bOverflow, pindex->nHeight, blockHash, false, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
+                return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
         }
 
         CTxUndo undoDummy;
@@ -2132,7 +2140,11 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         return state.Invalid(ValidationInvalidReason::CONSENSUS, error("%s: CheckQueue failed", __func__), REJECT_INVALID, "block-validation-failed");
      
     // SYSCOIN : MODIFIED TO CHECK MASTERNODE PAYMENTS AND SUPERBLOCKS
-
+    if(!fJustCheck && pblockindexdb){
+        if(!pblockindexdb->FlushWrite(blockIndex) || !passetallocationdb->Flush(mapAssetAllocations) || !passetdb->Flush(mapAssets) || !plockedoutpointsdb->FlushWrite(vecLockedOutpoints) || !pethereumtxmintdb->FlushWrite(vecMintKeys)){
+            return error("Error flushing to asset dbs");
+        } 
+    }  
     // It's possible that we simply don't have enough data and this could fail
     // (i.e. block itself could be a correct one and we need to store it),
     // that's why this is in ConnectBlock. Could be the other way around however -
