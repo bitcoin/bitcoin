@@ -1224,39 +1224,7 @@ static UniValue verifychain(const JSONRPCRequest& request)
     return CVerifyDB().VerifyDB(Params(), pcoinsTip.get(), nCheckLevel, nCheckDepth);
 }
 
-/** Implementation of IsSuperMajority with better feedback */
-static VersionBitsCache vbcache GUARDED_BY(cs_main);
-
-static UniValue SoftForkMajorityDesc(int version, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    UniValue rv(UniValue::VOBJ);
-    bool activated = false;
-    switch(version)
-    {
-        case 2:
-            activated = pindex->nHeight >= consensusParams.BIP34Height;
-            break;
-        case 3:
-            activated = DeploymentActive(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_STRICTDER, vbcache);
-            break;
-        case 4:
-            activated = DeploymentActive(pindex->pprev, consensusParams, Consensus::DEPLOYMENT_CLTV, vbcache);
-            break;
-    }
-    rv.pushKV("status", activated);
-    return rv;
-}
-
-static UniValue SoftForkDesc(const std::string &name, int version, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    UniValue rv(UniValue::VOBJ);
-    rv.pushKV("id", name);
-    rv.pushKV("version", version);
-    rv.pushKV("reject", SoftForkMajorityDesc(version, pindex, consensusParams));
-    return rv;
-}
-
-static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static UniValue SoftForkDesc(const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     UniValue rv(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
@@ -1271,8 +1239,14 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     {
         rv.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
-    rv.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
-    rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    if (consensusParams.vDeployments[id].nStartTime == Consensus::Deployment::ALWAYS_ACTIVE) {
+        rv.pushKV("alwaysActive", true);
+    } else if (consensusParams.vDeployments[id].nTimeout == Consensus::Deployment::FIXED_ACTIVATION_HEIGHT) {
+        rv.pushKV("fixedHeight", consensusParams.vDeployments[id].nStartTime);
+    } else {
+        rv.pushKV("startTime", consensusParams.vDeployments[id].nStartTime);
+        rv.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    }
     rv.pushKV("since", VersionBitsTipStateSinceHeight(consensusParams, id));
     if (ThresholdState::STARTED == thresholdState)
     {
@@ -1288,13 +1262,32 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     return rv;
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& bip9_softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
+static void BIP34DescPushBack(UniValue& softforks, const Consensus::Params& consensusParams)
+{
+    UniValue rv(UniValue::VOBJ);
+    bool active;
+    {
+        LOCK(cs_main);
+        active = ::ChainActive().Height() >= consensusParams.BIP34Height;
+    }
+    rv.pushKV("status", (active ? "active" : "defined"));
+    rv.pushKV("fixedHeight", consensusParams.BIP34Height);
+    rv.pushKV("since", (active ? consensusParams.BIP34Height : 0));
+    softforks.pushKV("bip34", rv);
+}
+
+static void SoftForkDescPushBack(UniValue& softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     // Deployments with timeout value of 0 (DISABLED) are hidden.
     // A timeout value of 0 guarantees a softfork will never be activated.
     // This is used when softfork codes are merged without specifying the deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout != Consensus::Deployment::DISABLED) {
-        bip9_softforks.pushKV(VersionBitsDeploymentInfo[id].name, BIP9SoftForkDesc(consensusParams, id));
+    // Further deployments with a timeout earlier than Jan 1 2009 are hidden;
+    // this is used for unit tests with the TESTDUMMY deployment.
+    // Note that a timeout of -1 indicates a fixed height deployment, so
+    // is allowed.
+    const int64_t timeout = consensusParams.vDeployments[id].nTimeout;
+    if (timeout < 0 || timeout >= 1230768000) {
+        softforks.pushKV(VersionBitsDeploymentInfo[id].name, SoftForkDesc(consensusParams, id));
     }
 }
 
@@ -1321,21 +1314,13 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  \"pruneheight\": xxxxxx,        (numeric) lowest-height complete block stored (only present if pruning is enabled)\n"
             "  \"automatic_pruning\": xx,      (boolean) whether automatic pruning is enabled (only present if pruning is enabled)\n"
             "  \"prune_target_size\": xxxxxx,  (numeric) the target size used by pruning (only present if automatic pruning is enabled)\n"
-            "  \"softforks\": [                (array) status of softforks in progress\n"
-            "     {\n"
-            "        \"id\": \"xxxx\",           (string) name of softfork\n"
-            "        \"version\": xx,          (numeric) block version\n"
-            "        \"reject\": {             (object) progress toward rejecting pre-softfork blocks\n"
-            "           \"status\": xx,        (boolean) true if threshold reached\n"
-            "        },\n"
-            "     }, ...\n"
-            "  ],\n"
-            "  \"bip9_softforks\": {           (object) status of BIP9 softforks in progress\n"
+            "  \"softforks\": {                (array) status of softforks\n"
             "     \"xxxx\" : {                 (string) name of the softfork\n"
             "        \"status\": \"xxxx\",       (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,              (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "        \"startTime\": xx,        (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
-            "        \"timeout\": xx,          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+            "        \"startTime\": xx,        (numeric) the minimum median time past of a block at which the bit gains its meaning (only for bip9 deployments)\n"
+            "        \"timeout\": xx,          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in (only for bip9 deployments)\n"
+            "        \"fixedHeight\": xx,      (numeric) the fixed activation height of the soft fork (only for buried deployments)\n"
             "        \"since\": xx,            (numeric) height of the first block to which the status applies\n"
             "        \"statistics\": {         (object) numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)\n"
             "           \"period\": xx,        (numeric) the length in blocks of the BIP9 signalling period \n"
@@ -1388,16 +1373,12 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    UniValue softforks(UniValue::VARR);
-    UniValue bip9_softforks(UniValue::VOBJ);
-    softforks.push_back(SoftForkDesc("bip34", 2, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
-    softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
-    for (int pos = Consensus::DEPLOYMENT_CSV; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
-        BIP9SoftForkDescPushBack(bip9_softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
+    UniValue softforks(UniValue::VOBJ);
+    BIP34DescPushBack(softforks, consensusParams);
+    for (int pos = 0; pos != Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++pos) {
+        SoftForkDescPushBack(softforks, consensusParams, static_cast<Consensus::DeploymentPos>(pos));
     }
-    obj.pushKV("softforks",             softforks);
-    obj.pushKV("bip9_softforks", bip9_softforks);
+    obj.pushKV("softforks", softforks);
 
     obj.pushKV("warnings", GetWarnings("statusbar"));
     return obj;
