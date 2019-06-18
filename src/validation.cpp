@@ -553,7 +553,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                     // unconfirmed ancestors anyway; doing otherwise is hopelessly
                     // insecure.
                     bool fReplacementOptOut = true;
-                    if (fEnableReplacement && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+                    // SYSCOIN asset allocation transactions should use CPFP not RBF
+                    if (fEnableReplacement && !IsAssetAllocationTx(tx.nVersion) && !IsAssetAllocationTx(ptxConflicting->nVersion))
                     {
                         for (const CTxIn &_txin : ptxConflicting->vin)
                         {
@@ -572,7 +573,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             }
         }
     }
-
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
@@ -586,11 +586,10 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             if (!pcoinsTip->HaveCoinInCache(txin.prevout)) {
                 coins_to_uncache.push_back(txin.prevout);
             }
-
             // Note: this call may add txin.prevout to the coins cache
             // (pcoinsTip.cacheCoins) by way of FetchCoin(). It should be removed
             // later (via coins_to_uncache) if this tx turns out to be invalid.
-            if (!view.HaveCoin(txin.prevout)) {
+           if (!view.HaveCoin(txin.prevout)) {
                 // Are inputs missing because we already have the tx?
                 for (size_t out = 0; out < tx.vout.size(); out++) {
                     // Optimistically just do efficient check of cache for outputs
@@ -639,6 +638,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         CAmount nModifiedFees = nFees;
         pool.ApplyDelta(hash, nModifiedFees);
 
+        // SYSCOIN
         // Keep track of transactions that spend a coinbase, which we re-scan
         // during reorgs to ensure COINBASE_MATURITY is still met.
         bool fSpendsCoinbase = false;
@@ -914,7 +914,22 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
 
                 if (isCheckPassing)
                 {
-                    CCoinsViewCache coinsViewCache(pcoinsTip.get()); 
+                    CCoinsView dummy;
+                    CCoinsViewCache view(&dummy);
+                    {
+                        LOCK2(cs_main, mempool.cs);
+                        CCoinsViewMemPool viewMemPool(pcoinsTip.get(), pool);
+                        view.SetBackend(viewMemPool);
+
+                        // do all inputs exist?
+                        for (const CTxIn &txin : txIn.vin) {
+                            view.AccessCoin(txin.prevout);
+                        }
+                    }
+                    // Bring the best block into scope
+                    view.GetBestBlock();
+                    // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+                    view.SetBackend(dummy);
                     CValidationState validationState;
                     int64_t syscoinCheckTime;
                     if (fLogThreadpool) {
@@ -922,7 +937,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         thisSyscoinCheckCount += 1;
                     }
                     {
-                        if (!CheckSyscoinInputs(txIn, validationState, coinsViewCache, true, ::ChainActive().Height()))
+                        if (!CheckSyscoinInputs(txIn, validationState, view, true, ::ChainActive().Height()))
                         {
                             nLastMultithreadMempoolFailure = GetTime();
                             LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error", hash.ToString());
@@ -1021,6 +1036,8 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
     }
     else if(!fConcurrentProcessing || test_accept || tx->nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
         bMultiThreaded = false;
+    if(fTPSTest && !test_accept && tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+        bMultiThreaded = true;
     std::vector<COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bMultiThreaded, bSanityCheck);
     if (!res) {

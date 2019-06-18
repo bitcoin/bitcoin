@@ -862,17 +862,16 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     }
 	#ifdef ENABLE_WALLET
     UniValue jsonObj(UniValue::VOBJ);
-    LogPrintf("check is sys tx\n");
-    if(SysTxToJSON(*tx, jsonObj)){
-        const std::string &sender = find_value(jsonObj, "sender").get_str();
-        LogPrintf("try to find %s in mtx size %d\n", sender, tx.get()->vout.size());
-        for(unsigned int i = 0;i<tx.get()->vout.size();i++){
-            CTxDestination dest ;
-            if(ExtractDestination(tx.get()->vout[i].scriptPubKey, dest)){
-                LogPrintf("found dest %s\n", EncodeDestination(dest));
-                if(EncodeDestination(dest) == sender){
-                    LogPrintf("emplacing\n");
-                    mapSenderTXIDs[sender] = COutPoint(txid, i);
+    if(DecodeSyscoinRawtransaction(*tx, jsonObj)){
+        const UniValue &senderObj = find_value(jsonObj, "sender");
+        if(senderObj.isStr()){
+            const std::string &sender = senderObj.get_str();
+            for(unsigned int i = 0;i<tx.get()->vout.size();i++){
+                CTxDestination dest ;
+                if(ExtractDestination(tx.get()->vout[i].scriptPubKey, dest)){
+                    if(EncodeDestination(dest) == sender){
+                        mapSenderTXIDs[sender] = COutPoint(txid, i);
+                    }
                 }
             }
         }

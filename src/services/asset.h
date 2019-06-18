@@ -19,7 +19,6 @@
 class CTransaction;
 class CCoinsViewCache;
 class COutPoint;
-class CTxIn;
 #ifdef ENABLE_WALLET
 class CWallet;
 #endif
@@ -41,7 +40,7 @@ static const uint64_t ONE_YEAR_IN_SECONDS = 31536000;
 static const uint32_t MAX_ETHEREUM_TX_ROOTS = 40000;
 static const uint32_t ETHEREUM_CONFIRMS_REQUIRED = 240;
 static CCriticalSection cs_ethsyncheight;
-static CTxIn emptyIn;
+static COutPoint emptyPoint;
 std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
