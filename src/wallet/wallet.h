@@ -1128,6 +1128,7 @@ public:
     std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
 
     bool GetNewDestination(const OutputType type, const std::string label, CTxDestination& dest, std::string& error);
+    bool GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error);
 
     isminetype IsMine(const CTxIn& txin) const;
     /**
