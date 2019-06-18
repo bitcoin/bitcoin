@@ -17,7 +17,6 @@
 #include <condition_variable>
 
 #include <unordered_set>
-#include <memory>
 #include <random.h>
 
 // BasicTestingSetup not sufficient because nScriptCheckThreads is not set

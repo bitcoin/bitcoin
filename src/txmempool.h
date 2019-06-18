@@ -6,7 +6,6 @@
 #ifndef BITCOIN_TXMEMPOOL_H
 #define BITCOIN_TXMEMPOOL_H
 
-#include <memory>
 #include <set>
 #include <map>
 #include <vector>

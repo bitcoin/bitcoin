@@ -32,7 +32,7 @@
 
 #include <algorithm>
 #include <assert.h>
-#include <future>
+#include <thread>
 
 #include <boost/algorithm/string/replace.hpp>
 

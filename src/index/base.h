@@ -12,6 +12,8 @@
 #include <uint256.h>
 #include <validationinterface.h>
 
+#include <thread>
+
 class CBlockIndex;
 
 /**

@@ -6,8 +6,6 @@
 #define BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H
 
 #include <validationinterface.h>
-#include <string>
-#include <map>
 #include <list>
 
 class CBlockIndex;

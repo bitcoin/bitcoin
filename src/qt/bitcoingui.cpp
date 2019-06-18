@@ -36,9 +36,6 @@
 #include <ui_interface.h>
 #include <util/system.h>
 
-#include <iostream>
-#include <memory>
-
 #include <QAction>
 #include <QApplication>
 #include <QComboBox>

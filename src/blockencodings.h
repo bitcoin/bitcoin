@@ -7,8 +7,6 @@
 
 #include <primitives/block.h>
 
-#include <memory>
-
 class CTxMemPool;
 
 // Dumb helper to handle CTransaction compression at serialize-time

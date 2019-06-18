@@ -37,8 +37,6 @@
 
 #include <univalue.h>
 
-#include <functional>
-
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)

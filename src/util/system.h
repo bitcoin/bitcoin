@@ -25,13 +25,11 @@
 #include <util/memory.h>
 #include <util/time.h>
 
-#include <atomic>
 #include <exception>
 #include <map>
 #include <set>
 #include <stdint.h>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 

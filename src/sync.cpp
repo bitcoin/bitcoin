@@ -16,7 +16,6 @@
 #include <stdio.h>
 
 #include <map>
-#include <memory>
 #include <set>
 
 #ifdef DEBUG_LOCKCONTENTION

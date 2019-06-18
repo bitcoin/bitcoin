@@ -9,7 +9,6 @@
 #include <threadsafety.h>
 
 #include <condition_variable>
-#include <thread>
 #include <mutex>
 
 

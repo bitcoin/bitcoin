@@ -13,6 +13,7 @@
 #include <test/setup_common.h>
 
 #include <stdint.h>
+#include <thread>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>

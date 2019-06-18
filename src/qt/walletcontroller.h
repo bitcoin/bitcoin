@@ -8,7 +8,6 @@
 #include <qt/walletmodel.h>
 #include <sync.h>
 
-#include <list>
 #include <memory>
 #include <vector>
 

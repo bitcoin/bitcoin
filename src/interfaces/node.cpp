@@ -35,7 +35,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <atomic>
 #include <univalue.h>
 
 class CWallet;

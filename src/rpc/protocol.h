@@ -8,8 +8,6 @@
 
 #include <fs.h>
 
-#include <list>
-#include <map>
 #include <stdint.h>
 #include <string>
 

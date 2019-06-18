@@ -10,7 +10,6 @@
 #include <script/standard.h>
 #include <util/system.h>
 
-#include <string>
 #include <vector>
 
 int CCrypter::BytesToKeySHA512AES(const std::vector<unsigned char>& chSalt, const SecureString& strKeyData, int count, unsigned char *key,unsigned char *iv) const

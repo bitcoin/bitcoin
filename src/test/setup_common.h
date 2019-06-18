@@ -14,7 +14,6 @@
 #include <txdb.h>
 #include <txmempool.h>
 
-#include <memory>
 #include <type_traits>
 
 #include <boost/thread.hpp>

@@ -20,8 +20,6 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include <algorithm>
-#include <memory>
 #include <vector>
 
 #include <test/fuzz/fuzz.h>

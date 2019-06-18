@@ -32,7 +32,6 @@
 #include <validationinterface.h>
 
 
-#include <numeric>
 #include <stdint.h>
 
 #include <univalue.h>
