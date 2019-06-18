@@ -36,11 +36,19 @@ struct Deployment {
     /** Constant for nTimeout very far in the future. */
     static constexpr int64_t NO_TIMEOUT = std::numeric_limits<int64_t>::max();
 
+    /** Constant for nTimeout indicating nStartTime is a fixed block height where activation begins. */
+    static constexpr int64_t FIXED_ACTIVATION_HEIGHT = -1;
+
     /** Special value for nStartTime indicating that the deployment is always active.
      *  This is useful for testing, as it means tests don't need to deal with the activation
      *  process (which takes at least 3 BIP9 intervals). Only tests that specifically test the
      *  behaviour during activation cannot use this. */
     static constexpr int64_t ALWAYS_ACTIVE = -1;
+
+    /** Special value for nTimeout indicating that the deployment is never active.
+     *  This is useful for integrating code changes or activation on regtest/testnet
+     *  before the deployment parameters for mainnet are set. */
+    static constexpr int64_t DISABLED = 0;
 };
 
 /**
