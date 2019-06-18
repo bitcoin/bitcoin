@@ -430,7 +430,7 @@ public:
     CAmount getAvailableBalance(const CCoinControl& coin_control) override
     {
         if (coin_control.IsUsingCoinJoin()) {
-            return m_wallet->GetBalance(0, false, &coin_control).m_anonymized;
+            return m_wallet->GetBalance(0, coin_control.m_avoid_address_reuse, false, &coin_control).m_anonymized;
         } else {
             return m_wallet->GetAvailableBalance(&coin_control);
         }
