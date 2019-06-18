@@ -812,7 +812,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
 			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
-			vecLockedOutpoints.emplace_back(emptyIn.prevout);
+			vecLockedOutpoints.emplace_back(emptyPoint);
 			storedSenderAllocationRef.lockedOutpoint.SetNull();
 		}
         // check balance is sufficient on sender

@@ -200,6 +200,14 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
                 continue;
             }
         }
+        if(fTPSTest && fTPSTestEnabled){
+            if(std::find(savedtxins.begin(), savedtxins.end(), vin) == savedtxins.end())
+                savedtxins.push_back(vin);
+            else{
+                LogPrint(BCLog::SYS, "Skipping saved output in syscointxfund...\n");
+                continue;
+            }
+        }
         tx.vin.push_back(vin);
         int numSigs = 0;
         CCountSigsVisitor(*pwallet, numSigs).Process(coin.out.scriptPubKey);

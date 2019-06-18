@@ -752,7 +752,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag1)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
-    BOOST_CHECK(r.write().size() < 32);
     
     MilliSleep(1000);
 
@@ -984,7 +983,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node2", "sendrawtransaction " + burnHex, true, false));
     BOOST_CHECK_NO_THROW(r = CallRPC("node3", "sendrawtransaction " + assetHex, true, false));
-    BOOST_CHECK_NO_THROW(CallExtRPC("node1", "tpstestsetenabled", "false"));
+    
     MilliSleep(1500);
     AssetAllocationTransfer(true, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
     MilliSleep(1000);
@@ -1021,6 +1020,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + assetguid + " " + useraddress2 + " ''"));
     BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_NOT_FOUND);
+    BOOST_CHECK_NO_THROW(CallExtRPC("node1", "tpstestsetenabled", "false"));
 }
 BOOST_AUTO_TEST_CASE(generate_bad_assetmaxsupply_address)
 {
