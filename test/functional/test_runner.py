@@ -120,6 +120,7 @@ BASE_SCRIPTS = [
     'rpc_misc.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
+    'wallet_avoidreuse.py',
     'mempool_reorg.py',
     'mempool_persist.py',
     'wallet_multiwallet.py',
