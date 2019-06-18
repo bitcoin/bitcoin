@@ -155,6 +155,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     static std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> quorumsCached;
     static std::map<Consensus::LLMQType, std::vector<uint256>> qcHashesCached;
 
+    // The returned quorums are in reversed order, so the most recent one is at index 0
     auto quorums = llmq::quorumBlockProcessor->GetMinedAndActiveCommitmentsUntilBlock(pindexPrev);
     std::map<Consensus::LLMQType, std::vector<uint256>> qcHashes;
     size_t hashCount = 0;
@@ -201,6 +202,9 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             const auto& params = Params().GetConsensus().llmqs.at((Consensus::LLMQType)qc.commitment.llmqType);
             auto& v = qcHashes[params.type];
             if (v.size() == params.signingActiveQuorumCount) {
+                // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock
+                // returned quorums in reversed order. This pop and later push can only work ONCE, but we rely on the
+                // fact that a block can only contain a single commitment for one LLMQ type
                 v.pop_back();
             }
             v.emplace_back(qcHash);
