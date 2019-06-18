@@ -39,7 +39,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if (IsSessionReady()) {
             // too many users in this session already, reject new ones
             LogPrintf("DSACCEPT -- queue is already full!\n");
-            PushStatus(pfrom, STATUS_ACCEPTED, ERR_QUEUE_FULL, connman);
+            PushStatus(pfrom, STATUS_REJECTED, ERR_QUEUE_FULL, connman);
             return;
         }
 
