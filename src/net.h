@@ -87,8 +87,9 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
 /** peercoin: Number of consecutive PoS headers are allowed from a single peer. Used to prevent out of memory attack. */
-static const unsigned int MAX_CONSECUTIVE_POS_HEADERS = 1000;
-// const unsigned int POW_HEADER_COOLING - defined in protocol.cpp, so that it is visible to other files
+static const int32_t MAX_CONSECUTIVE_POS_HEADERS = 1000;
+
+// const unsigned int POW_HEADER_COOLING = 70;  - defined in protocol.cpp, so that it is visible to other files
 
 typedef int64_t NodeId;
 
@@ -519,6 +520,7 @@ struct LocalServiceInfo {
 
 extern CCriticalSection cs_mapLocalHost;
 extern std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
+extern std::map<CNetAddr, int32_t> mapPoSTemperature;
 typedef std::map<std::string, uint64_t> mapMsgCmdSize; //command, total bytes
 
 class CNodeStats
@@ -723,8 +725,6 @@ public:
     CCriticalSection cs_feeFilter;
     CAmount lastSentFeeFilter;
     int64_t nextSendTimeFeeFilter;
-    // peercoin: temperature to measure how many PoS headers have been sent by this client
-    uint32_t nPoSTemperature;
     // peercoin: used to detect branch switches
     uint256 lastAcceptedHeader;
 

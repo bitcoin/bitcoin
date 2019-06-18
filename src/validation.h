@@ -239,7 +239,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
  * @param[out] ppindex If set, the pointer will be set to point to the last new block index object for the given headers
  * @param[out] first_invalid First header that fails validation, if one exists
  */
-bool ProcessNewBlockHeaders(uint32_t& nPoSTemperature, const uint256& lastAcceptedHeader, const std::vector<CBlockHeader>& block, bool fOldClient, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex=nullptr, CBlockHeader *first_invalid=nullptr);
+bool ProcessNewBlockHeaders(int32_t& nPoSTemperature, const uint256& lastAcceptedHeader, const std::vector<CBlockHeader>& block, bool fOldClient, CValidationState& state, const CChainParams& chainparams, const CBlockIndex** ppindex=nullptr, CBlockHeader *first_invalid=nullptr);
 
 /** Check whether enough disk space is available for an incoming block */
 bool CheckDiskSpace(uint64_t nAdditionalBytes = 0);
