@@ -4932,3 +4932,36 @@ bool CWallet::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<uns
     ImplicitlyLearnRelatedKeyScripts(vchPubKey);
     return true;
 }
+
+LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
+{
+    // Legacy wallets only have one ScriptPubKeyMan which is a LegacyScriptPubKeyMan.
+    // Everything in m_internal_spk_managers and m_external_spk_managers point to the same legacyScriptPubKeyMan.
+    return dynamic_cast<LegacyScriptPubKeyMan*>(m_internal_spk_managers.at(OutputType::LEGACY));
+}
+
+LegacyScriptPubKeyMan* CWallet::GetOrCreateLegacyScriptPubKeyMan()
+{
+    SetupLegacyScriptPubKeyMan();
+    return GetLegacyScriptPubKeyMan();
+}
+
+void CWallet::SetupLegacyScriptPubKeyMan()
+{
+    if (m_internal_spk_managers.empty() && m_external_spk_managers.empty() && m_spk_managers.empty()) {
+        auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new LegacyScriptPubKeyMan());
+        for (const auto& type : OUTPUT_TYPES) {
+            m_internal_spk_managers[type] = spk_manager.get();
+            m_external_spk_managers[type] = spk_manager.get();
+        }
+        m_spk_managers[spk_manager->GetID()] = std::move(spk_manager);
+    }
+    // These all need to exist and be the same
+    assert(m_internal_spk_managers.count(OutputType::LEGACY) > 0);
+    ScriptPubKeyMan* spk_man = m_internal_spk_managers.at(OutputType::LEGACY);
+    for (const auto& type : OUTPUT_TYPES) {
+        assert(m_internal_spk_managers.at(type) == spk_man);
+        assert(m_external_spk_managers.at(type) == spk_man);
+    }
+    assert(m_spk_managers.size() == 1);
+}
