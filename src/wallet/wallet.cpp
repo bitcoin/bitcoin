@@ -3531,6 +3531,23 @@ bool CWallet::GetNewDestination(const OutputType type, const std::string label, 
     return true;
 }
 
+bool CWallet::GetNewChangeDestination(const OutputType type, CTxDestination& dest, std::string& error)
+{
+    error.clear();
+    if (!IsLocked()) {
+        TopUpKeyPool();
+    }
+
+    ReserveDestination reservedest(this);
+    if (!reservedest.GetReservedDestination(type, dest, true)) {
+        error = "Error: Keypool ran out, please call keypoolrefill first";
+        return false;
+    }
+
+    reservedest.KeepDestination();
+    return true;
+}
+
 static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
     if (setKeyPool.empty()) {
         return GetTime();
