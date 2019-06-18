@@ -38,6 +38,9 @@
 #include <univalue.h>
 // SYSCOIN
 #include <services/assetconsensus.h>
+#ifdef ENABLE_WALLET
+extern std::map<std::string, COutPoint> mapSenderTXIDs;
+#endif
 /** High fee for sendrawtransaction and testmempoolaccept.
  * By default, transaction with a fee higher than this will be rejected by the
  * RPCs. This can be overridden with the maxfeerate argument.
@@ -850,14 +853,31 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
 	CValidationState state;
 	if (!CheckSyscoinLockedOutpoints(tx, state))
 		throw JSONRPCTransactionError(TransactionError::MISSING_INPUTS, state.GetRejectReason());
-	
+
 	uint256 txid;
     std::string err_string;
     const TransactionError err = BroadcastTransaction(tx, txid, err_string, max_raw_tx_fee);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
-
+	#ifdef ENABLE_WALLET
+    UniValue jsonObj(UniValue::VOBJ);
+    LogPrintf("check is sys tx\n");
+    if(SysTxToJSON(*tx, jsonObj)){
+        const std::string &sender = find_value(jsonObj, "sender").get_str();
+        LogPrintf("try to find %s in mtx size %d\n", sender, tx.get()->vout.size());
+        for(unsigned int i = 0;i<tx.get()->vout.size();i++){
+            CTxDestination dest ;
+            if(ExtractDestination(tx.get()->vout[i].scriptPubKey, dest)){
+                LogPrintf("found dest %s\n", EncodeDestination(dest));
+                if(EncodeDestination(dest) == sender){
+                    LogPrintf("emplacing\n");
+                    mapSenderTXIDs[sender] = COutPoint(txid, i);
+                }
+            }
+        }
+    }
+    #endif
     return txid.GetHex();
 }
 
