@@ -7,27 +7,27 @@
 #include "masternode-budget.h"
 #include "masternodeman.h"
 
-std::ostream& operator<<(std::ostream& os, uint256 value)
+static std::ostream& operator<<(std::ostream& os, uint256 value)
 {
     return os << value.ToString();
 }
 
-std::ostream& operator<<(std::ostream& os, const CTxIn& value)
+static std::ostream& operator<<(std::ostream& os, const CTxIn& value)
 {
     return os << value.ToString();
 }
 
-std::ostream& operator<<(std::ostream& os, const CTxOut& value)
+static std::ostream& operator<<(std::ostream& os, const CTxOut& value)
 {
     return os << value.ToString();
 }
 
-std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
+static std::ostream& operator<<(std::ostream& os, const CTxBudgetPayment& value)
 {
     return os << "{" << value.nProposalHash.ToString() << ":" << value.nAmount << "@" << value.payee.ToString() << "}";
 }
 
-std::ostream& operator<<(std::ostream& os, const CBudgetProposal& value)
+static std::ostream& operator<<(std::ostream& os, const CBudgetProposal& value)
 {
     return os << "{"
         << value.GetName() << ", "

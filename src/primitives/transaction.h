@@ -11,6 +11,26 @@
 #include "serialize.h"
 #include "uint256.h"
 
+/** Transaction types */
+enum TxType : int16_t
+{
+    TRANSACTION_NORMAL = 0,
+    TRANSACTION_GOVERNANCE_VOTE = 1000,
+
+    TRANSACTION_NF_TOKEN_REGISTER = 1100,
+    //TRANSACTION_NF_TOKEN_TRANSFER = 1111,
+    //TRANSACTION_NF_TOKEN_METADATA_TRANSFER = 1112,
+    //TRANSACTION_NF_TOKEN_LEND = 1113,
+    //TRANSACTION_NF_TOKEN_ID_UPDATE = 1114,
+    //TRANSACTION_NF_TOKEN_METADATA_UPDATE = 1115,
+    //TRANSACTION_NF_TOKEN_DESTROY = 1116
+
+    TRANSACTION_NF_TOKEN_PROTOCOL_REGISTER = 1200
+    //TRANSACTION_NF_TOKEN_PROTOCOL_TRANSFER = 1201,
+    //TRANSACTION_NF_TOKEN_PROTOCOL_UPDATE = 1202,
+    //TRANSACTION_NF_TOKEN_PROTOCOL_REVOKE = 1203
+};
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -141,17 +161,25 @@ public:
 
     uint256 GetHash() const;
 
-    bool IsDust(CFeeRate minRelayTxFee) const
+    CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
-        // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units cSats-per-kilobyte.
+        // "Dust" is defined in terms of CTransaction::minRelayTxFee, which has units duffs-per-kilobyte.
         // If you'd pay more than 1/3 in fees to spend something, then we consider it dust.
-        // A typical txout is 34 bytes big, and will need a CTxIn of at least 148 bytes to spend
-        // i.e. total is 148 + 32 = 182 bytes. Default -minrelaytxfee is 10000 cSats per kB
-        // and that means that fee per txout is 182 * 10000 / 1000 = 1820 cSats.
-        // So dust is a txout less than 1820 *3 = 5460 cSats
-        // with default -minrelaytxfee = minRelayTxFee = 10000 cSats per kB.
-        size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
-        return (nValue < 3*minRelayTxFee.GetFee(nSize));
+        // A typical spendable txout is 34 bytes big, and will need a CTxIn of at least 148 bytes to spend
+        // i.e. total is 148 + 32 = 182 bytes. Default -minrelaytxfee is 1000 duffs per kB
+        // and that means that fee per spendable txout is 182 * 1000 / 1000 = 182 duffs.
+        // So dust is a spendable txout less than 546 * minRelayTxFee / 1000 (in duffs)
+        // i.e. 182 * 3 = 546 duffs with default -minrelaytxfee = minRelayTxFee = 1000 duffs per kB.
+        if (scriptPubKey.IsUnspendable())
+            return 0;
+
+        size_t nSize = GetSerializeSize(SER_DISK, 0) + 148u;
+        return 3*minRelayTxFee.GetFee(nSize);
+    }
+
+    bool IsDust(const CFeeRate &minRelayTxFee) const
+    {
+        return (nValue < GetDustThreshold(minRelayTxFee));
     }
 
     friend bool operator==(const CTxOut& a, const CTxOut& b)
@@ -183,16 +211,19 @@ private:
 
 public:
     static const int32_t CURRENT_VERSION=1;
+    static const int32_t MAX_STANDARD_VERSION=2;
 
     // The local variables are made const to prevent unintended modification
     // without updating the cached hash value. However, CTransaction is not
     // actually immutable; deserialization and assignment are implemented,
     // and bypass the constness. This is safe, as they update the entire
     // structure, including the hash.
-    const int32_t nVersion;
+    const int16_t nVersion;
+    const int16_t nType;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
     const uint32_t nLockTime;
+    const std::vector<uint8_t> extraPayload; // only available for special transaction types
 
     /** Construct a CTransaction that qualifies as IsNull() */
     CTransaction();
@@ -206,11 +237,18 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*const_cast<int32_t*>(&this->nVersion));
-        nVersion = this->nVersion;
+        int32_t n32bitVersion = this->nVersion | (this->nType << 16);
+        READWRITE(n32bitVersion);
+        if (ser_action.ForRead()) {
+            *const_cast<int16_t*>(&this->nVersion) = (int16_t) (n32bitVersion & 0xffff);
+            *const_cast<int16_t*>(&this->nType) = (int16_t) ((n32bitVersion >> 16) & 0xffff);
+        }
         READWRITE(*const_cast<std::vector<CTxIn>*>(&vin));
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
+        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL) {
+            READWRITE(*const_cast<std::vector<uint8_t>*>(&extraPayload));
+        }
         if (ser_action.ForRead())
             UpdateHash();
     }
@@ -254,10 +292,12 @@ public:
 /** A mutable version of CTransaction. */
 struct CMutableTransaction
 {
-    int32_t nVersion;
+    int16_t nVersion;
+    int16_t nType;
     std::vector<CTxIn> vin;
     std::vector<CTxOut> vout;
     uint32_t nLockTime;
+    std::vector<uint8_t> extraPayload; // only available for special transaction types
 
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
@@ -266,11 +306,18 @@ struct CMutableTransaction
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
+        int32_t n32bitVersion = this->nVersion | (this->nType << 16);
+        READWRITE(n32bitVersion);
+        if (ser_action.ForRead()) {
+            *const_cast<int16_t*>(&this->nVersion) = (int16_t) (n32bitVersion & 0xffff);
+            *const_cast<int16_t*>(&this->nType) = (int16_t) ((n32bitVersion >> 16) & 0xffff);
+        }
         READWRITE(vin);
         READWRITE(vout);
         READWRITE(nLockTime);
+        if (this->nVersion >= 3 && this->nType != TRANSACTION_NORMAL) {
+            READWRITE(extraPayload);
+        }
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the
