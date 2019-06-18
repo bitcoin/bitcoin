@@ -26,6 +26,7 @@ extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const
 extern bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 extern CAmount AssetAmountFromValue(UniValue& value, int precision);
 extern UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
+std::map<std::string, COutPoint> mapSenderTXIDs;
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(const JSONRPCRequest& request);
@@ -35,7 +36,7 @@ void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient)
     recipient = recp;
 }
 
-UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, const vector<CRecipient> &vecSend, const COutPoint& outpoint=emptyOutPoint) {
+UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, const string &vchWitness, const vector<CRecipient> &vecSend) {
     CMutableTransaction txNew;
     if(nVersion > 0)
         txNew.nVersion = nVersion;
@@ -53,31 +54,6 @@ UniValue syscointxfund_helper(const string& strAddress, const int &nVersion, con
         Coin pcoinW;
         if (GetUTXOCoin(witnessOutpoint, pcoinW))
             txNew.vin.push_back(CTxIn(witnessOutpoint, pcoinW.out.scriptPubKey));
-    }
-    addressunspent(strAddress, addressOutpoint);
-
-    if (!outpoint.IsNull())
-        addressOutpoint = outpoint;
-
-    if (addressOutpoint.IsNull() || !IsOutpointMature(addressOutpoint))
-    {
-        throw runtime_error("SYSCOIN_RPC_ERROR ERRCODE: 9000 - " + _("Not enough outputs found for address: ") + strAddress);
-    }
-    Coin pcoin;
-    if (GetUTXOCoin(addressOutpoint, pcoin)){
-        CTxIn txIn(addressOutpoint, pcoin.out.scriptPubKey);
-        // hack for double spend zdag4 test so we can spend multiple inputs of an address within a block and get different inputs every time we call this function
-        if(fTPSTest && fTPSTestEnabled){
-            if(std::find(savedtxins.begin(), savedtxins.end(), txIn) == savedtxins.end()){
-                savedtxins.push_back(txIn);
-                txNew.vin.push_back(txIn);
-            }   
-            else{
-                LogPrint(BCLog::SYS, "Skipping saved output in syscointxfund_helper...\n");
-            }
-        }
-        else
-            txNew.vin.push_back(txIn);
     }
         
     // vouts to the payees
@@ -181,20 +157,41 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
     addressArray.push_back("addr(" + strAddress + ")"); 
     
     
-    
-    LOCK(cs_main);
-    CCoinsViewCache view(pcoinsTip.get());
-   
+   // Fetch previous transactions (inputs):
+    CCoinsView viewDummy;
+    CCoinsViewCache view(&viewDummy);
+    COutPoint outPointLastSender;
+    auto itSender = mapSenderTXIDs.find(strAddress);
+    if(itSender != mapSenderTXIDs.end())
+        outPointLastSender = itSender->second;
+    {
+        LOCK(cs_main);
+        LOCK(mempool.cs);
+        CCoinsViewCache &viewChain = *pcoinsTip;
+        CCoinsViewMemPool viewMempool(&viewChain, mempool);
+        view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
+        for (const CTxIn& txin : txIn.vin) {
+            view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
+        }
+        view.AccessCoin(outPointLastSender); // try to get last sender txid
+        view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+    }
     FeeCalculation fee_calc;
     CCoinControl coin_control;
     tx = txIn;
     tx.vin.clear();
+    LogPrintf("txfund outPointLastSender %s size map %d\n", outPointLastSender.ToString(), mapSenderTXIDs.size());
+    if(!outPointLastSender.IsNull()){
+        const Coin& coin = view.AccessCoin(outPointLastSender);
+        LogPrintf("txfund not spent\n");
+        txIn.vin.push_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
+    }
     // # vin (with IX)*FEE + # vout*FEE + (10 + # vin)*FEE + 34*FEE (for change output)
     CAmount nFees =  GetMinimumFee(*pwallet, 10+34, coin_control,  &fee_calc);
     for (auto& vin : txIn.vin) {
-        Coin coin;
-        if (!GetUTXOCoin(vin.prevout, coin))    
+        const Coin& coin = view.AccessCoin(vin.prevout);
+        if(coin.IsSpent())
             continue;
         {
             LOCK(pwallet->cs_wallet);
@@ -221,28 +218,26 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
         const unsigned int nBytes = ::GetSerializeSize(vout, PROTOCOL_VERSION);
         nFees += GetMinimumFee(*pwallet, nBytes, coin_control, &fee_calc);
     }
-
-    UniValue paramsBalance(UniValue::VARR);
-    paramsBalance.push_back("start");
-    paramsBalance.push_back(addressArray);
-    JSONRPCRequest request1;
-    request1.params = paramsBalance;
-
-    UniValue resUTXOs = scantxoutset(request1);
-    UniValue utxoArray(UniValue::VARR);
-    if (resUTXOs.isObject()) {
-        const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
-        if (!resUtxoUnspents.isArray())
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
-        utxoArray = resUtxoUnspents.get_array();
-    }
-    else
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No funds found in addresses provided"));
-
-   
     if (nCurrentAmount < (nDesiredAmount + nFees)) {
 
-        LOCK(mempool.cs);
+        UniValue paramsBalance(UniValue::VARR);
+        paramsBalance.push_back("start");
+        paramsBalance.push_back(addressArray);
+        JSONRPCRequest request1;
+        request1.params = paramsBalance;
+
+        UniValue resUTXOs = scantxoutset(request1);
+        UniValue utxoArray(UniValue::VARR);
+        if (resUTXOs.isObject()) {
+            const UniValue& resUtxoUnspents = find_value(resUTXOs.get_obj(), "unspents");
+            if (!resUtxoUnspents.isArray())
+                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No unspent outputs found in addresses provided"));
+            utxoArray = resUtxoUnspents.get_array();
+        }
+        else
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5501 - " + _("No funds found in addresses provided"));
+
+
         for (unsigned int i = 0; i < utxoArray.size(); i++)
         {
             const UniValue& utxoObj = utxoArray[i].get_obj();
@@ -256,9 +251,12 @@ UniValue syscointxfund(const JSONRPCRequest& request) {
             const COutPoint outPoint(txid, nOut);
             if (std::find(tx.vin.begin(), tx.vin.end(), txIn) != tx.vin.end())
                 continue;
-
-            if (mempool.mapNextTx.find(outPoint) != mempool.mapNextTx.end())
-                continue;
+            {
+                LOCK(cs_main);
+                LOCK(mempool.cs);
+                if (mempool.mapNextTx.find(outPoint) != mempool.mapNextTx.end())
+                    continue;
+            }
             {
                 LOCK(pwallet->cs_wallet);
                 if (pwallet->IsLockedCoin(txid, nOut))
@@ -921,7 +919,12 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
 	const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
-   
+    if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
+    if(!lockedOutpoint.IsNull()){
+        // this will let syscointxfund try to select this outpoint as the input
+        mapSenderTXIDs[strAddressFrom] = lockedOutpoint ;
+    }
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
     theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress); 
@@ -992,7 +995,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend, lockedOutpoint);
+	return syscointxfund_helper(strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
 }
 template <typename T>
 inline std::string int_to_hex(T val, size_t width=sizeof(T)*2)
@@ -1342,7 +1345,8 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
     const string& strAddressDest = EncodeDestination(address);
     if(strAddressFrom != strAddressDest)    
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
-    
+    // this will let syscointxfund try to select this outpoint as the input
+    mapSenderTXIDs[strAddressFrom] = theAssetAllocation.lockedOutpoint ;
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data);    
 	vector<CRecipient> vecSend;
@@ -1412,7 +1416,6 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} }, 
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
-    { "syscoinwallet",            "syscointxfund",                    &syscointxfund,                 {"hexstring","address","output_index"}},
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","public value","contract","supply","update_flags","witness"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address","witness"}},

@@ -311,7 +311,7 @@ bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const C
     bool bOverflow;
     return CheckSyscoinInputs(false, tx, state, inputs, fJustCheck, bOverflow, nHeight, uint256(), bSanity, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
 }
-bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, bool &bOverflow, int nHeight, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs,  bool fJustCheck, bool &bOverflow, int nHeight, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     if (nHeight == 0)
         nHeight = ::ChainActive().Height()+1;
@@ -812,7 +812,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
 		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
 			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
-			vecLockedOutpoints.emplace_back(std::move(emptyOutPoint));
+			vecLockedOutpoints.emplace_back(emptyIn.prevout);
 			storedSenderAllocationRef.lockedOutpoint.SetNull();
 		}
         // check balance is sufficient on sender
@@ -1499,7 +1499,6 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 	}
 	// ensure that the locked outpoint is being spent
 	else {
-
 		CAssetAllocation theAssetAllocation(myTx);
 		if (theAssetAllocation.assetAllocationTuple.IsNull()) {
             return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "invalid-allocation");
