@@ -22,7 +22,6 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_5_INSTANTSEND_MAX_VALUE,          1000),          // 1000 Dash
     MAKE_SPORK_DEF(SPORK_6_NEW_SIGS,                       4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_9_SUPERBLOCKS_ENABLED,            4070908800ULL), // OFF
-    MAKE_SPORK_DEF(SPORK_12_RECONSIDER_BLOCKS,             0),             // 0 BLOCKS
     MAKE_SPORK_DEF(SPORK_15_DETERMINISTIC_MNS_ENABLED,     4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_16_INSTANTSEND_AUTOLOCKS,         4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL), // OFF
@@ -184,12 +183,6 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         }
         spork.Relay(connman);
 
-        //does a task if needed
-        int64_t nActiveValue = 0;
-        if (SporkValueIsActive(spork.nSporkID, nActiveValue)) {
-            ExecuteSpork(spork.nSporkID, nActiveValue);
-        }
-
     } else if (strCommand == NetMsgType::GETSPORKS) {
         LOCK(cs); // make sure to not lock this together with cs_main
         for (const auto& pair : mapSporksActive) {
@@ -199,35 +192,6 @@ void CSporkManager::ProcessSpork(CNode* pfrom, const std::string& strCommand, CD
         }
     }
 
-}
-
-void CSporkManager::ExecuteSpork(SporkId nSporkID, int nValue)
-{
-    //correct fork via spork technology
-    if(nSporkID == SPORK_12_RECONSIDER_BLOCKS && nValue > 0) {
-        // allow to reprocess 24h of blocks max, which should be enough to resolve any issues
-        int64_t nMaxBlocks = 576;
-        // this potentially can be a heavy operation, so only allow this to be executed once per 10 minutes
-        int64_t nTimeout = 10 * 60;
-
-        static int64_t nTimeExecuted = 0; // i.e. it was never executed before
-
-        if(GetTime() - nTimeExecuted < nTimeout) {
-            LogPrint(BCLog::SPORK, "CSporkManager::ExecuteSpork -- ERROR: Trying to reconsider blocks, too soon - %d/%d\n", GetTime() - nTimeExecuted, nTimeout);
-            return;
-        }
-
-        if(nValue > nMaxBlocks) {
-            LogPrintf("CSporkManager::ExecuteSpork -- ERROR: Trying to reconsider too many blocks %d/%d\n", nValue, nMaxBlocks);
-            return;
-        }
-
-
-        LogPrintf("CSporkManager::ExecuteSpork -- Reconsider Last %d Blocks\n", nValue);
-
-        ReprocessBlocks(nValue);
-        nTimeExecuted = GetTime();
-    }
 }
 
 bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& connman)

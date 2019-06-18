@@ -26,7 +26,6 @@ enum SporkId : int32_t {
     SPORK_5_INSTANTSEND_MAX_VALUE                          = 10004,
     SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
-    SPORK_12_RECONSIDER_BLOCKS                             = 10011,
     SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,
     SPORK_16_INSTANTSEND_AUTOLOCKS                         = 10015,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
@@ -226,13 +225,6 @@ public:
      * performs any necessary processing.
      */
     void ProcessSpork(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-
-    /**
-     * ExecuteSpork is used to perform certain actions based on the spork value.
-     *
-     * Currently only used with Spork 12.
-     */
-    void ExecuteSpork(SporkId nSporkID, int nValue);
 
     /**
      * UpdateSpork is used by the spork RPC command to set a new spork value, sign

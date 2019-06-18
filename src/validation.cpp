@@ -105,7 +105,6 @@ CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 
 CBlockPolicyEstimator feeEstimator;
 CTxMemPool mempool(&feeEstimator);
-std::map<uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
 
@@ -2197,7 +2196,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                     // The node which relayed this should switch to correct chain.
                     // TODO: relay instantsend data/proof.
                     LOCK(cs_main);
-                    mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
                     return state.DoS(10, error("ConnectBlock(DASH): transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), hashLocked.ToString()),
                                      REJECT_INVALID, "conflict-tx-lock");
                 }
@@ -2213,7 +2211,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
                 // The node which relayed this should switch to correct chain.
                 // TODO: relay instantsend data/proof.
                 LOCK(cs_main);
-                mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
                 return state.DoS(10, error("ConnectBlock(DASH): transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), conflictLock->txid.ToString()),
                                  REJECT_INVALID, "conflict-tx-lock");
             }
@@ -2242,7 +2239,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     LogPrint(BCLog::BENCHMARK, "      - IsBlockValueValid: %.2fms [%.2fs]\n", 0.001 * (nTime5_3 - nTime5_2), nTimeValueValid * 0.000001);
 
     if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward)) {
-        mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
         return state.DoS(0, error("ConnectBlock(DASH): couldn't find masternode or superblock payments"),
                                 REJECT_INVALID, "bad-cb-payee");
     }
@@ -2696,49 +2692,6 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
 
     connectTrace.BlockConnected(pindexNew, std::move(pthisBlock));
     return true;
-}
-
-bool DisconnectBlocks(int blocks)
-{
-    LOCK(cs_main);
-
-    CValidationState state;
-    const CChainParams& chainparams = Params();
-
-    LogPrintf("DisconnectBlocks -- Got command to replay %d blocks\n", blocks);
-    for(int i = 0; i < blocks; i++) {
-        if(!DisconnectTip(state, chainparams) || !state.IsValid()) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-void ReprocessBlocks(int nBlocks)
-{
-    LOCK(cs_main);
-
-    std::map<uint256, int64_t>::iterator it = mapRejectedBlocks.begin();
-    while(it != mapRejectedBlocks.end()){
-        //use a window twice as large as is usual for the nBlocks we want to reset
-        if((*it).second  > GetTime() - (nBlocks*60*5)) {
-            BlockMap::iterator mi = mapBlockIndex.find((*it).first);
-            if (mi != mapBlockIndex.end() && (*mi).second) {
-
-                CBlockIndex* pindex = (*mi).second;
-                LogPrintf("ReprocessBlocks -- %s\n", (*it).first.ToString());
-
-                ResetBlockFailureFlags(pindex);
-            }
-        }
-        ++it;
-    }
-
-    DisconnectBlocks(nBlocks);
-
-    CValidationState state;
-    ActivateBestChain(state, Params());
 }
 
 /**

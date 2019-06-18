@@ -186,8 +186,6 @@ extern int64_t nMaxTipAge;
 extern bool fLargeWorkForkFound;
 extern bool fLargeWorkInvalidChainFound;
 
-extern std::map<uint256, int64_t> mapRejectedBlocks;
-
 extern std::atomic<bool> fDIP0001ActiveAtTip;
 
 /** Block hash whose ancestors we will assume to have valid scripts without checking them. */
@@ -454,10 +452,6 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 
 /** Functions for validating blocks and updating the block tree */
-
-/** Reprocess a number of blocks to try and get on the correct chain again **/
-bool DisconnectBlocks(int blocks);
-void ReprocessBlocks(int nBlocks);
 
 /** Context-independent validity checks */
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
