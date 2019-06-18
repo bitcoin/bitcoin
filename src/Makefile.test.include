@@ -385,19 +385,27 @@ univalue_test_object_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 endif
 
 %.cpp.test: %.cpp
-	@echo Running tests: $$(\
+	@ \
+	set -e ; \
+	TEST_TARGET=$$(\
 		cat $< | \
 		grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | \
-		cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1) \
-		from $<
-	$(AM_V_at)$(TEST_BINARY) \
-		--catch_system_errors=no -l test_suite -t "$$(\
-			cat $< | \
-			grep -E "(BOOST_FIXTURE_TEST_SUITE\\(|BOOST_AUTO_TEST_SUITE\\()" | \
-			cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1\
-		)" -- DEBUG_LOG_OUT > $(abs_builddir)/$$(\
-			echo $< | grep -E -o "(wallet/test/.*\.cpp|test/.*\.cpp)" | $(SED) -e s/\.cpp/.log/\
-		) 2>&1 || (cat $<.log && false)
+		cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1 \
+	) ; \
+	if $(TEST_BINARY) --list_content=HRF 2>&1 | \
+		grep -F -q -x "$${TEST_TARGET}*"; then \
+		echo Running tests: $$TEST_TARGET \
+		from $< ; \
+		$(TEST_BINARY) \
+			--catch_system_errors=no -l test_suite -t "$$TEST_TARGET" \
+			-- DEBUG_LOG_OUT > $(abs_builddir)/$$(\
+				echo $< | grep -E -o "(wallet/test/.*\.cpp|test/.*\.cpp)" | $(SED) -e s/\.cpp/.log/\
+			) 2>&1 || (cat $<.log && false) ; \
+	else \
+		echo Tests not built: $$TEST_TARGET \
+		from $< ; \
+		echo -n > $<.log ; \
+	fi
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
