@@ -61,8 +61,15 @@ class ConfArgsTest(BitcoinTestFramework):
         with open(inc_conf_file2_path, 'w', encoding='utf-8') as conf:
             conf.write('')  # clear
 
+    def test_log_buffer(self):
+        with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0']):
+            self.start_node(0, extra_args=['-noconnect=0'])
+        self.stop_node(0)
+
     def run_test(self):
         self.stop_node(0)
+
+        self.test_log_buffer()
 
         self.test_config_file_parser()
 
