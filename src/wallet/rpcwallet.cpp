@@ -245,11 +245,12 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
         }
     }
 
+    ReserveDestination reservedest(pwallet);
     CTxDestination dest;
-    std::string error;
-    if (!pwallet->GetNewChangeDestination(output_type, dest, error)) {
-        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, error);
-    }
+    if (!reservedest.GetReservedDestination(output_type, dest, true))
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+    reservedest.KeepDestination();
     return EncodeDestination(dest);
 }
 
