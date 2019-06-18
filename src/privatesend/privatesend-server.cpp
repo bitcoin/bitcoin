@@ -55,7 +55,7 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if (vecSessionCollaterals.size() == 0) {
+        if (vecSessionCollaterals.empty()) {
             {
                 TRY_LOCK(cs_vecqueue, lockRecv);
                 if (!lockRecv) return;
@@ -185,14 +185,14 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        //do we have the same denominations as the current session?
+        // do we have the same denominations as the current session?
         if (!IsOutputsCompatibleWithSessionDenom(entry.vecTxOut)) {
             LogPrintf("DSVIN -- not compatible with existing transactions!\n");
             PushStatus(pfrom, STATUS_REJECTED, ERR_EXISTING_TX, connman);
             return;
         }
 
-        //check it like a transaction
+        // check it like a transaction
         {
             CAmount nValueIn = 0;
             CAmount nValueOut = 0;
@@ -343,11 +343,12 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman& connman)
 
     // make our new transaction
     for (int i = 0; i < GetEntriesCount(); i++) {
-        for (const auto& txout : vecEntries[i].vecTxOut)
+        for (const auto& txout : vecEntries[i].vecTxOut) {
             txNew.vout.push_back(txout);
-
-        for (const auto& txdsin : vecEntries[i].vecTxDSIn)
+        }
+        for (const auto& txdsin : vecEntries[i].vecTxDSIn) {
             txNew.vin.push_back(txdsin);
+        }
     }
 
     sort(txNew.vin.begin(), txNew.vin.end(), CompareInputBIP69());
@@ -375,7 +376,7 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
         TRY_LOCK(cs_main, lockMain);
         CValidationState validationState;
         mempool.PrioritiseTransaction(hashTx, 0.1 * COIN);
-        if (!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, false, maxTxFee, true)) {
+        if (!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, nullptr, false, maxTxFee, true)) {
             LogPrintf("CPrivateSendServer::CommitFinalTransaction -- AcceptToMemoryPool() error: Transaction not valid\n");
             SetNull();
             // not much we can do in this case, just notify clients
@@ -433,9 +434,12 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
     if (nState == POOL_STATE_ACCEPTING_ENTRIES) {
         for (const auto& txCollateral : vecSessionCollaterals) {
             bool fFound = false;
-            for (const auto& entry : vecEntries)
-                if (*entry.txCollateral == *txCollateral)
+            for (const auto& entry : vecEntries) {
+                if (*entry.txCollateral == *txCollateral) {
                     fFound = true;
+                    break;
+                }
+            }
 
             // This queue entry didn't send us the promised transaction
             if (!fFound) {
@@ -584,9 +588,9 @@ bool CPrivateSendServer::IsInputScriptSigValid(const CTxIn& txin)
     CScript sigPubKey = CScript();
 
     for (const auto& entry : vecEntries) {
-        for (const auto& txout : entry.vecTxOut)
+        for (const auto& txout : entry.vecTxOut) {
             txNew.vout.push_back(txout);
-
+        }
         for (const auto& txdsin : entry.vecTxDSIn) {
             txNew.vin.push_back(txdsin);
 
@@ -702,9 +706,11 @@ bool CPrivateSendServer::AddScriptSig(const CTxIn& txinNew)
 // Check to make sure everything is signed
 bool CPrivateSendServer::IsSignaturesComplete()
 {
-    for (const auto& entry : vecEntries)
-        for (const auto& txdsin : entry.vecTxDSIn)
+    for (const auto& entry : vecEntries) {
+        for (const auto& txdsin : entry.vecTxDSIn) {
             if (!txdsin.fHasSig) return false;
+        }
+    }
 
     return true;
 }
@@ -827,7 +833,7 @@ void CPrivateSendServer::RelayFinalTransaction(const CTransaction& txFinal, CCon
         __func__, nSessionID, nSessionDenom, CPrivateSend::GetDenominationsToString(nSessionDenom));
 
     // final mixing tx with empty signatures should be relayed to mixing participants only
-    for (const auto entry : vecEntries) {
+    for (const auto& entry : vecEntries) {
         bool fOk = connman.ForNode(entry.addr, [&txFinal, &connman, this](CNode* pnode) {
             CNetMsgMaker msgMaker(pnode->GetSendVersion());
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSFINALTX, nSessionID, txFinal));
@@ -852,7 +858,7 @@ void CPrivateSendServer::RelayStatus(PoolStatusUpdate nStatusUpdate, CConnman& c
 {
     unsigned int nDisconnected{};
     // status updates should be relayed to mixing participants only
-    for (const auto entry : vecEntries) {
+    for (const auto& entry : vecEntries) {
         // make sure everyone is still connected
         bool fOk = connman.ForNode(entry.addr, [&nStatusUpdate, &nMessageID, &connman, this](CNode* pnode) {
             PushStatus(pnode, nStatusUpdate, nMessageID, connman);
@@ -923,8 +929,7 @@ void CPrivateSendServer::DoMaintenance(CConnman& connman)
     if (fLiteMode) return;        // disable all Dash specific functionality
     if (!fMasternodeMode) return; // only run on masternodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
-        return;
+    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     privateSendServer.CheckTimeout(connman);
     privateSendServer.CheckForCompleteQueue(connman);

@@ -46,7 +46,7 @@ void CKeyHolderStorage::KeepAll()
         std::swap(storage, tmp);
     }
 
-    if (tmp.size() > 0) {
+    if (!tmp.empty()) {
         for (auto& key : tmp) {
             key->KeepKey();
         }
@@ -63,7 +63,7 @@ void CKeyHolderStorage::ReturnAll()
         std::swap(storage, tmp);
     }
 
-    if (tmp.size() > 0) {
+    if (!tmp.empty()) {
         for (auto& key : tmp) {
             key->ReturnKey();
         }

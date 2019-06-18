@@ -75,7 +75,7 @@ enum PoolStatusUpdate {
     STATUS_ACCEPTED
 };
 
-/** Holds an mixing input
+/** Holds a mixing input
  */
 class CTxDSIn : public CTxIn
 {
@@ -128,7 +128,7 @@ public:
     }
 };
 
-// A clients transaction in the mixing pool
+// A client's transaction in the mixing pool
 class CPrivateSendEntry
 {
 public:
@@ -147,10 +147,10 @@ public:
     }
 
     CPrivateSendEntry(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
-        vecTxDSIn(vecTxDSIn),
-        vecTxOut(vecTxOut),
-        txCollateral(MakeTransactionRef(txCollateral)),
-        addr(CService())
+            vecTxDSIn(vecTxDSIn),
+            vecTxOut(vecTxOut),
+            txCollateral(MakeTransactionRef(txCollateral)),
+            addr(CService())
     {
     }
 
@@ -332,7 +332,7 @@ protected:
     void SetNull();
 
 public:
-    int nSessionDenom; //Users must submit a denom matching this
+    int nSessionDenom; // Users must submit a denom matching this
 
     CPrivateSendBaseSession() :
         vecEntries(),

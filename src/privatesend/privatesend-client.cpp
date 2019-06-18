@@ -99,7 +99,7 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             int64_t nLastDsq = mmetaman.GetMetaInfo(dmn->proTxHash)->GetLastDsq();
             int nThreshold = nLastDsq + mnList.GetValidMNsCount() / 5;
             LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", nLastDsq, nThreshold, mmetaman.GetDsqCount());
-            //don't allow a few nodes to dominate the queuing process
+            // don't allow a few nodes to dominate the queuing process
             if (nLastDsq != 0 && nThreshold > mmetaman.GetDsqCount()) {
                 LogPrint(BCLog::PRIVATESEND, "DSQUEUE -- Masternode %s is sending too many dsq messages\n", dmn->proTxHash.ToString());
                 return;
@@ -118,10 +118,9 @@ void CPrivateSendClientManager::ProcessMessage(CNode* pfrom, const std::string& 
             dsq.Relay(connman);
         }
 
-    } else if (
-        strCommand == NetMsgType::DSSTATUSUPDATE ||
-        strCommand == NetMsgType::DSFINALTX ||
-        strCommand == NetMsgType::DSCOMPLETE) {
+    } else if (strCommand == NetMsgType::DSSTATUSUPDATE ||
+               strCommand == NetMsgType::DSFINALTX ||
+               strCommand == NetMsgType::DSCOMPLETE) {
         LOCK(cs_deqsessions);
         for (auto& session : deqSessions) {
             session.ProcessMessage(pfrom, strCommand, vRecv, connman);
@@ -201,7 +200,7 @@ void CPrivateSendClientSession::ProcessMessage(CNode* pfrom, const std::string& 
 
         LogPrint(BCLog::PRIVATESEND, "DSFINALTX -- txNew %s", txNew.ToString());
 
-        //check to see if input is spent already? (and probably not confirmed)
+        // check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom, connman);
 
     } else if (strCommand == NetMsgType::DSCOMPLETE) {
@@ -294,8 +293,9 @@ std::string CPrivateSendClientSession::GetStatus(bool fWaitForBlock)
     nStatusMessageProgress += 10;
     std::string strSuffix = "";
 
-    if (fWaitForBlock || !masternodeSync.IsBlockchainSynced())
+    if (fWaitForBlock || !masternodeSync.IsBlockchainSynced()) {
         return strAutoDenomResult;
+    }
 
     switch (nState) {
     case POOL_STATE_IDLE:
@@ -432,8 +432,7 @@ bool CPrivateSendClientSession::CheckTimeout()
     int nTimeout = (nState == POOL_STATE_SIGNING) ? PRIVATESEND_SIGNING_TIMEOUT : PRIVATESEND_QUEUE_TIMEOUT;
     bool fTimeout = GetTime() - nTimeLastSuccessfulStep >= nTimeout + nLagTime;
 
-    if (nState == POOL_STATE_IDLE || !fTimeout)
-        return false;
+    if (nState == POOL_STATE_IDLE || !fTimeout) return false;
 
     LogPrint(BCLog::PRIVATESEND, "CPrivateSendClientSession::CheckTimeout -- %s timed out (%ds) -- resetting\n",
         (nState == POOL_STATE_SIGNING) ? "Signing" : "Session", nTimeout);
@@ -481,11 +480,13 @@ bool CPrivateSendClientSession::SendDenominate(const std::vector<std::pair<CTxDS
     }
 
     // lock the funds we're going to use
-    for (const auto& txin : txMyCollateral.vin)
+    for (const auto& txin : txMyCollateral.vin) {
         vecOutPointLocked.push_back(txin.prevout);
+    }
 
-    for (const auto& pair : vecPSInOutPairsIn)
+    for (const auto& pair : vecPSInOutPairsIn) {
         vecOutPointLocked.push_back(pair.first.prevout);
+    }
 
     // we should already be connected to a Masternode
     if (!nSessionID) {
@@ -630,8 +631,9 @@ bool CPrivateSendClientSession::SignFinalTransaction(const CTransaction& finalTr
                     }
                 }
 
-                for (const auto& txout : entry.vecTxOut)
+                for (const auto& txout : entry.vecTxOut) {
                     nValue2 += txout.nValue;
+                }
 
                 int nTargetOuputsCount = entry.vecTxOut.size();
                 if (nFoundOutputsCount < nTargetOuputsCount || nValue1 != nValue2) {
@@ -714,11 +716,9 @@ void CPrivateSendClientManager::AddSkippedDenom(const CAmount& nDenomValue)
 
 bool CPrivateSendClientManager::WaitForAnotherBlock()
 {
-    if (!masternodeSync.IsBlockchainSynced())
-        return true;
+    if (!masternodeSync.IsBlockchainSynced()) return true;
 
-    if (fPrivateSendMultiSession)
-        return false;
+    if (fPrivateSendMultiSession) return false;
 
     return nCachedBlockHeight - nCachedLastSuccessBlock < nMinBlocksToWait;
 }
@@ -921,8 +921,9 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
         }
 
         //check if we have the collateral sized inputs
-        if (!pwalletMain->HasCollateralInputs())
+        if (!pwalletMain->HasCollateralInputs()) {
             return !pwalletMain->HasCollateralInputs(false) && MakeCollateralAmounts(connman);
+        }
 
         if (nSessionID) {
             strAutoDenomResult = _("Mixing in progress...");
@@ -962,14 +963,14 @@ bool CPrivateSendClientSession::DoAutomaticDenominating(CConnman& connman, bool 
 
     bool fUseQueue = GetRandInt(100) > 33;
     // don't use the queues all of the time for mixing unless we are a liquidity provider
-    if ((privateSendClient.nLiquidityProvider || fUseQueue) && JoinExistingQueue(nBalanceNeedsAnonymized, connman))
+    if ((privateSendClient.nLiquidityProvider || fUseQueue) && JoinExistingQueue(nBalanceNeedsAnonymized, connman)) {
         return true;
+    }
 
     // do not initiate queue if we are a liquidity provider to avoid useless inter-mixing
     if (privateSendClient.nLiquidityProvider) return false;
 
-    if (StartNewQueue(nBalanceNeedsAnonymized, connman))
-        return true;
+    if (StartNewQueue(nBalanceNeedsAnonymized, connman)) return true;
 
     strAutoDenomResult = _("No compatible Masternode found.");
     return false;
@@ -1013,8 +1014,7 @@ bool CPrivateSendClientManager::DoAutomaticDenominating(CConnman& connman, bool 
         deqSessions.emplace_back();
     }
     for (auto& session : deqSessions) {
-        if (!CheckAutomaticBackup())
-            return false;
+        if (!CheckAutomaticBackup()) return false;
 
         if (WaitForAnotherBlock()) {
             LogPrintf("CPrivateSendClientManager::DoAutomaticDenominating -- Last successful PrivateSend action was too recent\n");
@@ -1456,8 +1456,9 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& ta
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     // denominated input is always a single one, so we can check its amount directly and return early
-    if (!fTryDenominated && tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount))
+    if (!fTryDenominated && tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
+    }
 
     CWalletTx wtx;
     CAmount nFeeRet = 0;
@@ -1483,8 +1484,9 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& ta
     coinControl.fAllowWatchOnly = false;
     // send change to the same address so that we were able create more denoms out of it later
     coinControl.destChange = tallyItem.txdest;
-    for (const auto& outpoint : tallyItem.vecOutPoints)
+    for (const auto& outpoint : tallyItem.vecOutPoints) {
         coinControl.Select(outpoint);
+    }
 
     bool fSuccess = pwalletMain->CreateTransaction(vecSend, wtx, reservekeyChange,
         nFeeRet, nChangePosRet, strFail, &coinControl, true, ONLY_NONDENOMINATED);
@@ -1643,8 +1645,9 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
     coinControl.fAllowWatchOnly = false;
     // send change to the same address so that we were able create more denoms out of it later
     coinControl.destChange = tallyItem.txdest;
-    for (const auto& outpoint : tallyItem.vecOutPoints)
+    for (const auto& outpoint : tallyItem.vecOutPoints) {
         coinControl.Select(outpoint);
+    }
 
     CWalletTx wtx;
     CAmount nFeeRet = 0;
@@ -1705,8 +1708,7 @@ void CPrivateSendClientManager::DoMaintenance(CConnman& connman)
     if (fLiteMode) return;       // disable all Dash specific functionality
     if (fMasternodeMode) return; // no client-side mixing on masternodes
 
-    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
-        return;
+    if (!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     static unsigned int nTick = 0;
     static unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
