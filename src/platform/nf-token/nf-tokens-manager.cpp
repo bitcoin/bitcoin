@@ -164,6 +164,7 @@ namespace Platform
                 {
                     count++;
                 }
+                return true;
             });
             return count;
         }
@@ -186,6 +187,7 @@ namespace Platform
             {
                 if (nftIndex.NfTokenPtr()->tokenOwnerKeyId == ownerId)
                     count++;
+                return true;
             });
             return count;
         }
