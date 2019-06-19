@@ -518,7 +518,34 @@ public:
 };
 
 
+class CInputCoin {
+public:
+    CInputCoin(const CWalletTx* walletTx, unsigned int i)
+    {
+        if (!walletTx)
+            throw std::invalid_argument("walletTx should not be null");
+        if (i >= walletTx->tx->vout.size())
+            throw std::out_of_range("The output index is out of range");
 
+        outpoint = COutPoint(walletTx->GetHash(), i);
+        txout = walletTx->tx->vout[i];
+    }
+
+    COutPoint outpoint;
+    CTxOut txout;
+
+    bool operator<(const CInputCoin& rhs) const {
+        return outpoint < rhs.outpoint;
+    }
+
+    bool operator!=(const CInputCoin& rhs) const {
+        return outpoint != rhs.outpoint;
+    }
+
+    bool operator==(const CInputCoin& rhs) const {
+        return outpoint == rhs.outpoint;
+    }
+};
 
 class COutput
 {
@@ -680,7 +707,7 @@ private:
      * all coins from coinControl are selected; Never select unconfirmed coins
      * if they are not ours
      */
-    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend = true) const;
+    bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend = true) const;
 
     CWalletDB *pwalletdbEncryption;
 
@@ -740,6 +767,10 @@ private:
     bool AddWatchOnly(const CScript& dest) override;
 
     std::unique_ptr<CWalletDBWrapper> dbw;
+
+    // Used to NotifyTransactionChanged of the previous block's coinbase when
+    // the next block comes in
+    uint256 hashPrevBestCoinbase;
 
 public:
     /*
@@ -865,7 +896,7 @@ public:
      * completion the coin set and corresponding actual target value is
      * assembled
      */
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend = false) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, uint64_t nMaxAncestors, std::vector<COutput> vCoins, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, AvailableCoinsType nCoinType=ALL_COINS, bool fUseInstantSend = false) const;
 
     // Coin selection
     bool SelectPSInOutPairsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet);
@@ -1026,12 +1057,7 @@ public:
      * Estimate the minimum fee considering user set parameters
      * and the required fee
      */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator);
-    /**
-     * Estimate the minimum fee considering required fee and targetFee or if 0
-     * then fee estimation for nConfirmTarget
-     */
-    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, CAmount targetFee);
+    static CAmount GetMinimumFee(unsigned int nTxBytes, unsigned int nConfirmTarget, const CTxMemPool& pool, const CBlockPolicyEstimator& estimator, bool ignoreUserSetFee = false);
     /**
      * Return the minimum required fee taking into account the
      * floating relay fee and user set minimum transaction fee
@@ -1084,8 +1110,6 @@ public:
     bool SetAddressBook(const CTxDestination& address, const std::string& strName, const std::string& purpose);
 
     bool DelAddressBook(const CTxDestination& address);
-
-    bool UpdatedTransaction(const uint256 &hashTx) override;
 
     void Inventory(const uint256 &hash) override
     {

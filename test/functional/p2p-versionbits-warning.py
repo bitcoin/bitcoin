@@ -24,27 +24,9 @@ WARN_UNKNOWN_RULES_MINED = "Unknown block versions being mined! It's possible un
 WARN_UNKNOWN_RULES_ACTIVE = "unknown new rules activated (versionbit {})".format(VB_UNKNOWN_BIT)
 VB_PATTERN = re.compile("^Warning.*versionbit")
 
-# TestNode: bare-bones "peer".  Used mostly as a conduit for a test to sending
-# p2p messages to a node, generating the messages in the main testing logic.
 class TestNode(NodeConnCB):
-    def __init__(self):
-        super().__init__()
-        self.connection = None
-        self.ping_counter = 1
-        self.last_pong = msg_pong()
-
-    def add_connection(self, conn):
-        self.connection = conn
-
     def on_inv(self, conn, message):
         pass
-
-    # Wrapper for the NodeConn's send_message function
-    def send_message(self, message):
-        self.connection.send_message(message)
-
-    def on_pong(self, conn, message):
-        self.last_pong = message
 
 class VersionBitsWarningTest(BitcoinTestFramework):
     def __init__(self):

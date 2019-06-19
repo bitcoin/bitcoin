@@ -465,15 +465,6 @@ void CDBEnv::CloseDb(const std::string& strFile)
     }
 }
 
-bool CDBEnv::RemoveDb(const std::string& strFile)
-{
-    this->CloseDb(strFile);
-
-    LOCK(cs_db);
-    int rc = dbenv->dbremove(NULL, strFile.c_str(), NULL, DB_AUTO_COMMIT);
-    return (rc == 0);
-}
-
 bool CDB::Rewrite(CWalletDBWrapper& dbw, const char* pszSkip)
 {
     if (dbw.IsDummy()) {

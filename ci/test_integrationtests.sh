@@ -17,4 +17,4 @@ export LD_LIBRARY_PATH=$BUILD_DIR/depends/$HOST/lib
 
 cd build-ci/dashcore-$BUILD_TARGET
 
-./test/functional/test_runner.py --coverage $PASS_ARGS
+./test/functional/test_runner.py --coverage --quiet $PASS_ARGS

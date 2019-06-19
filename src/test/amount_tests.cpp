@@ -9,9 +9,16 @@
 
 BOOST_FIXTURE_TEST_SUITE(amount_tests, BasicTestingSetup)
 
+BOOST_AUTO_TEST_CASE(MoneyRangeTest)
+{
+    BOOST_CHECK_EQUAL(MoneyRange(CAmount(-1)), false);
+    BOOST_CHECK_EQUAL(MoneyRange(MAX_MONEY + CAmount(1)), false);
+    BOOST_CHECK_EQUAL(MoneyRange(CAmount(1)), true);
+}
+
 BOOST_AUTO_TEST_CASE(GetFeeTest)
 {
-    CFeeRate feeRate;
+    CFeeRate feeRate, altFeeRate;
 
     feeRate = CFeeRate(0);
     // Must always return 0
@@ -53,6 +60,11 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(8), -1); // Special case: returns -1 instead of 0
     BOOST_CHECK_EQUAL(feeRate.GetFee(9), -1);
 
+    // check alternate constructor
+    feeRate = CFeeRate(1000);
+    altFeeRate = CFeeRate(feeRate);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(100), altFeeRate.GetFee(100));
+
     // Check full constructor
     // default value
     BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
@@ -66,6 +78,30 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
     // Maximum size in bytes, should not crash
     CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
+}
+
+BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
+{
+    CFeeRate a, b;
+    a = CFeeRate(1);
+    b = CFeeRate(2);
+    BOOST_CHECK(a < b);
+    BOOST_CHECK(b > a);
+    BOOST_CHECK(a == a);
+    BOOST_CHECK(a <= b);
+    BOOST_CHECK(a <= a);
+    BOOST_CHECK(b >= a);
+    BOOST_CHECK(b >= b);
+    // a should be 0.00000002 DASH/kB now
+    a += a;
+    BOOST_CHECK(a == b);
+}
+
+BOOST_AUTO_TEST_CASE(ToStringTest)
+{
+    CFeeRate feeRate;
+    feeRate = CFeeRate(1);
+    BOOST_CHECK_EQUAL(feeRate.ToString(), "0.00000001 DASH/kB");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

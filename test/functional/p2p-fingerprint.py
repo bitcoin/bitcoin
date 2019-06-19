@@ -89,26 +89,7 @@ class P2PFingerprintTest(BitcoinTestFramework):
     # This does not currently test that stale blocks timestamped within the
     # last month but that have over a month's worth of work are also withheld.
     def run_test(self):
-        # TODO remove this when mininode is up-to-date with Bitcoin
-        class MyNodeConnCB(NodeConnCB):
-            def __init__(self):
-                super().__init__()
-                self.cond = threading.Condition()
-                self.last_message = {}
-
-            def deliver(self, conn, message):
-                super().deliver(conn, message)
-                command = message.command.decode('ascii')
-                self.last_message[command] = message
-                with self.cond:
-                    self.cond.notify_all()
-
-            def wait_for_getdata(self):
-                with self.cond:
-                    assert(self.cond.wait_for(lambda: "getdata" in self.last_message, timeout=15))
-
-
-        node0 = MyNodeConnCB()
+        node0 = NodeConnCB()
 
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], node0))

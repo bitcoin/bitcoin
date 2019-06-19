@@ -144,8 +144,3 @@ std::string GetDevNetName()
     std::string devNetName = GetArg("-devnet", "");
     return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }
-
-bool AreBaseParamsConfigured()
-{
-    return pCurrentBaseParams != NULL;
-}

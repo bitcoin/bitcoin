@@ -8,6 +8,7 @@
 #include "bench.h"
 #include "bloom.h"
 #include "hash.h"
+#include "random.h"
 #include "uint256.h"
 #include "utiltime.h"
 #include "crypto/ripemd160.h"
@@ -84,6 +85,28 @@ static void HASH_SipHash_0032b(benchmark::State& state)
     while (state.KeepRunning()) {
         for (int i = 0; i < 1000000; i++) {
             *((uint64_t*)x.begin()) = SipHashUint256(0, i, x);
+        }
+    }
+}
+
+static void FastRandom_32bit(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    uint32_t x = 0;
+    while (state.KeepRunning()) {
+        for (int i = 0; i < 1000000; i++) {
+            x += rng.rand32();
+        }
+    }
+}
+
+static void FastRandom_1bit(benchmark::State& state)
+{
+    FastRandomContext rng(true);
+    uint32_t x = 0;
+    while (state.KeepRunning()) {
+        for (int i = 0; i < 1000000; i++) {
+            x += rng.randbool();
         }
     }
 }
@@ -209,3 +232,5 @@ BENCHMARK(HASH_X11_0128b_single);
 BENCHMARK(HASH_X11_0512b_single);
 BENCHMARK(HASH_X11_1024b_single);
 BENCHMARK(HASH_X11_2048b_single);
+BENCHMARK(FastRandom_32bit);
+BENCHMARK(FastRandom_1bit);

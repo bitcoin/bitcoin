@@ -929,21 +929,6 @@ void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, con
         return;
     }
 
-#ifdef ENABLE_WALLET
-    if (!pwalletMain) {
-        return;
-    }
-
-    if (pwalletMain->UpdatedTransaction(tx->GetHash())) {
-        // notify an external script once threshold is reached
-        std::string strCmd = GetArg("-instantsendnotify", "");
-        if (!strCmd.empty()) {
-            boost::replace_all(strCmd, "%s", tx->GetHash().GetHex());
-            boost::thread t(runCommand, strCmd); // thread runs free
-        }
-    }
-#endif
-
     GetMainSignals().NotifyTransactionLock(*tx, islock);
     // bump mempool counter to make sure newly mined txes are picked up by getblocktemplate
     mempool.AddTransactionsUpdated(1);

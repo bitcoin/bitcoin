@@ -2309,11 +2309,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
     int64_t nTime6 = GetTimeMicros(); nTimeIndex += nTime6 - nTime5;
     LogPrint(BCLog::BENCHMARK, "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime6 - nTime5), nTimeIndex * 0.000001);
 
-    // Watch for changes to the previous coinbase transaction.
-    static uint256 hashPrevBestCoinBase;
-    GetMainSignals().UpdatedTransaction(hashPrevBestCoinBase);
-    hashPrevBestCoinBase = block.vtx[0]->GetHash();
-
     evoDb->WriteBestBlock(pindex->GetBlockHash());
 
     int64_t nTime7 = GetTimeMicros(); nTimeCallbacks += nTime7 - nTime6;
@@ -2937,6 +2932,9 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     if (!FlushStateToDisk(chainparams, state, FLUSH_STATE_PERIODIC)) {
         return false;
     }
+
+    int nStopAtHeight = GetArg("-stopatheight", DEFAULT_STOPATHEIGHT);
+    if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
 
     return true;
 }
