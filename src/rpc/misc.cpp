@@ -1190,9 +1190,9 @@ UniValue getmemoryinfo(const JSONRPCRequest& request)
     }
 }
 
-uint32_t getCategoryMask(UniValue cats) {
+uint64_t getCategoryMask(UniValue cats) {
     cats = cats.get_array();
-    uint32_t mask = 0;
+    uint64_t mask = 0;
     for (unsigned int i = 0; i < cats.size(); ++i) {
         uint64_t flag = 0;
         std::string cat = cats[i].get_str();
@@ -1224,7 +1224,7 @@ UniValue logging(const JSONRPCRequest& request)
         );
     }
 
-    uint32_t originalLogCategories = logCategories;
+    uint64_t originalLogCategories = logCategories;
     if (request.params.size() > 0 && request.params[0].isArray()) {
         logCategories |= getCategoryMask(request.params[0]);
     }
@@ -1238,7 +1238,7 @@ UniValue logging(const JSONRPCRequest& request)
     // in which case we should clear the BCLog::LIBEVENT flag.
     // Throw an error if the user has explicitly asked to change only the libevent
     // flag and it failed.
-    uint32_t changedLogCategories = originalLogCategories ^ logCategories;
+    uint64_t changedLogCategories = originalLogCategories ^ logCategories;
     if (changedLogCategories & BCLog::LIBEVENT) {
         if (!UpdateHTTPServerLogging(logCategories & BCLog::LIBEVENT)) {
             logCategories &= ~BCLog::LIBEVENT;
