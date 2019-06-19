@@ -164,7 +164,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
         outPointLastSender = itSender->second.first;
         int64_t nElapsedTime = (GetTimeMillis() - itSender->second.second) / 1000;
         // enforce clients to wait to link mempool transactions, otherwise try to use confirmed outputs
-        if(nElapsedTime < ZDAG_MINIMUM_LATENCY_SECONDS){
+        if(!fTPSTest && nElapsedTime < ZDAG_MINIMUM_LATENCY_SECONDS){
             const std::string &message = strprintf("syscointxfund: Warning! Did not wait long enough (wait %d more seconds), trying to use confirmed outputs to fund this transactions intead...\n", ZDAG_MINIMUM_LATENCY_SECONDS - nElapsedTime);
             LogPrintf(message.c_str());
             outPointLastSender.SetNull();
