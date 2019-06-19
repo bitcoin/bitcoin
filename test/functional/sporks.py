@@ -16,15 +16,10 @@ class SporkTest(BitcoinTestFramework):
         super().__init__()
         self.num_nodes = 3
         self.setup_clean_chain = True
-        self.is_network_split = False
 
     def setup_network(self):
         disable_mocktime()
-        self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir,
-                                     ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]))
-        self.nodes.append(start_node(1, self.options.tmpdir))
-        self.nodes.append(start_node(2, self.options.tmpdir))
+        self.setup_nodes()
         # connect only 2 first nodes at start
         connect_nodes(self.nodes[0], 1)
 
