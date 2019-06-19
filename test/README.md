@@ -13,8 +13,7 @@ bitcoin-tx.
 - [lint](/test/lint/) which perform various static analysis checks.
 
 The util tests are run as part of `make check` target. The functional
-tests and lint scripts are run by the travis continuous build process whenever a pull
-request is opened. All sets of tests can also be run locally.
+tests and lint scripts can be run as explained in the sections below.
 
 # Running tests locally
 
