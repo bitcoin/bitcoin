@@ -1,77 +1,91 @@
-Bitcoin Core integration/staging tree
-=====================================
+# Bitcoin-Ecc
+## Build
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+**Install Xcode command line tool (for Mac)**
 
-https://bitcoincore.org
+```bash
+xcode-select -install
+```
 
-What is Bitcoin?
-----------------
+**Install Packages (for Mac)**
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+```bash
+brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python qt libevent qrencode librsvg
+```
 
-For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://bitcoincore.org/en/download/, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
 
-License
--------
+**Install Packages (For Ubuntu)**
+```bash
+$ apt install -y build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ibssl-dev libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb-dev libdb++-dev
+```
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/licenses/MIT.
+**Clone SourceCode**
 
-Development Process
--------------------
+```bash
+git clone https://github.com/cryptoecc/bitcoin_ECC.git
+```
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin Core.
+**Build BitcoinEcc**
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+```bash
+$ cd bitcoin_ECC
+$ ./autogen.sh
+$ ./configure
+$ make -j8
+```
 
-Testing
--------
+**Run**
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+```bash
+src/bitcoind \
+-rpcuser=<user> \
+-rpcpassword=<password> \
+-txindex \
+-rpcallowip=0.0.0.0/0 \
+-rpcbind=0.0.0.0
+```
 
-### Automated Testing
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled in configure) with: `make check`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+### Docker
 
-There are also [regression and integration tests](/test), written
-in Python, that are run automatically on the build server.
-These tests can be run (if the [test dependencies](/test) are installed) with: `test/functional/test_runner.py`
+#### Install Docker-CE
 
-The Travis CI system makes sure that every pull request is built for Windows, Linux, and macOS, and that unit/sanity tests are run automatically.
+**Macos**
 
-### Manual Quality Assurance (QA) Testing
+* [https://docs.docker.com/docker-for-mac/install/](https://docs.docker.com/docker-for-mac/install/) 
+* Download: [https://download.docker.com/mac/stable/Docker.dmg](https://download.docker.com/mac/stable/Docker.dmg)
 
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
+**Ubuntu**
 
-Translations
-------------
+* [Get Docker CE for Ubuntu | Docker Documentation](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
+#### Create Docker Image
 
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
+**Clone SourceCode**
 
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+```bash
+$ git clone https://github.com/cryptoecc/bitcoin_ECC.git
+```
 
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+**Create Docker Image**
+
+```bash
+$ cd bitcoin_ECC
+$ docker build -t bitcoin-ecc .
+```
+
+#### Run DockerContainer
+
+```bash
+# docker volume rm bitcoin-ecc-data
+$ docker volume create --name=bitcoin-ecc-data
+
+$ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-mainnet \
+    -p 9776:9776 \
+    -p 9777:9777 \
+    -e RPCUSER=rpc \
+    -e RPCPASSWORD=rpc \
+    bitcoin-ecc
+
+$ docker logs git clone https://github.com/cryptoecc/bitcoin_ECC.git
+```
