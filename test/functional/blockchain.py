@@ -114,8 +114,8 @@ class BlockchainTest(BitcoinTestFramework):
 
     def _test_getnetworkhashps(self):
         hashes_per_second = self.nodes[0].getnetworkhashps()
-        # This should be 2 hashes every 10 minutes or 1/300
-        assert abs(hashes_per_second * 300 - 1) < 0.0001
+        # This should be 2 hashes every 2.6 minutes (156 seconds) or 1/78
+        assert abs(hashes_per_second * 78 - 1) < 0.0001
 
 if __name__ == '__main__':
     BlockchainTest().main()
