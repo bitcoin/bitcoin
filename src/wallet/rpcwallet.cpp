@@ -383,7 +383,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
             "       \"UNSET\"\n"
             "       \"ECONOMICAL\"\n"
             "       \"CONSERVATIVE\""},
-                    {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Avoid spending from dirty addresses; addresses are considered\n"
+                    {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
             "                             dirty if they have previously been used in a transaction."},
                 },
                 RPCResult{
@@ -743,7 +743,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Remains for backward compatibility. Must be excluded or set to \"*\"."},
                     {"minconf", RPCArg::Type::NUM, /* default */ "0", "Only include transactions confirmed at least this many times."},
                     {"include_watchonly", RPCArg::Type::BOOL, /* default */ "false", "Also include balance in watch-only addresses (see 'importaddress')"},
-                    {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
+                    {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
                 },
                 RPCResult{
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this wallet.\n"
@@ -2892,11 +2892,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
-
-    if (request.fHelp || request.params.size() > 5)
-        throw std::runtime_error(
-            RPCHelpMan{"listunspent",
+    const RPCHelpMan help{
+                "listunspent",
                 "\nReturns array of unspent transaction outputs\n"
                 "with between minconf and maxconf (inclusive) confirmations.\n"
                 "Optionally filter to only include txouts paid to specified addresses.\n",
@@ -2933,9 +2930,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             "    \"witnessScript\" : \"script\" (string) witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH\n"
             "    \"spendable\" : xxx,        (bool) Whether we have the private keys to spend this output\n"
             "    \"solvable\" : xxx,         (bool) Whether we know how to spend this output, ignoring the lack of keys\n"
-            + (avoid_reuse ?
-            "    \"reused\" : xxx,           (bool) Whether this output is reused/dirty (sent to an address that was previously spent from)\n" :
-            "") +
+            "    \"reused\" : xxx,           (bool) (only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)\n"
             "    \"desc\" : xxx,             (string, only when solvable) A descriptor for spending this output\n"
             "    \"safe\" : xxx              (bool) Whether this output is considered safe to spend. Unconfirmed transactions\n"
             "                              from outside keys and unconfirmed replacement transactions are considered unsafe\n"
@@ -2951,7 +2946,11 @@ static UniValue listunspent(const JSONRPCRequest& request)
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
             + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
                 },
-            }.ToString());
+            };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(help.ToString());
+    }
 
     int nMinDepth = 1;
     if (!request.params[0].isNull()) {
@@ -3023,6 +3022,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
     }
 
     LOCK(pwallet->cs_wallet);
+
+    const bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
 
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
