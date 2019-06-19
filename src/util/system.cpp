@@ -1372,16 +1372,24 @@ bool StopRelayerNode(pid_t &pid)
     return true;
 }
 
-bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, bool bGethTestnet, int websocketport)
+bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
         return true;
-    LogPrintf("%s: Starting relayer on port %d, rpcuser %s, rpcpassword %s, wsport %d...\n", __func__, rpcport, rpcuser, rpcpassword, websocketport);
+    
     std::string relayerFilename = GetRelayerFilename();
     std::string infuraKey = "b3d07005e22f4127ba935ce09b9a2a8d"; // TODO: parameterize this later through config file
     // stop any relayer process  before starting
     StopRelayerNode(pid);
-        
+
+    // Get RPC credentials
+    std::string strRPCUserColonPass;
+    if (gArgs.GetArg("-rpcpassword", "") != "" || !GetAuthCookie(&strRPCUserColonPass)) {
+        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+    }
+    LogPrintf("%s: Starting relayer on port %d, RPC credentials %s, wsport %d...\n", __func__, rpcport, strRPCUserColonPass, websocketport);
+
+
     fs::path fpathDefault = exePath;
     fpathDefault = fpathDefault.parent_path();
     
@@ -1433,48 +1441,42 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
-					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
-					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(), 
                     (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
             char * argvAttempt2[] = {(char*)attempt2.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
-					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
-					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
                     (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
             char * argvAttempt3[] = {(char*)attempt3.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
-					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
-					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
                     (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
             char * argvAttempt4[] = {(char*)attempt4.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
-					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
-					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
                     (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
             char * argvAttempt5[] = {(char*)attempt5.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
-					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
-					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
                     (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
             char * argvAttempt6[] = {(char*)attempt6.string().c_str(), 
 					(char*)"--ethwsport", (char*)portStr.c_str(),
                     (char*)"--datadir", (char*)dataDir.string().c_str(),
                     (char*)"--infurakey", (char*)infuraKey.c_str(),
-					(char*)"--sysrpcuser", (char*)rpcuser.c_str(),
-					(char*)"--sysrpcpw", (char*)rpcpassword.c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
 					(char*)"--sysrpcport", (char*)rpcPortStr.c_str(),
                     (char*)"--gethtestnet", (bGethTestnet?(char*)"1": (char*)"0"), NULL };
             execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
@@ -1512,8 +1514,7 @@ bool StartRelayerNode(const std::string &exePath, pid_t &pid, int rpcport, const
 				std::string("--ethwsport ") + portStr +
                 std::string(" --datadir ") + dataDir.string() +
                 std::string(" --infurakey ") + infuraKey +
-				std::string(" --sysrpcuser ") + rpcuser +
-				std::string(" --sysrpcpw ") + rpcpassword +
+				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
 				std::string(" --sysrpcport ") + rpcPortStr +
                 std::string(" --gethtestnet ") + (bGethTestnet? std::string("1"):std::string("0")); 
         pid = fork(attempt1.string(), args);
