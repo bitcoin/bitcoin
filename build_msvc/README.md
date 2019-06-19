@@ -17,16 +17,22 @@ Options for installing the dependencies in a Visual Studio compatible manner are
 - Download the source code, build each dependency, add the required include paths, link libraries and binary tools to the Visual Studio project files.
 - Use [nuget](https://www.nuget.org/) packages with the understanding that any binary files have been compiled by an untrusted third party.
 
-The external dependencies required for the Visual Studio build are (see the [dependencies doc](https://github.com/syscoin/syscoin/blob/master/doc/dependencies.md) for versions):
+The external dependencies required for the Visual Studio build are (see [dependencies.md](https://github.com/syscoin/syscoin/blob/master/doc/dependencies.md) for more info):
 
-- Berkeley DB,
-- OpenSSL,
-- Boost,
-- libevent,
+- Berkeley DB
+- OpenSSL
+- Boost
+- libevent
 - ZeroMQ
+- RapidCheck
 
+<<<<<<< HEAD
 Additional dependencies required from the [syscoin-core](https://github.com/syscoin-core) github repository are:
 - SECP256K1,
+=======
+Additional dependencies required from the [bitcoin-core](https://github.com/bitcoin-core) GitHub repository are:
+- libsecp256k1
+>>>>>>> 4971be76a... docs: add rapidcheck to vcpkg install list
 - LevelDB
 
 Building
@@ -37,7 +43,7 @@ The instructions below use `vcpkg` to install the dependencies.
 - Install the required packages (replace x64 with x86 as required):
 
 ```
-    PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb
+    PS >.\vcpkg install --triplet x64-windows-static boost-filesystem boost-signals2 boost-test libevent openssl zeromq berkeleydb secp256k1 leveldb rapidcheck
 ```
 
 - Use Python to generate *.vcxproj from Makefile
