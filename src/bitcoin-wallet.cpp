@@ -15,7 +15,6 @@
 #include <wallet/wallettool.h>
 
 #include <functional>
-#include <stdio.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 

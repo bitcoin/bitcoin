@@ -38,6 +38,8 @@
 
 #include <memory>
 
+#include <boost/thread.hpp>
+
 #include <QApplication>
 #include <QDebug>
 #include <QLibraryInfo>
