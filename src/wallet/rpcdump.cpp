@@ -109,8 +109,6 @@ UniValue importprivkey(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
             RPCHelpMan{"importprivkey",
                 "\nAdds a private key (as returned by dumpprivkey) to your wallet. Requires a new wallet backup.\n"
                 "Hint: use importmulti to import more than one private key.\n"
@@ -135,7 +133,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importprivkey", "\"mykey\", \"testing\", false")
                 },
-            }.ToString());
+            }.Check(request);
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Cannot import private keys to a wallet with private keys disabled");
@@ -217,8 +215,6 @@ UniValue abortrescan(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 0)
-        throw std::runtime_error(
             RPCHelpMan{"abortrescan",
                 "\nStops current wallet rescan triggered by an RPC call, e.g. by an importprivkey call.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
@@ -232,7 +228,7 @@ UniValue abortrescan(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("abortrescan", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     if (!pwallet->IsScanning() || pwallet->IsAbortingRescan()) return false;
     pwallet->AbortRescan();
@@ -283,8 +279,6 @@ UniValue importaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 4)
-        throw std::runtime_error(
             RPCHelpMan{"importaddress",
                 "\nAdds an address or script (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
             "\nNote: This call can take over an hour to complete if rescan is true, during that time, other rpc calls\n"
@@ -309,7 +303,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importaddress", "\"myaddress\", \"testing\", false")
                 },
-            }.ToString());
+            }.Check(request);
 
 
     std::string strLabel;
@@ -376,8 +370,6 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
             RPCHelpMan{"importprunedfunds",
                 "\nImports funds without rescan. Corresponding address or script must previously be included in wallet. Aimed towards pruned wallets. The end-user is responsible to import additional transactions that subsequently spend the imported outputs or rescan after the point in the blockchain the transaction is included.\n",
                 {
@@ -386,8 +378,7 @@ UniValue importprunedfunds(const JSONRPCRequest& request)
                 },
                 RPCResults{},
                 RPCExamples{""},
-            }.ToString()
-        );
+            }.Check(request);
 
     CMutableTransaction tx;
     if (!DecodeHexTx(tx, request.params[0].get_str()))
@@ -443,8 +434,6 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"removeprunedfunds",
                 "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will affect wallet balances.\n",
                 {
@@ -456,7 +445,7 @@ UniValue removeprunedfunds(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
@@ -485,8 +474,6 @@ UniValue importpubkey(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
-        throw std::runtime_error(
             RPCHelpMan{"importpubkey",
                 "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend. Requires a new wallet backup.\n"
                 "Hint: use importmulti to import more than one public key.\n"
@@ -507,7 +494,7 @@ UniValue importpubkey(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("importpubkey", "\"mypubkey\", \"testing\", false")
                 },
-            }.ToString());
+            }.Check(request);
 
 
     std::string strLabel;
@@ -570,8 +557,6 @@ UniValue importwallet(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"importwallet",
                 "\nImports keys from a wallet dump file (see dumpwallet). Requires a new wallet backup to include imported keys.\n"
                 "Note: Use \"getwalletinfo\" to query the scanning progress.\n",
@@ -587,7 +572,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             "\nImport using the json rpc call\n"
             + HelpExampleRpc("importwallet", "\"test\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     if (pwallet->chain().havePruned()) {
         // Exit early and print an error.
@@ -735,8 +720,6 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"dumpprivkey",
                 "\nReveals the private key corresponding to 'address'.\n"
                 "Then the importprivkey can be used with this output\n",
@@ -751,7 +734,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
             + HelpExampleCli("importprivkey", "\"mykey\"")
             + HelpExampleRpc("dumpprivkey", "\"myaddress\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
@@ -783,8 +766,6 @@ UniValue dumpwallet(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"dumpwallet",
                 "\nDumps all wallet keys in a human-readable format to a server-side file. This does not allow overwriting existing files.\n"
                 "Imported scripts are included in the dumpfile, but corresponding BIP173 addresses, etc. may not be added automatically by importwallet.\n"
@@ -802,7 +783,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
                     HelpExampleCli("dumpwallet", "\"test\"")
             + HelpExampleRpc("dumpwallet", "\"test\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     auto locked_chain = pwallet->chain().lock();
     LOCK(pwallet->cs_wallet);
@@ -1322,8 +1303,6 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
         return NullUniValue;
     }
 
-    if (mainRequest.fHelp || mainRequest.params.size() < 1 || mainRequest.params.size() > 2)
-        throw std::runtime_error(
             RPCHelpMan{"importmulti",
                 "\nImport addresses/scripts (with private or public keys, redeem script (P2SH)), optionally rescanning the blockchain from the earliest creation time of the imported scripts. Requires a new wallet backup.\n"
                 "If an address/script is imported without all of the private keys required to spend from that address, it will be watchonly. The 'watchonly' option must be set to true in this case or a warning will be returned.\n"
@@ -1384,8 +1363,7 @@ UniValue importmulti(const JSONRPCRequest& mainRequest)
                                           "{ \"scriptPubKey\": { \"address\": \"<my 2nd address>\" }, \"label\": \"example 2\", \"timestamp\": 1455191480 }]'") +
                     HelpExampleCli("importmulti", "'[{ \"scriptPubKey\": { \"address\": \"<my address>\" }, \"timestamp\":1455191478 }]' '{ \"rescan\": false}'")
                 },
-            }.ToString()
-        );
+            }.Check(mainRequest);
 
 
     RPCTypeCheck(mainRequest.params, {UniValue::VARR, UniValue::VOBJ});
