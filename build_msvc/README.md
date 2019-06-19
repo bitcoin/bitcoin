@@ -26,13 +26,8 @@ The external dependencies required for the Visual Studio build are (see [depende
 - ZeroMQ
 - RapidCheck
 
-<<<<<<< HEAD
-Additional dependencies required from the [syscoin-core](https://github.com/syscoin-core) github repository are:
-- SECP256K1,
-=======
 Additional dependencies required from the [bitcoin-core](https://github.com/bitcoin-core) GitHub repository are:
 - libsecp256k1
->>>>>>> 4971be76a... docs: add rapidcheck to vcpkg install list
 - LevelDB
 
 Building
