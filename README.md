@@ -4,13 +4,13 @@
 **Install Xcode command line tool (for Mac)**
 
 ```bash
-xcode-select -install
+$ xcode-select -install
 ```
 
 **Install Packages (for Mac)**
 
 ```bash
-brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python qt libevent qrencode librsvg
+$ brew install automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf python qt libevent qrencode librsvg
 ```
 
 
@@ -22,7 +22,8 @@ $ apt install -y build-essential libtool autotools-dev automake pkg-config bsdma
 **Clone SourceCode**
 
 ```bash
-git clone https://github.com/cryptoecc/bitcoin_ECC.git
+$ git clone https://github.com/cryptoecc/bitcoin_ECC.git
+$ git checkout ecc-0.1
 ```
 
 **Build BitcoinEcc**
@@ -65,6 +66,7 @@ src/bitcoind \
 
 ```bash
 $ git clone https://github.com/cryptoecc/bitcoin_ECC.git
+$ git checkout ecc-0.1
 ```
 
 **Create Docker Image**
