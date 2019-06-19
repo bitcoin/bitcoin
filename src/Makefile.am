@@ -151,6 +151,7 @@ BITCOIN_CORE_H = \
   nodeconfig.h \
   platform/specialtx-common.h \
   platform/specialtx.h \
+  platform/platform-db.h \
   platform/platform-utils.h \
   platform/rpc/rpcagents.h \
   platform/rpc/rpc-nf-token.h \
@@ -256,6 +257,7 @@ libbitcoin_server_a_SOURCES = \
   platform/governance-vote.cpp \
   platform/governance-vote.h \
   platform/specialtx.cpp \
+  platform/platform-db.cpp \
   platform/rpc/specialtx-rpc-utils.cpp \
   platform/rpc/rpcagents.cpp \
   platform/rpc/rpc-nf-token.cpp \
