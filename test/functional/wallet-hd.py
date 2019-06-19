@@ -82,7 +82,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Needs rescan
         self.stop_node(1)
-        self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1] + ['-rescan'])
+        self.nodes[1] = start_node(1, self.options.tmpdir, self.extra_args[1] + ['-rescan'], redirect_stderr=True)
         #connect_nodes_bi(self.nodes, 0, 1)
         assert_equal(self.nodes[1].getbalance(), num_hd_adds + 1)
 

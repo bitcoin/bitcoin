@@ -67,7 +67,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir))
         self.nodes.append(start_node(1, self.options.tmpdir))
-        # Give bitcoind a second to reload the mempool
+        # Give dashd a second to reload the mempool
         time.sleep(1)
         assert wait_until(lambda: len(self.nodes[0].getrawmempool()) == 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
@@ -76,7 +76,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         stop_nodes(self.nodes)
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, ["-persistmempool=0"]))
-        # Give bitcoind a second to reload the mempool
+        # Give dashd a second to reload the mempool
         time.sleep(1)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
 

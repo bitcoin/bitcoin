@@ -303,9 +303,10 @@ class BitcoinTestFramework(object):
                     shutil.rmtree(os.path.join(cachedir, "node" + str(i)))
 
             # Create cache directories, run dashds:
+            set_genesis_mocktime()
             for i in range(MAX_NODES):
                 datadir = initialize_datadir(cachedir, i)
-                args = [os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0"]
+                args = [os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0", "-mocktime="+str(GENESISTIME)]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
                 bitcoind_processes[i] = subprocess.Popen(args)
@@ -328,14 +329,13 @@ class BitcoinTestFramework(object):
             #
             # blocks are created with timestamps 10 minutes apart
             # starting from 2010 minutes in the past
-            enable_mocktime()
-            block_time = get_mocktime() - (201 * 10 * 60)
+            block_time = GENESISTIME
             for i in range(2):
                 for peer in range(4):
                     for j in range(25):
                         set_node_times(self.nodes, block_time)
                         self.nodes[peer].generate(1)
-                        block_time += 10 * 60
+                        block_time += 156
                     # Must sync before next peer starts generating blocks
                     sync_blocks(self.nodes)
 
@@ -353,7 +353,7 @@ class BitcoinTestFramework(object):
             from_dir = os.path.join(cachedir, "node" + str(i))
             to_dir = os.path.join(test_dir, "node" + str(i))
             shutil.copytree(from_dir, to_dir)
-            initialize_datadir(test_dir, i)  # Overwrite port/rpcport in bitcoin.conf
+            initialize_datadir(test_dir, i)  # Overwrite port/rpcport in dsah.conf
 
     def _initialize_chain_clean(self, test_dir, num_nodes):
         """Initialize empty blockchain for use by the test.
