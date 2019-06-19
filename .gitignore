@@ -125,3 +125,4 @@ db4/
 # clang-check
 *.plist
 .vscode
+\#*\#

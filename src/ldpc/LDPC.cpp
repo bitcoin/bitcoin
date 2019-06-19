@@ -173,6 +173,9 @@ bool LDPC::generate_H()
     std::shuffle(col_order.begin(), col_order.end(), rng);
      */
     int o = seed % k;
+    if (!o) {
+      o = k;
+    }
     for (int j = 1; j < col_order.size(); j++) {
       if (j % o == 0) {
         std::swap(col_order[j], col_order[j-1]);
