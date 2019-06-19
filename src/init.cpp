@@ -2117,9 +2117,7 @@ bool AppInitMain(InitInterfaces& interfaces)
     bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
     StartGethNode(exePath, gethPID, bGethTestnet, wsport);
 	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-	const std::string& rpcuser = gArgs.GetArg("-rpcuser", "");
-	const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "");
-	StartRelayerNode(exePath, relayerPID, rpcport, rpcuser, rpcpassword, bGethTestnet, wsport);
+	StartRelayerNode(exePath, relayerPID, rpcport, bGethTestnet, wsport);
     
     for (const auto& client : interfaces.chain_clients) {
         client->start(scheduler);
