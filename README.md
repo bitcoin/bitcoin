@@ -87,5 +87,5 @@ $ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-mainnet \
     -e RPCPASSWORD=rpc \
     bitcoin-ecc
 
-$ docker logs git clone https://github.com/cryptoecc/bitcoin_ECC.git
+$ docker logs bitcoin-ecc
 ```
