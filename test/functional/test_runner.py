@@ -67,14 +67,14 @@ TEST_EXIT_PASSED = 0
 TEST_EXIT_SKIPPED = 77
 
 EXTENDED_SCRIPTS = [
-    # These tests are not run by the travis build process.
+    # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
 ]
 
 BASE_SCRIPTS = [
-    # Scripts that are run by the travis build process.
+    # Scripts that are run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_fee_estimation.py',
     'wallet_hd.py',
@@ -494,7 +494,8 @@ class TestHandler:
             for job in self.jobs:
                 (name, start_time, proc, testdir, log_out, log_err) = job
                 if int(time.time() - start_time) > self.timeout_duration:
-                    # In travis, timeout individual tests (to stop tests hanging and not providing useful output).
+                    # Timeout individual tests if timeout is specified (to stop
+                    # tests hanging and not providing useful output).
                     proc.send_signal(signal.SIGINT)
                 if proc.poll() is not None:
                     log_out.seek(0), log_err.seek(0)
@@ -582,7 +583,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:
-            # On travis this warning is an error to prevent merging incomplete commits into master
+            # On CI this warning is an error to prevent merging incomplete commits into master
             sys.exit(1)
 
 
