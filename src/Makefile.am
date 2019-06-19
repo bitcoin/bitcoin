@@ -165,6 +165,7 @@ BITCOIN_CORE_H = \
   platform/nf-token/nf-token-protocol-reg-tx.h \
   platform/nf-token/nf-token-protocol.h \
   platform/nf-token/nf-token.h \
+  platform/nf-token/nf-token-index.h \
   systemnode.h \
   systemnode-payments.h \
   systemnode-sync.h \
