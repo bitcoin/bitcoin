@@ -4,6 +4,8 @@
 
 #include <crypto/siphash.h>
 
+#include <cassert>
+
 #define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
 
 #define SIPROUND do { \

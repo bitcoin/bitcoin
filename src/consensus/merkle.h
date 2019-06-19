@@ -5,7 +5,6 @@
 #ifndef BITCOIN_CONSENSUS_MERKLE_H
 #define BITCOIN_CONSENSUS_MERKLE_H
 
-#include <stdint.h>
 #include <vector>
 
 #include <primitives/transaction.h>

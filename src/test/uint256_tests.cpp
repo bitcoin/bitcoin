@@ -7,12 +7,9 @@
 #include <test/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <stdint.h>
 #include <sstream>
 #include <iomanip>
-#include <cmath>
 #include <string>
-#include <stdio.h>
 
 BOOST_FIXTURE_TEST_SUITE(uint256_tests, BasicTestingSetup)
 

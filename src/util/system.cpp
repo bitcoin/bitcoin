@@ -8,8 +8,6 @@
 #include <chainparamsbase.h>
 #include <util/strencodings.h>
 
-#include <stdarg.h>
-
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
 #include <pthread_np.h>

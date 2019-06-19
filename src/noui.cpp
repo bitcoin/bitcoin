@@ -8,8 +8,6 @@
 #include <ui_interface.h>
 #include <util/system.h>
 
-#include <cstdio>
-#include <stdint.h>
 #include <string>
 
 #include <boost/signals2/connection.hpp>

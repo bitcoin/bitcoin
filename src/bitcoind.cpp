@@ -19,8 +19,6 @@
 #include <util/threadnames.h>
 #include <util/strencodings.h>
 
-#include <stdio.h>
-
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
 /* Introduction text for doxygen: */

@@ -36,7 +36,6 @@
 #include <util/system.h>
 
 #include <memory>
-#include <stdint.h>
 
 #include <boost/thread.hpp>
 

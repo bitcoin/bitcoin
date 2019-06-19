@@ -7,7 +7,7 @@
 
 #include <util/strencodings.h>
 
-#include <stdio.h>
+#include <cassert>
 #include <string.h>
 
 template <unsigned int BITS>
