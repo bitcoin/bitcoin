@@ -314,7 +314,7 @@ Examples:
             totalSupply = NfTokensManager::Instance().TotalSupply();
         }
 
-        return json_spirit::Value(totalSupply);
+        return static_cast<uint64_t>(totalSupply);
     }
 
     void NfTokenBalanceOfHelp()
@@ -357,7 +357,7 @@ Display balance of "CRWS78Yf5kbWAyfcES6RfiTVzP87csPNhZzc" address
             balance = NfTokensManager::Instance().BalanceOf(filterKeyId);
         }
 
-        return json_spirit::Value(balance);
+        return static_cast<uint64_t>(balance);
     }
 
     void NfTokenOwnerOfHelp()
