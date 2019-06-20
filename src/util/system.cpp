@@ -16,6 +16,8 @@
 #endif
 
 #ifndef WIN32
+#include <unistd.h>
+extern char **environ;
 // for posix_fallocate
 #ifdef __linux__
 
