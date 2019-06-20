@@ -103,11 +103,11 @@ class BitcoinTestFramework(object):
             connect_nodes_bi(self.nodes, i, i + 1)
         self.sync_all()
 
-    def setup_nodes(self):
+    def setup_nodes(self, stderr=None):
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args, stderr=stderr)
 
     def run_test(self):
         raise NotImplementedError
@@ -219,8 +219,8 @@ class BitcoinTestFramework(object):
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
         return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
 
-    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None):
-        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary)
+    def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
+        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary, stderr)
 
     def stop_node(self, num_node):
         stop_node(self.nodes[num_node], num_node)
@@ -281,7 +281,7 @@ class BitcoinTestFramework(object):
             rpc_handler.setLevel(logging.DEBUG)
             rpc_logger.addHandler(rpc_handler)
 
-    def _initialize_chain(self, test_dir, num_nodes, cachedir):
+    def _initialize_chain(self, test_dir, num_nodes, cachedir, extra_args=None, stderr=None):
         """Initialize a pre-mined blockchain for use by the test.
 
         Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
@@ -309,7 +309,9 @@ class BitcoinTestFramework(object):
                 args = [os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir=" + datadir, "-discover=0", "-mocktime="+str(GENESISTIME)]
                 if i > 0:
                     args.append("-connect=127.0.0.1:" + str(p2p_port(0)))
-                bitcoind_processes[i] = subprocess.Popen(args)
+                if extra_args is not None:
+                    args.extend(extra_args)
+                bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
                 self.log.debug("initialize_chain: dashd started, waiting for RPC to come up")
                 wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
                 self.log.debug("initialize_chain: RPC successfully started")

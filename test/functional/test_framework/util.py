@@ -251,7 +251,7 @@ def wait_for_bitcoind_start(process, url, i):
         time.sleep(0.25)
 
 
-def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, redirect_stderr=False, stderr=None):
+def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
     Start a dashd and return RPC connection to it
     """
@@ -263,11 +263,6 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     # Don't try auto backups (they fail a lot when running tests)
     args += [ "-createwalletbackups=0" ]
     if extra_args is not None: args.extend(extra_args)
-
-    # Allow to redirect stderr to stdout in case we expect some non-critical warnings/errors printed to stderr
-    # Otherwise the whole test would be considered to be failed in such cases
-    if redirect_stderr:
-        stderr = sys.stdout
 
     bitcoind_processes[i] = subprocess.Popen(args, stderr=stderr)
     logger.debug("initialize_chain: dashd started, waiting for RPC to come up")
@@ -300,7 +295,7 @@ def assert_start_raises_init_error(i, dirname, extra_args=None, expected_msg=Non
                 assert_msg = "dashd should have exited with expected error " + expected_msg
             raise AssertionError(assert_msg)
 
-def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, redirect_stderr=False):
+def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
     """
     Start multiple dashds, return RPC connections to them
     """
@@ -311,7 +306,7 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, timewait=None
     rpcs = []
     try:
         for i in range(num_nodes):
-            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], redirect_stderr=redirect_stderr))
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, timewait=timewait, binary=binary[i], stderr=stderr))
     except: # If one node failed to start, stop the others
         stop_nodes(rpcs)
         raise
