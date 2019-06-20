@@ -9,6 +9,7 @@
 #include <core_io.h>
 #include <net.h>
 #include <net_processing.h>
+#include <net_permissions.h>
 #include <netbase.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
@@ -178,6 +179,11 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
             obj.pushKV("inflight", heights);
         }
         obj.pushKV("whitelisted", stats.fWhitelisted);
+        UniValue permissions(UniValue::VARR);
+        for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {
+            permissions.push_back(permission);
+        }
+        obj.pushKV("permissions", permissions);
         obj.pushKV("minfeefilter", ValueFromAmount(stats.minFeeFilter));
 
         UniValue sendPerMsgCmd(UniValue::VOBJ);
