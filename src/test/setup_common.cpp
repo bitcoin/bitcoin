@@ -42,7 +42,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
     fs::create_directories(m_path_root);
     gArgs.ForceSetArg("-datadir", m_path_root.string());
-    ClearDatadirCache();
     SelectParams(chainName);
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();
@@ -73,7 +72,6 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
     // Ideally we'd move all the RPC tests to the functional testing framework
     // instead of unit tests, but for now we need these here.
-
     RegisterAllCoreRPCCommands(tableRPC);
 
     // We have to run a scheduler thread to prevent ActivateBestChain

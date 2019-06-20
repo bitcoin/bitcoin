@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -702,23 +702,9 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path g_blocks_path_cache_net_specific;
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
-
-const fs::path &GetBlocksDir()
+fs::path GetBlocksDir()
 {
-
-    LOCK(csPathCached);
-
-    fs::path &path = g_blocks_path_cache_net_specific;
-
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
-
+    fs::path path;
     if (gArgs.IsArgSet("-blocksdir")) {
         path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
         if (!fs::is_directory(path)) {
@@ -731,22 +717,15 @@ const fs::path &GetBlocksDir()
 
     path /= BaseParams().DataDir();
     path /= "blocks";
-    fs::create_directories(path);
+    static bool create_dir_once{true}; // Avoid hitting disk more than once
+    if (create_dir_once) fs::create_directories(path);
+    create_dir_once = false;
     return path;
 }
 
-const fs::path &GetDataDir(bool fNetSpecific)
+fs::path GetDataDir(bool fNetSpecific)
 {
-
-    LOCK(csPathCached);
-
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
-
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
-
+    fs::path path;
     if (gArgs.IsArgSet("-datadir")) {
         path = fs::system_complete(gArgs.GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
@@ -759,21 +738,14 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (fNetSpecific)
         path /= BaseParams().DataDir();
 
-    if (fs::create_directories(path)) {
+    static bool create_dir_once{true}; // Avoid hitting disk more than once
+    if (create_dir_once && fs::create_directories(path)) {
         // This is the first run, create wallets subdirectory too
         fs::create_directories(path / "wallets");
     }
+    create_dir_once = false;
 
     return path;
-}
-
-void ClearDatadirCache()
-{
-    LOCK(csPathCached);
-
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
-    g_blocks_path_cache_net_specific = fs::path();
 }
 
 fs::path GetConfigFile(const std::string& confPath)
@@ -939,7 +911,6 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     // If datadir is changed in .conf file:
-    ClearDatadirCache();
     if (!fs::is_directory(GetDataDir(false))) {
         error = strprintf("specified data directory \"%s\" does not exist.", gArgs.GetArg("-datadir", "").c_str());
         return false;
