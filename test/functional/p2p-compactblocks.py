@@ -95,7 +95,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         # both nodes has the same version
         self.num_nodes = 2
-        self.extra_args = [["-txindex"]]
+        self.extra_args = [["-txindex"]] * 2
         self.utxos = []
 
     def build_block_on_tip(self, node):

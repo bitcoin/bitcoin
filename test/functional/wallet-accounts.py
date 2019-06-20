@@ -25,7 +25,7 @@ class WalletAccountsTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 1
-        self.extra_args = [[]]
+        self.extra_args = [["-paytxfee=0.0001"]]
 
     def run_test(self):
         node = self.nodes[0]
@@ -33,7 +33,7 @@ class WalletAccountsTest(BitcoinTestFramework):
         assert_equal(len(node.listunspent()), 0)
 
         # Note each time we call generate, all generated coins go into
-        # the same address, so we call twice to get two addresses w/50 each
+        # the same address, so we call twice to get two addresses w/500 each
         node.generate(1)
         node.generate(101)
         assert_equal(node.getbalance(), 1000)
@@ -57,9 +57,11 @@ class WalletAccountsTest(BitcoinTestFramework):
         common_address = "yd5KMREs3GLMe6mTJYr3YrH1juwNwrFCfB"
         txid = node.sendmany(
             fromaccount="",
-            amounts={common_address: 100},
-            subtractfeefrom=[common_address],
+            amounts={common_address: 1000},
             minconf=1,
+            addlocked=False,
+            comment="",
+            subtractfeefrom=[common_address],
         )
         tx_details = node.gettransaction(txid)
         fee = -tx_details['details'][0]['fee']

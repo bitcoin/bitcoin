@@ -17,25 +17,29 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from .util import (
-    assert_equal,
-    start_nodes,
     PortSeed,
+    GENESISTIME,
     MAX_NODES,
+    assert_equal,
     bitcoind_processes,
     check_json_precision,
     connect_nodes_bi,
     connect_nodes,
+    copy_datadir,
     disable_mocktime,
     disconnect_nodes,
     enable_coverage,
-    enable_mocktime,
     get_mocktime,
     get_rpc_proxy,
     initialize_datadir,
     log_filename,
     p2p_port,
     rpc_url,
+    set_cache_mocktime,
+    set_genesis_mocktime,
+    set_mocktime,
     set_node_times,
+    satoshi_round,
     start_node,
     start_nodes,
     stop_node,
@@ -44,15 +48,7 @@ from .util import (
     sync_mempools,
     sync_masternodes,
     wait_for_bitcoind_start,
-    set_cache_mocktime,
-    set_genesis_mocktime,
-    get_mocktime,
-    set_mocktime,
-    set_node_times,
-    p2p_port,
-    satoshi_round,
-    wait_to_sync,
-    copy_datadir)
+    wait_to_sync)
 from .authproxy import JSONRPCException
 
 class BitcoinTestFramework(object):

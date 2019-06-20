@@ -26,6 +26,8 @@ class DIP3Test(BitcoinTestFramework):
         self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
         self.extra_args += ["-dip3params=135:150"]
 
+
+    def setup_network(self):
         disable_mocktime()
         self.start_controller_node()
 

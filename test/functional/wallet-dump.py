@@ -57,17 +57,15 @@ class WalletDumpTest(BitcoinTestFramework):
 
     def __init__(self):
         super().__init__()
-        self.setup_clean_chain = False
+        self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [["-keypool=90", "-usehd=1"]]
 
-    def setup_chain(self):
+    def setup_network(self):
         # TODO remove this when usehd=1 becomes the default
         # use our own cache and -usehd=1 as extra arg as the default cache is run with -usehd=0
         self._initialize_chain(os.path.join(self.options.tmpdir, "hd"), self.num_nodes, os.path.join(self.options.cachedir, "hd"), extra_args=self.extra_args[0], stderr=sys.stdout)
         set_cache_mocktime()
-
-    def setup_network(self, split=False):
         # Use 1 minute timeout because the initial getnewaddress RPC can take
         # longer than the default 30 seconds due to an expensive
         # CWallet::TopUpKeyPool call, and the encryptwallet RPC made later in
@@ -75,7 +73,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes = start_nodes(self.num_nodes, os.path.join(self.options.tmpdir, "hd"), self.extra_args, timewait=60, stderr=sys.stdout)
 
     def run_test (self):
-        tmpdir = self.options.tmpdir
+        tmpdir = os.path.join(self.options.tmpdir, "hd")
 
         # generate 20 addresses to compare against the dump
         test_addr_count = 20
@@ -99,7 +97,7 @@ class WalletDumpTest(BitcoinTestFramework):
         #encrypt wallet, restart, unlock and dump
         self.nodes[0].encryptwallet('test')
         bitcoind_processes[0].wait()
-        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args[0])
+        self.nodes[0] = start_node(0, tmpdir, self.extra_args[0])
         self.nodes[0].walletpassphrase('test', 10)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
