@@ -309,6 +309,9 @@ UniValue SignTransaction(CMutableTransaction& mtx, const SigningProvider* keysto
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 TxInErrorToJSON(txin, vErrors, "Unable to sign input, invalid stack size (possibly missing key)");
+            } else if (serror == SCRIPT_ERR_SIG_NULLFAIL) {
+                // Verification failed (possibly due to insufficient signatures).
+                TxInErrorToJSON(txin, vErrors, "CHECK(MULTI)SIG failing with non-zero signature (possibly need more signatures)");
             } else {
                 TxInErrorToJSON(txin, vErrors, ScriptErrorString(serror));
             }
