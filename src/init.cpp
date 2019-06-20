@@ -27,6 +27,7 @@
 #include <key.h>
 #include <miner.h>
 #include <net.h>
+#include <net_permissions.h>
 #include <net_processing.h>
 #include <netbase.h>
 #include <policy/feerate.h>
@@ -1775,21 +1776,16 @@ bool AppInitMain(InitInterfaces& interfaces)
         connOptions.vBinds.push_back(addrBind);
     }
     for (const std::string& strBind : gArgs.GetArgs("-whitebind")) {
-        CService addrBind;
-        if (!Lookup(strBind.c_str(), addrBind, 0, false)) {
-            return InitError(ResolveErrMsg("whitebind", strBind));
-        }
-        if (addrBind.GetPort() == 0) {
-            return InitError(strprintf(_("Need to specify a port with -whitebind: '%s'").translated, strBind));
-        }
-        connOptions.vWhiteBinds.push_back(addrBind);
+        NetWhitebindPermissions whitebind;
+        std::string error;
+        if (!NetWhitebindPermissions::TryParse(strBind, whitebind, error)) return InitError(error);
+        connOptions.vWhiteBinds.push_back(whitebind);
     }
 
     for (const auto& net : gArgs.GetArgs("-whitelist")) {
-        CSubNet subnet;
-        LookupSubNet(net.c_str(), subnet);
-        if (!subnet.IsValid())
-            return InitError(strprintf(_("Invalid netmask specified in -whitelist: '%s'").translated, net));
+        NetWhitelistPermissions subnet;
+        std::string error;
+        if (!NetWhitelistPermissions::TryParse(net, subnet, error)) return InitError(error);
         connOptions.vWhitelistedRange.push_back(subnet);
     }
 
