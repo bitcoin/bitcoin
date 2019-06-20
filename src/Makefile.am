@@ -305,6 +305,10 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
   ethereum/ethereum.h \
   ethereum/vector_ref.h
 
+if GLIBC_BACK_COMPAT
+  ethereum_libethereum_a_SOURCES += compat/glibc_compat.cpp
+endif
+
 # server: shared between syscoind and syscoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
 # from wallet and gui code (see node/README.md). Shared code should go in
