@@ -108,6 +108,8 @@ namespace BCLog {
 
         /** Start logging (and flush all buffered messages) */
         bool StartLogging();
+        /** Only for testing */
+        void DisconnectTestLogger();
 
         void ShrinkDebugFile();
 
