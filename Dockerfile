@@ -18,4 +18,5 @@ EXPOSE 9776 9777
 EXPOSE 19776 19777
 EXPOSE 19887 19888
 
+ENTRYPOINT ["bitcoind", "--printtoconsole"]
 CMD ["bitcoind", "--printtoconsole"]
