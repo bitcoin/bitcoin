@@ -97,8 +97,6 @@
 #include "zmq/zmqnotificationinterface.h"
 #endif
 
-extern void ThreadSendAlert(CConnman& connman);
-
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -2161,8 +2159,6 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (pwalletMain)
         pwalletMain->postInitProcess(scheduler);
 #endif
-
-    threadGroup.create_thread(boost::bind(&ThreadSendAlert, boost::ref(connman)));
 
     return !fRequestShutdown;
 }
