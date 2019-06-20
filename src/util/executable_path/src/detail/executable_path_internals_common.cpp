@@ -17,9 +17,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/locale.hpp>
 #include <boost/tokenizer.hpp>
-#ifndef BOOST_OS_WINDOWS
-#include <unistd.h>
-#endif
 #if (BOOST_VERSION >= 106100 && BOOST_VERSION < 106400)
 #  include <boost/dll/runtime_symbol_info.hpp>
 #endif

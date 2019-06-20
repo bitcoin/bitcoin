@@ -16,10 +16,6 @@
 #endif
 
 #ifndef WIN32
-#include <unistd.h>
-char **environ = NULL;
-char **__environ = NULL;
-char **_environ = NULL;
 // for posix_fallocate
 #ifdef __linux__
 
