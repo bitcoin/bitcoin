@@ -1031,7 +1031,7 @@ UniValue sendmany(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 8)
         throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefromamount use_is use_ps )\n"
+            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefrom use_is use_ps )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1044,7 +1044,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
             "4. addlocked               (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "5. \"comment\"               (string, optional) A comment\n"
-            "6. subtractfeefromamount   (array, optional) A json array with addresses.\n"
+            "6. subtractfeefrom         (array, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less dashs than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
@@ -1084,9 +1084,9 @@ UniValue sendmany(const JSONRPCRequest& request)
     if (request.params.size() > 4 && !request.params[4].isNull() && !request.params[4].get_str().empty())
         wtx.mapValue["comment"] = request.params[4].get_str();
 
-    UniValue subtractFeeFromAmount(UniValue::VARR);
+    UniValue subtractFeeFrom(UniValue::VARR);
     if (request.params.size() > 5)
-        subtractFeeFromAmount = request.params[5].get_array();
+        subtractFeeFrom = request.params[5].get_array();
 
     std::set<CBitcoinAddress> setAddress;
     std::vector<CRecipient> vecSend;
@@ -1110,8 +1110,8 @@ UniValue sendmany(const JSONRPCRequest& request)
         totalAmount += nAmount;
 
         bool fSubtractFeeFromAmount = false;
-        for (unsigned int idx = 0; idx < subtractFeeFromAmount.size(); idx++) {
-            const UniValue& addr = subtractFeeFromAmount[idx];
+        for (unsigned int idx = 0; idx < subtractFeeFrom.size(); idx++) {
+            const UniValue& addr = subtractFeeFrom[idx];
             if (addr.get_str() == name_)
                 fSubtractFeeFromAmount = true;
         }
