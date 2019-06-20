@@ -39,7 +39,7 @@
 // SYSCOIN
 #include <services/assetconsensus.h>
 #ifdef ENABLE_WALLET
-extern std::map<std::string, std::pair<COutPoint, int64_t> > mapSenderTXIDs;
+extern std::map<std::string, COutPoint> mapSenderTXIDs;
 #endif
 /** High fee for sendrawtransaction and testmempoolaccept.
  * By default, transaction with a fee higher than this will be rejected by the
@@ -877,7 +877,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
                 CTxDestination dest ;
                 if(ExtractDestination(tx.get()->vout[i].scriptPubKey, dest)){
                     if(EncodeDestination(dest) == sender){
-                        mapSenderTXIDs[sender] = std::make_pair(COutPoint(txid, i), GetTimeMillis());
+                        mapSenderTXIDs[sender] = COutPoint(txid, i);
                     }
                 }
             }

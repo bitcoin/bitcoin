@@ -26,7 +26,7 @@ extern CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const
 extern bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 extern CAmount AssetAmountFromValue(UniValue& value, int precision);
 extern UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
-std::map<std::string, std::pair<COutPoint, int64_t> > mapSenderTXIDs;
+std::map<std::string, COutPoint> mapSenderTXIDs;
 using namespace std;
 std::vector<CTxIn> savedtxins;
 UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request);
@@ -161,14 +161,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     COutPoint outPointLastSender;
     auto itSender = mapSenderTXIDs.find(strAddress);
     if(itSender != mapSenderTXIDs.end()){
-        outPointLastSender = itSender->second.first;
-        int64_t nElapsedTime = (GetTimeMillis() - itSender->second.second) / 1000;
-        // enforce clients to wait to link mempool transactions, otherwise try to use confirmed outputs
-        if(!fTPSTest && nElapsedTime < ZDAG_MINIMUM_LATENCY_SECONDS){
-            const std::string &message = strprintf("syscointxfund: Warning! Did not wait long enough (wait %d more seconds), trying to use confirmed outputs to fund this transactions intead...\n", ZDAG_MINIMUM_LATENCY_SECONDS - nElapsedTime);
-            LogPrintf(message.c_str());
-            outPointLastSender.SetNull();
-        }
+        outPointLastSender = itSender->second;
     }
     {
         LOCK(cs_main);
@@ -950,7 +943,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
     if(!lockedOutpoint.IsNull()){
         // this will let syscointxfund try to select this outpoint as the input
-        mapSenderTXIDs[strAddressFrom] = std::make_pair(lockedOutpoint, GetTimeMillis() - (ZDAG_MINIMUM_LATENCY_SECONDS*1000));
+        mapSenderTXIDs[strAddressFrom] = lockedOutpoint;
     }
 	theAssetAllocation.SetNull();
     theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
@@ -1380,7 +1373,7 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
     if(strAddressFrom != strAddressDest)    
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Outpoint address must match allocation owner address"));
     // this will let syscointxfund try to select this outpoint as the input
-    mapSenderTXIDs[strAddressFrom] = std::make_pair(theAssetAllocation.lockedOutpoint, GetTimeMillis() - (ZDAG_MINIMUM_LATENCY_SECONDS*1000));
+    mapSenderTXIDs[strAddressFrom] = theAssetAllocation.lockedOutpoint;
     vector<unsigned char> data;
     theAssetAllocation.Serialize(data);    
 	vector<CRecipient> vecSend;
