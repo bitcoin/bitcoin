@@ -78,16 +78,55 @@ $ docker build -t bitcoin-ecc .
 
 #### Run DockerContainer
 
+**Createe Volume**
+
 ```bash
 # docker volume rm bitcoin-ecc-data
 $ docker volume create --name=bitcoin-ecc-data
+```
 
+**Mainnet**
+
+```bash
 $ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-mainnet \
-    -p 9776:9776 \
-    -p 9777:9777 \
-    -e RPCUSER=rpc \
-    -e RPCPASSWORD=rpc \
-    bitcoin-ecc
+-p 9776:9776 \
+-p 9777:9777 \
+bitcoin-ecc \
+-rpcuser=rpc \
+-rpcpassword=rpc
 
-$ docker logs bitcoin-ecc
+$ docker logs bitcoin-ecc-mainnet
+```
+
+**Testnet**
+
+```bash
+$ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-testnet \
+-p 19776:19776 \
+-p 19777:19777 \
+bitcoin-ecc \
+-rpcuser=rpc \
+-rpcpassword=rpc \
+-testnet
+
+$ docker logs bitcoin-ecc-testnet
+```
+
+**Regtest**
+
+```bash
+$ docker run -d -v bitcoin-ecc-data:/root/.bitcoin --name=bitcoin-ecc-regtest \
+-p 19887:19887 \
+bitcoin-ecc \
+-rpcuser=rpc \
+-rpcpassword=rpc \
+-regtest
+
+$ docker logs bitcoin-ecc-regtest
+```
+
+**Add Node Option**
+
+```
+-addnode=<ipaddr>
 ```
