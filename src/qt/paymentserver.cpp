@@ -488,7 +488,7 @@ void PaymentServer::LoadRootCAs(X509_STORE* _store)
             continue;
         }
     }
-    qWarning() << "PaymentServer::LoadRootCAs: Loaded " << nRootCerts << " root certificates";
+    qInfo() << "PaymentServer::LoadRootCAs: Loaded " << nRootCerts << " root certificates";
 
     // Project for another day:
     // Fetch certificate revocation lists, and add them to certStore.
