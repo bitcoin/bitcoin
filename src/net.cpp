@@ -2070,6 +2070,8 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (interruptNet)
             return;
 
+        int64_t nANow = GetAdjustedTime();
+
         // NOTE: Process only one pending masternode at a time
 
         CService addr;
@@ -2085,6 +2087,11 @@ void CConnman::ThreadOpenMasternodeConnections()
                     }
                     const auto& addr2 = dmn->pdmnState->addr;
                     if (!connectedNodes.count(addr2) && !IsMasternodeOrDisconnectRequested(addr2) && !connectedProRegTxHashes.count(proRegTxHash)) {
+                        auto addrInfo = addrman.GetAddressInfo(addr2);
+                        // back off trying connecting to an address if we already tried recently
+                        if (addrInfo.IsValid() && nANow - addrInfo.nLastTry < 60) {
+                            continue;
+                        }
                         pending.emplace_back(addr2);
                     }
                 }
