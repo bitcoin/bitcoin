@@ -186,7 +186,6 @@ class AssumeValidTest(BitcoinTestFramework):
         # node1 must receive all headers as otherwise assumevalid is ignored in ConnectBlock
         # node2 should NOT receive all headers to force skipping of the assumevalid check in ConnectBlock
         node0.send_header_for_blocks(self.blocks[0:2000])
-        node0.send_header_for_blocks(self.blocks[2000:])
         node1.send_header_for_blocks(self.blocks[0:2000])
         node1.send_header_for_blocks(self.blocks[2000:4000])
         node1.send_header_for_blocks(self.blocks[4000:6000])
