@@ -11,11 +11,11 @@
 #include <stdint.h>
 #include <bitset>
 
-class CKeyStore;
+class CWallet;
 class CScript;
 
 /** IsMine() return codes */
-enum isminetype
+enum isminetype : unsigned int
 {
     ISMINE_NO         = 0,
     ISMINE_WATCH_ONLY = 1 << 0,
@@ -28,8 +28,8 @@ enum isminetype
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
 
-isminetype IsMine(const CKeyStore& keystore, const CScript& scriptPubKey);
-isminetype IsMine(const CKeyStore& keystore, const CTxDestination& dest);
+isminetype IsMine(const CWallet& wallet, const CScript& scriptPubKey);
+isminetype IsMine(const CWallet& wallet, const CTxDestination& dest);
 
 /**
  * Cachable amount subdivided into watchonly and spendable parts.
