@@ -13,6 +13,7 @@
 #endif
 
 static std::atomic<bool> g_initial_block_download_completed(false);
+extern bool g_enable_full_rbf;
 
 namespace NetMsgType {
 const char *VERSION="version";
@@ -128,12 +129,18 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
     return true;
 }
 
-
-ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
-    if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS);
+ServiceFlags GetDesirableServiceFlags(ServiceFlags services_them)
+{
+    ServiceFlags desired{NODE_WITNESS}; // Always desire NODE_WITNESS
+    if (g_enable_full_rbf) {
+        desired = ServiceFlags(desired | NODE_FULL_RBF);
     }
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS);
+    if ((services_them & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
+        desired = ServiceFlags(desired | NODE_NETWORK_LIMITED); // NODE_NETWORK_LIMITED provided by them is sufficient
+    } else {
+        desired = ServiceFlags(desired | NODE_NETWORK);
+    }
+    return desired;
 }
 
 void SetServiceFlagsIBDCache(bool state) {

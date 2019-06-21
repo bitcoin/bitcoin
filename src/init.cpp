@@ -527,6 +527,7 @@ void SetupServerArgs()
     gArgs.AddArg("-bytespersigop", strprintf("Equivalent bytes per sigop in transactions for relay and mining (default: %u)", DEFAULT_BYTES_PER_SIGOP), false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-datacarrier", strprintf("Relay and mine data carrier transactions (default: %u)", DEFAULT_ACCEPT_DATACARRIER), false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-datacarriersize", strprintf("Maximum size of data in data carrier transactions we relay and mine (default: %u)", MAX_OP_RETURN_RELAY), false, OptionsCategory::NODE_RELAY);
+    gArgs.AddArg("-mempoolreplacement=<mode>", "A comma separated list of transaction replacement modes for the memory pool. Recognized modes are: 'full' (experimental). Unrecognized modes are ignored. (default: empty list)", false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-minrelaytxfee=<amt>", strprintf("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)",
         CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)), false, OptionsCategory::NODE_RELAY);
     gArgs.AddArg("-whitelistforcerelay", strprintf("Force relay of transactions from whitelisted peers even if the transactions were already in the mempool or violate local relay policy (default: %d)", DEFAULT_WHITELISTFORCERELAY), false, OptionsCategory::NODE_RELAY);
@@ -1174,6 +1175,16 @@ bool AppInitParameterInteraction()
         return InitError("unknown rpcserialversion requested.");
 
     nMaxTipAge = gArgs.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
+
+    if (gArgs.IsArgSet("-mempoolreplacement")) {
+        std::string replacement_mode_list = gArgs.GetArg("-mempoolreplacement", ""); // default is impossible
+        std::vector<std::string> replacement_modes;
+        boost::split(replacement_modes, replacement_mode_list, boost::is_any_of(","));
+        g_enable_full_rbf = (std::find(replacement_modes.begin(), replacement_modes.end(), "full") != replacement_modes.end());
+    }
+    if (g_enable_full_rbf) {
+        nLocalServices = ServiceFlags(nLocalServices | NODE_FULL_RBF);
+    }
 
     return true;
 }

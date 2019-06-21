@@ -273,6 +273,8 @@ enum ServiceFlags : uint64_t {
     // collisions and other cases where nodes may be advertising a service they
     // do not actually support. Other service bits should be allocated via the
     // BIP process.
+
+    NODE_FULL_RBF = (1 << 26),
 };
 
 /**
@@ -299,7 +301,7 @@ enum ServiceFlags : uint64_t {
  * If the NODE_NONE return value is changed, contrib/seeds/makeseeds.py
  * should be updated appropriately to filter for the same nodes.
  */
-ServiceFlags GetDesirableServiceFlags(ServiceFlags services);
+ServiceFlags GetDesirableServiceFlags(ServiceFlags services_them);
 
 /** Set the current IBD status in order to figure out the desirable service flags */
 void SetServiceFlagsIBDCache(bool status);

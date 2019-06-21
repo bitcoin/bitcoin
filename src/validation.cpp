@@ -114,6 +114,7 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
+bool g_enable_full_rbf{false};
 
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
@@ -478,6 +479,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         if (ptxConflicting) {
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
+                if (!g_enable_full_rbf) {
                 // Allow opt-out of transaction replacement by setting
                 // nSequence > MAX_BIP125_RBF_SEQUENCE (SEQUENCE_FINAL-2) on all inputs.
                 //
@@ -502,6 +504,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 if (fReplacementOptOut) {
                     return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_DUPLICATE, "txn-mempool-conflict");
                 }
+                } // g_enable_full_rbf
 
                 setConflicts.insert(ptxConflicting->GetHash());
             }
