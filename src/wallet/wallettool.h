@@ -5,7 +5,7 @@
 #ifndef BITCOIN_WALLET_WALLETTOOL_H
 #define BITCOIN_WALLET_WALLETTOOL_H
 
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 #include <wallet/wallet.h>
 
 namespace WalletTool {
