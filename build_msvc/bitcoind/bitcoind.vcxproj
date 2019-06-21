@@ -45,4 +45,28 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Label="ReplaceInFile" Project="..\msbuild\tasks\replaceinfile.targets" />
+  <PropertyGroup>
+    <ConfigIniIn>..\..\test\config.ini.in</ConfigIniIn>
+    <ConfigIniOut>..\..\test\config.ini</ConfigIniOut>
+  </PropertyGroup>
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="$(ConfigIniIn)" DestinationFiles="$(ConfigIniOut)" ></Copy>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                   Replace="@PACKAGE_NAME@" By="Bitcoin Core"></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                   Replace="@abs_top_srcdir@" By="..\.." ToFullPath="true"></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                   Replace="@abs_top_builddir@" By="..\.." ToFullPath="true"></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                   Replace="@EXEEXT@" By=".exe"></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@ENABLE_WALLET_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@BUILD_BITCOIN_CLI_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@BUILD_BITCOIND_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
+  </Target>
 </Project>

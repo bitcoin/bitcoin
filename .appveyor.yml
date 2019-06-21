@@ -38,17 +38,6 @@ after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z
 before_test:
-- ps:  ${conf_ini} = (Get-Content([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini.in")))
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@PACKAGE_NAME@", "Bitcoin Core")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_srcdir@", ${env:APPVEYOR_BUILD_FOLDER})
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@abs_top_builddir@", ${env:APPVEYOR_BUILD_FOLDER})
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@EXEEXT@", ".exe")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@ENABLE_WALLET_TRUE@", "")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_BITCOIN_CLI_TRUE@", "")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@BUILD_BITCOIND_TRUE@", "")
-- ps:  ${conf_ini} = ${conf_ini}.Replace("@ENABLE_ZMQ_TRUE@", "")
-- ps:  ${utf8} = New-Object System.Text.UTF8Encoding ${false}
-- ps:  '[IO.File]::WriteAllLines([IO.Path]::Combine(${env:APPVEYOR_BUILD_FOLDER}, "test", "config.ini"), ${conf_ini}, ${utf8})'
 - ps:  move "build_msvc\${env:PLATFORM}\${env:CONFIGURATION}\*.exe" src
 test_script:
 - cmd: src\test_bitcoin.exe -k stdout -e stdout 2> NUL
