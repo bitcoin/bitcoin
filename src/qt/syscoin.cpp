@@ -331,7 +331,7 @@ void SyscoinApplication::initializeResult(bool success)
     if(success)
     {
         // Log this only after AppInitMain finishes, as then logging setup is guaranteed complete
-        qWarning() << "Platform customization:" << platformStyle->getName();
+        qInfo() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
         m_wallet_controller = new WalletController(m_node, platformStyle, optionsModel, this);
 #ifdef ENABLE_BIP70
