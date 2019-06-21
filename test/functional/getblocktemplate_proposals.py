@@ -75,7 +75,6 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
     def run_test(self):
         node = self.nodes[0]
-        wait_to_sync(node)
         node.generate(1) # Mine a block to leave initial block download
         tmpl = node.getblocktemplate()
         if 'coinbasetxn' not in tmpl:

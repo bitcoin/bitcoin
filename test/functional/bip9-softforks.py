@@ -74,7 +74,6 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         return info['bip9_softforks'][key]
 
     def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature, bitno):
-        wait_to_sync(self.nodes[0])
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
         assert_equal(self.get_bip9_status(bipName)['since'], 0)
         # generate some coins for later
