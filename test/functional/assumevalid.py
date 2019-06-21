@@ -197,12 +197,12 @@ class AssumeValidTest(BitcoinTestFramework):
         self.send_blocks_until_disconnected(node0)
         self.assert_blockchain_height(self.nodes[0], 101)
 
-        # Send all blocks to node1. All blocks will be accepted.
-        for i in range(2202):
+        # Send 200 blocks to node1. All blocks, including block 102, will be accepted.
+        for i in range(200):
             node1.send_message(msg_block(self.blocks[i]))
-        # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
+        # Syncing so many blocks can take a while on slow systems. Give it plenty of time to sync.
         node1.sync_with_ping(120)
-        assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
+        assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 200)
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(node2)
