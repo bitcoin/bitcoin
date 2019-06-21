@@ -529,7 +529,7 @@ boost::filesystem::path GetMasternodeConfigFile()
 
 boost::filesystem::path GetSystemnodeConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-mnconf", "systemnode.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-snconf", "systemnode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     return pathConfigFile;
 }
