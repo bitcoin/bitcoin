@@ -45,7 +45,8 @@ from test_framework.mininode import (CBlockHeader,
                                      msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_node, p2p_port, assert_equal)
+from test_framework.util import (start_node, p2p_port, assert_equal, get_mocktime, set_mocktime, set_node_times)
+
 
 class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):
@@ -151,8 +152,8 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time += 1
         height += 1
 
-        # Bury the assumed valid block 2100 deep
-        for i in range(2100):
+        # Bury the assumed valid block 8400 deep (Dash needs 4x as much blocks to allow -assumevalid to work)
+        for i in range(8400):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.nVersion = 4
             block.solve()
@@ -176,11 +177,21 @@ class AssumeValidTest(BitcoinTestFramework):
         node2.add_connection(connections[2])
         node2.wait_for_verack()
 
-        # send header lists to all three nodes
+        # Make sure nodes actually accept the many headers
+        set_mocktime(self.block_time)
+        set_node_times(self.nodes, get_mocktime())
+
+        # send header lists to all three nodes.
+        # node0 does not need to receive all headers
+        # node1 must receive all headers as otherwise assumevalid is ignored in ConnectBlock
+        # node2 should NOT receive all headers to force skipping of the assumevalid check in ConnectBlock
         node0.send_header_for_blocks(self.blocks[0:2000])
         node0.send_header_for_blocks(self.blocks[2000:])
         node1.send_header_for_blocks(self.blocks[0:2000])
-        node1.send_header_for_blocks(self.blocks[2000:])
+        node1.send_header_for_blocks(self.blocks[2000:4000])
+        node1.send_header_for_blocks(self.blocks[4000:6000])
+        node1.send_header_for_blocks(self.blocks[6000:8000])
+        node1.send_header_for_blocks(self.blocks[8000:])
         node2.send_header_for_blocks(self.blocks[0:200])
 
         # Send blocks to node0. Block 102 will be rejected.
