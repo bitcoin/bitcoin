@@ -1681,11 +1681,11 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     // ********************************************************* Step 11: import blocks
 
-    if (!CheckDiskSpace(GetDataDir())) {
+    if (!CheckDiskSpace(GetDataDir(), chainparams.AssumedBlockchainSize(), chainparams.AssumedChainStateSize(), nPruneTarget)) {
         InitError(strprintf(_("Error: Disk space is low for %s").translated, GetDataDir()));
         return false;
     }
-    if (!CheckDiskSpace(GetBlocksDir())) {
+    if (!CheckDiskSpace(GetBlocksDir(), chainparams.AssumedBlockchainSize(), chainparams.AssumedChainStateSize(), nPruneTarget)) {
         InitError(strprintf(_("Error: Disk space is low for %s").translated, GetBlocksDir()));
         return false;
     }

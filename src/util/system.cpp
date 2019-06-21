@@ -130,12 +130,21 @@ bool DirIsWritable(const fs::path& directory)
     return true;
 }
 
-bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes)
+bool CheckDiskSpace(const fs::path& dir, uint64_t blockchain_size, uint64_t chain_state_size, uint64_t prune_target_in_mib)
 {
-    constexpr uint64_t min_disk_space = 52428800; // 50 MiB
-
     uint64_t free_bytes_available = fs::space(dir).available;
-    return free_bytes_available >= min_disk_space + additional_bytes;
+    uint64_t required_space = blockchain_size;
+    constexpr uint64_t GB_BYTES{1000000000};
+
+    if (prune_target_in_mib) {
+        uint64_t pruned_GBs = std::ceil(prune_target_in_mib * 1024 * 1024.0 / GB_BYTES);
+        if (pruned_GBs <= required_space) {
+            required_space = pruned_GBs;
+        }
+    }
+    required_space += chain_state_size;
+
+    return free_bytes_available >= required_space;
 }
 
 /**

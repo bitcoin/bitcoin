@@ -59,7 +59,7 @@ bool RenameOver(fs::path src, fs::path dest);
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
 void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
-bool CheckDiskSpace(const fs::path& dir, uint64_t additional_bytes = 0);
+bool CheckDiskSpace(const fs::path& dir, uint64_t blockchain_size = 0, uint64_t chain_state_size = 0, uint64_t prune_target = 0);
 
 /** Release all directory locks. This is used for unit testing only, at runtime
  * the global destructor will take care of the locks.
