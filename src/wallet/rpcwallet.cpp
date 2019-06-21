@@ -1030,14 +1030,15 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     }
 
     // Construct using pay-to-script-hash:
-    CScript inner = CreateMultisigRedeemscript(required, pubkeys);
-    ScriptHash innerHash(inner);
+    CScript inner;
+    CTxDestination dest = AddAndGetMultisigDestination(required, pubkeys, inner);
+
     spk_man.AddCScript(inner);
 
-    pwallet->SetAddressBook(innerHash, label, "send");
+    pwallet->SetAddressBook(dest, label, "send");
 
     UniValue result(UniValue::VOBJ);
-    result.pushKV("address", EncodeDestination(innerHash));
+    result.pushKV("address", EncodeDestination(dest));
     result.pushKV("redeemScript", HexStr(inner));
     return result;
 }
