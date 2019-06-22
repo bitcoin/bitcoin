@@ -27,7 +27,7 @@ typedef std::shared_ptr<CSuperblock> CSuperblock_sptr;
 extern CGovernanceTriggerManager triggerman;
 
 /**
-*   Trigger Mananger
+*   Trigger Manager
 *
 *   - Track governance objects which are triggers
 *   - After triggers are activated and executed, they can be removed
