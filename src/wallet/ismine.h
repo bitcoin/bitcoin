@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef SYSCOIN_SCRIPT_ISMINE_H
-#define SYSCOIN_SCRIPT_ISMINE_H
+#ifndef SYSCOIN_WALLET_ISMINE_H
+#define SYSCOIN_WALLET_ISMINE_H
 
 #include <script/standard.h>
 
@@ -50,4 +50,4 @@ struct CachableAmount
     }
 };
 
-#endif // SYSCOIN_SCRIPT_ISMINE_H
+#endif // SYSCOIN_WALLET_ISMINE_H
