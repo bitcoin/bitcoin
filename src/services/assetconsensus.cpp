@@ -383,7 +383,7 @@ void ResyncAssetAllocationStates(){
             }
             for(auto& arrivalTime: arrivalTimes->second){
                 const uint256& txHash = arrivalTime.first;
-                const CTransactionRef txRef = mempool.get(txHash);
+                const CTransactionRef &txRef = mempool.get(txHash);
                 // if mempool doesn't have txid then remove from both arrivalTime and mempool balances
                 if (!txRef){
                     vecToRemoveArrivalTimes.push_back(txHash);
