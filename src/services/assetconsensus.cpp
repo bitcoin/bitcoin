@@ -275,7 +275,12 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         }  
     
         const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
+        #if __cplusplus > 201402 
+        auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        #else
         auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+        #endif
+
         auto mapAssetAllocation = result1.first;
         const bool &mapAssetAllocationNotFound = result1.second;
         if(mapAssetAllocationNotFound){
@@ -501,7 +506,13 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
     vecMintKeys.emplace_back(ethKey);  
     // recver
     const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
+    #if __cplusplus > 201402 
+    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    #else
     auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+    #endif
+
+    
     auto mapAssetAllocation = result1.first;
     const bool& mapAssetAllocationNotFound = result1.second;
     if(mapAssetAllocationNotFound){
@@ -545,7 +556,12 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
         LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not decode asset allocation\n");
         return false;
     }
+    #if __cplusplus > 201402 
+    auto result = mapAssetAllocations.try_emplace(std::move(senderTupleStr),  std::move(emptyAllocation));
+    #else
     auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+    #endif
+    
     auto mapAssetAllocation = result.first;
     const bool & mapAssetAllocationNotFound = result.second;
     if(mapAssetAllocationNotFound){
@@ -564,8 +580,12 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
        
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocation receiverAllocation;
-        
+        #if __cplusplus > 201402 
+        auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        #else
         auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+        #endif
+
         auto mapAssetAllocationReceiver = result1.first;
         const bool& mapAssetAllocationReceiverNotFound = result1.second;
         if(mapAssetAllocationReceiverNotFound){
@@ -686,7 +706,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         }     
     }
     else{
+        #if __cplusplus > 201402 
+        auto result = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+        #else
         auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+        #endif
+        
         mapAssetAllocation = result.first;
         const bool& mapAssetAllocationNotFound = result.second;
         
@@ -712,7 +737,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     bool mapSenderMempoolBalanceNotFound = false;
     if(fJustCheck && !bSanityCheck){
         LOCK(cs_assetallocation); 
+        #if __cplusplus > 201402 
+        auto result = mempoolMapAssetBalances.try_emplace(senderTupleStr,  std::move(storedSenderAllocationRef.nBalance));
+        #else
         auto result =  mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(senderTupleStr),  std::forward_as_tuple(std::move(storedSenderAllocationRef.nBalance))); 
+        #endif
+        
         mapBalanceSender = result.first;
         mapSenderMempoolBalanceNotFound = result.second;
         mapBalanceSenderCopy = mapBalanceSender->second;
@@ -770,8 +800,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         }
         if (!fJustCheck) {   
             const CAssetAllocationTuple receiverAllocationTuple(nAssetFromScript,  CWitnessAddress(0, vchFromString("burn")));
-            const string& receiverTupleStr = receiverAllocationTuple.ToString();  
+            const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
+            #if __cplusplus > 201402 
+            auto result = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+            #else
             auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+            #endif 
+            
             auto mapAssetAllocationReceiver = result.first;
             const bool& mapAssetAllocationReceiverNotFound = result.second;
             if(mapAssetAllocationReceiverNotFound){
@@ -872,7 +907,12 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             AssetAllocationMap::iterator mapBalanceReceiverBlock;            
             if(fJustCheck && !bSanityCheck){
                 LOCK(cs_assetallocation);
+                #if __cplusplus > 201402 
+                auto result = mempoolMapAssetBalances.try_emplace(std::move(receiverTupleStr),  0);
+                #else
                 auto result = mempoolMapAssetBalances.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(0));
+                #endif 
+
                 auto mapBalanceReceiver = result.first;
                 const bool& mapAssetAllocationReceiverNotFound = result.second;
                 if(mapAssetAllocationReceiverNotFound){
@@ -884,8 +924,13 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     mapBalanceReceiver->second += amountTuple.second;
                 }
             }  
-            else{           
+            else{     
+                #if __cplusplus > 201402 
+                auto result = mapAssetAllocations.try_emplace(receiverTupleStr,  std::move(emptyAllocation));
+                #else
                 auto result =  mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+                #endif       
+               
                 auto mapBalanceReceiverBlock = result.first;
                 const bool& mapAssetAllocationReceiverBlockNotFound = result.second;
                 if(mapAssetAllocationReceiverBlockNotFound){
@@ -958,7 +1003,12 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not decode asset allocation in asset send\n");
         return false;
     } 
+    #if __cplusplus > 201402 
+    auto result = mapAssets.try_emplace(theAssetAllocation.assetAllocationTuple.nAsset,  std::move(emptyAsset));
+    #else
     auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif   
+   
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
     if(mapAssetNotFound){
@@ -975,7 +1025,12 @@ bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAlloc
         const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
         const std::string &receiverTupleStr = receiverAllocationTuple.ToString();
         CAssetAllocation receiverAllocation;
+        #if __cplusplus > 201402 
+        auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+        #else
         auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+        #endif 
+        
         auto mapAssetAllocation = result.first;
         const bool &mapAssetAllocationNotFound = result.second;
         if(mapAssetAllocationNotFound){
@@ -1029,7 +1084,12 @@ bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets){
         LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not decode asset\n");
         return false;
     }
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #if __cplusplus > 201402 
+    auto result = mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
+    #else
+    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif     
+
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound){
@@ -1068,7 +1128,11 @@ bool DisconnectAssetTransfer(const CTransaction &tx, AssetMap &mapAssets){
         LogPrint(BCLog::SYS,"DisconnectAssetTransfer: Could not decode asset\n");
         return false;
     }
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #if __cplusplus > 201402 
+    auto result = mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
+    #else
+    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif  
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound){
@@ -1100,7 +1164,11 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets){
         LogPrint(BCLog::SYS,"DisconnectAssetActivate: Could not decode asset in asset activate\n");
         return false;
     }
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #if __cplusplus > 201402 
+    auto result = mapAssets.try_emplace(theAsset.nAsset,  std::move(emptyAsset));
+    #else
+    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAsset.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif  
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound){
@@ -1255,7 +1323,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
 
     CAsset dbAsset;
     const uint32_t &nAsset = tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND ? theAssetAllocation.assetAllocationTuple.nAsset : theAsset.nAsset;
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #if __cplusplus > 201402 
+    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
+    #else
+    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+    #endif  
     auto mapAsset = result.first;
     const bool & mapAssetNotFound = result.second; 
     if (mapAssetNotFound)
@@ -1385,7 +1457,12 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
                 CAssetAllocation receiverAllocation;
                 const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
                 const string& receiverTupleStr = receiverAllocationTuple.ToString();
-                auto result =  mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+                #if __cplusplus > 201402 
+                auto result = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+                #else
+                auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+                #endif 
+                
                 auto mapAssetAllocation = result.first;
                 const bool& mapAssetAllocationNotFound = result.second;
                
@@ -1601,7 +1678,12 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             }
             EthereumTxRoot txRoot;
             pcursor->GetValue(txRoot);
+            #if __cplusplus > 201402 
+            mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));
+            #else
             mapTxRoots.emplace(nKey, txRoot);
+            #endif            
+            
             pcursor->Next();
         }
         catch (std::exception &e) {
