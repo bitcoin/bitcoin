@@ -394,13 +394,10 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 },
             }.ToString());
     // SYSCOIN RPC_MISC_ERROR
-    meminfo_t memInfo = parse_meminfo();
-    LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
-    if(memInfo.MemTotalMiB < 8000)
-        throw JSONRPCError(RPC_MISC_ERROR, "Insufficient memory, you need at least 8GB RAM to mine syscoin and be running in a Unix OS. Please see documentation.");
-    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
-    if(GetNumCores() < 4)
-        throw JSONRPCError(RPC_MISC_ERROR, "Insufficient CPU cores, you need at least 4 cores to mine syscoin. Please see documentation.");
+    std::string errorMessage = "";
+    if(!CheckSpecs(errorMessage, true)){
+        throw JSONRPCError(RPC_MISC_ERROR, errorMessage);
+    }
     LOCK(cs_main);
 
     std::string strMode = "template";

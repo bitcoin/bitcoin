@@ -1933,16 +1933,10 @@ bool AppInitMain(InitInterfaces& interfaces)
     }
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
-        meminfo_t memInfo = parse_meminfo();
-        LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
-        if(memInfo.MemTotalMiB < 3800)
-            return InitError(_("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation."));
-        if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
-            return InitError(_("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation."));           
-        LogPrintf("Total number of physical cores found %d\n", GetNumCores());
-        if(GetNumCores() < 2)
-            return InitError(_("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation."));
-            
+        std::string errorMessage = "";
+        if(!CheckSpecs(errorMessage)){
+            return InitError(errorMessage);
+        }
         std::array<char, 128> buffer;
         std::string result;
         std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("pidof syscoind | wc -w", "r"), pclose);

@@ -89,6 +89,7 @@ pid_t relayerPID = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
+bool bb = true;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -1148,7 +1149,19 @@ bool StopGethNode(pid_t &pid)
     pid = -1;
     return true;
 }
-
+bool CheckSpecs(std::string &errMsg, bool bMiner){
+    meminfo_t memInfo = parse_meminfo();
+    LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
+    if(memInfo.MemTotalMiB < bMiner? 8000: 3800)
+        errMsg = _("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation.");
+    if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
+        errMsg = _("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation.");           
+    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
+    if(GetNumCores() < bMiner? 4: 2)
+        errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.");
+   bb = !errMsg.empty();
+   return errMsg.empty();         
+}
 bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
