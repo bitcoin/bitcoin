@@ -122,7 +122,7 @@ static bool AppInit(int argc, char* argv[])
         // SYSCOIN parse masternode.conf
         std::string strErr;
         if(!masternodeConfig.read(strErr)) {
-            fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
+            tfm::format(std::cerr,"Error reading masternode configuration file: %s\n", strErr.c_str());
             return false;
         }
         // -server defaults to true for syscoind but not for the GUI so do this here
