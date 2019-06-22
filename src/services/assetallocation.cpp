@@ -777,6 +777,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	if (fUnitTest)
 		minLatency = 1000;
     const CTransaction *prevTx = NULL;
+    int64_t nPrevTime = 0;
 	for (auto& arrivalTime : arrivalTimesSet)
 	{
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
@@ -801,7 +802,11 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
         }
         
         prevTx = &tx;
-
+        // ensure that transactions are ordered by some time difference
+        if(nPrevTime >= arrivalTime.second){
+            return ZDAG_MINOR_CONFLICT;
+        }
+        nPrevTime = arrivalTime.second;
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
 		if (nNow - arrivalTime.second < minLatency) {
 			return ZDAG_MINOR_CONFLICT;
