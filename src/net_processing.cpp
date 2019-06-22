@@ -69,15 +69,16 @@ static constexpr int STALE_RELAY_AGE_LIMIT = 30 * 24 * 60 * 60;
 /// limiting block relay. Set to one week, denominated in seconds.
 static constexpr int HISTORICAL_BLOCK_AGE = 7 * 24 * 60 * 60;
 /** Maximum number of in-flight transactions from a peer */
-static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 100;
+// SYSCOIN
+static constexpr int32_t MAX_PEER_TX_IN_FLIGHT = 1000;
 /** Maximum number of announced transactions from a peer */
 static constexpr int32_t MAX_PEER_TX_ANNOUNCEMENTS = 2 * MAX_INV_SZ;
 /** SYSCOIN How many microseconds to delay requesting transactions from inbound peers */
 static constexpr int64_t INBOUND_PEER_TX_DELAY = 20;
 /** How long to wait (in microseconds) before downloading a transaction from an additional peer */
-static constexpr int64_t GETDATA_TX_INTERVAL = 60;
+static constexpr int64_t GETDATA_TX_INTERVAL = 0;
 /** Maximum delay (in microseconds) for transaction requests to avoid biasing some peers over others. */
-static constexpr int64_t MAX_GETDATA_RANDOM_DELAY = 10;
+static constexpr int64_t MAX_GETDATA_RANDOM_DELAY = 0;
 /** How long to wait (in microseconds) before expiring an in-flight getdata request to a peer */
 static constexpr int64_t TX_EXPIRY_INTERVAL = 10 * 60 * 1000000; // 10 minutes
 static_assert(INBOUND_PEER_TX_DELAY >= MAX_GETDATA_RANDOM_DELAY,
@@ -1957,7 +1958,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
         auto orphan_it = mapOrphanTransactions.find(orphanHash);
         if (orphan_it == mapOrphanTransactions.end()) continue;
 
-        const CTransactionRef porphanTx = orphan_it->second.tx;
+        const CTransactionRef &porphanTx = orphan_it->second.tx;
         const CTransaction& orphanTx = *porphanTx;
         NodeId fromPeer = orphan_it->second.fromPeer;
         bool fMissingInputs2 = false;
