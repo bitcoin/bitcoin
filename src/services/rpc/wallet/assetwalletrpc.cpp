@@ -986,22 +986,6 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
 
 	}
-    
-    {
-        LOCK(cs_assetallocationarrival);
-    	// check to see if a transaction for this asset/address tuple has arrived before minimum latency period
-    	const ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetAllocationTuple.ToString()];
-    	const int64_t & nNow = GetTimeMillis();
-    	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
-    	if (fUnitTest)
-    		minLatency = 1000;
-    	for (auto& arrivalTime : arrivalTimes) {
-    		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-    		if ((nNow - arrivalTime.second) < minLatency) {
-    			throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1503 - " + _("Please wait a few more seconds and try again..."));
-    		}
-    	}
-    }
 
 	vector<unsigned char> data;
 	theAssetAllocation.Serialize(data);   
@@ -1068,21 +1052,7 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
 	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
-    {
-        LOCK(cs_assetallocationarrival);
-        // check to see if a transaction for this asset/address tuple has arrived before minimum latency period
-        const ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetAllocationTuple.ToString()];
-        const int64_t & nNow = GetTimeMillis();
-        int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
-        if (fUnitTest)
-            minLatency = 1000;
-        for (auto& arrivalTime : arrivalTimes) {
-            // if this tx arrived within the minimum latency period flag it as potentially conflicting
-            if ((nNow - arrivalTime.second) < minLatency) {
-                throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1503 - " + _("Please wait a few more seconds and try again..."));
-            }
-        }
-    }
+
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));

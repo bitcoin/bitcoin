@@ -766,8 +766,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
 
 	// go through arrival times and check that balances don't overrun the POW balance
-	pair<uint256, int64_t> lastArrivalTime;
-	lastArrivalTime.second = GetTimeMillis();
+	const int64_t &nNow = GetTimeMillis();
 	unordered_map<string, CAmount> mapBalances;
 	// init sender balance, track balances by address
 	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
@@ -779,13 +778,13 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	for (auto& arrivalTime : arrivalTimesSet)
 	{
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		const CTransactionRef txRef = mempool.get(arrivalTime.first);
+		const CTransactionRef &txRef = mempool.get(arrivalTime.first);
 		if (!txRef)
 			continue;
 		const CTransaction &tx = *txRef;
 
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-		if (abs(arrivalTime.second - lastArrivalTime.second) < minLatency) {
+		if (nNow - arrivalTime.second < minLatency) {
 			return ZDAG_MINOR_CONFLICT;
 		}
 		const uint256& txHash = tx.GetHash();
