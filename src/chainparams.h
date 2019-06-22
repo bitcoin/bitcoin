@@ -115,9 +115,9 @@ protected:
     bool fAllowMultiplePorts;
     CCheckpointData checkpointData;
     ChainTxData chainTxData;
-    int nPoolMinParticipants;
-    int nPoolMaxParticipants;
-    int nFulfilledRequestExpireTime;
+    int nPoolMinParticipants{0};
+    int nPoolMaxParticipants{0};
+    int nFulfilledRequestExpireTime{0};
     std::vector<std::string> vSporkAddresses;
     int nMinSporkKeys;
     bool fBIP9CheckMasternodesUpgraded;
