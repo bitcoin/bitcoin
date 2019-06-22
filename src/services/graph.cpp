@@ -13,7 +13,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 	// order the arrival times in ascending order using a map
 	std::multimap<int64_t, int> orderedIndexes;
 	for (unsigned int n = 0; n < blockVtx.size(); n++) {
-		const CTransactionRef txRef = blockVtx[n];
+		const CTransactionRef &txRef = blockVtx[n];
 		if (!txRef)
 			continue;
 		const CTransaction &tx = *txRef;
