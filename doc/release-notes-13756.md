@@ -7,8 +7,8 @@ A new wallet flag `avoid_reuse` has been added (default off). When enabled,
 a wallet will distinguish between used and unused addresses, and default to not
 use the former in coin selection.
 
-(Note: rescanning the blockchain is required, to correctly mark previously
-used destinations.)
+Rescanning the blockchain is required, to correctly mark previously
+used destinations.
 
 Together with "avoid partial spends" (present as of Bitcoin v0.17), this
 addresses a serious privacy issue where a malicious user can track spends by
@@ -30,10 +30,12 @@ These include:
 
 - createwallet
 - getbalance
+- getbalances
 - sendtoaddress
 
-In addition, `sendtoaddress` has been changed to enable `-avoidpartialspends` when
-`avoid_reuse` is enabled.
+In addition, `sendtoaddress` has been changed to avoid partial spends when `avoid_reuse`
+is enabled (if not already enabled via the  `-avoidpartialspends` command line flag),
+as it would otherwise risk using up the "wrong" UTXO for an address reuse case.
 
 The listunspent RPC has also been updated to now include a "reused" bool, for nodes
 with "avoid_reuse" enabled.
