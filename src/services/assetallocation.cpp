@@ -591,7 +591,8 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
     std::vector<uint32_t> emptyVec;
     if(fAssetIndex){
         for (const auto &key : mapAssetAllocations) {
-            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.assetAllocationTuple.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
+            const string& witnessStr = key.second.assetAllocationTuple.witnessAddress.ToString();
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(witnessStr)),  std::forward_as_tuple(std::move(emptyVec)));
             std::vector<uint32_t> &assetGuids = it.first->second;
             if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.second.assetAllocationTuple.nAsset) == fAssetIndexGuids.end())
                 continue;

@@ -657,7 +657,9 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
         for (const auto &key : mapAssets) {
             if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.first) == fAssetIndexGuids.end())
                 continue;
-            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
+            const string& witnessStr = key.second.witnessAddress.ToString();
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(witnessStr)),  std::forward_as_tuple(std::move(emptyVec)));
+            
             std::vector<uint32_t> &assetGuids = it.first->second;
             // if wasn't found and was added to the map
             if(it.second)
