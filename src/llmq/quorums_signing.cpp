@@ -430,10 +430,10 @@ void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand
 void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig, CConnman& connman)
 {
     bool ban = false;
-    if (!PreVerifyRecoveredSig(pfrom->id, recoveredSig, ban)) {
+    if (!PreVerifyRecoveredSig(pfrom->GetId(), recoveredSig, ban)) {
         if (ban) {
             LOCK(cs_main);
-            Misbehaving(pfrom->id, 100);
+            Misbehaving(pfrom->GetId(), 100);
         }
         return;
     }
@@ -444,10 +444,10 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
         return;
     }
 
-    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- signHash=%s, node=%d\n", __func__, CLLMQUtils::BuildSignHash(recoveredSig).ToString(), pfrom->id);
+    LogPrint(BCLog::LLMQ, "CSigningManager::%s -- signHash=%s, node=%d\n", __func__, CLLMQUtils::BuildSignHash(recoveredSig).ToString(), pfrom->GetId());
 
     LOCK(cs);
-    pendingRecoveredSigs[pfrom->id].emplace_back(recoveredSig);
+    pendingRecoveredSigs[pfrom->GetId()].emplace_back(recoveredSig);
 }
 
 bool CSigningManager::PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, bool& retBan)

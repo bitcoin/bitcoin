@@ -20,12 +20,11 @@ class WalletTest(BitcoinTestFramework):
         self.num_nodes = 4
         self.extra_args = [['-usehd={:d}'.format(i%2==0)] for i in range(4)]
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(3, self.options.tmpdir, self.extra_args[:3], redirect_stderr=True)
+    def setup_network(self):
+        self.nodes = start_nodes(3, self.options.tmpdir, self.extra_args[:3], stderr=sys.stdout)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
-        self.is_network_split=False
         self.sync_all()
 
     def run_test(self):
@@ -179,7 +178,7 @@ class WalletTest(BitcoinTestFramework):
         txid2 = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         sync_mempools(self.nodes)
 
-        self.nodes.append(start_node(3, self.options.tmpdir, self.extra_args[3], redirect_stderr=True))
+        self.nodes.append(start_node(3, self.options.tmpdir, self.extra_args[3], stderr=sys.stdout))
         connect_nodes_bi(self.nodes, 0, 3)
         sync_blocks(self.nodes)
 

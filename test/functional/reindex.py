@@ -24,9 +24,6 @@ class ReindexTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
 
-    def setup_network(self):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-
     def reindex(self, justchainstate=False):
         self.nodes[0].generate(3)
         blockcount = self.nodes[0].getblockcount()

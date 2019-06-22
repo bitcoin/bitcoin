@@ -13,17 +13,14 @@ class RawTransactionsTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 4
+        self.extra_args = [['-usehd=1']] * self.num_nodes
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1']] * self.num_nodes, redirect_stderr=True)
-
+    def setup_network(self):
+        self.setup_nodes(stderr=sys.stdout)
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
         connect_nodes_bi(self.nodes,0,3)
-
-        self.is_network_split=False
-        self.sync_all()
 
     def run_test(self):
         self.log.info("Mining blocks...")
@@ -446,7 +443,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         stop_node(self.nodes[1], 2)
         stop_node(self.nodes[2], 3)
 
-        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1']] * self.num_nodes, redirect_stderr=True)
+        self.nodes = start_nodes(4, self.options.tmpdir, [['-usehd=1']] * self.num_nodes, stderr=sys.stdout)
         # This test is not meant to test fee estimation and we'd like
         # to be sure all txs are sent at a consistent desired feerate
         for node in self.nodes:
@@ -456,7 +453,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         connect_nodes_bi(self.nodes,1,2)
         connect_nodes_bi(self.nodes,0,2)
         connect_nodes_bi(self.nodes,0,3)
-        self.is_network_split=False
         self.sync_all()
 
         # drain the keypool

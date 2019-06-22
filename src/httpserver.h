@@ -32,6 +32,10 @@ void InterruptHTTPServer();
 /** Stop HTTP server */
 void StopHTTPServer();
 
+/** Change logging level for libevent. Removes BCLog::LIBEVENT from logCategories if
+ * libevent doesn't support debug logging.*/
+bool UpdateHTTPServerLogging(bool enable);
+
 /** Handler for requests to a certain HTTP path */
 typedef std::function<bool(HTTPRequest* req, const std::string &)> HTTPRequestHandler;
 /** Register handler for prefix.

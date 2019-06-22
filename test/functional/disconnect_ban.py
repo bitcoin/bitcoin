@@ -23,10 +23,6 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = False
 
-    def setup_network(self):
-        self.nodes = self.setup_nodes()
-        connect_nodes_bi(self.nodes, 0, 1)
-
     def run_test(self):
         self.log.info("Test setban and listbanned RPCs")
 

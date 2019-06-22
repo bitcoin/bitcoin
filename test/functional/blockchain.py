@@ -10,6 +10,7 @@ Test the following RPCs:
     - getbestblockhash
     - getblockhash
     - getblockheader
+    - getnetworkhashps
     - verifychain
 
 Tests correspond to code in rpc/blockchain.cpp.
@@ -35,15 +36,11 @@ class BlockchainTest(BitcoinTestFramework):
         self.setup_clean_chain = False
         self.num_nodes = 1
 
-    def setup_network(self, split=False):
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        self.is_network_split = False
-        self.sync_all()
-
     def run_test(self):
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
         self._test_getdifficulty()
+        self._test_getnetworkhashps()
         self.nodes[0].verifychain(4, 0)
 
     def _test_gettxoutsetinfo(self):
@@ -114,6 +111,11 @@ class BlockchainTest(BitcoinTestFramework):
         # 1 hash in 2 should be valid, so difficulty should be 1/2**31
         # binary => decimal => binary math is why we do this check
         assert abs(difficulty * 2**31 - 1) < 0.0001
+
+    def _test_getnetworkhashps(self):
+        hashes_per_second = self.nodes[0].getnetworkhashps()
+        # This should be 2 hashes every 2.6 minutes (156 seconds) or 1/78
+        assert abs(hashes_per_second * 78 - 1) < 0.0001
 
 if __name__ == '__main__':
     BlockchainTest().main()

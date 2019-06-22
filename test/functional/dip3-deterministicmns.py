@@ -26,10 +26,10 @@ class DIP3Test(BitcoinTestFramework):
         self.extra_args += ["-sporkkey=cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK"]
         self.extra_args += ["-dip3params=135:150"]
 
+
     def setup_network(self):
         disable_mocktime()
         self.start_controller_node()
-        self.is_network_split = False
 
     def start_controller_node(self, extra_args=None):
         self.log.info("starting controller node")
@@ -252,7 +252,7 @@ class DIP3Test(BitcoinTestFramework):
         while len(self.nodes) <= mn.idx:
             self.nodes.append(None)
         extra_args = ['-masternode=1', '-masternodeblsprivkey=%s' % mn.blsMnkey]
-        n = start_node(mn.idx, self.options.tmpdir, self.extra_args + extra_args, redirect_stderr=True)
+        n = start_node(mn.idx, self.options.tmpdir, self.extra_args + extra_args, stderr=sys.stdout)
         self.nodes[mn.idx] = n
         for i in range(0, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:

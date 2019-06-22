@@ -14,19 +14,12 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         super().__init__()
         self.setup_clean_chain = True
         self.num_nodes = 2
-
-        self.txouts = gen_return_txouts()
-
-    def setup_network(self):
-        self.nodes = []
-        self.is_network_split = False
-
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-printpriority=1"]))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-printpriority=1"])) # TODO move this to extra_args when Bitcoin #10198 gets backported
-        connect_nodes(self.nodes[0], 1) # TODO remove this when Bitcoin #10198 gets backported
-        self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+        self.extra_args = [["-printpriority=1"]] * 2
 
     def run_test(self):
+        self.txouts = gen_return_txouts()
+        self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
+
         utxo_count = 90
         utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], utxo_count)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb

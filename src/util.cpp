@@ -28,7 +28,6 @@
 #include <pthread_np.h>
 #endif
 
-
 #ifndef WIN32
 // for posix_fallocate
 #ifdef __linux__
@@ -125,7 +124,7 @@ bool fLogIPs = DEFAULT_LOGIPS;
 std::atomic<bool> fReopenDebugLog(false);
 CTranslationInterface translationInterface;
 
-/** Log categories bitfield. Leveldb/libevent need special handling if their flags are changed at runtime. */
+/** Log categories bitfield. */
 std::atomic<uint64_t> logCategories(0);
 
 /** Init OpenSSL library multithreading support */
@@ -332,7 +331,22 @@ std::string ListLogCategories()
     return ret;
 }
 
-std::string ListActiveLogCategories()
+std::vector<CLogCategoryActive> ListActiveLogCategories()
+{
+    std::vector<CLogCategoryActive> ret;
+    for (unsigned int i = 0; i < ARRAYLEN(LogCategories); i++) {
+        // Omit the special cases.
+        if (LogCategories[i].flag != BCLog::NONE && LogCategories[i].flag != BCLog::ALL) {
+            CLogCategoryActive catActive;
+            catActive.category = LogCategories[i].category;
+            catActive.active = LogAcceptCategory(LogCategories[i].flag);
+            ret.push_back(catActive);
+        }
+    }
+    return ret;
+}
+
+std::string ListActiveLogCategoriesString()
 {
     if (logCategories == BCLog::NONE)
         return "0";

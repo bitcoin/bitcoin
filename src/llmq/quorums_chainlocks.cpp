@@ -84,7 +84,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         auto hash = ::SerializeHash(clsig);
 
-        ProcessNewChainLock(pfrom->id, clsig, hash);
+        ProcessNewChainLock(pfrom->GetId(), clsig, hash);
     }
 }
 

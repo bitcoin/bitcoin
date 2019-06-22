@@ -12,7 +12,6 @@ from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import re
-import time
 from test_framework.blocktools import create_block, create_coinbase
 
 VB_PERIOD = 144 # versionbits period length for regtest
@@ -40,7 +39,7 @@ class VersionBitsWarningTest(BitcoinTestFramework):
         with open(self.alert_filename, 'w', encoding='utf8') as _:
             pass
         self.extra_args = [["-alertnotify=echo %s >> \"" + self.alert_filename + "\""]]
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
+        self.setup_nodes()
 
     # Send numblocks blocks via peer with nVersionToUse set.
     def send_blocks_with_version(self, peer, numblocks, nVersionToUse):

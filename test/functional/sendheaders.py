@@ -193,11 +193,6 @@ class SendHeadersTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 2
 
-    def setup_network(self):
-        self.nodes = []
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
-        connect_nodes(self.nodes[0], 1)
-
     # mine count blocks and return the new tip
     def mine_blocks(self, count):
         # Clear out last block announcement from each p2p listener

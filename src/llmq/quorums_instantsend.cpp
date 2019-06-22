@@ -688,10 +688,10 @@ void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCom
 void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq::CInstantSendLock& islock, CConnman& connman)
 {
     bool ban = false;
-    if (!PreVerifyInstantSendLock(pfrom->id, islock, ban)) {
+    if (!PreVerifyInstantSendLock(pfrom->GetId(), islock, ban)) {
         if (ban) {
             LOCK(cs_main);
-            Misbehaving(pfrom->id, 100);
+            Misbehaving(pfrom->GetId(), 100);
         }
         return;
     }
@@ -707,9 +707,9 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
     }
 
     LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: received islock, peer=%d\n", __func__,
-            islock.txid.ToString(), hash.ToString(), pfrom->id);
+            islock.txid.ToString(), hash.ToString(), pfrom->GetId());
 
-    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->id, std::move(islock)));
+    pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->GetId(), std::move(islock)));
 }
 
 bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CInstantSendLock& islock, bool& retBan)
@@ -1300,7 +1300,7 @@ void CInstantSendManager::AskNodesForLockedTx(const uint256& txid)
         LOCK(cs_main);
         for (CNode* pnode : nodesToAskFor) {
             LogPrintf("CInstantSendManager::%s -- txid=%s: asking other peer %d for correct TX\n", __func__,
-                      txid.ToString(), pnode->id);
+                      txid.ToString(), pnode->GetId());
 
             CInv inv(MSG_TX, txid);
             pnode->AskFor(inv);
