@@ -366,7 +366,7 @@ static UniValue sendtoaddress(const JSONRPCRequest& request)
     "       \"UNSET\"\n"
     "       \"ECONOMICAL\"\n"
     "       \"CONSERVATIVE\""},
-            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Avoid spending from dirty addresses; addresses are considered\n"
+            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Avoid spending from dirty addresses; addresses are considered\n"
     "                             dirty if they have previously been used in a transaction."},
         },
         RPCResult{
@@ -753,7 +753,7 @@ static UniValue getbalance(const JSONRPCRequest& request)
             {"minconf", RPCArg::Type::NUM, /* default */ "0", "Only include transactions confirmed at least this many times."},
             {"addlocked", RPCArg::Type::BOOL, /* default */ "false", "Whether to include transactions locked via InstantSend in the wallet's balance."},
             {"include_watchonly", RPCArg::Type::BOOL, /* default */ "true for watch-only wallets, otherwise false", "Also include balance in watch-only addresses (see 'importaddress')"},
-            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE) ? "true" : "unavailable", "Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
+            {"avoid_reuse", RPCArg::Type::BOOL, /* default */ "true", "(only available if avoid_reuse wallet flag is set) Do not include balance in dirty outputs; addresses are considered dirty if they have previously been used in a transaction."},
         },
         RPCResult{
             RPCResult::Type::STR_AMOUNT, "amount", "The total amount in " + CURRENCY_UNIT + " received for this wallet."
@@ -2394,6 +2394,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
                                 {RPCResult::Type::STR_AMOUNT, "trusted", " trusted balance (outputs created by the wallet or confirmed outputs)"},
                                 {RPCResult::Type::STR_AMOUNT, "untrusted_pending", " untrusted pending balance (outputs created by others that are in the mempool)"},
                                 {RPCResult::Type::STR_AMOUNT, "immature", " balance from immature coinbase outputs"},
+                                {RPCResult::Type::STR_AMOUNT, "used", "(only present if avoid_reuse is set) balance from coins sent to addresses that were previously spent from (potentially privacy violating)"},
                                 {RPCResult::Type::STR_AMOUNT, "coinjoin", " CoinJoin balance (outputs with enough rounds created by the wallet via mixing)"},
                         }},
                         {RPCResult::Type::OBJ, "watchonly", "watchonly balances (not present if wallet does not watch anything)",
@@ -2429,6 +2430,12 @@ static UniValue getbalances(const JSONRPCRequest& request)
         balances_mine.pushKV("trusted", ValueFromAmount(bal.m_mine_trusted));
         balances_mine.pushKV("untrusted_pending", ValueFromAmount(bal.m_mine_untrusted_pending));
         balances_mine.pushKV("immature", ValueFromAmount(bal.m_mine_immature));
+        if (wallet.IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE)) {
+            // If the AVOID_REUSE flag is set, bal has been set to just the un-reused address balance. Get
+            // the total balance, and then subtract bal to get the reused address balance.
+            const auto full_bal = wallet.GetBalance(0, false);
+            balances_mine.pushKV("used", ValueFromAmount(full_bal.m_mine_trusted + full_bal.m_mine_untrusted_pending - bal.m_mine_trusted - bal.m_mine_untrusted_pending));
+        }
         balances_mine.pushKV("coinjoin", ValueFromAmount(bal.m_anonymized));
         balances.pushKV("mine", balances_mine);
     }
@@ -2965,7 +2972,6 @@ static UniValue listunspent(const JSONRPCRequest& request)
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
 
-    bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
     RPCHelpMan{"listunspent",
         "\nReturns array of unspent transaction outputs\n"
         "with between minconf and maxconf (inclusive) confirmations.\n"
@@ -3008,7 +3014,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
                     {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
                     {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
                     {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
-                    {RPCResult::Type::BOOL, "reused", /* optional*/ true, "Whether this output is reused/dirty (sent to an address that was previously spent from)"},
+                    {RPCResult::Type::BOOL, "reused", /* optional*/ true, "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
                     {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions"
                                                     "                             from outside keys and unconfirmed replacement transactions are considered unsafe\n"
                                                     "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
@@ -3120,6 +3126,8 @@ static UniValue listunspent(const JSONRPCRequest& request)
     }
 
     LOCK(pwallet->cs_wallet);
+
+    const bool avoid_reuse = pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE);
 
     for (const COutput& out : vecOutputs) {
         CTxDestination address;
