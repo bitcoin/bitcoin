@@ -21,12 +21,12 @@
 #include <rpc/server.h>
 #include <shutdown.h>
 #include <sync.h>
-#include <threadsafety.h>
 #include <timedata.h>
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <util/memory.h>
 #include <util/system.h>
 #include <validation.h>
 #include <validationinterface.h>

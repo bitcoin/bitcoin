@@ -6,7 +6,9 @@
 #include <wallet/db.h>
 
 #include <util/strencodings.h>
+
 #include <util/translation.h>
+#include <util/time.h>
 
 #include <stdint.h>
 

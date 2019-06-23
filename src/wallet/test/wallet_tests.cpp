@@ -11,7 +11,7 @@
 #include <consensus/validation.h>
 #include <interfaces/chain.h>
 #include <policy/policy.h>
-#include <rpc/server.h>
+#include <rpc/request.h>
 #include <test/setup_common.h>
 #include <validation.h>
 #include <wallet/coincontrol.h>

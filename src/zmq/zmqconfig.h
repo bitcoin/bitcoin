@@ -13,9 +13,6 @@
 #include <zmq.h>
 #endif
 
-#include <primitives/block.h>
-#include <primitives/transaction.h>
-
 void zmqError(const char *str);
 
 #endif // BITCOIN_ZMQ_ZMQCONFIG_H

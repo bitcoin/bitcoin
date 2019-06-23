@@ -6,7 +6,6 @@
 
 #if defined(Q_OS_WIN)
 #include <shutdown.h>
-#include <util/system.h>
 
 #include <windows.h>
 

@@ -20,6 +20,7 @@
 #include <rpc/client.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #include <univalue.h>
 

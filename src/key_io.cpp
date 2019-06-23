@@ -6,7 +6,6 @@
 
 #include <base58.h>
 #include <bech32.h>
-#include <script/script.h>
 #include <util/strencodings.h>
 
 #include <boost/variant/apply_visitor.hpp>

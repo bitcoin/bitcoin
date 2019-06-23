@@ -7,15 +7,16 @@
 
 #include <addrman.h>
 #include <banman.h>
-#include <arith_uint256.h>
 #include <blockencodings.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <hash.h>
 #include <validation.h>
+#include <limitedmap.h>
 #include <merkleblock.h>
 #include <netmessagemaker.h>
 #include <netbase.h>
+#include <util/time.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>

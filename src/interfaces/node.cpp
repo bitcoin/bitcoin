@@ -5,7 +5,6 @@
 #include <interfaces/node.h>
 
 #include <addrdb.h>
-#include <amount.h>
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
@@ -19,7 +18,6 @@
 #include <netbase.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
-#include <policy/policy.h>
 #include <policy/settings.h>
 #include <primitives/block.h>
 #include <rpc/server.h>
@@ -27,6 +25,7 @@
 #include <sync.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+#include <util/memory.h>
 #include <util/system.h>
 #include <validation.h>
 #include <warnings.h>

@@ -46,10 +46,13 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <ui_interface.h>
+
 #include <util/moneystr.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
+#include <util/memory.h>
+#include <util/time.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>

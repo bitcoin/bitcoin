@@ -7,8 +7,9 @@
 #if defined(HAVE_CONSENSUS_LIB)
 #include <script/bitcoinconsensus.h>
 #endif
+#include <primitives/transaction.h>
+#include <script/interpreter.h>
 #include <script/script.h>
-#include <script/standard.h>
 #include <streams.h>
 
 #include <array>

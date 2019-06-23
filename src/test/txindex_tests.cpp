@@ -6,7 +6,6 @@
 #include <index/txindex.h>
 #include <script/standard.h>
 #include <test/setup_common.h>
-#include <util/system.h>
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>

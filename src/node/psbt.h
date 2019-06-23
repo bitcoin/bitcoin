@@ -5,6 +5,8 @@
 #ifndef BITCOIN_NODE_PSBT_H
 #define BITCOIN_NODE_PSBT_H
 
+#include <optional.h>
+#include <policy/feerate.h>
 #include <psbt.h>
 
 /**

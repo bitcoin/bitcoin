@@ -6,16 +6,13 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
-#include <addrdb.h>
 #include <addrman.h>
 #include <amount.h>
 #include <bloom.h>
 #include <compat.h>
 #include <crypto/siphash.h>
 #include <hash.h>
-#include <limitedmap.h>
 #include <netaddress.h>
-#include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
 #include <streams.h>

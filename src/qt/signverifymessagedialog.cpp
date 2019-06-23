@@ -11,8 +11,8 @@
 #include <qt/walletmodel.h>
 
 #include <key_io.h>
+#include <util/strencodings.h>
 #include <util/validation.h> // For strMessageMagic
-#include <wallet/wallet.h>
 
 #include <vector>
 

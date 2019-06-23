@@ -17,10 +17,10 @@
 #include <policy/policy.h>
 #include <pow.h>
 #include <primitives/transaction.h>
-#include <script/standard.h>
 #include <timedata.h>
 #include <util/moneystr.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <util/validation.h>
 
 #include <algorithm>

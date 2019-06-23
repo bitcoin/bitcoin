@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 
+#include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 

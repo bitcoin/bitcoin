@@ -16,12 +16,14 @@
 #include <noui.h>
 #include <shutdown.h>
 #include <ui_interface.h>
-#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/threadnames.h>
+
 #include <util/translation.h>
 
 #include <functional>
+#include <util/strencodings.h>
+#include <util/time.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 

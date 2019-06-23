@@ -5,7 +5,8 @@
 #ifndef BITCOIN_QT_BANTABLEMODEL_H
 #define BITCOIN_QT_BANTABLEMODEL_H
 
-#include <net.h>
+#include <addrdb.h>
+#include <netaddress.h>
 
 #include <memory>
 

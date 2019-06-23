@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/hkdf_sha256_32.h>
+#include <crypto/hmac_sha256.h>
 
 #include <assert.h>
 #include <string.h>

@@ -6,6 +6,7 @@
 
 #include <dbwrapper.h>
 #include <index/blockfilterindex.h>
+#include <util/memory.h>
 #include <util/system.h>
 #include <validation.h>
 

@@ -4,7 +4,6 @@
 #include <key.h>
 
 #include <uint256.h>
-#include <util/system.h>
 #include <test/setup_common.h>
 #include <vector>
 

@@ -6,8 +6,8 @@
 
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <script/interpreter.h>
 #include <script/script.h>
-#include <script/sign.h>
 #include <serialize.h>
 #include <streams.h>
 #include <univalue.h>

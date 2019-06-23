@@ -35,6 +35,7 @@
 #include <interfaces/node.h>
 #include <ui_interface.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #include <QAction>
 #include <QApplication>

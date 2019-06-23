@@ -2,7 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <primitives/transaction.h>
 #include <zmq/zmqabstractnotifier.h>
+
+#include <cassert>
 
 const int CZMQAbstractNotifier::DEFAULT_ZMQ_SNDHWM;
 

@@ -5,6 +5,8 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <streams.h>
+#include <zmq/zmqabstractnotifier.h>
+#include <zmq/zmqconfig.h>
 #include <zmq/zmqpublishnotifier.h>
 #include <validation.h>
 #include <util/system.h>

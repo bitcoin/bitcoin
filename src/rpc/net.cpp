@@ -10,7 +10,6 @@
 #include <net.h>
 #include <net_processing.h>
 #include <netbase.h>
-#include <policy/policy.h>
 #include <policy/settings.h>
 #include <rpc/protocol.h>
 #include <rpc/util.h>
@@ -18,6 +17,7 @@
 #include <timedata.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <validation.h>
 #include <version.h>
 #include <warnings.h>

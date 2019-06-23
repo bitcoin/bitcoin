@@ -8,6 +8,7 @@
 #include <tinyformat.h>
 #include <ui_interface.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <validation.h>
 #include <warnings.h>
 

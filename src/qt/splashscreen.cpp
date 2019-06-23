@@ -17,7 +17,6 @@
 #include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
-#include <version.h>
 
 #include <QApplication>
 #include <QCloseEvent>

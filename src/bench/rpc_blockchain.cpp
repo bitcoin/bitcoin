@@ -5,12 +5,12 @@
 #include <bench/bench.h>
 #include <bench/data.h>
 
-#include <validation.h>
+#include <chain.h>
+#include <primitives/block.h>
 #include <streams.h>
-#include <consensus/validation.h>
 #include <rpc/blockchain.h>
-
 #include <univalue.h>
+#include <version.h>
 
 static void BlockToJsonVerbose(benchmark::State& state) {
     CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);

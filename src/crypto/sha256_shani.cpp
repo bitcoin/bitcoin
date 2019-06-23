@@ -11,9 +11,6 @@
 #include <stdint.h>
 #include <immintrin.h>
 
-#include <crypto/common.h>
-
-
 namespace {
 
 const __m128i MASK = _mm_set_epi64x(0x0c0d0e0f08090a0bULL, 0x0405060700010203ULL);

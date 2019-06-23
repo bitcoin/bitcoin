@@ -11,6 +11,7 @@
 
 #include <span.h>
 #include <util/bip32.h>
+#include <util/memory.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 

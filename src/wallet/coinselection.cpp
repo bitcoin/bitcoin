@@ -4,6 +4,7 @@
 
 #include <wallet/coinselection.h>
 
+#include <random.h>
 #include <util/system.h>
 #include <util/moneystr.h>
 

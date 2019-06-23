@@ -15,6 +15,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #include <stdint.h>
 

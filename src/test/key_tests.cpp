@@ -6,9 +6,9 @@
 
 #include <key_io.h>
 #include <uint256.h>
-#include <util/system.h>
 #include <util/strencodings.h>
 #include <test/setup_common.h>
+#include <tinyformat.h>
 
 #include <string>
 #include <vector>

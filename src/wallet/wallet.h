@@ -16,6 +16,7 @@
 #include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <validationinterface.h>
 #include <wallet/coinselection.h>
 #include <wallet/crypter.h>

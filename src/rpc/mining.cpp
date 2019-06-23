@@ -25,6 +25,7 @@
 #include <util/fees.h>
 #include <util/strencodings.h>
 #include <util/system.h>
+#include <util/time.h>
 #include <util/validation.h>
 #include <validation.h>
 #include <validationinterface.h>

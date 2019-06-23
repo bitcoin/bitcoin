@@ -7,7 +7,6 @@
 
 #include <amount.h>
 #include <primitives/transaction.h>
-#include <random.h>
 
 //! target minimum change amount
 static constexpr CAmount MIN_CHANGE{COIN / 100};

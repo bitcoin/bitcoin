@@ -8,7 +8,6 @@
 
 #include <amount.h>
 #include <rpc/request.h>
-#include <uint256.h>
 
 #include <map>
 #include <stdint.h>

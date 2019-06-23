@@ -3,16 +3,15 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <crypto/ripemd160.h>
 #include <key_io.h>
 #include <httpserver.h>
 #include <outputtype.h>
-#include <rpc/blockchain.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <util/system.h>
 #include <util/strencodings.h>
+#include <util/time.h>
 #include <util/validation.h>
 
 #include <stdint.h>
@@ -22,6 +21,8 @@
 #endif
 
 #include <univalue.h>
+
+extern CCriticalSection cs_main;
 
 static UniValue validateaddress(const JSONRPCRequest& request)
 {

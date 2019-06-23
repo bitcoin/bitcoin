@@ -9,9 +9,9 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <logging.h>
-#include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <random.h>
 #include <wallet/wallettool.h>
 
 #include <functional>

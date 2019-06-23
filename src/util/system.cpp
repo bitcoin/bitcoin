@@ -6,8 +6,11 @@
 #include <util/system.h>
 
 #include <chainparamsbase.h>
+#include <util/memory.h>
 #include <util/strencodings.h>
+
 #include <util/translation.h>
+#include <util/time.h>
 
 #if (defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__DragonFly__))
 #include <pthread.h>
