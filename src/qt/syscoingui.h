@@ -148,6 +148,7 @@ private:
     QAction* openAction = nullptr;
     QAction* showHelpMessageAction = nullptr;
     QAction* m_open_wallet_action{nullptr};
+    QMenu* m_open_wallet_menu{nullptr};
     QAction* m_close_wallet_action{nullptr};
     QAction* m_wallet_selector_label_action = nullptr;
     QAction* m_wallet_selector_action = nullptr;
