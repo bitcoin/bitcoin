@@ -1114,7 +1114,7 @@ bool AppInitParameterInteraction()
         if (GetArg("-server", false) && !IsArgSet("-rpcport")) {
             return InitError(_("-rpcport must be specified when -devnet and -server are specified"));
         }
-        if (gArgs.IsArgSet("-devnet")) {
+        if (gArgs.GetArgs("-devnet").size() > 1) {
             return InitError(_("-devnet can only be specified once"));
         }
     }
