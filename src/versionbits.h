@@ -65,7 +65,6 @@ public:
     // Note that the functions below take a pindexPrev as input: they compute information for block B based on its parent.
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
-    int CountBlocksInWindow(const CBlockIndex* pindex, const Consensus::Params& params) const;
 };
 
 struct VersionBitsCache
@@ -78,7 +77,6 @@ struct VersionBitsCache
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-int VersionBitsCountBlocksInWindow(const CBlockIndex* pindex, const Consensus::Params& params, Consensus::DeploymentPos pos);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 #endif

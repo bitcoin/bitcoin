@@ -1324,16 +1324,6 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     if (THRESHOLD_STARTED == thresholdState)
     {
         rv.push_back(Pair("bit", consensusParams.vDeployments[id].bit));
-
-        int nBlockCount = VersionBitsCountBlocksInWindow(chainActive.Tip(), consensusParams, id);
-        int64_t nPeriod = consensusParams.vDeployments[id].nWindowSize ? consensusParams.vDeployments[id].nWindowSize : consensusParams.nMinerConfirmationWindow;
-        int64_t nThreshold = consensusParams.vDeployments[id].nThreshold ? consensusParams.vDeployments[id].nThreshold : consensusParams.nRuleChangeActivationThreshold;
-        int64_t nWindowStart = chainActive.Height() - (chainActive.Height() % nPeriod);
-        rv.push_back(Pair("period", nPeriod));
-        rv.push_back(Pair("threshold", nThreshold));
-        rv.push_back(Pair("windowStart", nWindowStart));
-        rv.push_back(Pair("windowBlocks", nBlockCount));
-        rv.push_back(Pair("windowProgress", std::min(1.0, (double)nBlockCount / nThreshold)));
     }
     rv.push_back(Pair("startTime", consensusParams.vDeployments[id].nStartTime));
     rv.push_back(Pair("timeout", consensusParams.vDeployments[id].nTimeout));
@@ -1392,11 +1382,6 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "     \"xxxx\" : {                (string) name of the softfork\n"
             "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "        \"period\": xx,          (numeric) the window size/period for this softfork (only for \"started\" status)\n"
-            "        \"threshold\": xx,       (numeric) the threshold for this softfork (only for \"started\" status)\n"
-            "        \"windowStart\": xx,     (numeric) the starting block height of the current window (only for \"started\" status)\n"
-            "        \"windowBlocks\": xx,    (numeric) the number of blocks in the current window that had the version bit set for this softfork (only for \"started\" status)\n"
-            "        \"windowProgress\": xx,  (numeric) the progress (between 0 and 1) for activation of this softfork (only for \"started\" status)\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
             "        \"since\": xx,           (numeric) height of the first block to which the status applies\n"
