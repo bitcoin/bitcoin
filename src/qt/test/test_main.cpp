@@ -6,7 +6,6 @@
 #include <config/bitcoin-config.h>
 #endif
 
-#include <chainparams.h>
 #include <interfaces/node.h>
 #include <qt/bitcoin.h>
 #include <qt/test/apptests.h>

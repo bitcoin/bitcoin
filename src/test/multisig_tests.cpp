@@ -9,6 +9,7 @@
 #include <script/script_error.h>
 #include <script/interpreter.h>
 #include <script/sign.h>
+#include <tinyformat.h>
 #include <uint256.h>
 #include <test/setup_common.h>
 
