@@ -112,6 +112,7 @@ typedef AnnotatedMixin<std::mutex> Mutex;
 
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine);
+void PrintLockContentionOwned(const char* pszName, const char* pszFile, int nLine);
 #endif
 
 /** Wrapper around std::unique_lock style lock for Mutex. */
@@ -128,6 +129,7 @@ private:
 #endif
             Base::lock();
 #ifdef DEBUG_LOCKCONTENTION
+            PrintLockContentionOwned(pszName, pszFile, nLine);
         }
 #endif
     }
