@@ -120,9 +120,9 @@ void SelectBaseParams(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fDevNet = IsArgSet("-devnet");
-    bool fTestNet = GetBoolArg("-testnet", false);
+    bool fRegTest = gArgs.GetBoolArg("-regtest", false);
+    bool fDevNet = gArgs.IsArgSet("-devnet");
+    bool fTestNet = gArgs.GetBoolArg("-testnet", false);
 
     int nameParamsCount = (fRegTest ? 1 : 0) + (fDevNet ? 1 : 0) + (fTestNet ? 1 : 0);
     if (nameParamsCount > 1)
@@ -140,7 +140,7 @@ std::string ChainNameFromCommandLine()
 std::string GetDevNetName()
 {
     // This function should never be called for non-devnets
-    assert(IsArgSet("-devnet"));
-    std::string devNetName = GetArg("-devnet", "");
+    assert(gArgs.IsArgSet("-devnet"));
+    std::string devNetName = gArgs.GetArg("-devnet", "");
     return "devnet" + (devNetName.empty() ? "" : "-" + devNetName);
 }

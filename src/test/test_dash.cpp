@@ -71,7 +71,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_dash_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         fs::create_directories(pathTemp);
-        ForceSetArg("-datadir", pathTemp.string());
+        gArgs.ForceSetArg("-datadir", pathTemp.string());
         mempool.setSanityCheck(1.0);
         g_connman = std::unique_ptr<CConnman>(new CConnman(0x1337, 0x1337)); // Deterministic randomness for tests.
         connman = g_connman.get();

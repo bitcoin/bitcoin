@@ -186,7 +186,7 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     connmanQuorumsToDelete.erase(curDkgBlock);
 
     for (auto& quorum : lastQuorums) {
-        if (!quorum->IsMember(myProTxHash) && !GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
+        if (!quorum->IsMember(myProTxHash) && !gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS)) {
             continue;
         }
 
