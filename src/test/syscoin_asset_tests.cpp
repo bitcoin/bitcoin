@@ -535,7 +535,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
     }
 }
-BOOST_AUTO_TEST_CASE(generate_syscoinmint)
+/* BOOST_AUTO_TEST_CASE(generate_syscoinmint)
 {
     UniValue r;
     tfm::format(std::cout,"Running generate_syscoinmint...\n");  
@@ -562,8 +562,8 @@ BOOST_AUTO_TEST_CASE(generate_syscoinmint)
     // should fail: already minted with that block+txindex tuple
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false)); 
     BOOST_CHECK(r.write().size() < 32);
-}
-BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
+}*/
+/* BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
 {
     tfm::format(std::cout,"Running generate_burn_syscoin...\n");
     UniValue r;
@@ -581,7 +581,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
     CTransaction tx(txIn);
     BOOST_CHECK(tx.vout[0].scriptPubKey.IsUnspendable());
     BOOST_CHECK_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 0.1 0x931D387731bBbC988B312206c74F77D004D6B84b"), runtime_error);
-}
+}*/
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
     UniValue r;

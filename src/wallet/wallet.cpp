@@ -1439,7 +1439,7 @@ CAmount CWallet::GetChange(const CTxOut& txout) const
     return (IsChange(txout) ? txout.nValue : 0);
 }
 bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter) const {
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
         CAssetAllocation assetallocation(tx);
         if(!assetallocation.assetAllocationTuple.IsNull()){
             if (!assetallocation.listSendingAllocationAmounts.empty()) {
@@ -1453,7 +1453,7 @@ bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter) co
     return false;
 }
 bool CWallet::IsAssetMine(const CTransaction& tx, const isminefilter& filter, std::vector<IsAssetMineSelection> &addresses) const {
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
         CAssetAllocation assetallocation(tx);
         if(!assetallocation.assetAllocationTuple.IsNull()){
             if (!assetallocation.listSendingAllocationAmounts.empty()) {

@@ -1104,7 +1104,7 @@ static UniValue ListReceived(interfaces::Chain::Lock& locked_chain, CWallet * co
 
         // SYSCOIN if asset send check receivers instead of syscoin dust output
         std::vector<IsAssetMineSelection> IsAssetMineResults;
-        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND){
+        if(wtx.tx->nVersion == SYSCOIN_TX_VERSION_ASSET_SEND || wtx.tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND){
             if(pwallet->IsAssetMine(*wtx.tx.get(), filter, IsAssetMineResults)){
                 for(auto isMineResult: IsAssetMineResults){
                     if (has_filtered_address && !(filtered_address == isMineResult.destination)) {

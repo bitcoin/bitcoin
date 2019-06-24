@@ -79,7 +79,7 @@ bool DisconnectAssetActivate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectAssetUpdate(const CTransaction &tx, AssetMap &mapAssets);
 bool DisconnectAssetTransfer(const CTransaction &tx, AssetMap &mapAssets);
-bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations);
+bool DisconnectAssetAllocation(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations);
 bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys);
 bool DisconnectMint(const CTransaction &tx, EthereumMintTxVec &vecMintKeys);
 bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& errorMessage, const bool &fJustCheck, const bool& bSanity, const bool& bMiner, const int& nHeight, const uint256& blockhash, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys, bool &bTxRootError);
@@ -90,5 +90,5 @@ static CAssetAllocation emptyAllocation;
 bool ResetAssetAllocation(const std::string &senderStr, const uint256 &txHash, const bool &bMiner=false, const bool &bExpiryOnly=false);
 void ResyncAssetAllocationStates();
 bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& state);
-bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, std::string &errorMessage, bool& bOverflow, const bool &bSanityCheck = false, const bool &bMiner = false);
+bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const uint256& blockhash, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, std::string &errorMessage, bool& bOverflow, const bool &bSanityCheck = false, const bool &bMiner = false);
 #endif // SYSCOIN_SERVICES_ASSETCONSENSUS_H
