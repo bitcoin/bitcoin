@@ -673,10 +673,10 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
 fs::path GetBackupsDir()
 {
-    if (!IsArgSet("-walletbackupsdir"))
+    if (!gArgs.IsArgSet("-walletbackupsdir"))
         return GetDataDir() / "backups";
 
-    return fs::absolute(GetArg("-walletbackupsdir", ""));
+    return fs::absolute(gArgs.GetArg("-walletbackupsdir", ""));
 }
 
 void ClearDatadirCache()
