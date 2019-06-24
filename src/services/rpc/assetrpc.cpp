@@ -47,33 +47,36 @@ UniValue convertaddress(const JSONRPCRequest& request)
     
     UniValue ret(UniValue::VOBJ);
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
-
     // Make sure the destination is valid
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
     std::string currentV4Address = "";
     std::string currentV3Address = "";
+    CTxDestination v4Dest;
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
+        v4Dest = dest;
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  EncodeDestination(PKHash(*witness_id));
     }
     else if (auto key_id = boost::get<PKHash>(&dest)) {
-        currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
+        v4Dest = WitnessV0KeyHash(*key_id);
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  EncodeDestination(*key_id);
     }
     else if (auto script_id = boost::get<ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(*script_id);
+        v4Dest = *script_id;
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  currentV4Address;
     }
     else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
+        v4Dest = dest;
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  currentV4Address;
-    }  
+    } 
+
     ret.pushKV("v3address", currentV3Address);
-    ret.pushKV("v4address", currentV4Address);
-                       
-    
+    ret.pushKV("v4address", currentV4Address); 
     return ret;
 }
 unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
