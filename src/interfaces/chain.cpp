@@ -353,13 +353,11 @@ public:
     {
         return MakeUnique<NotificationsHandlerImpl>(*this, notifications);
     }
-    void waitForNotificationsIfNewBlocksConnected(const uint256& old_tip) override
+    void waitForNotificationsIfTipChanged(const uint256& old_tip) override
     {
         if (!old_tip.IsNull()) {
             LOCK(::cs_main);
             if (old_tip == ::ChainActive().Tip()->GetBlockHash()) return;
-            CBlockIndex* block = LookupBlockIndex(old_tip);
-            if (block && block->GetAncestor(::ChainActive().Height()) == ::ChainActive().Tip()) return;
         }
         SyncWithValidationInterfaceQueue();
     }
