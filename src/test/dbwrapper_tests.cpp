@@ -4,8 +4,8 @@
 
 #include <dbwrapper.h>
 #include <uint256.h>
-#include <random.h>
 #include <test/setup_common.h>
+#include <util/memory.h>
 
 #include <memory>
 

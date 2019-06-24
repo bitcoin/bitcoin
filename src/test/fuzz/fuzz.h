@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_TEST_FUZZ_FUZZ_H
 #define SYSCOIN_TEST_FUZZ_FUZZ_H
 
-#include <functional>
 #include <stdint.h>
 #include <vector>
 

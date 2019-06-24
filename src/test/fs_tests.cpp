@@ -4,6 +4,7 @@
 //
 #include <fs.h>
 #include <test/setup_common.h>
+#include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 

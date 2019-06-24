@@ -5,7 +5,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <pow.h>
-#include <random.h>
 #include <util/system.h>
 #include <test/setup_common.h>
 
