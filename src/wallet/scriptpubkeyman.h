@@ -236,6 +236,9 @@ public:
     void UpdateTimeFirstKey(int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
     //! Adds a CScript to the store
     bool LoadCScript(const CScript& redeemScript);
+    //! Load metadata (used by LoadWallet)
+    void LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
+    void LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &metadata);
 
     /* Set the HD chain model (chain child index counters) */
     void SetHDChain(const CHDChain& chain, bool memonly);
