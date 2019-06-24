@@ -475,9 +475,19 @@ public:
      */
     std::multimap<CBlockIndex*, CBlockIndex*> m_blocks_unlinked;
 
+    /**
+     * Load the blocktree off disk and into memory. Populate certain metadata
+     * per index entry (nStatus, nChainWork, nTimeMax, etc.) as well as peripheral
+     * collections like setDirtyBlockIndex.
+     *
+     * @param[out] block_index_candidates  Fill this set with any valid blocks for
+     *                                     which we've downloaded all transactions.
+     */
     bool LoadBlockIndex(
         const Consensus::Params& consensus_params,
-        CBlockTreeDB& blocktree) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+        CBlockTreeDB& blocktree,
+        std::set<CBlockIndex*, CBlockIndexWorkComparator>& block_index_candidates)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Clear all data members. */
     void Unload() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
