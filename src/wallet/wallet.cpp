@@ -1113,7 +1113,7 @@ void CWallet::BlockUntilSyncedToCurrentChain() {
     // for the queue to drain enough to execute it (indicating we are caught up
     // at least with the time we entered this function).
     uint256 last_block_hash = WITH_LOCK(cs_wallet, return m_last_block_processed);
-    chain().waitForNotificationsIfNewBlocksConnected(last_block_hash);
+    chain().waitForNotificationsIfTipChanged(last_block_hash);
 }
 
 
