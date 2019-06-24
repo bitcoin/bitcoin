@@ -5,14 +5,10 @@
 #include <consensus/validation.h>
 #include <key.h>
 #include <validation.h>
-#include <miner.h>
-#include <pubkey.h>
 #include <txmempool.h>
-#include <random.h>
 #include <script/standard.h>
 #include <script/sign.h>
 #include <test/setup_common.h>
-#include <util/time.h>
 #include <keystore.h>
 
 #include <boost/test/unit_test.hpp>

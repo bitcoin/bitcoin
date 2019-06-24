@@ -6,7 +6,6 @@
 #include <config/syscoin-config.h>
 #endif
 
-#include <chainparams.h>
 #include <interfaces/node.h>
 #include <qt/syscoin.h>
 #include <qt/test/apptests.h>
