@@ -121,7 +121,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     }
 
     auto mnList = deterministicMNManager->GetListAtChainTip();
-    auto dmn = mnList.GetValidMNByCollateral(vote.GetMasternodeOutpoint());
+    auto dmn = mnList.GetMNByCollateral(vote.GetMasternodeOutpoint());
 
     if (!dmn) {
         std::ostringstream ostr;
@@ -235,7 +235,7 @@ void CGovernanceObject::ClearMasternodeVotes()
 
     vote_m_it it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
-        if (!mnList.HasValidMNByCollateral(it->first)) {
+        if (!mnList.HasMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
             mapCurrentMNVotes.erase(it++);
         } else {
@@ -500,8 +500,8 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
         }
 
         // Check that we have a valid MN signature
-        if (!CheckSignature(dmn->pdmnState->pubKeyOperator)) {
-            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.ToString();
+        if (!CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
+            strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey = " + dmn->pdmnState->pubKeyOperator.Get().ToString();
             return false;
         }
 

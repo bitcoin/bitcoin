@@ -551,7 +551,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
 
         clsig.nHeight = lastSignedHeight;
         clsig.blockHash = lastSignedMsgHash;
-        clsig.sig = recoveredSig.sig.GetSig();
+        clsig.sig = recoveredSig.sig.Get();
     }
     ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
 }

@@ -72,7 +72,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
 
         auto mnList = deterministicMNManager->GetListAtChainTip();
-        auto dmn = mnList.GetValidMN(mnauth.proRegTxHash);
+        auto dmn = mnList.GetMN(mnauth.proRegTxHash);
         if (!dmn) {
             LOCK(cs_main);
             // in case he was unlucky and not up to date, just let him be connected as a regular node, which gives him
@@ -89,7 +89,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->fInbound));
         }
 
-        if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator, signHash)) {
+        if (!mnauth.sig.VerifyInsecure(dmn->pdmnState->pubKeyOperator.Get(), signHash)) {
             LOCK(cs_main);
             // Same as above, MN seems to not know about his fate yet, so give him a chance to update. If this is a
             // malicious actor (DoSing us), we'll ban him soon.

@@ -44,7 +44,7 @@ public:
     uint256 confirmedHashWithProRegTxHash;
 
     CKeyID keyIDOwner;
-    CBLSPublicKey pubKeyOperator;
+    CBLSLazyPublicKey pubKeyOperator;
     CKeyID keyIDVoting;
     CService addr;
     CScript scriptPayout;
@@ -55,7 +55,7 @@ public:
     CDeterministicMNState(const CProRegTx& proTx)
     {
         keyIDOwner = proTx.keyIDOwner;
-        pubKeyOperator = proTx.pubKeyOperator;
+        pubKeyOperator.Set(proTx.pubKeyOperator);
         keyIDVoting = proTx.keyIDVoting;
         addr = proTx.addr;
         scriptPayout = proTx.scriptPayout;
@@ -89,7 +89,7 @@ public:
 
     void ResetOperatorFields()
     {
-        pubKeyOperator = CBLSPublicKey();
+        pubKeyOperator.Set(CBLSPublicKey());
         addr = CService();
         scriptOperatorPayout = CScript();
         nRevocationReason = CProUpRevTx::REASON_NOT_SPECIFIED;
@@ -306,6 +306,7 @@ public:
     CDeterministicMNCPtr GetMNByOperatorKey(const CBLSPublicKey& pubKey);
     CDeterministicMNCPtr GetMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
+    CDeterministicMNCPtr GetMNByService(const CService& service) const;
     CDeterministicMNCPtr GetValidMNByService(const CService& service) const;
     CDeterministicMNCPtr GetMNPayee() const;
 
