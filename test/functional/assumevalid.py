@@ -45,7 +45,8 @@ from test_framework.mininode import (CBlockHeader,
                                      msg_headers)
 from test_framework.script import (CScript, OP_TRUE)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (start_node, p2p_port, assert_equal)
+from test_framework.util import (start_node, p2p_port, assert_equal, get_mocktime, set_mocktime, set_node_times)
+
 
 class BaseNode(NodeConnCB):
     def send_header_for_blocks(self, new_blocks):
@@ -63,15 +64,21 @@ class AssumeValidTest(BitcoinTestFramework):
         # Start node0. We don't start the other nodes yet since
         # we need to pre-mine a block with an invalid transaction
         # signature so we can pass in the block hash as assumevalid.
-        self.nodes = [start_node(0, self.options.tmpdir)]
+        self.nodes = [start_node(0, self.options.tmpdir, ["-dip3params=9000:9000", "-checkblockindex=0"])]
 
     def send_blocks_until_disconnected(self, node):
         """Keep sending blocks to the node until we're disconnected."""
         for i in range(len(self.blocks)):
+            if not node.connection:
+                break
             try:
                 node.send_message(msg_block(self.blocks[i]))
-            except IOError as e:
-                assert str(e) == 'Not connected, no pushbuf'
+            # TODO There is a race condition between send_message and on_close which causes an AttributError on Travis
+            # We can reenable the correct exception handling and the assert when Bitcoin 0.16 mininode.py changes have been
+            # backported
+            #except IOError as e:
+            except:
+                #assert str(e) == 'Not connected, no pushbuf'
                 break
 
     def assert_blockchain_height(self, node, height):
@@ -151,8 +158,8 @@ class AssumeValidTest(BitcoinTestFramework):
         self.block_time += 1
         height += 1
 
-        # Bury the assumed valid block 2100 deep
-        for i in range(2100):
+        # Bury the assumed valid block 8400 deep (Dash needs 4x as much blocks to allow -assumevalid to work)
+        for i in range(8400):
             block = create_block(self.tip, create_coinbase(height), self.block_time)
             block.nVersion = 4
             block.solve()
@@ -163,36 +170,45 @@ class AssumeValidTest(BitcoinTestFramework):
 
         # Start node1 and node2 with assumevalid so they accept a block with a bad signature.
         self.nodes.append(start_node(1, self.options.tmpdir,
-                                     ["-assumevalid=" + hex(block102.sha256)]))
+                                     ["-assumevalid=" + hex(block102.sha256), "-dip3params=9000:9000", "-checkblockindex=0"]))
         node1 = BaseNode()  # connects to node1
         connections.append(NodeConn('127.0.0.1', p2p_port(1), self.nodes[1], node1))
         node1.add_connection(connections[1])
         node1.wait_for_verack()
 
         self.nodes.append(start_node(2, self.options.tmpdir,
-                                     ["-assumevalid=" + hex(block102.sha256)]))
+                                     ["-assumevalid=" + hex(block102.sha256), "-dip3params=9000:9000", "-checkblockindex=0"]))
         node2 = BaseNode()  # connects to node2
         connections.append(NodeConn('127.0.0.1', p2p_port(2), self.nodes[2], node2))
         node2.add_connection(connections[2])
         node2.wait_for_verack()
 
-        # send header lists to all three nodes
+        # Make sure nodes actually accept the many headers
+        set_mocktime(self.block_time)
+        set_node_times(self.nodes, get_mocktime())
+
+        # send header lists to all three nodes.
+        # node0 does not need to receive all headers
+        # node1 must receive all headers as otherwise assumevalid is ignored in ConnectBlock
+        # node2 should NOT receive all headers to force skipping of the assumevalid check in ConnectBlock
         node0.send_header_for_blocks(self.blocks[0:2000])
-        node0.send_header_for_blocks(self.blocks[2000:])
         node1.send_header_for_blocks(self.blocks[0:2000])
-        node1.send_header_for_blocks(self.blocks[2000:])
+        node1.send_header_for_blocks(self.blocks[2000:4000])
+        node1.send_header_for_blocks(self.blocks[4000:6000])
+        node1.send_header_for_blocks(self.blocks[6000:8000])
+        node1.send_header_for_blocks(self.blocks[8000:])
         node2.send_header_for_blocks(self.blocks[0:200])
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(node0)
         self.assert_blockchain_height(self.nodes[0], 101)
 
-        # Send all blocks to node1. All blocks will be accepted.
-        for i in range(2202):
+        # Send 200 blocks to node1. All blocks, including block 102, will be accepted.
+        for i in range(200):
             node1.send_message(msg_block(self.blocks[i]))
-        # Syncing 2200 blocks can take a while on slow systems. Give it plenty of time to sync.
-        node1.sync_with_ping(120)
-        assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 2202)
+        # Syncing so many blocks can take a while on slow systems. Give it plenty of time to sync.
+        node1.sync_with_ping(300)
+        assert_equal(self.nodes[1].getblock(self.nodes[1].getbestblockhash())['height'], 200)
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(node2)

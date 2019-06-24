@@ -38,7 +38,7 @@ class BIP65Test(ComparisonTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=3']]
+        self.extra_args = [['-whitelist=127.0.0.1', '-blockversion=3', '-dip3params=9000:9000']]
 
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
