@@ -23,16 +23,18 @@ class COutPoint;
 class CWallet;
 #endif
 
-const int SYSCOIN_TX_VERSION_MINT = 0x7400;
-const int SYSCOIN_TX_VERSION_BURN = 0x7401;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 0x7400;
+const int SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION = 0x7401;
 const int SYSCOIN_TX_VERSION_ASSET_ACTIVATE = 0x7402;
 const int SYSCOIN_TX_VERSION_ASSET_UPDATE = 0x7403;
 const int SYSCOIN_TX_VERSION_ASSET_TRANSFER = 0x7404;
 const int SYSCOIN_TX_VERSION_ASSET_SEND = 0x7405;
-const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT = 0x7406;
-const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN = 0x7407;
-const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND = 0x7408;
-const int SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK = 0x7409;
+const int SYSCOIN_TX_VERSION_ALLOCATION_MINT = 0x7406;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM = 0x7407;
+const int SYSCOIN_TX_VERSION_ALLOCATION_SEND = 0x7408;
+const int SYSCOIN_TX_VERSION_ALLOCATION_LOCK = 0x7409;
+
+
     
 static const unsigned int MAX_GUID_LENGTH = 20;
 static const unsigned int MAX_VALUE_LENGTH = 512;
@@ -100,10 +102,6 @@ public:
         SetNull();
         nAsset = 0;
     }
-    CAsset(const CAsset&) = delete;
-    CAsset(CAsset && other) = default;
-    CAsset& operator=(CAsset& other) = delete;
-    CAsset& operator=(CAsset&& other) = default;
     CAsset(const CTransaction &tx) {
         SetNull();
         nAsset = 0;

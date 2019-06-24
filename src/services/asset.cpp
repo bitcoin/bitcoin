@@ -100,7 +100,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
 } 
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress)
 {
-    if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+    if(tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
         return false;
     }
@@ -305,7 +305,7 @@ void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){
     int count = 0;
     for (const txiter& it : stage) {
         const CTransaction& tx = it->GetTx();
-        if(IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK){
+        if(IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_LOCK){
             CAssetAllocation allocation(tx);
             if(allocation.assetAllocationTuple.IsNull())
                 continue;
@@ -350,14 +350,14 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 }
 
 bool IsSyscoinMintTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_MINT;
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
 }
 bool IsAssetTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
 }
 bool IsAssetAllocationTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN || 
-        nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK;
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
+        nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK;
 }
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
@@ -369,7 +369,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
         found = SysTxToJSON(rawTx, output, pwallet, filter_ismine);
     }
     
@@ -382,7 +382,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
         found = SysTxToJSON(rawTx, output);
     }
     
@@ -395,7 +395,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwalle
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
         found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
@@ -407,7 +407,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
         found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output);
@@ -458,7 +458,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 int GenerateSyscoinGuid()
 {
     int rand = 0;
-    while(rand <= SYSCOIN_TX_VERSION_MINT)
+    while(rand <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
 	    rand = GetRand(std::numeric_limits<int>::max());
     return rand;
 }

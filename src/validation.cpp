@@ -1033,9 +1033,9 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
         LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: using single-threaded verification...\n");
         bMultiThreaded = false;
     }
-    else if(!fConcurrentProcessing || test_accept || tx->nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+    else if(!fConcurrentProcessing || test_accept || tx->nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND)
         bMultiThreaded = false;
-    if(fTPSTest && !test_accept && tx->nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+    if(fTPSTest && !test_accept && tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
         bMultiThreaded = true;
     std::vector<COutPoint> coins_to_uncache;
     bool res = AcceptToMemoryPoolWorker(chainparams, pool, state, tx, pfMissingInputs, nAcceptTime, plTxnReplaced, bypass_limits, nAbsurdFee, coins_to_uncache, test_accept, bMultiThreaded, bSanityCheck);

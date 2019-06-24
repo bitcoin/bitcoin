@@ -1007,18 +1007,13 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }
     catch(const runtime_error& e){
     }
-    if(!assetVal.isNull()) {
-        CAsset asset;
-        if (!GetAsset(assetVal.get_int(), asset))
-             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
-        if(asset.vchContract.empty())
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
-         res.__pushKV("contract", HexStr(asset.vchContract));    
-                   
-    }
-    else{
-        res.__pushKV("contract", HexStr(Params().GetConsensus().vchSYSXContract));
-    }
+    CAsset asset;
+    if (!GetAsset(assetVal.get_int(), asset))
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
+    if(asset.vchContract.empty())
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
+    res.__pushKV("contract", HexStr(asset.vchContract));    
+                
     return res;
 }
 UniValue listassetindex(const JSONRPCRequest& request) {

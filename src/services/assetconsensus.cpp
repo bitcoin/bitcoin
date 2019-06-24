@@ -30,18 +30,14 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     if (!IsSyscoinTx(tx.nVersion))
         return true;
  
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT){
         if(!DisconnectMintAsset(tx, mapAssetAllocations, vecMintKeys))
             return false;       
-    }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_MINT){
-        if(!DisconnectMint(tx, vecMintKeys))
-            return false;       
-    }    
+    }  
     else{
         if (IsAssetAllocationTx(tx.nVersion))
         {
-            if(!DisconnectAssetAllocation(tx, mapAssetAllocations))
+            if(!DisconnectAssetAllocation(tx, mapAssets, mapAssetAllocations))
                 return false;       
         }
         else if (IsAssetTx(tx.nVersion))
@@ -76,18 +72,13 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
     {
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an syscoinmint");
         return false;
-    }
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT && !mintSyscoin.assetAllocationTuple.IsNull())
-    {
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Tried to mint Syscoin but asset information was present");
-        return false;
-    }  
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && mintSyscoin.assetAllocationTuple.IsNull())
+    } 
+    if(mintSyscoin.assetAllocationTuple.IsNull())
     {
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Tried to mint asset but asset information was not present");
         return false;
     } 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !GetAsset(mintSyscoin.assetAllocationTuple.nAsset, dbAsset)) 
+    if(!GetAsset(mintSyscoin.assetAllocationTuple.nAsset, dbAsset)) 
     {
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Failed to read from asset DB");
         return false;
@@ -213,11 +204,8 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         return false;
     }                       
     const dev::Address &address160 = rlpTxValue[3].toHash<dev::Address>(dev::RLP::VeryStrict);
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT && Params().GetConsensus().vchSYSXContract != address160.asBytes()){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Receiver not the expected SYSX contract address");
-        return false;
-    }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && dbAsset.vchContract != address160.asBytes()){
+
+    if(dbAsset.vchContract != address160.asBytes()){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Receiver not the expected SYSX contract address");
         return false;
     }
@@ -230,81 +218,56 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not parse and validate transaction data");
         return false;
     }
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT) {
-        int witnessversion;
-        std::vector<unsigned char> witnessprogram;
-        if (tx.vout[0].scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)){
-            if(!fUnitTest && (witnessAddress.vchWitnessProgram != witnessprogram || witnessAddress.nVersion != (unsigned char)witnessversion)){
-                errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Witness address does not match extracted witness address from burn transaction");
-                return false;
-            }
-        }
-        else{
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Witness program not detected in the first output of the mint transaction");
-            return false;
-        } 
-       
-    }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
-    {
-        if(witnessAddress != mintSyscoin.assetAllocationTuple.witnessAddress){
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Minting address does not match address passed into burn function");
-            return false;
-        }
-    }    
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT && nAsset != 0){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot mint an asset in a syscoin mint operation");
+    
+    if(witnessAddress != mintSyscoin.assetAllocationTuple.witnessAddress){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Minting address does not match address passed into burn function");
         return false;
     }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && nAsset != dbAsset.nAsset){
+      
+    if(nAsset != dbAsset.nAsset){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid asset being minted, does not match asset GUID encoded in transaction data");
         return false;
     }
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT && outputAmount != tx.vout[0].nValue){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must match mint amount");
-        return false;
-    }
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && outputAmount != mintSyscoin.nValueAsset){
+    if(outputAmount != mintSyscoin.nValueAsset){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must match asset mint amount");
         return false;
     }  
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-        if(outputAmount <= 0){
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must be positive");
-            return false;
-        }  
+    if(outputAmount <= 0){
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must be positive");
+        return false;
+    }  
     
-        const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
-        #if __cplusplus > 201402 
-        auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
-        #else
-        auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
-        #endif
+    const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
+    #if __cplusplus > 201402 
+    auto result1 = mapAssetAllocations.try_emplace(std::move(receiverTupleStr),  std::move(emptyAllocation));
+    #else
+    auto result1 = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+    #endif
 
-        auto mapAssetAllocation = result1.first;
-        const bool &mapAssetAllocationNotFound = result1.second;
-        if(mapAssetAllocationNotFound){
-            CAssetAllocation receiverAllocation;
-            GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
-            if (receiverAllocation.assetAllocationTuple.IsNull()) {           
-                receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
-                receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
-            }
-            mapAssetAllocation->second = std::move(receiverAllocation);             
+    auto mapAssetAllocation = result1.first;
+    const bool &mapAssetAllocationNotFound = result1.second;
+    if(mapAssetAllocationNotFound){
+        CAssetAllocation receiverAllocation;
+        GetAssetAllocation(mintSyscoin.assetAllocationTuple, receiverAllocation);
+        if (receiverAllocation.assetAllocationTuple.IsNull()) {           
+            receiverAllocation.assetAllocationTuple.nAsset = std::move(mintSyscoin.assetAllocationTuple.nAsset);
+            receiverAllocation.assetAllocationTuple.witnessAddress = std::move(mintSyscoin.assetAllocationTuple.witnessAddress);
         }
-        CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
-        if (!AssetRange(mintSyscoin.nValueAsset))
-        {
-            errorMessage = "SYSCOIN_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
-            return false;
-        }
-
-        // update balances  
-        storedReceiverAllocationRef.nBalance += mintSyscoin.nValueAsset; 
-        if(!fJustCheck && !bSanity && !bMiner)     
-            passetallocationdb->WriteMintIndex(tx, mintSyscoin, nHeight, blockhash);         
-                                       
+        mapAssetAllocation->second = std::move(receiverAllocation);             
     }
+    CAssetAllocation& storedReceiverAllocationRef = mapAssetAllocation->second;
+    if (!AssetRange(mintSyscoin.nValueAsset))
+    {
+        errorMessage = "SYSCOIN_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
+        return false;
+    }
+
+    // update balances  
+    storedReceiverAllocationRef.nBalance += mintSyscoin.nValueAsset; 
+    if(!fJustCheck && !bSanity && !bMiner)     
+        passetallocationdb->WriteMintIndex(tx, mintSyscoin, nHeight, blockhash);         
+                                    
+
     return true;
 }
 bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const bool &bSanity)
@@ -332,7 +295,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     const bool &bJustCheckInternal = blockHash.IsNull()? fJustCheck: false;
     if (IsAssetAllocationTx(tx.nVersion))
     {
-        good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
+        good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
 
     }
     else if (IsAssetTx(tx.nVersion))
@@ -547,7 +510,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
     }    
     return true; 
 }
-bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations){
+bool DisconnectAssetAllocation(const CTransaction &tx, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations){
     const uint256& txid = tx.GetHash();
     CAssetAllocation theAssetAllocation(tx);
 
@@ -574,7 +537,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
         mapAssetAllocation->second = std::move(senderAllocation);               
     }
     CAssetAllocation& storedSenderAllocationRef = mapAssetAllocation->second;
-
+    CAmount nTotal = 0;
     for(const auto& amountTuple:theAssetAllocation.listSendingAllocationAmounts){
         const CAssetAllocationTuple receiverAllocationTuple(theAssetAllocation.assetAllocationTuple.nAsset, amountTuple.first);
        
@@ -601,7 +564,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
         // reverse allocations
         storedReceiverAllocationRef.nBalance -= amountTuple.second;
         storedSenderAllocationRef.nBalance += amountTuple.second; 
-
+        nTotal += amountTuple.second;
         if(storedReceiverAllocationRef.nBalance < 0) {
             LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Receiver balance of %s is negative: %lld\n",receiverAllocationTuple.ToString(), storedReceiverAllocationRef.nBalance);
             return false;
@@ -620,6 +583,36 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
             }
         }                                       
     }
+    // update supply if burning or minting sys bridge asset
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
+        CAsset dbAsset;
+        #if __cplusplus > 201402 
+        auto result = mapAssets.try_emplace(theAssetAllocation.assetAllocationTuple.nAsset,  std::move(emptyAsset));
+        #else
+        auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+        #endif   
+    
+        auto mapAsset = result.first;
+        const bool& mapAssetNotFound = result.second;
+        if(mapAssetNotFound){
+            if (!GetAsset(theAssetAllocation.assetAllocationTuple.nAsset, dbAsset)) {
+                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.assetAllocationTuple.nAsset);
+                return false;               
+            } 
+            mapAsset->second = std::move(dbAsset);                        
+        }
+        CAsset& storedSenderRef = mapAsset->second;  
+        // opposite supply logic according to checkassetallocationinputs
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
+            storedSenderRef.nTotalSupply += nTotal;
+        else
+            storedSenderRef.nTotalSupply -= nTotal;
+        if(storedSenderRef.nTotalSupply < 0 || storedSenderRef.nTotalSupply > storedSenderRef.nMaxSupply) {
+            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset out of range: nTotalSupply %lld, nMaxSupply: %lld\n",storedSenderRef.nTotalSupply, storedSenderRef.nMaxSupply);
+            return false;
+        }  
+
+    }
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
             if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
@@ -632,8 +625,15 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
     }         
     return true; 
 }
+CAmount FindBurnAmountFromTx(const CTransaction& tx){
+    for(const auto& out: tx.vout){
+        if(out.scriptPubKey.IsUnspendable())
+            return out.nValue;
+    }
+    return 0;
+}
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
+        bool fJustCheck, int nHeight, const uint256& blockhash, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
     const uint256 & txHash = tx.GetHash();
@@ -655,7 +655,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     if(fJustCheck)
     {
         switch (tx.nVersion) {
-        case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND:
+        case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
             if (theAssetAllocation.listSendingAllocationAmounts.empty())
             {
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Asset send must send an input or transfer balance");
@@ -672,14 +672,21 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 				return error(errorMessage.c_str());
 			}
             break; 
-        case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+        case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
+        case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
 			if (!theAssetAllocation.lockedOutpoint.IsNull())
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Cannot include locked outpoint information for allocation burn");
 				return error(errorMessage.c_str());
 			}
-            break;  
-		case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK:
+            if(theAssetAllocation.listSendingAllocationAmounts.empty())
+			{
+				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Must include burn allocation to this transaction");
+				return error(errorMessage.c_str());
+			}
+            break;            
+		case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
 			if (theAssetAllocation.lockedOutpoint.IsNull())
 			{
 				errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1004 - " + _("Asset allocation lock must include outpoint information");
@@ -749,43 +756,54 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     }
     else
         mapBalanceSenderCopy = storedSenderAllocationRef.nBalance;     
-           
-    if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
-    {       
-        std::vector<unsigned char> vchEthAddress;
-        uint32_t nAssetFromScript;
-        CAmount nAmountFromScript;
-        CWitnessAddress burnWitnessAddress;
-        if(!GetSyscoinBurnData(tx, nAssetFromScript, burnWitnessAddress, nAmountFromScript, vchEthAddress)){
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocationburn");
-            return error(errorMessage.c_str());
-        }   
-        if(burnWitnessAddress != user1)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
+        const uint32_t &nBurnAsset = theAssetAllocation.assetAllocationTuple.nAsset;
+        if(nBurnAsset != Params().GetConsensus().nSYSXAsset)
         {
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Mismatching deserailized witness address");
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid Syscoin Bridge Asset GUID specified");
             return error(errorMessage.c_str());
         }
-        if(storedSenderAllocationRef.assetAllocationTuple.nAsset != nAssetFromScript)
+        if (!FindAssetOwnerInTx(inputs, tx, theAssetAllocation.listSendingAllocationAmounts[0].first))
         {
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid asset details entered in the script output");
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot move syscoin to this asset. Receiver of Asset Allocation must sign off on this change");
+            return error(errorMessage.c_str());
+        }               
+        const int &nOut = GetSyscoinDataOutput(tx);
+        if(nOut < 0)
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Could not find burn output in transaction");
             return error(errorMessage.c_str());
         }
-        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1))
+        const CAmount &nBurnAmount = tx.vout[nOut].nValue;
+        if(nBurnAmount <= 0)
         {
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid burn amount found in transaction");
             return error(errorMessage.c_str());
         }
+        if(nBurnAmount != theAssetAllocation.listSendingAllocationAmounts[0].second)
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid burn amount found in transaction");
+            return error(errorMessage.c_str());
+        }  
+        if(user1 != CWitnessAddress(0, vchFromString("burn")))
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid burn sender address found in transaction");
+            return error(errorMessage.c_str());
+        }
+
+        if (nBurnAmount <= 0 || nBurnAmount > dbAsset.nMaxSupply)
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
+            return error(errorMessage.c_str());
+        }        
+  		    
         if(dbAsset.vchContract.empty())
         {
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot burn, no contract provided in asset by owner");
             return error(errorMessage.c_str());
         } 
-        if (nAmountFromScript <= 0 || nAmountFromScript > dbAsset.nTotalSupply)
-        {
-            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
-            return error(errorMessage.c_str());
-        }        
-        mapBalanceSenderCopy -= nAmountFromScript;
+       
+        mapBalanceSenderCopy -= nBurnAmount;
         if (mapBalanceSenderCopy < 0) {
             if(fJustCheck && !bSanityCheck)
             {
@@ -799,16 +817,155 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             return error(errorMessage.c_str());
         }
         if (!fJustCheck) {   
-            const CAssetAllocationTuple receiverAllocationTuple(nAssetFromScript,  CWitnessAddress(0, vchFromString("burn")));
+            const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset, theAssetAllocation.listSendingAllocationAmounts[0].first);
             const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
             #if __cplusplus > 201402 
-            auto result = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+            auto resultReceiver = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
             #else
-            auto result = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+            auto resultReceiver = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
             #endif 
             
-            auto mapAssetAllocationReceiver = result.first;
-            const bool& mapAssetAllocationReceiverNotFound = result.second;
+            auto mapAssetAllocationReceiver = resultReceiver.first;
+            const bool& mapAssetAllocationReceiverNotFound = resultReceiver.second;
+            if(mapAssetAllocationReceiverNotFound){
+                CAssetAllocation dbAssetAllocationReceiver;
+                if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
+                    dbAssetAllocationReceiver.assetAllocationTuple.nAsset = std::move(receiverAllocationTuple.nAsset);
+                    dbAssetAllocationReceiver.assetAllocationTuple.witnessAddress = std::move(receiverAllocationTuple.witnessAddress);              
+                }
+                mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);               
+            } 
+            mapAssetAllocationReceiver->second.nBalance += nBurnAmount;   
+            mapBalanceSenderCopy -= nBurnAmount;
+            if (mapBalanceSenderCopy < 0) {
+                if(fJustCheck && !bSanityCheck)
+                {
+                    LOCK(cs_assetallocation); 
+                    if(mapSenderMempoolBalanceNotFound){
+                        mempoolMapAssetBalances.erase(mapBalanceSender);
+                    }
+                }
+                bOverflow = true;
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Sender balance is insufficient");
+                return error(errorMessage.c_str());
+            }            
+            // update asset total supply
+            #if __cplusplus > 201402 
+            auto resultAsset = mapAssets.try_emplace(nBurnAsset,  std::move(emptyAsset));
+            #else
+            auto resultAsset  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+            #endif  
+            auto mapAsset = resultAsset.first;
+            const bool & mapAssetNotFound = resultAsset.second; 
+            if (mapAssetNotFound)
+            { 
+                mapAsset->second = dbAsset;  
+            } 
+            CAsset &storedSenderAssetRef = mapAsset->second;
+            storedSenderAssetRef.nTotalSupply += nBurnAmount;
+                                      
+        }else if (!bSanityCheck && !bMiner) {
+            LOCK(cs_assetallocationarrival);
+            // add conflicting sender if using ZDAG
+            assetAllocationConflicts.insert(senderTupleStr);
+        }         
+    }          
+    if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
+    {     
+        uint32_t nBurnAsset;
+        CAmount nBurnAmount;
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
+            nBurnAsset = storedSenderAllocationRef.assetAllocationTuple.nAsset;
+            if(nBurnAsset != Params().GetConsensus().nSYSXAsset)
+            {
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid Syscoin Bridge Asset GUID specified");
+                return error(errorMessage.c_str());
+            }
+            nBurnAmount = theAssetAllocation.listSendingAllocationAmounts[0].second;
+            // update asset total supply
+            #if __cplusplus > 201402 
+            auto resultAsset = mapAssets.try_emplace(nBurnAsset,  std::move(emptyAsset));
+            #else
+            auto resultAsset  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAsset)));
+            #endif  
+            auto mapAsset = resultAsset.first;
+            const bool & mapAssetNotFound = resultAsset.second;
+            if (mapAssetNotFound)
+            { 
+                mapAsset->second = dbAsset;  
+            } 
+            CAsset &storedSenderAssetRef = mapAsset->second;
+            storedSenderAssetRef.nTotalSupply -= nBurnAmount;                 
+        }
+        else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
+            std::vector<unsigned char> vchEthAddress;
+            CWitnessAddress burnWitnessAddress;
+            if(!GetSyscoinBurnData(tx, nBurnAsset, burnWitnessAddress, nBurnAmount, vchEthAddress)){
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocationburn");
+                return error(errorMessage.c_str());
+            }   
+            if(burnWitnessAddress != user1)
+            {
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Mismatching deserailized witness address");
+                return error(errorMessage.c_str());
+            }
+            if(storedSenderAllocationRef.assetAllocationTuple.nAsset != nBurnAsset)
+            {
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid asset details entered in the script output");
+                return error(errorMessage.c_str());
+            }
+        }
+        if(theAssetAllocation.listSendingAllocationAmounts[0].first != CWitnessAddress(0, vchFromString("burn")))
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid burn address found in transaction");
+            return error(errorMessage.c_str());
+        } 
+        if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
+            {
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1015 - " + _("Cannot send this asset. Asset allocation owner must sign off on this change");
+                return error(errorMessage.c_str());
+            }       
+        if (nBurnAmount <= 0 || nBurnAmount > dbAsset.nTotalSupply)
+        {
+            errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
+            return error(errorMessage.c_str());
+        }        
+  		// ensure lockedOutpoint is cleared on PoW if it was set once a send happens, it is useful only once typical for atomic scripts like CLTV based atomic swaps or hashlock type of usecases
+		if (!bSanityCheck && !fJustCheck && !storedSenderAllocationRef.lockedOutpoint.IsNull()) {
+			// this will flag the batch write function on plockedoutpointsdb to erase this outpoint
+			vecLockedOutpoints.emplace_back(emptyPoint);
+			storedSenderAllocationRef.lockedOutpoint.SetNull();
+		}      
+        if(dbAsset.vchContract.empty())
+        {
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot burn, no contract provided in asset by owner");
+            return error(errorMessage.c_str());
+        } 
+       
+        mapBalanceSenderCopy -= nBurnAmount;
+        if (mapBalanceSenderCopy < 0) {
+            if(fJustCheck && !bSanityCheck)
+            {
+                LOCK(cs_assetallocation); 
+                if(mapSenderMempoolBalanceNotFound){
+                    mempoolMapAssetBalances.erase(mapBalanceSender);
+                }
+            }
+            bOverflow = true;
+            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Sender balance is insufficient");
+            return error(errorMessage.c_str());
+        }
+        if (!fJustCheck) {   
+            const CAssetAllocationTuple receiverAllocationTuple(nBurnAsset,  CWitnessAddress(0, vchFromString("burn")));
+            const string& receiverTupleStr = receiverAllocationTuple.ToString(); 
+            #if __cplusplus > 201402 
+            auto resultReceiver = mapAssetAllocations.try_emplace(senderTupleStr,  std::move(emptyAllocation));
+            #else
+            auto resultReceiver = mapAssetAllocations.emplace(std::piecewise_construct,  std::forward_as_tuple(receiverTupleStr),  std::forward_as_tuple(std::move(emptyAllocation)));
+            #endif 
+            
+            auto mapAssetAllocationReceiver = resultReceiver.first;
+            const bool& mapAssetAllocationReceiverNotFound = resultReceiver.second;
             if(mapAssetAllocationReceiverNotFound){
                 CAssetAllocation dbAssetAllocationReceiver;
                 if (!GetAssetAllocation(receiverAllocationTuple, dbAssetAllocationReceiver)) {               
@@ -817,14 +974,14 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 }
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);                  
             } 
-            mapAssetAllocationReceiver->second.nBalance += nAmountFromScript;                        
+            mapAssetAllocationReceiver->second.nBalance += nBurnAmount;                        
         }else if (!bSanityCheck && !bMiner) {
             LOCK(cs_assetallocationarrival);
             // add conflicting sender if using ZDAG
             assetAllocationConflicts.insert(senderTupleStr);
         }
     }
-	else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+	else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
 	{
 		if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1))
 		{
@@ -833,11 +990,11 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 		}
         if (!bSanityCheck && !fJustCheck){
     		storedSenderAllocationRef.lockedOutpoint = theAssetAllocation.lockedOutpoint;
-    		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND transaction
+    		// this will batch write the outpoint in the calling function, we save the outpoint so that we cannot spend this outpoint without creating an SYSCOIN_TX_VERSION_ALLOCATION_SEND transaction
     		vecLockedOutpoints.emplace_back(std::move(theAssetAllocation.lockedOutpoint));
         }
 	}
-    else if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+    else if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
 	{
         if (storedSenderAllocationRef.assetAllocationTuple != theAssetAllocation.assetAllocationTuple || !FindAssetOwnerInTx(inputs, tx, user1, storedSenderAllocationRef.lockedOutpoint))
         {
@@ -954,7 +1111,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     // write assetallocation  
     // asset sends are the only ones confirming without PoW
     if(!fJustCheck){
-        if (!bSanityCheck && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK) {
+        if (!bSanityCheck && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_LOCK) {
             ResetAssetAllocation(senderTupleStr, txHash, bMiner);
            
         } 
@@ -976,7 +1133,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     
     }
     else if(!bSanityCheck){
-		if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+		if(tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
         {
             LOCK(cs_assetallocationarrival);
             ArrivalTimesMap &arrivalTimes = arrivalTimesMap[senderTupleStr];
@@ -984,7 +1141,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         }
 
         // send a realtime notification on zdag, send another when pow happens (above)
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND)
+        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND)
             passetallocationdb->WriteAssetAllocationIndex(tx, dbAsset, nHeight, blockhash);
         {
             LOCK(cs_assetallocation);
@@ -1224,7 +1381,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         }
         switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
-            if (theAsset.nAsset <= SYSCOIN_TX_VERSION_MINT)
+            if (theAsset.nAsset <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
             {
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("asset guid invalid");
                 return error(errorMessage.c_str());
@@ -1564,7 +1721,7 @@ bool CheckSyscoinLockedOutpoints(const CTransactionRef &tx, CValidationState& st
 	// SYSCOIN
 	const CTransaction &myTx = (*tx);
 	// if not an allocation send ensure the outpoint locked isn't being spent
-	if (myTx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND) {
+	if (myTx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_SEND) {
 		for (unsigned int i = 0; i < myTx.vin.size(); i++)
 		{
 			bool locked = false;

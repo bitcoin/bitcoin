@@ -215,8 +215,8 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CAmount nCurrentAmount = view.GetValueIn(txIn_t);   
     // add total output amount of transaction to desired amount
     CAmount nDesiredAmount = txIn_t.GetValueOut();
-    // mint transactions should start with 0 because the output is minted based on spv proof
-    if(txIn_t.nVersion == SYSCOIN_TX_VERSION_MINT) 
+    // convert to sys transactions should start with 0 because the output is minted based on allocation burn
+    if(txIn_t.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) 
         nDesiredAmount = 0;
    
     for (auto& vout : tx.vout) {
@@ -314,18 +314,17 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     res.__pushKV("hex", EncodeHexTx(CTransaction(tx)));
     return res;
 }
-UniValue syscoinburn(const JSONRPCRequest& request) {
+UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
-    if (request.fHelp || 3 != params.size())
+    if (request.fHelp || 2 != params.size())
         throw runtime_error(
-            RPCHelpMan{"syscoinburn",
-                "\nBurns the syscoin for bridging to Ethereum token\n",
+            RPCHelpMan{"syscoinburntoassetallocation",
+                "\nBurns Syscoin to an Asset Allocation\n",
                 {
                     {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Funding address to burn SYS from"},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees."},
-                    {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 bytes (40 character) hex string of the ethereum destination address.  Leave empty to burn as normal without the bridge"}
                 },
                 RPCResult{
                     "{\n"
@@ -333,145 +332,49 @@ UniValue syscoinburn(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinburn", "\"funding_address\" \"amount\" \"ethaddress\"")
-                    + HelpExampleRpc("syscoinburn", "\"funding_address\", \"amount\", \"ethaddress\"")
+                    HelpExampleCli("syscoinburntoassetallocation", "\"funding_address\" \"amount\"")
+                    + HelpExampleRpc("syscoinburntoassetallocation", "\"funding_address\", \"amount\"")
                 }
          }.ToString());
-    string fundingAddress = params[0].get_str();    
-    CAmount nAmount = AmountFromValue(params[1]);
-    string ethAddress = params[2].get_str();
-    boost::erase_all(ethAddress, "0x");  // strip 0x if exist
+    string strAddressFrom = params[0].get_str();    
+	const CTxDestination &addressFrom = DecodeDestination(strAddressFrom);
+    const uint32_t nAsset = Params().GetConsensus().nSYSXAsset;
+    
+    UniValue detail = DescribeAddress(addressFrom);
+    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();            	
+	CAssetAllocation theAssetAllocation;
+	const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
 
-   
+	CAsset theAsset;
+	if (!GetAsset(nAsset, theAsset))
+		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
+        
+    UniValue amountObj = params[1];
+	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+
+    theAssetAllocation.SetNull();
+    // from burn to allocation
+    theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
+    theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn")); 
+        
+    theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), nAmount));
+    
+    vector<unsigned char> data;
+    theAssetAllocation.Serialize(data); 
+
+
     vector<CRecipient> vecSend;
     CScript scriptData;
-    scriptData << OP_RETURN;
-    if (!ethAddress.empty()){
-        scriptData << ParseHex(ethAddress);
-    }
-    
+    scriptData << OP_RETURN;  
     CRecipient burn;
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
-    vecSend.push_back(burn);
-    UniValue res = syscointxfund_helper(pwallet, fundingAddress, ethAddress.empty()? 0: SYSCOIN_TX_VERSION_BURN, "", vecSend);
-    return res;
-}
-UniValue syscoinmint(const JSONRPCRequest& request) {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-    const UniValue &params = request.params;
-    if (request.fHelp || 11 != params.size())
-        throw runtime_error(
-                RPCHelpMan{"syscoinmint",
-                "\nMint syscoin to come back from the ethereum bridge\n",
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to mint.  Note that fees are applied on top.  It is not inclusive of fees"},
-                    {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
-                    {"tx_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction hex."},
-                    {"txroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction merkle root that commits this transaction to the block header."},
-                    {"txmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction merkle root."},
-                    {"merklerootpath_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The merkle path to walk through the tree to recreate the merkle hash for both transaction and receipt root."},
-                    {"receipt_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction Receipt Hex."},
-                    {"receiptroot_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction receipt merkle root that commits this receipt to the block header."},
-                    {"receiptmerkleproof_hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The list of parent nodes of the Merkle Patricia Tree for SPV proof of transaction receipt merkle root."},
-                    {"witness", RPCArg::Type::STR, "\"\"", "Witness address that will sign for web-of-trust notarization of this transaction."}
-                },
-                RPCResult{
-                    "{\n"
-                    "  \"hex\": \"hexstring\"       (string) the unsigned transaction hexstring.\n"
-                    "}\n"
-                },
-                RPCExamples{
-                    HelpExampleCli("syscoinmint","\"address\" \"amount\" \"blocknumber\" \"tx_hex\" \"txroot_hex\" \"txmerkleproof\" \"txmerkleproofpath\" \"receipt_hex\" \"receiptroot_hex\" \"receiptmerkleproof\"")
-                    + HelpExampleRpc("syscoinmint","\"address\", \"amount\", \"blocknumber\", \"tx_hex\", \"txroot_hex\", \"txmerkleproof\", \"txmerkleproofpath\", \"receipt_hex\", \"receiptroot_hex\", \"receiptmerkleproof\", \"\"")
-                }
-                }.ToString());
-
-    string vchAddress = params[0].get_str();
-    CAmount nAmount = AmountFromValue(params[1]);
-    uint32_t nBlockNumber;
-    if(params[2].isNum())
-        nBlockNumber = (uint32_t)params[2].get_int();
-    else if(params[2].isStr())
-        ParseUInt32(params[2].get_str(), &nBlockNumber);
- 
-    string vchTxValue = params[3].get_str();
-    string vchTxRoot = params[4].get_str();
-    string vchTxParentNodes = params[5].get_str();
-    string vchTxPath = params[6].get_str();
- 
-    string vchReceiptValue = params[7].get_str();
-    string vchReceiptRoot = params[8].get_str();
-    string vchReceiptParentNodes = params[9].get_str();
-    
-    string strWitnessAddress = params[10].get_str();
-    
-    vector<CRecipient> vecSend;
-    const CTxDestination &dest = DecodeDestination(vchAddress);
-    
-    CScript scriptPubKeyFromOrig = GetScriptForDestination(dest);
-    if(!fGethSynced){
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
-    }
-    int nBlocksLeftToEnable = ::ChainActive().Tip()->nHeight - (Params().GetConsensus().nBridgeStartBlock+500);
-    if(nBlocksLeftToEnable > 0)
-    {
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Bridge is not enabled yet. Blocks left to enable: ") + itostr(nBlocksLeftToEnable));
-    }
-    CMintSyscoin mintSyscoin;
-    mintSyscoin.nBlockNumber = nBlockNumber;
-    mintSyscoin.vchTxValue = ParseHex(vchTxValue);
-    mintSyscoin.vchTxRoot = ParseHex(vchTxRoot);
-    mintSyscoin.vchTxParentNodes = ParseHex(vchTxParentNodes);
-    mintSyscoin.vchTxPath = ParseHex(vchTxPath);
-    mintSyscoin.vchReceiptValue = ParseHex(vchReceiptValue);
-    mintSyscoin.vchReceiptRoot = ParseHex(vchReceiptRoot);
-    mintSyscoin.vchReceiptParentNodes = ParseHex(vchReceiptParentNodes);
-    
-    EthereumTxRoot txRootDB;
-    bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
-    uint32_t cutoffHeight;
-    const bool &ethTxRootShouldExist = !fLiteMode && fLoaded && fGethSynced;
-    if(!ethTxRootShouldExist){
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Network is not ready to accept your mint transaction please wait..."));
-    }
-    // validate that the block passed is committed to by the tx root he also passes in, then validate the spv proof to the tx root below  
-    // the cutoff to keep txroots is 120k blocks and the cutoff to get approved is 40k blocks. If we are syncing after being offline for a while it should still validate up to 120k worth of txroots
-    if(!pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB)){
-        if(ethTxRootShouldExist){
-            throw runtime_error("SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Missing transaction root for SPV proof at Ethereum block: ") + itostr(mintSyscoin.nBlockNumber));
-        }
-    }  
-    if(ethTxRootShouldExist){
-        LOCK(cs_ethsyncheight);
-        // cutoff is ~1 week of blocks is about 40K blocks
-        cutoffHeight = (fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS) + 100;
-        if(fGethSyncHeight >= MAX_ETHEREUM_TX_ROOTS && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-            throw runtime_error("SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within 40000 blocks of the burn transaction on Ethereum blockchain"));
-        } 
-        
-        // ensure that we wait at least ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
-        // also ensure sanity test that the current height that our node thinks Eth is on isn't less than the requested block for spv proof
-        if(fGethCurrentHeight <  mintSyscoin.nBlockNumber || fGethSyncHeight <= 0 || (fGethSyncHeight - mintSyscoin.nBlockNumber < (bGethTestnet? 20: ETHEREUM_CONFIRMS_REQUIRED*1.5))){
-            throw runtime_error("SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Not enough confirmations on Ethereum to process this mint transaction. Blocks required: ") + itostr((ETHEREUM_CONFIRMS_REQUIRED*1.5) - (fGethSyncHeight - mintSyscoin.nBlockNumber)));
-        } 
-    }
-          
-    vector<unsigned char> data;
-    mintSyscoin.Serialize(data);
-    
-    
-    CRecipient recp = { scriptPubKeyFromOrig, nAmount, false };
-    vecSend.push_back(recp);
-    CScript scriptData;
-    scriptData << OP_RETURN << data;
-    CRecipient fee;
-    CreateFeeRecipient(scriptData, fee);
-    vecSend.push_back(fee);
-    
-    UniValue res = syscointxfund_helper(pwallet, vchAddress, SYSCOIN_TX_VERSION_MINT, strWitnessAddress, vecSend);
+    UniValue res = syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION, "", vecSend);
     return res;
 }
 
@@ -999,7 +902,7 @@ UniValue assetallocationsendmany(const JSONRPCRequest& request) {
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
-	return syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND, strWitness, vecSend);
+	return syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_ALLOCATION_SEND, strWitness, vecSend);
 }
 template <typename T>
 inline std::string int_to_hex(T val, size_t width=sizeof(T)*2)
@@ -1015,12 +918,12 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	if (request.fHelp || 4 != params.size())
 		throw runtime_error(
             RPCHelpMan{"assetallocationburn",
-                "\nBurn an asset allocation in order to use the bridge\n",
+                "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address that owns this asset allocation"},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
-                    {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn as normal without the bridge.  If it is left empty this will process as a normal assetallocationsend to the burn address"}
+                    {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Leave empty to burn to Syscoin."}
                 },
                 RPCResult{
                     "{\n"
@@ -1061,38 +964,54 @@ UniValue assetallocationburn(const JSONRPCRequest& request) {
 	CAmount amount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 	string ethAddress = params[3].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
+    vector<CRecipient> vecSend;
+    CScript scriptData;
+    int nVersion = 0;
     // if no eth address provided just send as a std asset allocation send but to burn address
     if(ethAddress.empty()){
-        UniValue output(UniValue::VARR);
-        UniValue outputObj(UniValue::VOBJ);
-        outputObj.__pushKV("address", "burn");
-        outputObj.__pushKV("amount", ValueFromAssetAmount(amount, theAsset.nPrecision));
-        output.push_back(outputObj);
-        UniValue paramsFund(UniValue::VARR);
-        paramsFund.push_back((int)nAsset);
-        paramsFund.push_back(strAddress);
-        paramsFund.push_back(output);
-        paramsFund.push_back("");
-        JSONRPCRequest requestMany;
-        requestMany.params = paramsFund;
-        return assetallocationsendmany(requestMany);  
+        CAmount nAmount = 0;
+        const COutPoint lockedOutpoint = theAssetAllocation.lockedOutpoint;
+        if(!lockedOutpoint.IsNull() && !IsOutpointMature(lockedOutpoint))
+            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Locked outpoint not mature"));
+        if(!lockedOutpoint.IsNull()){
+            // this will let syscointxfund try to select this outpoint as the input
+            mapSenderTXIDs[strAddress] = lockedOutpoint;
+        }
+        theAssetAllocation.SetNull();
+        theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
+        theAssetAllocation.assetAllocationTuple.witnessAddress = std::move(assetAllocationTuple.witnessAddress); 
+
+        UniValue amountObj = find_value(params[1], "amount");
+        if (amountObj.isNum() || amountObj.isStr()) {
+            nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
+            if (amount <= 0)
+                throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "amount must be positive");
+            theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(0, vchFromString("burn")), amount));
+        }
+        else
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected amount as number in receiver array");
+
+        vector<unsigned char> data;
+        theAssetAllocation.Serialize(data);  
+        scriptData << OP_RETURN << data;
+        CScript scriptPubKeyFromOrig = GetScriptForDestination(addressFrom);
+        CRecipient recp = { scriptPubKeyFromOrig, nAmount, false };
+        vecSend.push_back(recp);
+        nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN;
     }
-    // convert to hex string because otherwise cscript will push a cscriptnum which is 4 bytes but we want 8 byte hex representation of an int64 pushed
-    const std::string amountHex = int_to_hex(amount);
-    const std::string witnessVersionHex = int_to_hex(assetAllocationTuple.witnessAddress.nVersion);
-    const std::string assetHex = int_to_hex(nAsset);
-
-    
-	vector<CRecipient> vecSend;
-
-
-	CScript scriptData;
-	scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
+    else{
+        // convert to hex string because otherwise cscript will push a cscriptnum which is 4 bytes but we want 8 byte hex representation of an int64 pushed
+        const std::string amountHex = int_to_hex(amount);
+        const std::string witnessVersionHex = int_to_hex(assetAllocationTuple.witnessAddress.nVersion);
+        const std::string assetHex = int_to_hex(nAsset);
+        scriptData << OP_RETURN << ParseHex(assetHex) << ParseHex(amountHex) << ParseHex(ethAddress) << ParseHex(witnessVersionHex) << assetAllocationTuple.witnessAddress.vchWitnessProgram;
+        nVersion = SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM;
+    }
 	CRecipient fee;
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN, "", vecSend);
+	return syscointxfund_helper(pwallet, strAddress, nVersion, "", vecSend);
 }
 UniValue assetallocationmint(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -1220,7 +1139,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     CreateFeeRecipient(scriptData, fee);
     vecSend.push_back(fee);
        
-    return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT, strWitness, vecSend);
+    return syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ALLOCATION_MINT, strWitness, vecSend);
 }
 
 UniValue assetallocationsend(const JSONRPCRequest& request) {
@@ -1354,7 +1273,7 @@ UniValue assetallocationlock(const JSONRPCRequest& request) {
 	CreateFeeRecipient(scriptData, fee);
 	vecSend.push_back(fee);
 
-	return syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK, strWitness, vecSend);
+	return syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_ALLOCATION_LOCK, strWitness, vecSend);
 }
 UniValue sendfrom(const JSONRPCRequest& request)
 {
@@ -1411,8 +1330,7 @@ static const CRPCCommand commands[] =
     //  --------------------- ------------------------          -----------------------         ----------
 
    /* assets using the blockchain, coins/points/service backed tokens*/
-    { "syscoinwallet",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","ethereum_destination_address"} },
-    { "syscoinwallet",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} }, 
+    { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"funding_address","amount"} }, 
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},
