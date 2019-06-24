@@ -1,4 +1,4 @@
-Dash Core version 0.14.0.2
+Dash Core version 0.14.0.1
 ==========================
 
 Release is now available from:
