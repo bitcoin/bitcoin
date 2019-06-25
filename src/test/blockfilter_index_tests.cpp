@@ -267,8 +267,6 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, TestChain100Setup)
 
 BOOST_FIXTURE_TEST_CASE(blockfilter_index_init_destroy, BasicTestingSetup)
 {
-    SetDataDir("tempdir");
-
     BlockFilterIndex* filter_index;
 
     filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
