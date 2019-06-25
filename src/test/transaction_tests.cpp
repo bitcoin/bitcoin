@@ -116,6 +116,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 continue;
             }
 
+            //std::cout<<test[1].write()<<std::endl;
+
             std::map<COutPoint, CScript> mapprevOutScriptPubKeys;
             std::map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
@@ -149,6 +151,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             std::string transaction = test[1].get_str();
             CDataStream stream(ParseHex(transaction), SER_NETWORK, PROTOCOL_VERSION);
             CTransaction tx(deserialize, stream);
+            
+            std::cout<<tx.toString()<<std::endl;
 
             CValidationState state;
             BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);

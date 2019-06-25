@@ -125,6 +125,7 @@ public:
     }
 
     std::string ToString() const;
+    std::string toString() const;
 };
 
 /** An output of a transaction.  It contains the public key that the next input
@@ -355,6 +356,18 @@ public:
             }
         }
         return false;
+    }
+
+    std::string toString() {
+        std::string ret;
+        for(uint64_t i=0; i<vin.size(); i++) {
+           ret += vin[i].ToString();
+        }
+        for(uint64_t i=0; i<vout.size(); i++) {
+           ret += vout[i].ToString();
+        }
+        ret += "\n---------\n";
+        return ret;
     }
 };
 
