@@ -123,6 +123,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
 {
 
     LOCK(testWallet.cs_wallet);
+    testWallet.SetupLegacyScriptPubKeyMan();
 
     // Setup
     std::vector<CInputCoin> utxo_pool;
