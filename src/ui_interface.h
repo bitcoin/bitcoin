@@ -70,6 +70,9 @@ public:
         /** Force blocking, modal message box dialog (not just OS notification) */
         MODAL               = 0x10000000U,
 
+        /** Do not prepend error/warning prefix */
+        MSG_NOPREFIX        = 0x20000000U,
+
         /** Do not print contents of message to debug log */
         SECURE              = 0x40000000U,
 
