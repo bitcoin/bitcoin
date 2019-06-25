@@ -76,6 +76,14 @@ bool BCLog::Logger::StartLogging()
     return true;
 }
 
+void BCLog::Logger::DisconnectTestLogger()
+{
+    StdLockGuard scoped_lock(m_cs);
+    m_buffering = true;
+    if (m_fileout != nullptr) fclose(m_fileout);
+    m_fileout = nullptr;
+}
+
 void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 {
     m_categories |= flag;

@@ -6,6 +6,7 @@
 
 #include <chainparams.h>
 #include <init.h>
+#include <key.h>
 #include <qt/dash.h>
 #include <qt/bitcoingui.h>
 #include <qt/networkstyle.h>
@@ -66,6 +67,9 @@ void AppTests::appTests()
         return;
     }
 #endif
+
+    ECC_Stop(); // Already started by the common test setup, so stop it to avoid interference
+    LogInstance().DisconnectTestLogger();
 
     m_app.parameterSetup();
     GUIUtil::loadFonts();
