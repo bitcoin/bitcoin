@@ -3300,11 +3300,11 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         }
     }
 
-    {
-        LOCK(cs_KeyStore);
-        // This wallet is in its first run if all of these are empty
-        fFirstRunRet = mapKeys.empty() && mapCryptedKeys.empty() && mapWatchKeys.empty() && setWatchOnly.empty() && mapScripts.empty()
-            && !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
+    // This wallet is in its first run if all of these are empty and this isn't blank or no privkeys
+    fFirstRunRet = m_spk_managers.empty() && !IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET);
+    if (fFirstRunRet) {
+        assert(m_external_spk_managers.empty());
+        assert(m_internal_spk_managers.empty());
     }
 
     if (nLoadWalletRet != DBErrors::LOAD_OK)
