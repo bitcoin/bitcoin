@@ -2421,7 +2421,7 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
 CWallet::Balance CWallet::GetBalance(const int min_depth, const bool avoid_reuse, const bool fAddLocked, const CCoinControl* coinControl) const
 {
     Balance ret;
-    isminefilter reuse_filter = avoid_reuse ? 0 : ISMINE_USED;
+    isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
     {
         LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
