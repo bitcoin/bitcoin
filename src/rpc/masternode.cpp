@@ -314,6 +314,7 @@ UniValue masternode(const JSONRPCRequest& request)
     if (strCommand == "list-conf")
     {
         UniValue resultObj(UniValue::VOBJ);
+        UniValue masternodesObj(UniValue::VARR);
 
         for (const auto& mne : masternodeConfig.getEntries()) {
             uint32_t outputIndex;
@@ -333,8 +334,9 @@ UniValue masternode(const JSONRPCRequest& request)
             mnObj.pushKV("txHash", mne.getTxHash());
             mnObj.pushKV("outputIndex", mne.getOutputIndex());
             mnObj.pushKV("status", strStatus);
-            resultObj.pushKV("masternode", mnObj);
+            masternodesObj.push_back(mnObj);
         }
+        resultObj.pushKV("masternode", masternodesObj);
 
         return resultObj;
     }
