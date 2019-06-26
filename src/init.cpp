@@ -88,7 +88,6 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
@@ -278,7 +277,7 @@ void PrepareShutdown()
     }
 
     UnregisterNodeSignals(GetNodeSignals());
-    if (fDumpMempoolLater && GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    if (fDumpMempoolLater && gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool();
     }
 
@@ -428,14 +427,14 @@ void OnRPCPreCommand(const CRPCCommand& cmd)
 {
     // Observe safe mode
     std::string strWarning = GetWarnings("rpc");
-    if (strWarning != "" && !GetBoolArg("-disablesafemode", DEFAULT_DISABLE_SAFEMODE) &&
+    if (strWarning != "" && !gArgs.GetBoolArg("-disablesafemode", DEFAULT_DISABLE_SAFEMODE) &&
         !cmd.okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, std::string("Safe mode: ") + strWarning);
 }
 
 std::string HelpMessage(HelpMessageMode mode)
 {
-    const bool showDebug = GetBoolArg("-help-debug", false);
+    const bool showDebug = gArgs.GetBoolArg("-help-debug", false);
 
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
     // Do not translate _(...) -help-debug options, Many technical terms, and only a very small audience, so is unnecessary stress to translators.
@@ -682,7 +681,7 @@ static void BlockNotifyCallback(bool initialSync, const CBlockIndex *pBlockIndex
     if (initialSync || !pBlockIndex)
         return;
 
-    std::string strCmd = GetArg("-blocknotify", "");
+    std::string strCmd = gArgs.GetArg("-blocknotify", "");
 
     boost::replace_all(strCmd, "%s", pBlockIndex->GetBlockHash().GetHex());
     boost::thread t(runCommand, strCmd); // thread runs free
@@ -819,7 +818,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
         StartShutdown();
     }
 
-    if (GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
+    if (gArgs.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
         LogPrintf("Stopping after block import\n");
         StartShutdown();
     }
@@ -842,7 +841,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
     }
 #endif
 
-    if (GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    if (gArgs.GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         LoadMempool();
         fDumpMempoolLater = !fRequestShutdown;
     }
@@ -885,7 +884,7 @@ bool AppInitServers(boost::thread_group& threadGroup)
         return false;
     if (!StartHTTPRPC())
         return false;
-    if (GetBoolArg("-rest", DEFAULT_REST_ENABLE) && !StartREST())
+    if (gArgs.GetBoolArg("-rest", DEFAULT_REST_ENABLE) && !StartREST())
         return false;
     if (!StartHTTPServer())
         return false;
@@ -897,95 +896,95 @@ void InitParameterInteraction()
 {
     // when specifying an explicit binding address, you want to listen on it
     // even when -connect or -proxy is specified
-    if (IsArgSet("-bind")) {
-        if (SoftSetBoolArg("-listen", true))
+    if (gArgs.IsArgSet("-bind")) {
+        if (gArgs.SoftSetBoolArg("-listen", true))
             LogPrintf("%s: parameter interaction: -bind set -> setting -listen=1\n", __func__);
     }
-    if (IsArgSet("-whitebind")) {
-        if (SoftSetBoolArg("-listen", true))
+    if (gArgs.IsArgSet("-whitebind")) {
+        if (gArgs.SoftSetBoolArg("-listen", true))
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (GetBoolArg("-masternode", false)) {
+    if (gArgs.GetBoolArg("-masternode", false)) {
         // masternodes MUST accept connections from outside
-        ForceSetArg("-listen", "1");
+        gArgs.ForceSetArg("-listen", "1");
         LogPrintf("%s: parameter interaction: -masternode=1 -> setting -listen=1\n", __func__);
-        if (GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
+        if (gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
-            ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
+            gArgs.ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
             LogPrintf("%s: parameter interaction: -masternode=1 -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
         }
     }
 
-    if (mapMultiArgs.count("-connect") && mapMultiArgs.at("-connect").size() > 0) {
+    if (gArgs.IsArgSet("-connect")) {
         // when only connecting to trusted nodes, do not seed via DNS, or listen by default
-        if (SoftSetBoolArg("-dnsseed", false))
+        if (gArgs.SoftSetBoolArg("-dnsseed", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -dnsseed=0\n", __func__);
-        if (SoftSetBoolArg("-listen", false))
+        if (gArgs.SoftSetBoolArg("-listen", false))
             LogPrintf("%s: parameter interaction: -connect set -> setting -listen=0\n", __func__);
     }
 
-    if (IsArgSet("-proxy")) {
+    if (gArgs.IsArgSet("-proxy")) {
         // to protect privacy, do not listen by default if a default proxy server is specified
-        if (SoftSetBoolArg("-listen", false))
+        if (gArgs.SoftSetBoolArg("-listen", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -listen=0\n", __func__);
         // to protect privacy, do not use UPNP when a proxy is set. The user may still specify -listen=1
         // to listen locally, so don't rely on this happening through -listen below.
-        if (SoftSetBoolArg("-upnp", false))
+        if (gArgs.SoftSetBoolArg("-upnp", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -upnp=0\n", __func__);
         // to protect privacy, do not discover addresses by default
-        if (SoftSetBoolArg("-discover", false))
+        if (gArgs.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -proxy set -> setting -discover=0\n", __func__);
     }
 
-    if (!GetBoolArg("-listen", DEFAULT_LISTEN)) {
+    if (!gArgs.GetBoolArg("-listen", DEFAULT_LISTEN)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
-        if (SoftSetBoolArg("-upnp", false))
+        if (gArgs.SoftSetBoolArg("-upnp", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -upnp=0\n", __func__);
-        if (SoftSetBoolArg("-discover", false))
+        if (gArgs.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -discover=0\n", __func__);
-        if (SoftSetBoolArg("-listenonion", false))
+        if (gArgs.SoftSetBoolArg("-listenonion", false))
             LogPrintf("%s: parameter interaction: -listen=0 -> setting -listenonion=0\n", __func__);
     }
 
-    if (IsArgSet("-externalip")) {
+    if (gArgs.IsArgSet("-externalip")) {
         // if an explicit public IP is specified, do not try to find others
-        if (SoftSetBoolArg("-discover", false))
+        if (gArgs.SoftSetBoolArg("-discover", false))
             LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
     // disable whitelistrelay in blocksonly mode
-    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
-        if (SoftSetBoolArg("-whitelistrelay", false))
+    if (gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
+        if (gArgs.SoftSetBoolArg("-whitelistrelay", false))
             LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -whitelistrelay=0\n", __func__);
     }
 
     // Forcing relay from whitelisted hosts implies we will accept relays from them in the first place.
-    if (GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
-        if (SoftSetBoolArg("-whitelistrelay", true))
+    if (gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
+        if (gArgs.SoftSetBoolArg("-whitelistrelay", true))
             LogPrintf("%s: parameter interaction: -whitelistforcerelay=1 -> setting -whitelistrelay=1\n", __func__);
     }
 
 #ifdef ENABLE_WALLET
-    int nLiqProvTmp = GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
+    int nLiqProvTmp = gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY);
     if (nLiqProvTmp > 0) {
-        ForceSetArg("-enableprivatesend", "1");
+        gArgs.ForceSetArg("-enableprivatesend", "1");
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", __func__, nLiqProvTmp);
-        ForceSetArg("-privatesendsessions", itostr(MIN_PRIVATESEND_SESSIONS));
+        gArgs.ForceSetArg("-privatesendsessions", itostr(MIN_PRIVATESEND_SESSIONS));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendsessions=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
-        ForceSetArg("-privatesendrounds", itostr(std::numeric_limits<int>::max()));
+        gArgs.ForceSetArg("-privatesendrounds", itostr(std::numeric_limits<int>::max()));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendrounds=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
-        ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
+        gArgs.ForceSetArg("-privatesendamount", itostr(MAX_PRIVATESEND_AMOUNT));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendamount=%d\n", __func__, nLiqProvTmp, MAX_PRIVATESEND_AMOUNT);
-        ForceSetArg("-privatesenddenoms", itostr(MAX_PRIVATESEND_DENOMS));
+        gArgs.ForceSetArg("-privatesenddenoms", itostr(MAX_PRIVATESEND_DENOMS));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesenddenoms=%d\n", __func__, nLiqProvTmp, itostr(MAX_PRIVATESEND_DENOMS));
-        ForceSetArg("-privatesendmultisession", "0");
+        gArgs.ForceSetArg("-privatesendmultisession", "0");
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendmultisession=0\n", __func__, nLiqProvTmp);
     }
 
-    if (IsArgSet("-hdseed") && IsHex(GetArg("-hdseed", "not hex")) && (IsArgSet("-mnemonic") || IsArgSet("-mnemonicpassphrase"))) {
-        ForceRemoveArg("-mnemonic");
-        ForceRemoveArg("-mnemonicpassphrase");
+    if (gArgs.IsArgSet("-hdseed") && IsHex(gArgs.GetArg("-hdseed", "not hex")) && (gArgs.IsArgSet("-mnemonic") || gArgs.IsArgSet("-mnemonicpassphrase"))) {
+        gArgs.ForceRemoveArg("-mnemonic");
+        gArgs.ForceRemoveArg("-mnemonicpassphrase");
         LogPrintf("%s: parameter interaction: can't use -hdseed and -mnemonic/-mnemonicpassphrase together, will prefer -seed\n", __func__);
     }
 #endif // ENABLE_WALLET
@@ -993,12 +992,12 @@ void InitParameterInteraction()
     // Make sure additional indexes are recalculated correctly in VerifyDB
     // (we must reconnect blocks whenever we disconnect them for these indexes to work)
     bool fAdditionalIndexes =
-        GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX) ||
-        GetBoolArg("-spentindex", DEFAULT_SPENTINDEX) ||
-        GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
+        gArgs.GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX) ||
+        gArgs.GetBoolArg("-spentindex", DEFAULT_SPENTINDEX) ||
+        gArgs.GetBoolArg("-timestampindex", DEFAULT_TIMESTAMPINDEX);
 
-    if (fAdditionalIndexes && GetArg("-checklevel", DEFAULT_CHECKLEVEL) < 4) {
-        ForceSetArg("-checklevel", "4");
+    if (fAdditionalIndexes && gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL) < 4) {
+        gArgs.ForceSetArg("-checklevel", "4");
         LogPrintf("%s: parameter interaction: additional indexes -> setting -checklevel=4\n", __func__);
     }
 }
@@ -1010,12 +1009,12 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
 
 void InitLogging()
 {
-    fPrintToConsole = GetBoolArg("-printtoconsole", false);
-    fPrintToDebugLog = GetBoolArg("-printtodebuglog", true) && !fPrintToConsole;
-    fLogTimestamps = GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
-    fLogTimeMicros = GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
-    fLogThreadNames = GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
-    fLogIPs = GetBoolArg("-logips", DEFAULT_LOGIPS);
+    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", false);
+    fPrintToDebugLog = gArgs.GetBoolArg("-printtodebuglog", true) && !fPrintToConsole;
+    fLogTimestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
+    fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
+    fLogThreadNames = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
+    fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Dash Core version %s\n", FormatFullVersion());
@@ -1074,7 +1073,7 @@ bool AppInitBasicSetup()
         return InitError("Initializing networking failed");
 
 #ifndef WIN32
-    if (!GetBoolArg("-sysperms", false)) {
+    if (!gArgs.GetBoolArg("-sysperms", false)) {
         umask(077);
     }
 
@@ -1102,29 +1101,31 @@ bool AppInitParameterInteraction()
     // also see: InitParameterInteraction()
 
     // if using block pruning, then disallow txindex
-    if (GetArg("-prune", 0)) {
-        if (GetBoolArg("-txindex", DEFAULT_TXINDEX))
+    if (gArgs.GetArg("-prune", 0)) {
+        if (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
     }
 
-    if (IsArgSet("-devnet")) {
+    if (gArgs.IsArgSet("-devnet")) {
         // Require setting of ports when running devnet
-        if (GetArg("-listen", DEFAULT_LISTEN) && !IsArgSet("-port"))
+        if (gArgs.GetArg("-listen", DEFAULT_LISTEN) && !gArgs.IsArgSet("-port")) {
             return InitError(_("-port must be specified when -devnet and -listen are specified"));
-        if (GetArg("-server", false) && !IsArgSet("-rpcport"))
+        }
+        if (gArgs.GetArg("-server", false) && !gArgs.IsArgSet("-rpcport")) {
             return InitError(_("-rpcport must be specified when -devnet and -server are specified"));
-
-        if (mapMultiArgs.count("-devnet") > 1)
+        }
+        if (gArgs.GetArgs("-devnet").size() > 1) {
             return InitError(_("-devnet can only be specified once"));
+        }
     }
 
-    fAllowPrivateNet = GetBoolArg("-allowprivatenet", DEFAULT_ALLOWPRIVATENET);
+    fAllowPrivateNet = gArgs.GetBoolArg("-allowprivatenet", DEFAULT_ALLOWPRIVATENET);
 
     // Make sure enough file descriptors are available
     int nBind = std::max(
-                (mapMultiArgs.count("-bind") ? mapMultiArgs.at("-bind").size() : 0) +
-                (mapMultiArgs.count("-whitebind") ? mapMultiArgs.at("-whitebind").size() : 0), size_t(1));
-    nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
+                (gArgs.IsArgSet("-bind") ? gArgs.GetArgs("-bind").size() : 0) +
+                (gArgs.IsArgSet("-whitebind") ? gArgs.GetArgs("-whitebind").size() : 0), size_t(1));
+    nUserMaxConnections = gArgs.GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
     // Trim requested connection counts, to fit into system limitations
@@ -1139,11 +1140,11 @@ bool AppInitParameterInteraction()
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
-    if (mapMultiArgs.count("-debug") > 0) {
+    if (gArgs.IsArgSet("-debug")) {
         // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
-        const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
+        const std::vector<std::string> categories = gArgs.GetArgs("-debug");
 
-        if (!(GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
+        if (!(gArgs.GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())) {
             for (const auto& cat : categories) {
                 uint64_t flag;
                 if (!GetLogCategory(&flag, &cat)) {
@@ -1155,9 +1156,8 @@ bool AppInitParameterInteraction()
     }
 
     // Now remove the logging categories which were explicitly excluded
-    if (mapMultiArgs.count("-debugexclude") > 0) {
-        const std::vector<std::string>& excludedCategories = mapMultiArgs.at("-debugexclude");
-        for (const auto& cat : excludedCategories) {
+    if (gArgs.IsArgSet("-debugexclude")) {
+        for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
             uint64_t flag;
             if (!GetLogCategory(&flag, &cat)) {
                 InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
@@ -1167,55 +1167,55 @@ bool AppInitParameterInteraction()
     }
 
     // Check for -debugnet
-    if (GetBoolArg("-debugnet", false))
+    if (gArgs.GetBoolArg("-debugnet", false))
         InitWarning(_("Unsupported argument -debugnet ignored, use -debug=net."));
     // Check for -socks - as this is a privacy risk to continue, exit here
-    if (IsArgSet("-socks"))
+    if (gArgs.IsArgSet("-socks"))
         return InitError(_("Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported."));
     // Check for -tor - as this is a privacy risk to continue, exit here
-    if (GetBoolArg("-tor", false))
+    if (gArgs.GetBoolArg("-tor", false))
         return InitError(_("Unsupported argument -tor found, use -onion."));
 
-    if (GetBoolArg("-benchmark", false))
+    if (gArgs.GetBoolArg("-benchmark", false))
         InitWarning(_("Unsupported argument -benchmark ignored, use -debug=bench."));
 
-    if (GetBoolArg("-whitelistalwaysrelay", false))
+    if (gArgs.GetBoolArg("-whitelistalwaysrelay", false))
         InitWarning(_("Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay."));
 
-    if (IsArgSet("-blockminsize"))
+    if (gArgs.IsArgSet("-blockminsize"))
         InitWarning("Unsupported argument -blockminsize ignored.");
 
     // Checkmempool and checkblockindex default to true in regtest mode
-    int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
+    int ratio = std::min<int>(std::max<int>(gArgs.GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
         mempool.setSanityCheck(1.0 / ratio);
     }
-    fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
-    fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
+    fCheckBlockIndex = gArgs.GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
+    fCheckpointsEnabled = gArgs.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
 
-    hashAssumeValid = uint256S(GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
+    hashAssumeValid = uint256S(gArgs.GetArg("-assumevalid", chainparams.GetConsensus().defaultAssumeValid.GetHex()));
     if (!hashAssumeValid.IsNull())
         LogPrintf("Assuming ancestors of block %s have valid signatures.\n", hashAssumeValid.GetHex());
     else
         LogPrintf("Validating signatures for all blocks.\n");
 
     // mempool limits
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    int64_t nMempoolSizeMin = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
+    int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMin = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
     // incremental relay fee sets the minimum feerate increase necessary for BIP 125 replacement in the mempool
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
-    if (IsArgSet("-incrementalrelayfee"))
+    if (gArgs.IsArgSet("-incrementalrelayfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-incrementalrelayfee", ""), n))
-            return InitError(AmountErrMsg("incrementalrelayfee", GetArg("-incrementalrelayfee", "")));
+        if (!ParseMoney(gArgs.GetArg("-incrementalrelayfee", ""), n))
+            return InitError(AmountErrMsg("incrementalrelayfee", gArgs.GetArg("-incrementalrelayfee", "")));
         incrementalRelayFee = CFeeRate(n);
     }
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
-    nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
+    nScriptCheckThreads = gArgs.GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
     if (nScriptCheckThreads <= 0)
         nScriptCheckThreads += GetNumCores();
     if (nScriptCheckThreads <= 1)
@@ -1224,7 +1224,7 @@ bool AppInitParameterInteraction()
         nScriptCheckThreads = MAX_SCRIPTCHECK_THREADS;
 
     // block pruning; get the amount of disk space (in MiB) to allot for block & undo files
-    int64_t nPruneArg = GetArg("-prune", 0);
+    int64_t nPruneArg = gArgs.GetArg("-prune", 0);
     if (nPruneArg < 0) {
         return InitError(_("Prune cannot be configured with a negative value."));
     }
@@ -1234,7 +1234,7 @@ bool AppInitParameterInteraction()
         nPruneTarget = std::numeric_limits<uint64_t>::max();
         fPruneMode = true;
     } else if (nPruneTarget) {
-        if (GetBoolArg("-regtest", false)) {
+        if (gArgs.GetBoolArg("-regtest", false)) {
             // we use 1MB blocks to test this on regtest
             if (nPruneTarget < 550 * 1024 * 1024) {
                 return InitError(strprintf(_("Prune configured below the minimum of %d MiB.  Please use a higher number."), 550));
@@ -1253,7 +1253,7 @@ bool AppInitParameterInteraction()
     RegisterWalletRPCCommands(tableRPC);
 #endif
 
-    nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
+    nConnectTimeout = gArgs.GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
@@ -1263,11 +1263,11 @@ bool AppInitParameterInteraction()
     // a transaction spammer can cheaply fill blocks using
     // 0-fee transactions. It should be set above the real
     // cost to you of processing a transaction.
-    if (IsArgSet("-minrelaytxfee"))
+    if (gArgs.IsArgSet("-minrelaytxfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-minrelaytxfee", ""), n)) {
-            return InitError(AmountErrMsg("minrelaytxfee", GetArg("-minrelaytxfee", "")));
+        if (!ParseMoney(gArgs.GetArg("-minrelaytxfee", ""), n)) {
+            return InitError(AmountErrMsg("minrelaytxfee", gArgs.GetArg("-minrelaytxfee", "")));
         }
         // High fee check is done afterward in CWallet::ParameterInteraction()
         ::minRelayTxFee = CFeeRate(n);
@@ -1279,54 +1279,53 @@ bool AppInitParameterInteraction()
 
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
-    if (IsArgSet("-blockmintxfee"))
+    if (gArgs.IsArgSet("-blockmintxfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-blockmintxfee", ""), n))
-            return InitError(AmountErrMsg("blockmintxfee", GetArg("-blockmintxfee", "")));
+        if (!ParseMoney(gArgs.GetArg("-blockmintxfee", ""), n))
+            return InitError(AmountErrMsg("blockmintxfee", gArgs.GetArg("-blockmintxfee", "")));
     }
 
     // Feerate used to define dust.  Shouldn't be changed lightly as old
     // implementations may inadvertently create non-standard transactions
-    if (IsArgSet("-dustrelayfee"))
+    if (gArgs.IsArgSet("-dustrelayfee"))
     {
         CAmount n = 0;
-        if (!ParseMoney(GetArg("-dustrelayfee", ""), n) || 0 == n)
-            return InitError(AmountErrMsg("dustrelayfee", GetArg("-dustrelayfee", "")));
+        if (!ParseMoney(gArgs.GetArg("-dustrelayfee", ""), n) || 0 == n)
+            return InitError(AmountErrMsg("dustrelayfee", gArgs.GetArg("-dustrelayfee", "")));
         dustRelayFee = CFeeRate(n);
     }
 
-    fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
+    fRequireStandard = !gArgs.GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (chainparams.RequireStandard() && !fRequireStandard)
         return InitError(strprintf("acceptnonstdtxn is not currently supported for %s chain", chainparams.NetworkIDString()));
-    nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
+    nBytesPerSigOp = gArgs.GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
     if (!CWallet::ParameterInteraction())
         return false;
 #endif // ENABLE_WALLET
 
-    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
-    fAcceptDatacarrier = GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
-    nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    fIsBareMultisigStd = gArgs.GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
+    fAcceptDatacarrier = gArgs.GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
+    nMaxDatacarrierBytes = gArgs.GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
     // Option to startup with mocktime set (used for regression testing):
-    SetMockTime(GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
+    SetMockTime(gArgs.GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
 
-    if (GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
+    if (gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
 
-    nMaxTipAge = GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
+    nMaxTipAge = gArgs.GetArg("-maxtipage", DEFAULT_MAX_TIP_AGE);
 
-    if (mapMultiArgs.count("-bip9params")) {
+    if (gArgs.IsArgSet("-bip9params")) {
         // Allow overriding BIP9 parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("BIP9 parameters may only be overridden on regtest.");
         }
-        const std::vector<std::string>& deployments = mapMultiArgs.at("-bip9params");
-        for (auto i : deployments) {
+        for (const std::string& strDeployment : gArgs.GetArgs("-bip9params")) {
             std::vector<std::string> vDeploymentParams;
-            boost::split(vDeploymentParams, i, boost::is_any_of(":"));
+            boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
             if (vDeploymentParams.size() != 3 && vDeploymentParams.size() != 5) {
                 return InitError("BIP9 parameters malformed, expecting deployment:start:end or deployment:start:end:window:threshold");
             }
@@ -1361,12 +1360,12 @@ bool AppInitParameterInteraction()
         }
     }
 
-    if (IsArgSet("-dip3params")) {
+    if (gArgs.IsArgSet("-dip3params")) {
         // Allow overriding budget parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("DIP3 parameters may only be overridden on regtest.");
         }
-        std::string strDIP3Params = GetArg("-dip3params", "");
+        std::string strDIP3Params = gArgs.GetArg("-dip3params", "");
         std::vector<std::string> vDIP3Params;
         boost::split(vDIP3Params, strDIP3Params, boost::is_any_of(":"));
         if (vDIP3Params.size() != 2) {
@@ -1382,13 +1381,13 @@ bool AppInitParameterInteraction()
         UpdateRegtestDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
     }
 
-    if (IsArgSet("-budgetparams")) {
+    if (gArgs.IsArgSet("-budgetparams")) {
         // Allow overriding budget parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("Budget parameters may only be overridden on regtest.");
         }
 
-        std::string strBudgetParams = GetArg("-budgetparams", "");
+        std::string strBudgetParams = gArgs.GetArg("-budgetparams", "");
         std::vector<std::string> vBudgetParams;
         boost::split(vBudgetParams, strBudgetParams, boost::is_any_of(":"));
         if (vBudgetParams.size() != 3) {
@@ -1408,16 +1407,16 @@ bool AppInitParameterInteraction()
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-        int nMinimumDifficultyBlocks = GetArg("-minimumdifficultyblocks", chainparams.GetConsensus().nMinimumDifficultyBlocks);
-        int nHighSubsidyBlocks = GetArg("-highsubsidyblocks", chainparams.GetConsensus().nHighSubsidyBlocks);
-        int nHighSubsidyFactor = GetArg("-highsubsidyfactor", chainparams.GetConsensus().nHighSubsidyFactor);
+        int nMinimumDifficultyBlocks = gArgs.GetArg("-minimumdifficultyblocks", chainparams.GetConsensus().nMinimumDifficultyBlocks);
+        int nHighSubsidyBlocks = gArgs.GetArg("-highsubsidyblocks", chainparams.GetConsensus().nHighSubsidyBlocks);
+        int nHighSubsidyFactor = gArgs.GetArg("-highsubsidyfactor", chainparams.GetConsensus().nHighSubsidyFactor);
         UpdateDevnetSubsidyAndDiffParams(nMinimumDifficultyBlocks, nHighSubsidyBlocks, nHighSubsidyFactor);
-    } else if (IsArgSet("-minimumdifficultyblocks") || IsArgSet("-highsubsidyblocks") || IsArgSet("-highsubsidyfactor")) {
+    } else if (gArgs.IsArgSet("-minimumdifficultyblocks") || gArgs.IsArgSet("-highsubsidyblocks") || gArgs.IsArgSet("-highsubsidyfactor")) {
         return InitError("Difficulty and subsidy parameters may only be overridden on devnet.");
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-        std::string llmqChainLocks = GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqChainLocks).name);
+        std::string llmqChainLocks = gArgs.GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqChainLocks).name);
         Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
         for (const auto& p : Params().GetConsensus().llmqs) {
             if (p.second.name == llmqChainLocks) {
@@ -1429,7 +1428,7 @@ bool AppInitParameterInteraction()
             return InitError("Invalid LLMQ type specified for -llmqchainlocks.");
         }
         UpdateDevnetLLMQChainLocks(llmqType);
-    } else if (IsArgSet("-llmqchainlocks")) {
+    } else if (gArgs.IsArgSet("-llmqchainlocks")) {
         return InitError("LLMQ type for ChainLocks can only be overridden on devnet.");
     }
 
@@ -1490,7 +1489,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
-    if (GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
+    if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
         // Do this first since it both loads a bunch of debug.log into memory,
         // and because this needs to happen before any other debug.log printing
         ShrinkDebugFile();
@@ -1503,7 +1502,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         LogPrintf("Startup time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
-    LogPrintf("Using config file %s\n", GetConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
+    LogPrintf("Using config file %s\n", GetConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME)).string());
     LogPrintf("Using at most %i automatic connections (%i file descriptors available)\n", nMaxConnections, nFD);
 
     InitSignatureCache();
@@ -1515,8 +1514,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     std::vector<std::string> vSporkAddresses;
-    if (mapMultiArgs.count("-sporkaddr")) {
-        vSporkAddresses = mapMultiArgs.at("-sporkaddr");
+    if (gArgs.IsArgSet("-sporkaddr")) {
+        vSporkAddresses = gArgs.GetArgs("-sporkaddr");
     } else {
         vSporkAddresses = Params().SporkAddresses();
     }
@@ -1526,14 +1525,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    int minsporkkeys = GetArg("-minsporkkeys", Params().MinSporkKeys());
+    int minsporkkeys = gArgs.GetArg("-minsporkkeys", Params().MinSporkKeys());
     if (!sporkManager.SetMinSporkKeys(minsporkkeys)) {
         return InitError(_("Invalid minimum number of spork signers specified with -minsporkkeys"));
     }
 
 
-    if (IsArgSet("-sporkkey")) { // spork priv key
-        if (!sporkManager.SetPrivKey(GetArg("-sporkkey", ""))) {
+    if (gArgs.IsArgSet("-sporkkey")) { // spork priv key
+        if (!sporkManager.SetPrivKey(gArgs.GetArg("-sporkkey", ""))) {
             return InitError(_("Unable to sign spork message, wrong key?"));
         }
     }
@@ -1547,7 +1546,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
      * that the server is there and will be ready later).  Warmup mode will
      * be disabled when initialisation is finished.
      */
-    if (GetBoolArg("-server", false))
+    if (gArgs.GetBoolArg("-server", false))
     {
         uiInterface.InitMessage.connect(SetRPCWarmupStatus);
         if (!AppInitServers(threadGroup))
@@ -1587,8 +1586,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         uacomments.push_back(strprintf("devnet=%s", GetDevNetName()));
     }
 
-    if (mapMultiArgs.count("-uacomment")) {
-        BOOST_FOREACH(std::string cmt, mapMultiArgs.at("-uacomment"))
+    if (gArgs.IsArgSet("-uacomment")) {
+        BOOST_FOREACH(std::string cmt, gArgs.GetArgs("-uacomment"))
         {
             if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
                 return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
@@ -1601,9 +1600,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             strSubVersion.size(), MAX_SUBVERSION_LENGTH));
     }
 
-    if (mapMultiArgs.count("-onlynet")) {
+    if (gArgs.IsArgSet("-onlynet")) {
         std::set<enum Network> nets;
-        BOOST_FOREACH(const std::string& snet, mapMultiArgs.at("-onlynet")) {
+        BOOST_FOREACH(const std::string& snet, gArgs.GetArgs("-onlynet")) {
             enum Network net = ParseNetwork(snet);
             if (net == NET_UNROUTABLE)
                 return InitError(strprintf(_("Unknown network specified in -onlynet: '%s'"), snet));
@@ -1616,8 +1615,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    if (mapMultiArgs.count("-whitelist")) {
-        BOOST_FOREACH(const std::string& net, mapMultiArgs.at("-whitelist")) {
+    if (gArgs.IsArgSet("-whitelist")) {
+        BOOST_FOREACH(const std::string& net, gArgs.GetArgs("-whitelist")) {
             CSubNet subnet;
             LookupSubNet(net.c_str(), subnet);
             if (!subnet.IsValid())
@@ -1627,12 +1626,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // Check for host lookup allowed before parsing any network related parameters
-    fNameLookup = GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
+    fNameLookup = gArgs.GetBoolArg("-dns", DEFAULT_NAME_LOOKUP);
 
-    bool proxyRandomize = GetBoolArg("-proxyrandomize", DEFAULT_PROXYRANDOMIZE);
+    bool proxyRandomize = gArgs.GetBoolArg("-proxyrandomize", DEFAULT_PROXYRANDOMIZE);
     // -proxy sets a proxy for all outgoing network traffic
     // -noproxy (or -proxy=0) as well as the empty string can be used to not set a proxy, this is the default
-    std::string proxyArg = GetArg("-proxy", "");
+    std::string proxyArg = gArgs.GetArg("-proxy", "");
     SetLimited(NET_TOR);
     if (proxyArg != "" && proxyArg != "0") {
         CService proxyAddr;
@@ -1654,7 +1653,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // -onion can be used to set only a proxy for .onion, or override normal proxy for .onion addresses
     // -noonion (or -onion=0) disables connecting to .onion entirely
     // An empty string is used to not override the onion proxy (in which case it defaults to -proxy set above, or none)
-    std::string onionArg = GetArg("-onion", "");
+    std::string onionArg = gArgs.GetArg("-onion", "");
     if (onionArg != "") {
         if (onionArg == "0") { // Handle -noonion/-onion=0
             SetLimited(NET_TOR); // set onions as unreachable
@@ -1672,22 +1671,22 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // see Step 2: parameter interactions for more information about these
-    fListen = GetBoolArg("-listen", DEFAULT_LISTEN);
-    fDiscover = GetBoolArg("-discover", true);
-    fRelayTxes = !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
+    fListen = gArgs.GetBoolArg("-listen", DEFAULT_LISTEN);
+    fDiscover = gArgs.GetBoolArg("-discover", true);
+    fRelayTxes = !gArgs.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY);
 
     if (fListen) {
         bool fBound = false;
-        if (mapMultiArgs.count("-bind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-bind")) {
+        if (gArgs.IsArgSet("-bind")) {
+            BOOST_FOREACH(const std::string& strBind, gArgs.GetArgs("-bind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, GetListenPort(), false))
                     return InitError(ResolveErrMsg("bind", strBind));
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR));
             }
         }
-        if (mapMultiArgs.count("-whitebind")) {
-            BOOST_FOREACH(const std::string& strBind, mapMultiArgs.at("-whitebind")) {
+        if (gArgs.IsArgSet("-whitebind")) {
+            BOOST_FOREACH(const std::string& strBind, gArgs.GetArgs("-whitebind")) {
                 CService addrBind;
                 if (!Lookup(strBind.c_str(), addrBind, 0, false))
                     return InitError(ResolveErrMsg("whitebind", strBind));
@@ -1696,7 +1695,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 fBound |= Bind(connman, addrBind, (BF_EXPLICIT | BF_REPORT_ERROR | BF_WHITELIST));
             }
         }
-        if (!mapMultiArgs.count("-bind") && !mapMultiArgs.count("-whitebind")) {
+        if (!gArgs.IsArgSet("-bind") && !gArgs.IsArgSet("-whitebind")) {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
             fBound |= Bind(connman, CService((in6_addr)IN6ADDR_ANY_INIT, GetListenPort()), BF_NONE);
@@ -1706,19 +1705,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             return InitError(_("Failed to listen on any port. Use -listen=0 if you want this."));
     }
 
-    if (mapMultiArgs.count("-externalip")) {
-        BOOST_FOREACH(const std::string& strAddr, mapMultiArgs.at("-externalip")) {
+    if (gArgs.IsArgSet("-externalip")) {
+        BOOST_FOREACH(const std::string& strAddr, gArgs.GetArgs("-externalip")) {
             CService addrLocal;
             if (Lookup(strAddr.c_str(), addrLocal, GetListenPort(), fNameLookup) && addrLocal.IsValid())
                 AddLocal(addrLocal, LOCAL_MANUAL);
             else
                 return InitError(ResolveErrMsg("externalip", strAddr));
         }
-    }
-
-    if (mapMultiArgs.count("-seednode")) {
-        BOOST_FOREACH(const std::string& strDest, mapMultiArgs.at("-seednode"))
-            connman.AddOneShot(strDest);
     }
 
 #if ENABLE_ZMQ
@@ -1735,14 +1729,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     uint64_t nMaxOutboundLimit = 0; //unlimited unless -maxuploadtarget is set
     uint64_t nMaxOutboundTimeframe = MAX_UPLOAD_TIMEFRAME;
 
-    if (IsArgSet("-maxuploadtarget")) {
-        nMaxOutboundLimit = GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
+    if (gArgs.IsArgSet("-maxuploadtarget")) {
+        nMaxOutboundLimit = gArgs.GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024;
     }
 
     // ********************************************************* Step 7a: check lite mode and load sporks
 
     // lite mode disables all Dash-specific functionality
-    fLiteMode = GetBoolArg("-litemode", false);
+    fLiteMode = gArgs.GetBoolArg("-litemode", false);
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
     if(fLiteMode) {
@@ -1764,23 +1758,23 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 7b: load block chain
 
-    fReindex = GetBoolArg("-reindex", false);
-    bool fReindexChainState = GetBoolArg("-reindex-chainstate", false);
+    fReindex = gArgs.GetBoolArg("-reindex", false);
+    bool fReindexChainState = gArgs.GetBoolArg("-reindex-chainstate", false);
 
     fs::create_directories(GetDataDir() / "blocks");
 
     // cache size calculations
-    int64_t nTotalCache = (GetArg("-dbcache", nDefaultDbCache) << 20);
+    int64_t nTotalCache = (gArgs.GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
     nTotalCache = std::min(nTotalCache, nMaxDbCache << 20); // total cache cannot be greater than nMaxDbcache
     int64_t nBlockTreeDBCache = nTotalCache / 8;
-    nBlockTreeDBCache = std::min(nBlockTreeDBCache, (GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxBlockDBAndTxIndexCache : nMaxBlockDBCache) << 20);
+    nBlockTreeDBCache = std::min(nBlockTreeDBCache, (gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX) ? nMaxBlockDBAndTxIndexCache : nMaxBlockDBCache) << 20);
     nTotalCache -= nBlockTreeDBCache;
     int64_t nCoinDBCache = std::min(nTotalCache / 2, (nTotalCache / 4) + (1 << 23)); // use 25%-50% of the remainder for disk cache
     nCoinDBCache = std::min(nCoinDBCache, nMaxCoinsDBCache << 20); // cap total coins db cache
     nTotalCache -= nCoinDBCache;
     nCoinCacheUsage = nTotalCache; // the rest goes to in-memory cache
-    int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t nEvoDbCache = 1024 * 1024 * 16; // TODO
     LogPrintf("Cache configuration:\n");
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
@@ -1850,7 +1844,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 }
 
                 // Check for changed -txindex state
-                if (fTxIndex != GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
+                if (fTxIndex != gArgs.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
                     strLoadError = _("You need to rebuild the database using -reindex-chainstate to change -txindex");
                     break;
                 }
@@ -1863,7 +1857,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 }
 
                 uiInterface.InitMessage(_("Verifying blocks..."));
-                if (fHavePruned && GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
+                if (fHavePruned && gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
                     LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks",
                         MIN_BLOCKS_TO_KEEP);
                 }
@@ -1880,8 +1874,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
                 }
 
-                if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, GetArg("-checklevel", DEFAULT_CHECKLEVEL),
-                              GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
+                if (!CVerifyDB().VerifyDB(chainparams, pcoinsdbview, gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
+                              gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
                     strLoadError = _("Corrupted block database detected");
                     break;
                 }
@@ -1953,7 +1947,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // ********************************************************* Step 10a: Prepare Masternode related stuff
-    fMasternodeMode = GetBoolArg("-masternode", false);
+    fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
     // TODO: masternode should have no wallet
 
     if(fLiteMode && fMasternodeMode) {
@@ -1963,7 +1957,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
 
-        std::string strMasterNodeBLSPrivKey = GetArg("-masternodeblsprivkey", "");
+        std::string strMasterNodeBLSPrivKey = gArgs.GetArg("-masternodeblsprivkey", "");
         if(!strMasterNodeBLSPrivKey.empty()) {
             auto binKey = ParseHex(strMasterNodeBLSPrivKey);
             CBLSSecretKey keyOperator;
@@ -1994,7 +1988,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 10b: setup PrivateSend
 
 #ifdef ENABLE_WALLET
-    privateSendClient.nLiquidityProvider = std::min(std::max((int)GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
+    privateSendClient.nLiquidityProvider = std::min(std::max((int)gArgs.GetArg("-liquidityprovider", DEFAULT_PRIVATESEND_LIQUIDITY), MIN_PRIVATESEND_LIQUIDITY), MAX_PRIVATESEND_LIQUIDITY);
     int nMaxRounds = MAX_PRIVATESEND_ROUNDS;
     if(privateSendClient.nLiquidityProvider) {
         // special case for liquidity providers only, normal clients should use default value
@@ -2002,12 +1996,12 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         nMaxRounds = std::numeric_limits<int>::max();
     }
 
-    privateSendClient.fEnablePrivateSend = GetBoolArg("-enableprivatesend", false);
-    privateSendClient.fPrivateSendMultiSession = GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
-    privateSendClient.nPrivateSendSessions = std::min(std::max((int)GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
-    privateSendClient.nPrivateSendRounds = std::min(std::max((int)GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
-    privateSendClient.nPrivateSendAmount = std::min(std::max((int)GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
-    privateSendClient.nPrivateSendDenoms = std::min(std::max((int)GetArg("-privatesenddenoms", DEFAULT_PRIVATESEND_DENOMS), MIN_PRIVATESEND_DENOMS), MAX_PRIVATESEND_DENOMS);
+    privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
+    privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
+    privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
+    privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
+    privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
+    privateSendClient.nPrivateSendDenoms = std::min(std::max((int)gArgs.GetArg("-privatesenddenoms", DEFAULT_PRIVATESEND_DENOMS), MIN_PRIVATESEND_DENOMS), MAX_PRIVATESEND_DENOMS);
 
     LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
     LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
@@ -2019,7 +2013,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 10b: setup InstantSend
 
-    fEnableInstantSend = GetBoolArg("-enableinstantsend", 1);
+    fEnableInstantSend = gArgs.GetBoolArg("-enableinstantsend", 1);
 
     // ********************************************************* Step 10c: Load cache data
 
@@ -2097,13 +2091,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         fHaveGenesis = true;
     }
 
-    if (IsArgSet("-blocknotify"))
+    if (gArgs.IsArgSet("-blocknotify"))
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
 
     std::vector<fs::path> vImportFiles;
-    if (mapMultiArgs.count("-loadblock"))
+    if (gArgs.IsArgSet("-loadblock"))
     {
-        BOOST_FOREACH(const std::string& strFile, mapMultiArgs.at("-loadblock"))
+        BOOST_FOREACH(const std::string& strFile, gArgs.GetArgs("-loadblock"))
             vImportFiles.push_back(strFile);
     }
 
@@ -2123,13 +2117,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     //// debug print
     LogPrintf("mapBlockIndex.size() = %u\n",   mapBlockIndex.size());
     LogPrintf("chainActive.Height() = %d\n",   chainActive.Height());
-    if (GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
+    if (gArgs.GetBoolArg("-listenonion", DEFAULT_LISTEN_ONION))
         StartTorControl(threadGroup, scheduler);
 
     Discover(threadGroup);
 
     // Map ports with UPnP
-    MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
+    MapPort(gArgs.GetBoolArg("-upnp", DEFAULT_UPNP));
 
     std::string strNodeError;
     CConnman::Options connOptions;
@@ -2141,11 +2135,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     connOptions.nMaxFeeler = 1;
     connOptions.nBestHeight = chainActive.Height();
     connOptions.uiInterface = &uiInterface;
-    connOptions.nSendBufferMaxSize = 1000*GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
-    connOptions.nReceiveFloodSize = 1000*GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
+    connOptions.nSendBufferMaxSize = 1000*gArgs.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
+    connOptions.nReceiveFloodSize = 1000*gArgs.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
 
     connOptions.nMaxOutboundTimeframe = nMaxOutboundTimeframe;
     connOptions.nMaxOutboundLimit = nMaxOutboundLimit;
+
+    if (gArgs.IsArgSet("-seednode")) {
+        connOptions.vSeedNodes = gArgs.GetArgs("-seednode");
+    }
 
     if (!connman.Start(scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
@@ -2160,5 +2158,5 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         pwalletMain->postInitProcess(scheduler);
 #endif
 
-    return !fRequestShutdown;
+    return true;
 }

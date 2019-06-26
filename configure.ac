@@ -608,7 +608,7 @@ dnl Check for MSG_DONTWAIT
 AC_MSG_CHECKING(for MSG_DONTWAIT)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
  [[ int f = MSG_DONTWAIT; ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_DONTWAIT, 1,[Define this symbol if you have MSG_DONTWAIT]) ],
+ [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_DONTWAIT, 1,[Define this symbol if you have MSG_DONTWAIT]) ],
  [ AC_MSG_RESULT(no)]
 )
 

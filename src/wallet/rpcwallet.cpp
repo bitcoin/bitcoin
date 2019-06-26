@@ -840,6 +840,9 @@ UniValue getbalance(const JSONRPCRequest& request)
     if (request.params.size() == 0)
         return  ValueFromAmount(pwallet->GetBalance());
 
+    const std::string& account_param = request.params[0].get_str();
+    const std::string* account = account_param != "*" ? &account_param : nullptr;
+
     int nMinDepth = 1;
     if (request.params.size() > 1)
         nMinDepth = request.params[1].get_int();
@@ -849,38 +852,7 @@ UniValue getbalance(const JSONRPCRequest& request)
         if(request.params[3].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
-    if (request.params[0].get_str() == "*") {
-        // Calculate total balance a different way from GetBalance()
-        // (GetBalance() sums up all unspent TxOuts)
-        // getbalance and "getbalance * 1 true" should return the same number
-        CAmount nBalance = 0;
-        for (const std::pair<uint256, CWalletTx>& pairWtx : pwallet->mapWallet) {
-            const CWalletTx& wtx = pairWtx.second;
-            if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
-                continue;
-
-            CAmount allFee;
-            std::string strSentAccount;
-            std::list<COutputEntry> listReceived;
-            std::list<COutputEntry> listSent;
-            wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
-            if ((wtx.GetDepthInMainChain() >= nMinDepth) || (fAddLocked && wtx.IsLockedByInstantSend()))
-            {
-                BOOST_FOREACH(const COutputEntry& r, listReceived)
-                    nBalance += r.amount;
-            }
-            BOOST_FOREACH(const COutputEntry& s, listSent)
-                nBalance -= s.amount;
-            nBalance -= allFee;
-        }
-        return  ValueFromAmount(nBalance);
-    }
-
-    std::string strAccount = AccountFromValue(request.params[0]);
-
-    CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, filter, fAddLocked);
-
-    return ValueFromAmount(nBalance);
+    return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account, fAddLocked));
 }
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -1012,7 +984,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLocked);
+    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLocked);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -1123,7 +1095,7 @@ UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE, fAddLocked);
+    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLocked);
     if (totalAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
 
@@ -3078,7 +3050,7 @@ static const CRPCCommand commands[] =
 
 void RegisterWalletRPCCommands(CRPCTable &t)
 {
-    if (GetBoolArg("-disablewallet", false))
+    if (gArgs.GetBoolArg("-disablewallet", false))
         return;
 
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)

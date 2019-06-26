@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(get_next_work)
     BOOST_CHECK_EQUAL(GetNextWorkRequired(&blockIndexLast, &blockHeader, params), 0x1b1441de); // Block #123457 has 0x1b1441de
 
     // test special rules for slow blocks on devnet/testnet
-    SoftSetBoolArg("-devnet", true);
+    gArgs.SoftSetBoolArg("-devnet", true);
     SelectParams(CBaseChainParams::DEVNET);
     const Consensus::Params& paramsdev = Params().GetConsensus();
 

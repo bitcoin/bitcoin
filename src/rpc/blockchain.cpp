@@ -209,7 +209,7 @@ void RPCNotifyBlockChange(bool ibd, const CBlockIndex * pindex)
         latestblock.hash = pindex->GetBlockHash();
         latestblock.height = pindex->nHeight;
     }
-	cond_blockchange.notify_all();
+    cond_blockchange.notify_all();
 }
 
 UniValue waitfornewblock(const JSONRPCRequest& request)
@@ -1254,8 +1254,8 @@ UniValue gettxout(const JSONRPCRequest& request)
 
 UniValue verifychain(const JSONRPCRequest& request)
 {
-    int nCheckLevel = GetArg("-checklevel", DEFAULT_CHECKLEVEL);
-    int nCheckDepth = GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
+    int nCheckLevel = gArgs.GetArg("-checklevel", DEFAULT_CHECKLEVEL);
+    int nCheckDepth = gArgs.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS);
     if (request.fHelp || request.params.size() > 2)
         throw std::runtime_error(
             "verifychain ( checklevel nblocks )\n"
@@ -1324,20 +1324,21 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     if (THRESHOLD_STARTED == thresholdState)
     {
         rv.push_back(Pair("bit", consensusParams.vDeployments[id].bit));
-
-        int nBlockCount = VersionBitsCountBlocksInWindow(chainActive.Tip(), consensusParams, id);
-        int64_t nPeriod = consensusParams.vDeployments[id].nWindowSize ? consensusParams.vDeployments[id].nWindowSize : consensusParams.nMinerConfirmationWindow;
-        int64_t nThreshold = consensusParams.vDeployments[id].nThreshold ? consensusParams.vDeployments[id].nThreshold : consensusParams.nRuleChangeActivationThreshold;
-        int64_t nWindowStart = chainActive.Height() - (chainActive.Height() % nPeriod);
-        rv.push_back(Pair("period", nPeriod));
-        rv.push_back(Pair("threshold", nThreshold));
-        rv.push_back(Pair("windowStart", nWindowStart));
-        rv.push_back(Pair("windowBlocks", nBlockCount));
-        rv.push_back(Pair("windowProgress", std::min(1.0, (double)nBlockCount / nThreshold)));
     }
     rv.push_back(Pair("startTime", consensusParams.vDeployments[id].nStartTime));
     rv.push_back(Pair("timeout", consensusParams.vDeployments[id].nTimeout));
     rv.push_back(Pair("since", VersionBitsTipStateSinceHeight(consensusParams, id)));
+    if (THRESHOLD_STARTED == thresholdState)
+    {
+        UniValue statsUV(UniValue::VOBJ);
+        BIP9Stats statsStruct = VersionBitsTipStatistics(consensusParams, id);
+        statsUV.push_back(Pair("period", statsStruct.period));
+        statsUV.push_back(Pair("threshold", statsStruct.threshold));
+        statsUV.push_back(Pair("elapsed", statsStruct.elapsed));
+        statsUV.push_back(Pair("count", statsStruct.count));
+        statsUV.push_back(Pair("possible", statsStruct.possible));
+        rv.push_back(Pair("statistics", statsUV));
+    }
     return rv;
 }
 
@@ -1381,14 +1382,16 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "     \"xxxx\" : {                (string) name of the softfork\n"
             "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
-            "        \"period\": xx,          (numeric) the window size/period for this softfork (only for \"started\" status)\n"
-            "        \"threshold\": xx,       (numeric) the threshold for this softfork (only for \"started\" status)\n"
-            "        \"windowStart\": xx,     (numeric) the starting block height of the current window (only for \"started\" status)\n"
-            "        \"windowBlocks\": xx,    (numeric) the number of blocks in the current window that had the version bit set for this softfork (only for \"started\" status)\n"
-            "        \"windowProgress\": xx,  (numeric) the progress (between 0 and 1) for activation of this softfork (only for \"started\" status)\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
             "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
-            "        \"since\": xx            (numeric) height of the first block to which the status applies\n"
+            "        \"since\": xx,           (numeric) height of the first block to which the status applies\n"
+            "        \"statistics\": {        (object) numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)\n"
+            "           \"period\": xx,       (numeric) the length in blocks of the BIP9 signalling period \n"
+            "           \"threshold\": xx,    (numeric) the number of blocks with the version bit set required to activate the feature \n"
+            "           \"elapsed\": xx,      (numeric) the number of blocks elapsed since the beginning of the current period \n"
+            "           \"count\": xx,        (numeric) the number of blocks with the version bit set in the current period \n"
+            "           \"possible\": xx      (boolean) returns false if there are not enough blocks left in this period to pass activation threshold \n"
+            "        }\n"
             "     }\n"
             "  }\n"
             "}\n"
@@ -1585,7 +1588,7 @@ UniValue mempoolInfoToJSON()
     ret.push_back(Pair("size", (int64_t) mempool.size()));
     ret.push_back(Pair("bytes", (int64_t) mempool.GetTotalTxSize()));
     ret.push_back(Pair("usage", (int64_t) mempool.DynamicMemoryUsage()));
-    size_t maxmempool = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     ret.push_back(Pair("maxmempool", (int64_t) maxmempool));
     ret.push_back(Pair("mempoolminfee", ValueFromAmount(mempool.GetMinFee(maxmempool).GetFeePerK())));
 
@@ -1604,7 +1607,7 @@ UniValue getmempoolinfo(const JSONRPCRequest& request)
             "  \"bytes\": xxxxx,              (numeric) Sum of all tx sizes\n"
             "  \"usage\": xxxxx,              (numeric) Total memory usage for the mempool\n"
             "  \"maxmempool\": xxxxx,         (numeric) Maximum memory usage for the mempool\n"
-            "  \"mempoolminfee\": xxxxx       (numeric) Minimum fee for tx to be accepted\n"
+            "  \"mempoolminfee\": xxxxx       (numeric) Minimum feerate (" + CURRENCY_UNIT + " per KB) for tx to be accepted\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmempoolinfo", "")

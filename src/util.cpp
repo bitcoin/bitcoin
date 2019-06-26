@@ -17,7 +17,6 @@
 #include "random.h"
 #include "serialize.h"
 #include "stacktraces.h"
-#include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
 
@@ -110,10 +109,7 @@ int nWalletBackups = 10;
 const char * const BITCOIN_CONF_FILENAME = "dash.conf";
 const char * const BITCOIN_PID_FILENAME = "dashd.pid";
 
-CCriticalSection cs_args;
-std::unordered_map<std::string, std::string> mapArgs;
-static std::unordered_map<std::string, std::vector<std::string> > _mapMultiArgs;
-const std::unordered_map<std::string, std::vector<std::string> >& mapMultiArgs = _mapMultiArgs;
+ArgsManager gArgs;
 bool fPrintToConsole = false;
 bool fPrintToDebugLog = true;
 
@@ -379,14 +375,14 @@ static std::string LogTimestampStr(const std::string &str, std::atomic_bool *fSt
         return str;
 
     if (*fStartedNewLine) {
-        if (IsMockTime()) {
-            int64_t nRealTimeMicros = GetTimeMicros();
-            strStamped = DateTimeStrFormat("(real %Y-%m-%d %H:%M:%S) ", nRealTimeMicros/1000000);
-        }
-        int64_t nTimeMicros = GetLogTimeMicros();
-        strStamped += DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTimeMicros/1000000);
+        int64_t nTimeMicros = GetTimeMicros();
+        strStamped = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTimeMicros/1000000);
         if (fLogTimeMicros)
             strStamped += strprintf(".%06d", nTimeMicros%1000000);
+        int64_t mocktime = GetMockTime();
+        if (mocktime) {
+            strStamped += " (mocktime: " + DateTimeStrFormat("%Y-%m-%d %H:%M:%S", mocktime) + ")";
+        }
         strStamped += ' ' + str;
     } else
         strStamped = str;
@@ -480,11 +476,11 @@ static void InterpretNegativeSetting(std::string& strKey, std::string& strValue)
     }
 }
 
-void ParseParameters(int argc, const char* const argv[])
+void ArgsManager::ParseParameters(int argc, const char* const argv[])
 {
     LOCK(cs_args);
     mapArgs.clear();
-    _mapMultiArgs.clear();
+    mapMultiArgs.clear();
 
     for (int i = 1; i < argc; i++)
     {
@@ -512,17 +508,23 @@ void ParseParameters(int argc, const char* const argv[])
         InterpretNegativeSetting(str, strValue);
 
         mapArgs[str] = strValue;
-        _mapMultiArgs[str].push_back(strValue);
+        mapMultiArgs[str].push_back(strValue);
     }
 }
 
-bool IsArgSet(const std::string& strArg)
+std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg)
+{
+    LOCK(cs_args);
+    return mapMultiArgs.at(strArg);
+}
+
+bool ArgsManager::IsArgSet(const std::string& strArg)
 {
     LOCK(cs_args);
     return mapArgs.count(strArg);
 }
 
-std::string GetArg(const std::string& strArg, const std::string& strDefault)
+std::string ArgsManager::GetArg(const std::string& strArg, const std::string& strDefault)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -530,7 +532,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault)
     return strDefault;
 }
 
-int64_t GetArg(const std::string& strArg, int64_t nDefault)
+int64_t ArgsManager::GetArg(const std::string& strArg, int64_t nDefault)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -538,7 +540,7 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault)
     return nDefault;
 }
 
-bool GetBoolArg(const std::string& strArg, bool fDefault)
+bool ArgsManager::GetBoolArg(const std::string& strArg, bool fDefault)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
@@ -546,16 +548,16 @@ bool GetBoolArg(const std::string& strArg, bool fDefault)
     return fDefault;
 }
 
-bool SoftSetArg(const std::string& strArg, const std::string& strValue)
+bool ArgsManager::SoftSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
     if (mapArgs.count(strArg))
         return false;
-    mapArgs[strArg] = strValue;
+    ForceSetArg(strArg, strValue);
     return true;
 }
 
-bool SoftSetBoolArg(const std::string& strArg, bool fValue)
+bool ArgsManager::SoftSetBoolArg(const std::string& strArg, bool fValue)
 {
     if (fValue)
         return SoftSetArg(strArg, std::string("1"));
@@ -563,23 +565,24 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("0"));
 }
 
-void ForceSetArg(const std::string& strArg, const std::string& strValue)
+void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strValue)
 {
     LOCK(cs_args);
     mapArgs[strArg] = strValue;
+    mapMultiArgs[strArg].push_back(strValue);
 }
 
-void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
+void ArgsManager::ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values)
 {
     LOCK(cs_args);
-    _mapMultiArgs[strArg] = values;
+    mapMultiArgs[strArg] = values;
 }
 
-void ForceRemoveArg(const std::string& strArg)
+void ArgsManager::ForceRemoveArg(const std::string& strArg)
 {
     LOCK(cs_args);
     mapArgs.erase(strArg);
-    _mapMultiArgs.erase(strArg);
+    mapMultiArgs.erase(strArg);
 }
 
 static const int screenWidth = 79;
@@ -651,8 +654,8 @@ const fs::path &GetDataDir(bool fNetSpecific)
     if (!path.empty())
         return path;
 
-    if (IsArgSet("-datadir")) {
-        path = fs::system_complete(GetArg("-datadir", ""));
+    if (gArgs.IsArgSet("-datadir")) {
+        path = fs::system_complete(gArgs.GetArg("-datadir", ""));
         if (!fs::is_directory(path)) {
             path = "";
             return path;
@@ -670,10 +673,10 @@ const fs::path &GetDataDir(bool fNetSpecific)
 
 fs::path GetBackupsDir()
 {
-    if (!IsArgSet("-walletbackupsdir"))
+    if (!gArgs.IsArgSet("-walletbackupsdir"))
         return GetDataDir() / "backups";
 
-    return fs::absolute(GetArg("-walletbackupsdir", ""));
+    return fs::absolute(gArgs.GetArg("-walletbackupsdir", ""));
 }
 
 void ClearDatadirCache()
@@ -693,7 +696,7 @@ fs::path GetConfigFile(const std::string& confPath)
     return pathConfigFile;
 }
 
-void ReadConfigFile(const std::string& confPath)
+void ArgsManager::ReadConfigFile(const std::string& confPath)
 {
     fs::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good()){
@@ -717,7 +720,7 @@ void ReadConfigFile(const std::string& confPath)
             InterpretNegativeSetting(strKey, strValue);
             if (mapArgs.count(strKey) == 0)
                 mapArgs[strKey] = strValue;
-            _mapMultiArgs[strKey].push_back(strValue);
+            mapMultiArgs[strKey].push_back(strValue);
         }
     }
     // If datadir is changed in .conf file:
@@ -727,7 +730,7 @@ void ReadConfigFile(const std::string& confPath)
 #ifndef WIN32
 fs::path GetPidFile()
 {
-    fs::path pathPidFile(GetArg("-pid", BITCOIN_PID_FILENAME));
+    fs::path pathPidFile(gArgs.GetArg("-pid", BITCOIN_PID_FILENAME));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }

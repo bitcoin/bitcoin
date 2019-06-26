@@ -74,14 +74,14 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/dash.conf are parsed in qt/dash.cpp's main()
-    ParseParameters(argc, argv);
+    gArgs.ParseParameters(argc, argv);
 
     // Process help and version before taking care about datadir
-    if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
+    if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") ||  gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version"))
     {
         std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
 
-        if (IsArgSet("-version"))
+        if (gArgs.IsArgSet("-version"))
         {
             strUsage += FormatParagraph(LicenseInfo());
         }
@@ -99,22 +99,22 @@ bool AppInit(int argc, char* argv[])
 
     try
     {
-        bool datadirFromCmdLine = IsArgSet("-datadir");
+        bool datadirFromCmdLine = gArgs.IsArgSet("-datadir");
         if (datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
+            fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return false;
         }
         try
         {
-            ReadConfigFile(GetArg("-conf", BITCOIN_CONF_FILENAME));
+            gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;
         }
         if (!datadirFromCmdLine && !fs::is_directory(GetDataDir(false)))
         {
-            fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", GetArg("-datadir", "").c_str());
+            fprintf(stderr, "Error: Specified data directory \"%s\" from config file does not exist.\n", gArgs.GetArg("-datadir", "").c_str());
             return EXIT_FAILURE;
         }
         // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
@@ -125,19 +125,16 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // Command-line RPC
-        bool fCommandLine = false;
-        for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "dash:"))
-                fCommandLine = true;
-
-        if (fCommandLine)
-        {
-            fprintf(stderr, "Error: There is no RPC client functionality in dashd anymore. Use the dash-cli utility instead.\n");
-            exit(EXIT_FAILURE);
+        // Error out when loose non-argument tokens are encountered on command line
+        for (int i = 1; i < argc; i++) {
+            if (!IsSwitchChar(argv[i][0])) {
+                fprintf(stderr, "Error: Command line contains unexpected token '%s', see dashd -h for a list of options.\n", argv[i]);
+                exit(EXIT_FAILURE);
+            }
         }
+
         // -server defaults to true for bitcoind but not for the GUI so do this here
-        SoftSetBoolArg("-server", true);
+        gArgs.SoftSetBoolArg("-server", true);
         // Set this early so that parameter interactions go to console
         InitLogging();
         InitParameterInteraction();
@@ -156,7 +153,7 @@ bool AppInit(int argc, char* argv[])
             // InitError will have been called with detailed error, which ends up on console
             exit(EXIT_FAILURE);
         }
-        if (GetBoolArg("-daemon", false))
+        if (gArgs.GetBoolArg("-daemon", false))
         {
 #if HAVE_DECL_DAEMON
             fprintf(stdout, "Dash Core server starting\n");

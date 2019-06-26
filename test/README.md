@@ -34,7 +34,7 @@ You can run any single test by calling
 
     test/functional/test_runner.py <testname>
 
-Or you can run any combination of tests by calling
+Or you can run any combination (incl. duplicates) of tests by calling
 
     test/functional/test_runner.py <testname1> <testname2> <testname3> ...
 

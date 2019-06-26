@@ -104,7 +104,7 @@ void CConnman::AddOneShot(const std::string& strDest)
 
 unsigned short GetListenPort()
 {
-    return (unsigned short)(GetArg("-port", Params().GetDefaultPort()));
+    return (unsigned short)(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -504,7 +504,7 @@ void CConnman::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t ba
     banEntry.banReason = banReason;
     if (bantimeoffset <= 0)
     {
-        bantimeoffset = GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME);
+        bantimeoffset = gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME);
         sinceUnixEpoch = false;
     }
     banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
@@ -1127,12 +1127,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
     // According to the internet TCP_NODELAY is not carried into accepted sockets
     // on all platforms.  Set it again here just to be sure.
-    int set = 1;
-#ifdef WIN32
-    setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
-#else
-    setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&set, sizeof(int));
-#endif
+    SetSocketNoDelay(hSocket);
 
     if (IsBanned(addr) && !whitelisted)
     {
@@ -1669,7 +1664,7 @@ void CConnman::ThreadDNSAddressSeed()
     //  creating fewer identifying DNS requests, reduces trust by giving seeds
     //  less influence on the network topology, and reduces traffic to the seeds.
     if ((addrman.size() > 0) &&
-        (!GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
+        (!gArgs.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
         if (!interruptNet.sleep_for(std::chrono::seconds(11)))
             return;
 
@@ -1777,12 +1772,12 @@ void CConnman::ProcessOneShot()
 void CConnman::ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapMultiArgs.count("-connect") && mapMultiArgs.at("-connect").size() > 0)
+    if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
             ProcessOneShot();
-            BOOST_FOREACH(const std::string& strAddr, mapMultiArgs.at("-connect"))
+            BOOST_FOREACH(const std::string& strAddr, gArgs.GetArgs("-connect"))
             {
                 CAddress addr(CService(), NODE_NONE);
                 OpenNetworkConnection(addr, false, NULL, strAddr.c_str());
@@ -1862,9 +1857,9 @@ void CConnman::ThreadOpenConnections()
         //  * Increase the number of connectable addresses in the tried table.
         //
         // Method:
-        //  * Choose a random address from new and attempt to connect to it if we can connect 
+        //  * Choose a random address from new and attempt to connect to it if we can connect
         //    successfully it is added to tried.
-        //  * Start attempting feeler connections only after node finishes making outbound 
+        //  * Start attempting feeler connections only after node finishes making outbound
         //    connections.
         //  * Only make a feeler connection once every few minutes.
         //
@@ -2013,8 +2008,8 @@ void CConnman::ThreadOpenAddedConnections()
 {
     {
         LOCK(cs_vAddedNodes);
-        if (mapMultiArgs.count("-addnode"))
-            vAddedNodes = mapMultiArgs.at("-addnode");
+        if (gArgs.IsArgSet("-addnode"))
+            vAddedNodes = gArgs.GetArgs("-addnode");
     }
 
     while (true)
@@ -2047,7 +2042,7 @@ void CConnman::ThreadOpenAddedConnections()
 void CConnman::ThreadOpenMasternodeConnections()
 {
     // Connecting to specific addresses, no masternode connections available
-    if (IsArgSet("-connect") && mapMultiArgs.at("-connect").size() > 0)
+    if (gArgs.IsArgSet("-connect") && gArgs.GetArgs("-connect").size() > 0)
         return;
 
     while (!interruptNet)
@@ -2440,6 +2435,10 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
 
     SetBestHeight(connOptions.nBestHeight);
 
+    for (const auto& strDest : connOptions.vSeedNodes) {
+        AddOneShot(strDest);
+    }
+
     clientInterface = connOptions.uiInterface;
     if (clientInterface) {
         clientInterface->InitMessage(_("Loading P2P addresses..."));
@@ -2524,7 +2523,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     // Send and receive from sockets, accept connections
     threadSocketHandler = std::thread(&TraceThread<std::function<void()> >, "net", std::function<void()>(std::bind(&CConnman::ThreadSocketHandler, this)));
 
-    if (!GetBoolArg("-dnsseed", true))
+    if (!gArgs.GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
     else
         threadDNSAddressSeed = std::thread(&TraceThread<std::function<void()> >, "dnsseed", std::function<void()>(std::bind(&CConnman::ThreadDNSAddressSeed, this)));
@@ -2533,7 +2532,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     threadOpenAddedConnections = std::thread(&TraceThread<std::function<void()> >, "addcon", std::function<void()>(std::bind(&CConnman::ThreadOpenAddedConnections, this)));
 
     // Initiate outbound connections unless connect=0
-    if (!mapMultiArgs.count("-connect") || mapMultiArgs.at("-connect").size() != 1 || mapMultiArgs.at("-connect")[0] != "0")
+    if (!gArgs.IsArgSet("-connect") || gArgs.GetArgs("-connect").size() != 1 || gArgs.GetArgs("-connect")[0] != "0")
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
 
     // Initiate masternode connections
