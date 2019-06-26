@@ -53,7 +53,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
 
     if (about)
     {
-        setWindowTitle(tr("About %1").arg(tr(PACKAGE_NAME)));
+        setWindowTitle(tr("About %1").arg(PACKAGE_NAME));
 
         std::string licenseInfo = LicenseInfo();
         /// HTML-format the license message from the core
@@ -155,7 +155,7 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
 {
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
-        tr("%1 is shutting down...").arg(tr(PACKAGE_NAME)) + "<br /><br />" +
+        tr("%1 is shutting down...").arg(PACKAGE_NAME) + "<br /><br />" +
         tr("Do not shut down the computer until this window disappears.")));
     setLayout(layout);
 }
