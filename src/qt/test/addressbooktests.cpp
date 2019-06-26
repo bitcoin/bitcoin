@@ -56,6 +56,7 @@ void TestAddAddressesToSendBook()
     TestChain100Setup test;
     auto chain = interfaces::MakeChain();
     std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>(chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+    wallet->SetupLegacyScriptPubKeyMan();
     bool firstRun;
     wallet->LoadWallet(firstRun);
 

@@ -271,6 +271,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
     bool bnb_used;
 
     LOCK(testWallet.cs_wallet);
+    testWallet.SetupLegacyScriptPubKeyMan();
 
     // test multiple times to allow for differences in the shuffle order
     for (int i = 0; i < RUN_TESTS; i++)
@@ -550,6 +551,7 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
     bool bnb_used;
 
     LOCK(testWallet.cs_wallet);
+    testWallet.SetupLegacyScriptPubKeyMan();
 
     empty_wallet();
 
@@ -568,6 +570,8 @@ BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
 // Tests that with the ideal conditions, the coin selector will always be able to find a solution that can pay the target value
 BOOST_AUTO_TEST_CASE(SelectCoins_test)
 {
+    testWallet.SetupLegacyScriptPubKeyMan();
+
     // Random generator stuff
     std::default_random_engine generator;
     std::exponential_distribution<double> distribution (100);

@@ -138,9 +138,10 @@ void TestGUI()
     bool firstRun;
     wallet->LoadWallet(firstRun);
     {
-        LOCK(wallet->cs_wallet);
+        auto spk_man = wallet->GetOrCreateLegacyScriptPubKeyMan();
+        LOCK2(wallet->cs_wallet, spk_man->cs_KeyStore);
         wallet->SetAddressBook(GetDestinationForKey(test.coinbaseKey.GetPubKey(), wallet->m_default_address_type), "", "receive");
-        wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
+        spk_man->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
     {
         auto locked_chain = wallet->chain().lock();
