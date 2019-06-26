@@ -1213,17 +1213,8 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, CWalletTx::St
 
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
-                // extract addresses and check if they match with an unused keypool key
-                for (const auto& keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
-                    std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
-                    if (mi != m_pool_key_to_index.end()) {
-                        WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
-                        MarkReserveKeysAsUsed(mi->second);
-
-                        if (!TopUpKeyPool()) {
-                            WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
-                        }
-                    }
+                for (const auto& spk_man_pair : m_spk_managers) {
+                    spk_man_pair.second->MarkUnusedAddresses(txout.scriptPubKey);
                 }
             }
 
