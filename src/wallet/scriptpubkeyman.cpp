@@ -4,6 +4,7 @@
 
 #include <key_io.h>
 #include <outputtype.h>
+#include <script/descriptor.h>
 #include <wallet/scriptpubkeyman.h>
 
 bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
@@ -73,6 +74,19 @@ bool LegacyScriptPubKeyMan::TopUp(unsigned int size)
 
 void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
 {
+    LOCK(cs_KeyStore);
+    // extract addresses and check if they match with an unused keypool key
+    for (const auto& keyid : GetAffectedKeys(script, *this)) {
+        std::map<CKeyID, int64_t>::const_iterator mi = m_pool_key_to_index.find(keyid);
+        if (mi != m_pool_key_to_index.end()) {
+            WalletLogPrintf("%s: Detected a used keypool key, mark all keypool key up to this key as used\n", __func__);
+            MarkReserveKeysAsUsed(mi->second);
+
+            if (!TopUpKeyPool()) {
+                WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+            }
+        }
+    }
 }
 
 void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
@@ -884,4 +898,40 @@ void LegacyScriptPubKeyMan::LearnAllRelatedScripts(const CPubKey& key)
 {
     // OutputType::P2SH_SEGWIT always adds all necessary scripts for all types.
     LearnRelatedScripts(key, OutputType::P2SH_SEGWIT);
+}
+
+void LegacyScriptPubKeyMan::MarkReserveKeysAsUsed(int64_t keypool_id)
+{
+    AssertLockHeld(cs_KeyStore);
+    bool internal = setInternalKeyPool.count(keypool_id);
+    if (!internal) assert(setExternalKeyPool.count(keypool_id) || set_pre_split_keypool.count(keypool_id));
+    std::set<int64_t> *setKeyPool = internal ? &setInternalKeyPool : (set_pre_split_keypool.empty() ? &setExternalKeyPool : &set_pre_split_keypool);
+    auto it = setKeyPool->begin();
+
+    WalletBatch batch(*m_database);
+    while (it != std::end(*setKeyPool)) {
+        const int64_t& index = *(it);
+        if (index > keypool_id) break; // set*KeyPool is ordered
+
+        CKeyPool keypool;
+        if (batch.ReadPool(index, keypool)) { //TODO: This should be unnecessary
+            m_pool_key_to_index.erase(keypool.vchPubKey.GetID());
+        }
+        LearnAllRelatedScripts(keypool.vchPubKey);
+        batch.ErasePool(index);
+        WalletLogPrintf("keypool index %d removed\n", index);
+        it = setKeyPool->erase(it);
+    }
+}
+
+std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider)
+{
+    std::vector<CScript> dummy;
+    FlatSigningProvider out;
+    InferDescriptor(spk, provider)->Expand(0, DUMMY_SIGNING_PROVIDER, dummy, out);
+    std::vector<CKeyID> ret;
+    for (const auto& entry : out.pubkeys) {
+        ret.push_back(entry.first);
+    }
+    return ret;
 }

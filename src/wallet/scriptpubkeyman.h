@@ -40,6 +40,8 @@ public:
 //! Default for -keypool
 static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
 
+std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& provider);
+
 /** A key from a CWallet's keypool
  *
  * The wallet holds one (for pre HD-split wallets) or several keypools. These
@@ -428,6 +430,12 @@ public:
      * be anything).
      */
     void LearnAllRelatedScripts(const CPubKey& key);
+
+    /**
+     * Marks all keys in the keypool up to and including reserve_key as used.
+     */
+    void MarkReserveKeysAsUsed(int64_t keypool_id) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    const std::map<CKeyID, int64_t>& GetAllReserveKeys() const { return m_pool_key_to_index; }
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */
