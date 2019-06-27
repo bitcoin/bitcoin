@@ -63,7 +63,19 @@ bool LegacyScriptPubKeyMan::IsHDEnabled() const
 
 bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal)
 {
-    return false;
+    LOCK(cs_KeyStore);
+    // Check if the keypool has keys
+    bool keypool_has_keys;
+    if (internal && CanSupportFeature(FEATURE_HD_SPLIT)) {
+        keypool_has_keys = setInternalKeyPool.size() > 0;
+    } else {
+        keypool_has_keys = KeypoolCountExternalKeys() > 0;
+    }
+    // If the keypool doesn't have keys, check if we can generate them
+    if (!keypool_has_keys) {
+        return CanGenerateKeys();
+    }
+    return keypool_has_keys;
 }
 
 bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
@@ -73,7 +85,8 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
 
 bool LegacyScriptPubKeyMan::HavePrivateKeys() const
 {
-    return false;
+    LOCK(cs_KeyStore);
+    return !mapKeys.empty() || !mapCryptedKeys.empty();
 }
 
 void LegacyScriptPubKeyMan::RewriteDB()
@@ -573,4 +586,11 @@ void LegacyScriptPubKeyMan::LoadKeyPool(int64_t nIndex, const CKeyPool &keypool)
     CKeyID keyid = keypool.vchPubKey.GetID();
     if (mapKeyMetadata.count(keyid) == 0)
         mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
+}
+
+bool LegacyScriptPubKeyMan::CanGenerateKeys()
+{
+    // A wallet can generate keys if it has an HD seed (IsHDEnabled) or it is a non-HD wallet (pre FEATURE_HD)
+    LOCK(cs_KeyStore);
+    return IsHDEnabled() || !CanSupportFeature(FEATURE_HD);
 }

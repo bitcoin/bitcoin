@@ -368,6 +368,9 @@ public:
 
     //! Load a keypool entry
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool);
+
+    /* Returns true if the wallet can generate new keys */
+    bool CanGenerateKeys();
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */
