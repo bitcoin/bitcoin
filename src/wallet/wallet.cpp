@@ -1741,92 +1741,46 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
 
 bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
 {
-    WalletBatch batch(*database);
-    for (const auto& entry : scripts) {
-        CScriptID id(entry);
-        if (HaveCScript(id)) {
-            WalletLogPrintf("Already have script %s, skipping\n", HexStr(entry));
-            continue;
-        }
-        if (!AddCScriptWithDB(batch, entry)) {
-            return false;
-        }
-
-        if (timestamp > 0) {
-            m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
-        }
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
     }
-    if (timestamp > 0) {
-        UpdateTimeFirstKey(timestamp);
-    }
-
-    return true;
+    LOCK(spk_man->cs_KeyStore);
+    return spk_man->ImportScripts(scripts, timestamp);
 }
 
 bool CWallet::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
 {
-    WalletBatch batch(*database);
-    for (const auto& entry : privkey_map) {
-        const CKey& key = entry.second;
-        CPubKey pubkey = key.GetPubKey();
-        const CKeyID& id = entry.first;
-        assert(key.VerifyPubKey(pubkey));
-        // Skip if we already have the key
-        if (HaveKey(id)) {
-            WalletLogPrintf("Already have key with pubkey %s, skipping\n", HexStr(pubkey));
-            continue;
-        }
-        mapKeyMetadata[id].nCreateTime = timestamp;
-        // If the private key is not present in the wallet, insert it.
-        if (!AddKeyPubKeyWithDB(batch, key, pubkey)) {
-            return false;
-        }
-        UpdateTimeFirstKey(timestamp);
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
     }
-    return true;
+    LOCK(spk_man->cs_KeyStore);
+    return spk_man->ImportPrivKeys(privkey_map, timestamp);
 }
 
 bool CWallet::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
 {
-    WalletBatch batch(*database);
-    for (const auto& entry : key_origins) {
-        AddKeyOriginWithDB(batch, entry.second.first, entry.second.second);
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
     }
-    for (const CKeyID& id : ordered_pubkeys) {
-        auto entry = pubkey_map.find(id);
-        if (entry == pubkey_map.end()) {
-            continue;
-        }
-        const CPubKey& pubkey = entry->second;
-        CPubKey temp;
-        if (GetPubKey(id, temp)) {
-            // Already have pubkey, skipping
-            WalletLogPrintf("Already have pubkey %s, skipping\n", HexStr(temp));
-            continue;
-        }
-        if (!AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
-            return false;
-        }
-        mapKeyMetadata[id].nCreateTime = timestamp;
-
-        // Add to keypool only works with pubkeys
-        if (add_keypool) {
-            AddKeypoolPubkeyWithDB(pubkey, internal, batch);
-            NotifyCanGetAddressesChanged();
-        }
-    }
-    return true;
+    LOCK(spk_man->cs_KeyStore);
+    return spk_man->ImportPubKeys(ordered_pubkeys, pubkey_map, key_origins, add_keypool, internal, timestamp);
 }
 
 bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScript>& script_pub_keys, const bool have_solving_data, const bool apply_label, const int64_t timestamp)
 {
+    auto spk_man = GetLegacyScriptPubKeyMan();
+    if (!spk_man) {
+        return false;
+    }
+    LOCK(spk_man->cs_KeyStore);
+    if (!spk_man->ImportScriptPubKeys(script_pub_keys, have_solving_data, timestamp)) {
+        return false;
+    }
     WalletBatch batch(*database);
     for (const CScript& script : script_pub_keys) {
-        if (!have_solving_data || !IsMine(script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
-            if (!AddWatchOnlyWithDB(batch, script, timestamp)) {
-                return false;
-            }
-        }
         CTxDestination dest;
         ExtractDestination(script, dest);
         if (apply_label && IsValidDestination(dest)) {
