@@ -20,18 +20,16 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
-#include <util/threadnames.h>
 #include <tinyformat.h>
 #include <util/memory.h>
+#include <util/threadnames.h>
 #include <util/time.h>
 
-#include <atomic>
 #include <exception>
 #include <map>
 #include <set>
 #include <stdint.h>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
