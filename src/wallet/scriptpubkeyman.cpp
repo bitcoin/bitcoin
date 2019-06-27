@@ -26,7 +26,7 @@ bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestinat
 
 isminetype LegacyScriptPubKeyMan::IsMine(const CScript& script) const
 {
-    return ISMINE_NO;
+    return ::IsMine(*this, script);
 }
 
 bool LegacyScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys)
