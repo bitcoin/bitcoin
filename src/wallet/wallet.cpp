@@ -1627,7 +1627,11 @@ void CWallet::SetHDChain(const CHDChain& chain, bool memonly)
 
 bool CWallet::IsHDEnabled() const
 {
-    return !hdChain.seed_id.IsNull();
+    bool result = true;
+    for (const auto& spk_man_pair : m_spk_managers) {
+        result &= spk_man_pair.second->IsHDEnabled();
+    }
+    return result;
 }
 
 bool CWallet::CanGenerateKeys()
