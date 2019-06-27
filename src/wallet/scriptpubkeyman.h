@@ -274,6 +274,12 @@ private:
 
     void AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch);
 
+    //! Adds a script to the store and saves it to disk
+    bool AddCScriptWithDB(WalletBatch& batch, const CScript& script);
+
+    /** Add a KeyOriginInfo to the wallet */
+    bool AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info);
+
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
@@ -399,12 +405,18 @@ public:
     bool HaveKey(const CKeyID &address) const override;
     bool GetKey(const CKeyID &address, CKey& keyOut) const override;
     bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
+    bool AddCScript(const CScript& redeemScript) override;
 
     //! Load a keypool entry
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool);
     bool TopUpKeyPool(unsigned int kpSize = 0);
     bool NewKeyPool();
     void MarkPreSplitKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+
+    bool ImportScripts(const std::set<CScript> scripts, int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    bool ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys();

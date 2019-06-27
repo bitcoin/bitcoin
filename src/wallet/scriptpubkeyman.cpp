@@ -6,6 +6,7 @@
 #include <outputtype.h>
 #include <script/descriptor.h>
 #include <util/bip32.h>
+#include <util/strencodings.h>
 #include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
 
@@ -1086,4 +1087,123 @@ void LegacyScriptPubKeyMan::MarkPreSplitKeys()
         set_pre_split_keypool.insert(index);
         it = setExternalKeyPool.erase(it);
     }
+}
+
+bool LegacyScriptPubKeyMan::AddCScript(const CScript& redeemScript)
+{
+    WalletBatch batch(*m_database);
+    return AddCScriptWithDB(batch, redeemScript);
+}
+
+bool LegacyScriptPubKeyMan::AddCScriptWithDB(WalletBatch& batch, const CScript& redeemScript)
+{
+    if (!FillableSigningProvider::AddCScript(redeemScript))
+        return false;
+    if (batch.WriteCScript(Hash160(redeemScript), redeemScript)) {
+        UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
+        return true;
+    }
+    return false;
+}
+
+bool LegacyScriptPubKeyMan::AddKeyOriginWithDB(WalletBatch& batch, const CPubKey& pubkey, const KeyOriginInfo& info)
+{
+    LOCK(cs_KeyStore);
+    std::copy(info.fingerprint, info.fingerprint + 4, mapKeyMetadata[pubkey.GetID()].key_origin.fingerprint);
+    mapKeyMetadata[pubkey.GetID()].key_origin.path = info.path;
+    mapKeyMetadata[pubkey.GetID()].has_key_origin = true;
+    mapKeyMetadata[pubkey.GetID()].hdKeypath = WriteHDKeypath(info.path);
+    return batch.WriteKeyMetadata(mapKeyMetadata[pubkey.GetID()], pubkey, true);
+}
+
+bool LegacyScriptPubKeyMan::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
+{
+    WalletBatch batch(*m_database);
+    for (const auto& entry : scripts) {
+        CScriptID id(entry);
+        if (HaveCScript(id)) {
+            WalletLogPrintf("Already have script %s, skipping\n", HexStr(entry));
+            continue;
+        }
+        if (!AddCScriptWithDB(batch, entry)) {
+            return false;
+        }
+
+        if (timestamp > 0) {
+            m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
+        }
+    }
+    if (timestamp > 0) {
+        UpdateTimeFirstKey(timestamp);
+    }
+
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::ImportPrivKeys(const std::map<CKeyID, CKey>& privkey_map, const int64_t timestamp)
+{
+    WalletBatch batch(*m_database);
+    for (const auto& entry : privkey_map) {
+        const CKey& key = entry.second;
+        CPubKey pubkey = key.GetPubKey();
+        const CKeyID& id = entry.first;
+        assert(key.VerifyPubKey(pubkey));
+        // Skip if we already have the key
+        if (HaveKey(id)) {
+            WalletLogPrintf("Already have key with pubkey %s, skipping\n", HexStr(pubkey));
+            continue;
+        }
+        mapKeyMetadata[id].nCreateTime = timestamp;
+        // If the private key is not present in the wallet, insert it.
+        if (!AddKeyPubKeyWithDB(batch, key, pubkey)) {
+            return false;
+        }
+        UpdateTimeFirstKey(timestamp);
+    }
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::ImportPubKeys(const std::vector<CKeyID>& ordered_pubkeys, const std::map<CKeyID, CPubKey>& pubkey_map, const std::map<CKeyID, std::pair<CPubKey, KeyOriginInfo>>& key_origins, const bool add_keypool, const bool internal, const int64_t timestamp)
+{
+    WalletBatch batch(*m_database);
+    for (const auto& entry : key_origins) {
+        AddKeyOriginWithDB(batch, entry.second.first, entry.second.second);
+    }
+    for (const CKeyID& id : ordered_pubkeys) {
+        auto entry = pubkey_map.find(id);
+        if (entry == pubkey_map.end()) {
+            continue;
+        }
+        const CPubKey& pubkey = entry->second;
+        CPubKey temp;
+        if (GetPubKey(id, temp)) {
+            // Already have pubkey, skipping
+            WalletLogPrintf("Already have pubkey %s, skipping\n", HexStr(temp));
+            continue;
+        }
+        if (!AddWatchOnlyWithDB(batch, GetScriptForRawPubKey(pubkey), timestamp)) {
+            return false;
+        }
+        mapKeyMetadata[id].nCreateTime = timestamp;
+
+        // Add to keypool only works with pubkeys
+        if (add_keypool) {
+            AddKeypoolPubkeyWithDB(pubkey, internal, batch);
+            NotifyCanGetAddressesChanged();
+        }
+    }
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::ImportScriptPubKeys(const std::set<CScript>& script_pub_keys, const bool have_solving_data, const int64_t timestamp)
+{
+    WalletBatch batch(*m_database);
+    for (const CScript& script : script_pub_keys) {
+        if (!have_solving_data || !IsMine(script)) { // Always call AddWatchOnly for non-solvable watch-only, so that watch timestamp gets updated
+            if (!AddWatchOnlyWithDB(batch, script, timestamp)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
