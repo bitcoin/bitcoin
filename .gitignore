@@ -83,6 +83,7 @@ libconftest.dylib*
 Makefile
 dash-qt
 Dash-Qt.app
+!/depends/Makefile
 
 # Unit-tests
 Makefile.test
