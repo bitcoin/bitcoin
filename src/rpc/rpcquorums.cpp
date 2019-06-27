@@ -76,6 +76,41 @@ void quorum_info_help()
     );
 }
 
+UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, bool includeSkShare)
+{
+    UniValue ret(UniValue::VOBJ);
+
+    ret.push_back(Pair("height", quorum->height));
+    ret.push_back(Pair("type", quorum->params.name));
+    ret.push_back(Pair("quorumHash", quorum->qc.quorumHash.ToString()));
+    ret.push_back(Pair("minedBlock", quorum->minedBlockHash.ToString()));
+
+    if (includeMembers) {
+        UniValue membersArr(UniValue::VARR);
+        for (size_t i = 0; i < quorum->members.size(); i++) {
+            auto& dmn = quorum->members[i];
+            UniValue mo(UniValue::VOBJ);
+            mo.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
+            mo.push_back(Pair("valid", quorum->qc.validMembers[i]));
+            if (quorum->qc.validMembers[i]) {
+                CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
+                if (pubKey.IsValid()) {
+                    mo.push_back(Pair("pubKeyShare", pubKey.ToString()));
+                }
+            }
+            membersArr.push_back(mo);
+        }
+
+        ret.push_back(Pair("members", membersArr));
+    }
+    ret.push_back(Pair("quorumPublicKey", quorum->qc.quorumPublicKey.ToString()));
+    CBLSSecretKey skShare = quorum->GetSkShare();
+    if (includeSkShare && skShare.IsValid()) {
+        ret.push_back(Pair("secretKeyShare", skShare.ToString()));
+    }
+    return ret;
+}
+
 UniValue quorum_info(const JSONRPCRequest& request)
 {
     if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
@@ -101,35 +136,7 @@ UniValue quorum_info(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
     }
 
-    UniValue ret(UniValue::VOBJ);
-
-    ret.push_back(Pair("height", quorum->height));
-    ret.push_back(Pair("quorumHash", quorum->qc.quorumHash.ToString()));
-    ret.push_back(Pair("minedBlock", quorum->minedBlockHash.ToString()));
-
-    UniValue membersArr(UniValue::VARR);
-    for (size_t i = 0; i < quorum->members.size(); i++) {
-        auto& dmn = quorum->members[i];
-        UniValue mo(UniValue::VOBJ);
-        mo.push_back(Pair("proTxHash", dmn->proTxHash.ToString()));
-        mo.push_back(Pair("valid", quorum->qc.validMembers[i]));
-        if (quorum->qc.validMembers[i]) {
-            CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
-            if (pubKey.IsValid()) {
-                mo.push_back(Pair("pubKeyShare", pubKey.ToString()));
-            }
-        }
-        membersArr.push_back(mo);
-    }
-
-    ret.push_back(Pair("members", membersArr));
-    ret.push_back(Pair("quorumPublicKey", quorum->qc.quorumPublicKey.ToString()));
-    CBLSSecretKey skShare = quorum->GetSkShare();
-    if (includeSkShare && skShare.IsValid()) {
-        ret.push_back(Pair("secretKeyShare", skShare.ToString()));
-    }
-
-    return ret;
+    return BuildQuorumInfo(quorum, true, includeSkShare);
 }
 
 void quorum_dkgstatus_help()
@@ -180,6 +187,59 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
     ret.push_back(Pair("minableCommitments", minableCommitments));
 
     return ret;
+}
+
+void quorum_memberof_help()
+{
+    throw std::runtime_error(
+            "quorum memberof \"proTxHash\"\n"
+            "Checks which quorums the given masternode is a member of.\n"
+            "\nArguments:\n"
+            "1. \"proTxHash\"                (string, required) ProTxHash of the masternode.\n"
+    );
+}
+
+UniValue quorum_memberof(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 2)) {
+        quorum_memberof_help();
+    }
+
+    uint256 protxHash = ParseHashV(request.params[1], "proTxHash");
+
+    const CBlockIndex* pindexTip;
+    {
+        LOCK(cs_main);
+        pindexTip = chainActive.Tip();
+    }
+
+    auto mnList = deterministicMNManager->GetListForBlock(pindexTip->GetBlockHash());
+    auto dmn = mnList.GetMN(protxHash);
+    if (!dmn) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");
+    }
+
+    std::set<std::pair<Consensus::LLMQType, uint256>> quorumHashes;
+    for (const auto& p : Params().GetConsensus().llmqs) {
+        auto& params = p.second;
+        auto quorums = llmq::quorumManager->ScanQuorums(params.type, params.signingActiveQuorumCount);
+        for (auto& quorum : quorums) {
+            for (auto& m : quorum->members) {
+                if (m->proTxHash == dmn->proTxHash) {
+                    quorumHashes.emplace(params.type, quorum->qc.quorumHash);
+                }
+            }
+        }
+    }
+
+    UniValue result(UniValue::VARR);
+    for (auto& p : quorumHashes) {
+        auto quorum = llmq::quorumManager->GetQuorum(p.first, p.second);
+        assert(quorum);
+        result.push_back(BuildQuorumInfo(quorum, false, false));
+    }
+
+    return result;
 }
 
 void quorum_sign_help()
@@ -318,6 +378,7 @@ UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
             "  info              - Return information about a quorum\n"
             "  dkgsimerror       - Simulates DKG errors and malicious behavior.\n"
             "  dkgstatus         - Return the status of the current DKG process\n"
+            "  memberof          - Checks which quorums the given masternode is a member of\n"
             "  sign              - Threshold-sign a message\n"
             "  hasrecsig         - Test if a valid recovered signature is present\n"
             "  getrecsig         - Get a recovered signature\n"
@@ -342,6 +403,8 @@ UniValue quorum(const JSONRPCRequest& request)
         return quorum_info(request);
     } else if (command == "dkgstatus") {
         return quorum_dkgstatus(request);
+    } else if (command == "memberof") {
+        return quorum_memberof(request);
     } else if (command == "sign" || command == "hasrecsig" || command == "getrecsig" || command == "isconflicting") {
         return quorum_sigs_cmd(request);
     } else if (command == "dkgsimerror") {
