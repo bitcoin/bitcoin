@@ -332,6 +332,16 @@ bool LegacyScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sig
 
 const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(uint160 id) const
 {
+    LOCK(cs_KeyStore);
+    auto it = mapKeyMetadata.find(CKeyID(id));
+    if (it != mapKeyMetadata.end()) {
+        return &it->second;
+    } else {
+        auto it2 = m_script_metadata.find(CScriptID(id));
+        if (it2 != m_script_metadata.end()) {
+            return &it2->second;
+        }
+    }
     return nullptr;
 }
 
