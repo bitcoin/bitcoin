@@ -538,11 +538,16 @@ UniValue importpubkey(const JSONRPCRequest& request)
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);
 
+        std::set<CScript> script_pub_keys;
         for (const auto& dest : GetAllDestinationsForKey(pubKey)) {
-            ImportAddress(pwallet, dest, strLabel);
+            script_pub_keys.insert(GetScriptForDestination(dest));
         }
-        ImportScript(pwallet, GetScriptForRawPubKey(pubKey), strLabel, false);
-        pwallet->LearnAllRelatedScripts(pubKey);
+
+        pwallet->MarkDirty();
+
+        pwallet->ImportScriptPubKeys(strLabel, script_pub_keys, true /* have_solving_data */, true /* apply_label */, 1 /* timestamp */);
+
+        pwallet->ImportPubKeys({pubKey.GetID()}, {{pubKey.GetID(), pubKey}} , {} /* key_origins */, false /* add_keypool */, false /* internal */, 1 /* timestamp */);
     }
     if (fRescan)
     {
