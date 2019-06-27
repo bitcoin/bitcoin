@@ -1372,6 +1372,17 @@ public:
     /** Implement lookup of key origin information through wallet key metadata. */
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
 
+    //! De-duplicates and returns all ScriptPubKeyMans in m_internal_spk_managers and m_external_spk_managers
+    std::set<ScriptPubKeyMan*> GetActiveScriptPubKeyMans() const;
+
+    //! Get the ScriptPubKeyMan for the given OutputType and internal/external chain.
+    ScriptPubKeyMan* GetScriptPubKeyMan(const OutputType& type, bool internal) const;
+
+    //! Get the ScriptPubKeyMan for a script
+    ScriptPubKeyMan* GetScriptPubKeyMan(const CScript& script) const;
+    //! Get the ScriptPubKeyMan by id
+    ScriptPubKeyMan* GetScriptPubKeyMan(const uint256& id) const;
+
     //! Get the SigningProvider for a script
     std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const;
     std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
