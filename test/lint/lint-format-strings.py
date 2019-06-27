@@ -19,6 +19,8 @@ FALSE_POSITIVES = [
     ("src/util/system.cpp", "strprintf(_(COPYRIGHT_HOLDERS).translated, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
     ("src/wallet/wallet.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
+    ("src/wallet/scriptpubkeyman.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),
+    ("src/wallet/scriptpubkeyman.h", "LogPrintf((\"%s \" + fmt).c_str(), GetDisplayName(), parameters...)"),
     ("src/logging.h", "LogPrintf(const char* fmt, const Args&... args)"),
 ]
 
