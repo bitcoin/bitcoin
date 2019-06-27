@@ -1372,6 +1372,10 @@ public:
     /** Implement lookup of key origin information through wallet key metadata. */
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override;
 
+    //! Get the SigningProvider for a script
+    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script) const;
+    std::unique_ptr<SigningProvider> GetSigningProvider(const CScript& script, SignatureData& sigdata) const;
+
     //! Get the LegacyScriptPubKeyMan which is used for all types, internal, and external.
     LegacyScriptPubKeyMan* GetLegacyScriptPubKeyMan() const;
     LegacyScriptPubKeyMan* GetOrCreateLegacyScriptPubKeyMan();

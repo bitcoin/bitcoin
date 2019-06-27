@@ -4933,6 +4933,22 @@ bool CWallet::AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<uns
     return true;
 }
 
+std::unique_ptr<SigningProvider> CWallet::GetSigningProvider(const CScript& script) const
+{
+    SignatureData sigdata;
+    return GetSigningProvider(script, sigdata);
+}
+
+std::unique_ptr<SigningProvider> CWallet::GetSigningProvider(const CScript& script, SignatureData& sigdata) const
+{
+    for (const auto& spk_man_pair : m_spk_managers) {
+        if (spk_man_pair.second->CanProvide(script, sigdata)) {
+            return spk_man_pair.second->GetSigningProvider(script);
+        }
+    }
+    return nullptr;
+}
+
 LegacyScriptPubKeyMan* CWallet::GetLegacyScriptPubKeyMan() const
 {
     // Legacy wallets only have one ScriptPubKeyMan which is a LegacyScriptPubKeyMan.
