@@ -40,7 +40,7 @@ void LegacyScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, cons
 
 bool LegacyScriptPubKeyMan::TopUp(unsigned int size)
 {
-    return false;
+    return TopUpKeyPool(size);
 }
 
 void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
@@ -644,4 +644,104 @@ void LegacyScriptPubKeyMan::SetHDSeed(const CPubKey& seed)
     NotifyCanGetAddressesChanged();
     WalletBatch batch(*m_database);
     UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
+}
+
+/**
+ * Mark old keypool keys as used,
+ * and generate all new keys
+ */
+bool LegacyScriptPubKeyMan::NewKeyPool()
+{
+    if (IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        return false;
+    }
+    {
+        LOCK(cs_KeyStore);
+        WalletBatch batch(*m_database);
+
+        for (const int64_t nIndex : setInternalKeyPool) {
+            batch.ErasePool(nIndex);
+        }
+        setInternalKeyPool.clear();
+
+        for (const int64_t nIndex : setExternalKeyPool) {
+            batch.ErasePool(nIndex);
+        }
+        setExternalKeyPool.clear();
+
+        for (const int64_t nIndex : set_pre_split_keypool) {
+            batch.ErasePool(nIndex);
+        }
+        set_pre_split_keypool.clear();
+
+        m_pool_key_to_index.clear();
+
+        if (!TopUpKeyPool()) {
+            return false;
+        }
+        WalletLogPrintf("CWallet::NewKeyPool rewrote keypool\n");
+    }
+    return true;
+}
+
+bool LegacyScriptPubKeyMan::TopUpKeyPool(unsigned int kpSize)
+{
+    if (!CanGenerateKeys()) {
+        return false;
+    }
+    {
+        LOCK(cs_KeyStore);
+
+        if (IsLocked()) return false;
+
+        // Top up key pool
+        unsigned int nTargetSize;
+        if (kpSize > 0)
+            nTargetSize = kpSize;
+        else
+            nTargetSize = std::max(gArgs.GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t) 0);
+
+        // count amount of available keys (internal, external)
+        // make sure the keypool of external and internal keys fits the user selected target (-keypool)
+        int64_t missingExternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - (int64_t)setExternalKeyPool.size(), (int64_t) 0);
+        int64_t missingInternal = std::max(std::max((int64_t) nTargetSize, (int64_t) 1) - (int64_t)setInternalKeyPool.size(), (int64_t) 0);
+
+        if (!IsHDEnabled() || !CanSupportFeature(FEATURE_HD_SPLIT))
+        {
+            // don't create extra internal keys
+            missingInternal = 0;
+        }
+        bool internal = false;
+        WalletBatch batch(*m_database);
+        for (int64_t i = missingInternal + missingExternal; i--;)
+        {
+            if (i < missingInternal) {
+                internal = true;
+            }
+
+            CPubKey pubkey(GenerateNewKey(batch, internal));
+            AddKeypoolPubkeyWithDB(pubkey, internal, batch);
+        }
+        if (missingInternal + missingExternal > 0) {
+            WalletLogPrintf("keypool added %d keys (%d internal), size=%u (%u internal)\n", missingInternal + missingExternal, missingInternal, setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size(), setInternalKeyPool.size());
+        }
+    }
+    NotifyCanGetAddressesChanged();
+    return true;
+}
+
+void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch)
+{
+    LOCK(cs_KeyStore);
+    assert(m_max_keypool_index < std::numeric_limits<int64_t>::max()); // How in the hell did you use so many keys?
+    int64_t index = ++m_max_keypool_index;
+    if (!batch.WritePool(index, CKeyPool(pubkey, internal))) {
+        throw std::runtime_error(std::string(__func__) + ": writing imported pubkey failed");
+    }
+    if (internal) {
+        setInternalKeyPool.insert(index);
+    } else {
+        setExternalKeyPool.insert(index);
+    }
+    m_pool_key_to_index[pubkey.GetID()] = index;
 }

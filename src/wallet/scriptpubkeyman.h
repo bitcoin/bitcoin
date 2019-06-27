@@ -37,6 +37,9 @@ public:
     virtual bool IsLocked() const = 0;
 };
 
+//! Default for -keypool
+static const unsigned int DEFAULT_KEYPOOL_SIZE = 1000;
+
 /** A key from a CWallet's keypool
  *
  * The wallet holds one (for pre HD-split wallets) or several keypools. These
@@ -264,6 +267,8 @@ private:
     //! Adds a key to the store, and saves it to disk.
     bool AddKeyPubKeyWithDB(WalletBatch &batch,const CKey& key, const CPubKey &pubkey) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
+    void AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const bool internal, WalletBatch& batch);
+
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
@@ -368,6 +373,8 @@ public:
 
     //! Load a keypool entry
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool);
+    bool TopUpKeyPool(unsigned int kpSize = 0);
+    bool NewKeyPool();
 
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys();
