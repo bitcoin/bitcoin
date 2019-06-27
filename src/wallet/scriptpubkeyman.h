@@ -371,6 +371,18 @@ public:
 
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys();
+
+    /* Generates a new HD seed (will not be activated) */
+    CPubKey GenerateNewSeed();
+
+    /* Derives a new HD seed (will not be activated) */
+    CPubKey DeriveNewSeed(const CKey& key);
+
+    /* Set the current HD seed (will reset the chain child index counters)
+       Sets the seed's version based on the current wallet version (so the
+       caller must ensure the current wallet version is correct before calling
+       this function). */
+    void SetHDSeed(const CPubKey& key);
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */

@@ -594,3 +594,54 @@ bool LegacyScriptPubKeyMan::CanGenerateKeys()
     LOCK(cs_KeyStore);
     return IsHDEnabled() || !CanSupportFeature(FEATURE_HD);
 }
+
+CPubKey LegacyScriptPubKeyMan::GenerateNewSeed()
+{
+    assert(!IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    CKey key;
+    key.MakeNewKey(true);
+    return DeriveNewSeed(key);
+}
+
+CPubKey LegacyScriptPubKeyMan::DeriveNewSeed(const CKey& key)
+{
+    int64_t nCreationTime = GetTime();
+    CKeyMetadata metadata(nCreationTime);
+
+    // calculate the seed
+    CPubKey seed = key.GetPubKey();
+    assert(key.VerifyPubKey(seed));
+
+    // set the hd keypath to "s" -> Seed, refers the seed to itself
+    metadata.hdKeypath     = "s";
+    metadata.has_key_origin = false;
+    metadata.hd_seed_id = seed.GetID();
+
+    {
+        LOCK(cs_KeyStore);
+
+        // mem store the metadata
+        mapKeyMetadata[seed.GetID()] = metadata;
+
+        // write the key&metadata to the database
+        if (!AddKeyPubKey(key, seed))
+            throw std::runtime_error(std::string(__func__) + ": AddKeyPubKey failed");
+    }
+
+    return seed;
+}
+
+void LegacyScriptPubKeyMan::SetHDSeed(const CPubKey& seed)
+{
+    LOCK(cs_KeyStore);
+    // store the keyid (hash160) together with
+    // the child index counter in the database
+    // as a hdchain object
+    CHDChain newHdChain;
+    newHdChain.nVersion = CanSupportFeature(FEATURE_HD_SPLIT) ? CHDChain::VERSION_HD_CHAIN_SPLIT : CHDChain::VERSION_HD_BASE;
+    newHdChain.seed_id = seed.GetID();
+    SetHDChain(newHdChain, false);
+    NotifyCanGetAddressesChanged();
+    WalletBatch batch(*m_database);
+    UnsetWalletFlagWithDB(batch, WALLET_FLAG_BLANK_WALLET);
+}
