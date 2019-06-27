@@ -130,6 +130,15 @@ public:
 
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
 {
+private:
+    WalletBatch *encrypted_batch GUARDED_BY(cs_KeyStore) = nullptr;
+
+    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+
+    CryptedKeyMap mapCryptedKeys GUARDED_BY(cs_KeyStore);
+
+    bool AddCryptedKeyInner(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
@@ -174,6 +183,14 @@ public:
     bool CanProvide(const CScript& script, SignatureData& sigdata) override;
 
     uint256 GetID() const override;
+
+    // Map from Key ID to key metadata.
+    std::map<CKeyID, CKeyMetadata> mapKeyMetadata GUARDED_BY(cs_KeyStore);
+
+    //! Adds an encrypted key to the store, and saves it to disk.
+    bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    //! Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
+    bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */
