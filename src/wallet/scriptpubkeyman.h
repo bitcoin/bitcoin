@@ -253,6 +253,14 @@ public:
     //! Remove a watch only script from the keystore
     bool RemoveWatchOnly(const CScript &dest);
     bool AddWatchOnly(const CScript& dest, int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+
+    //! Fetches a pubkey from mapWatchKeys if it exists there
+    bool GetWatchPubKey(const CKeyID &address, CPubKey &pubkey_out) const;
+
+    /* SigningProvider overrides */
+    bool HaveKey(const CKeyID &address) const override;
+    bool GetKey(const CKeyID &address, CKey& keyOut) const override;
+    bool GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const override;
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr */
