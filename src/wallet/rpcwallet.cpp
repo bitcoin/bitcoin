@@ -555,9 +555,15 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
 
+    CScript script_pub_key = GetScriptForDestination(*pkhash);
+    std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(script_pub_key);
+    if (!provider) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
+    }
+
     CKey key;
     CKeyID keyID(*pkhash);
-    if (!pwallet->GetKey(keyID, key)) {
+    if (!provider->GetKey(keyID, key)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
     }
 
@@ -2935,33 +2941,36 @@ static UniValue listunspent(const JSONRPCRequest& request)
                 entry.pushKV("label", i->second.name);
             }
 
-            if (scriptPubKey.IsPayToScriptHash()) {
-                const CScriptID& hash = CScriptID(boost::get<ScriptHash>(address));
-                CScript redeemScript;
-                if (pwallet->GetCScript(hash, redeemScript)) {
-                    entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
-                    // Now check if the redeemScript is actually a P2WSH script
-                    CTxDestination witness_destination;
-                    if (redeemScript.IsPayToWitnessScriptHash()) {
-                        bool extracted = ExtractDestination(redeemScript, witness_destination);
-                        assert(extracted);
-                        // Also return the witness script
-                        const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
-                        CScriptID id;
-                        CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
-                        CScript witnessScript;
-                        if (pwallet->GetCScript(id, witnessScript)) {
-                            entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
+            if (provider) {
+                if (scriptPubKey.IsPayToScriptHash()) {
+                    const CScriptID& hash = CScriptID(boost::get<ScriptHash>(address));
+                    CScript redeemScript;
+                    if (provider->GetCScript(hash, redeemScript)) {
+                        entry.pushKV("redeemScript", HexStr(redeemScript.begin(), redeemScript.end()));
+                        // Now check if the redeemScript is actually a P2WSH script
+                        CTxDestination witness_destination;
+                        if (redeemScript.IsPayToWitnessScriptHash()) {
+                            bool extracted = ExtractDestination(redeemScript, witness_destination);
+                            assert(extracted);
+                            // Also return the witness script
+                            const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(witness_destination);
+                            CScriptID id;
+                            CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                            CScript witnessScript;
+                            if (provider->GetCScript(id, witnessScript)) {
+                                entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                            }
                         }
                     }
-                }
-            } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
-                const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
-                CScriptID id;
-                CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
-                CScript witnessScript;
-                if (pwallet->GetCScript(id, witnessScript)) {
-                    entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
+                    const WitnessV0ScriptHash& whash = boost::get<WitnessV0ScriptHash>(address);
+                    CScriptID id;
+                    CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                    CScript witnessScript;
+                    if (provider->GetCScript(id, witnessScript)) {
+                        entry.pushKV("witnessScript", HexStr(witnessScript.begin(), witnessScript.end()));
+                    }
                 }
             }
         }
@@ -2972,8 +2981,11 @@ static UniValue listunspent(const JSONRPCRequest& request)
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         if (out.fSolvable) {
-            auto descriptor = InferDescriptor(scriptPubKey, *pwallet);
-            entry.pushKV("desc", descriptor->ToString());
+            std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
+            if (provider) {
+                auto descriptor = InferDescriptor(scriptPubKey, *provider);
+                entry.pushKV("desc", descriptor->ToString());
+            }
         }
         if (avoid_reuse) entry.pushKV("reused", reused);
         entry.pushKV("safe", out.fSafe);
@@ -3282,7 +3294,23 @@ UniValue signrawtransactionwithwallet(const JSONRPCRequest& request)
     // Parse the prevtxs array
     ParsePrevouts(request.params[1], nullptr, coins);
 
-    return SignTransaction(mtx, pwallet, coins, request.params[2]);
+    std::set<std::shared_ptr<SigningProvider>> providers;
+    for (const std::pair<COutPoint, Coin> coin_pair : coins) {
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(coin_pair.second.out.scriptPubKey);
+        if (provider) {
+            providers.insert(std::move(provider));
+        }
+    }
+    if (providers.size() == 0) {
+        // When there are no available providers, use DUMMY_SIGNING_PROVIDER so we can check if the tx is complete
+        providers.insert(std::make_shared<SigningProvider>());
+    }
+
+    UniValue result;
+    for (std::shared_ptr<SigningProvider> provider : providers) {
+        result = SignTransaction(mtx, provider.get(), coins, request.params[2]);
+    }
+     return result;
 }
 
 static UniValue bumpfee(const JSONRPCRequest& request)
@@ -3554,7 +3582,7 @@ UniValue rescanblockchain(const JSONRPCRequest& request)
 class DescribeWalletAddressVisitor : public boost::static_visitor<UniValue>
 {
 public:
-    CWallet * const pwallet;
+    const SigningProvider * const provider;
 
     void ProcessSubScript(const CScript& subscript, UniValue& obj) const
     {
@@ -3590,7 +3618,7 @@ public:
         }
     }
 
-    explicit DescribeWalletAddressVisitor(CWallet* _pwallet) : pwallet(_pwallet) {}
+    explicit DescribeWalletAddressVisitor(const SigningProvider* _provider) : provider(_provider) {}
 
     UniValue operator()(const CNoDestination& dest) const { return UniValue(UniValue::VOBJ); }
 
@@ -3599,7 +3627,7 @@ public:
         CKeyID keyID(pkhash);
         UniValue obj(UniValue::VOBJ);
         CPubKey vchPubKey;
-        if (pwallet && pwallet->GetPubKey(keyID, vchPubKey)) {
+        if (provider && provider->GetPubKey(keyID, vchPubKey)) {
             obj.pushKV("pubkey", HexStr(vchPubKey));
             obj.pushKV("iscompressed", vchPubKey.IsCompressed());
         }
@@ -3611,7 +3639,7 @@ public:
         CScriptID scriptID(scripthash);
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
-        if (pwallet && pwallet->GetCScript(scriptID, subscript)) {
+        if (provider && provider->GetCScript(scriptID, subscript)) {
             ProcessSubScript(subscript, obj);
         }
         return obj;
@@ -3621,7 +3649,7 @@ public:
     {
         UniValue obj(UniValue::VOBJ);
         CPubKey pubkey;
-        if (pwallet && pwallet->GetPubKey(CKeyID(id), pubkey)) {
+        if (provider && provider->GetPubKey(CKeyID(id), pubkey)) {
             obj.pushKV("pubkey", HexStr(pubkey));
         }
         return obj;
@@ -3634,7 +3662,7 @@ public:
         CRIPEMD160 hasher;
         uint160 hash;
         hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (pwallet && pwallet->GetCScript(CScriptID(hash), subscript)) {
+        if (provider && provider->GetCScript(CScriptID(hash), subscript)) {
             ProcessSubScript(subscript, obj);
         }
         return obj;
@@ -3647,8 +3675,13 @@ static UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& de
 {
     UniValue ret(UniValue::VOBJ);
     UniValue detail = DescribeAddress(dest);
+    CScript script = GetScriptForDestination(dest);
+    std::unique_ptr<SigningProvider> provider = nullptr;
+    if (pwallet) {
+        provider = pwallet->GetSigningProvider(script);
+    }
     ret.pushKVs(detail);
-    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(pwallet), dest));
+    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(provider.get()), dest));
     return ret;
 }
 
@@ -3737,13 +3770,14 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
+    std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(scriptPubKey);
 
     isminetype mine = pwallet->IsMine(dest);
     ret.pushKV("ismine", bool(mine & ISMINE_SPENDABLE));
-    bool solvable = IsSolvable(*pwallet, scriptPubKey);
+    bool solvable = provider ? IsSolvable(*provider, scriptPubKey) : false;
     ret.pushKV("solvable", solvable);
     if (solvable) {
-       ret.pushKV("desc", InferDescriptor(scriptPubKey, *pwallet)->ToString());
+       ret.pushKV("desc", InferDescriptor(scriptPubKey, *provider)->ToString());
     }
     ret.pushKV("iswatchonly", bool(mine & ISMINE_WATCH_ONLY));
     UniValue detail = DescribeWalletAddress(pwallet, dest);
@@ -3752,26 +3786,24 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
         ret.pushKV("label", pwallet->mapAddressBook[dest].name);
     }
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
-    const CKeyMetadata* meta = nullptr;
-    CKeyID key_id = GetKeyForDestination(*pwallet, dest);
-    if (!key_id.IsNull()) {
-        auto it = pwallet->mapKeyMetadata.find(key_id);
-        if (it != pwallet->mapKeyMetadata.end()) {
-            meta = &it->second;
+
+    ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan(scriptPubKey);
+    if (spk_man) {
+        CKeyID key_id = GetKeyForDestination(*provider, dest);
+        const CKeyMetadata* meta = nullptr;
+        if (!key_id.IsNull()) {
+            meta = spk_man->GetMetadata(key_id);
         }
-    }
-    if (!meta) {
-        auto it = pwallet->m_script_metadata.find(CScriptID(scriptPubKey));
-        if (it != pwallet->m_script_metadata.end()) {
-            meta = &it->second;
+        if (!meta) {
+            meta = spk_man->GetMetadata(CScriptID(scriptPubKey));
         }
-    }
-    if (meta) {
-        ret.pushKV("timestamp", meta->nCreateTime);
-        if (meta->has_key_origin) {
-            ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
-            ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
-            ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint, meta->key_origin.fingerprint + 4));
+        if (meta) {
+            ret.pushKV("timestamp", meta->nCreateTime);
+            if (meta->has_key_origin) {
+                ret.pushKV("hdkeypath", WriteHDKeypath(meta->key_origin.path));
+                ret.pushKV("hdseedid", meta->hd_seed_id.GetHex());
+                ret.pushKV("hdmasterfingerprint", HexStr(meta->key_origin.fingerprint, meta->key_origin.fingerprint + 4));
+            }
         }
     }
 
