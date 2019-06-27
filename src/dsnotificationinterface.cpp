@@ -56,16 +56,17 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (fInitialDownload)
         return;
 
+    CPrivateSend::UpdatedBlockTip(pindexNew);
+#ifdef ENABLE_WALLET
+    privateSendClient.UpdatedBlockTip(pindexNew);
+#endif // ENABLE_WALLET
+
     if (fLiteMode)
         return;
 
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
     llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
 
-    CPrivateSend::UpdatedBlockTip(pindexNew);
-#ifdef ENABLE_WALLET
-    privateSendClient.UpdatedBlockTip(pindexNew);
-#endif // ENABLE_WALLET
     instantsend.UpdatedBlockTip(pindexNew);
     governance.UpdatedBlockTip(pindexNew, connman);
     llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);

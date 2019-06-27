@@ -503,7 +503,7 @@ void CPrivateSend::CheckDSTXes(int nHeight)
 
 void CPrivateSend::UpdatedBlockTip(const CBlockIndex* pindex)
 {
-    if (pindex && !fLiteMode && masternodeSync.IsBlockchainSynced()) {
+    if (pindex && masternodeSync.IsBlockchainSynced()) {
         CheckDSTXes(pindex->nHeight);
     }
 }

@@ -92,8 +92,6 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 
 void CMasternodeUtils::DoMaintenance(CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Dash specific functionality
-
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested())
         return;
 

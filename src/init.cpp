@@ -242,9 +242,9 @@ void PrepareShutdown()
     bool fRPCInWarmup = RPCIsInWarmup(&statusmessage);
 
 #ifdef ENABLE_WALLET
-    if (!fLiteMode && !fRPCInWarmup) {
+    if (privateSendClient.fEnablePrivateSend && !fRPCInWarmup) {
         // Stop PrivateSend, release keys
-        privateSendClient.fEnablePrivateSend = false;
+        privateSendClient.fPrivateSendRunning = false;
         privateSendClient.ResetPool();
     }
     if (pwalletMain)
@@ -600,7 +600,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
 #ifdef ENABLE_WALLET
     strUsage += HelpMessageGroup(_("PrivateSend options:"));
-    strUsage += HelpMessageOpt("-enableprivatesend", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-enableprivatesend", strprintf(_("Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-privatesendautostart", strprintf(_("Start PrivateSend automatically (0-1, default: %u)"), DEFAULT_PRIVATESEND_AUTOSTART));
     strUsage += HelpMessageOpt("-privatesendmultisession", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
     strUsage += HelpMessageOpt("-privatesendsessions=<n>", strprintf(_("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_SESSIONS, MAX_PRIVATESEND_SESSIONS, DEFAULT_PRIVATESEND_SESSIONS));
     strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
@@ -970,6 +971,8 @@ void InitParameterInteraction()
     if (nLiqProvTmp > 0) {
         gArgs.ForceSetArg("-enableprivatesend", "1");
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -enableprivatesend=1\n", __func__, nLiqProvTmp);
+        gArgs.ForceSetArg("-privatesendautostart", "1");
+        LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendautostart=1\n", __func__, nLiqProvTmp);
         gArgs.ForceSetArg("-privatesendsessions", itostr(MIN_PRIVATESEND_SESSIONS));
         LogPrintf("%s: parameter interaction: -liquidityprovider=%d -> setting -privatesendsessions=%d\n", __func__, nLiqProvTmp, itostr(std::numeric_limits<int>::max()));
         gArgs.ForceSetArg("-privatesendrounds", itostr(std::numeric_limits<int>::max()));
@@ -1740,7 +1743,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("fLiteMode %d\n", fLiteMode);
 
     if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, all Dash-specific functionality is disabled."));
+        InitWarning(_("You are starting in lite mode, most Dash-specific functionality is disabled."));
     }
 
     if((!fLiteMode && fTxIndex == false)
@@ -1996,17 +1999,26 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         nMaxRounds = std::numeric_limits<int>::max();
     }
 
-    privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", false);
+    if (pwalletMain == nullptr) {
+        privateSendClient.fEnablePrivateSend = privateSendClient.fPrivateSendRunning = false;
+    } else {
+        privateSendClient.fEnablePrivateSend = gArgs.GetBoolArg("-enableprivatesend", !fLiteMode);
+        privateSendClient.fPrivateSendRunning = pwalletMain->IsLocked() ? false : gArgs.GetBoolArg("-privatesendautostart", DEFAULT_PRIVATESEND_AUTOSTART);
+    }
     privateSendClient.fPrivateSendMultiSession = gArgs.GetBoolArg("-privatesendmultisession", DEFAULT_PRIVATESEND_MULTISESSION);
     privateSendClient.nPrivateSendSessions = std::min(std::max((int)gArgs.GetArg("-privatesendsessions", DEFAULT_PRIVATESEND_SESSIONS), MIN_PRIVATESEND_SESSIONS), MAX_PRIVATESEND_SESSIONS);
     privateSendClient.nPrivateSendRounds = std::min(std::max((int)gArgs.GetArg("-privatesendrounds", DEFAULT_PRIVATESEND_ROUNDS), MIN_PRIVATESEND_ROUNDS), nMaxRounds);
     privateSendClient.nPrivateSendAmount = std::min(std::max((int)gArgs.GetArg("-privatesendamount", DEFAULT_PRIVATESEND_AMOUNT), MIN_PRIVATESEND_AMOUNT), MAX_PRIVATESEND_AMOUNT);
     privateSendClient.nPrivateSendDenoms = std::min(std::max((int)gArgs.GetArg("-privatesenddenoms", DEFAULT_PRIVATESEND_DENOMS), MIN_PRIVATESEND_DENOMS), MAX_PRIVATESEND_DENOMS);
 
-    LogPrintf("PrivateSend liquidityprovider: %d\n", privateSendClient.nLiquidityProvider);
-    LogPrintf("PrivateSend rounds: %d\n", privateSendClient.nPrivateSendRounds);
-    LogPrintf("PrivateSend amount: %d\n", privateSendClient.nPrivateSendAmount);
-    LogPrintf("PrivateSend denoms: %d\n", privateSendClient.nPrivateSendDenoms);
+    if (privateSendClient.fEnablePrivateSend) {
+        LogPrintf("PrivateSend: liquidityprovider=%d, autostart=%d, multisession=%d, "
+            "sessions=%d, rounds=%d, amount=%d, denoms=%d\n",
+            privateSendClient.nLiquidityProvider, privateSendClient.fPrivateSendRunning,
+            privateSendClient.fPrivateSendMultiSession, privateSendClient.nPrivateSendSessions,
+            privateSendClient.nPrivateSendRounds, privateSendClient.nPrivateSendAmount,
+            privateSendClient.nPrivateSendDenoms);
+    }
 #endif // ENABLE_WALLET
 
     CPrivateSend::InitStandardDenominations();
@@ -2062,17 +2074,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
         scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
-        scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
 
         scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5 * 1000);
 
         scheduler.scheduleEvery(boost::bind(&CInstantSend::DoMaintenance, boost::ref(instantsend)), 60 * 1000);
+    }
 
-        if (fMasternodeMode)
-            scheduler.scheduleEvery(boost::bind(&CPrivateSendServer::DoMaintenance, boost::ref(privateSendServer), boost::ref(*g_connman)), 1 * 1000);
+    scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);
+
+    if (fMasternodeMode) {
+        scheduler.scheduleEvery(boost::bind(&CPrivateSendServer::DoMaintenance, boost::ref(privateSendServer), boost::ref(*g_connman)), 1 * 1000);
 #ifdef ENABLE_WALLET
-        else
-            scheduler.scheduleEvery(boost::bind(&CPrivateSendClientManager::DoMaintenance, boost::ref(privateSendClient), boost::ref(*g_connman)), 1 * 1000);
+    } else if (privateSendClient.fEnablePrivateSend) {
+        scheduler.scheduleEvery(boost::bind(&CPrivateSendClientManager::DoMaintenance, boost::ref(privateSendClient), boost::ref(*g_connman)), 1 * 1000);
 #endif // ENABLE_WALLET
     }
 

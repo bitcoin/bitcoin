@@ -2318,7 +2318,7 @@ CAmount CWallet::GetBalance() const
 
 CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfirmed) const
 {
-    if(fLiteMode) return 0;
+    if(!privateSendClient.fEnablePrivateSend) return 0;
 
     std::vector<CompactTallyItem> vecTally;
     if(!SelectCoinsGroupedByAddresses(vecTally, fSkipDenominated, true, fSkipUnconfirmed)) return 0;
@@ -2340,7 +2340,7 @@ CAmount CWallet::GetAnonymizableBalance(bool fSkipDenominated, bool fSkipUnconfi
 
 CAmount CWallet::GetAnonymizedBalance() const
 {
-    if(fLiteMode) return 0;
+    if(!privateSendClient.fEnablePrivateSend) return 0;
 
     CAmount nTotal = 0;
 
@@ -2364,7 +2364,7 @@ CAmount CWallet::GetAnonymizedBalance() const
 // that's ok as long as we use it for informational purposes only
 float CWallet::GetAverageAnonymizedRounds() const
 {
-    if(fLiteMode) return 0;
+    if(!privateSendClient.fEnablePrivateSend) return 0;
 
     int nTotal = 0;
     int nCount = 0;
@@ -2386,7 +2386,7 @@ float CWallet::GetAverageAnonymizedRounds() const
 // that's ok as long as we use it for informational purposes only
 CAmount CWallet::GetNormalizedAnonymizedBalance() const
 {
-    if(fLiteMode) return 0;
+    if(!privateSendClient.fEnablePrivateSend) return 0;
 
     CAmount nTotal = 0;
 
@@ -2408,7 +2408,7 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
 
 CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
 {
-    if(fLiteMode) return 0;
+    if(!privateSendClient.fEnablePrivateSend) return 0;
 
     CAmount nTotal = 0;
 
@@ -4067,7 +4067,7 @@ bool CWallet::NewKeyPool()
             walletdb.ErasePool(nIndex);
         }
         setExternalKeyPool.clear();
-        privateSendClient.fEnablePrivateSend = false;
+        privateSendClient.fPrivateSendRunning = false;
         nKeysLeftSinceAutoBackup = 0;
 
         if (!TopUpKeyPool())

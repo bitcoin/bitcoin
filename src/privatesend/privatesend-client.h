@@ -32,6 +32,7 @@ static const int DEFAULT_PRIVATESEND_AMOUNT = 1000;
 static const int DEFAULT_PRIVATESEND_DENOMS = 300;
 static const int DEFAULT_PRIVATESEND_LIQUIDITY = 0;
 
+static const bool DEFAULT_PRIVATESEND_AUTOSTART = false;
 static const bool DEFAULT_PRIVATESEND_MULTISESSION = false;
 
 // Warn user if mixing in gui or try to create backup if mixing in daemon mode
@@ -199,6 +200,7 @@ public:
     int nPrivateSendDenoms;
     int nLiquidityProvider;
     bool fEnablePrivateSend;
+    bool fPrivateSendRunning;
     bool fPrivateSendMultiSession;
 
     int nCachedNumBlocks;    //used for the overview screen
@@ -217,6 +219,7 @@ public:
         nPrivateSendDenoms(DEFAULT_PRIVATESEND_DENOMS),
         nLiquidityProvider(DEFAULT_PRIVATESEND_LIQUIDITY),
         fEnablePrivateSend(false),
+        fPrivateSendRunning(false),
         fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION),
         nCachedNumBlocks(std::numeric_limits<int>::max()),
         fCreateAutoBackups(true)

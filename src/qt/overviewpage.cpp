@@ -158,8 +158,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
 
-    // that's it for litemode
-    if(fLiteMode) return;
+    if(!privateSendClient.fEnablePrivateSend) return;
 
     // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
     if(fMasternodeMode || nWalletBackups <= 0){
@@ -168,7 +167,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
             ui->labelPrivateSendEnabled->setToolTip(tr("Automatic backups are disabled, no mixing available!"));
         }
     } else {
-        if(!privateSendClient.fEnablePrivateSend){
+        if(!privateSendClient.fPrivateSendRunning){
             ui->togglePrivateSend->setText(tr("Start Mixing"));
         } else {
             ui->togglePrivateSend->setText(tr("Stop Mixing"));
@@ -291,8 +290,8 @@ void OverviewPage::setWalletModel(WalletModel *model)
         // explicitly update PS frame and transaction list to reflect actual settings
         updateAdvancedPSUI(model->getOptionsModel()->getShowAdvancedPSUI());
 
-        // that's it for litemode
-        if(fLiteMode) return;
+        if(!privateSendClient.fEnablePrivateSend) return;
+
         connect(model->getOptionsModel(), SIGNAL(privateSendRoundsChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(privateSentAmountChanged()), this, SLOT(updatePrivateSendProgress()));
         connect(model->getOptionsModel(), SIGNAL(advancedPSUIChanged(bool)), this, SLOT(updateAdvancedPSUI(bool)));
@@ -448,10 +447,10 @@ void OverviewPage::updatePrivateSendProgress()
 
 void OverviewPage::updateAdvancedPSUI(bool fShowAdvancedPSUI) {
     this->fShowAdvancedPSUI = fShowAdvancedPSUI;
-    int nNumItems = (fLiteMode || !fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
+    int nNumItems = (!privateSendClient.fEnablePrivateSend || !fShowAdvancedPSUI) ? NUM_ITEMS : NUM_ITEMS_ADV;
     SetupTransactionList(nNumItems);
 
-    if (fLiteMode) return;
+    if (!privateSendClient.fEnablePrivateSend) return;
 
     ui->framePrivateSend->setVisible(true);
     ui->labelCompletitionText->setVisible(fShowAdvancedPSUI);
@@ -481,7 +480,7 @@ void OverviewPage::privateSendStatus()
     }
     ui->labelPrivateSendEnabled->setToolTip(strKeysLeftText);
 
-    if (!privateSendClient.fEnablePrivateSend) {
+    if (!privateSendClient.fPrivateSendRunning) {
         if (nBestHeight != privateSendClient.nCachedNumBlocks) {
             privateSendClient.nCachedNumBlocks = nBestHeight;
             updatePrivateSendProgress();
@@ -538,7 +537,7 @@ void OverviewPage::privateSendStatus()
         }
     }
 
-    QString strEnabled = privateSendClient.fEnablePrivateSend ? tr("Enabled") : tr("Disabled");
+    QString strEnabled = privateSendClient.fPrivateSendRunning ? tr("Enabled") : tr("Disabled");
     // Show how many keys left in advanced PS UI mode only
     if(fShowAdvancedPSUI) strEnabled += ", " + strKeysLeftText;
     ui->labelPrivateSendEnabled->setText(strEnabled);
@@ -605,7 +604,7 @@ void OverviewPage::togglePrivateSend(){
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
-    if(!privateSendClient.fEnablePrivateSend){
+    if(!privateSendClient.fPrivateSendRunning){
         const CAmount nMinAmount = CPrivateSend::GetSmallestDenomination() + CPrivateSend::GetMaxCollateralAmount();
         if(currentBalance < nMinAmount){
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, nMinAmount));
@@ -633,10 +632,10 @@ void OverviewPage::togglePrivateSend(){
 
     }
 
-    privateSendClient.fEnablePrivateSend = !privateSendClient.fEnablePrivateSend;
+    privateSendClient.fPrivateSendRunning = !privateSendClient.fPrivateSendRunning;
     privateSendClient.nCachedNumBlocks = std::numeric_limits<int>::max();
 
-    if(!privateSendClient.fEnablePrivateSend){
+    if(!privateSendClient.fPrivateSendRunning){
         ui->togglePrivateSend->setText(tr("Start Mixing"));
         privateSendClient.ResetPool();
     } else {
@@ -670,5 +669,5 @@ void OverviewPage::DisablePrivateSendCompletely() {
     if (nWalletBackups <= 0) {
         ui->labelPrivateSendEnabled->setText("<span style='color:red;'>(" + tr("Disabled") + ")</span>");
     }
-    privateSendClient.fEnablePrivateSend = false;
+    privateSendClient.fPrivateSendRunning = false;
 }
