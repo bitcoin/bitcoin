@@ -29,9 +29,6 @@ enum isminetype : unsigned int
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
 
-isminetype IsMine(const CWallet& wallet, const CScript& scriptPubKey);
-isminetype IsMine(const CWallet& wallet, const CTxDestination& dest);
-
 isminetype IsMine(const LegacyScriptPubKeyMan& wallet, const CScript& scriptPubKey);
 
 /**
