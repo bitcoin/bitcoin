@@ -27,6 +27,7 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     }
     // dummy chain interface
     std::shared_ptr<CWallet> wallet_instance(new CWallet(nullptr /* chain */, WalletLocation(name), WalletDatabase::Create(path)), WalletToolReleaseWallet);
+    LOCK(wallet_instance->cs_wallet);
     bool first_run = true;
     DBErrors load_wallet_ret = wallet_instance->LoadWallet(first_run);
     if (load_wallet_ret != DBErrors::LOAD_OK) {
@@ -37,8 +38,9 @@ static std::shared_ptr<CWallet> CreateWallet(const std::string& name, const fs::
     wallet_instance->SetMinVersion(FEATURE_HD_SPLIT);
 
     // generate a new HD seed
-    CPubKey seed = wallet_instance->GenerateNewSeed();
-    wallet_instance->SetHDSeed(seed);
+    auto spk_man = wallet_instance->GetOrCreateLegacyScriptPubKeyMan();
+    CPubKey seed = spk_man->GenerateNewSeed();
+    spk_man->SetHDSeed(seed);
 
     tfm::format(std::cout, "Topping up keypool...\n");
     wallet_instance->TopUpKeyPool();
@@ -94,7 +96,7 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
     tfm::format(std::cout, "Wallet info\n===========\n");
     tfm::format(std::cout, "Encrypted: %s\n", wallet_instance->IsCrypted() ? "yes" : "no");
-    tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->GetHDChain().seed_id.IsNull() ? "no" : "yes");
+    tfm::format(std::cout, "HD (hd seed available): %s\n", wallet_instance->IsHDEnabled() ? "yes" : "no");
     tfm::format(std::cout, "Keypool Size: %u\n", wallet_instance->GetKeyPoolSize());
     tfm::format(std::cout, "Transactions: %zu\n", wallet_instance->mapWallet.size());
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->mapAddressBook.size());
