@@ -2470,7 +2470,15 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("txcount",       (int)pwallet->mapWallet.size());
     obj.pushKV("keypoololdest", pwallet->GetOldestKeyPoolTime());
     obj.pushKV("keypoolsize", (int64_t)kpExternalSize);
-    CKeyID seed_id = pwallet->GetHDChain().seed_id;
+
+    LegacyScriptPubKeyMan* spk_man = pwallet->GetLegacyScriptPubKeyMan();
+    if (spk_man) {
+        CKeyID seed_id = spk_man->GetHDChain().seed_id;
+        if (!seed_id.IsNull()) {
+            obj.pushKV("hdseedid", seed_id.GetHex());
+        }
+    }
+
     if (pwallet->CanSupportFeature(FEATURE_HD_SPLIT)) {
         obj.pushKV("keypoolsize_hd_internal",   (int64_t)(pwallet->GetKeyPoolSize() - kpExternalSize));
     }
@@ -2478,9 +2486,6 @@ static UniValue getwalletinfo(const JSONRPCRequest& request)
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
     }
     obj.pushKV("paytxfee", ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
-    if (!seed_id.IsNull()) {
-        obj.pushKV("hdseedid", seed_id.GetHex());
-    }
     obj.pushKV("private_keys_enabled", !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
     obj.pushKV("avoid_reuse", pwallet->IsWalletFlagSet(WALLET_FLAG_AVOID_REUSE));
     if (pwallet->IsScanning()) {
