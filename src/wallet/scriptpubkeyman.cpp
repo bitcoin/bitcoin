@@ -96,7 +96,8 @@ unsigned int LegacyScriptPubKeyMan::GetKeyPoolSize() const
 
 int64_t LegacyScriptPubKeyMan::GetTimeFirstKey() const
 {
-    return 0;
+    LOCK(cs_KeyStore);
+    return nTimeFirstKey;
 }
 
 std::unique_ptr<SigningProvider> LegacyScriptPubKeyMan::GetSigningProvider(const CScript& script) const
@@ -117,6 +118,22 @@ const CKeyMetadata* LegacyScriptPubKeyMan::GetMetadata(uint160 id) const
 uint256 LegacyScriptPubKeyMan::GetID() const
 {
     return uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+}
+
+/**
+ * Update wallet first key creation time. This should be called whenever keys
+ * are added to the wallet, with the oldest key creation time.
+ */
+void LegacyScriptPubKeyMan::UpdateTimeFirstKey(int64_t nCreateTime)
+{
+    AssertLockHeld(cs_KeyStore);
+    if (nCreateTime <= 1) {
+        // Cannot determine birthday information, so set the wallet birthday to
+        // the beginning of time.
+        nTimeFirstKey = 1;
+    } else if (!nTimeFirstKey || nCreateTime < nTimeFirstKey) {
+        nTimeFirstKey = nCreateTime;
+    }
 }
 
 bool LegacyScriptPubKeyMan::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
