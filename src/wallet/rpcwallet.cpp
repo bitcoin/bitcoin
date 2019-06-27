@@ -1879,7 +1879,7 @@ static UniValue keypoolrefill(const JSONRPCRequest& request)
     pwallet->TopUpKeyPool(kpSize);
 
     if (pwallet->GetKeyPoolSize() < kpSize) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error refreshing keypool.");
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Error refreshing keypool. %d", pwallet->GetKeyPoolSize()));
     }
 
     return NullUniValue;
