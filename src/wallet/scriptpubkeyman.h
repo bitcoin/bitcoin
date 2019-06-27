@@ -324,7 +324,7 @@ public:
 
     void MarkUnusedAddresses(const CScript& script) override;
 
-    void UpgradeKeyMetadata() override EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+    void UpgradeKeyMetadata() override;
 
     bool IsHDEnabled() const override;
 
@@ -401,6 +401,7 @@ public:
     void LoadKeyPool(int64_t nIndex, const CKeyPool &keypool);
     bool TopUpKeyPool(unsigned int kpSize = 0);
     bool NewKeyPool();
+    void MarkPreSplitKeys() EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Returns true if the wallet can generate new keys */
     bool CanGenerateKeys();

@@ -5,6 +5,8 @@
 #include <key_io.h>
 #include <outputtype.h>
 #include <script/descriptor.h>
+#include <util/bip32.h>
+#include <util/translation.h>
 #include <wallet/scriptpubkeyman.h>
 
 bool LegacyScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
@@ -91,11 +93,51 @@ void LegacyScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
 
 void LegacyScriptPubKeyMan::UpgradeKeyMetadata()
 {
+    LOCK(cs_KeyStore);
+    if (IsLocked() || IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
+        return;
+    }
+
+    std::unique_ptr<WalletBatch> batch = MakeUnique<WalletBatch>(*m_database);
+    for (auto& meta_pair : mapKeyMetadata) {
+        CKeyMetadata& meta = meta_pair.second;
+        if (!meta.hd_seed_id.IsNull() && !meta.has_key_origin && meta.hdKeypath != "s") { // If the hdKeypath is "s", that's the seed and it doesn't have a key origin
+            CKey key;
+            GetKey(meta.hd_seed_id, key);
+            CExtKey masterKey;
+            masterKey.SetSeed(key.begin(), key.size());
+            // Add to map
+            CKeyID master_id = masterKey.key.GetPubKey().GetID();
+            std::copy(master_id.begin(), master_id.begin() + 4, meta.key_origin.fingerprint);
+            if (!ParseHDKeypath(meta.hdKeypath, meta.key_origin.path)) {
+                throw std::runtime_error("Invalid stored hdKeypath");
+            }
+            meta.has_key_origin = true;
+            if (meta.nVersion < CKeyMetadata::VERSION_WITH_KEY_ORIGIN) {
+                meta.nVersion = CKeyMetadata::VERSION_WITH_KEY_ORIGIN;
+            }
+
+            // Write meta to wallet
+            CPubKey pubkey;
+            if (GetPubKey(meta_pair.first, pubkey)) {
+                batch->WriteKeyMetadata(meta, pubkey, true);
+            }
+        }
+    }
+    batch.reset();
 }
 
 bool LegacyScriptPubKeyMan::SetupGeneration(bool force)
 {
-    return false;
+    if ((CanGenerateKeys() && !force) || IsLocked()) {
+        return false;
+    }
+
+    SetHDSeed(GenerateNewSeed());
+    if (!NewKeyPool()) {
+        return false;
+    }
+    return true;
 }
 
 bool LegacyScriptPubKeyMan::IsHDEnabled() const
@@ -122,7 +164,36 @@ bool LegacyScriptPubKeyMan::CanGetAddresses(bool internal)
 
 bool LegacyScriptPubKeyMan::Upgrade(int prev_version, std::string& error)
 {
-    return false;
+    LOCK(cs_KeyStore);
+    error = "";
+    bool hd_upgrade = false;
+    bool split_upgrade = false;
+    if (CanSupportFeature(FEATURE_HD) && !IsHDEnabled()) {
+        WalletLogPrintf("Upgrading wallet to HD\n");
+        SetMinVersion(FEATURE_HD);
+
+        // generate a new master key
+        SetHDSeed(GenerateNewSeed());
+        hd_upgrade = true;
+    }
+    // Upgrade to HD chain split if necessary
+    if (CanSupportFeature(FEATURE_HD_SPLIT) && hdChain.nVersion < 2 /* VERSION_HD_CHAIN_SPLIT */) {
+        WalletLogPrintf("Upgrading wallet to use HD chain split\n");
+        SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
+        split_upgrade = FEATURE_HD_SPLIT > prev_version;
+    }
+    // Mark all keys currently in the keypool as pre-split
+    if (split_upgrade) {
+        MarkPreSplitKeys();
+    }
+    // Regenerate the keypool if upgraded to HD
+    if (hd_upgrade) {
+        if (!TopUpKeyPool()) {
+            error = _("Unable to generate keys").translated;
+            return false;
+        }
+    }
+    return true;
 }
 
 bool LegacyScriptPubKeyMan::HavePrivateKeys() const
@@ -133,6 +204,13 @@ bool LegacyScriptPubKeyMan::HavePrivateKeys() const
 
 void LegacyScriptPubKeyMan::RewriteDB()
 {
+    LOCK(cs_KeyStore);
+    setInternalKeyPool.clear();
+    setExternalKeyPool.clear();
+    m_pool_key_to_index.clear();
+    // Note: can't top-up keypool here, because wallet is locked.
+    // User will be prompted to unlock wallet the next operation
+    // that requires a new key.
 }
 
 static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
@@ -934,4 +1012,22 @@ std::vector<CKeyID> GetAffectedKeys(const CScript& spk, const SigningProvider& p
         ret.push_back(entry.first);
     }
     return ret;
+}
+
+void LegacyScriptPubKeyMan::MarkPreSplitKeys()
+{
+    WalletBatch batch(*m_database);
+    for (auto it = setExternalKeyPool.begin(); it != setExternalKeyPool.end();) {
+        int64_t index = *it;
+        CKeyPool keypool;
+        if (!batch.ReadPool(index, keypool)) {
+            throw std::runtime_error(std::string(__func__) + ": read keypool entry failed");
+        }
+        keypool.m_pre_split = true;
+        if (!batch.WritePool(index, keypool)) {
+            throw std::runtime_error(std::string(__func__) + ": writing modified keypool entry failed");
+        }
+        set_pre_split_keypool.insert(index);
+        it = setExternalKeyPool.erase(it);
+    }
 }
