@@ -473,9 +473,6 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             return DBErrors::CORRUPT;
         }
 
-        // Always create LegacyScriptPubKeyMan for now
-        pwallet->SetupLegacyScriptPubKeyMan();
-
         while (true)
         {
             // Read next record
