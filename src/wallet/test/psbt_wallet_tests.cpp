@@ -16,7 +16,8 @@ BOOST_FIXTURE_TEST_SUITE(psbt_wallet_tests, WalletTestingSetup)
 
 BOOST_AUTO_TEST_CASE(psbt_updater_test)
 {
-    LOCK(m_wallet.cs_wallet);
+    auto spk_man = m_wallet.GetOrCreateLegacyScriptPubKeyMan();
+    LOCK2(m_wallet.cs_wallet, spk_man->cs_KeyStore);
 
     // Create prevtxs and add to wallet
     CDataStream s_prev_tx1(ParseHex("0200000000010158e87a21b56daf0c23be8e7070456c336f7cbaa5c8757924f545887bb2abdd7501000000171600145f275f436b09a8cc9a2eb2a2f528485c68a56323feffffff02d8231f1b0100000017a914aed962d6654f9a2b36608eb9d64d2b260db4f1118700c2eb0b0000000017a914b7f5faf40e3d40a5a459b1db3535f2b72fa921e88702483045022100a22edcc6e5bc511af4cc4ae0de0fcd75c7e04d8c1c3a8aa9d820ed4b967384ec02200642963597b9b1bc22c75e9f3e117284a962188bf5e8a74c895089046a20ad770121035509a48eb623e10aace8bfd0212fdb8a8e5af3c94b0b133b95e114cab89e4f7965000000"), SER_NETWORK, PROTOCOL_VERSION);
@@ -35,23 +36,23 @@ BOOST_AUTO_TEST_CASE(psbt_updater_test)
     CScript rs1;
     CDataStream s_rs1(ParseHex("475221029583bf39ae0a609747ad199addd634fa6108559d6c5cd39b4c2183f1ab96e07f2102dab61ff49a14db6a7d02b0cd1fbb78fc4b18312b5b4e54dae4dba2fbfef536d752ae"), SER_NETWORK, PROTOCOL_VERSION);
     s_rs1 >> rs1;
-    m_wallet.AddCScript(rs1);
+    spk_man->AddCScript(rs1);
 
     CScript rs2;
     CDataStream s_rs2(ParseHex("2200208c2353173743b595dfb4a07b72ba8e42e3797da74e87fe7d9d7497e3b2028903"), SER_NETWORK, PROTOCOL_VERSION);
     s_rs2 >> rs2;
-    m_wallet.AddCScript(rs2);
+    spk_man->AddCScript(rs2);
 
     CScript ws1;
     CDataStream s_ws1(ParseHex("47522103089dc10c7ac6db54f91329af617333db388cead0c231f723379d1b99030b02dc21023add904f3d6dcf59ddb906b0dee23529b7ffb9ed50e5e86151926860221f0e7352ae"), SER_NETWORK, PROTOCOL_VERSION);
     s_ws1 >> ws1;
-    m_wallet.AddCScript(ws1);
+    spk_man->AddCScript(ws1);
 
     // Add hd seed
     CKey key = DecodeSecret("5KSSJQ7UNfFGwVgpCZDSHm5rVNhMFcFtvWM3zQ8mW4qNDEN7LFd"); // Mainnet and uncompressed form of cUkG8i1RFfWGWy5ziR11zJ5V4U4W3viSFCfyJmZnvQaUsd1xuF3T
-    CPubKey master_pub_key = m_wallet.DeriveNewSeed(key);
-    m_wallet.SetHDSeed(master_pub_key);
-    m_wallet.NewKeyPool();
+    CPubKey master_pub_key = spk_man->DeriveNewSeed(key);
+    spk_man->SetHDSeed(master_pub_key);
+    spk_man->NewKeyPool();
 
     // Call FillPSBT
     PartiallySignedTransaction psbtx;
