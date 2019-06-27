@@ -313,7 +313,7 @@ std::vector<CQuorumCPtr> CQuorumManager::ScanQuorums(Consensus::LLMQType llmqTyp
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
     auto cacheKey = std::make_pair(llmqType, pindexStart->GetBlockHash());
-    const size_t cacheMaxSize = 25; // largest active set + 1
+    const size_t cacheMaxSize = params.signingActiveQuorumCount + 1;
 
     std::vector<CQuorumCPtr> result;
 
