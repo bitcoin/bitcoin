@@ -5,14 +5,15 @@
 #include <util/system.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <sync.h>
 #include <test/util.h>
 #include <util/strencodings.h>
 #include <util/moneystr.h>
+#include <util/time.h>
 #include <test/setup_common.h>
 
 #include <stdint.h>
+#include <thread>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>
