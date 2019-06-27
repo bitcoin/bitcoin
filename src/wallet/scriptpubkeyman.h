@@ -280,6 +280,11 @@ private:
     std::set<int64_t> set_pre_split_keypool GUARDED_BY(cs_KeyStore);
     int64_t m_max_keypool_index GUARDED_BY(cs_KeyStore) = 0;
     std::map<CKeyID, int64_t> m_pool_key_to_index;
+    // Tracks keypool indexes to CKeyIDs of keys that have been taken out of the keypool but may be returned to it
+    std::map<int64_t, CKeyID> m_reserved_key_to_index;
+
+    void KeepKey(int64_t nIndex);
+    void ReturnKey(int64_t nIndex, bool fInternal, const CKeyID& pubkey_id);
 
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;

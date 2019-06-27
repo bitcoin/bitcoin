@@ -32,10 +32,13 @@ bool LegacyScriptPubKeyMan::GetReservedDestination(const OutputType type, bool i
 
 void LegacyScriptPubKeyMan::KeepDestination(int64_t index)
 {
+    KeepKey(index);
 }
 
 void LegacyScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)
 {
+    ReturnKey(index, internal, m_reserved_key_to_index[index]);
+    m_reserved_key_to_index.erase(index);
 }
 
 bool LegacyScriptPubKeyMan::TopUp(unsigned int size)
@@ -744,4 +747,30 @@ void LegacyScriptPubKeyMan::AddKeypoolPubkeyWithDB(const CPubKey& pubkey, const 
         setExternalKeyPool.insert(index);
     }
     m_pool_key_to_index[pubkey.GetID()] = index;
+}
+
+void LegacyScriptPubKeyMan::KeepKey(int64_t nIndex)
+{
+    // Remove from key pool
+    WalletBatch batch(*m_database);
+    batch.ErasePool(nIndex);
+    WalletLogPrintf("keypool keep %d\n", nIndex);
+}
+
+void LegacyScriptPubKeyMan::ReturnKey(int64_t nIndex, bool fInternal, const CKeyID& pubkey_id)
+{
+    // Return to key pool
+    {
+        LOCK(cs_KeyStore);
+        if (fInternal) {
+            setInternalKeyPool.insert(nIndex);
+        } else if (!set_pre_split_keypool.empty()) {
+            set_pre_split_keypool.insert(nIndex);
+        } else {
+            setExternalKeyPool.insert(nIndex);
+        }
+        m_pool_key_to_index[pubkey_id] = nIndex;
+        NotifyCanGetAddressesChanged();
+    }
+    WalletLogPrintf("keypool return %d\n", nIndex);
 }
