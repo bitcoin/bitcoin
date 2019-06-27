@@ -174,6 +174,9 @@ private:
     /* the HD chain data model (external chain counters) */
     CHDChain hdChain;
 
+    /* HD derive new child key (on internal or external chain) */
+    void DeriveNewChildKey(WalletBatch& batch, CKeyMetadata& metadata, CKey& secret, bool internal = false) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
+
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
@@ -239,6 +242,8 @@ public:
     //! Load metadata (used by LoadWallet)
     void LoadKeyMetadata(const CKeyID& keyID, const CKeyMetadata &metadata);
     void LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata &metadata);
+    //! Generate a new key
+    CPubKey GenerateNewKey(WalletBatch& batch, bool internal = false) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     /* Set the HD chain model (chain child index counters) */
     void SetHDChain(const CHDChain& chain, bool memonly);
