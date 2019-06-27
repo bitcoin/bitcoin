@@ -420,38 +420,9 @@ void CWallet::LoadScriptMetadata(const CScriptID& script_id, const CKeyMetadata&
 
 void CWallet::UpgradeKeyMetadata()
 {
-    AssertLockHeld(cs_wallet);
-    if (IsLocked() || IsWalletFlagSet(WALLET_FLAG_KEY_ORIGIN_METADATA)) {
-        return;
+    for (const auto& spk_man_pair : m_spk_managers) {
+        spk_man_pair.second->UpgradeKeyMetadata();
     }
-
-    std::unique_ptr<WalletBatch> batch = MakeUnique<WalletBatch>(*database);
-    for (auto& meta_pair : mapKeyMetadata) {
-        CKeyMetadata& meta = meta_pair.second;
-        if (!meta.hd_seed_id.IsNull() && !meta.has_key_origin && meta.hdKeypath != "s") { // If the hdKeypath is "s", that's the seed and it doesn't have a key origin
-            CKey key;
-            GetKey(meta.hd_seed_id, key);
-            CExtKey masterKey;
-            masterKey.SetSeed(key.begin(), key.size());
-            // Add to map
-            CKeyID master_id = masterKey.key.GetPubKey().GetID();
-            std::copy(master_id.begin(), master_id.begin() + 4, meta.key_origin.fingerprint);
-            if (!ParseHDKeypath(meta.hdKeypath, meta.key_origin.path)) {
-                throw std::runtime_error("Invalid stored hdKeypath");
-            }
-            meta.has_key_origin = true;
-            if (meta.nVersion < CKeyMetadata::VERSION_WITH_KEY_ORIGIN) {
-                meta.nVersion = CKeyMetadata::VERSION_WITH_KEY_ORIGIN;
-            }
-
-            // Write meta to wallet
-            CPubKey pubkey;
-            if (GetPubKey(meta_pair.first, pubkey)) {
-                batch->WriteKeyMetadata(meta, pubkey, true);
-            }
-        }
-    }
-    batch.reset(); //write before setting the flag
     SetWalletFlag(WALLET_FLAG_KEY_ORIGIN_METADATA);
 }
 
