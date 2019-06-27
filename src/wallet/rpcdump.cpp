@@ -187,19 +187,15 @@ UniValue importprivkey(const JSONRPCRequest& request)
                 }
             }
 
-            // Don't throw error in case a key is already there
-            if (pwallet->HaveKey(vchAddress)) {
-                return NullUniValue;
-            }
-
-            // whenever a key is imported, we need to scan the whole chain
-            pwallet->UpdateTimeFirstKey(1);
-            pwallet->mapKeyMetadata[vchAddress].nCreateTime = 1;
-
-            if (!pwallet->AddKeyPubKey(key, pubkey)) {
+            // Use timestamp of 1 to scan the whole chain
+            if (!pwallet->ImportPrivKeys({{vchAddress, key}}, 1)) {
                 throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
             }
-            pwallet->LearnAllRelatedScripts(pubkey);
+
+            // Add the wpkh script for this key if possible
+            if (pubkey.IsCompressed()) {
+                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))});
+            }
         }
     }
     if (fRescan) {
