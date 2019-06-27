@@ -622,8 +622,9 @@ std::string SHA256AutoDetect()
         TransformD64 = TransformD64Wrapper<sha256_shani::Transform>;
         TransformD64_2way = sha256d64_shani::Transform_2way;
         ret = "shani(1way,2way)";
-        have_sse4 = false; // Disable SSE4/AVX2;
+        have_sse4 = false; // Disable SSE4/AVX2/AVX512;
         have_avx2 = false;
+        have_avx512 = false;
     }
 #endif
 
