@@ -80,19 +80,48 @@ void LegacyScriptPubKeyMan::RewriteDB()
 {
 }
 
+static int64_t GetOldestKeyTimeInPool(const std::set<int64_t>& setKeyPool, WalletBatch& batch) {
+    if (setKeyPool.empty()) {
+        return GetTime();
+    }
+
+    CKeyPool keypool;
+    int64_t nIndex = *(setKeyPool.begin());
+    if (!batch.ReadPool(nIndex, keypool)) {
+        throw std::runtime_error(std::string(__func__) + ": read oldest key in keypool failed");
+    }
+    assert(keypool.vchPubKey.IsValid());
+    return keypool.nTime;
+}
+
 int64_t LegacyScriptPubKeyMan::GetOldestKeyPoolTime()
 {
-    return GetTime();
+    LOCK(cs_KeyStore);
+
+    WalletBatch batch(*m_database);
+
+    // load oldest key from keypool, get time and return
+    int64_t oldestKey = GetOldestKeyTimeInPool(setExternalKeyPool, batch);
+    if (IsHDEnabled() && CanSupportFeature(FEATURE_HD_SPLIT)) {
+        oldestKey = std::max(GetOldestKeyTimeInPool(setInternalKeyPool, batch), oldestKey);
+        if (!set_pre_split_keypool.empty()) {
+            oldestKey = std::max(GetOldestKeyTimeInPool(set_pre_split_keypool, batch), oldestKey);
+        }
+    }
+
+    return oldestKey;
 }
 
 size_t LegacyScriptPubKeyMan::KeypoolCountExternalKeys()
 {
-    return 0;
+    LOCK(cs_KeyStore);
+    return setExternalKeyPool.size() + set_pre_split_keypool.size();
 }
 
 unsigned int LegacyScriptPubKeyMan::GetKeyPoolSize() const
 {
-    return 0;
+    LOCK(cs_KeyStore);
+    return setInternalKeyPool.size() + setExternalKeyPool.size() + set_pre_split_keypool.size();
 }
 
 int64_t LegacyScriptPubKeyMan::GetTimeFirstKey() const
