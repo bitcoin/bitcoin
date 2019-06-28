@@ -194,7 +194,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
             // Add the wpkh script for this key if possible
             if (pubkey.IsCompressed()) {
-                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))});
+                pwallet->ImportScripts({GetScriptForDestination(WitnessV0KeyHash(vchAddress))}, 0 /* timestamp */);
             }
         }
     }
@@ -316,7 +316,7 @@ UniValue importaddress(const JSONRPCRequest& request)
             CScript redeem_script(data.begin(), data.end());
 
             std::set<CScript> scripts = {redeem_script};
-            pwallet->ImportScripts(scripts);
+            pwallet->ImportScripts(scripts, 0 /* timestamp */);
 
             if (fP2SH) {
                 scripts.insert(GetScriptForDestination(ScriptHash(CScriptID(redeem_script))));
@@ -1251,7 +1251,7 @@ static UniValue ProcessImport(CWallet * const pwallet, const UniValue& data, con
 
         // All good, time to import
         pwallet->MarkDirty();
-        if (!pwallet->ImportScripts(import_data.import_scripts)) {
+        if (!pwallet->ImportScripts(import_data.import_scripts, timestamp)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding script to wallet");
         }
         if (!pwallet->ImportPrivKeys(privkey_map, timestamp)) {
