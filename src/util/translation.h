@@ -5,6 +5,28 @@
 #ifndef BITCOIN_UTIL_TRANSLATION_H
 #define BITCOIN_UTIL_TRANSLATION_H
 
+#include <tinyformat.h>
+
+#include <utility>
+
+/**
+ * Bilingual messages:
+ *   - in GUI: user's native language + untranslated (i.e. English)
+ *   - in log and stderr: untranslated only
+ */
+struct bilingual_str {
+    std::string original;
+    std::string translated;
+};
+
+namespace tinyformat {
+template <typename... Args>
+bilingual_str format(const bilingual_str& fmt, const Args&... args)
+{
+    return bilingual_str{format(fmt.original, args...), format(fmt.translated, args...)};
+}
+} // namespace tinyformat
+
 /** Translate a message to the native language of the user. */
 const extern std::function<std::string(const char*)> G_TRANSLATION_FUN;
 
