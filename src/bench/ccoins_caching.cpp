@@ -4,8 +4,8 @@
 
 #include <bench/bench.h>
 #include <coins.h>
+#include <keystore.h>
 #include <policy/policy.h>
-#include <wallet/crypter.h>
 
 #include <vector>
 
