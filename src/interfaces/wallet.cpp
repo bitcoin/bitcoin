@@ -118,10 +118,31 @@ public:
         std::string error;
         return m_wallet->GetNewDestination(type, label, dest, error);
     }
-    bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetPubKey(address, pub_key); }
-    bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetKey(address, key); }
+    bool getPubKey(const CScript& script, const CKeyID& address, CPubKey& pub_key) override
+    {
+        std::unique_ptr<SigningProvider> provider = m_wallet->GetSigningProvider(script);
+        if (provider) {
+            return provider->GetPubKey(address, pub_key);
+        }
+        return false;
+    }
+    bool getPrivKey(const CScript& script, const CKeyID& address, CKey& key) override
+    {
+        std::unique_ptr<SigningProvider> provider = m_wallet->GetSigningProvider(script);
+        if (provider) {
+            return provider->GetKey(address, key);
+        }
+        return false;
+    }
     bool isSpendable(const CTxDestination& dest) override { return m_wallet->IsMine(dest) & ISMINE_SPENDABLE; }
-    bool haveWatchOnly() override { return m_wallet->HaveWatchOnly(); };
+    bool haveWatchOnly() override
+    {
+        auto spk_man = m_wallet->GetLegacyScriptPubKeyMan();
+        if (spk_man) {
+            return spk_man->HaveWatchOnly();
+        }
+        return false;
+    };
     bool setAddressBook(const CTxDestination& dest, const std::string& name, const std::string& purpose) override
     {
         return m_wallet->SetAddressBook(dest, name, purpose);
@@ -349,7 +370,7 @@ public:
         result.balance = bal.m_mine_trusted;
         result.unconfirmed_balance = bal.m_mine_untrusted_pending;
         result.immature_balance = bal.m_mine_immature;
-        result.have_watch_only = m_wallet->HaveWatchOnly();
+        result.have_watch_only = haveWatchOnly();
         if (result.have_watch_only) {
             result.watch_only_balance = bal.m_watchonly_trusted;
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
