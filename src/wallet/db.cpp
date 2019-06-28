@@ -405,7 +405,7 @@ bool BerkeleyBatch::VerifyEnvironment(const fs::path& file_path, std::string& er
     LogPrintf("Using wallet %s\n", file_path.string());
 
     if (!env->Open(true /* retry */)) {
-        errorStr = strprintf(_("Error initializing wallet database environment %s!"), walletDir);
+        errorStr = strprintf(_("Error initializing wallet database environment %s!").translated, walletDir);
         return false;
     }
 
@@ -427,12 +427,12 @@ bool BerkeleyBatch::VerifyDatabaseFile(const fs::path& file_path, std::string& w
             warningStr = strprintf(_("Warning: Wallet file corrupt, data salvaged!"
                                      " Original %s saved as %s in %s; if"
                                      " your balance or transactions are incorrect you should"
-                                     " restore from a backup."),
+                                     " restore from a backup.").translated,
                                    walletFile, backup_filename, walletDir);
         }
         if (r == BerkeleyEnvironment::VerifyResult::RECOVER_FAIL)
         {
-            errorStr = strprintf(_("%s corrupt, salvage failed"), walletFile);
+            errorStr = strprintf(_("%s corrupt, salvage failed").translated, walletFile);
             return false;
         }
     }

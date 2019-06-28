@@ -138,7 +138,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
 
     int64_t count = 0;
     LogPrintf("Upgrading txindex database... [0%%]\n");
-    uiInterface.ShowProgress(_("Upgrading txindex database"), 0, true);
+    uiInterface.ShowProgress(_("Upgrading txindex database").translated, 0, true);
     int report_done = 0;
     const size_t batch_size = 1 << 24; // 16 MiB
 
@@ -175,7 +175,7 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
                 (static_cast<uint32_t>(*(txid.begin() + 1)) << 0);
             int percentage_done = (int)(high_nibble * 100.0 / 65536.0 + 0.5);
 
-            uiInterface.ShowProgress(_("Upgrading txindex database"), percentage_done, true);
+            uiInterface.ShowProgress(_("Upgrading txindex database").translated, percentage_done, true);
             if (report_done < percentage_done/10) {
                 LogPrintf("Upgrading txindex database... [%d%%]\n", percentage_done);
                 report_done = percentage_done/10;

@@ -38,10 +38,10 @@ std::string TransactionErrorString(const TransactionError err)
 
 std::string AmountHighWarn(const std::string& optname)
 {
-    return strprintf(_("%s is set very high!"), optname);
+    return strprintf(_("%s is set very high!").translated, optname);
 }
 
 std::string AmountErrMsg(const char* const optname, const std::string& strValue)
 {
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'").translated, optname, strValue);
 }
