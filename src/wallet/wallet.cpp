@@ -1827,7 +1827,7 @@ bool CWallet::DummySignTx(CMutableTransaction &txNew, const std::vector<CTxOut> 
     return true;
 }
 
-bool CWallet::ImportScripts(const std::set<CScript> scripts)
+bool CWallet::ImportScripts(const std::set<CScript> scripts, int64_t timestamp)
 {
     WalletBatch batch(*database);
     for (const auto& entry : scripts) {
@@ -1839,7 +1839,15 @@ bool CWallet::ImportScripts(const std::set<CScript> scripts)
         if (!AddCScriptWithDB(batch, entry)) {
             return false;
         }
+
+        if (timestamp > 0) {
+            m_script_metadata[CScriptID(entry)].nCreateTime = timestamp;
+        }
     }
+    if (timestamp > 0) {
+        UpdateTimeFirstKey(timestamp);
+    }
+
     return true;
 }
 
