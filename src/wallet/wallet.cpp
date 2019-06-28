@@ -3913,8 +3913,12 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
     AssertLockHeld(cs_wallet);
     mapKeyBirth.clear();
 
+    LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+    assert(spk_man != nullptr);
+    LOCK(spk_man->cs_KeyStore);
+
     // get birth times for keys with metadata
-    for (const auto& entry : mapKeyMetadata) {
+    for (const auto& entry : spk_man->mapKeyMetadata) {
         if (entry.second.nCreateTime) {
             mapKeyBirth[entry.first] = entry.second.nCreateTime;
         }
@@ -3924,7 +3928,7 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
     const Optional<int> tip_height = locked_chain.getHeight();
     const int max_height = tip_height && *tip_height > 144 ? *tip_height - 144 : 0; // the tip can be reorganized; use a 144-block safety margin
     std::map<CKeyID, int> mapKeyFirstBlock;
-    for (const CKeyID &keyid : GetKeys()) {
+    for (const CKeyID &keyid : spk_man->GetKeys()) {
         if (mapKeyBirth.count(keyid) == 0)
             mapKeyFirstBlock[keyid] = max_height;
     }
@@ -3941,7 +3945,7 @@ void CWallet::GetKeyBirthTimes(interfaces::Chain::Lock& locked_chain, std::map<C
             // ... which are already in a block
             for (const CTxOut &txout : wtx.tx->vout) {
                 // iterate over all their outputs
-                for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *this)) {
+                for (const auto &keyid : GetAffectedKeys(txout.scriptPubKey, *spk_man)) {
                     // ... and all their affected keys
                     std::map<CKeyID, int>::iterator rit = mapKeyFirstBlock.find(keyid);
                     if (rit != mapKeyFirstBlock.end() && *height < rit->second)
