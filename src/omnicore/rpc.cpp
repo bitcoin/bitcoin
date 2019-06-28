@@ -1897,7 +1897,7 @@ UniValue omni_listblockstransactions(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "omni_listblocktransactions firstblock lastblock\n"
+            "omni_listblockstransactions firstblock lastblock\n"
             "\nLists all Omni transactions in a given range of blocks.\n"
             "\nNote: the list of transactions is unordered and can contain invalid transactions!\n"
             "\nArguments:\n"
@@ -1910,8 +1910,8 @@ UniValue omni_listblockstransactions(const UniValue& params, bool fHelp)
             "]\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_listblocktransactions", "279007 300000")
-            + HelpExampleRpc("omni_listblocktransactions", "279007, 300000")
+            + HelpExampleCli("omni_listblockstransactions", "279007 300000")
+            + HelpExampleRpc("omni_listblockstransactions", "279007, 300000")
         );
 
     int blockFirst = params[0].get_int();
