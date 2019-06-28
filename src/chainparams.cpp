@@ -264,17 +264,22 @@ public:
         vSeeds.clear();
 
         if (!args.IsArgSet("-signet_blockscript")) {
-            throw std::runtime_error(strprintf("%s: -signet_blockscript is mandatory for signet networks", __func__));
-        }
-        if (args.GetArgs("-signet_blockscript").size() != 1) {
-            throw std::runtime_error(strprintf("%s: -signet_blockscript cannot be multiple values.", __func__));
-        }
-        bin = ParseHex(args.GetArgs("-signet_blockscript")[0]);
-        if (args.IsArgSet("-signet_seednode")) {
-            vSeeds = gArgs.GetArgs("-signet_seednode");
-        }
+            LogPrintf("Using default signet network\n");
+            bin = ParseHex("512103ad5e0edad18cb1f0fc0d28a3d4f1f3e445640337489abb10404f2d1e086be43051ae");
+            vSeeds.push_back("178.128.221.177");
+            vSeeds.push_back("2a01:7c8:d005:390::5");
+            vSeeds.push_back("ntv3mtqw5wt63red.onion:38333");
+        } else {
+            if (args.GetArgs("-signet_blockscript").size() != 1) {
+                throw std::runtime_error(strprintf("%s: -signet_blockscript cannot be multiple values.", __func__));
+            }
+            bin = ParseHex(args.GetArgs("-signet_blockscript")[0]);
+            if (args.IsArgSet("-signet_seednode")) {
+                vSeeds = gArgs.GetArgs("-signet_seednode");
+            }
 
-        LogPrintf("SigNet with block script %s\n", gArgs.GetArgs("-signet_blockscript")[0]);
+            LogPrintf("SigNet with block script %s\n", gArgs.GetArgs("-signet_blockscript")[0]);
+        }
 
         strNetworkID = CBaseChainParams::SIGNET;
         g_signet_blockscript = CScript(bin.begin(), bin.end());
