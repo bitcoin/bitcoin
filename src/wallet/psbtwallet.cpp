@@ -39,12 +39,33 @@ TransactionError FillPSBT(const CWallet* pwallet, PartiallySignedTransaction& ps
             return TransactionError::SIGHASH_MISMATCH;
         }
 
-        complete &= SignPSBTInput(HidingSigningProvider(pwallet, !sign, !bip32derivs), psbtx, i, sighash_type);
+        // Get the scriptPubKey to know which SigningProvider to use
+        CScript script;
+        if (input.non_witness_utxo) {
+            script = input.non_witness_utxo->vout[txin.prevout.n].scriptPubKey;
+        } else if (!input.witness_utxo.IsNull()) {
+            script = input.witness_utxo.scriptPubKey;
+        } else {
+            // There's no UTXO so we can just skip this now
+            continue;
+        }
+        SignatureData sigdata;
+        input.FillSignatureData(sigdata);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(script, sigdata);
+        if (!provider) {
+            continue;
+        }
+
+        complete &= SignPSBTInput(HidingSigningProvider(provider.get(), !sign, !bip32derivs), psbtx, i, sighash_type);
     }
 
     // Fill in the bip32 keypaths and redeemscripts for the outputs so that hardware wallets can identify change
     for (unsigned int i = 0; i < psbtx.tx->vout.size(); ++i) {
-        UpdatePSBTOutput(HidingSigningProvider(pwallet, true, !bip32derivs), psbtx, i);
+        const CTxOut& out = psbtx.tx->vout.at(i);
+        std::unique_ptr<SigningProvider> provider = pwallet->GetSigningProvider(out.scriptPubKey);
+        if (provider) {
+            UpdatePSBTOutput(HidingSigningProvider(provider.get(), true, !bip32derivs), psbtx, i);
+        }
     }
 
     return TransactionError::OK;
