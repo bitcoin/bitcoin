@@ -26,4 +26,11 @@ if [ "$RUN_FUZZ_TESTS" = "true" ]; then
   END_FOLD
 fi
 
+if [ "$RUN_DETERMINISTIC_COVERAGE_TESTS" = "true" ]; then
+  BEGIN_FOLD deterministic-coverage-tests
+  DOCKER_EXEC pip3 install -q gcovr==4.1
+  DOCKER_EXEC ${TRAVIS_BUILD_DIR}/contrib/devtools/test_deterministic_coverage.sh 3
+  END_FOLD
+fi
+
 cd ${TRAVIS_BUILD_DIR} || (echo "could not enter travis build dir $TRAVIS_BUILD_DIR"; exit 1)
