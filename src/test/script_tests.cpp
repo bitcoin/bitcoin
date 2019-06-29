@@ -483,6 +483,12 @@ std::string JSONPrettyPrint(const UniValue& univalue)
 }
 } // namespace
 
+// The gcc optimizer (as of g++ (Ubuntu 7.4.0-1ubuntu1~18.04.1)) doesn't handle script_build
+// very well: by disabling optimisations we reduce compile-time memory use by 0.5 GB (!).
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+#endif
 BOOST_AUTO_TEST_CASE(script_build)
 {
     const KeyData keys;
@@ -959,6 +965,9 @@ BOOST_AUTO_TEST_CASE(script_build)
     fclose(file);
 #endif
 }
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC pop_options
+#endif
 
 BOOST_AUTO_TEST_CASE(script_json_test)
 {
