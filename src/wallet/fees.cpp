@@ -18,14 +18,7 @@ CAmount GetRequiredFee(const CWallet& wallet, unsigned int nTxBytes)
 
 CAmount GetMinimumFee(const CWallet& wallet, unsigned int nTxBytes, const CCoinControl& coin_control, FeeCalculation* feeCalc)
 {
-    CAmount fee_needed = GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(nTxBytes);
-    // Always obey the maximum
-    const CAmount max_tx_fee = wallet.m_default_max_tx_fee;
-    if (fee_needed > max_tx_fee) {
-        fee_needed = max_tx_fee;
-        if (feeCalc) feeCalc->reason = FeeReason::MAXTXFEE;
-    }
-    return fee_needed;
+    return GetMinimumFeeRate(wallet, coin_control, feeCalc).GetFee(nTxBytes);
 }
 
 CFeeRate GetRequiredFeeRate(const CWallet& wallet)
