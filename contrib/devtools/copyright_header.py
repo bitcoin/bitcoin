@@ -97,7 +97,6 @@ EXPECTED_HOLDER_NAMES = [
     "Wladimir J. van der Laan\n",
     "Jeff Garzik\n",
     "Jan-Klaas Kollhof\n",
-    "Sam Rushing\n",
     "ArtForz -- public domain half-a-node\n",
     "Intel Corporation",
     "The Zcash developers",
