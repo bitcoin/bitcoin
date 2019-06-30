@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     string newaddress = GetNewFundedAddress("node1");
     string amount = "3";
     
-    SyscoinMint("node1", newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
+    AssetAllocationMint("node1", newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
     
     // try to mint again
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinmint " + newaddress + " " + amount + " " + itostr(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"));
