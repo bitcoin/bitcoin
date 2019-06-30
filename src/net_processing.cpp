@@ -2026,6 +2026,9 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
     if (!filter_index) {
         return error("Filter index for supported type %s not found", BlockFilterTypeName(filter_type));
     }
+    if (!filter_index->BlockUntilSyncedToCurrentChain()) {
+        return error("%s is not ready yet", filter_index->GetName());
+    }
 
     return true;
 }
