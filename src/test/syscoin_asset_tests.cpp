@@ -535,10 +535,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
         BOOST_CHECK_EQUAL(nAsset, nAssetStored);
     }
 }
-/* BOOST_AUTO_TEST_CASE(generate_syscoinmint)
+BOOST_AUTO_TEST_CASE(generate_assetallocationmint)
 {
     UniValue r;
-    tfm::format(std::cout,"Running generate_syscoinmint...\n");  
+    tfm::format(std::cout,"Running generate_assetallocationmint...\n");  
     // txid 0x4c68e1964c994a2c3facef047a83d14bbb0a127a14006f5f51ca7f6c8d219082 on rinkeby    
 	std::string spv_tx_root = "b7bd7593040ca5b230f658d529bddb6beb5b5f0baad3ae1c2bd844f647885c4a";
 	std::string spv_tx_parent_nodes = "f9035af851a0ca9340bba90781b81f3385b7eee298e3e55cb6a2c05b9f43960ae3b648076cf080808080808080a094047daa38d0aed9cecf2ec2ddf40921f875cbc8f314c73841e92a6a2eff1c918080808080808080f901f180a08164f4ff6b1eca79c231e562597d20b6d8bb1f468c59c6ec7124ab1da14d11dca05168f1dae52b7a223b933aa10429a9b37f1a6e7be82dd4f71d72dc4ab8300f9fa06bdb4be7a6cb3faf333c03647b5d4105f5050f481e259e97018f2da7e9846a98a0a35898131ebc4d8c7296e2157905a8711931e8b06d8f1a3fdd4520591aefcda6a002e4ec3017df498e401a672549d2fb459578b2782c33afee631c391b27a99cbfa09ede31da1d6113501b879fa1ac3cc599c6accb151c81b3c3570e35583257a911a014e0026d220deeaaa62497ed5e76b23670dd415eb1cff01996b390e08f09182fa0cc1d629d03c192cae56aa3ba8e9557fd152a3819f6317a00e73c58e648c4298fa05533a6daec2715c4ab23cdf8b555b0446bab8b80e54ec122f990c2f3d6b542a1a052aabf523dbe87e486900b76142a69d02af00e0b692aaae050783a863f13ad70a070ff8ed8be9cc8a23f89f5f9137762f03f0460bb0441ff2e480d6b4be8da7e9ea0fd8182c3c14e0f73ee706e8f57adb42ed33955c615c2f41140134ba07ef3a15ba09efd760f82967b69b89440ffc161aaff5b30f1bfbd241d50324e140f73266dc7a0ff10c05d4ba159dd75fd9e8b9dcd1f280d841c20f172af91b2af6e8b9cbc02eaa0d3091b9e467b9a5fdf02d6067c1536a55f75f758f8aea313153bc90c3bf9f78580f9011020b9010cf901094f843b9aca008307a120945f6e74ba20bf26161612eac8f7e8b3b6c9baaadd80b8a4285c5bc60000000000000000000000000000000000000000000000000000000011e1a30000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000001500ddeb722584e9a6ffe2cf02468abca0ddc32341de00000000000000000000002ca080c84e86f9bffe6a33ded8bb9c8be35bf202468c76e586f37bac0295e5ed509ea0250448d451e3126e548293629b63f3dbaa5a884a0d8a8e629722fce8be4095a4";
@@ -552,36 +552,17 @@ BOOST_AUTO_TEST_CASE(generate_asset_throughput)
     int height = 4189030;
     string newaddress = GetNewFundedAddress("node1");
     string amount = "3";
-    
-    AssetAllocationMint("node1", newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
+    string assetguid = AssetNew("node1", newaddress, "pubdata", "0x5f6e74ba20bf26161612eac8f7e8b3b6c9baaadd");
+    AssetAllocationMint("node1", assetguid, newaddress, amount, height, spv_tx_value, spv_tx_root, spv_tx_parent_nodes, spv_tx_path, spv_receipt_value, spv_receipt_root, spv_receipt_parent_nodes);
     
     // try to mint again
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinmint " + newaddress + " " + amount + " " + itostr(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationmint " + assetguid + " " + newaddress + " " + amount + " " + itostr(height) + " " + spv_tx_value + " a0" + spv_tx_root + " " + spv_tx_parent_nodes + " " + spv_tx_path + " " + spv_receipt_value + " a0" + spv_receipt_root + " " + spv_receipt_parent_nodes +  " ''"));
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
     // should fail: already minted with that block+txindex tuple
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hex_str, true, false)); 
     BOOST_CHECK(r.write().size() < 32);
-}*/
-/* BOOST_AUTO_TEST_CASE(generate_burn_syscoin)
-{
-    tfm::format(std::cout,"Running generate_burn_syscoin...\n");
-    UniValue r;
-    string newaddress = GetNewFundedAddress("node1");
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 9.9 0x931D387731bBbC988B312206c74F77D004D6B84b"));
-    
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
-    string hexStr = find_value(r.get_obj(), "hex").get_str();    
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
-	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "syscoindecoderawtransaction " + hexStr));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "txtype").get_str(), "syscoinburn");
-    GenerateBlocks(5, "node1");
-    CMutableTransaction txIn;
-    BOOST_CHECK(DecodeHexTx(txIn, hexStr, true, true));
-    CTransaction tx(txIn);
-    BOOST_CHECK(tx.vout[0].scriptPubKey.IsUnspendable());
-    BOOST_CHECK_THROW(r = CallRPC("node1", "syscoinburn " + newaddress + " 0.1 0x931D387731bBbC988B312206c74F77D004D6B84b"), runtime_error);
-}*/
+}
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
 {
     UniValue r;
