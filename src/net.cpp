@@ -10,10 +10,12 @@
 #include <net.h>
 
 #include <banman.h>
+#include <blockfilter.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
+#include <index/blockfilterindex.h>
 #include <netbase.h>
 #include <net_permissions.h>
 #include <random.h>
@@ -2673,7 +2675,18 @@ uint64_t CConnman::GetTotalBytesSent()
 
 ServiceFlags CConnman::GetLocalServices() const
 {
-    return nLocalServices;
+    uint64_t local_services = nLocalServices;
+    if (local_services & NODE_COMPACT_FILTERS) {
+        BlockFilterIndex* basic_filter_index = GetBlockFilterIndex(BlockFilterType::BASIC);
+        if (!basic_filter_index) {
+            LogPrintf("WARNING: NODE_COMPACT_FILTERS is signaled, but filter index is not available\n");
+        }
+        if (!basic_filter_index || !basic_filter_index->IsSynced()) {
+            // If block filter index is still syncing, do not advertise the service bit.
+            local_services &= ~NODE_COMPACT_FILTERS;
+        }
+    }
+    return ServiceFlags(local_services);
 }
 
 void CConnman::SetBestHeight(int height)
