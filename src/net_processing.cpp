@@ -131,6 +131,8 @@ static constexpr unsigned int AVG_FEEFILTER_BROADCAST_INTERVAL = 10 * 60;
 static constexpr unsigned int MAX_FEEFILTER_CHANGE_DELAY = 5 * 60;
 /** Maximum number of compact filters that may be requested with one getcfilters. See BIP 157. */
 static constexpr uint32_t MAX_GETCFILTERS_SIZE = 100;
+/** Maximum number of cf hashes that may be requested with one getcfheaders. See BIP 157. */
+static constexpr uint32_t MAX_GETCFHEADERS_SIZE = 2000;
 
 struct COrphanTx {
     // When modifying, adapt the copy of this definition in tests/DoS_tests.
@@ -2061,6 +2063,51 @@ static bool ProcessGetCFilters(CNode* pfrom, CDataStream& vRecv, const CChainPar
     return true;
 }
 
+static bool ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainParams& chain_params,
+                                CConnman* connman)
+{
+    uint8_t filter_type_ser;
+    uint32_t start_height;
+    uint256 stop_hash;
+
+    vRecv >> filter_type_ser >> start_height >> stop_hash;
+
+    BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+
+    const CBlockIndex* stop_index;
+    BlockFilterIndex* filter_index;
+    if (!PrepareBlockFilterRequest(pfrom, chain_params, filter_type, start_height, stop_hash,
+                                   MAX_GETCFHEADERS_SIZE, stop_index, filter_index)) {
+        // Return true because the issue with the invalid request has already been logged.
+        return true;
+    }
+
+    uint256 prev_header;
+    if (start_height > 0) {
+        const CBlockIndex* prev_block = stop_index->GetAncestor(start_height - 1);
+        if (!filter_index->LookupFilterHeader(prev_block, prev_header)) {
+            return error("Failed to find block filter header in index: filter_type=%s, block_hash=%s",
+                         BlockFilterTypeName(filter_type), prev_block->GetBlockHash().ToString());
+        }
+    }
+
+    std::vector<uint256> filter_hashes;
+    if (!filter_index->LookupFilterHashRange(start_height, stop_index, filter_hashes)) {
+        return error("Failed to find block filter hashes in index: filter_type=%s, start_height=%d, stop_hash=%s",
+                     BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
+    }
+
+    CSerializedNetMsg msg = CNetMsgMaker(pfrom->GetSendVersion())
+        .Make(NetMsgType::CFHEADERS,
+              filter_type_ser,
+              stop_index->GetBlockHash(),
+              prev_header,
+              filter_hashes);
+    connman->PushMessage(pfrom, std::move(msg));
+
+    return true;
+}
+
 bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom->GetId());
@@ -3369,6 +3416,9 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
 
     if (msg_type == NetMsgType::GETCFILTERS) {
         return ProcessGetCFilters(pfrom, vRecv, chainparams, connman);
+    }
+    if (msg_type == NetMsgType::GETCFHEADERS) {
+        return ProcessGetCFHeaders(pfrom, vRecv, chainparams, connman);
     }
 
     if (msg_type == NetMsgType::NOTFOUND) {
