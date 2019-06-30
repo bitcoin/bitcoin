@@ -8,6 +8,10 @@ define $(package)_config_cmds
   cmake -DCMAKE_INSTALL_PREFIX=$($(package)_staging_dir)$(host_prefix) -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=true -DRC_INSTALL_ALL_EXTRAS=ON
 endef
 
+define $(package)_preprocess_cmds
+  sed -i.old 's/ -Wall//' CMakeLists.txt
+endef
+
 define $(package)_build_cmds
   $(MAKE) rapidcheck
 endef
