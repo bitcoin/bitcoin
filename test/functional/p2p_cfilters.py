@@ -66,6 +66,20 @@ class CompactFiltersTest(BitcoinTestFramework):
         self.nodes[1].generate(1001)
         wait_until(lambda: self.nodes[1].getblockcount() == 2000)
 
+        # Fetch cfcheckpt on node 0. Since the implementation caches the checkpoints on the active
+        # chain in memory, this checks that the cache is updated correctly upon subsequent queries
+        # after the reorg.
+        request = msg_getcfcheckpt(
+            filter_type=FILTER_TYPE_BASIC,
+            stop_hash=int(stale_block_hash, 16)
+        )
+        node0.send_message(request)
+        node0.sync_with_ping(timeout=5)
+        response = node0.last_message['cfcheckpt']
+        assert_equal(response.filter_type, request.filter_type)
+        assert_equal(response.stop_hash, request.stop_hash)
+        assert_equal(len(response.headers), 1)
+
         # Reorg node 0 to a new chain
         connect_nodes(self.nodes[0], 1)
         sync_blocks(self.nodes)
