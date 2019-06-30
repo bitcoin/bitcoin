@@ -8,9 +8,11 @@
 #include <addrman.h>
 #include <banman.h>
 #include <blockencodings.h>
+#include <blockfilter.h>
 #include <chainparams.h>
 #include <consensus/validation.h>
 #include <hash.h>
+#include <index/blockfilterindex.h>
 #include <validation.h>
 #include <merkleblock.h>
 #include <netmessagemaker.h>
@@ -127,6 +129,8 @@ static constexpr unsigned int INVENTORY_BROADCAST_MAX = 7 * INVENTORY_BROADCAST_
 static constexpr unsigned int AVG_FEEFILTER_BROADCAST_INTERVAL = 10 * 60;
 /** Maximum feefilter broadcast delay after significant change. */
 static constexpr unsigned int MAX_FEEFILTER_CHANGE_DELAY = 5 * 60;
+/** Maximum number of compact filters that may be requested with one getcfilters. See BIP 157. */
+static constexpr uint32_t MAX_GETCFILTERS_SIZE = 100;
 
 struct COrphanTx {
     // When modifying, adapt the copy of this definition in tests/DoS_tests.
@@ -1965,6 +1969,98 @@ void static ProcessOrphanTx(CConnman* connman, CTxMemPool& mempool, std::set<uin
     }
 }
 
+/**
+ * Common validation logic for GETCFILTER, GETCFHEADER, GETCFCHECKPT request handling. If the
+ * request is valid and can be serviced, this returns the stop block index and the filter index
+ * as out parameters. May disconnect from the peer in the case of a bad request.
+ */
+static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_params,
+                                      BlockFilterType filter_type, uint32_t start_height,
+                                      const uint256& stop_hash, uint32_t max_height_diff,
+                                      const CBlockIndex*& stop_index,
+                                      BlockFilterIndex*& filter_index)
+{
+    bool supported_filter_type =
+        (filter_type == BlockFilterType::BASIC &&
+         (pfrom->GetLocalServices() & NODE_COMPACT_FILTERS));
+    if (!supported_filter_type) {
+        LogPrint(BCLog::NET, "peer %d requested unknown block filter type: %d\n",
+                 pfrom->GetId(), static_cast<uint8_t>(filter_type));
+        pfrom->fDisconnect = true;
+        return false;
+    }
+
+    {
+        LOCK(cs_main);
+        stop_index = LookupBlockIndex(stop_hash);
+
+        // Check that the stop block exists and was at some point connected to the active chain.
+        if (!stop_index || !BlockRequestAllowed(stop_index, chain_params.GetConsensus())) {
+            LogPrint(BCLog::NET, "peer %d requested invalid block hash: %s\n",
+                     pfrom->GetId(), stop_hash.ToString());
+            pfrom->fDisconnect = true;
+            return false;
+        }
+    }
+
+    uint32_t stop_height = stop_index->nHeight;
+    if (start_height > stop_height) {
+        LogPrint(BCLog::NET, "peer %d sent invalid getcfilters/getcfheaders with " /* Continued */
+                 "start height %d and stop height %d\n",
+                 pfrom->GetId(), start_height, stop_height);
+        pfrom->fDisconnect = true;
+        return false;
+    }
+    if (stop_height - start_height >= max_height_diff) {
+        LogPrint(BCLog::NET, "peer %d requested too many cfilters/cfheaders: %d / %d\n",
+                 pfrom->GetId(), stop_height - start_height + 1, max_height_diff);
+        pfrom->fDisconnect = true;
+        return false;
+    }
+
+    filter_index = GetBlockFilterIndex(filter_type);
+    if (!filter_index) {
+        return error("Filter index for supported type %s not found", BlockFilterTypeName(filter_type));
+    }
+
+    return true;
+}
+
+static bool ProcessGetCFilters(CNode* pfrom, CDataStream& vRecv, const CChainParams& chain_params,
+                               CConnman* connman)
+{
+    uint8_t filter_type_ser;
+    uint32_t start_height;
+    uint256 stop_hash;
+
+    vRecv >> filter_type_ser >> start_height >> stop_hash;
+
+    BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+
+    const CBlockIndex* stop_index;
+    BlockFilterIndex* filter_index;
+    if (!PrepareBlockFilterRequest(pfrom, chain_params, filter_type, start_height, stop_hash,
+                                   MAX_GETCFILTERS_SIZE, stop_index, filter_index)) {
+        // Return true because the issue with the invalid request has already been logged.
+        return true;
+    }
+
+    std::vector<BlockFilter> filters;
+
+    if (!filter_index->LookupFilterRange(start_height, stop_index, filters)) {
+        return error("Failed to find block filter in index: filter_type=%s, start_height=%d, stop_hash=%s",
+                     BlockFilterTypeName(filter_type), start_height, stop_hash.ToString());
+    }
+
+    for (const auto& filter : filters) {
+        CSerializedNetMsg msg = CNetMsgMaker(pfrom->GetSendVersion())
+            .Make(NetMsgType::CFILTER, filter);
+        connman->PushMessage(pfrom, std::move(msg));
+    }
+
+    return true;
+}
+
 bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom->GetId());
@@ -3269,6 +3365,10 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
             LogPrint(BCLog::NET, "received: feefilter of %s from peer=%d\n", CFeeRate(newFeeFilter).ToString(), pfrom->GetId());
         }
         return true;
+    }
+
+    if (msg_type == NetMsgType::GETCFILTERS) {
+        return ProcessGetCFilters(pfrom, vRecv, chainparams, connman);
     }
 
     if (msg_type == NetMsgType::NOTFOUND) {
