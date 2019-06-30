@@ -593,13 +593,22 @@ void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
 			otherNode2 = "node2";
 	}
 }
-string AssetAllocationMint(const string& node, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
+string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
 {
     string otherNode1, otherNode2;
     GetOtherNodes(node, otherNode1, otherNode2);
     UniValue r;
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
-    CAmount nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+	CAmount nAmountBefore = 0;
+	try{
+    	r = CallRPC(node, "assetallocationbalance " + asset + " " + address);
+		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+    		nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+		}
+	}
+	catch(...){
+
+	}
+	
     // ensure that block number you claim the burn is at least 1 hour old
     int heightPlus240 = height+(ETHEREUM_CONFIRMS_REQUIRED*1.5);
     string headerStr = "\"[[" + itostr(height) + ", \\\"" + itostr(height) + "\\\", \\\"" + itostr(height-1) + "\\\", \\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
@@ -619,18 +628,18 @@ string AssetAllocationMint(const string& node, const string& address, const stri
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethheaders " + headerStr));
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + itostr(heightPlus240)));
     }   
-    // "syscoinmint [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationmint " + address + " " + amount + " " + itostr(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
+    // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationmint " + asset + " " + address + " " + amount + " " + itostr(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false));  
     GenerateBlocks(5, node);
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationbalance " + asset + " " + address));
     CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
     // account for fees
-    BOOST_CHECK(abs((nAmountBefore+AmountFromValue(amount)) -  nAmountAfter) < 0.1*COIN);
+    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
     return hex_str;
 }
 bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){

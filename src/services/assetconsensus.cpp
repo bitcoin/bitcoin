@@ -218,15 +218,16 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Could not parse and validate transaction data");
         return false;
     }
-    
-    if(witnessAddress != mintSyscoin.assetAllocationTuple.witnessAddress){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Minting address does not match address passed into burn function");
-        return false;
-    }
-      
-    if(nAsset != dbAsset.nAsset){
-        errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid asset being minted, does not match asset GUID encoded in transaction data");
-        return false;
+    if(!fUnitTest){
+        if(witnessAddress != mintSyscoin.assetAllocationTuple.witnessAddress){
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Minting address does not match address passed into burn function");
+            return false;
+        }
+        
+        if(nAsset != dbAsset.nAsset){
+            errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Invalid asset being minted, does not match asset GUID encoded in transaction data");
+            return false;
+        }
     }
     if(outputAmount != mintSyscoin.nValueAsset){
         errorMessage = "SYSCOIN_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must match asset mint amount");
