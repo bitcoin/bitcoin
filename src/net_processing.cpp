@@ -30,6 +30,7 @@
 #include <util/strencodings.h>
 
 #include <memory>
+#include <mutex>
 #include <typeinfo>
 
 #if defined(NDEBUG)
@@ -435,6 +436,10 @@ limitedmap<uint256, std::chrono::microseconds> g_already_asked_for GUARDED_BY(cs
 
 /** Map maintaining per-node state. */
 static std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
+
+/** In-memory cache of all BIP157 compact filter checkpoints for the active chain. */
+static std::vector<std::pair<const CBlockIndex*, uint256>> active_chain_cf_headers;
+static std::mutex active_chain_cf_headers_mtx;
 
 static CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     std::map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
@@ -1299,6 +1304,40 @@ void PeerLogicValidation::NewPoWValidBlock(const CBlockIndex *pindex, const std:
     });
 }
 
+static bool UpdateCFHeadersCache(const BlockFilterIndex& filter_index)
+{
+    LOCK(cs_main);
+    std::lock_guard<std::mutex> _lock(active_chain_cf_headers_mtx);
+
+    const CChain& active_chain = ::ChainActive();
+
+    // Drop any entries in the checkpoint cache that have been reorganized off the active chain.
+    int new_size = active_chain_cf_headers.size();
+    for (; new_size > 0; new_size--) {
+        if (active_chain.Contains(active_chain_cf_headers[new_size - 1].first)) {
+            break;
+        }
+    }
+    active_chain_cf_headers.resize(new_size);
+
+    // Populate the checkpoint cache with headers for blocks on the active chain.
+    for (uint32_t height = (new_size + 1) * CFCHECKPT_INTERVAL;
+         height <= static_cast<uint32_t>(active_chain.Height());
+         height += CFCHECKPT_INTERVAL) {
+        const CBlockIndex* block_index = active_chain[height];
+        uint256 filter_header;
+
+        if (!filter_index.LookupFilterHeader(block_index, filter_header)) {
+            return error("Failed to find block filter header in index: filter_type=%s, block_hash=%s",
+                         BlockFilterTypeName(filter_index.GetFilterType()),
+                         block_index->GetBlockHash().ToString());
+        }
+        active_chain_cf_headers.emplace_back(block_index, filter_header);
+    }
+
+    return true;
+}
+
 /**
  * Update our best height and announce any block hashes which weren't previously
  * in ::ChainActive() to our peers.
@@ -1331,6 +1370,10 @@ void PeerLogicValidation::UpdatedBlockTip(const CBlockIndex *pindexNew, const CB
         });
         connman->WakeMessageHandler();
     }
+
+    ForEachBlockFilterIndex(
+        [](BlockFilterIndex& index) { UpdateCFHeadersCache(index); }
+    );
 }
 
 /**
@@ -2133,17 +2176,30 @@ static bool ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainPa
     }
 
     std::vector<uint256> headers(stop_index->nHeight / CFCHECKPT_INTERVAL);
+    {
+        std::lock_guard<std::mutex> _lock(active_chain_cf_headers_mtx);
 
-    // Populate headers.
-    const CBlockIndex* block_index = stop_index;
-    for (int i = headers.size() - 1; i >= 0; i--) {
-        uint32_t height = (i + 1) * CFCHECKPT_INTERVAL;
-        block_index = block_index->GetAncestor(height);
+        // Populate headers.
+        int i = headers.size() - 1;
+        const CBlockIndex* block_index = stop_index;
+        for (; i >= 0; i--) {
+            uint32_t height = (i + 1) * CFCHECKPT_INTERVAL;
+            block_index = block_index->GetAncestor(height);
 
-        // Filter header requested for stale block.
-        if (!filter_index->LookupFilterHeader(block_index, headers[i])) {
-            return error("Failed to find block filter header in index: filter_type=%s, block_hash=%s",
-                         BlockFilterTypeName(filter_type), block_index->GetBlockHash().ToString());
+            if (static_cast<size_t>(i) < active_chain_cf_headers.size() &&
+                active_chain_cf_headers[i].first == block_index) {
+                break;
+            }
+
+            // Filter header requested for stale block.
+            if (!filter_index->LookupFilterHeader(block_index, headers[i])) {
+                return error("Failed to find block filter header in index: "
+                             "filter_type=%s, block_hash=%s",
+                             BlockFilterTypeName(filter_type), block_index->GetBlockHash().ToString());
+            }
+        }
+        for (; i >= 0; i--) {
+            headers[i] = active_chain_cf_headers[i].second;
         }
     }
 
