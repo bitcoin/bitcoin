@@ -28,7 +28,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
             RPCHelpMan{"convertaddress",
-            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}
             },

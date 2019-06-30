@@ -1411,7 +1411,7 @@ UniValue convertaddresswallet(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 3) {
         throw std::runtime_error(
             RPCHelpMan{"convertaddresswallet",
-            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.\n",
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.\n",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},
                 {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address", "An optional label"},
@@ -1467,10 +1467,16 @@ UniValue convertaddresswallet(const JSONRPCRequest& request)
     } 
     else
         strLabel = "";
+    isminetype mine = IsMine(*pwallet, v4Dest);
+    if(!(mine & ISMINE_SPENDABLE)){
+        throw JSONRPCError(RPC_MISC_ERROR, "The V4 Public key or redeemscript not known to wallet, or the key is uncompressed.");
+    }
     if(!strLabel.empty())
     {
         auto locked_chain = pwallet->chain().lock();
         LOCK(pwallet->cs_wallet);   
+        CScript witprog = GetScriptForDestination(v4Dest);
+        pwallet->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility
         pwallet->SetAddressBook(v4Dest, strLabel, "receive");
         WalletRescanReserver reserver(pwallet);                   
         if (fRescan) {
