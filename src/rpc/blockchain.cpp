@@ -851,7 +851,7 @@ static UniValue getblock(const JSONRPCRequest& request)
                 "If verbosity is 1, returns an Object with information about block <hash>.\n"
                 "If verbosity is 2, returns an Object with information about block <hash> and information about each transaction. \n",
                 {
-                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash"},
+                    {"blockhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The block hash or the block index"},
                     {"verbosity", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
                 },
                 {
@@ -897,14 +897,25 @@ static UniValue getblock(const JSONRPCRequest& request)
                 RPCExamples{
                     HelpExampleCli("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
             + HelpExampleRpc("getblock", "\"00000000c937983704a73af28acdec37b049d214adbda81d7e2a3dd146f6ed09\"")
+            + HelpExampleRpc("getblock", "\"42\"")
                 },
     };
 
     if (request.fHelp || !help.IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(help.ToString());
     }
+    UniValue blockhash;
+    // Check if the first parameter is an index or a hash or invalid
+    if(request.params[0].get_str().length() < 64 && request.params[0].get_str().find_first_not_of("0123456789") == std::string::npos) {
+        int nHeight = atoi(request.params[0].get_str().c_str());
+        CBlockIndex* pblockindex = ::ChainActive()[nHeight];
+        blockhash = pblockindex->GetBlockHash().GetHex();
+    }
+    else {
+        blockhash = request.params[0];
+    }
 
-    uint256 hash(ParseHashV(request.params[0], "blockhash"));
+    uint256 hash(ParseHashV(blockhash, "blockhash"));
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {
