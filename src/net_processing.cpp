@@ -133,6 +133,8 @@ static constexpr unsigned int MAX_FEEFILTER_CHANGE_DELAY = 5 * 60;
 static constexpr uint32_t MAX_GETCFILTERS_SIZE = 100;
 /** Maximum number of cf hashes that may be requested with one getcfheaders. See BIP 157. */
 static constexpr uint32_t MAX_GETCFHEADERS_SIZE = 2000;
+/** Interval between compact filter checkpoints. See BIP 157. */
+static constexpr uint32_t CFCHECKPT_INTERVAL = 1000;
 
 struct COrphanTx {
     // When modifying, adapt the copy of this definition in tests/DoS_tests.
@@ -2108,6 +2110,50 @@ static bool ProcessGetCFHeaders(CNode* pfrom, CDataStream& vRecv, const CChainPa
     return true;
 }
 
+static bool ProcessGetCFCheckPt(CNode* pfrom, CDataStream& vRecv, const CChainParams& chain_params,
+                                CConnman* connman)
+{
+    uint8_t filter_type_ser;
+    uint256 stop_hash;
+
+    vRecv >> filter_type_ser >> stop_hash;
+
+    BlockFilterType filter_type = static_cast<BlockFilterType>(filter_type_ser);
+
+    const CBlockIndex* stop_index;
+    BlockFilterIndex* filter_index;
+    if (!PrepareBlockFilterRequest(pfrom, chain_params, filter_type, /*start_height=*/0, stop_hash,
+                                   /*max_height_diff=*/std::numeric_limits<uint32_t>::max(),
+                                   stop_index, filter_index)) {
+        // Return true because the issue with the invalid request has already been logged.
+        return true;
+    }
+
+    std::vector<uint256> headers(stop_index->nHeight / CFCHECKPT_INTERVAL);
+
+    // Populate headers.
+    const CBlockIndex* block_index = stop_index;
+    for (int i = headers.size() - 1; i >= 0; i--) {
+        uint32_t height = (i + 1) * CFCHECKPT_INTERVAL;
+        block_index = block_index->GetAncestor(height);
+
+        // Filter header requested for stale block.
+        if (!filter_index->LookupFilterHeader(block_index, headers[i])) {
+            return error("Failed to find block filter header in index: filter_type=%s, block_hash=%s",
+                         BlockFilterTypeName(filter_type), block_index->GetBlockHash().ToString());
+        }
+    }
+
+    CSerializedNetMsg msg = CNetMsgMaker(pfrom->GetSendVersion())
+        .Make(NetMsgType::CFCHECKPT,
+              filter_type_ser,
+              stop_index->GetBlockHash(),
+              headers);
+    connman->PushMessage(pfrom, std::move(msg));
+
+    return true;
+}
+
 bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CTxMemPool& mempool, CConnman* connman, BanMan* banman, const std::atomic<bool>& interruptMsgProc)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(msg_type), vRecv.size(), pfrom->GetId());
@@ -3419,6 +3465,9 @@ bool ProcessMessage(CNode* pfrom, const std::string& msg_type, CDataStream& vRec
     }
     if (msg_type == NetMsgType::GETCFHEADERS) {
         return ProcessGetCFHeaders(pfrom, vRecv, chainparams, connman);
+    }
+    if (msg_type == NetMsgType::GETCFCHECKPT) {
+        return ProcessGetCFCheckPt(pfrom, vRecv, chainparams, connman);
     }
 
     if (msg_type == NetMsgType::NOTFOUND) {
