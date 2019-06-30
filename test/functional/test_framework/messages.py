@@ -49,6 +49,7 @@ NODE_NETWORK = (1 << 0)
 NODE_GETUTXO = (1 << 1)
 NODE_BLOOM = (1 << 2)
 NODE_WITNESS = (1 << 3)
+NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
 
 MSG_TX = 1
@@ -56,6 +57,8 @@ MSG_BLOCK = 2
 MSG_FILTERED_BLOCK = 3
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
+
+FILTER_TYPE_BASIC = 0
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -1512,3 +1515,154 @@ class msg_no_witness_blocktxn(msg_blocktxn):
 
     def serialize(self):
         return self.block_transactions.serialize(with_witness=False)
+
+
+class msg_getcfilters:
+    __slots__ = ("filter_type", "start_height", "stop_hash")
+    msgtype =  b"getcfilters"
+
+    def __init__(self, filter_type, start_height, stop_hash):
+        self.filter_type = filter_type
+        self.start_height = start_height
+        self.stop_hash = stop_hash
+
+    def deserialize(self, f):
+        self.filter_type = struct.unpack("<B", f.read(1))[0]
+        self.start_height = struct.unpack("<I", f.read(4))[0]
+        self.stop_hash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.filter_type)
+        r += struct.pack("<I", self.start_height)
+        r += ser_uint256(self.stop_hash)
+        return r
+
+    def __repr__(self):
+        return "msg_getcfilters(filter_type={:#x}, start_height={}, stop_hash={:x})".format(
+            self.filter_type, self.start_height, self.stop_hash)
+
+class msg_cfilter:
+    __slots__ = ("filter_type", "block_hash", "filter_data")
+    msgtype =  b"cfilter"
+
+    def __init__(self, filter_type=None, block_hash=None, filter_data=None):
+        self.filter_type = filter_type
+        self.block_hash = block_hash
+        self.filter_data = filter_data
+
+    def deserialize(self, f):
+        self.filter_type = struct.unpack("<B", f.read(1))[0]
+        self.block_hash = deser_uint256(f)
+        self.filter_data = deser_string(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.filter_type)
+        r += ser_uint256(self.block_hash)
+        r += ser_string(self.filter_data)
+        return r
+
+    def __repr__(self):
+        return "msg_cfilter(filter_type={:#x}, block_hash={:x})".format(
+            self.filter_type, self.block_hash)
+
+class msg_getcfheaders:
+    __slots__ = ("filter_type", "start_height", "stop_hash")
+    msgtype =  b"getcfheaders"
+
+    def __init__(self, filter_type, start_height, stop_hash):
+        self.filter_type = filter_type
+        self.start_height = start_height
+        self.stop_hash = stop_hash
+
+    def deserialize(self, f):
+        self.filter_type = struct.unpack("<B", f.read(1))[0]
+        self.start_height = struct.unpack("<I", f.read(4))[0]
+        self.stop_hash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.filter_type)
+        r += struct.pack("<I", self.start_height)
+        r += ser_uint256(self.stop_hash)
+        return r
+
+    def __repr__(self):
+        return "msg_getcfheaders(filter_type={:#x}, start_height={}, stop_hash={:x})".format(
+            self.filter_type, self.start_height, self.stop_hash)
+
+class msg_cfheaders:
+    __slots__ = ("filter_type", "stop_hash", "prev_header", "hashes")
+    msgtype =  b"cfheaders"
+
+    def __init__(self, filter_type=None, stop_hash=None, prev_header=None, hashes=None):
+        self.filter_type = filter_type
+        self.stop_hash = stop_hash
+        self.prev_header = prev_header
+        self.hashes = hashes
+
+    def deserialize(self, f):
+        self.filter_type = struct.unpack("<B", f.read(1))[0]
+        self.stop_hash = deser_uint256(f)
+        self.prev_header = deser_uint256(f)
+        self.hashes = deser_uint256_vector(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.filter_type)
+        r += ser_uint256(self.stop_hash)
+        r += ser_uint256(self.prev_header)
+        r += ser_uint256_vector(self.hashes)
+        return r
+
+    def __repr__(self):
+        return "msg_cfheaders(filter_type={:#x}, stop_hash={:x})".format(
+            self.filter_type, self.stop_hash)
+
+class msg_getcfcheckpt:
+    __slots__ = ("filter_type", "stop_hash")
+    msgtype =  b"getcfcheckpt"
+
+    def __init__(self, filter_type, stop_hash):
+        self.filter_type = filter_type
+        self.stop_hash = stop_hash
+
+    def deserialize(self, f):
+        self.filter_type = struct.unpack("<B", f.read(1))[0]
+        self.stop_hash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.filter_type)
+        r += ser_uint256(self.stop_hash)
+        return r
+
+    def __repr__(self):
+        return "msg_getcfcheckpt(filter_type={:#x}, stop_hash={:x})".format(
+            self.filter_type, self.stop_hash)
+
+class msg_cfcheckpt:
+    __slots__ = ("filter_type", "stop_hash", "headers")
+    msgtype =  b"cfcheckpt"
+
+    def __init__(self, filter_type=None, stop_hash=None, headers=None):
+        self.filter_type = filter_type
+        self.stop_hash = stop_hash
+        self.headers = headers
+
+    def deserialize(self, f):
+        self.filter_type = struct.unpack("<B", f.read(1))[0]
+        self.stop_hash = deser_uint256(f)
+        self.headers = deser_uint256_vector(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.filter_type)
+        r += ser_uint256(self.stop_hash)
+        r += ser_uint256_vector(self.headers)
+        return r
+
+    def __repr__(self):
+        return "msg_cfcheckpt(filter_type={:#x}, stop_hash={:x})".format(
+            self.filter_type, self.stop_hash)
