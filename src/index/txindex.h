@@ -30,14 +30,14 @@ protected:
 
     BaseIndex::DB& GetDB() const override;
 
-    const char* GetName() const override { return "txindex"; }
-
 public:
     /// Constructs the index, which becomes available to be queried.
     explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Destructor is declared because this class contains a unique_ptr to an incomplete type.
     virtual ~TxIndex() override;
+
+    const char* GetName() const override { return "txindex"; }
 
     /// Look up a transaction by hash.
     ///

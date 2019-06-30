@@ -2035,6 +2035,10 @@ static bool PrepareBlockFilterRequest(CNode* pfrom, const CChainParams& chain_pa
         LogPrint(BCLog::NET, "Filter index for supported type %s not found\n", BlockFilterTypeName(filter_type));
         return false;
     }
+    if (!filter_index->BlockUntilSyncedToCurrentChain()) {
+        LogPrint(BCLog::NET, "%s is not ready yet\n", filter_index->GetName());
+        return false;
+    }
 
     return true;
 }
