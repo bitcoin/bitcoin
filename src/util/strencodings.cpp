@@ -59,12 +59,13 @@ signed char HexDigit(char c)
 
 bool IsHex(const std::string& str)
 {
+    if (str.size() == 0 || str.size()%2 != 0) return false;
     for(std::string::const_iterator it(str.begin()); it != str.end(); ++it)
     {
         if (HexDigit(*it) < 0)
             return false;
     }
-    return (str.size() > 0) && (str.size()%2 == 0);
+    return true;
 }
 
 bool IsHexNumber(const std::string& str)
