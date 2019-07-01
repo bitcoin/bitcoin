@@ -2602,7 +2602,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
                 if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint((*it).first, i)))
                     continue;
 
-                if (IsLockedCoin((*it).first, i) || nCoinType == ONLY_1000)
+                if (IsLockedCoin((*it).first, i) || nCoinType != ONLY_1000)
                     continue;
 
                 if (IsSpent(wtxid, i))
