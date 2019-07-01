@@ -221,9 +221,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             return TransactionCreationFailed;
         }
 
-        // reject absurdly high fee. (This can never happen because the
-        // wallet caps the fee at m_default_max_tx_fee. This merely serves as a
-        // belt-and-suspenders check)
+        // Reject absurdly high fee
         if (nFeeRequired > m_wallet->getDefaultMaxTxFee())
             return AbsurdFee;
     }
