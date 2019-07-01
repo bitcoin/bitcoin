@@ -23,17 +23,11 @@ install:
 before_build:
 - ps:  clcache -M 536870912
 - cmd: python build_msvc\msvc-autogen.py
-- ps:  $files = (Get-ChildItem -Recurse | where {$_.extension -eq ".vcxproj"}).FullName
-- ps:  for (${i} = 0; ${i} -lt ${files}.length; ${i}++) {
-           ${content} = (Get-Content ${files}[${i}]);
-           ${content} = ${content}.Replace("</RuntimeLibrary>", "</RuntimeLibrary><DebugInformationFormat>None</DebugInformationFormat>");
-           ${content} = ${content}.Replace("<WholeProgramOptimization>true", "<WholeProgramOptimization>false");
-           Set-Content ${files}[${i}] ${content};
-       }
 - ps:  Start-Process clcache-server
 - ps:  fsutil behavior set disablelastaccess 0 # Enable Access time feature on Windows (for clcache)
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false /p:CLToolExe=clcache.exe build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: copy "build_msvc\appveyor-common.init.vcxproj.user" "build_msvc\common.init.vcxproj.user"
+- cmd: msbuild build_msvc\bitcoin.sln /m /v:q /nologo
 after_build:
 - ps:  fsutil behavior set disablelastaccess 1 # Disable Access time feature on Windows (better performance)
 - ps:  clcache -z

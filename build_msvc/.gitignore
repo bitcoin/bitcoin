@@ -8,5 +8,6 @@ packages/*
 */Release
 */x64
 *.vcxproj.user
+!appveyor-common.init.vcxproj.user
 *.vcxproj
 */Win32
