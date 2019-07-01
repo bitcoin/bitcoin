@@ -149,46 +149,31 @@ void LDPC::generate_hv(const unsigned char header_with_nonce[])
 }
 bool LDPC::generate_H()
 {
-  int seed = this->seed;
-  std::vector<int> col_order;
-  if (this->H == NULL)
-    return false;
+    int seed = this->seed;
+    std::vector<int> col_order;
+    if (this->H == NULL)
+        return false;
 
-  int k = this->m / this->wc;
+    int k = this->m / this->wc;
 
-  for (int i = 0; i < k; i++)
-    for (int j = i*this->wr; j < (i + 1)*this->wr; j++)
-      this->H[i][j] = 1;
+    for (int i = 0; i < k; i++)
+        for (int j = i * this->wr; j < (i + 1) * this->wr; j++)
+            this->H[i][j] = 1;
 
-  std::default_random_engine rng(seed);
+    for (int i = 1; i < this->wc; i++) {
+        /*generate each permutation order using seed*/
+        col_order.clear();
+        for (int j = 0; j < this->n; j++)
+            col_order.push_back(j);
+        std::srand((unsigned int)seed--);
+        std::random_shuffle(col_order.begin(), col_order.end());
 
-  for (int i = 1; i < this->wc; i++)
-  {
-    /*generate each permutation order using seed*/
-    col_order.clear();
-    for (int j = 0; j < this->n; j++)
-      col_order.push_back(j);
-
-    /* Todo: Fix
-    std::shuffle(col_order.begin(), col_order.end(), rng);
-     */
-    int o = seed % k;
-    if (!o) {
-      o = k;
+        for (int j = 0; j < this->n; j++) {
+            int index = (col_order.at(j) / this->wr + k * i);
+            H[index][j] = 1;
+        }
     }
-    for (int j = 1; j < col_order.size(); j++) {
-      if (j % o == 0) {
-        std::swap(col_order[j], col_order[j-1]);
-      }
-    }
-    
-    for (int j = 0; j <this->n; j++)
-    {
-      int index = (col_order.at(j) / this->wr + k * i);
-      H[index][j] = 1;
-    }
-  }
-  return true;
+    return true;
 }
 bool LDPC::generate_Q()
 {
