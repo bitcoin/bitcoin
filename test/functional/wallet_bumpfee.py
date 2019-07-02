@@ -304,7 +304,9 @@ def test_unconfirmed_not_spendable(rbf_node, rbf_node_address):
 
 
 def test_bumpfee_metadata(rbf_node, dest_address):
-    rbfid = rbf_node.sendtoaddress(dest_address, Decimal("0.00100000"), "comment value", "to value")
+    assert(rbf_node.getbalance() < 49)
+    rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
+    rbfid = rbf_node.sendtoaddress(dest_address, 49, "comment value", "to value")
     bumped_tx = rbf_node.bumpfee(rbfid)
     bumped_wtx = rbf_node.gettransaction(bumped_tx["txid"])
     assert_equal(bumped_wtx["comment"], "comment value")
