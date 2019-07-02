@@ -43,6 +43,11 @@ static int AppInitRawTx(int argc, char* argv[])
     //
     gArgs.ParseParameters(argc, argv);
 
+    if (gArgs.IsArgSet("-printcrashinfo")) {
+        std::cout << GetCrashInfoStrFromSerializedStr(gArgs.GetArg("-printcrashinfo", "")) << std::endl;
+        return true;
+    }
+
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         SelectParams(ChainNameFromCommandLine());

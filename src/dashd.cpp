@@ -76,6 +76,11 @@ bool AppInit(int argc, char* argv[])
     // If Qt is used, parameters/dash.conf are parsed in qt/dash.cpp's main()
     gArgs.ParseParameters(argc, argv);
 
+    if (gArgs.IsArgSet("-printcrashinfo")) {
+        std::cout << GetCrashInfoStrFromSerializedStr(gArgs.GetArg("-printcrashinfo", "")) << std::endl;
+        return true;
+    }
+
     // Process help and version before taking care about datadir
     if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") ||  gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version"))
     {

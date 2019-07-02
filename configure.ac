@@ -87,6 +87,7 @@ AC_PATH_PROG(HEXDUMP,hexdump)
 AC_PATH_TOOL(READELF, readelf)
 AC_PATH_TOOL(CPPFILT, c++filt)
 AC_PATH_TOOL(OBJCOPY, objcopy)
+AC_PATH_TOOL(DSYMUTIL, dsymutil)
 
 AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
@@ -192,12 +193,12 @@ AC_ARG_ENABLE([debug],
     [enable_debug=$enableval],
     [enable_debug=no])
 
-# Enable exception stacktraces
-AC_ARG_ENABLE([stacktraces],
-    [AS_HELP_STRING([--enable-stacktraces],
-                    [gather and print exception stack traces (default is no)])],
-    [enable_stacktraces=$enableval],
-    [enable_stacktraces=no])
+# Enable crash hooks
+AC_ARG_ENABLE([crash-hooks],
+    [AS_HELP_STRING([--enable-crash-hooks],
+                    [hook into exception/signal/assert handling to gather stack traces (default is no)])],
+    [enable_crashhooks=$enableval],
+    [enable_crashhooks=no])
 
 # Enable in-wallet miner
 AC_ARG_ENABLE([miner],
@@ -229,9 +230,10 @@ if test "x$enable_debug" = xyes; then
     if test "x$GXX" = xyes; then
         CXXFLAGS="$CXXFLAGS -g3 -O0"
     fi
-elif test "x$enable_stacktraces" = xyes; then
-    # Enable debug information but don't turn off optimization
-    # (stacktraces will be suboptimal, but better than nothing)
+else
+    # We always enable at at least -g1 debug info to support proper stacktraces in crash infos
+    # Stacktraces will be suboptimal due to optimization, but better than nothing. Also, -fno-omit-frame-pointer
+    # mitigates this a little bit
     if test "x$GCC" = xyes; then
         CFLAGS="$CFLAGS -g1 -fno-omit-frame-pointer"
     fi
@@ -241,17 +243,15 @@ elif test "x$enable_stacktraces" = xyes; then
     fi
 fi
 
-AM_CONDITIONAL([ENABLE_STACKTRACES], [test x$enable_stacktraces = xyes])
-if test "x$enable_stacktraces" = xyes; then
-    AC_DEFINE(ENABLE_STACKTRACES, 1, [Define this symbol if stacktraces should be enabled])
+AM_CONDITIONAL([ENABLE_CRASH_HOOKS], [test x$enable_crashhooks = xyes])
+if test "x$enable_crashhooks" = xyes; then
+    AC_DEFINE(ENABLE_CRASH_HOOKS, 1, [Define this symbol if crash hooks should be enabled])
 fi
 AX_CHECK_LINK_FLAG([-Wl,-wrap=__cxa_allocate_exception], [LINK_WRAP_SUPPORTED=yes],,,)
-AX_CHECK_COMPILE_FLAG([-rdynamic], [RDYNAMIC_SUPPORTED=yes],,,)
-AM_CONDITIONAL([STACKTRACE_WRAPPED_CXX_ABI],[test x$LINK_WRAP_SUPPORTED = xyes])
-AM_CONDITIONAL([RDYNAMIC_SUPPORTED],[test x$RDYNAMIC_SUPPORTED = xyes])
+AM_CONDITIONAL([CRASH_HOOKS_WRAPPED_CXX_ABI],[test x$LINK_WRAP_SUPPORTED = xyes])
 
 if test x$LINK_WRAP_SUPPORTED = "xyes"; then
-  AC_DEFINE(STACKTRACE_WRAPPED_CXX_ABI, 1, [Define this symbol to use wrapped CXX ABIs for exception stacktraces])],
+  AC_DEFINE(CRASH_HOOKS_WRAPPED_CXX_ABI, 1, [Define this symbol to use wrapped CXX ABIs for exception stacktraces])
 fi
 
 # Needed for MinGW targets when debug symbols are enabled as compiled objects get very large
@@ -1142,6 +1142,18 @@ else
   AC_MSG_RESULT([no])
 fi
 
+# When compiled natively on MacOS, we need to specify -flat to avoid producing a dSYM bundle
+# When cross-compiled on linux, we're using a different version of the tool that only supports flat symbol files
+AC_MSG_CHECKING([whether dsymutil needs -flat])
+if test x$DSYMUTIL != x && ($DSYMUTIL --help | grep -q \\-flat); then
+AC_MSG_RESULT([yes])
+	DSYMUTIL_FLAT="$DSYMUTIL -flat"
+else
+	AC_MSG_RESULT([no])
+	DSYMUTIL_FLAT="$DSYMUTIL"
+fi
+AC_MSG_RESULT($dsymutil_needs_flat)
+
 if test x$build_bitcoin_utils$build_bitcoin_libs$build_bitcoind$bitcoin_enable_qt$use_bench$use_tests = xnononononono; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-bench or --enable-tests])
 fi
@@ -1205,6 +1217,7 @@ AC_SUBST(EVENT_PTHREADS_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)
+AC_SUBST(DSYMUTIL_FLAT)
 AC_CONFIG_FILES([Makefile src/Makefile doc/man/Makefile share/setup.nsi share/qt/Info.plist test/functional/config.ini])
 AC_CONFIG_FILES([test/util/buildenv.py],[chmod +x test/util/buildenv.py])
 AC_CONFIG_FILES([contrib/devtools/split-debug.sh],[chmod +x contrib/devtools/split-debug.sh])
@@ -1277,7 +1290,7 @@ echo "  with test           = $use_tests"
 echo "  with bench          = $use_bench"
 echo "  with upnp           = $use_upnp"
 echo "  debug enabled       = $enable_debug"
-echo "  stacktraces enabled = $enable_stacktraces"
+echo "  crash hooks enabled = $enable_crashhooks"
 echo "  miner enabled       = $enable_miner"
 echo "  werror              = $enable_werror"
 echo 

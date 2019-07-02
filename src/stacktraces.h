@@ -15,10 +15,8 @@
 
 std::string DemangleSymbol(const std::string& name);
 
-std::string GetCurrentStacktraceStr(size_t skip = 0, size_t max_depth = 16);
-
-std::string GetExceptionStacktraceStr(const std::exception_ptr& e);
 std::string GetPrettyExceptionStr(const std::exception_ptr& e);
+std::string GetCrashInfoStrFromSerializedStr(const std::string& ciStr);
 
 template<typename T>
 std::string GetExceptionWhat(const T& e);
