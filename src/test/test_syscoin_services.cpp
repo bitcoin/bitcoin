@@ -62,7 +62,7 @@ void SetupSYSXAsset(){
 	string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_FLAGS);
 	strSYSXAddress = GetNewFundedAddress("node1");
 	string receiverAddress = GetNewFundedAddress("node1");
-	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "898000000", updateFlags);
+	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "888000000", updateFlags);
 	AssetSend("node1", strSYSXAsset, "\"[{\\\"address\\\":\\\"" + receiverAddress + "\\\",\\\"amount\\\":888000000}]\"");
 	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");	
 }

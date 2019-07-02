@@ -38,7 +38,7 @@ bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pin
     else{
         if (IsAssetAllocationTx(tx.nVersion))
         {
-            if(!DisconnectAssetAllocation(tx, mapAssets, mapAssetAllocations))
+            if(!DisconnectAssetAllocation(tx, mapAssetAllocations))
                 return false;       
         }
         else if (IsAssetTx(tx.nVersion))
@@ -301,7 +301,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     const bool &bJustCheckInternal = blockHash.IsNull()? fJustCheck: false;
     if (IsAssetAllocationTx(tx.nVersion))
     {
-        good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssets, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
+        good = CheckAssetAllocationInputs(tx, inputs, bJustCheckInternal, nHeight, blockHash, mapAssetAllocations, vecLockedOutpoints, errorMessage, bOverflow, bSanityInternal, bMiner);
 
     }
     else if (IsAssetTx(tx.nVersion))
@@ -516,7 +516,7 @@ bool DisconnectMintAsset(const CTransaction &tx, AssetAllocationMap &mapAssetAll
     }    
     return true; 
 }
-bool DisconnectAssetAllocation(const CTransaction &tx, AssetMap& mapAssets, AssetAllocationMap &mapAssetAllocations){
+bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAssetAllocations){
     const uint256& txid = tx.GetHash();
     CAssetAllocation theAssetAllocation(tx);
 
@@ -589,36 +589,6 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetMap& mapAssets, Asse
             }
         }                                       
     }
-    // update supply if burning or minting sys bridge asset
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
-        CAsset dbAsset;
-        #if __cplusplus > 201402 
-        auto result = mapAssets.try_emplace(theAssetAllocation.assetAllocationTuple.nAsset,  std::move(emptyAsset));
-        #else
-        auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(theAssetAllocation.assetAllocationTuple.nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-        #endif   
-    
-        auto mapAsset = result.first;
-        const bool& mapAssetNotFound = result.second;
-        if(mapAssetNotFound){
-            if (!GetAsset(theAssetAllocation.assetAllocationTuple.nAsset, dbAsset)) {
-                LogPrint(BCLog::SYS,"DisconnectAssetAllocation: Could not get asset %d\n",theAssetAllocation.assetAllocationTuple.nAsset);
-                return false;               
-            } 
-            mapAsset->second = std::move(dbAsset);                        
-        }
-        CAsset& storedSenderRef = mapAsset->second;  
-        // opposite supply logic according to checkassetallocationinputs
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
-            storedSenderRef.nTotalSupply += nTotal;
-        else
-            storedSenderRef.nTotalSupply -= nTotal;
-        if(storedSenderRef.nTotalSupply < 0 || storedSenderRef.nTotalSupply > storedSenderRef.nMaxSupply) {
-            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Asset out of range: nTotalSupply %lld, nMaxSupply: %lld\n",storedSenderRef.nTotalSupply, storedSenderRef.nMaxSupply);
-            return false;
-        }  
-
-    }
     if(fAssetIndex){
         if(fAssetIndexGuids.empty() || std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), theAssetAllocation.assetAllocationTuple.nAsset) != fAssetIndexGuids.end()){
             if(!passetindexdb->EraseIndexTXID(theAssetAllocation.assetAllocationTuple, txid)){
@@ -639,7 +609,7 @@ CAmount FindBurnAmountFromTx(const CTransaction& tx){
     return 0;
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
-        bool fJustCheck, int nHeight, const uint256& blockhash, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
+        bool fJustCheck, int nHeight, const uint256& blockhash, AssetAllocationMap &mapAssetAllocations, std::vector<COutPoint> &vecLockedOutpoints, string &errorMessage, bool& bOverflow, const bool &bSanityCheck, const bool &bMiner) {
     if (passetallocationdb == nullptr)
         return false;
     const uint256 & txHash = tx.GetHash();
@@ -835,22 +805,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 }
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);               
             } 
-            mapAssetAllocationReceiver->second.nBalance += nBurnAmount;            
-            // update asset total supply
-            #if __cplusplus > 201402 
-            auto resultAsset = mapAssets.try_emplace(nBurnAsset,  std::move(emptyAsset));
-            #else
-            auto resultAsset  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-            #endif  
-            auto mapAsset = resultAsset.first;
-            const bool & mapAssetNotFound = resultAsset.second; 
-            if (mapAssetNotFound)
-            { 
-                mapAsset->second = dbAsset;  
-            } 
-            CAsset &storedSenderAssetRef = mapAsset->second;
-            storedSenderAssetRef.nTotalSupply += nBurnAmount;
-                                      
+            mapAssetAllocationReceiver->second.nBalance += nBurnAmount;                              
         }else if (!bSanityCheck && !bMiner) {
             LOCK(cs_assetallocationarrival);
             // add conflicting sender if using ZDAG
@@ -868,21 +823,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid Syscoin Bridge Asset GUID specified");
                 return error(errorMessage.c_str());
             }
-            nBurnAmount = theAssetAllocation.listSendingAllocationAmounts[0].second;
-            // update asset total supply
-            #if __cplusplus > 201402 
-            auto resultAsset = mapAssets.try_emplace(nBurnAsset,  std::move(emptyAsset));
-            #else
-            auto resultAsset  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nBurnAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-            #endif  
-            auto mapAsset = resultAsset.first;
-            const bool & mapAssetNotFound = resultAsset.second;
-            if (mapAssetNotFound)
-            { 
-                mapAsset->second = dbAsset;  
-            } 
-            CAsset &storedSenderAssetRef = mapAsset->second;
-            storedSenderAssetRef.nTotalSupply -= nBurnAmount;                 
+            nBurnAmount = theAssetAllocation.listSendingAllocationAmounts[0].second;             
         }
         else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
             std::vector<unsigned char> vchEthAddress;
