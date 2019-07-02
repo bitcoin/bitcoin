@@ -129,6 +129,11 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
         outval = value - decimal.Decimal("0.00001000")
         rawtx = node2.createrawtransaction([{"txid": txid, "vout": vout}], [{self.final: outval}])
 
+        prevtx_err = dict(prevtxs[0])
+        del prevtx_err["redeemScript"]
+
+        assert_raises_rpc_error(-8, "Missing redeemScript/witnessScript", node2.signrawtransactionwithkey, rawtx, self.priv[0:self.nsigs-1], [prevtx_err])
+
         rawtx2 = node2.signrawtransactionwithkey(rawtx, self.priv[0:self.nsigs - 1], prevtxs)
         rawtx3 = node2.signrawtransactionwithkey(rawtx2["hex"], [self.priv[-1]], prevtxs)
 
