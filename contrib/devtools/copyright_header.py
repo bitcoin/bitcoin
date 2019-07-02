@@ -34,7 +34,7 @@ EXCLUDE_DIRS = [
     "src/univalue/",
 ]
 
-INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.py']
+INCLUDE = ['*.h', '*.cpp', '*.cc', '*.c', '*.mm', '*.py']
 INCLUDE_COMPILED = re.compile('|'.join([fnmatch.translate(m) for m in INCLUDE]))
 
 def applies_to_file(filename):
@@ -90,14 +90,12 @@ def compile_copyright_regex(copyright_style, year_style, name):
 EXPECTED_HOLDER_NAMES = [
     "Satoshi Nakamoto\n",
     "The Bitcoin Core developers\n",
-    "Bitcoin Core Developers\n",
     "BitPay Inc\.\n",
     "University of Illinois at Urbana-Champaign\.\n",
     "Pieter Wuille\n",
     "Wladimir J. van der Laan\n",
     "Jeff Garzik\n",
     "Jan-Klaas Kollhof\n",
-    "Sam Rushing\n",
     "ArtForz -- public domain half-a-node\n",
     "Intel Corporation",
     "The Zcash developers",
