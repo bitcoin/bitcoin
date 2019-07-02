@@ -80,6 +80,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_bumpfee_metadata(rbf_node, dest_address)
         test_locked_wallet_fails(rbf_node, dest_address)
         test_change_script_match(rbf_node, dest_address)
+        test_maxtxfee_fails(self, rbf_node, dest_address)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(rbf_node, dest_address)
         test_no_more_inputs_fails(rbf_node, dest_address)
@@ -246,6 +247,15 @@ def test_settxfee(rbf_node, dest_address):
     # feerate of the bumped transaction is small.
     assert_greater_than(Decimal("0.00001000"), abs(requested_feerate - actual_feerate))
     rbf_node.settxfee(Decimal("0.00000000"))  # unset paytxfee
+
+
+def test_maxtxfee_fails(test, rbf_node, dest_address):
+    test.restart_node(1, ['-maxtxfee=0.00003'] + test.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    rbfid = spend_one_input(rbf_node, dest_address)
+    assert_raises_rpc_error(-4, "Unable to create transaction: Fee exceeds maximum configured by -maxtxfee", rbf_node.bumpfee, rbfid)
+    test.restart_node(1, test.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
 
 
 def test_rebumping(rbf_node, dest_address):

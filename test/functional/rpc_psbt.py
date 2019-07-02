@@ -136,7 +136,7 @@ class PSBTTest(BitcoinTestFramework):
         assert_greater_than(0.06, res["fee"])
 
         # feeRate of 10 BTC / KB produces a total fee well above -maxtxfee
-        # previously this was silenty capped at -maxtxfee
+        # previously this was silently capped at -maxtxfee
         assert_raises_rpc_error(-4, "Fee exceeds maximum configured by -maxtxfee", self.nodes[1].walletcreatefundedpsbt, [{"txid":txid,"vout":p2wpkh_pos},{"txid":txid,"vout":p2sh_p2wpkh_pos},{"txid":txid,"vout":p2pkh_pos}], {self.nodes[1].getnewaddress():29.99}, 0, {"feeRate": 10})
 
         # partially sign multisig things with node 1
