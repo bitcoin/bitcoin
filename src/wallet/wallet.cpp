@@ -2671,11 +2671,6 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         }
     }
 
-    if (nFeeRet > maxTxFee) {
-        strFailReason = _("Fee exceeds maximum configured by -maxtxfee");
-        return false;
-    }
-
     return true;
 }
 
@@ -3078,6 +3073,11 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
             strFailReason = _("Transaction too large");
             return false;
         }
+    }
+
+    if (nFeeRet > maxTxFee) {
+        strFailReason = _("Fee exceeds maximum configured by -maxtxfee");
+        return false;
     }
 
     if (gArgs.GetBoolArg("-walletrejectlongchains", DEFAULT_WALLET_REJECT_LONG_CHAINS)) {
