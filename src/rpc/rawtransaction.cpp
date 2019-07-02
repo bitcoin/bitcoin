@@ -1776,7 +1776,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
     { "rawtransactions",    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata","iswitness"} },
-    { "rawtransactions",    "utxoupdatepsbt",               &utxoupdatepsbt,            {"psbt"} },
+    { "rawtransactions",    "utxoupdatepsbt",               &utxoupdatepsbt,            {"psbt", "descriptors"} },
     { "rawtransactions",    "joinpsbts",                    &joinpsbts,                 {"txs"} },
     { "rawtransactions",    "analyzepsbt",                  &analyzepsbt,               {"psbt"} },
 
