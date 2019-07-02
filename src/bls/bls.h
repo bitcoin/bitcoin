@@ -170,6 +170,11 @@ public:
     }
 
 public:
+    inline void Serialize(CSizeComputer& s) const
+    {
+        s.seek(SerSize);
+    }
+
     template <typename Stream>
     inline void Serialize(Stream& s) const
     {
@@ -354,6 +359,11 @@ public:
         }
         hash = r.hash;
         return *this;
+    }
+
+    inline void Serialize(CSizeComputer& s) const
+    {
+        s.seek(BLSObject::SerSize);
     }
 
     template<typename Stream>
