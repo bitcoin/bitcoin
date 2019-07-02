@@ -325,18 +325,32 @@ class PSBTTest(BitcoinTestFramework):
         vout3 = find_output(self.nodes[0], txid3, 11)
         self.sync_all()
 
-        # Update a PSBT with UTXOs from the node
-        # Bech32 inputs should be filled with witness UTXO. Other inputs should not be filled because they are non-witness
+        def test_psbt_input_keys(psbt_input, keys):
+            """Check that the psbt input has only the expected keys."""
+            assert_equal(set(keys), set(psbt_input.keys()))
+
+        # Create a PSBT. None of the inputs are filled initially
         psbt = self.nodes[1].createpsbt([{"txid":txid1, "vout":vout1},{"txid":txid2, "vout":vout2},{"txid":txid3, "vout":vout3}], {self.nodes[0].getnewaddress():32.999})
         decoded = self.nodes[1].decodepsbt(psbt)
-        assert "witness_utxo" not in decoded['inputs'][0] and "non_witness_utxo" not in decoded['inputs'][0]
-        assert "witness_utxo" not in decoded['inputs'][1] and "non_witness_utxo" not in decoded['inputs'][1]
-        assert "witness_utxo" not in decoded['inputs'][2] and "non_witness_utxo" not in decoded['inputs'][2]
+        test_psbt_input_keys(decoded['inputs'][0], [])
+        test_psbt_input_keys(decoded['inputs'][1], [])
+        test_psbt_input_keys(decoded['inputs'][2], [])
+
+        # Update a PSBT with UTXOs from the node
+        # Bech32 inputs should be filled with witness UTXO. Other inputs should not be filled because they are non-witness
         updated = self.nodes[1].utxoupdatepsbt(psbt)
         decoded = self.nodes[1].decodepsbt(updated)
-        assert "witness_utxo" in decoded['inputs'][0] and "non_witness_utxo" not in decoded['inputs'][0]
-        assert "witness_utxo" not in decoded['inputs'][1] and "non_witness_utxo" not in decoded['inputs'][1]
-        assert "witness_utxo" not in decoded['inputs'][2] and "non_witness_utxo" not in decoded['inputs'][2]
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo'])
+        test_psbt_input_keys(decoded['inputs'][1], [])
+        test_psbt_input_keys(decoded['inputs'][2], [])
+
+        # Try again, now while providing descriptors, making P2SH-segwit work, and causing bip32_derivs and redeem_script to be filled in
+        descs = [self.nodes[1].getaddressinfo(addr)['desc'] for addr in [addr1,addr2,addr3]]
+        updated = self.nodes[1].utxoupdatepsbt(psbt, descs)
+        decoded = self.nodes[1].decodepsbt(updated)
+        test_psbt_input_keys(decoded['inputs'][0], ['witness_utxo', 'bip32_derivs'])
+        test_psbt_input_keys(decoded['inputs'][1], [])
+        test_psbt_input_keys(decoded['inputs'][2], ['witness_utxo', 'bip32_derivs', 'redeem_script'])
 
         # Two PSBTs with a common input should not be joinable
         psbt1 = self.nodes[1].createpsbt([{"txid":txid1, "vout":vout1}], {self.nodes[0].getnewaddress():Decimal('10.999')})
