@@ -74,7 +74,7 @@ public:
 class CSimplifiedMNList
 {
 public:
-    std::vector<CSimplifiedMNListEntry> mnList;
+    std::vector<std::unique_ptr<CSimplifiedMNListEntry>> mnList;
 
 public:
     CSimplifiedMNList() {}
