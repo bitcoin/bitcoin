@@ -43,8 +43,8 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
        The first parameter that is set is used.
     */
    // SYS until we get full blocks we just relay on getrequiredfeerate which is based on the relayminfee
-   /*  CFeeRate feerate_needed;
-    if (coin_control.m_feerate) { // 1.
+     CFeeRate feerate_needed;
+    /* if (coin_control.m_feerate) { // 1.
         feerate_needed = *(coin_control.m_feerate);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
         // Allow to override automatic min/max check over coin control instance
