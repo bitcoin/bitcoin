@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
-BOOST_AUTO_TEST_CASE(generate_asset_sysx)
+BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx)
 {
     UniValue r;
-    tfm::format(std::cout,"Running generate_asset_sysx...\n");
+    tfm::format(std::cout,"Running generate_asset_spt_sysx...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -80,10 +80,10 @@ BOOST_AUTO_TEST_CASE(generate_asset_sysx)
     // can update contract
     AssetUpdate("node1", strSYSXAsset, "''", "''", updateFlags, "0x931d387731bbbc988b312206c74f77d004d6b84b");   
 }
-BOOST_AUTO_TEST_CASE(generate_asset_sysx_mint)
+BOOST_AUTO_TEST_CASE(generate_asset_spt_sysx_mint)
 {
     UniValue r;
-    tfm::format(std::cout,"Running generate_asset_sysx_mint...\n");
+    tfm::format(std::cout,"Running generate_asset_spt_sysx_mint...\n");
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
@@ -92,6 +92,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_sysx_mint)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
     string blockHashAfterFundingAddress = find_value(r.get_obj(), "bestblockhash").get_str();
     SyscoinBurn("node1", useraddress, strSYSXAsset, "9");
+
     // check burn balance is 888m - amount burned
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationbalance " + strSYSXAsset + " burn"));
     BOOST_CHECK_EQUAL(888000000*COIN - 9*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
@@ -101,6 +102,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_sysx_mint)
     BOOST_CHECK_EQUAL(888000000*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "addressbalance " + useraddress));
     BOOST_CHECK_EQUAL(10*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
+
     BOOST_CHECK_NO_THROW(CallRPC("node1", "reconsiderblock " + blockHashAfterFundingAddress, true, false));
     // sync back to tip and ensure address balance is 1 and burn balance is 888m - amount burned
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationbalance " + strSYSXAsset + " burn"));
