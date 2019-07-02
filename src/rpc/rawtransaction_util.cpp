@@ -207,6 +207,9 @@ void ParsePrevouts(const UniValue& prevTxsUnival, FillableSigningProvider* keyst
                         throw JSONRPCError(RPC_INVALID_PARAMETER, "redeemScript does not match scriptPubKey");
                     }
                 }
+                if (rs.isNull()) {
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing redeemScript");
+                }
             }
         }
     }
