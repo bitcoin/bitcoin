@@ -551,6 +551,7 @@ class CDBTransaction {
 protected:
     Parent &parent;
     CommitTarget &commitTarget;
+    ssize_t memoryUsage{0}; // signed, just in case we made an error in the calculations so that we don't get an overflow
 
     struct DataStreamCmp {
         static bool less(const CDataStream& a, const CDataStream& b) {
@@ -564,6 +565,8 @@ protected:
     };
 
     struct ValueHolder {
+        size_t memoryUsage;
+        ValueHolder(size_t _memoryUsage) : memoryUsage(_memoryUsage) {}
         virtual ~ValueHolder() = default;
         virtual void Write(const CDataStream& ssKey, CommitTarget &parent) = 0;
     };
@@ -571,7 +574,7 @@ protected:
 
     template <typename V>
     struct ValueHolderImpl : ValueHolder {
-        ValueHolderImpl(const V &_value) : value(_value) { }
+        ValueHolderImpl(const V &_value, size_t _memoryUsage) : ValueHolder(_memoryUsage), value(_value) {}
 
         virtual void Write(const CDataStream& ssKey, CommitTarget &commitTarget) {
             // we're moving the value instead of copying it. This means that Write() can only be called once per
@@ -605,9 +608,18 @@ public:
 
     template <typename V>
     void Write(const CDataStream& ssKey, const V& v) {
-        deletes.erase(ssKey);
+        auto valueMemoryUsage = ::GetSerializeSize(v, SER_DISK, CLIENT_VERSION);
+
+        if (deletes.erase(ssKey)) {
+            memoryUsage -= ssKey.size();
+        }
         auto it = writes.emplace(ssKey, nullptr).first;
-        it->second = std::make_unique<ValueHolderImpl<V>>(v);
+        if (it->second) {
+            memoryUsage -= ssKey.size() + it->second->memoryUsage;
+        }
+        it->second = std::make_unique<ValueHolderImpl<V>>(v, valueMemoryUsage);
+
+        memoryUsage += ssKey.size() + valueMemoryUsage;
     }
 
     template <typename K, typename V>
@@ -657,13 +669,20 @@ public:
     }
 
     void Erase(const CDataStream& ssKey) {
-        writes.erase(ssKey);
-        deletes.emplace(ssKey);
+        auto it = writes.find(ssKey);
+        if (it != writes.end()) {
+            memoryUsage -= ssKey.size() + it->second->memoryUsage;
+            writes.erase(it);
+        }
+        if (deletes.emplace(ssKey).second) {
+            memoryUsage += ssKey.size();
+        }
     }
 
     void Clear() {
         writes.clear();
         deletes.clear();
+        memoryUsage = 0;
     }
 
     void Commit() {
@@ -678,6 +697,19 @@ public:
 
     bool IsClean() {
         return writes.empty() && deletes.empty();
+    }
+
+    size_t GetMemoryUsage() const {
+        if (memoryUsage < 0) {
+            // something went wrong when we accounted/calculated used memory...
+            static volatile bool didPrint = false;
+            if (!didPrint) {
+                LogPrintf("CDBTransaction::%s -- negative memoryUsage (%d)", __func__, memoryUsage);
+                didPrint = true;
+            }
+            return 0;
+        }
+        return (size_t)memoryUsage;
     }
 
     CDBTransactionIterator<CDBTransaction>* NewIterator() {

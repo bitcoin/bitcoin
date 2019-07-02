@@ -195,6 +195,21 @@ void UnserializeImmerMap(Stream& is, immer::map<K, T, Hash, Equal>& m)
     }
 }
 
+// For some reason the compiler is not able to choose the correct Serialize/Deserialize methods without a specialized
+// version of SerReadWrite. It otherwise always chooses the version that calls a.Serialize()
+template<typename Stream, typename K, typename T, typename Hash, typename Equal>
+inline void SerReadWrite(Stream& s, const immer::map<K, T, Hash, Equal>& m, CSerActionSerialize ser_action)
+{
+    ::SerializeImmerMap(s, m);
+}
+
+template<typename Stream, typename K, typename T, typename Hash, typename Equal>
+inline void SerReadWrite(Stream& s, immer::map<K, T, Hash, Equal>& obj, CSerActionUnserialize ser_action)
+{
+    ::UnserializeImmerMap(s, obj);
+}
+
+
 class CDeterministicMNList
 {
 public:
@@ -226,13 +241,8 @@ public:
     {
         READWRITE(blockHash);
         READWRITE(nHeight);
-        if (ser_action.ForRead()) {
-            UnserializeImmerMap(s, mnMap);
-            UnserializeImmerMap(s, mnUniquePropertyMap);
-        } else {
-            SerializeImmerMap(s, mnMap);
-            SerializeImmerMap(s, mnUniquePropertyMap);
-        }
+        READWRITE(mnMap);
+        READWRITE(mnUniquePropertyMap);
     }
 
 public:
