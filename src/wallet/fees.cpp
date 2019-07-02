@@ -42,7 +42,8 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
        4. m_confirm_target (user-set member variable of wallet)
        The first parameter that is set is used.
     */
-    CFeeRate feerate_needed;
+   // SYS until we get full blocks we just relay on getrequiredfeerate which is based on the relayminfee
+   /*  CFeeRate feerate_needed;
     if (coin_control.m_feerate) { // 1.
         feerate_needed = *(coin_control.m_feerate);
         if (feeCalc) feeCalc->reason = FeeReason::PAYTXFEE;
@@ -77,7 +78,7 @@ CFeeRate GetMinimumFeeRate(const CWallet& wallet, const CCoinControl& coin_contr
             feerate_needed = min_mempool_feerate;
             if (feeCalc) feeCalc->reason = FeeReason::MEMPOOL_MIN;
         }
-    }
+    }*/
 
     // prevent user from paying a fee below the required fee rate
     CFeeRate required_feerate = GetRequiredFeeRate(wallet);
