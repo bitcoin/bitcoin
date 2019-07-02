@@ -39,7 +39,7 @@ CIRCULAR_DEPENDENCIES=()
 
 IFS=$'\n'
 for CIRC in $(cd src && ../contrib/devtools/circular-dependencies.py {*,*/*,*/*/*}.{h,cpp} | sed -e 's/^Circular dependency: //'); do
-    CIRCULAR_DEPENDENCIES+=($CIRC)
+    CIRCULAR_DEPENDENCIES+=( "$CIRC" )
     IS_EXPECTED_CIRC=0
     for EXPECTED_CIRC in "${EXPECTED_CIRCULAR_DEPENDENCIES[@]}"; do
         if [[ "${CIRC}" == "${EXPECTED_CIRC}" ]]; then
