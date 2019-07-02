@@ -57,8 +57,7 @@ class ResendWalletTransactionsTest(SyscoinTestFramework):
         # after the last time we tried to broadcast. Use mocktime and give an extra minute to be sure.
         block_time = int(time.time()) + 6 * 60
         node.setmocktime(block_time)
-        block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockchaininfo()['blocks']), block_time)
-        block.set_base_version(3)
+        block = create_block(int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
         block.rehash()
         block.solve()
         node.submitblock(ToHex(block))
