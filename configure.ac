@@ -242,6 +242,13 @@ AC_ARG_ENABLE([debug],
     [enable_debug=$enableval],
     [enable_debug=no])
 
+# Enable building in low-memory environments
+AC_ARG_ENABLE([lowmem],
+    [AS_HELP_STRING([--enable-lowmem],
+                    [use compiler options which minimise compile-time memory usage at the cost of run-time debuggability (default is no)])],
+    [enable_lowmem=$enableval],
+    [enable_lowmem=no])
+
 # Enable different -fsanitize options
 AC_ARG_WITH([sanitizers],
     [AS_HELP_STRING([--with-sanitizers],
@@ -287,6 +294,10 @@ if test "x$enable_debug" = xyes; then
   AX_CHECK_PREPROC_FLAG([-DDEBUG],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG"]],,[[$CXXFLAG_WERROR]])
   AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"]],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-ftrapv],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -ftrapv"],,[[$CXXFLAG_WERROR]])
+fi
+
+if test "x$enable_lowmem" = xyes; then
+  AX_CHECK_COMPILE_FLAG([-fno-var-tracking],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -fno-var-tracking"],,[[$CXXFLAG_WERROR]])
 fi
 
 if test x$use_sanitizers != x; then
