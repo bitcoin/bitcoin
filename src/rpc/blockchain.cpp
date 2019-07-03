@@ -15,7 +15,6 @@
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
-#include <key_io.h>
 #include <llmq/context.h>
 #include <node/coinstats.h>
 #include <node/context.h>
@@ -49,9 +48,10 @@
 
 #include <univalue.h>
 
-#include <mutex>
-#include <condition_variable>
 #include <merkleblock.h>
+
+#include <condition_variable>
+#include <mutex>
 
 struct CUpdatedBlock
 {
