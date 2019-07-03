@@ -14,6 +14,8 @@
 #include <regex>
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
+const RegTestingSetup* g_testing_setup = nullptr;
+
 namespace {
 
 void GenerateTemplateResults(const std::vector<ankerl::nanobench::Result>& benchmarkResults, const std::string& filename, const char* tpl)
@@ -53,11 +55,14 @@ void benchmark::BenchRunner::RunAll(const Args& args)
     std::vector<ankerl::nanobench::Result> benchmarkResults;
     for (const auto& p : benchmarks()) {
         RegTestingSetup test{};
+        assert(g_testing_setup == nullptr);
+        g_testing_setup = &test;
         {
             assert(::ChainActive().Height() == 0);
         }
 
         if (!std::regex_match(p.first, baseMatch, reFilter)) {
+            g_testing_setup = nullptr;
             continue;
         }
 
@@ -77,6 +82,7 @@ void benchmark::BenchRunner::RunAll(const Args& args)
             }
             std::cout << bench.complexityBigO() << std::endl;
         }
+        g_testing_setup = nullptr;
         benchmarkResults.push_back(bench.results().back());
     }
 

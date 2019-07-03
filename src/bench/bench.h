@@ -15,6 +15,9 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 
+struct RegTestingSetup;
+extern const RegTestingSetup* g_testing_setup; //!< A pointer to the current testing setup
+
 /*
  * Usage:
 

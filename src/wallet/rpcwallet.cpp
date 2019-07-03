@@ -3370,7 +3370,9 @@ UniValue generate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available");
     }
 
-    return generateBlocks(coinbase_script, num_generate, max_tries, true);
+    const CTxMemPool& mempool = EnsureMemPool();
+
+    return generateBlocks(mempool, coinbase_script, num_generate, max_tries, true);
 }
 #else
 UniValue generate(const JSONRPCRequest& request)
