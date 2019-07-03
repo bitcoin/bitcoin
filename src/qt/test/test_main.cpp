@@ -42,12 +42,18 @@ Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
 #endif
 #endif
 
-extern void noui_connect();
-
 // This is all you need to run all the tests
 int main(int argc, char *argv[])
 {
-    BasicTestingSetup test{CBaseChainParams::REGTEST};
+    // Initialize persistent globals with the testing setup state for sanity.
+    // E.g. -datadir in gArgs is set to a temp directory dummy value (instead
+    // of defaulting to the default datadir), or globalChainParams is set to
+    // regtest params.
+    //
+    // All tests must use their own testing setup (if needed).
+    {
+        BasicTestingSetup dummy{CBaseChainParams::REGTEST};
+    }
 
     auto node = interfaces::MakeNode();
 
