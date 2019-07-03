@@ -56,8 +56,7 @@ static BlockAssembler AssemblerForTest(const CChainParams& params) {
     return BlockAssembler(params, options);
 }
 
-static
-struct {
+constexpr static struct {
     unsigned char extranonce;
     unsigned int nonce;
 } blockinfo[] = {
@@ -225,7 +224,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK(pblocktemplate = AssemblerForTest(chainparams).CreateNewBlock(scriptPubKey));
 
     // We can't make transactions until we have inputs
-    // Therefore, load 100 blocks :)
+    // Therefore, load 110 blocks :)
+    static_assert(sizeof(blockinfo) / sizeof(*blockinfo) == 110, "Should have 110 blocks to import");
     int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
     for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
