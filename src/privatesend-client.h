@@ -232,7 +232,7 @@ public:
 
     bool IsDenomSkipped(const CAmount& nDenomValue);
     void AddSkippedDenom(const CAmount& nDenomValue);
-    void ClearSkippedDenominations() { vecDenominationsSkipped.clear(); }
+    void RemoveSkippedDenom(const CAmount& nDenomValue);
 
     void SetMinBlocksToWait(int nMinBlocksToWaitIn) { nMinBlocksToWait = nMinBlocksToWaitIn; }
 

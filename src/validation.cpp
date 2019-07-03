@@ -2385,6 +2385,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
     }
     int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
+    cacheSize += evoDb->GetMemoryUsage() * DB_PEAK_USAGE_FACTOR;
     int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
     // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
     bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
@@ -2522,6 +2523,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
       log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
       DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
       GuessVerificationProgress(chainParams.TxData(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
+    strMessage += strprintf(" evodb_cache=%.1fMiB", evoDb->GetMemoryUsage() * (1.0 / (1<<20)));
     if (!warningMessages.empty())
         strMessage += strprintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
     LogPrintf("%s\n", strMessage);
