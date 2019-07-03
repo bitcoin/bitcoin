@@ -232,6 +232,10 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     result.pushKV("active_commands", active_commands);
 
+    const std::string path = LogInstance().m_file_path.string();
+    UniValue log_path(UniValue::VSTR, path);
+    result.pushKV("logpath", log_path);
+
     return result;
 }
 
