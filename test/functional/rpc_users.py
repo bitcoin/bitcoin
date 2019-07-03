@@ -61,6 +61,19 @@ class HTTPBasicsTest(BitcoinTestFramework):
             f.write(rpcuser+"\n")
             f.write(rpcpassword+"\n")
 
+    def test_auth(self, node, user, password):
+        self.log.info('Correct...')
+        assert_equal(200, call_with_auth(node, user, password).status)
+
+        self.log.info('Wrong...')
+        assert_equal(401, call_with_auth(node, user, password+'wrong').status)
+
+        self.log.info('Wrong...')
+        assert_equal(401, call_with_auth(node, user+'wrong', password).status)
+
+        self.log.info('Wrong...')
+        assert_equal(401, call_with_auth(node, user+'wrong', password+'wrong').status)
+
     def run_test(self):
 
         ##################################################
@@ -71,53 +84,17 @@ class HTTPBasicsTest(BitcoinTestFramework):
         password = "cA773lm788buwYe4g4WT+05pKyNruVKjQ25x3n0DQcM="
         password2 = "8/F3uMDw4KSEbw96U3CA1C4X05dkHDN2BPFjTgZW4KI="
 
-        self.log.info('Correct...')
-        assert_equal(200, call_with_auth(self.nodes[0], url.username, url.password).status)
-
-        #Use new authpair to confirm both work
-        self.log.info('Correct...')
-        assert_equal(200, call_with_auth(self.nodes[0], 'rt', password).status)
-
-        #Wrong login name with rt's password
-        self.log.info('Wrong...')
-        assert_equal(401, call_with_auth(self.nodes[0], 'rtwrong', password).status)
-
-        #Wrong password for rt
-        self.log.info('Wrong...')
-        assert_equal(401, call_with_auth(self.nodes[0], 'rt', password+'wrong').status)
-
-        #Correct for rt2
-        self.log.info('Correct...')
-        assert_equal(200, call_with_auth(self.nodes[0], 'rt2', password2).status)
-
-        #Wrong password for rt2
-        self.log.info('Wrong...')
-        assert_equal(401, call_with_auth(self.nodes[0], 'rt2', password2+'wrong').status)
-
-        #Correct for randomly generated user
-        self.log.info('Correct...')
-        assert_equal(200, call_with_auth(self.nodes[0], self.user, self.password).status)
-
-        #Wrong password for randomly generated user
-        self.log.info('Wrong...')
-        assert_equal(401, call_with_auth(self.nodes[0], self.user, self.password+'Wrong').status)
+        self.test_auth(self.nodes[0], url.username, url.password)
+        self.test_auth(self.nodes[0], 'rt', password)
+        self.test_auth(self.nodes[0], 'rt2', password2)
+        self.test_auth(self.nodes[0], self.user, self.password)
 
         ###############################################################
         # Check correctness of the rpcuser/rpcpassword config options #
         ###############################################################
         url = urllib.parse.urlparse(self.nodes[1].url)
 
-        # rpcuser and rpcpassword authpair
-        self.log.info('Correct...')
-        assert_equal(200, call_with_auth(self.nodes[1], "rpcuser💻", "rpcpassword🔑").status)
-
-        #Wrong login name with rpcuser's password
-        self.log.info('Wrong...')
-        assert_equal(401, call_with_auth(self.nodes[1], 'rpcuserwrong', 'rpcpassword').status)
-
-        #Wrong password for rpcuser
-        self.log.info('Wrong...')
-        assert_equal(401, call_with_auth(self.nodes[1], 'rpcuser', 'rpcpasswordwrong').status)
+        self.test_auth(self.nodes[1], "rpcuser💻", "rpcpassword🔑")
 
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()
