@@ -44,12 +44,12 @@ enum bloomflags
 class CBloomFilter
 {
 private:
-    std::vector<unsigned char> vData;
-    bool isFull;
-    bool isEmpty;
-    unsigned int nHashFuncs;
-    unsigned int nTweak;
-    unsigned char nFlags;
+    std::vector<unsigned char> m_vData;
+    bool m_isFull;
+    bool m_isEmpty;
+    unsigned int m_nHashFuncs;
+    unsigned int m_nTweak;
+    unsigned char m_nFlags;
 
     unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
 
@@ -64,16 +64,16 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(const unsigned int nElements, const double nFPRate, const unsigned int nTweak, unsigned char nFlagsIn);
-    CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
+    CBloomFilter() : m_isFull(true), m_isEmpty(false), m_nHashFuncs(0), m_nTweak(0), m_nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vData);
-        READWRITE(nHashFuncs);
-        READWRITE(nTweak);
-        READWRITE(nFlags);
+        READWRITE(m_vData);
+        READWRITE(m_nHashFuncs);
+        READWRITE(m_nTweak);
+        READWRITE(m_nFlags);
     }
 
     void insert(const std::vector<unsigned char>& vKey);
@@ -128,12 +128,12 @@ public:
     void reset();
 
 private:
-    int nEntriesPerGeneration;
-    int nEntriesThisGeneration;
-    int nGeneration;
-    std::vector<uint64_t> data;
-    unsigned int nTweak;
-    int nHashFuncs;
+    int m_nEntriesPerGeneration;
+    int m_nEntriesThisGeneration;
+    int m_nGeneration;
+    std::vector<uint64_t> m_data;
+    unsigned int m_nTweak;
+    int m_nHashFuncs;
 };
 
 #endif // BITCOIN_BLOOM_H

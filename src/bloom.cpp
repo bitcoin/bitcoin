@@ -25,37 +25,37 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
      * - nElements * log(fp rate) / ln(2)^2
      * We ignore filter parameters which will create a bloom filter larger than the protocol limits
      */
-    vData(std::min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
+    m_vData(std::min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
     /**
      * The ideal number of hash functions is filter size * ln(2) / number of elements
      * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
      * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
      */
-    isFull(false),
-    isEmpty(true),
-    nHashFuncs(std::min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
-    nTweak(nTweakIn),
-    nFlags(nFlagsIn)
+    m_isFull(false),
+    m_isEmpty(true),
+    m_nHashFuncs(std::min((unsigned int)(m_vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
+    m_nTweak(nTweakIn),
+    m_nFlags(nFlagsIn)
 {
 }
 
 inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const
 {
     // 0xFBA4C795 chosen as it guarantees a reasonable bit difference between nHashNum values.
-    return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash) % (vData.size() * 8);
+    return MurmurHash3(nHashNum * 0xFBA4C795 + m_nTweak, vDataToHash) % (m_vData.size() * 8);
 }
 
 void CBloomFilter::insert(const std::vector<unsigned char>& vKey)
 {
-    if (isFull)
+    if (m_isFull)
         return;
-    for (unsigned int i = 0; i < nHashFuncs; i++)
+    for (unsigned int i = 0; i < m_nHashFuncs; ++i)
     {
         unsigned int nIndex = Hash(i, vKey);
         // Sets bit nIndex of vData
-        vData[nIndex >> 3] |= (1 << (7 & nIndex));
+        m_vData[nIndex >> 3] |= (1 << (7 & nIndex));
     }
-    isEmpty = false;
+    m_isEmpty = false;
 }
 
 void CBloomFilter::insert(const COutPoint& outpoint)
@@ -74,15 +74,15 @@ void CBloomFilter::insert(const uint256& hash)
 
 bool CBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 {
-    if (isFull)
+    if (m_isFull)
         return true;
-    if (isEmpty)
+    if (m_isEmpty)
         return false;
-    for (unsigned int i = 0; i < nHashFuncs; i++)
+    for (unsigned int i = 0; i < m_nHashFuncs; ++i)
     {
         unsigned int nIndex = Hash(i, vKey);
         // Checks bit nIndex of vData
-        if (!(vData[nIndex >> 3] & (1 << (7 & nIndex))))
+        if (!(m_vData[nIndex >> 3] & (1 << (7 & nIndex))))
             return false;
     }
     return true;
@@ -104,20 +104,20 @@ bool CBloomFilter::contains(const uint256& hash) const
 
 void CBloomFilter::clear()
 {
-    vData.assign(vData.size(),0);
-    isFull = false;
-    isEmpty = true;
+    m_vData.assign(m_vData.size(), 0);
+    m_isFull = false;
+    m_isEmpty = true;
 }
 
 void CBloomFilter::reset(const unsigned int nNewTweak)
 {
     clear();
-    nTweak = nNewTweak;
+    m_nTweak = nNewTweak;
 }
 
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
-    return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
+    return m_vData.size() <= MAX_BLOOM_FILTER_SIZE && m_nHashFuncs <= MAX_HASH_FUNCS;
 }
 
 bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
@@ -125,15 +125,15 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     bool fFound = false;
     // Match if the filter contains the hash of tx
     //  for finding tx when they appear in a block
-    if (isFull)
+    if (m_isFull)
         return true;
-    if (isEmpty)
+    if (m_isEmpty)
         return false;
     const uint256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
 
-    for (unsigned int i = 0; i < tx.vout.size(); i++)
+    for (unsigned int i = 0; i < tx.vout.size(); ++i)
     {
         const CTxOut& txout = tx.vout[i];
         // Match if the filter contains any arbitrary script data element in any scriptPubKey in tx
@@ -150,9 +150,9 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
             if (data.size() != 0 && contains(data))
             {
                 fFound = true;
-                if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
+                if ((m_nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_ALL)
                     insert(COutPoint(hash, i));
-                else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
+                else if ((m_nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
                 {
                     std::vector<std::vector<unsigned char> > vSolutions;
                     txnouttype type = Solver(txout.scriptPubKey, vSolutions);
@@ -194,13 +194,13 @@ void CBloomFilter::UpdateEmptyFull()
 {
     bool full = true;
     bool empty = true;
-    for (unsigned int i = 0; i < vData.size(); i++)
+    for (unsigned int i = 0; i < m_vData.size(); ++i)
     {
-        full &= vData[i] == 0xff;
-        empty &= vData[i] == 0;
+        full &= m_vData[i] == 0xff;
+        empty &= m_vData[i] == 0;
     }
-    isFull = full;
-    isEmpty = empty;
+    m_isFull = full;
+    m_isEmpty = empty;
 }
 
 CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const double fpRate)
@@ -208,10 +208,10 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
     double logFpRate = log(fpRate);
     /* The optimal number of hash functions is log(fpRate) / log(0.5), but
      * restrict it to the range 1-50. */
-    nHashFuncs = std::max(1, std::min((int)round(logFpRate / log(0.5)), 50));
+    m_nHashFuncs = std::max(1, std::min((int)round(logFpRate / log(0.5)), 50));
     /* In this rolling bloom filter, we'll store between 2 and 3 generations of nElements / 2 entries. */
-    nEntriesPerGeneration = (nElements + 1) / 2;
-    uint32_t nMaxElements = nEntriesPerGeneration * 3;
+    m_nEntriesPerGeneration = (nElements + 1) / 2;
+    uint32_t nMaxElements = m_nEntriesPerGeneration * 3;
     /* The maximum fpRate = pow(1.0 - exp(-nHashFuncs * nMaxElements / nFilterBits), nHashFuncs)
      * =>          pow(fpRate, 1.0 / nHashFuncs) = 1.0 - exp(-nHashFuncs * nMaxElements / nFilterBits)
      * =>          1.0 - pow(fpRate, 1.0 / nHashFuncs) = exp(-nHashFuncs * nMaxElements / nFilterBits)
@@ -219,14 +219,14 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
      * =>          nFilterBits = -nHashFuncs * nMaxElements / log(1.0 - pow(fpRate, 1.0 / nHashFuncs))
      * =>          nFilterBits = -nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / nHashFuncs))
      */
-    uint32_t nFilterBits = (uint32_t)ceil(-1.0 * nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / nHashFuncs)));
-    data.clear();
+    uint32_t nFilterBits = (uint32_t)ceil(-1.0 * m_nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / m_nHashFuncs)));
+    m_data.clear();
     /* For each data element we need to store 2 bits. If both bits are 0, the
      * bit is treated as unset. If the bits are (01), (10), or (11), the bit is
      * treated as set in generation 1, 2, or 3 respectively.
      * These bits are stored in separate integers: position P corresponds to bit
      * (P & 63) of the integers data[(P >> 6) * 2] and data[(P >> 6) * 2 + 1]. */
-    data.resize(((nFilterBits + 63) / 64) << 1);
+    m_data.resize(((nFilterBits + 63) / 64) << 1);
     reset();
 }
 
@@ -245,32 +245,32 @@ static inline uint32_t FastMod(uint32_t x, size_t n) {
 
 void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
 {
-    if (nEntriesThisGeneration == nEntriesPerGeneration) {
-        nEntriesThisGeneration = 0;
-        nGeneration++;
-        if (nGeneration == 4) {
-            nGeneration = 1;
+    if (m_nEntriesThisGeneration == m_nEntriesPerGeneration) {
+        m_nEntriesThisGeneration = 0;
+        ++m_nGeneration;
+        if (m_nGeneration == 4) {
+            m_nGeneration = 1;
         }
-        uint64_t nGenerationMask1 = 0 - (uint64_t)(nGeneration & 1);
-        uint64_t nGenerationMask2 = 0 - (uint64_t)(nGeneration >> 1);
+        uint64_t nGenerationMask1 = 0 - (uint64_t)(m_nGeneration & 1);
+        uint64_t nGenerationMask2 = 0 - (uint64_t)(m_nGeneration >> 1);
         /* Wipe old entries that used this generation number. */
-        for (uint32_t p = 0; p < data.size(); p += 2) {
-            uint64_t p1 = data[p], p2 = data[p + 1];
+        for (uint32_t p = 0; p < m_data.size(); p += 2) {
+            uint64_t p1 = m_data[p], p2 = m_data[p + 1];
             uint64_t mask = (p1 ^ nGenerationMask1) | (p2 ^ nGenerationMask2);
-            data[p] = p1 & mask;
-            data[p + 1] = p2 & mask;
+            m_data[p] = p1 & mask;
+            m_data[p + 1] = p2 & mask;
         }
     }
-    nEntriesThisGeneration++;
+    ++m_nEntriesThisGeneration;
 
-    for (int n = 0; n < nHashFuncs; n++) {
-        uint32_t h = RollingBloomHash(n, nTweak, vKey);
+    for (int n = 0; n < m_nHashFuncs; n++) {
+        uint32_t h = RollingBloomHash(n, m_nTweak, vKey);
         int bit = h & 0x3F;
         /* FastMod works with the upper bits of h, so it is safe to ignore that the lower bits of h are already used for bit. */
-        uint32_t pos = FastMod(h, data.size());
+        uint32_t pos = FastMod(h, m_data.size());
         /* The lowest bit of pos is ignored, and set to zero for the first bit, and to one for the second. */
-        data[pos & ~1] = (data[pos & ~1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(nGeneration & 1)) << bit;
-        data[pos | 1] = (data[pos | 1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(nGeneration >> 1)) << bit;
+        m_data[pos & ~1] = (m_data[pos & ~1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(m_nGeneration & 1)) << bit;
+        m_data[pos | 1] = (m_data[pos | 1] & ~(((uint64_t)1) << bit)) | ((uint64_t)(m_nGeneration >> 1)) << bit;
     }
 }
 
@@ -282,12 +282,12 @@ void CRollingBloomFilter::insert(const uint256& hash)
 
 bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 {
-    for (int n = 0; n < nHashFuncs; n++) {
-        uint32_t h = RollingBloomHash(n, nTweak, vKey);
+    for (int n = 0; n < m_nHashFuncs; n++) {
+        uint32_t h = RollingBloomHash(n, m_nTweak, vKey);
         int bit = h & 0x3F;
-        uint32_t pos = FastMod(h, data.size());
+        uint32_t pos = FastMod(h, m_data.size());
         /* If the relevant bit is not set in either data[pos & ~1] or data[pos | 1], the filter does not contain vKey */
-        if (!(((data[pos & ~1] | data[pos | 1]) >> bit) & 1)) {
+        if (!(((m_data[pos & ~1] | m_data[pos | 1]) >> bit) & 1)) {
             return false;
         }
     }
@@ -302,8 +302,8 @@ bool CRollingBloomFilter::contains(const uint256& hash) const
 
 void CRollingBloomFilter::reset()
 {
-    nTweak = GetRand(std::numeric_limits<unsigned int>::max());
-    nEntriesThisGeneration = 0;
-    nGeneration = 1;
-    std::fill(data.begin(), data.end(), 0);
+    m_nTweak = GetRand(std::numeric_limits<unsigned int>::max());
+    m_nEntriesThisGeneration = 0;
+    m_nGeneration = 1;
+    std::fill(m_data.begin(), m_data.end(), 0);
 }
