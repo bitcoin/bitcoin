@@ -407,7 +407,7 @@ class DashTestFramework(BitcoinTestFramework):
     def create_simple_node(self):
         idx = len(self.nodes)
         args = self.extra_args
-        self.nodes.append(start_node(idx, self.options.tmpdir, args))
+        self.nodes.append(self.start_node(idx, self.options.tmpdir, args))
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
 
@@ -458,7 +458,7 @@ class DashTestFramework(BitcoinTestFramework):
 
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
-        self.stop_node(self.nodes[0], 0)
+        self.stop_node(0)
 
         start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
@@ -514,7 +514,7 @@ class DashTestFramework(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # create faucet node for collateral and transactions
-        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args))
+        self.nodes.append(self.start_node(0, self.options.tmpdir, self.extra_args))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
             set_mocktime(get_mocktime() + 1)

@@ -57,8 +57,8 @@ class SporkTest(BitcoinTestFramework):
         assert(sent)
 
         # restart nodes to check spork persistence
-        self.stop_node(self.nodes[0], 0)
-        self.stop_node(self.nodes[1], 1)
+        self.stop_node(0)
+        self.stop_node(1)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
         self.nodes[1] = self.start_node(1, self.options.tmpdir)
         assert(not self.get_test_spork_state(self.nodes[0]))
