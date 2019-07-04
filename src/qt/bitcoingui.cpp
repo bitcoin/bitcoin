@@ -335,8 +335,9 @@ void BitcoinGUI::createActions()
     openAction->setStatusTip(tr("Open a bitcoin: URI or payment request"));
 
     m_open_wallet_action = new QAction(tr("Open Wallet"), this);
-    m_open_wallet_action->setMenu(new QMenu(this));
+    m_open_wallet_action->setEnabled(false);
     m_open_wallet_action->setStatusTip(tr("Open a wallet"));
+    m_open_wallet_menu = new QMenu(this);
 
     m_close_wallet_action = new QAction(tr("Close Wallet..."), this);
     m_close_wallet_action->setStatusTip(tr("Close wallet"));
@@ -368,11 +369,20 @@ void BitcoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &BitcoinGUI::openClicked);
-        connect(m_open_wallet_action->menu(), &QMenu::aboutToShow, [this] {
-            m_open_wallet_action->menu()->clear();
-            for (std::string path : m_wallet_controller->getWalletsAvailableToOpen()) {
+        connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
+            m_open_wallet_menu->clear();
+            std::vector<std::string> available_wallets = m_wallet_controller->getWalletsAvailableToOpen();
+            std::vector<std::string> wallets = m_node.listWalletDir();
+            for (const auto& path : wallets) {
                 QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
-                QAction* action = m_open_wallet_action->menu()->addAction(name);
+                QAction* action = m_open_wallet_menu->addAction(name);
+
+                if (std::find(available_wallets.begin(), available_wallets.end(), path) == available_wallets.end()) {
+                    // This wallet is already loaded
+                    action->setEnabled(false);
+                    continue;
+                }
+
                 connect(action, &QAction::triggered, [this, name, path] {
                     OpenWalletActivity* activity = m_wallet_controller->openWallet(path);
 
@@ -399,6 +409,10 @@ void BitcoinGUI::createActions()
                     bool invoked = QMetaObject::invokeMethod(activity, "open");
                     assert(invoked);
                 });
+            }
+            if (wallets.empty()) {
+                QAction* action = m_open_wallet_menu->addAction(tr("No wallets available"));
+                action->setEnabled(false);
             }
         });
         connect(m_close_wallet_action, &QAction::triggered, [this] {
@@ -619,6 +633,9 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
     assert(wallet_controller);
 
     m_wallet_controller = wallet_controller;
+
+    m_open_wallet_action->setEnabled(true);
+    m_open_wallet_action->setMenu(m_open_wallet_menu);
 
     connect(wallet_controller, &WalletController::walletAdded, this, &BitcoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &BitcoinGUI::removeWallet);
@@ -1328,6 +1345,7 @@ void BitcoinGUI::showProgress(const QString &title, int nProgress)
         if (progressDialog) {
             progressDialog->close();
             progressDialog->deleteLater();
+            progressDialog = nullptr;
         }
     } else if (progressDialog) {
         progressDialog->setValue(nProgress);

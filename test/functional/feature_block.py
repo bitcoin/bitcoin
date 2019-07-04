@@ -14,7 +14,7 @@ from test_framework.blocktools import (
     get_legacy_sigopcount_block,
     MAX_BLOCK_SIGOPS,
 )
-from test_framework.key import CECKey
+from test_framework.key import ECKey
 from test_framework.messages import (
     CBlock,
     COIN,
@@ -86,9 +86,9 @@ class FullBlockTest(BitcoinTestFramework):
         self.bootstrap_p2p()  # Add one p2p connection to the node
 
         self.block_heights = {}
-        self.coinbase_key = CECKey()
-        self.coinbase_key.set_secretbytes(b"horsebattery")
-        self.coinbase_pubkey = self.coinbase_key.get_pubkey()
+        self.coinbase_key = ECKey()
+        self.coinbase_key.generate()
+        self.coinbase_pubkey = self.coinbase_key.get_pubkey().get_bytes()
         self.tip = None
         self.blocks = {}
         self.genesis_hash = int(self.nodes[0].getbestblockhash(), 16)
@@ -146,20 +146,6 @@ class FullBlockTest(BitcoinTestFramework):
             badtx = template.get_tx()
             if TxTemplate != invalid_txs.InputMissing:
                 self.sign_tx(badtx, attempt_spend_tx)
-            else:
-                # Segwit is active in regtest at this point, so to deserialize a
-                # transaction without any inputs correctly, we set the outputs
-                # to an empty list. This is a hack, as the serialization of an
-                # empty list of outputs is deserialized as flags==0 and thus
-                # deserialization of the outputs is skipped.
-                # A policy check requires "loose" txs to be of a minimum size,
-                # so vtx is not set to be empty in the TxTemplate class and we
-                # only apply the workaround where txs are not "loose", i.e. in
-                # blocks.
-                #
-                # The workaround has the purpose that both sides calculate
-                # the same tx hash in the merkle tree
-                badtx.vout = []
             badtx.rehash()
             badblock = self.update_block(blockname, [badtx])
             self.sync_blocks(
@@ -528,7 +514,7 @@ class FullBlockTest(BitcoinTestFramework):
             tx.vin.append(CTxIn(COutPoint(b39.vtx[i].sha256, 0), b''))
             # Note: must pass the redeem_script (not p2sh_script) to the signature hash function
             (sighash, err) = SignatureHash(redeem_script, tx, 1, SIGHASH_ALL)
-            sig = self.coinbase_key.sign(sighash) + bytes(bytearray([SIGHASH_ALL]))
+            sig = self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))
             scriptSig = CScript([sig, redeem_script])
 
             tx.vin[1].scriptSig = scriptSig
@@ -1284,7 +1270,7 @@ class FullBlockTest(BitcoinTestFramework):
             tx.vin[0].scriptSig = CScript()
             return
         (sighash, err) = SignatureHash(spend_tx.vout[0].scriptPubKey, tx, 0, SIGHASH_ALL)
-        tx.vin[0].scriptSig = CScript([self.coinbase_key.sign(sighash) + bytes(bytearray([SIGHASH_ALL]))])
+        tx.vin[0].scriptSig = CScript([self.coinbase_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))])
 
     def create_and_sign_transaction(self, spend_tx, value, script=CScript([OP_TRUE])):
         tx = self.create_tx(spend_tx, 0, value, script)
