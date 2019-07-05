@@ -925,6 +925,29 @@ if test x$use_reduce_exports = xyes; then
   [AC_MSG_ERROR([Cannot set default symbol visibility. Use --disable-reduce-exports.])])
 fi
 
+AC_MSG_CHECKING([for std::system])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ #include <cstdlib> ]],
+        [[ int nErr = std::system(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_STD__SYSTEM, 1, Define to 1 if you have the `std::system' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+AC_MSG_CHECKING([for ::_wsystem])
+AC_LINK_IFELSE(
+    [ AC_LANG_PROGRAM(
+        [[ ]],
+        [[ int nErr = ::_wsystem(""); ]]
+    )],
+    [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_WSYSTEM, 1, Define to 1 if you have the `::wsystem' function.)],
+    [ AC_MSG_RESULT(no) ]
+)
+
+# Define to 1 if std::system or ::wsystem (Windows) is available
+AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
+
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
 LIBMEMENV=
