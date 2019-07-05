@@ -13,7 +13,6 @@
 
 class CWallet;
 class CScript;
-class LegacyScriptPubKeyMan;
 
 /** IsMine() return codes */
 enum isminetype : unsigned int
@@ -28,8 +27,6 @@ enum isminetype : unsigned int
 };
 /** used for bitflags of isminetype */
 typedef uint8_t isminefilter;
-
-isminetype IsMine(const LegacyScriptPubKeyMan& wallet, const CScript& scriptPubKey);
 
 /**
  * Cachable amount subdivided into watchonly and spendable parts.
