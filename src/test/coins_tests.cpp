@@ -145,8 +145,8 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
             // Determine whether to test HaveCoin before or after Access* (or both). As these functions
             // can influence each other's behaviour by pulling things into the cache, all combinations
             // are tested.
-            bool test_havecoin_before = (insecure_rand() & 0x3) == 0; // TODO change to InsecureRandBits(2) when backporting Bitcoin #10321
-            bool test_havecoin_after = (insecure_rand() & 0x3) == 0; // TODO change to InsecureRandBits(2) when backporting Bitcoin #10321
+            bool test_havecoin_before = (InsecureRandBits(2)) == 0;
+            bool test_havecoin_after = (InsecureRandBits(2)) == 0;
 
             bool result_havecoin = test_havecoin_before ? stack.back()->HaveCoin(COutPoint(txid, 0)) : false;
             const Coin& entry = (InsecureRandRange(500) == 0) ? AccessByTxid(*stack.back(), txid) : stack.back()->AccessCoin(COutPoint(txid, 0));
