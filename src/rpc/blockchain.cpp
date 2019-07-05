@@ -940,6 +940,102 @@ static UniValue getblock(const JSONRPCRequest& request)
     return blockToJSON(block, tip, pblockindex, verbosity >= 2);
 }
 
+static UniValue getblockbyheight(const JSONRPCRequest& request)
+{
+    const RPCHelpMan help{"getblockbyheight",
+                "\nIf verbosity is 0, returns a string that is serialized, hex-encoded data for block 'height'.\n"
+                "If verbosity is 1, returns an Object with information about block <height>.\n"
+                "If verbosity is 2, returns an Object with information about block <height> and information about each transaction. \n",
+                {
+                    {"blockheight", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block height"},
+                    {"verbosity", RPCArg::Type::NUM, /* default */ "1", "0 for hex-encoded data, 1 for a json object, and 2 for json object with transaction data"},
+                },
+                {
+                    RPCResult{"for verbosity = 0",
+            "\"data\"             (string) A string that is serialized, hex-encoded data for block 'height'.\n"
+                    },
+                    RPCResult{"for verbosity = 1",
+            "{\n"
+            "  \"hash\" : \"hash\",     (string) the block hash (same as provided)\n"
+            "  \"confirmations\" : n,   (numeric) The number of confirmations, or -1 if the block is not on the main chain\n"
+            "  \"size\" : n,            (numeric) The block size\n"
+            "  \"strippedsize\" : n,    (numeric) The block size excluding witness data\n"
+            "  \"weight\" : n           (numeric) The block weight as defined in BIP 141\n"
+            "  \"height\" : n,          (numeric) The block height or index\n"
+            "  \"version\" : n,         (numeric) The block version\n"
+            "  \"versionHex\" : \"00000000\", (string) The block version formatted in hexadecimal\n"
+            "  \"merkleroot\" : \"xxxx\", (string) The merkle root\n"
+            "  \"tx\" : [               (array of string) The transaction ids\n"
+            "     \"transactionid\"     (string) The transaction id\n"
+            "     ,...\n"
+            "  ],\n"
+            "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"
+            "  \"nonce\" : n,           (numeric) The nonce\n"
+            "  \"bits\" : \"1d00ffff\", (string) The bits\n"
+            "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
+            "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
+            "  \"nTx\" : n,             (numeric) The number of transactions in the block.\n"
+            "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
+            "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "}\n"
+                    },
+                    RPCResult{"for verbosity = 2",
+            "{\n"
+            "  ...,                     Same output as verbosity = 1.\n"
+            "  \"tx\" : [               (array of Objects) The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result.\n"
+            "         ,...\n"
+            "  ],\n"
+            "  ,...                     Same output as verbosity = 1.\n"
+            "}\n"
+                    },
+                },
+                RPCExamples{
+                    HelpExampleCli("getblockbyheight", "0")
+            + HelpExampleRpc("getblockbyheight", "42")
+                },
+    };
+
+    if (request.fHelp || !help.IsValidNumArgs(request.params.size()))
+        throw std::runtime_error(help.ToString());
+
+    int verbosity = 1;
+    if (!request.params[1].isNull()) {
+        if(request.params[1].isNum())
+            verbosity = request.params[1].get_int();
+        else
+            verbosity = request.params[1].get_bool() ? 1 : 0;
+    }
+
+    // Check if block exists or is negative
+    if(::ChainActive().Height() < request.params[0].get_int() || request.params[0].get_int() <= -1)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block " + std::to_string(request.params[0].get_int()) + " not found");
+
+    CBlock block;
+    CBlockIndex* pblockindex = ::ChainActive()[request.params[0].get_int()];
+    uint256 hash(pblockindex->GetBlockHash());
+    const CBlockIndex* tip;
+
+    if (!pblockindex)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid key");
+
+    {
+        LOCK(cs_main);
+        tip = ::ChainActive().Tip();
+        block = GetBlockChecked(pblockindex);
+    }
+
+    if (verbosity <= 0)
+    {
+        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+        ssBlock << block;
+        std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
+        return strHex;
+    }
+
+    return blockToJSON(block, tip, pblockindex, verbosity >= 2);
+}
+
 struct CCoinsStats
 {
     int nHeight;
@@ -2388,6 +2484,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
+    { "blockchain",         "getblockbyheight",       &getblockbyheight,       {"blockheight","verbosity|verbose"} },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           {} },
