@@ -21,6 +21,7 @@ std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 extern std::unordered_set<std::string> assetAllocationConflicts;
 extern CCriticalSection cs_assetallocation;
 extern CCriticalSection cs_assetallocationarrival;
+int64_t nLastMultithreadMempoolFailure = 0;
 using namespace std;
 bool DisconnectSyscoinTransaction(const CTransaction& tx, const CBlockIndex* pindex, CCoinsViewCache& view, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations, EthereumMintTxVec &vecMintKeys)
 {
@@ -271,16 +272,16 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, std::string& error
 
     return true;
 }
-bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const bool &bSanity)
+bool CheckSyscoinInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, const bool &fJustCheck, int nHeight, const bool &bSanity)
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
     EthereumMintTxVec vecMintKeys;
     std::vector<COutPoint> vecLockedOutpoints;
     bool bOverflow;
-    return CheckSyscoinInputs(false, tx, state, inputs, fJustCheck, bOverflow, nHeight, uint256(), bSanity, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
+    return CheckSyscoinInputs(false, tx, state, inputs, fJustCheck, bOverflow, nHeight, 0, uint256(), bSanity, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints);
 }
-bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs,  bool fJustCheck, bool &bOverflow, int nHeight, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
+bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs,  const bool &fJustCheck, bool &bOverflow, int nHeight, const uint32_t& nTime, const uint256 & blockHash, const bool &bSanity, const bool &bMiner, AssetAllocationMap &mapAssetAllocations, AssetMap &mapAssets, EthereumMintTxVec &vecMintKeys, std::vector<COutPoint> &vecLockedOutpoints)
 {
     if (nHeight == 0)
         nHeight = ::ChainActive().Height()+1;
@@ -289,6 +290,10 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     bool bTxRootError = false;
     bOverflow=false;
     good = true;
+    // reset MT mempool failure time during connectblock, ensure atleast 30 seconds or latch on next block
+    if(nLastMultithreadMempoolFailure > 0 && !blockHash.IsNull() && (nTime > (nLastMultithreadMempoolFailure+30)) ){
+        nLastMultithreadMempoolFailure = 0;
+    }
     if(!IsSyscoinTx(tx.nVersion))
         return true;
     // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode if blockhash isn't null

@@ -214,7 +214,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     std::vector<COutPoint> vecLockedOutpoints;
     for(const CTransactionRef& tx: pblock->vtx){
         bool bOverflow = false;
-        if(!CheckSyscoinInputs(false, *tx, stateInputs, view, false, bOverflow, nHeight, pblock->GetHash(), false, true, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
+        if(!CheckSyscoinInputs(false, *tx, stateInputs, view, false, bOverflow, nHeight, 0, pblock->GetHash(), false, true, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
             txsToRemove.push_back(tx->GetHash());
         if(bOverflow)
             bOverflowed = true;
