@@ -261,14 +261,14 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     strHTML += "<b>" + tr("Transaction total size") + ":</b> " + QString::number(wtx.tx->GetTotalSize()) + " bytes<br>";
 
     // Message from normal dash:URI (dash:XyZ...?message=example)
-    for (const PAIRTYPE(std::string, std::string)& r : wtx.vOrderForm)
+    for (const std::pair<std::string, std::string>& r : wtx.vOrderForm)
         if (r.first == "Message")
             strHTML += "<br><b>" + tr("Message") + ":</b><br>" + GUIUtil::HtmlEscape(r.second, true) + "<br>";
 
     //
     // PaymentRequest info:
     //
-    for (const PAIRTYPE(std::string, std::string)& r : wtx.vOrderForm)
+    for (const std::pair<std::string, std::string>& r : wtx.vOrderForm)
     {
         if (r.first == "PaymentRequest")
         {

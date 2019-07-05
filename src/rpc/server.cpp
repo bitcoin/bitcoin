@@ -233,7 +233,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     jreq.fHelp = true;
     jreq.params = UniValue();
 
-    for (const PAIRTYPE(std::string, const CRPCCommand*)& command : vCommands)
+    for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
     {
         const CRPCCommand *pcmd = command.second;
         std::string strMethod = pcmd->name;

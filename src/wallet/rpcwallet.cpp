@@ -92,7 +92,7 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     entry.push_back(Pair("time", wtx.GetTxTime()));
     entry.push_back(Pair("timereceived", (int64_t)wtx.nTimeReceived));
 
-    for (const PAIRTYPE(std::string, std::string)& item : wtx.mapValue)
+    for (const std::pair<std::string, std::string>& item : wtx.mapValue)
         entry.push_back(Pair(item.first, item.second));
 }
 
@@ -1652,7 +1652,7 @@ UniValue listaccounts(const JSONRPCRequest& request)
         mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
 
     UniValue ret(UniValue::VOBJ);
-    for (const PAIRTYPE(std::string, CAmount)& accountBalance : mapAccountBalances) {
+    for (const std::pair<std::string, CAmount>& accountBalance : mapAccountBalances) {
         ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
     }
     return ret;
