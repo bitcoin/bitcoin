@@ -1268,7 +1268,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
-    static bool bRegtest = Params().NetworkIDString() == CBaseChainParams::REGTEST;
+    static bool bRegtest = Params().NetworkIDString() == CBaseChainParams::REGTEST && !fUnitTest;
     if (nHeight == 0)
         return 50*COIN;
     if (nHeight == 1)
