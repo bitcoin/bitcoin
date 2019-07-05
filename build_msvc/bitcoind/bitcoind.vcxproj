@@ -71,4 +71,5 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_ZMQ_TRUE@" By=""></ReplaceInFile>
   </Target>
+  <Import Project="..\common.vcxproj" />
 </Project>
