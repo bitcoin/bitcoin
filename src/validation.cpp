@@ -64,7 +64,6 @@ std::vector<std::pair<uint256, int64_t> > vecTPSTestReceivedTimesMempool;
 int64_t nTPSTestingStartTime = 0;
 double nTPSTestingSendRawEndTime = 0;
 int64_t nTPSTestingSendRawStartTime = 0;
-int64_t nLastMultithreadMempoolFailure = 0;
 bool fLogThreadpool = false;
 tp::ThreadPool *threadpool = NULL;
 std::vector<CInv> vInvToSend;
@@ -1029,8 +1028,8 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                         bool bypass_limits, const CAmount nAbsurdFee, bool test_accept, bool bMultiThreaded = false, bool bSanityCheck = true) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    // SYSCOIN if its been less 60 seconds since the last MT mempool verification failure then fallback to single threaded
-    if (GetTime() - nLastMultithreadMempoolFailure < 60) {
+    // SYSCOIN if MT mempool verification failure then fallback to single threaded until it latches to 0 again on PoW
+    if (nLastMultithreadMempoolFailure > 0) {
         LogPrint(BCLog::MEMPOOL, "AcceptToMemoryPoolWithTime: using single-threaded verification...\n");
         bMultiThreaded = false;
     }
@@ -2142,7 +2141,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 const uint256& txHash = tx.GetHash(); 
                 blockIndex.emplace_back(std::make_pair(txHash, blockHash));
             } 
-            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bOverflow, pindex->nHeight, blockHash, false, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
+            if (!CheckSyscoinInputs(ibd, tx, state, view, fJustCheck, bOverflow, pindex->nHeight, pindex->nTime, blockHash, false, false, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
                 return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n", block.GetHash().ToString());        
         }
 
