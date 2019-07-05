@@ -1499,3 +1499,113 @@ std::set<CKeyID> LegacyScriptPubKeyMan::GetKeys() const
 }
 
 void LegacyScriptPubKeyMan::SetType(OutputType type, bool internal) {}
+
+bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
+{
+    return false;
+}
+
+isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
+{
+    return ISMINE_NO;
+}
+
+bool DescriptorScriptPubKeyMan::CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys)
+{
+    return false;
+}
+
+bool DescriptorScriptPubKeyMan::Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch)
+{
+    return false;
+}
+
+bool DescriptorScriptPubKeyMan::GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool)
+{
+    return false;
+}
+
+void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, const CTxDestination& addr)
+{
+}
+
+bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
+{
+    return false;
+}
+
+void DescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
+{
+}
+
+bool DescriptorScriptPubKeyMan::IsHDEnabled() const
+{
+    return false;
+}
+
+bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
+{
+    return false;
+}
+
+bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
+{
+    return false;
+}
+
+int64_t DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
+{
+    return GetTime();
+}
+
+size_t DescriptorScriptPubKeyMan::KeypoolCountExternalKeys() const
+{
+    return 0;
+}
+
+unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
+{
+    return 0;
+}
+
+int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
+{
+    return 0;
+}
+
+std::unique_ptr<SigningProvider> DescriptorScriptPubKeyMan::GetSolvingProvider(const CScript& script) const
+{
+    return nullptr;
+}
+
+bool DescriptorScriptPubKeyMan::CanProvide(const CScript& script, SignatureData& sigdata)
+{
+    return false;
+}
+
+bool DescriptorScriptPubKeyMan::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
+{
+    return false;
+}
+
+SigningResult DescriptorScriptPubKeyMan::SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const
+{
+    return SigningResult::SIGNING_FAILED;
+}
+
+TransactionError DescriptorScriptPubKeyMan::FillPSBT(PartiallySignedTransaction& psbt, int sighash_type, bool sign, bool bip32derivs) const
+{
+    return TransactionError::INVALID_PSBT;
+}
+
+const CKeyMetadata* DescriptorScriptPubKeyMan::GetMetadata(const CTxDestination& dest) const
+{
+    return nullptr;
+}
+
+uint256 DescriptorScriptPubKeyMan::GetID() const
+{
+    return uint256();
+}
+
+void DescriptorScriptPubKeyMan::SetType(OutputType type, bool internal) {}

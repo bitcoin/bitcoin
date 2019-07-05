@@ -6,6 +6,7 @@
 #define BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
 
 #include <psbt.h>
+#include <script/descriptor.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <util/error.h>
@@ -479,6 +480,51 @@ public:
     bool GetKey(const CKeyID &address, CKey& key) const override { return false; }
     bool HaveKey(const CKeyID &address) const override { return false; }
     bool GetKeyOrigin(const CKeyID& keyid, KeyOriginInfo& info) const override { return m_spk_man.GetKeyOrigin(keyid, info); }
+};
+
+class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
+{
+public:
+    using ScriptPubKeyMan::ScriptPubKeyMan;
+
+    bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) override;
+    isminetype IsMine(const CScript& script) const override;
+
+    bool CheckDecryptionKey(const CKeyingMaterial& master_key, bool accept_no_keys = false) override;
+    bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
+
+    bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
+    void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
+
+    bool TopUp(unsigned int size = 0) override;
+
+    void MarkUnusedAddresses(const CScript& script) override;
+
+    bool IsHDEnabled() const override;
+
+    bool HavePrivateKeys() const override;
+
+    int64_t GetOldestKeyPoolTime() const override;
+    size_t KeypoolCountExternalKeys() const override;
+    unsigned int GetKeyPoolSize() const override;
+
+    int64_t GetTimeFirstKey() const override;
+
+    const CKeyMetadata* GetMetadata(const CTxDestination& dest) const override;
+
+    bool CanGetAddresses(bool internal = false) const override;
+
+    std::unique_ptr<SigningProvider> GetSolvingProvider(const CScript& script) const override;
+
+    bool CanProvide(const CScript& script, SignatureData& sigdata) override;
+
+    bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const override;
+    SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const override;
+    TransactionError FillPSBT(PartiallySignedTransaction& psbt, int sighash_type = 1 /* SIGHASH_ALL */, bool sign = true, bool bip32derivs = false) const override;
+
+    uint256 GetID() const override;
+
+    void SetType(OutputType type, bool internal) override;
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
