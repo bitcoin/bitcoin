@@ -74,6 +74,7 @@ The Syscoin repo's [root README](/README.md) contains relevant information on th
 - [syscoin.conf Configuration File](syscoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
+- [Reduce Memory](reduce-memory.md)
 - [Reduce Traffic](reduce-traffic.md)
 - [Tor Support](tor.md)
 - [Init Scripts (systemd/upstart/openrc)](init.md)
