@@ -1114,6 +1114,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 }
 #endif
 
+#if defined(HAVE_SYSTEM)
 void runCommand(const std::string& strCommand)
 {
     if (strCommand.empty()) return;
@@ -1125,6 +1126,7 @@ void runCommand(const std::string& strCommand)
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
+#endif
 
 void SetupEnvironment()
 {
