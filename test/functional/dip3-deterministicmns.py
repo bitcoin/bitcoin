@@ -38,7 +38,7 @@ class DIP3Test(BitcoinTestFramework):
         args = self.extra_args
         if extra_args is not None:
             args += extra_args
-        self.nodes[0] = start_node(0, self.options.tmpdir, extra_args=args)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, extra_args=args)
         for i in range(1, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None:
                 connect_nodes_bi(self.nodes, 0, i)
@@ -252,7 +252,7 @@ class DIP3Test(BitcoinTestFramework):
         while len(self.nodes) <= mn.idx:
             self.nodes.append(None)
         extra_args = ['-masternode=1', '-masternodeblsprivkey=%s' % mn.blsMnkey]
-        n = start_node(mn.idx, self.options.tmpdir, self.extra_args + extra_args, stderr=sys.stdout)
+        n = self.start_node(mn.idx, self.options.tmpdir, self.extra_args + extra_args, stderr=sys.stdout)
         self.nodes[mn.idx] = n
         for i in range(0, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:

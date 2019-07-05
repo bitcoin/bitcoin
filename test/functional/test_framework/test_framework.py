@@ -465,7 +465,7 @@ class DashTestFramework(BitcoinTestFramework):
             copy_datadir(0, idx + start_idx, self.options.tmpdir)
 
         # restart faucet node
-        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args)
 
     def start_masternodes(self):
         start_idx = len(self.nodes)
@@ -477,7 +477,7 @@ class DashTestFramework(BitcoinTestFramework):
         def do_start(idx):
             args = ['-masternode=1',
                     '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
-            node = start_node(idx + start_idx, self.options.tmpdir, args)
+            node = self.start_node(idx + start_idx, self.options.tmpdir, args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = node
             self.nodes[idx + start_idx] = node
