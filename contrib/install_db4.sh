@@ -14,7 +14,7 @@ if [ -z "${1}" ]; then
 fi
 
 expand_path() {
-  echo "$(cd "${1}" && pwd -P)"
+  cd "${1}" && pwd -P
 }
 
 BDB_PREFIX="$(expand_path ${1})/db4"; shift;
@@ -23,7 +23,7 @@ BDB_HASH='12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef'
 BDB_URL="https://download.oracle.com/berkeley-db/${BDB_VERSION}.tar.gz"
 
 check_exists() {
-  which "$1" >/dev/null 2>&1
+  command -v "$1" >/dev/null
 }
 
 sha256_check() {
@@ -95,7 +95,9 @@ make install
 echo
 echo "db4 build complete."
 echo
+# shellcheck disable=SC2016
 echo 'When compiling bitcoind, run `./configure` in the following way:'
 echo
 echo "  export BDB_PREFIX='${BDB_PREFIX}'"
+# shellcheck disable=SC2016
 echo '  ./configure BDB_LIBS="-L${BDB_PREFIX}/lib -ldb_cxx-4.8" BDB_CFLAGS="-I${BDB_PREFIX}/include" ...'
