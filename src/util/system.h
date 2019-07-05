@@ -89,7 +89,7 @@ fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-#if defined(HAVE_SYSTEM)
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
 
