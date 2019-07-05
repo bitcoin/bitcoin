@@ -45,7 +45,7 @@ class DIP3Test(BitcoinTestFramework):
 
     def stop_controller_node(self):
         self.log.info("stopping controller node")
-        stop_node(self.nodes[0], 0)
+        self.stop_node(self.nodes[0], 0)
 
     def restart_controller_node(self):
         self.stop_controller_node()

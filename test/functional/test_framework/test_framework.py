@@ -458,7 +458,7 @@ class DashTestFramework(BitcoinTestFramework):
 
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
-        stop_node(self.nodes[0], 0)
+        self.stop_node(self.nodes[0], 0)
 
         start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
