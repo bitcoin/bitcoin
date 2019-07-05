@@ -64,7 +64,7 @@ void RPCTypeCheck(const UniValue& params,
                   bool fAllowNull)
 {
     unsigned int i = 0;
-    BOOST_FOREACH(UniValue::VType t, typesExpected)
+    for (UniValue::VType t : typesExpected)
     {
         if (params.size() <= i)
             break;
@@ -103,7 +103,7 @@ void RPCTypeCheckObj(const UniValue& o,
 
     if (fStrict)
     {
-        BOOST_FOREACH(const std::string& k, o.getKeys())
+        for (const std::string& k : o.getKeys())
         {
             if (typesExpected.count(k) == 0)
             {
@@ -233,7 +233,7 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
     jreq.fHelp = true;
     jreq.params = UniValue();
 
-    BOOST_FOREACH(const PAIRTYPE(std::string, const CRPCCommand*)& command, vCommands)
+    for (const PAIRTYPE(std::string, const CRPCCommand*)& command : vCommands)
     {
         const CRPCCommand *pcmd = command.second;
         std::string strMethod = pcmd->name;

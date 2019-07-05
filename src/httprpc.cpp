@@ -94,7 +94,7 @@ static bool multiUserAuthorized(std::string strUserPass)
 
     if (gArgs.IsArgSet("-rpcauth")) {
         //Search for multi-user login/pass "rpcauth" from config
-        BOOST_FOREACH(std::string strRPCAuth, gArgs.GetArgs("-rpcauth"))
+        for (std::string strRPCAuth : gArgs.GetArgs("-rpcauth"))
         {
             std::vector<std::string> vFields;
             boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));

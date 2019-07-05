@@ -159,7 +159,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
     block.vtx.resize(1);
     // Re-add quorum commitments
     block.vtx.insert(block.vtx.end(), llmqCommitments.begin(), llmqCommitments.end());
-    BOOST_FOREACH(const CMutableTransaction& tx, txns)
+    for (const CMutableTransaction& tx : txns)
         block.vtx.push_back(MakeTransactionRef(tx));
 
     // Manually update CbTx as we modified the block here
