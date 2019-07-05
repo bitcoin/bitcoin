@@ -487,6 +487,8 @@ class DescriptorScriptPubKeyMan : public ScriptPubKeyMan
 public:
     using ScriptPubKeyMan::ScriptPubKeyMan;
 
+    mutable RecursiveMutex cs_desc_man;
+
     bool GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error) override;
     isminetype IsMine(const CScript& script) const override;
 
