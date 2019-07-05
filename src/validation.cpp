@@ -2604,8 +2604,7 @@ bool CChainState::ConnectTip(CValidationState& state, const CChainParams& chainp
 // SYSCOIN
 bool DisconnectBlocks(int blocks)
 {
-    LOCK(cs_main);
-
+    LOCK2(cs_main, ::mempool.cs); 
     CValidationState state;
     const CChainParams& chainparams = Params();
 
