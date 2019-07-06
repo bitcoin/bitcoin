@@ -613,6 +613,22 @@ private:
     /** Indicates the block validation thread is parked */
     bool m_block_validation_parked;
 
+    /**
+     * Utility function to check if it makes sense to write the given block to
+     * disk right now.
+     * Checks whether we already had/have the block and whether it meets DoS
+     * criteria.
+     */
+    bool ShouldMaybeWrite(CBlockIndex* pindex, bool fRequested) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * Performs initial DoS checks for the given block (assuming ShouldMaybeWrite
+     * passes).
+     * Will detect any cases of malleability, ie if this passes, pblock is a
+     * "good" copy of the block.
+     */
+    bool PreWriteCheckBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, bool* fShouldWrite) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 public:
     CChainState(BlockManager& blockman) : m_blockman(blockman) {}
     CChainState();

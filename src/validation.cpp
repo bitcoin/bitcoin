@@ -3423,22 +3423,9 @@ static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, const CChai
     return blockPos;
 }
 
-/** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
+bool CChainState::ShouldMaybeWrite(CBlockIndex* pindex, bool fRequested)
 {
-    const CBlock& block = *pblock;
-
-    if (fNewBlock) *fNewBlock = false;
     AssertLockHeld(cs_main);
-
-    CBlockIndex *pindexDummy = nullptr;
-    CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
-
-    bool accepted_header = m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex);
-    CheckBlockIndex(chainparams.GetConsensus());
-
-    if (!accepted_header)
-        return false;
 
     // Try to process all requested blocks that we don't have, but only
     // process an unrequested block if it's new and has enough work to
@@ -3459,18 +3446,40 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
 
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.
-    if (fAlreadyHave) return true;
+    if (fAlreadyHave) return false;
     if (!fRequested) {  // If we didn't ask for it:
-        if (pindex->nTx != 0) return true;    // This is a previously-processed block that was pruned
-        if (!fHasMoreOrSameWork) return true; // Don't process less-work chains
-        if (fTooFarAhead) return true;        // Block height is too high
+        if (pindex->nTx != 0) return false;    // This is a previously-processed block that was pruned
+        if (!fHasMoreOrSameWork) return false; // Don't process less-work chains
+        if (fTooFarAhead) return false;        // Block height is too high
 
         // Protect against DoS attacks from low-work chains.
         // If our tip is behind, a peer could try to send us
         // low-work blocks on a fake chain that we would never
         // request; don't process these.
-        if (pindex->nChainWork < nMinimumChainWork) return true;
+        if (pindex->nChainWork < nMinimumChainWork) return false;
     }
+
+    return true;
+}
+
+/** Check block before we go to write it to disk */
+bool CChainState::PreWriteCheckBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, bool* fShouldWrite)
+{
+    AssertLockHeld(cs_main);
+
+    const CBlock& block = *pblock;
+    if (fShouldWrite) *fShouldWrite = false;
+
+    CBlockIndex *pindexDummy = nullptr;
+    CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
+
+    bool accepted_header = m_blockman.AcceptBlockHeader(block, state, chainparams, &pindex);
+    CheckBlockIndex(chainparams.GetConsensus());
+
+    if (!accepted_header)
+        return false;
+
+    if (!ShouldMaybeWrite(pindex, fRequested)) return true;
 
     if (!CheckBlock(block, state, chainparams.GetConsensus()) ||
         !ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindex->pprev)) {
@@ -3480,6 +3489,29 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CVali
             setDirtyBlockIndex.insert(pindex);
         }
         return error("%s: %s", __func__, FormatStateMessage(state));
+    }
+
+    if (fShouldWrite) *fShouldWrite = true;
+    return true;
+}
+
+/** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
+bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, const FlatFilePos* dbp, bool* fNewBlock)
+{
+    AssertLockHeld(cs_main);
+
+    const CBlock& block = *pblock;
+    if (fNewBlock) *fNewBlock = false;
+
+    CBlockIndex *pindexDummy = nullptr;
+    CBlockIndex *&pindex = ppindex ? *ppindex : pindexDummy;
+
+    bool fShouldWrite = false;
+    if (!PreWriteCheckBlock(pblock, state, chainparams, &pindex, fRequested, &fShouldWrite)) {
+        return false;
+    }
+    if (!fShouldWrite) {
+        return true;
     }
 
     // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
@@ -3542,6 +3574,47 @@ void CChainState::ProcessBlockValidationQueue()
         }
 
         CChainParams chainparams = Params();
+        {
+            LOCK(cs_main);
+
+            CBlockIndex* pindex = LookupBlockIndex(pblock->GetHash());
+            assert(pindex);
+
+            // Check that we still want this block
+            if (!ShouldMaybeWrite(pindex, fForceProcessing)) {
+                result_promise.set_value(false);
+                continue;
+            }
+
+            // We already verified the block in ProcessNewBlock, so no need to check merkle roots here again
+
+            // Header is valid/has work, merkle tree and segwit merkle tree are good...RELAY NOW
+            // (but if it does not build on our best tip, let the SendMessages loop relay it)
+            if (!IsInitialBlockDownload() && m_chain.Tip() == pindex->pprev)
+                GetMainSignals().NewPoWValidBlock(pindex, pblock);
+
+            CValidationState state;
+            try {
+                FlatFilePos blockPos = SaveBlockToDisk(*pblock, pindex->nHeight, chainparams, nullptr);
+                if (blockPos.IsNull()) {
+                    error(strprintf("%s: Failed to find position to write new block to disk", __func__).c_str());
+                    result_promise.set_value(false);
+                    continue;
+                }
+                ReceivedBlockTransactions(*pblock, pindex, blockPos, chainparams.GetConsensus());
+            } catch (const std::runtime_error& e) {
+                AbortNode(state, std::string("System error: ") + e.what());
+            }
+
+            FlushStateToDisk(chainparams, state, FlushStateMode::NONE);
+
+            CheckBlockIndex(chainparams.GetConsensus());
+
+            if (state.IsError()) {
+                result_promise.set_value(false);
+                continue;
+            }
+        }
 
         NotifyHeaderTip();
 
@@ -3564,8 +3637,6 @@ std::future<bool> CChainState::ProcessNewBlock(const CChainParams& chainparams, 
     bool fNewBlock = false;
 
     {
-        CBlockIndex *pindex = nullptr;
-
         // CheckBlock() does not support multi-threaded block validation because CBlock::fChecked can cause data race.
         // Therefore, the following critical section must include the CheckBlock() call as well.
         LOCK(cs_main);
@@ -3575,7 +3646,7 @@ std::future<bool> CChainState::ProcessNewBlock(const CChainParams& chainparams, 
         bool ret = CheckBlock(*pblock, state, chainparams.GetConsensus());
         if (ret) {
             // Store to disk
-            ret = ::ChainstateActive().AcceptBlock(pblock, state, chainparams, &pindex, fForceProcessing, nullptr, &fNewBlock);
+            ret = PreWriteCheckBlock(pblock, state, chainparams, nullptr, fForceProcessing, &fNewBlock);
         }
         if (!ret || !fNewBlock) {
             if (!ret) {
