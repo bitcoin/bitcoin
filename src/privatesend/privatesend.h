@@ -351,7 +351,7 @@ public:
     bool CheckSignature(const CBLSPublicKey& blsPubKey) const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
-    bool IsExpired(int nHeight);
+    bool IsExpired(const CBlockIndex* pindex);
     bool IsValidStructure();
 };
 
@@ -427,7 +427,7 @@ private:
 
     static CCriticalSection cs_mapdstx;
 
-    static void CheckDSTXes(int nHeight);
+    static void CheckDSTXes(const CBlockIndex* pindex);
 
 public:
     static void InitStandardDenominations();
