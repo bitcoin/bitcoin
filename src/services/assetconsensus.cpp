@@ -802,12 +802,6 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
             errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2029 - " + _("Amount out of money range");
             return error(errorMessage.c_str());
         }        
-  		    
-        if(dbAsset.vchContract.empty())
-        {
-            errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Cannot burn, no contract provided in asset by owner");
-            return error(errorMessage.c_str());
-        } 
        
         mapBalanceSenderCopy -= nBurnAmount;
         if (mapBalanceSenderCopy < 0) {

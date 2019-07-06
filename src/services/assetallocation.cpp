@@ -647,21 +647,9 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 			const UniValue &ownersArray = owners.get_array();
 			for (unsigned int i = 0; i < ownersArray.size(); i++) {
 				const UniValue &owner = ownersArray[i].get_obj();
-				const UniValue &ownerStr = find_value(owner, "address");
-				if (ownerStr.isStr()) {
-                    UniValue requestParam(UniValue::VARR);
-                    requestParam.push_back(ownerStr.get_str());
-                    JSONRPCRequest jsonRequest;
-                    jsonRequest.params = requestParam;
-                    const UniValue &convertedAddressValue = convertaddress(jsonRequest);
-                    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();
-                    const CTxDestination &dest = DecodeDestination(v4address);                   
-                    UniValue detail = DescribeAddress(dest);
-                    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-                    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-                    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-					vecWitnessAddresses.push_back(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+				const UniValue &ownerValue = find_value(owner, "address");
+				if (ownerValue.isStr()) {
+                    vecWitnessAddresses.push_back(DescribeWitnessAddress(ownerValue.get_str())); 
 				}
 			}
 		}

@@ -52,6 +52,34 @@ BOOST_AUTO_TEST_CASE(generate_big_assetdata)
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetinfo " + guid1));
     BOOST_CHECK(itostr(find_value(r.get_obj(), "asset_guid").get_int()) == guid1);
 }
+BOOST_AUTO_TEST_CASE(generate_asset_sysx)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_asset_sysx...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+    SetupSYSXAsset();
+    string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_FLAGS);
+    // cannot edit supply
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + strSYSXAsset + " " + strSYSXAddress + " '' 1 " + updateFlags + " ''"));
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    string hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);
+
+    // cannot edit public data
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetupdate " + strSYSXAsset + " " + strSYSXAddress + " 'pub' 0 " + updateFlags + " ''"));
+
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    hexStr = find_value(r.get_obj(), "hex").get_str();
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "sendrawtransaction " + hexStr, true, false));
+    BOOST_CHECK(r.write().size() < 32);  
+
+    // can update contract
+    AssetUpdate("node1", strSYSXAsset, "''", "''", updateFlags, "0x931d387731bbbc988b312206c74f77d004d6b84b");   
+}
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
     UniValue r;
@@ -82,7 +110,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
     nAmountBalance = AmountFromValue(find_value(r.get_obj(), "amount"));
     BOOST_CHECK_EQUAL(nAmountBalance, nAmountHalf);
 
-    string assetguid = AssetNew("node3", creatoraddress, "pubdata", "0x931D387731bBbC988B312206c74F77D004D6B84b");
+    string assetguid = AssetNew("node3", creatoraddress, "pubdata", "0x931d387731bbbc988b312206c74f77d004d6b84b");
 
     AssetSend("node3", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress + "\\\",\\\"amount\\\":0.5}]\"");
  
@@ -574,11 +602,11 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset)
     string creatoraddress = GetNewFundedAddress("node1");
     string useraddress = GetNewFundedAddress("node1");
 
-    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0x931D387731bBbC988B312206c74F77D004D6B84b");
+    string assetguid = AssetNew("node1", creatoraddress, "pubdata", "0x931d387731bbbc988b312206c74f77d004d6b84b");
 
     AssetSend("node1", assetguid, "\"[{\\\"address\\\":\\\"" + useraddress + "\\\",\\\"amount\\\":0.5}]\"");
     // try to burn more than we own
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress + " 0.6 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress + " 0.6 0x931d387731bbbc988b312206c74f77d004d6b84b"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -636,7 +664,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_multiple)
     BurnAssetAllocation("node1", assetguid, useraddress, "0.6", false);
     MilliSleep(1000);
     // try burn more than we own
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress + " 0.6 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress + " 0.6 0x931d387731bbbc988b312206c74f77d004d6b84b"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -800,7 +828,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
     MilliSleep(1000);
 
     // try to burn more than you own
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress1 + " 0.2 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress1 + " 0.2 0x931d387731bbbc988b312206c74f77d004d6b84b"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -848,7 +876,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)
     AssetAllocationTransfer(false, "node1", assetguid, useraddress1, "\"[{\\\"address\\\":\\\"" + useraddress2 + "\\\",\\\"amount\\\":0.1}]\"");
     
     // try to burn more than you own
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress2 + " 0.4 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress2 + " 0.4 0x931d387731bbbc988b312206c74f77d004d6b84b"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -951,7 +979,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     // burn and transfer at same time for dbl spend attempt
     // burn
     BOOST_CHECK_NO_THROW(CallExtRPC("node1", "tpstestsetenabled", "true"));
-    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress1 + " 0.8 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationburn " + assetguid + " " + useraddress1 + " 0.8 0x931d387731bbbc988b312206c74f77d004d6b84b"));
 
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string burnHex = find_value(r.get_obj(), "hex").get_str();

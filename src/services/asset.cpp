@@ -733,15 +733,10 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			const UniValue &ownersArray = owners.get_array();
 			for (unsigned int i = 0; i < ownersArray.size(); i++) {
 				const UniValue &owner = ownersArray[i].get_obj();
-                const CTxDestination &dest = DecodeDestination(owner.get_str());
-                UniValue detail = DescribeAddress(dest);
-                if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                    throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-                string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-                unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
+                 
 				const UniValue &ownerStr = find_value(owner, "address");
-				if (ownerStr.isStr()) 
-					vecWitnessAddresses.push_back(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+				if (ownerStr.isStr())
+					vecWitnessAddresses.push_back(DescribeWitnessAddress(ownerStr.get_str()));
 			}
 		}
 	}
@@ -810,19 +805,7 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
 
         const UniValue &addressObj = find_value(oOptions, "address");
         if (addressObj.isStr()) {
-            UniValue requestParam(UniValue::VARR);
-            requestParam.push_back(addressObj.get_str());
-            JSONRPCRequest jsonRequest;
-            jsonRequest.params = requestParam;
-            const UniValue &convertedAddressValue = convertaddress(jsonRequest);     
-            const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();              
-            const CTxDestination &dest = DecodeDestination(v4address);
-            UniValue detail = DescribeAddress(dest);
-            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-            string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-            unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
-            assetTuple = CAssetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+            assetTuple = CAssetAllocationTuple(nAsset, DescribeWitnessAddress(addressObj.get_str()));
         }
     }
     else{
