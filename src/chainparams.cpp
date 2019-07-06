@@ -357,7 +357,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
-        consensus.nSYSXAsset = 101010;
+        consensus.nSYSXAsset = 0;
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;

@@ -80,6 +80,22 @@ BOOST_AUTO_TEST_CASE(generate_asset_sysx)
     // can update contract
     AssetUpdate("node1", strSYSXAsset, "''", "''", updateFlags, "0x931d387731bbbc988b312206c74f77d004d6b84b");   
 }
+BOOST_AUTO_TEST_CASE(generate_asset_sysx_mint)
+{
+    UniValue r;
+    tfm::format(std::cout,"Running generate_asset_sysx_mint...\n");
+    GenerateBlocks(5);
+    GenerateBlocks(5, "node2");
+    GenerateBlocks(5, "node3");
+    string useraddress = GetNewFundedAddress("node1");
+    SyscoinBurn("node1", useraddress, strSYSXAsset, "9");
+    // check burn balance is 888m - amount burned
+    // rollback blocks ensure burn is non existent and addressbalance is 0, rollback to when asset was created check it was 888m, rollback to when address was funded it should be 888m and 10 address balance
+    // sync back to tip and ensure address balance is 9 and burn balance is still 888m - amount burned
+    BurnAssetAllocation("node1", strSYSXAsset, useraddress, "9", true, "''");
+    // check burn balance back to 888m and address balance back to 10
+
+}
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
     UniValue r;

@@ -318,13 +318,14 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
-    if (request.fHelp || 2 != params.size())
+    if (request.fHelp || 3 != params.size())
         throw runtime_error(
             RPCHelpMan{"syscoinburntoassetallocation",
                 "\nBurns Syscoin to an Asset Allocation\n",
                 {
                     {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "Funding address to burn SYS from"},
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn. Note that fees are applied on top. It is not inclusive of fees."},
+                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
                 },
                 RPCResult{
                     "{\n"
@@ -332,29 +333,28 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("syscoinburntoassetallocation", "\"funding_address\" \"amount\"")
-                    + HelpExampleRpc("syscoinburntoassetallocation", "\"funding_address\", \"amount\"")
+                    HelpExampleCli("syscoinburntoassetallocation", "\"funding_address\" \"asset_guid\" \"amount\"")
+                    + HelpExampleRpc("syscoinburntoassetallocation", "\"funding_address\", \"asset_guid\", \"amount\"")
                 }
          }.ToString());
-    const uint32_t &nAsset = Params().GetConsensus().nSYSXAsset;
-    std::string strAddressFrom = params[0].get_str();             	
+    std::string strAddressFrom = params[0].get_str();
+    const int &nAsset = params[1].get_int();          	
 	CAssetAllocation theAssetAllocation;
     const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddressFrom);
     strAddressFrom = witnessAddress.ToString();
-	const CAssetAllocationTuple assetAllocationTuple(nAsset, witnessAddress);
-	if (!GetAssetAllocation(assetAllocationTuple, theAssetAllocation))
-		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1500 - " + _("Could not find a asset allocation with this key"));
-
+    if(fUnitTest && Params().GetConsensus().nSYSXAsset == 0){
+        SetSYSXAssetForUnitTests(nAsset);
+    }
 	CAsset theAsset;
 	if (!GetAsset(nAsset, theAsset))
 		throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1501 - " + _("Could not find a asset with this key"));
         
-    UniValue amountObj = params[1];
+    UniValue amountObj = params[2];
 	CAmount nAmount = AssetAmountFromValue(amountObj, theAsset.nPrecision);
 
     theAssetAllocation.SetNull();
     // from burn to allocation
-    theAssetAllocation.assetAllocationTuple.nAsset = std::move(assetAllocationTuple.nAsset);
+    theAssetAllocation.assetAllocationTuple.nAsset = std::move(nAsset);
     theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn")); 
         
     theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), nAmount));
@@ -365,10 +365,11 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
 
     vector<CRecipient> vecSend;
     CScript scriptData;
-    scriptData << OP_RETURN;  
+    scriptData << OP_RETURN << data;  
     CRecipient burn;
     CreateFeeRecipient(scriptData, burn);
     burn.nAmount = nAmount;
+    vecSend.push_back(burn);
     UniValue res = syscointxfund_helper(pwallet, strAddressFrom, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION, "", vecSend);
     return res;
 }
@@ -1222,7 +1223,7 @@ static const CRPCCommand commands[] =
     //  --------------------- ------------------------          -----------------------         ----------
 
    /* assets using the blockchain, coins/points/service backed tokens*/
-    { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"funding_address","amount"} }, 
+    { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"funding_address","asset_guid","amount"} }, 
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},

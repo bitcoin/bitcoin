@@ -835,20 +835,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 }
                 mapAssetAllocationReceiver->second = std::move(dbAssetAllocationReceiver);               
             } 
-            mapAssetAllocationReceiver->second.nBalance += nBurnAmount;   
-            mapBalanceSenderCopy -= nBurnAmount;
-            if (mapBalanceSenderCopy < 0) {
-                if(fJustCheck && !bSanityCheck)
-                {
-                    LOCK(cs_assetallocation); 
-                    if(mapSenderMempoolBalanceNotFound){
-                        mempoolMapAssetBalances.erase(mapBalanceSender);
-                    }
-                }
-                bOverflow = true;
-                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Sender balance is insufficient");
-                return error(errorMessage.c_str());
-            }            
+            mapAssetAllocationReceiver->second.nBalance += nBurnAmount;            
             // update asset total supply
             #if __cplusplus > 201402 
             auto resultAsset = mapAssets.try_emplace(nBurnAsset,  std::move(emptyAsset));

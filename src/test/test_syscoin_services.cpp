@@ -63,9 +63,6 @@ void SetupSYSXAsset(){
 	strSYSXAddress = GetNewFundedAddress("node1");
 	string receiverAddress = GetNewFundedAddress("node1");
 	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "898000000", updateFlags);
-	uint32_t nAsset;
-	if(ParseUInt32(strSYSXAsset,&nAsset))
-		SetSYSXAssetForUnitTests(nAsset);
 	AssetSend("node1", strSYSXAsset, "\"[{\\\"address\\\":\\\"" + receiverAddress + "\\\",\\\"amount\\\":888000000}]\"");
 	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");	
 }
@@ -116,7 +113,7 @@ void StopNodes()
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs, bool reindex)
 {
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -daemon -server -debug=0 -concurrentprocessing=1 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -daemon -server -debug=1 -concurrentprocessing=1 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (reindex)
@@ -616,6 +613,51 @@ void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
 			otherNode2 = "node2";
 	}
 }
+
+string SyscoinBurn(const string& node, const string& address, const string& asset, const string& amount)
+{
+    string otherNode1, otherNode2;
+    GetOtherNodes(node, otherNode1, otherNode2);
+    UniValue r;
+	CAmount nAmountBefore = 0;
+	try{
+    	r = CallRPC(node, "assetallocationbalance " + asset + " " + address);
+		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+    		nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+		}
+	}
+	catch(...){
+
+	}
+	CAmount nAmountAddressBefore = 0;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+	if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+		nAmountAddressBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+	}
+  
+    // "syscoinburntoassetallocation [funding_address] [asset_guid] [amount]\n"
+	// set the sysx variable in consensus params if not already set
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    string hex_str = find_value(r.get_obj(), "hex").get_str();
+   
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false));  
+    GenerateBlocks(5, node);
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationbalance " + asset + " " + address));
+    CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+    CAmount nAmountAddressAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+	nAmountAddressBefore -= AmountFromValue(amount);
+	// account for fee
+    BOOST_CHECK(abs(nAmountAddressBefore - nAmountAddressAfter) < 0.001*COIN);
+    return hex_str;
+}
 string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
 {
     string otherNode1, otherNode2;
@@ -1003,8 +1045,17 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
         UniValue balanceB = find_value(r.get_obj(), "balance");
         beforeBalance = AssetAmountFromValue(balanceB, 8);
     }
-	double nAmount;
-	ParseDouble(amount, &nAmount);
+
+	CAmount nAmountAddressBefore = 0;
+	if(contract == "''"){
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+			nAmountAddressBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+		}
+	}
+  
+
+	CAmount nAmount =  AmountFromValue(amount);
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " " + contract));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hexStr = find_value(r.get_obj(), "hex").get_str();
@@ -1014,7 +1065,14 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
     	GenerateBlocks(5, "node1");
     	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " burn"));
     	UniValue balance = find_value(r.get_obj(), "balance");
-    	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+(nAmount * COIN));
+    	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+nAmount);
+
+		if(contract == "''"){
+			BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+			CAmount nAmountAddressAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+			// account for fee
+			BOOST_CHECK(nAmountAddressAfter - nAmountAddressBefore >= (nAmount-0.001*COIN));
+		}		
     }
 }
 void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid, const string &index){
