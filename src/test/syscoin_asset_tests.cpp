@@ -87,14 +87,36 @@ BOOST_AUTO_TEST_CASE(generate_asset_sysx_mint)
     GenerateBlocks(5);
     GenerateBlocks(5, "node2");
     GenerateBlocks(5, "node3");
+    
     string useraddress = GetNewFundedAddress("node1");
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockchaininfo"));
+    string blockHashAfterFundingAddress = find_value(r.get_obj(), "bestblockhash").get_str();
     SyscoinBurn("node1", useraddress, strSYSXAsset, "9");
     // check burn balance is 888m - amount burned
-    // rollback blocks ensure burn is non existent and addressbalance is 0, rollback to when asset was created check it was 888m, rollback to when address was funded it should be 888m and 10 address balance
-    // sync back to tip and ensure address balance is 9 and burn balance is still 888m - amount burned
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationbalance " + strSYSXAsset + " burn"));
+    BOOST_CHECK_EQUAL(888000000*COIN - 9*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
+    // rollback to when address was funded it should be burn 888m and 10 address balance
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "invalidateblock " + blockHashAfterFundingAddress, true, false));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationbalance " + strSYSXAsset + " burn"));
+    BOOST_CHECK_EQUAL(888000000*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "addressbalance " + useraddress));
+    BOOST_CHECK_EQUAL(10*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
+    BOOST_CHECK_NO_THROW(CallRPC("node1", "reconsiderblock " + blockHashAfterFundingAddress, true, false));
+    // sync back to tip and ensure address balance is 1 and burn balance is 888m - amount burned
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationbalance " + strSYSXAsset + " burn"));
+    BOOST_CHECK_EQUAL(888000000*COIN - 9*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "addressbalance " + useraddress));
+    // account for fees because the funding address is the same as the receiving, so SYS fees are taken out to fund the tx
+    BOOST_CHECK(abs(1*COIN-AmountFromValue(find_value(r.get_obj(), "amount"))) < 0.001*COIN);
+
+    // burn allocation and mint syscoin
     BurnAssetAllocation("node1", strSYSXAsset, useraddress, "9", true, "''");
     // check burn balance back to 888m and address balance back to 10
-
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationbalance " + strSYSXAsset + " burn"));
+    BOOST_CHECK_EQUAL(888000000*COIN, AmountFromValue(find_value(r.get_obj(), "amount")));
+    BOOST_CHECK_NO_THROW(r = CallRPC("node1", "addressbalance " + useraddress));
+    // account for fees because the funding address is the same as the receiving, so SYS fees are taken out to fund the tx
+    BOOST_CHECK(abs(10*COIN-AmountFromValue(find_value(r.get_obj(), "amount"))) < 0.001*COIN);
 }
 BOOST_AUTO_TEST_CASE(generate_asset_address_spend)
 {
