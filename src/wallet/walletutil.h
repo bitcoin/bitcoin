@@ -55,6 +55,9 @@ enum WalletFlags : uint64_t {
     //! bitcoin from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
+
+    //! Indicate that this wallet supports DescriptorScriptPubKeyMan
+    WALLET_FLAG_DESCRIPTORS = (1ULL << 34),
 };
 
 //! Get the path of the wallet directory.
