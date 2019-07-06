@@ -454,6 +454,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.stop_node(3)
         self.nodes[1].encryptwallet("test")
         self.nodes.pop(1)
+        wait_node(1)
 
         self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, [['-usehd=0']] * self.num_nodes)
         # This test is not meant to test fee estimation and we'd like
