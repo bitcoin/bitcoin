@@ -7,6 +7,7 @@
 #include <string>
 class CUniValue;
 class COutPoint;
+class CWitnessAddress;
 unsigned int addressunspent(const std::string& strAddressFrom, COutPoint& outpoint);
 UniValue ValueFromAssetAmount(const CAmount& amount, int precision);
 CAmount AssetAmountFromValue(UniValue& value, int precision);
@@ -22,4 +23,5 @@ CAmount AssetAmountFromValue(UniValue& value, int precision);
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL;
 inline bool AssetRange(const CAmount& nValue) { return (nValue > 0 && nValue <= MAX_ASSET); }
 bool AssetRange(const CAmount& amountIn, int precision);
+CWitnessAddress DescribeWitnessAddress(const std::string& strAddress);
 #endif // SYSCOIN_SERVICES_RPC_ASSETRPC_H

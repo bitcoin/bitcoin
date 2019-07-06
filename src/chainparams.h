@@ -86,6 +86,7 @@ public:
     const ChainTxData& TxData() const { return chainTxData; }
     void TurnOffSegwitForUnitTests();
     // SYSCOIN
+    void SetSYSXAssetForUnitTests(uint32_t asset);
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     const std::string& SporkAddress() const { return strSporkAddress; }
 protected:
@@ -136,5 +137,6 @@ void SelectParams(const std::string& chain);
  * Allows turning off segwit for unit tests.
  */
 void TurnOffSegwitForUnitTests();
-
+// SYSCOIN
+void SetSYSXAssetForUnitTests(uint32_t asset);
 #endif // SYSCOIN_CHAINPARAMS_H

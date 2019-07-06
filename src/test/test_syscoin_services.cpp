@@ -31,6 +31,8 @@ static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
 std::map<string, string> mapNodes;
+string strSYSXAsset;
+string strSYSXAddress;
 // create a map between node alias names and URLs to be used in testing for example CallRPC("mynode", "getblockchaininfo") would call getblockchaininfo on the node alias mynode which would be pushed as a URL here.
 // it is assumed RPC ports are open and u:p is the authentication
 void InitNodeURLMap() {
@@ -45,6 +47,27 @@ string LookupURL(const string& node) {
 	if (mapNodes.find(node) != mapNodes.end())
 		return mapNodes[node];
 	return "";
+}
+void SetupSYSXAsset(){
+	/*
+	enum {
+    ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
+    ASSET_UPDATE_DATA=2, // can you update public data field?
+    ASSET_UPDATE_CONTRACT=4, // can you update smart contract?
+    ASSET_UPDATE_SUPPLY=8, // can you update supply?
+    ASSET_UPDATE_FLAGS=16, // can you update flags? if you would set permanently disable this one and admin flag as well
+    ASSET_UPDATE_ALL=31
+	};
+ 	*/
+	string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_FLAGS);
+	strSYSXAddress = GetNewFundedAddress("node1");
+	string receiverAddress = GetNewFundedAddress("node1");
+	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "898000000", updateFlags);
+	uint32_t nAsset;
+	if(ParseUInt32(strSYSXAsset,&nAsset))
+		SetSYSXAssetForUnitTests(nAsset);
+	AssetSend("node1", strSYSXAsset, "\"[{\\\"address\\\":\\\"" + receiverAddress + "\\\",\\\"amount\\\":888000000}]\"");
+	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");	
 }
 // SYSCOIN testing setup
 void StartNodes()
@@ -735,7 +758,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	}
 	return guid;
 }
-void AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& witness)
+void AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& contract, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -743,6 +766,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	string oldaddress = find_value(r.get_obj(), "address").get_str();
 	string oldpubdata = find_value(r.get_obj(), "public_value").get_str();
+	string oldcontract = find_value(r.get_obj(), "contract").get_str();
     UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
     CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
@@ -757,13 +781,20 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	CAmount newamount = oldsupplyamount + supplyamount;
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
+	string newcontract = contract == "''" ? oldcontract : contract;
+	string newcontract1 = newcontract;
+	string newpubdata1 = newpubdata;
+	if(newcontract1.empty())
+		newcontract1 = "''";
+	if(newpubdata1.empty())
+		newpubdata1 = "''";		
 	string newsupply = supply == "''" ? "0" : supply;
 	int flagsi;
 	ParseInt32(updateflags, &flagsi);
 	int newflags = updateflags == "''" ? oldflags : flagsi;
 	string newflagsstr = itostr(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata1 + " " + newcontract1 + " " +  newsupply + " " + newflagsstr + " " + witness));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -803,6 +834,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
 	
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
@@ -818,6 +850,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "listassetindexassets " + oldaddress ));
 		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
@@ -875,23 +908,19 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK(receivers.size() > 0);
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
+		CAmount amount;
 		BOOST_CHECK(receiver.isObject());
-      
 		UniValue receiverObj = receiver.get_obj();
-        
-        const CTxDestination &dest = DecodeDestination(find_value(receiverObj, "address").get_str());
-        UniValue detail = DescribeAddress(dest);
-        string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();                  
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum()) {
-			const CAmount &amount = AssetAmountFromValue(amountObj, nprecision);
+			amount = AssetAmountFromValue(amountObj, nprecision);
 			inputamount += amount;
 			BOOST_CHECK(amount > 0);
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), amount));
 		}
-
-
+        std::string strAddress = find_value(receiverObj, "address").get_str();
+		const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
+    	strAddress = witnessAddress.ToString(); 
+		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
 
 	string otherNode1, otherNode2;
@@ -962,7 +991,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 
 	return txid;
 }
-void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm){
+void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm, string contract){
     UniValue r;
     try{
         r = CallRPC(node, "assetallocationinfo " + guid + " burn");
@@ -974,8 +1003,9 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
         UniValue balanceB = find_value(r.get_obj(), "balance");
         beforeBalance = AssetAmountFromValue(balanceB, 8);
     }
-    
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+	double nAmount;
+	ParseDouble(amount, &nAmount);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " " + contract));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hexStr = find_value(r.get_obj(), "hex").get_str();
  
@@ -984,7 +1014,7 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
     	GenerateBlocks(5, "node1");
     	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " burn"));
     	UniValue balance = find_value(r.get_obj(), "balance");
-    	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+(0.5 * COIN));
+    	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+(nAmount * COIN));
     }
 }
 void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid, const string &index){
@@ -1023,22 +1053,18 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		BOOST_CHECK(receiver.isObject());
-
-
-		UniValue receiverObj = receiver.get_obj();
-        const CTxDestination &dest = DecodeDestination(find_value(receiverObj, "address").get_str());
-        UniValue detail = DescribeAddress(dest);
-        string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-		UniValue amountObj = find_value(receiverObj, "amount");
+		CAmount amount;
+		UniValue amountObj = find_value(receiver.get_obj(), "amount");
         if (amountObj.isNum()) {
-			const CAmount &amount = AssetAmountFromValue(amountObj, nprecision);
+			amount = AssetAmountFromValue(amountObj, nprecision);
 			inputamount += amount;
 			BOOST_CHECK(amount > 0);
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), amount));
 		}
-
-
+		UniValue receiverObj = receiver.get_obj();
+		std::string strAddress = find_value(receiverObj, "address").get_str();
+		const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
+    	strAddress = witnessAddress.ToString(); 
+		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
 
 	string otherNode1, otherNode2;
