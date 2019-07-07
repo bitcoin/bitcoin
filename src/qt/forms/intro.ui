@@ -213,7 +213,7 @@
    <item>
     <widget class="QLabel" name="lblExplanation2">
      <property name="text">
-      <string>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</string>
+      <string>This initial synchronisation can be very demanding. Each time you run %1, it will continue downloading where it left off.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -223,7 +223,7 @@
    <item>
     <widget class="QLabel" name="lblExplanation3">
      <property name="text">
-      <string>If you have chosen to limit block chain storage (pruning), the historical data must still be downloaded and processed, but will be deleted afterward to keep your disk usage low.</string>
+      <string>Please understand that deleting directory will delete your private keys as well which effectively destroys your coins. Make sure to have the backup. All the keys are stored in the wallet.dat file.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
