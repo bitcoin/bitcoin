@@ -764,7 +764,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         mapBalanceSenderCopy = storedSenderAllocationRef.nBalance;     
     if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
         const uint32_t &nBurnAsset = theAssetAllocation.assetAllocationTuple.nAsset;
-        if(nBurnAsset != Params().GetConsensus().nSYSXAsset)
+        if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
         {
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid Syscoin Bridge Asset GUID specified");
             return error(errorMessage.c_str());
@@ -863,7 +863,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
         CAmount nBurnAmount;
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
             nBurnAsset = storedSenderAllocationRef.assetAllocationTuple.nAsset;
-            if(nBurnAsset != Params().GetConsensus().nSYSXAsset)
+            if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
             {
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid Syscoin Bridge Asset GUID specified");
                 return error(errorMessage.c_str());
