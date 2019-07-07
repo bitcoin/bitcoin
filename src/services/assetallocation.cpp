@@ -705,7 +705,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	}
 	return true;
 }
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) {
+int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds) {
     LOCK(cs_assetallocationarrival);
 	CAssetAllocation dbAssetAllocation;
 	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
@@ -744,7 +744,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
 	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.witnessAddress.ToString()];
 	senderBalance = dbAssetAllocation.nBalance;
-	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
+	int minLatency = nMinLatencyMilliSeconds;
 	if (fUnitTest)
 		minLatency = 1000;
     const CTransaction *prevTx = NULL;
