@@ -494,7 +494,7 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
 
 UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 3 != params.size())
+	if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
 		throw runtime_error(
             RPCHelpMan{"assetallocationsenderstatus",
                 "\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
@@ -506,7 +506,8 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the sender"},
-                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The transaction id of the assetallocationsend"}
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The transaction id of the assetallocationsend. Default to empty. Skip to check all transactions for this sender, enter txid if checking for specific transaction."},
+                    {"min_latency", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The minimum latency to ensure the sender has not sent a transaction within this time (in milliseconds). Defaults to 10000 for 10 seconds."}
                 },
                 RPCResult{
                     "{\n"
@@ -514,8 +515,8 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\"")
-                    + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\"")
+                    HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\" \"min_latency\"")
+                    + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\" \"min_latency\"")
                 }
             }.ToString());
 
@@ -525,6 +526,8 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	txid.SetNull();
 	if(!params[2].get_str().empty())
 		txid.SetHex(params[2].get_str());
+    // 10 seconds by default
+    uint32_t nMinLatencyMilliSeconds = 10*1000;
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
 	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, DescribeWitnessAddress(strAddressSender));
     {
@@ -535,7 +538,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
     		nStatus = ZDAG_MAJOR_CONFLICT;
     	else
-    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
+    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid, nMinLatencyMilliSeconds);
     	
         oAssetAllocationStatus.__pushKV("status", nStatus);
     }
@@ -1331,7 +1334,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
     { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
     { "syscoin",            "assetallocationbalances",          &assetallocationbalances,       {"asset_guid","addresses"} },
-    { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid"}},
+    { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid","address","txid","min_latency"} },
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
     { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },
