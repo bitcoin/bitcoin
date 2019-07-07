@@ -258,7 +258,7 @@ class PSBTTest(BitcoinTestFramework):
 
         # Try again, now while providing descriptors
         descs = [self.nodes[1].getaddressinfo(addr)['desc'] for addr in [addr1,addr2,addr3]]
-        updated = self.nodes[1].utxoupdatepsbt(psbt, descs)
+        updated = self.nodes[1].utxoupdatepsbt(psbt=psbt, descriptors=descs)
         decoded = self.nodes[1].decodepsbt(updated)
         test_psbt_input_keys(decoded['inputs'][0], [])
         test_psbt_input_keys(decoded['inputs'][1], [])
