@@ -210,7 +210,8 @@ static UniValue getrpcinfo(const JSONRPCRequest& request)
             "    \"method\"       (string)  The name of the RPC command \n"
             "    \"duration\"     (numeric)  The running time in microseconds\n"
             "   },...\n"
-            "  ]\n"
+            "  ],\n"
+            " \"logpath\": \"xxx\" (string) The complete file path to the debug log\n"
             "}\n"
                 },
                 RPCExamples{
