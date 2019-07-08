@@ -60,8 +60,10 @@ extern const std::string CRYPTED_KEY;
 extern const std::string CSCRIPT;
 extern const std::string DEFAULTKEY;
 extern const std::string DESTDATA;
+extern const std::string EXTERNALSPK;
 extern const std::string FLAGS;
 extern const std::string HDCHAIN;
+extern const std::string INTERNALSPK;
 extern const std::string KEY;
 extern const std::string KEYMETA;
 extern const std::string MASTER_KEY;
@@ -74,6 +76,7 @@ extern const std::string PURPOSE;
 extern const std::string SETTINGS;
 extern const std::string TX;
 extern const std::string VERSION;
+extern const std::string WALLETDESCRIPTOR;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
 } // namespace DBKeys
