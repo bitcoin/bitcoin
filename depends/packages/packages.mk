@@ -1,6 +1,6 @@
 packages:=boost libevent gmp backtrace
 
-qt_linux_packages:=qt expat dbus libxcb xcb_proto libXau xproto freetype fontconfig libxkbcommon
+qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig libxkbcommon
 
 qrencode_linux_packages = qrencode
 qrencode_android_packages = qrencode
