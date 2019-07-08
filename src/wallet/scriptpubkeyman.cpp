@@ -1540,6 +1540,17 @@ bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 
 void DescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
 {
+    LOCK(cs_desc_man);
+    if (IsMine(script)) {
+        int32_t index = m_map_script_pub_keys[script];
+        if (index >= m_wallet_descriptor.next_index) {
+            WalletLogPrintf("%s: Detected a used keypool item at index %d, mark all keypool items up to this item as used\n", __func__, index);
+            m_wallet_descriptor.next_index = index + 1;
+        }
+        if (!TopUp()) {
+            WalletLogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
+        }
+    }
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
