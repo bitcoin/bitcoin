@@ -28,7 +28,7 @@ UniValue convertaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1) {
         throw std::runtime_error(
             RPCHelpMan{"convertaddress",
-            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3.\n",
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."}
             },
@@ -47,33 +47,36 @@ UniValue convertaddress(const JSONRPCRequest& request)
     
     UniValue ret(UniValue::VOBJ);
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
-
     // Make sure the destination is valid
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
     std::string currentV4Address = "";
     std::string currentV3Address = "";
+    CTxDestination v4Dest;
     if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
+        v4Dest = dest;
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  EncodeDestination(PKHash(*witness_id));
     }
     else if (auto key_id = boost::get<PKHash>(&dest)) {
-        currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
+        v4Dest = WitnessV0KeyHash(*key_id);
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  EncodeDestination(*key_id);
     }
     else if (auto script_id = boost::get<ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(*script_id);
+        v4Dest = *script_id;
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  currentV4Address;
     }
     else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
-        currentV4Address =  EncodeDestination(dest);
+        v4Dest = dest;
+        currentV4Address =  EncodeDestination(v4Dest);
         currentV3Address =  currentV4Address;
-    }  
+    } 
+
     ret.pushKV("v3address", currentV3Address);
-    ret.pushKV("v4address", currentV4Address);
-                       
-    
+    ret.pushKV("v4address", currentV4Address); 
     return ret;
 }
 CWitnessAddress DescribeWitnessAddress(const std::string& strAddress){

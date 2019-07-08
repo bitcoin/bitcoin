@@ -8,7 +8,7 @@
 
 #if (BOOST_OS_SOLARIS)
 
-#include <cstdlib>
+#include <stdlib.h>
 #include <string>
 
 #include <boost/filesystem/operations.hpp>

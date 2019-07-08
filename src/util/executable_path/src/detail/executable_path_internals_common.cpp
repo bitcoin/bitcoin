@@ -5,8 +5,8 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <locale>
 #include <iterator>
@@ -17,7 +17,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/locale.hpp>
 #include <boost/tokenizer.hpp>
-
 #if (BOOST_VERSION >= 106100 && BOOST_VERSION < 106400)
 #  include <boost/dll/runtime_symbol_info.hpp>
 #endif
@@ -177,7 +176,7 @@ std::string GetEnv(const std::string& varName)
         return "";
     }
 #if (BOOST_OS_BSD || BOOST_OS_CYGWIN || BOOST_OS_LINUX || BOOST_OS_MACOS || BOOST_OS_SOLARIS)
-    char* value = std::getenv(varName.c_str());
+    char* value = getenv(varName.c_str());
     if (value == nullptr)
     {
         return "";
@@ -228,7 +227,7 @@ std::wstring GetEnv(const std::wstring& varName)
 #if (BOOST_OS_BSD || BOOST_OS_CYGWIN || BOOST_OS_LINUX || BOOST_OS_MACOS || BOOST_OS_SOLARIS)
     std::locale loc;
     std::string sVarName = to_string(varName, loc);
-    char* value = std::getenv(sVarName.c_str());
+    char* value = getenv(sVarName.c_str());
     if (value == nullptr)
     {
         return L"";

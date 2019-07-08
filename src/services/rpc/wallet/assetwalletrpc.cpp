@@ -1215,7 +1215,98 @@ UniValue sendfrom(const JSONRPCRequest& request)
     std::string strWitness = "";
     return syscointxfund_helper(pwallet, EncodeDestination(from), 0, strWitness, vecSend);
 }
+UniValue convertaddresswallet(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+    if (request.fHelp || request.params.size() != 3) {
+        throw std::runtime_error(
+            RPCHelpMan{"convertaddresswallet",
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. This should only be used with addressed based on compressed private keys only. P2WPKH can be shown as P2PKH in Syscoin 3. Adds to wallet as receiving address under label specified.\n",
+            {
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},
+                {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address", "An optional label"},
+                {"rescan", RPCArg::Type::BOOL, /* default */ "false", "Rescan the wallet for transactions. Useful if you provided label to add to receiving address"},
+            },
+            RPCResult{
+                "{\n"
+                "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
+                "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
+                "}\n"
+            },
+            RPCExamples{
+                HelpExampleCli("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")
+                + HelpExampleRpc("convertaddresswallet", "\"sys1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\" \"bob\" true")
+            }
+            }.ToString());
+    }
+    
+    UniValue ret(UniValue::VOBJ);
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+    std::string strLabel = "";
+    if (!request.params[1].isNull())
+        strLabel = request.params[1].get_str();    
+    bool fRescan = false;
+    if (!request.params[2].isNull())
+        fRescan = request.params[2].get_bool();
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+    std::string currentV4Address = "";
+    std::string currentV3Address = "";
+    CTxDestination v4Dest;
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
+        v4Dest = dest;
+        currentV4Address =  EncodeDestination(v4Dest);
+        currentV3Address =  EncodeDestination(PKHash(*witness_id));
+    }
+    else if (auto key_id = boost::get<PKHash>(&dest)) {
+        v4Dest = WitnessV0KeyHash(*key_id);
+        currentV4Address =  EncodeDestination(v4Dest);
+        currentV3Address =  EncodeDestination(*key_id);
+    }
+    else if (auto script_id = boost::get<ScriptHash>(&dest)) {
+        v4Dest = *script_id;
+        currentV4Address =  EncodeDestination(v4Dest);
+        currentV3Address =  currentV4Address;
+    }
+    else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
+        v4Dest = dest;
+        currentV4Address =  EncodeDestination(v4Dest);
+        currentV3Address =  currentV4Address;
+    } 
+    else
+        strLabel = "";
+    isminetype mine = IsMine(*pwallet, v4Dest);
+    if(!(mine & ISMINE_SPENDABLE)){
+        throw JSONRPCError(RPC_MISC_ERROR, "The V4 Public key or redeemscript not known to wallet, or the key is uncompressed.");
+    }
+    if(!strLabel.empty())
+    {
+        auto locked_chain = pwallet->chain().lock();
+        LOCK(pwallet->cs_wallet);   
+        CScript witprog = GetScriptForDestination(v4Dest);
+        pwallet->AddCScript(witprog); // Implicit for single-key now, but necessary for multisig and for compatibility
+        pwallet->SetAddressBook(v4Dest, strLabel, "receive");
+        WalletRescanReserver reserver(pwallet);                   
+        if (fRescan) {
+            int64_t scanned_time = pwallet->RescanFromTime(0, reserver, true);
+            if (pwallet->IsAbortingRescan()) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Rescan aborted by user.");
+            } else if (scanned_time > 0) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Rescan was unable to fully rescan the blockchain. Some transactions may be missing.");
+            }
+        }  
+    }
 
+    ret.pushKV("v3address", currentV3Address);
+    ret.pushKV("v4address", currentV4Address); 
+    return ret;
+}
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
@@ -1223,6 +1314,9 @@ static const CRPCCommand commands[] =
 
    /* assets using the blockchain, coins/points/service backed tokens*/
     { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"funding_address","asset_guid","amount"} }, 
+    { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
+    { "syscoinwallet",            "syscoinburn",                      &syscoinburn,                   {"funding_address","amount","ethereum_destination_address"} },
+    { "syscoinwallet",            "syscoinmint",                      &syscoinmint,                   {"address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} }, 
     { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","address","amount","ethereum_destination_address"} }, 
     { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","tx_hex","txroot_hex","txmerkleproof_hex","txmerkleproofpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof","witness"} },     
     { "syscoinwallet",            "assetnew",                         &assetnew,                      {"address","symbol","public value","contract","precision","total_supply","max_supply","update_flags","witness"}},
