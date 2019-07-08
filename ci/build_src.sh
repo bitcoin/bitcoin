@@ -28,6 +28,7 @@ if [ "$CHECK_DOC" = 1 ]; then
     test/lint/check-rpc-mappings.py .
     # Run all linters
     test/lint/lint-all.sh
+    test/lint/extended-lint-all.sh
 fi
 
 ccache --max-size=$CCACHE_SIZE
