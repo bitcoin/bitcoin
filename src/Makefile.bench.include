@@ -39,6 +39,7 @@ bench_bench_dash_SOURCES = \
   bench/mempool_stress.cpp \
   bench/nanobench.h \
   bench/nanobench.cpp \
+  bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/util_time.cpp \
   bench/base58.cpp \
