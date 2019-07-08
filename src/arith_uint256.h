@@ -168,6 +168,7 @@ public:
     base_uint& operator*=(uint32_t b32);
     base_uint& operator*=(const base_uint& b);
     base_uint& operator/=(const base_uint& b);
+    base_uint& operator%=(const base_uint& b);
 
     base_uint& operator++()
     {
@@ -210,6 +211,7 @@ public:
     friend inline const base_uint operator-(const base_uint& a, const base_uint& b) { return base_uint(a) -= b; }
     friend inline const base_uint operator*(const base_uint& a, const base_uint& b) { return base_uint(a) *= b; }
     friend inline const base_uint operator/(const base_uint& a, const base_uint& b) { return base_uint(a) /= b; }
+    friend inline const base_uint operator%(const base_uint& a, const base_uint& b) { return base_uint(a) %= b; }
     friend inline const base_uint operator|(const base_uint& a, const base_uint& b) { return base_uint(a) |= b; }
     friend inline const base_uint operator&(const base_uint& a, const base_uint& b) { return base_uint(a) &= b; }
     friend inline const base_uint operator^(const base_uint& a, const base_uint& b) { return base_uint(a) ^= b; }

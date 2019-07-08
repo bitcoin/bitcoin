@@ -108,6 +108,31 @@ base_uint<BITS>& base_uint<BITS>::operator/=(const base_uint& b)
 }
 
 template <unsigned int BITS>
+base_uint<BITS>& base_uint<BITS>::operator%=(const base_uint& b)
+{
+    base_uint<BITS> div = b;     // make a copy, so we can shift.
+    base_uint<BITS> num = *this; // make a copy, so we can subtract.
+    int num_bits = num.bits();
+    int div_bits = div.bits();
+    if (div_bits == 0)
+        throw uint_error("Division by zero");
+    if (div_bits > num_bits) // remainder is the same number
+        return *this;
+    int shift = num_bits - div_bits;
+    div <<= shift; // shift so that div and num align.
+    while (shift >= 0) {
+        if (num >= div) {
+            num -= div;
+        }
+        div >>= 1; // shift back.
+        shift--;
+    }
+    // num now contains the remainder of the division.
+    *this = num;
+    return *this;
+}
+
+template <unsigned int BITS>
 int base_uint<BITS>::CompareTo(const base_uint<BITS>& b) const
 {
     for (int i = WIDTH - 1; i >= 0; i--) {
@@ -191,6 +216,7 @@ template base_uint<256>& base_uint<256>::operator>>=(unsigned int);
 template base_uint<256>& base_uint<256>::operator*=(uint32_t b32);
 template base_uint<256>& base_uint<256>::operator*=(const base_uint<256>& b);
 template base_uint<256>& base_uint<256>::operator/=(const base_uint<256>& b);
+template base_uint<256>& base_uint<256>::operator%=(const base_uint<256>& b);
 template int base_uint<256>::CompareTo(const base_uint<256>&) const;
 template bool base_uint<256>::EqualTo(uint64_t) const;
 template double base_uint<256>::getdouble() const;
