@@ -311,7 +311,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     else if(IsSyscoinMintTx(tx.nVersion))
     {
         if(nHeight <= Params().GetConsensus().nBridgeStartBlock){
-            errorMessage = "Bridge is disabled until blockheight 75000";
+            errorMessage = "Bridge is disabled";
             good = false;
         }
         else{
@@ -1309,6 +1309,11 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         }
         switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
+            if(!fUnitTest && nHeight >= Params().GetConsensus().nBridgeStartBlock && tx.vout[nDataOut].nValue < 500*COIN)
+            {
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Insufficient fees included to create asset (You need to pay atleast 500 SYS).");
+                return error(errorMessage.c_str());               
+            }
             if (theAsset.nAsset <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
             {
                 errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("asset guid invalid");
