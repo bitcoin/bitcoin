@@ -241,10 +241,10 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000016d0016d");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000005209cf425c5f98e068a444b56c14274f1d656d634ee39df98e84fc5e49e");
+        consensus.defaultAssumeValid = uint256S("0x0000047674e00888c7bf9a6f58dd519330eafb45be8b9da76fe291d653d9e7f8");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
@@ -299,7 +299,7 @@ public:
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         checkpointData = {
             {
-                {164, uint256S("000005209cf425c5f98e068a444b56c14274f1d656d634ee39df98e84fc5e49e")},
+                {364, uint256S("0x0000047674e00888c7bf9a6f58dd519330eafb45be8b9da76fe291d653d9e7f8")},
             }
         };
 
