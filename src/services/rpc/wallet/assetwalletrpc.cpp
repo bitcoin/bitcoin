@@ -451,6 +451,10 @@ UniValue assetnew(const JSONRPCRequest& request) {
     scriptData << OP_RETURN << data;
     CRecipient fee;
     CreateFeeRecipient(scriptData, fee);
+    if(!fUnitTest && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
+        // 500 SYS fee for new asset
+        fee.nAmount += 500*COIN;
+    }
     vecSend.push_back(fee);
     UniValue res = syscointxfund_helper(pwallet, strAddress, SYSCOIN_TX_VERSION_ASSET_ACTIVATE, vchWitness, vecSend);
     res.__pushKV("asset_guid", (int)newAsset.nAsset);
