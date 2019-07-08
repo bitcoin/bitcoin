@@ -226,7 +226,7 @@ struct RPCResults {
 
 struct RPCExamples {
     const std::string m_examples;
-    RPCExamples(
+    explicit RPCExamples(
         std::string examples)
         : m_examples(std::move(examples))
     {
