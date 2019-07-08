@@ -437,7 +437,6 @@ static void SetupUIArgs()
     gArgs.AddArg("-windowtitle=<name>", _("Sets a window title which is appended to \"Dash Core - \""), false, OptionsCategory::GUI);
 }
 
-#ifndef BITCOIN_QT_TEST
 int GuiMain(int argc, char* argv[])
 {
     RegisterPrettyTerminateHander();
@@ -711,4 +710,3 @@ int GuiMain(int argc, char* argv[])
     }
     return rv;
 }
-#endif // BITCOIN_QT_TEST
