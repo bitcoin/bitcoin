@@ -244,12 +244,12 @@ public:
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000000000000000000000000000000000000000000000000000000000000000"); //1354312
+        consensus.defaultAssumeValid = uint256S("0x000005209cf425c5f98e068a444b56c14274f1d656d634ee39df98e84fc5e49e");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.nSYSXAsset = 101010;
+        consensus.nSYSXAsset = 719610612;
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xce;
@@ -297,11 +297,11 @@ public:
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-        /*checkpointData = {
+        checkpointData = {
             {
-                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+                {164, uint256S("000005209cf425c5f98e068a444b56c14274f1d656d634ee39df98e84fc5e49e")},
             }
-        };*/
+        };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75
