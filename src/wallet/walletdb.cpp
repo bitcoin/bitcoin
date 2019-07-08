@@ -21,6 +21,8 @@
 
 namespace DBKeys {
 const std::string ACENTRY{"acentry"};
+const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
+const std::string ACTIVEINTERNALSPK{"activeinternalspk"};
 const std::string BESTBLOCK_NOMERKLE{"bestblock_nomerkle"};
 const std::string BESTBLOCK{"bestblock"};
 const std::string CRYPTED_KEY{"ckey"};
@@ -41,6 +43,7 @@ const std::string PURPOSE{"purpose"};
 const std::string SETTINGS{"settings"};
 const std::string TX{"tx"};
 const std::string VERSION{"version"};
+const std::string WALLETDESCRIPTOR{"walletdescriptor"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 } // namespace DBKeys
@@ -179,6 +182,12 @@ bool WalletBatch::WriteMinVersion(int nVersion)
     return WriteIC(DBKeys::MINVERSION, nVersion);
 }
 
+bool WalletBatch::WriteActiveScriptPubKeyMan(uint8_t type, const uint256& id, bool internal)
+{
+    std::string key = internal ? DBKeys::ACTIVEINTERNALSPK : DBKeys::ACTIVEEXTERNALSPK;
+    return WriteIC(make_pair(key, type), id);
+}
+
 class CWalletScanState {
 public:
     unsigned int nKeys{0};
@@ -189,6 +198,8 @@ public:
     bool fIsEncrypted{false};
     bool fAnyUnordered{false};
     std::vector<uint256> vWalletUpgrade;
+    std::map<OutputType, uint256> m_active_external_spks;
+    std::map<OutputType, uint256> m_active_internal_spks;
 
     CWalletScanState() {
     }
@@ -404,6 +415,25 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         } else if (strType == DBKeys::OLD_KEY) {
             strErr = "Found unsupported 'wkey' record, try loading with version 0.18";
             return false;
+        } else if (strType == DBKeys::ACTIVEEXTERNALSPK || strType == DBKeys::ACTIVEINTERNALSPK) {
+            uint8_t type;
+            ssKey >> type;
+            uint256 id;
+            ssValue >> id;
+
+            bool internal = strType == DBKeys::ACTIVEINTERNALSPK;
+            auto& spk_mans = internal ? wss.m_active_internal_spks : wss.m_active_external_spks;
+            if (spk_mans.count(static_cast<OutputType>(type)) > 0) {
+                strErr = "Multiple ScriptPubKeyMans specified for a single type";
+                return false;
+            }
+            spk_mans[static_cast<OutputType>(type)] = id;
+        } else if (strType == DBKeys::WALLETDESCRIPTOR) {
+            uint256 id;
+            ssKey >> id;
+            WalletDescriptor desc;
+            ssValue >> desc;
+            pwallet->LoadDescriptorScriptPubKeyMan(id, desc);
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
@@ -495,6 +525,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     }
     catch (...) {
         result = DBErrors::CORRUPT;
+    }
+
+    // Set the active ScriptPubKeyMans
+    for (auto spk_man_pair : wss.m_active_external_spks) {
+        pwallet->SetActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ false, /* memonly */ true);
+    }
+    for (auto spk_man_pair : wss.m_active_internal_spks) {
+        pwallet->SetActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, /* internal */ true, /* memonly */ true);
     }
 
     if (fNoncriticalErrors && result == DBErrors::LOAD_OK)

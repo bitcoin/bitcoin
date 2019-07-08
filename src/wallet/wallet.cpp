@@ -4402,3 +4402,25 @@ void CWallet::ConnectScriptPubKeyManNotifiers()
         spk_man->NotifyCanGetAddressesChanged.connect(NotifyCanGetAddressesChanged);
     }
 }
+
+void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
+{
+    auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
+    m_spk_managers[id] = std::move(spk_manager);
+}
+
+void CWallet::SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly)
+{
+    auto& spk_mans = internal ? m_internal_spk_managers : m_external_spk_managers;
+    auto spk_man = m_spk_managers.at(id).get();
+    spk_man->SetType(type, internal);
+    spk_mans[type] = spk_man;
+
+    if (!memonly) {
+        WalletBatch batch(*database);
+        if (!batch.WriteActiveScriptPubKeyMan(static_cast<uint8_t>(type), id, internal)) {
+            throw std::runtime_error(std::string(__func__) + ": writing active ScriptPubKeyMan id failed");
+        }
+    }
+    NotifyCanGetAddressesChanged();
+}
