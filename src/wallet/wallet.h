@@ -1186,6 +1186,12 @@ public:
 
     //! Connect the signals from ScriptPubKeyMans to the signals in CWallet
     void ConnectScriptPubKeyManNotifiers();
+
+    //! Instantiate a descriptor ScriptPubKeyMan from the WalletDescriptor and load it
+    void LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc);
+
+    //! Sets the active ScriptPubKeyMan for the specified type and internal
+    void SetActiveScriptPubKeyMan(uint256 id, OutputType type, bool internal, bool memonly = false);
 };
 
 /**
