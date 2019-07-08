@@ -460,10 +460,10 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
             "\nExamples:\n"
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
+            + HelpExampleCli("sendtoaddress", "\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\" 0.1")
+            + HelpExampleCli("sendtoaddress", "\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\" 0.1 \"donation\" \"seans outpost\"")
+            + HelpExampleCli("sendtoaddress", "\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\" 0.1 \"\" \"\" true")
+            + HelpExampleRpc("sendtoaddress", "\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\", 0.1, \"donation\", \"seans outpost\"")
         );
 
     ObserveSafeMode();
@@ -945,11 +945,11 @@ UniValue sendfrom(const JSONRPCRequest& request)
             "\"txid\"                 (string) The transaction id.\n"
             "\nExamples:\n"
             "\nSend 0.01 " + CURRENCY_UNIT + " from the default account to the address, must have at least 1 confirmation\n"
-            + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
+            + HelpExampleCli("sendfrom", "\"\" \"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\" 0.01") +
             "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
-            + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"") +
+            + HelpExampleCli("sendfrom", "\"tabby\" \"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\" 0.01 6 \"donation\" \"seans outpost\"") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\"")
+            + HelpExampleRpc("sendfrom", "\"tabby\", \"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\", 0.01, 6, \"donation\", \"seans outpost\"")
         );
 
     ObserveSafeMode();
@@ -1031,13 +1031,13 @@ UniValue sendmany(const JSONRPCRequest& request)
             "                                    the number of addresses.\n"
             "\nExamples:\n"
             "\nSend two amounts to two different addresses:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"") +
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\":0.01,\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\":0.02}\"") +
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 6 \"testing\"") +
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\":0.01,\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\":0.02}\" 6 \"testing\"") +
             "\nSend two amounts to two different addresses, subtract fee from amount:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 1 \"\" \"[\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\",\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\"]\"") +
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\":0.01,\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\":0.02}\" 1 \"\" \"[\\\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\\\",\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\"]\"") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("sendmany", "\"\", {\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\":0.01,\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\":0.02}, 6, \"testing\"")
+            + HelpExampleRpc("sendmany", "\"\", {\"PKRWHSDPDZHFJ9Mrjy65fPN3wL8YWQrD8q\":0.01,\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\":0.02}, 6, \"testing\"")
         );
 
     ObserveSafeMode();
@@ -1162,13 +1162,14 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "  \"redeemScript\":\"script\"         (string) The string value of the hex-encoded redemption script.\n"
             "}\n"
             "\nResult (DEPRECATED. To see this result in v0.8 instead, please start peercoind with -deprecatedrpc=addmultisigaddress).\n"
-            "        clients should transition to the new output api before upgrading to v0.9   "\"address\"                         (string) A peercoin address associated with the keys.\n"
+            "        clients should transition to the new output api before upgrading to v0.9.\n"
+            "\"address\"                         (string) A peercoin address associated with the keys.\n"
 
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
-            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"") +
+            + HelpExampleCli("addmultisigaddress", "2 \"[\\\"PR5KAV1aTkHuscQ6FmdGEM7abGwfAAWwr5\\\",\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\"]\"") +
             "\nAs json rpc call\n"
-            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"16sSauSf5pF2UkUwvKGq4qjNRzBZYqgEL5\\\",\\\"171sgjn4YtPu27adkKGrdDwzRTxnRkBfKV\\\"]\"")
+            + HelpExampleRpc("addmultisigaddress", "2, \"[\\\"PR5KAV1aTkHuscQ6FmdGEM7abGwfAAWwr5\\\",\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\"]\"")
         ;
         throw std::runtime_error(msg);
     }
@@ -2887,8 +2888,8 @@ UniValue listunspent(const JSONRPCRequest& request)
 
             "\nExamples\n"
             + HelpExampleCli("listunspent", "")
-            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
-            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"1PGFqEzfmQch1gKD3ra4k18PNj3tTUUSqg\\\",\\\"1LtvqCaApEdUGFkpKMM4MstjcaL4dKg8SP\\\"]\"")
+            + HelpExampleCli("listunspent", "6 9999999 \"[\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\",\\\"PR5KAV1aTkHuscQ6FmdGEM7abGwfAAWwr5\\\"]\"")
+            + HelpExampleRpc("listunspent", "6, 9999999 \"[\\\"PN9ZrKwPttJxM8VMsfBFtAWzbycpG2cosD\\\",\\\"PR5KAV1aTkHuscQ6FmdGEM7abGwfAAWwr5\\\"]\"")
             + HelpExampleCli("listunspent", "6 9999999 '[]' true '{ \"minimumAmount\": 0.005 }'")
             + HelpExampleRpc("listunspent", "6, 9999999, [] , true, { \"minimumAmount\": 0.005 } ")
         );
