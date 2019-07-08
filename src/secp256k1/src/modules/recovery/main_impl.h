@@ -179,7 +179,7 @@ int secp256k1_ecdsa_recover(const secp256k1_context* ctx, secp256k1_pubkey *pubk
     ARG_CHECK(pubkey != NULL);
 
     secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, &recid, signature);
-    ARG_CHECK(recid >= 0 && recid < 4);
+    VERIFY_CHECK(recid >= 0 && recid < 4);  /* should have been caught in parse_compact */
     secp256k1_scalar_set_b32(&m, msg32, NULL);
     if (secp256k1_ecdsa_sig_recover(&ctx->ecmult_ctx, &r, &s, &q, &m, recid)) {
         secp256k1_pubkey_save(pubkey, &q);

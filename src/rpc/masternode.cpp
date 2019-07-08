@@ -334,7 +334,7 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
 
     // Find possible candidates
     std::vector<COutput> vPossibleCoins;
-    pwallet->AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
+    pwallet->AvailableCoins(vPossibleCoins, true, NULL, 1, MAX_MONEY, MAX_MONEY, 0, 0, 9999999, ONLY_1000);
 
     UniValue obj(UniValue::VOBJ);
     for (const auto& out : vPossibleCoins) {

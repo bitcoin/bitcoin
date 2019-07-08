@@ -506,8 +506,8 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
     unsigned int countedTxs = 0;
     // Repopulate the current block states
-    for (unsigned int i = 0; i < entries.size(); i++) {
-        if (processBlockTx(nBlockHeight, entries[i]))
+    for (const auto& entry : entries) {
+        if (processBlockTx(nBlockHeight, entry))
             countedTxs++;
     }
 

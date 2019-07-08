@@ -428,8 +428,8 @@ class ImportMultiTest (BitcoinTestFramework):
 
 
         # restart nodes to check for proper serialization/deserialization of watch only address
-        stop_nodes(self.nodes)
-        self.nodes = start_nodes(2, self.options.tmpdir)
+        self.stop_nodes()
+        self.nodes = self.start_nodes(2, self.options.tmpdir)
         address_assert = self.nodes[1].validateaddress(watchonly_address)
         assert_equal(address_assert['iswatchonly'], True)
         assert_equal(address_assert['ismine'], False)

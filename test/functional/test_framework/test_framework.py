@@ -6,6 +6,7 @@
 """Base class for RPC testing."""
 
 from collections import deque
+from enum import Enum
 import logging
 import optparse
 import os
@@ -40,16 +41,25 @@ from .util import (
     set_mocktime,
     set_node_times,
     satoshi_round,
-    start_node,
-    start_nodes,
-    stop_node,
-    stop_nodes,
+    _start_node,
+    _start_nodes,
+    _stop_node,
+    _stop_nodes,
     sync_blocks,
     sync_mempools,
     sync_masternodes,
     wait_for_bitcoind_start,
     wait_to_sync)
 from .authproxy import JSONRPCException
+
+class TestStatus(Enum):
+    PASSED = 1
+    FAILED = 2
+    SKIPPED = 3
+
+TEST_EXIT_PASSED = 0
+TEST_EXIT_FAILED = 1
+TEST_EXIT_SKIPPED = 77
 
 class BitcoinTestFramework(object):
     """Base class for a bitcoin test script.
@@ -67,11 +77,6 @@ class BitcoinTestFramework(object):
     This class also contains various public and private helper methods."""
 
     # Methods to override in subclass test scripts.
-
-    TEST_EXIT_PASSED = 0
-    TEST_EXIT_FAILED = 1
-    TEST_EXIT_SKIPPED = 77
-
     def __init__(self):
         self.num_nodes = 4
         self.setup_clean_chain = False
@@ -103,7 +108,7 @@ class BitcoinTestFramework(object):
         extra_args = None
         if hasattr(self, "extra_args"):
             extra_args = self.extra_args
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args, stderr=stderr)
+        self.nodes = _start_nodes(self.num_nodes, self.options.tmpdir, extra_args, stderr=stderr)
 
     def run_test(self):
         raise NotImplementedError
@@ -151,15 +156,18 @@ class BitcoinTestFramework(object):
             self.options.tmpdir = tempfile.mkdtemp(prefix="test")
         self._start_logging()
 
-        success = False
+        success = TestStatus.FAILED
 
         try:
             self.setup_chain()
             self.setup_network()
             self.run_test()
-            success = True
+            success = TestStatus.PASSED
         except JSONRPCException as e:
             self.log.exception("JSONRPC error")
+        except SkipTest as e:
+            self.log.warning("Test Skipped: %s" % e.message)
+            success = TestStatus.SKIPPED
         except AssertionError as e:
             self.log.exception("Assertion failed")
         except KeyError as e:
@@ -172,14 +180,15 @@ class BitcoinTestFramework(object):
         if not self.options.noshutdown:
             self.log.info("Stopping nodes")
             try:
-                stop_nodes(self.nodes)
+                if self.nodes:
+                    self.stop_nodes()
             except BaseException as e:
                 success = False
                 self.log.exception("Unexpected exception caught during shutdown")
         else:
             self.log.info("Note: dashds were not stopped and may still be running")
 
-        if not self.options.nocleanup and not self.options.noshutdown and success:
+        if not self.options.nocleanup and not self.options.noshutdown and success != TestStatus.FAILED:
             self.log.info("Cleaning up")
             shutil.rmtree(self.options.tmpdir)
         else:
@@ -199,27 +208,31 @@ class BitcoinTestFramework(object):
                     except OSError:
                         print("Opening file %s failed." % fn)
                         traceback.print_exc()
-        if success:
+
+        if success == TestStatus.PASSED:
             self.log.info("Tests successful")
-            sys.exit(self.TEST_EXIT_PASSED)
+            sys.exit(TEST_EXIT_PASSED)
+        elif success == TestStatus.SKIPPED:
+            self.log.info("Test skipped")
+            sys.exit(TEST_EXIT_SKIPPED)
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
             logging.shutdown()
-            sys.exit(self.TEST_EXIT_FAILED)
+            sys.exit(TEST_EXIT_FAILED)
 
     # Public helper methods. These can be accessed by the subclass test scripts.
 
     def start_node(self, i, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
+        return _start_node(i, dirname, extra_args, rpchost, timewait, binary, stderr)
 
     def start_nodes(self, num_nodes, dirname, extra_args=None, rpchost=None, timewait=None, binary=None, stderr=None):
-        return start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary, stderr)
+        return _start_nodes(num_nodes, dirname, extra_args, rpchost, timewait, binary, stderr)
 
     def stop_node(self, num_node):
-        stop_node(self.nodes[num_node], num_node)
+        _stop_node(self.nodes[num_node], num_node)
 
     def stop_nodes(self):
-        stop_nodes(self.nodes)
+        _stop_nodes(self.nodes)
 
     def split_network(self):
         """
@@ -394,7 +407,7 @@ class DashTestFramework(BitcoinTestFramework):
     def create_simple_node(self):
         idx = len(self.nodes)
         args = self.extra_args
-        self.nodes.append(start_node(idx, self.options.tmpdir, args))
+        self.nodes.append(self.start_node(idx, self.options.tmpdir, args))
         for i in range(0, idx):
             connect_nodes(self.nodes[i], idx)
 
@@ -445,14 +458,14 @@ class DashTestFramework(BitcoinTestFramework):
 
     def prepare_datadirs(self):
         # stop faucet node so that we can copy the datadir
-        stop_node(self.nodes[0], 0)
+        self.stop_node(0)
 
         start_idx = len(self.nodes)
         for idx in range(0, self.mn_count):
             copy_datadir(0, idx + start_idx, self.options.tmpdir)
 
         # restart faucet node
-        self.nodes[0] = start_node(0, self.options.tmpdir, self.extra_args)
+        self.nodes[0] = self.start_node(0, self.options.tmpdir, self.extra_args)
 
     def start_masternodes(self):
         start_idx = len(self.nodes)
@@ -464,7 +477,7 @@ class DashTestFramework(BitcoinTestFramework):
         def do_start(idx):
             args = ['-masternode=1',
                     '-masternodeblsprivkey=%s' % self.mninfo[idx].keyOperator] + self.extra_args
-            node = start_node(idx + start_idx, self.options.tmpdir, args)
+            node = self.start_node(idx + start_idx, self.options.tmpdir, args)
             self.mninfo[idx].nodeIdx = idx + start_idx
             self.mninfo[idx].node = node
             self.nodes[idx + start_idx] = node
@@ -501,7 +514,7 @@ class DashTestFramework(BitcoinTestFramework):
     def setup_network(self):
         self.nodes = []
         # create faucet node for collateral and transactions
-        self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args))
+        self.nodes.append(self.start_node(0, self.options.tmpdir, self.extra_args))
         required_balance = MASTERNODE_COLLATERAL * self.mn_count + 1
         while self.nodes[0].getbalance() < required_balance:
             set_mocktime(get_mocktime() + 1)
@@ -823,6 +836,11 @@ class DashTestFramework(BitcoinTestFramework):
 # 1 binary: test binary
 # 2 binaries: 1 test binary, 1 ref binary
 # n>2 binaries: 1 test binary, n-1 ref binaries
+
+class SkipTest(Exception):
+    """This exception is raised to skip a test"""
+    def __init__(self, message):
+        self.message = message
 
 class ComparisonTestFramework(BitcoinTestFramework):
 

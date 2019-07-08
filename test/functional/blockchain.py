@@ -10,6 +10,7 @@ Test the following RPCs:
     - getbestblockhash
     - getblockhash
     - getblockheader
+    - getchaintxstats
     - getnetworkhashps
     - verifychain
 
@@ -35,11 +36,20 @@ class BlockchainTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
+        self._test_getchaintxstats()
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
         self._test_getdifficulty()
         self._test_getnetworkhashps()
         self.nodes[0].verifychain(4, 0)
+
+    def _test_getchaintxstats(self):
+        chaintxstats = self.nodes[0].getchaintxstats(1)
+        # 200 txs plus genesis tx
+        assert_equal(chaintxstats['txcount'], 201)
+        # tx rate should be 1 per ~2.6 minutes (156 seconds), or 1/156
+        # we have to round because of binary math
+        assert_equal(round(chaintxstats['txrate'] * 156, 10), Decimal(1))
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
@@ -49,6 +59,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['transactions'], 200)
         assert_equal(res['height'], 200)
         assert_equal(res['txouts'], 200)
+        assert_equal(res['bogosize'], 17000),
         size = res['disk_size']
         assert size > 6400
         assert size < 64000
@@ -64,6 +75,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res2['total_amount'], Decimal('0'))
         assert_equal(res2['height'], 0)
         assert_equal(res2['txouts'], 0)
+        assert_equal(res2['bogosize'], 0),
         assert_equal(res2['bestblock'], node.getblockhash(0))
         assert_equal(len(res2['hash_serialized_2']), 64)
 
@@ -75,6 +87,7 @@ class BlockchainTest(BitcoinTestFramework):
         assert_equal(res['transactions'], res3['transactions'])
         assert_equal(res['height'], res3['height'])
         assert_equal(res['txouts'], res3['txouts'])
+        assert_equal(res['bogosize'], res3['bogosize'])
         assert_equal(res['bestblock'], res3['bestblock'])
         assert_equal(res['hash_serialized_2'], res3['hash_serialized_2'])
 

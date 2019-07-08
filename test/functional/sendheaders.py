@@ -239,6 +239,8 @@ class SendHeadersTest(BitcoinTestFramework):
         # Test logic begins here
         inv_node.wait_for_verack()
         test_node.wait_for_verack()
+        inv_node.sync_with_ping()
+        test_node.sync_with_ping()
 
         self.test_null_locators(test_node)
         self.test_nonnull_locators(test_node, inv_node)

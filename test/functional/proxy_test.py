@@ -35,7 +35,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     PORT_MIN,
     PORT_RANGE,
-    start_nodes,
     assert_equal,
 )
 from test_framework.netutil import test_ipv6_local
@@ -90,7 +89,7 @@ class ProxyTest(BitcoinTestFramework):
             ]
         if self.have_ipv6:
             args[3] = ['-listen', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0', '-noonion']
-        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, extra_args=args)
+        self.nodes = self.start_nodes(self.num_nodes, self.options.tmpdir, extra_args=args)
 
     def node_test(self, node, proxies, auth, test_onion=True):
         rv = []

@@ -20,7 +20,7 @@ AC_PATH_TOOL(STRIP, strip)
 AX_PROG_CC_FOR_BUILD
 
 if test "x$CFLAGS" = "x"; then
-  CFLAGS="-O3 -g"
+  CFLAGS="-g"
 fi
 
 AM_PROG_CC_C_O
@@ -89,6 +89,11 @@ AC_ARG_ENABLE(benchmark,
     [use_benchmark=$enableval],
     [use_benchmark=no])
 
+AC_ARG_ENABLE(coverage,
+    AS_HELP_STRING([--enable-coverage],[enable compiler flags to support kcov coverage analysis]),
+    [enable_coverage=$enableval],
+    [enable_coverage=no])
+
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--enable-tests],[compile tests (default is yes)]),
     [use_tests=$enableval],
@@ -153,6 +158,14 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[void myfunc() {__builtin_expect(0,0);}]])],
     [ AC_MSG_RESULT([yes]);AC_DEFINE(HAVE_BUILTIN_EXPECT,1,[Define this symbol if __builtin_expect is available]) ],
     [ AC_MSG_RESULT([no])
     ])
+
+if test x"$enable_coverage" = x"yes"; then
+    AC_DEFINE(COVERAGE, 1, [Define this symbol to compile out all VERIFY code])
+    CFLAGS="$CFLAGS -O0 --coverage"
+    LDFLAGS="--coverage"
+else
+    CFLAGS="$CFLAGS -O3"
+fi
 
 if test x"$use_ecmult_static_precomputation" != x"no"; then
   save_cross_compiling=$cross_compiling
@@ -434,6 +447,7 @@ AC_MSG_NOTICE([Using field implementation: $set_field])
 AC_MSG_NOTICE([Using bignum implementation: $set_bignum])
 AC_MSG_NOTICE([Using scalar implementation: $set_scalar])
 AC_MSG_NOTICE([Using endomorphism optimizations: $use_endomorphism])
+AC_MSG_NOTICE([Building for coverage analysis: $enable_coverage])
 AC_MSG_NOTICE([Building ECDH module: $enable_module_ecdh])
 AC_MSG_NOTICE([Building ECDSA pubkey recovery module: $enable_module_recovery])
 AC_MSG_NOTICE([Using jni: $use_jni])
@@ -460,6 +474,7 @@ AC_SUBST(SECP_INCLUDES)
 AC_SUBST(SECP_LIBS)
 AC_SUBST(SECP_TEST_LIBS)
 AC_SUBST(SECP_TEST_INCLUDES)
+AM_CONDITIONAL([ENABLE_COVERAGE], [test x"$enable_coverage" = x"yes"])
 AM_CONDITIONAL([USE_TESTS], [test x"$use_tests" != x"no"])
 AM_CONDITIONAL([USE_EXHAUSTIVE_TESTS], [test x"$use_exhaustive_tests" != x"no"])
 AM_CONDITIONAL([USE_BENCHMARK], [test x"$use_benchmark" = x"yes"])

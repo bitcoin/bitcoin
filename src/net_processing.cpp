@@ -815,8 +815,8 @@ void PeerLogicValidation::BlockConnected(const std::shared_ptr<const CBlock>& pb
         const CTransaction& tx = *ptx;
 
         // Which orphan pool entries must we evict?
-        for (size_t j = 0; j < tx.vin.size(); j++) {
-            auto itByPrev = mapOrphanTransactionsByPrev.find(tx.vin[j].prevout);
+        for (const auto& txin : tx.vin) {
+            auto itByPrev = mapOrphanTransactionsByPrev.find(txin.prevout);
             if (itByPrev == mapOrphanTransactionsByPrev.end()) continue;
             for (auto mi = itByPrev->second.begin(); mi != itByPrev->second.end(); ++mi) {
                 const CTransaction& orphanTx = *(*mi)->second.tx;
@@ -1815,10 +1815,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         LOCK(cs_main);
 
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        for (CInv &inv : vInv)
         {
-            const CInv &inv = vInv[nInv];
-
             if(!inv.IsKnownType()) {
                 LogPrint(BCLog::NET, "got inv of unknown type %d: %s peer=%d\n", inv.type, inv.hash.ToString(), pfrom->GetId());
                 continue;
