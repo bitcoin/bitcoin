@@ -355,8 +355,7 @@ UniValue syscoinburntoassetallocation(const JSONRPCRequest& request) {
     theAssetAllocation.SetNull();
     // from burn to allocation
     theAssetAllocation.assetAllocationTuple.nAsset = std::move(nAsset);
-    theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn")); 
-        
+    theAssetAllocation.assetAllocationTuple.witnessAddress = CWitnessAddress(0, vchFromString("burn"));   
     theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), nAmount));
     
     vector<unsigned char> data;

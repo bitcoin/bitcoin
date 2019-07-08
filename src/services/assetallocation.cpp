@@ -100,7 +100,9 @@ string assetAllocationFromTx(const int &nVersion) {
 	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
 		return "assetallocationburntoethereum"; 
 	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
-		return "assetallocationburntosyscoin";         
+		return "assetallocationburntosyscoin";
+	case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+		return "syscoinburntoassetallocation";            
     case SYSCOIN_TX_VERSION_ALLOCATION_MINT:
         return "assetallocationmint";   
 	case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
@@ -768,19 +770,19 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
                 }
             }
             if(!foundLink){
-                return ZDAG_MINOR_CONFLICT;
+                return ZDAG_WARNING_NO_OUTPUT_LINKING;
             }
         }
         
         prevTx = &tx;
         // ensure that transactions are ordered by some time difference
         if(nPrevTime >= arrivalTime.second){
-            return ZDAG_MINOR_CONFLICT;
+            return ZDAG_WARNING_NO_TIME_SEPERATION;
         }
         nPrevTime = arrivalTime.second;
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
 		if (nNow - arrivalTime.second < minLatency) {
-			return ZDAG_MINOR_CONFLICT;
+			return ZDAG_WARNING_MIN_LATENCY;
 		}
 		const uint256& txHash = tx.GetHash();
 		CAssetAllocation assetallocation(tx);
@@ -792,7 +794,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				mapBalances[amountTuple.first.ToString()] += amountTuple.second;
 				// if running balance overruns the stored balance then we have a potential conflict
 				if (senderBalance < 0) {
-					return ZDAG_MINOR_CONFLICT;
+					return ZDAG_WARNING_POTENTIAL_BALANCE_OVERFLOW;
 				}
 			}
 		}
