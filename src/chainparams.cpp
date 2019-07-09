@@ -58,10 +58,10 @@ static void GenerateGenesisBlock(CBlockHeader &genesisBlock, uint256 &phash)
         }
         nOnce++;
     }
-    printf("genesis.nTime = %u \n", genesisBlock.nTime);
-    printf("genesis.nNonce = %u \n", genesisBlock.nNonce);
-    printf("Generate hash = %s\n", phash.ToString().c_str());
-    printf("genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
+    tfm::format(std::cout,"genesis.nTime = %u \n", genesisBlock.nTime);
+    tfm::format(std::cout,"genesis.nNonce = %u \n", genesisBlock.nNonce);
+    tfm::format(std::cout,"Generate hash = %s\n", phash.ToString().c_str());
+    tfm::format(std::cout,"genesis.hashMerkleRoot = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
 }   
 /**
  * Build the genesis block. Note that the output of its generation
@@ -81,9 +81,14 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
 }
 
- void CChainParams::TurnOffSegwitForUnitTests ()
+void CChainParams::TurnOffSegwitForUnitTests ()
 {
   consensus.BIP16Height = 1000000;
+  consensus.BIP34Height = 1000000;
+}
+void CChainParams::SetSYSXAssetForUnitTests (uint32_t asset)
+{
+  consensus.nSYSXAsset = asset;
 }
 /**
  * Main network
@@ -133,7 +138,7 @@ public:
         consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.vchSYSXContract = ParseHex("197a2f58c94eff4b2c6ae0922fbc840080f839c2");
+        consensus.nSYSXAsset = 101010;
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         consensus.nBridgeStartBlock = 75000;
         /**
@@ -236,15 +241,15 @@ public:
         // BIP147) are deployed together with P2SH.
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000016d0016d");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x000000000000000000000000000000000000000000000000000000000000000"); //1354312
+        consensus.defaultAssumeValid = uint256S("0x0000047674e00888c7bf9a6f58dd519330eafb45be8b9da76fe291d653d9e7f8");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = false;
         consensus.nLegacyBlocksBefore = 1;
-        consensus.vchSYSXContract = ParseHex("46c6accc790ebd002c022057a14a7d247d5e5d37");
+        consensus.nSYSXAsset = 719610612;
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xce;
@@ -292,11 +297,11 @@ public:
         // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
         strSporkAddress = "TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX";
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-        /*checkpointData = {
+        checkpointData = {
             {
-                {546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")},
+                {364, uint256S("0x0000047674e00888c7bf9a6f58dd519330eafb45be8b9da76fe291d653d9e7f8")},
             }
-        };*/
+        };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75
@@ -352,7 +357,7 @@ public:
         consensus.nAuxpowChainId = 0x1000;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
-        consensus.vchSYSXContract = ParseHex("5f6e74ba20bf26161612eac8f7e8b3b6c9baaadd");
+        consensus.nSYSXAsset = 0;
         consensus.vchSYSXBurnMethodSignature = ParseHex("285c5bc6");
         consensus.nBridgeStartBlock = 100;
         pchMessageStart[0] = 0xfa;
@@ -482,4 +487,13 @@ void TurnOffSegwitForUnitTests ()
      we would have to have an explicit argument for BIP16.  */
   auto* params = const_cast<CChainParams*> (globalChainParams.get ());
   params->TurnOffSegwitForUnitTests ();
+}
+void SetSYSXAssetForUnitTests (uint32_t asset)
+{
+  /* TODO: It is ugly that we need a const-cast here, but this is only for
+     unit testing.  Upstream avoids this by turning off segwit through
+     forcing command-line args in the tests.  For that to work in our case,
+     we would have to have an explicit argument for BIP16.  */
+  auto* params = const_cast<CChainParams*> (globalChainParams.get ());
+  params->SetSYSXAssetForUnitTests (asset);
 }

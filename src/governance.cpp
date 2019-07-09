@@ -333,7 +333,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
         return;
     }
 
-    // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANANGERS?
+    // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
 
     /*DBG( std::cout << "CGovernanceManager::AddGovernanceObject Before trigger block, GetDataAsPlainString = "
               << govobj.GetDataAsPlainString()

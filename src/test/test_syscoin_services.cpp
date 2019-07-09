@@ -31,6 +31,8 @@ static bool node1Online = false;
 static bool node2Online = false;
 static bool node3Online = false;
 std::map<string, string> mapNodes;
+string strSYSXAsset;
+string strSYSXAddress;
 // create a map between node alias names and URLs to be used in testing for example CallRPC("mynode", "getblockchaininfo") would call getblockchaininfo on the node alias mynode which would be pushed as a URL here.
 // it is assumed RPC ports are open and u:p is the authentication
 void InitNodeURLMap() {
@@ -46,10 +48,28 @@ string LookupURL(const string& node) {
 		return mapNodes[node];
 	return "";
 }
+void SetupSYSXAsset(){
+	/*
+	enum {
+    ASSET_UPDATE_ADMIN=1, // god mode flag, governs flags field below
+    ASSET_UPDATE_DATA=2, // can you update public data field?
+    ASSET_UPDATE_CONTRACT=4, // can you update smart contract?
+    ASSET_UPDATE_SUPPLY=8, // can you update supply?
+    ASSET_UPDATE_FLAGS=16, // can you update flags? if you would set permanently disable this one and admin flag as well
+    ASSET_UPDATE_ALL=31
+	};
+ 	*/
+	string updateFlags = itostr(ASSET_UPDATE_CONTRACT | ASSET_UPDATE_FLAGS);
+	strSYSXAddress = GetNewFundedAddress("node1");
+	string receiverAddress = GetNewFundedAddress("node1");
+	strSYSXAsset = AssetNew("node1", strSYSXAddress, "", "''", "8", "888000000", "888000000", updateFlags);
+	AssetSend("node1", strSYSXAsset, "\"[{\\\"address\\\":\\\"" + receiverAddress + "\\\",\\\"amount\\\":888000000}]\"");
+	AssetAllocationTransfer(false, "node1", strSYSXAsset, receiverAddress, "\"[{\\\"address\\\":\\\"burn\\\",\\\"amount\\\":888000000}]\"");	
+}
 // SYSCOIN testing setup
 void StartNodes()
 {
-	printf("Stopping any test nodes that are running...\n");
+	tfm::format(std::cout,"Stopping any test nodes that are running...\n");
 	InitNodeURLMap();
 	StopNodes();
     if (boost::filesystem::exists(boost::filesystem::system_complete("node1/regtest")))
@@ -62,7 +82,7 @@ void StartNodes()
 	node2LastBlock = 0;
 	node3LastBlock = 0;
 	//StopMainNetNodes();
-	printf("Starting 3 nodes in a regtest setup...\n");
+	tfm::format(std::cout,"Starting 3 nodes in a regtest setup...\n");
 	StartNode("node1");
     BOOST_CHECK_NO_THROW(CallExtRPC("node1", "generate", "5"));
 	StartNode("node2");
@@ -72,28 +92,28 @@ void StartNodes()
 void StartMainNetNodes()
 {
 	StopMainNetNodes();
-	printf("Starting 2 nodes in mainnet setup...\n");
+	tfm::format(std::cout,"Starting 2 nodes in mainnet setup...\n");
 	StartNode("mainnet1", false);
 	SelectParams(CBaseChainParams::MAIN);
 
 }
 void StopMainNetNodes()
 {
-	printf("Stopping mainnet1..\n");
+	tfm::format(std::cout,"Stopping mainnet1..\n");
 	StopNode("mainnet1", false);
-	printf("Done!\n");
+	tfm::format(std::cout,"Done!\n");
 }
 void StopNodes()
 {
 	StopNode("node1");
 	StopNode("node2");
 	StopNode("node3");
-	printf("Done!\n");
+	tfm::format(std::cout,"Done!\n");
 }
 void StartNode(const string &dataDir, bool regTest, const string& extraArgs, bool reindex)
 {
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -daemon -server -debug=0 -concurrentprocessing=1 -datadir=") + dataDir;
+	string nodePath = fpath.string() + string(" -unittest -tpstest -assetindex -daemon -server -debug=1 -concurrentprocessing=1 -datadir=") + dataDir;
 	if (regTest)
 		nodePath += string(" -regtest");
 	if (reindex)
@@ -102,19 +122,19 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 		nodePath += string(" ") + extraArgs;
 
 	boost::thread t(runCommand, nodePath);
-	printf("Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
+	tfm::format(std::cout,"Launching %s, waiting 1 second before trying to ping...\n", nodePath.c_str());
 	MilliSleep(1000);
 	UniValue r;
 	while (1)
 	{
 		try {
-			printf("Calling getblockchaininfo!\n");
+			tfm::format(std::cout,"Calling getblockchaininfo!\n");
 			r = CallRPC(dataDir, "getblockchaininfo", regTest);
 			if (dataDir == "node1")
 			{
 				if (node1LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
-					printf("Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node1LastBlock);
+					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node1LastBlock);
 					MilliSleep(500);
 					continue;
 				}
@@ -125,7 +145,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 			{
 				if (node2LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
-					printf("Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node2LastBlock);
+					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node2LastBlock);
 					MilliSleep(500);
 					continue;
 				}
@@ -136,7 +156,7 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 			{
 				if (node3LastBlock > find_value(r.get_obj(), "blocks").get_int())
 				{
-					printf("Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node3LastBlock);
+					tfm::format(std::cout,"Waiting for %s to catch up, current block number %d vs total blocks %d...\n", dataDir.c_str(), find_value(r.get_obj(), "blocks").get_int(), node3LastBlock);
 					MilliSleep(500);
 					continue;
 				}
@@ -147,17 +167,17 @@ void StartNode(const string &dataDir, bool regTest, const string& extraArgs, boo
 		}
 		catch (const runtime_error& error)
 		{
-			printf("Waiting for %s to come online, trying again in 1 second...\n", dataDir.c_str());
+			tfm::format(std::cout,"Waiting for %s to come online, trying again in 1 second...\n", dataDir.c_str());
 			MilliSleep(1000);
 			continue;
 		}
 		break;
 	}
-	printf("Done!\n");
+	tfm::format(std::cout,"Done!\n");
 }
 
 void StopNode(const string &dataDir, bool regtest) {
-	printf("Stopping %s..\n", dataDir.c_str());
+	tfm::format(std::cout,"Stopping %s..\n", dataDir.c_str());
 	UniValue r;
 	try {
 		r = CallRPC(dataDir, "getblockchaininfo", regtest);
@@ -302,7 +322,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 		newHeight = find_value(r.get_obj(), "blocks").get_int();
 		BOOST_CHECK_NO_THROW(r = CallRPC(node, "getwalletinfo", false));
 		CAmount balance = AmountFromValue(find_value(r.get_obj(), "balance"));
-		printf("Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real());
+		tfm::format(std::cout,"Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real());
 	}
 	BOOST_CHECK(newHeight >= targetHeight);
 	height = 0;
@@ -326,7 +346,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 		height = find_value(r.get_obj(), "blocks").get_int();
 		timeoutCounter++;
 		if (timeoutCounter > 100) {
-			printf("Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 			break;
 		}
 		MilliSleep(10);
@@ -381,7 +401,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 		height = find_value(r.get_obj(), "blocks").get_int();
 		timeoutCounter++;
 		if (timeoutCounter > 100) {
-			printf("Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode1.c_str(), height, newHeight);
 			break;
 		}
 		MilliSleep(10);
@@ -408,7 +428,7 @@ void GenerateBlocks(int nBlocks, const string& node, bool bRegtest)
 		height = find_value(r.get_obj(), "blocks").get_int();
 		timeoutCounter++;
 		if (timeoutCounter > 100) {
-			printf("Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
+			tfm::format(std::cout,"Error: Timeout on getblockchaininfo for %s, height %d vs newHeight %d!\n", otherNode2.c_str(), height, newHeight);
 			break;
 		}
 		MilliSleep(10);
@@ -593,13 +613,67 @@ void GetOtherNodes(const string& node, string& otherNode1, string& otherNode2)
 			otherNode2 = "node2";
 	}
 }
-string SyscoinMint(const string& node, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
+
+string SyscoinBurn(const string& node, const string& address, const string& asset, const string& amount)
 {
     string otherNode1, otherNode2;
     GetOtherNodes(node, otherNode1, otherNode2);
     UniValue r;
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
-    CAmount nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+	CAmount nAmountBefore = 0;
+	try{
+    	r = CallRPC(node, "assetallocationbalance " + asset + " " + address);
+		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+    		nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+		}
+	}
+	catch(...){
+
+	}
+	CAmount nAmountAddressBefore = 0;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+	if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+		nAmountAddressBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+	}
+  
+    // "syscoinburntoassetallocation [funding_address] [asset_guid] [amount]\n"
+	// set the sysx variable in consensus params if not already set
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinburntoassetallocation "  + address + " " + asset + " " + amount));
+
+    
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
+    string hex_str = find_value(r.get_obj(), "hex").get_str();
+   
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false));  
+    GenerateBlocks(5, node);
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationbalance " + asset + " " + address));
+    CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+    CAmount nAmountAddressAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+	nAmountAddressBefore -= AmountFromValue(amount);
+	// account for fee
+    BOOST_CHECK(abs(nAmountAddressBefore - nAmountAddressAfter) < 0.001*COIN);
+    return hex_str;
+}
+string AssetAllocationMint(const string& node, const string& asset, const string& address, const string& amount, int height, const string& tx_hex, const string& txroot_hex, const string& txmerkleproof_hex, const string& txmerkleproofpath_hex, const string& receipt_hex, const string& receiptroot_hex, const string& receiptmerkleproof_hex, const string& witness)
+{
+    string otherNode1, otherNode2;
+    GetOtherNodes(node, otherNode1, otherNode2);
+    UniValue r;
+	CAmount nAmountBefore = 0;
+	try{
+    	r = CallRPC(node, "assetallocationbalance " + asset + " " + address);
+		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+    		nAmountBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+		}
+	}
+	catch(...){
+
+	}
+	
     // ensure that block number you claim the burn is at least 1 hour old
     int heightPlus240 = height+(ETHEREUM_CONFIRMS_REQUIRED*1.5);
     string headerStr = "\"[[" + itostr(height) + ", \\\"" + itostr(height) + "\\\", \\\"" + itostr(height-1) + "\\\", \\\"" + txroot_hex + "\\\", \\\"" + receiptroot_hex + "\\\"]]\"";
@@ -619,18 +693,18 @@ string SyscoinMint(const string& node, const string& address, const string& amou
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethheaders " + headerStr));
         BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "syscoinsetethstatus synced " + itostr(heightPlus240)));
     }   
-    // "syscoinmint [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "syscoinmint " + address + " " + amount + " " + itostr(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
+    // "assetallocationmint [asset] [address] [amount] [blocknumber] [tx_hex] [txroot_hex] [txmerkleproof_hex] [txmerkleroofpath_hex] [receipt_hex] [receiptroot_hex] [receiptmerkleproof_hex] [witness]\n"
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationmint " + asset + " " + address + " " + amount + " " + itostr(height) + " " + tx_hex + " a0" + txroot_hex + " " + txmerkleproof_hex + " " + txmerkleproofpath_hex + " " + receipt_hex + " a0" + receiptroot_hex + " " + receiptmerkleproof_hex +  " " + witness));
     
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
     string hex_str = find_value(r.get_obj(), "hex").get_str();
    
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "sendrawtransaction " + hex_str, true, false));  
     GenerateBlocks(5, node);
-    BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+    BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationbalance " + asset + " " + address));
     CAmount nAmountAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
     // account for fees
-    BOOST_CHECK(abs((nAmountBefore+AmountFromValue(amount)) -  nAmountAfter) < 0.1*COIN);
+    BOOST_CHECK_EQUAL(nAmountBefore+AmountFromValue(amount) , nAmountAfter);
     return hex_str;
 }
 bool FindAssetGUIDFromAssetIndexResults(const UniValue& results, std::string guid){
@@ -726,7 +800,7 @@ string AssetNew(const string& node, const string& address, string pubdata, strin
 	}
 	return guid;
 }
-void AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& witness)
+void AssetUpdate(const string& node, const string& guid, const string& pubdata, const string& supply, const string& updateflags, const string& contract, const string& witness)
 {
 	string otherNode1, otherNode2;
 	GetOtherNodes(node, otherNode1, otherNode2);
@@ -734,6 +808,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetinfo " + guid));
 	string oldaddress = find_value(r.get_obj(), "address").get_str();
 	string oldpubdata = find_value(r.get_obj(), "public_value").get_str();
+	string oldcontract = find_value(r.get_obj(), "contract").get_str();
     UniValue totalsupply = find_value(r.get_obj(), "total_supply");
 	int nprecision = find_value(r.get_obj(), "precision").get_int();
     CAmount oldsupplyamount = AssetAmountFromValue(totalsupply, nprecision);
@@ -748,13 +823,20 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 	CAmount newamount = oldsupplyamount + supplyamount;
    
 	string newpubdata = pubdata == "''" ? oldpubdata : pubdata;
+	string newcontract = contract == "''" ? oldcontract : contract;
+	string newcontract1 = newcontract;
+	string newpubdata1 = newpubdata;
+	if(newcontract1.empty())
+		newcontract1 = "''";
+	if(newpubdata1.empty())
+		newpubdata1 = "''";		
 	string newsupply = supply == "''" ? "0" : supply;
 	int flagsi;
 	ParseInt32(updateflags, &flagsi);
 	int newflags = updateflags == "''" ? oldflags : flagsi;
 	string newflagsstr = itostr(newflags);
 	// "assetupdate [asset] [public] [contract] [supply] [update_flags] [witness]\n"
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata + " '' " +  newsupply + " " + newflagsstr + " " + witness));
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetupdate " + guid + " " + newpubdata1 + " " + newcontract1 + " " +  newsupply + " " + newflagsstr + " " + witness));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hex_str = find_value(r.get_obj(), "hex").get_str();
    
@@ -794,6 +876,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		BOOST_CHECK(find_value(r.get_obj(), "address").get_str() == oldaddress);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "public_value").get_str(), newpubdata);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
 	
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
@@ -809,6 +892,7 @@ void AssetUpdate(const string& node, const string& guid, const string& pubdata, 
 		totalsupply = find_value(r.get_obj(), "total_supply");
 		BOOST_CHECK(AssetAmountFromValue(totalsupply, nprecision) == newamount);
 		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "update_flags").get_int(), newflags);
+		BOOST_CHECK_EQUAL(find_value(r.get_obj(), "contract").get_str(), newcontract);
 		BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "listassetindexassets " + oldaddress ));
 		BOOST_CHECK(FindAssetGUIDFromAssetIndexResults(r, guid));
 	}
@@ -866,23 +950,19 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 	BOOST_CHECK(receivers.size() > 0);
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
+		CAmount amount;
 		BOOST_CHECK(receiver.isObject());
-      
 		UniValue receiverObj = receiver.get_obj();
-        
-        const CTxDestination &dest = DecodeDestination(find_value(receiverObj, "address").get_str());
-        UniValue detail = DescribeAddress(dest);
-        string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();                  
 		UniValue amountObj = find_value(receiverObj, "amount");
 		if (amountObj.isNum()) {
-			const CAmount &amount = AssetAmountFromValue(amountObj, nprecision);
+			amount = AssetAmountFromValue(amountObj, nprecision);
 			inputamount += amount;
 			BOOST_CHECK(amount > 0);
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), amount));
 		}
-
-
+        std::string strAddress = find_value(receiverObj, "address").get_str();
+		const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
+    	strAddress = witnessAddress.ToString(); 
+		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
 
 	string otherNode1, otherNode2;
@@ -953,7 +1033,7 @@ string AssetAllocationTransfer(const bool usezdag, const string& node, const str
 
 	return txid;
 }
-void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm){
+void BurnAssetAllocation(const string& node, const string &guid, const string &address,const string &amount, bool confirm, string contract){
     UniValue r;
     try{
         r = CallRPC(node, "assetallocationinfo " + guid + " burn");
@@ -965,8 +1045,18 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
         UniValue balanceB = find_value(r.get_obj(), "balance");
         beforeBalance = AssetAmountFromValue(balanceB, 8);
     }
-    
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " 0x931D387731bBbC988B312206c74F77D004D6B84b"));
+
+	CAmount nAmountAddressBefore = 0;
+	if(contract == "''"){
+		BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+		if(r.isObject() && !find_value(r.get_obj(), "amount").isNull()){
+			nAmountAddressBefore = AmountFromValue(find_value(r.get_obj(), "amount"));
+		}
+	}
+  
+
+	CAmount nAmount =  AmountFromValue(amount);
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationburn " + guid + " " + address + " " + amount + " " + contract));
     BOOST_CHECK_NO_THROW(r = CallRPC(node, "signrawtransactionwithwallet " + find_value(r.get_obj(), "hex").get_str()));
 	string hexStr = find_value(r.get_obj(), "hex").get_str();
  
@@ -975,7 +1065,14 @@ void BurnAssetAllocation(const string& node, const string &guid, const string &a
     	GenerateBlocks(5, "node1");
     	BOOST_CHECK_NO_THROW(r = CallRPC(node, "assetallocationinfo " + guid + " burn"));
     	UniValue balance = find_value(r.get_obj(), "balance");
-    	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+(0.5 * COIN));
+    	BOOST_CHECK_EQUAL(AssetAmountFromValue(balance, 8), beforeBalance+nAmount);
+
+		if(contract == "''"){
+			BOOST_CHECK_NO_THROW(r = CallRPC(node, "addressbalance " + address));
+			CAmount nAmountAddressAfter = AmountFromValue(find_value(r.get_obj(), "amount"));
+			// account for fee
+			BOOST_CHECK(nAmountAddressAfter - nAmountAddressBefore >= (nAmount-0.001*COIN));
+		}		
     }
 }
 void LockAssetAllocation(const string& node, const string &guid, const string &address,const string &txid, const string &index){
@@ -1014,22 +1111,18 @@ string AssetSend(const string& node, const string& guid, const string& inputs, c
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
 		const UniValue& receiver = receivers[idx];
 		BOOST_CHECK(receiver.isObject());
-
-
-		UniValue receiverObj = receiver.get_obj();
-        const CTxDestination &dest = DecodeDestination(find_value(receiverObj, "address").get_str());
-        UniValue detail = DescribeAddress(dest);
-        string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-		UniValue amountObj = find_value(receiverObj, "amount");
+		CAmount amount;
+		UniValue amountObj = find_value(receiver.get_obj(), "amount");
         if (amountObj.isNum()) {
-			const CAmount &amount = AssetAmountFromValue(amountObj, nprecision);
+			amount = AssetAmountFromValue(amountObj, nprecision);
 			inputamount += amount;
 			BOOST_CHECK(amount > 0);
-			theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), amount));
 		}
-
-
+		UniValue receiverObj = receiver.get_obj();
+		std::string strAddress = find_value(receiverObj, "address").get_str();
+		const CWitnessAddress& witnessAddress = DescribeWitnessAddress(strAddress); 
+    	strAddress = witnessAddress.ToString(); 
+		theAssetAllocation.listSendingAllocationAmounts.push_back(make_pair(CWitnessAddress(witnessAddress.nVersion, witnessAddress.vchWitnessProgram), amount));
 	}
 
 	string otherNode1, otherNode2;

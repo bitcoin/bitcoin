@@ -5,14 +5,15 @@
 #include <util/system.h>
 
 #include <clientversion.h>
-#include <primitives/transaction.h>
 #include <sync.h>
 #include <test/util.h>
 #include <util/strencodings.h>
 #include <util/moneystr.h>
+#include <util/time.h>
 #include <test/setup_common.h>
 
 #include <stdint.h>
+#include <thread>
 #include <vector>
 #ifndef WIN32
 #include <signal.h>
@@ -1398,7 +1399,7 @@ static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
 
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
-    fs::path dirname = SetDataDir("test_LockDirectory") / fs::unique_path();
+    fs::path dirname = GetDataDir() / "lock_dir";
     const std::string lockname = ".lock";
 #ifndef WIN32
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
@@ -1487,7 +1488,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 BOOST_AUTO_TEST_CASE(test_DirIsWritable)
 {
     // Should be able to write to the data dir.
-    fs::path tmpdirname = SetDataDir("test_DirIsWritable");
+    fs::path tmpdirname = GetDataDir();
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
 
     // Should not be able to write to a non-existent dir.

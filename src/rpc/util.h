@@ -6,8 +6,11 @@
 #define SYSCOIN_RPC_UTIL_H
 
 #include <node/transaction.h>
+#include <outputtype.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
+#include <script/script.h>
+#include <script/sign.h>
 #include <script/standard.h>
 #include <univalue.h>
 
@@ -70,7 +73,7 @@ extern std::string HelpExampleRpc(const std::string& methodname, const std::stri
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(CKeyStore* const keystore, const std::string& addr_in);
-CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey>& pubkeys);
+CTxDestination AddAndGetMultisigDestination(const int required, const std::vector<CPubKey>& pubkeys, OutputType type, CKeyStore& keystore, CScript& script_out);
 
 UniValue DescribeAddress(const CTxDestination& dest);
 
@@ -82,6 +85,9 @@ UniValue JSONRPCTransactionError(TransactionError terr, const std::string& err_s
 
 //! Parse a JSON range specified as int64, or [int64, int64]
 std::pair<int64_t, int64_t> ParseDescriptorRange(const UniValue& value);
+
+/** Evaluate a descriptor given as a string, or as a {"desc":...,"range":...} object, with default range of 1000. */
+std::vector<CScript> EvalDescriptorStringOrObject(const UniValue& scanobject, FlatSigningProvider& provider);
 
 struct RPCArg {
     enum class Type {
@@ -220,7 +226,7 @@ struct RPCResults {
 
 struct RPCExamples {
     const std::string m_examples;
-    RPCExamples(
+    explicit RPCExamples(
         std::string examples)
         : m_examples(std::move(examples))
     {

@@ -190,13 +190,36 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
     // SYSCOIN remove bad burn transactions prior to accepting block                      
-    CCoinsViewCache viewOld(pcoinsTip.get());
-             
+    CCoinsView viewDummy;
+    CCoinsViewCache view(&viewDummy);
+    CCoinsViewCache &viewChain = *pcoinsTip;
+    CCoinsViewMemPool viewMempool(&viewChain, mempool);
+    view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
+    // bring all inputs of syscoin txs into view
+    for (const CTransactionRef& tx : pblock->vtx) {
+        if(IsSyscoinTx(tx->nVersion)){
+            for (const CTxIn& txin : tx->vin) {
+                view.AccessCoin(txin.prevout); // Load entries from viewChain into view; can fail.
+            }
+        }
+    }
+    view.SetBackend(viewDummy); // switch back to avoid locking mempool for too long
+      
     CValidationState stateInputs;
     txsToRemove.clear();
-    bool bOverflow = false;
-    CheckSyscoinInputs(false, *pblock->vtx[0], stateInputs, viewOld, false, bOverflow, nHeight, *pblock, false, true, txsToRemove);
-    if(bOverflow)
+    bool bOverflowed = false;
+    AssetAllocationMap mapAssetAllocations;
+    AssetMap mapAssets;
+    EthereumMintTxVec vecMintKeys;
+    std::vector<COutPoint> vecLockedOutpoints;
+    for(const CTransactionRef& tx: pblock->vtx){
+        bool bOverflow = false;
+        if(!CheckSyscoinInputs(false, *tx, stateInputs, view, false, bOverflow, nHeight, 0, pblock->GetHash(), false, true, mapAssetAllocations, mapAssets, vecMintKeys, vecLockedOutpoints))
+            txsToRemove.push_back(tx->GetHash());
+        if(bOverflow)
+            bOverflowed = true;
+    }
+    if(bOverflowed)
         ResyncAssetAllocationStates();
 
     if(!txsToRemove.empty()){

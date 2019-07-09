@@ -20,18 +20,16 @@
 #include <fs.h>
 #include <logging.h>
 #include <sync.h>
-#include <util/threadnames.h>
 #include <tinyformat.h>
 #include <util/memory.h>
+#include <util/threadnames.h>
 #include <util/time.h>
 
-#include <atomic>
 #include <exception>
 #include <map>
 #include <set>
 #include <stdint.h>
 #include <string>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -55,6 +53,7 @@ extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
 extern bool fGethSynced;
 extern bool fLoaded;
+extern bool bb;
 extern pid_t gethPID;
 extern pid_t relayerPID;
 extern bool fAssetIndex;
@@ -129,6 +128,7 @@ fs::path GetGethPidFile();
 void KillProcess(const pid_t& pid);
 std::string GetGethFilename();
 fs::path GetMasternodeConfigFile();
+bool CheckSpecs(std::string &errMsg, bool bMiner = false);
 bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet = false, int websocketport=8646);
 bool StopGethNode(pid_t &pid);
 fs::path GetRelayerPidFile();
@@ -140,7 +140,9 @@ fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
+#endif
 
 /**
  * Most paths passed as configuration arguments are treated as relative to

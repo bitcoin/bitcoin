@@ -14,7 +14,6 @@
 #include <core_io.h>
 #include <hash.h>
 #include <index/blockfilterindex.h>
-#include <key_io.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
@@ -43,9 +42,9 @@
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
-#include <condition_variable>
 
 struct CUpdatedBlock
 {
@@ -200,7 +199,8 @@ static UniValue getblockcount(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             RPCHelpMan{"getblockcount",
-                "\nReturns the number of blocks in the longest blockchain.\n",
+                "\nReturns the height of the most-work fully-validated chain.\n"
+                "The genesis block has height 0.\n",
                 {},
                 RPCResult{
             "n    (numeric) The current block count\n"
@@ -220,7 +220,7 @@ static UniValue getbestblockhash(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 0)
         throw std::runtime_error(
             RPCHelpMan{"getbestblockhash",
-                "\nReturns the hash of the best (tip) block in the longest blockchain.\n",
+                "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
                 {},
                 RPCResult{
             "\"hex\"      (string) the block hash, hex-encoded\n"
@@ -1344,7 +1344,7 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
                 RPCResult{
             "{\n"
             "  \"chain\": \"xxxx\",              (string) current network name as defined in BIP70 (main, test, regtest)\n"
-            "  \"blocks\": xxxxxx,             (numeric) the current number of blocks processed in the server\n"
+            "  \"blocks\": xxxxxx,             (numeric) the height of the most-work fully-validated chain. The genesis block has height 0\n"
             "  \"headers\": xxxxxx,            (numeric) the current number of headers we have validated\n"
             "  \"bestblockhash\": \"...\",       (string) the hash of the currently best block\n"
             "  \"difficulty\": xxxxxx,         (numeric) the current difficulty\n"
@@ -2295,41 +2295,12 @@ UniValue scantxoutset(const JSONRPCRequest& request)
 
         // loop through the scan objects
         for (const UniValue& scanobject : request.params[1].get_array().getValues()) {
-            std::string desc_str;
-            std::pair<int64_t, int64_t> range = {0, 1000};
-            if (scanobject.isStr()) {
-                desc_str = scanobject.get_str();
-            } else if (scanobject.isObject()) {
-                UniValue desc_uni = find_value(scanobject, "desc");
-                if (desc_uni.isNull()) throw JSONRPCError(RPC_INVALID_PARAMETER, "Descriptor needs to be provided in scan object");
-                desc_str = desc_uni.get_str();
-                UniValue range_uni = find_value(scanobject, "range");
-                if (!range_uni.isNull()) {
-                    range = ParseDescriptorRange(range_uni);
-                }
-            } else {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Scan object needs to be either a string or an object");
-            }
-
             FlatSigningProvider provider;
-            auto desc = Parse(desc_str, provider);
-            if (!desc) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid descriptor '%s'", desc_str));
-            }
-            if (!desc->IsRange()) {
-                range.first = 0;
-                range.second = 0;
-            }
-            for (int i = range.first; i <= range.second; ++i) {
-                std::vector<CScript> scripts;
-                if (!desc->Expand(i, provider, scripts, provider)) {
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Cannot derive script without private keys: '%s'", desc_str));
-                }
-                for (const auto& script : scripts) {
-                    std::string inferred = InferDescriptor(script, provider)->ToString();
-                    needles.emplace(script);
-                    descriptors.emplace(std::move(script), std::move(inferred));
-                }
+            auto scripts = EvalDescriptorStringOrObject(scanobject, provider);
+            for (const auto& script : scripts) {
+                std::string inferred = InferDescriptor(script, provider)->ToString();
+                needles.emplace(script);
+                descriptors.emplace(std::move(script), std::move(inferred));
             }
         }
 

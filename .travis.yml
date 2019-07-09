@@ -37,6 +37,7 @@ cache:
 stages:
   - lint
   - test
+  - extended-lint
 env:
   global:
     - MAKEJOBS=-j3
@@ -84,6 +85,19 @@ jobs:
         - set -o errexit; source .travis/lint_05_before_script.sh
       script:
         - set -o errexit; source .travis/lint_06_script.sh
+
+    - stage: extended-lint
+      name: 'extended lint [runtime >= 60 seconds]'
+      env:
+      cache: false
+      language: python
+      python: '3.5'
+      install:
+        - set -o errexit; source .travis/extended_lint_04_install.sh
+      before_script:
+        - set -o errexit; source .travis/lint_05_before_script.sh
+      script:
+        - set -o errexit; source .travis/extended_lint_06_script.sh
 
     - stage: test
       name: 'ARM  [GOAL: install]  [no unit or functional tests]'

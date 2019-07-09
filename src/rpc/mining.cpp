@@ -107,7 +107,6 @@ static UniValue getnetworkhashps(const JSONRPCRequest& request)
 }
 UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGenerate, uint64_t nMaxTries, bool keepScript)
 {
-    static const int nInnerLoopCount = 0x10000;
     int nHeightEnd = 0;
     int nHeight = 0;
 
@@ -128,14 +127,14 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, ::ChainActive().Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        while (nMaxTries > 0 && pblock->nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus()) && !ShutdownRequested()) {
             ++pblock->nNonce;
             --nMaxTries;
         }
-        if (nMaxTries == 0) {
+        if (nMaxTries == 0 || ShutdownRequested()) {
             break;
         }
-        if (pblock->nNonce == nInnerLoopCount) {
+        if (pblock->nNonce == std::numeric_limits<uint32_t>::max()) {
             continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
@@ -394,13 +393,10 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 },
             }.ToString());
     // SYSCOIN RPC_MISC_ERROR
-    meminfo_t memInfo = parse_meminfo();
-    LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
-    if(memInfo.MemTotalMiB < 8000)
-        throw JSONRPCError(RPC_MISC_ERROR, "Insufficient memory, you need at least 8GB RAM to mine syscoin and be running in a Unix OS. Please see documentation.");
-    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
-    if(GetNumCores() < 4)
-        throw JSONRPCError(RPC_MISC_ERROR, "Insufficient CPU cores, you need at least 4 cores to mine syscoin. Please see documentation.");
+    std::string errorMessage = "";
+    if(!CheckSpecs(errorMessage, true)){
+        throw JSONRPCError(RPC_MISC_ERROR, errorMessage);
+    }
     LOCK(cs_main);
 
     std::string strMode = "template";
@@ -514,7 +510,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             nTransactionsUpdatedLastLP = nTransactionsUpdatedLast;
         }
 
-        // Release the wallet and main lock while waiting
+        // Release lock while waiting
         LEAVE_CRITICAL_SECTION(cs_main);
         {
             checktxtime = std::chrono::steady_clock::now() + std::chrono::minutes(1);
@@ -525,6 +521,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
                 if (g_best_block_cv.wait_until(lock, checktxtime) == std::cv_status::timeout)
                 {
                     // Timeout: Check transactions for update
+                    // without holding ::mempool.cs to avoid deadlocks
                     if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLastLP)
                         break;
                     checktxtime += std::chrono::seconds(10);

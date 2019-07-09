@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <util/memory.h>
 #include <util/system.h>
 #include <util/time.h>
 #include <validation.h>
@@ -17,8 +18,6 @@
 #include <condition_variable>
 
 #include <unordered_set>
-#include <memory>
-#include <random.h>
 
 // BasicTestingSetup not sufficient because nScriptCheckThreads is not set
 // otherwise.

@@ -87,12 +87,12 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* Display elements init */
     QDir translations(":translations");
 
-    ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(tr(PACKAGE_NAME)));
-    ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(tr(PACKAGE_NAME)));
+    ui->syscoinAtStartup->setToolTip(ui->syscoinAtStartup->toolTip().arg(PACKAGE_NAME));
+    ui->syscoinAtStartup->setText(ui->syscoinAtStartup->text().arg(PACKAGE_NAME));
 
-    ui->openSyscoinConfButton->setToolTip(ui->openSyscoinConfButton->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->openSyscoinConfButton->setToolTip(ui->openSyscoinConfButton->toolTip().arg(PACKAGE_NAME));
 
-    ui->lang->setToolTip(ui->lang->toolTip().arg(tr(PACKAGE_NAME)));
+    ui->lang->setToolTip(ui->lang->toolTip().arg(PACKAGE_NAME));
     ui->lang->addItem(QString("(") + tr("default") + QString(")"), QVariant(""));
     for (const QString &langStr : translations.entryList())
     {

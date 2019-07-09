@@ -21,7 +21,7 @@ BOOST_FIXTURE_TEST_SUITE(syscoin_asset_allocation_tests, BasicSyscoinTestingSetu
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_address_sync...\n");
+	tfm::format(std::cout,"Running generate_asset_allocation_address_sync...\n");
 	GenerateBlocks(5);
 	string newaddress = GetNewFundedAddress("node1");
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node1", "getnewaddress"));
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_address_sync)
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_lock...\n");
+	tfm::format(std::cout,"Running generate_asset_allocation_lock...\n");
 	GenerateBlocks(5);
 	string txid;
 	string newaddress1 = GetNewFundedAddress("node2");
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_lock)
 BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 {
 	UniValue r;
-	printf("Running generate_asset_allocation_send_address...\n");
+	tfm::format(std::cout,"Running generate_asset_allocation_send_address...\n");
 	GenerateBlocks(5);
     GenerateBlocks(5, "node2");
 	string newaddress1 = GetNewFundedAddress("node1");
@@ -151,15 +151,15 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 
 	// non zdag cannot be found since it was already mined, but ends up briefly in conflict state because sender is conflicted
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid0));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
 
 	// first tx should have to wait 1 sec for good status
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid1));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
 
 	// check just sender
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " ''"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
 
 	// wait for 1 second as required by unit test
 	MilliSleep(1000);
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 
 	// sender is conflicted so txid0 is conflicted by extension even if its not found
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid0));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
 
 	// first ones now OK because it was found explicitly
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid1));
@@ -179,11 +179,11 @@ BOOST_AUTO_TEST_CASE(generate_asset_allocation_send_address)
 
 	// second one hasn't waited enough time yet
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " " + txid2));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
 
 	// check just sender
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationsenderstatus " + guid + " " + newaddress1 + " ''"));
-	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_MINOR_CONFLICT);
+	BOOST_CHECK_EQUAL(find_value(r.get_obj(), "status").get_int(), ZDAG_WARNING_MIN_LATENCY);
 
 	// wait for 1.5 second to clear minor warning status
 	MilliSleep(1500);
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(generate_asset_consistency_check)
 	UniValue assetInvalidatedResults, assetNowResults, assetValidatedResults;
 	UniValue assetAllocationsInvalidatedResults, assetAllocationsNowResults, assetAllocationsValidatedResults;
 	UniValue r;
-	printf("Running generate_asset_consistency_check...\n");
+	tfm::format(std::cout,"Running generate_asset_consistency_check...\n");
 	GenerateBlocks(5);
 
 	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "getblockcount", true, false));

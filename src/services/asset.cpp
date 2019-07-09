@@ -100,7 +100,7 @@ bool GetSyscoinBurnData(const CTransaction &tx, CAssetAllocation* theAssetAlloca
 } 
 bool GetSyscoinBurnData(const CTransaction &tx, uint32_t& nAssetFromScript, CWitnessAddress& burnWitnessAddress, CAmount &nAmountFromScript, std::vector<unsigned char> &vchEthAddress)
 {
-    if(tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+    if(tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         LogPrint(BCLog::SYS, "GetSyscoinBurnData: Invalid transaction version\n");
         return false;
     }
@@ -305,7 +305,7 @@ void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){
     int count = 0;
     for (const txiter& it : stage) {
         const CTransaction& tx = it->GetTx();
-        if(IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK){
+        if(IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_LOCK){
             CAssetAllocation allocation(tx);
             if(allocation.assetAllocationTuple.IsNull())
                 continue;
@@ -350,14 +350,14 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 }
 
 bool IsSyscoinMintTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT || nVersion == SYSCOIN_TX_VERSION_MINT;
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT;
 }
 bool IsAssetTx(const int &nVersion){
     return nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE || nVersion == SYSCOIN_TX_VERSION_ASSET_UPDATE || nVersion == SYSCOIN_TX_VERSION_ASSET_TRANSFER || nVersion == SYSCOIN_TX_VERSION_ASSET_SEND;
 }
 bool IsAssetAllocationTx(const int &nVersion){
-    return nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN || 
-        nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK;
+    return nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION ||
+        nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND || nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK;
 }
 bool IsSyscoinTx(const int &nVersion){
     return IsAssetTx(nVersion) || IsAssetAllocationTx(nVersion) || IsSyscoinMintTx(nVersion);
@@ -369,7 +369,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output, CW
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
         found = SysTxToJSON(rawTx, output, pwallet, filter_ismine);
     }
     
@@ -382,7 +382,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, UniValue& output){
     if(IsSyscoinMintTx(rawTx.nVersion)){
         found = AssetMintTxToJson(rawTx, output);
     }
-    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_BURN){
+    else if (IsAssetTx(rawTx.nVersion) || IsAssetAllocationTx(rawTx.nVersion) || rawTx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION){
         found = SysTxToJSON(rawTx, output);
     }
     
@@ -395,7 +395,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output, CWallet* const pwalle
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
         found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output, pwallet, filter_ismine);
@@ -407,7 +407,7 @@ bool SysTxToJSON(const CTransaction& tx, UniValue& output)
     bool found = false;
     if (IsAssetTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetTxToJSON(tx, output);
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_BURN)
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)
         found = SysBurnTxToJSON(tx, output);
     else if (IsAssetAllocationTx(tx.nVersion) || tx.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND)
         found = AssetAllocationTxToJSON(tx, output);
@@ -458,7 +458,7 @@ bool SysBurnTxToJSON(const CTransaction &tx, UniValue &entry)
 int GenerateSyscoinGuid()
 {
     int rand = 0;
-    while(rand <= SYSCOIN_TX_VERSION_MINT)
+    while(rand <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
 	    rand = GetRand(std::numeric_limits<int>::max());
     return rand;
 }
@@ -657,7 +657,9 @@ bool CAssetDB::Flush(const AssetMap &mapAssets){
         for (const auto &key : mapAssets) {
             if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.first) == fAssetIndexGuids.end())
                 continue;
-            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
+            const string& witnessStr = key.second.witnessAddress.ToString();
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(witnessStr)),  std::forward_as_tuple(std::move(emptyVec)));
+            
             std::vector<uint32_t> &assetGuids = it.first->second;
             // if wasn't found and was added to the map
             if(it.second)
@@ -731,15 +733,10 @@ bool CAssetDB::ScanAssets(const int count, const int from, const UniValue& oOpti
 			const UniValue &ownersArray = owners.get_array();
 			for (unsigned int i = 0; i < ownersArray.size(); i++) {
 				const UniValue &owner = ownersArray[i].get_obj();
-                const CTxDestination &dest = DecodeDestination(owner.get_str());
-                UniValue detail = DescribeAddress(dest);
-                if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                    throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-                string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-                unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
+                 
 				const UniValue &ownerStr = find_value(owner, "address");
-				if (ownerStr.isStr()) 
-					vecWitnessAddresses.push_back(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+				if (ownerStr.isStr())
+					vecWitnessAddresses.push_back(DescribeWitnessAddress(ownerStr.get_str()));
 			}
 		}
 	}
@@ -808,19 +805,7 @@ bool CAssetIndexDB::ScanAssetIndex(int64_t page, const UniValue& oOptions, UniVa
 
         const UniValue &addressObj = find_value(oOptions, "address");
         if (addressObj.isStr()) {
-            UniValue requestParam(UniValue::VARR);
-            requestParam.push_back(addressObj.get_str());
-            JSONRPCRequest jsonRequest;
-            jsonRequest.params = requestParam;
-            const UniValue &convertedAddressValue = convertaddress(jsonRequest);     
-            const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();              
-            const CTxDestination &dest = DecodeDestination(v4address);
-            UniValue detail = DescribeAddress(dest);
-            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-            string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-            unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
-            assetTuple = CAssetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+            assetTuple = CAssetAllocationTuple(nAsset, DescribeWitnessAddress(addressObj.get_str()));
         }
     }
     else{
