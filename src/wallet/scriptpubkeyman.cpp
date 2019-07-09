@@ -1561,12 +1561,18 @@ bool DescriptorScriptPubKeyMan::IsHDEnabled() const
 
 bool DescriptorScriptPubKeyMan::CanGetAddresses(bool internal) const
 {
-    return false;
+    // We can only give out addresses from descriptors that are single type (not combo), ranged,
+    // and either have cached keys or can generate more keys (ignoring encryption)
+    LOCK(cs_desc_man);
+    return m_wallet_descriptor.descriptor->IsSingleType() &&
+           m_wallet_descriptor.descriptor->IsRange() &&
+           (HavePrivateKeys() || m_wallet_descriptor.next_index < m_wallet_descriptor.range_end);
 }
 
 bool DescriptorScriptPubKeyMan::HavePrivateKeys() const
 {
-    return false;
+    LOCK(cs_desc_man);
+    return m_map_keys.size() > 0 || m_map_crypted_keys.size() > 0;
 }
 
 int64_t DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
@@ -1576,17 +1582,22 @@ int64_t DescriptorScriptPubKeyMan::GetOldestKeyPoolTime() const
 
 size_t DescriptorScriptPubKeyMan::KeypoolCountExternalKeys() const
 {
-    return 0;
+    if (m_internal) {
+        return 0;
+    }
+    return GetKeyPoolSize();
 }
 
 unsigned int DescriptorScriptPubKeyMan::GetKeyPoolSize() const
 {
-    return 0;
+    LOCK(cs_desc_man);
+    return m_wallet_descriptor.range_end - m_wallet_descriptor.next_index;
 }
 
 int64_t DescriptorScriptPubKeyMan::GetTimeFirstKey() const
 {
-    return 0;
+    LOCK(cs_desc_man);
+    return m_wallet_descriptor.creation_time;
 }
 
 std::unique_ptr<SigningProvider> DescriptorScriptPubKeyMan::GetSolvingProvider(const CScript& script) const
