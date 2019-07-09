@@ -71,13 +71,13 @@ private:
     map_t mapIndex;
 
 public:
-    CacheMap(size_type nMaxSizeIn = 0)
+    explicit CacheMap(size_type nMaxSizeIn = 0)
         : nMaxSize(nMaxSizeIn),
           listItems(),
           mapIndex()
     {}
 
-    CacheMap(const CacheMap<K,V>& other)
+    explicit CacheMap(const CacheMap<K,V>& other)
         : nMaxSize(other.nMaxSize),
           listItems(other.listItems),
           mapIndex()

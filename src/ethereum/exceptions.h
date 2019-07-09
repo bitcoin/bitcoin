@@ -38,7 +38,7 @@ namespace dev
 /// Base class for all exceptions.
 struct Exception: virtual std::exception, virtual boost::exception
 {
-	Exception(std::string _message = std::string()): m_message(std::move(_message)) {}
+	explicit Exception(std::string _message = std::string()): m_message(std::move(_message)) {}
 	const char* what() const noexcept override { return m_message.empty() ? std::exception::what() : m_message.c_str(); }
 
 private:
@@ -48,7 +48,7 @@ private:
 #define DEV_SIMPLE_EXCEPTION(X) struct X: virtual Exception { const char* what() const noexcept override { return #X; } }
 
 /// Base class for all RLP exceptions.
-struct RLPException: virtual Exception { RLPException(std::string _message = std::string()): Exception(_message) {} };
+struct RLPException: virtual Exception { explicit RLPException(std::string _message = std::string()): Exception(_message) {} };
 #define DEV_SIMPLE_EXCEPTION_RLP(X) struct X: virtual RLPException { const char* what() const noexcept override { return #X; } }
 
 DEV_SIMPLE_EXCEPTION_RLP(BadCast);
@@ -60,15 +60,15 @@ DEV_SIMPLE_EXCEPTION(BadHexCharacter);
 DEV_SIMPLE_EXCEPTION(NoNetworking);
 DEV_SIMPLE_EXCEPTION(NoUPnPDevice);
 DEV_SIMPLE_EXCEPTION(RootNotFound);
-struct BadRoot: virtual Exception { public: BadRoot(h256 const& _root): Exception("BadRoot " + _root.hex()), root(_root) {} h256 root; };
+struct BadRoot: virtual Exception { public: explicit BadRoot(h256 const& _root): Exception("BadRoot " + _root.hex()), root(_root) {} h256 root; };
 DEV_SIMPLE_EXCEPTION(FileError);
 DEV_SIMPLE_EXCEPTION(Overflow);
 DEV_SIMPLE_EXCEPTION(FailedInvariant);
 DEV_SIMPLE_EXCEPTION(ValueTooLarge);
 DEV_SIMPLE_EXCEPTION(UnknownField);
 
-struct InterfaceNotSupported: virtual Exception { public: InterfaceNotSupported(std::string const& _f): Exception("Interface " + _f + " not supported.") {} };
-struct ExternalFunctionFailure: virtual Exception { public: ExternalFunctionFailure(std::string const& _f): Exception("Function " + _f + "() failed.") {} };
+struct InterfaceNotSupported: virtual Exception { public: explicit InterfaceNotSupported(std::string const& _f): Exception("Interface " + _f + " not supported.") {} };
+struct ExternalFunctionFailure: virtual Exception { public: explicit ExternalFunctionFailure(std::string const& _f): Exception("Function " + _f + "() failed.") {} };
 
 // error information to be added to exceptions
 using errinfo_invalidSymbol = boost::error_info<struct tag_invalidSymbol, char>;

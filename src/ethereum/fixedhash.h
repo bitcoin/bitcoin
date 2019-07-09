@@ -69,7 +69,7 @@ public:
 	template <unsigned M> explicit FixedHash(FixedHash<M> const& _h, ConstructFromHashType _t = AlignLeft) { m_data.fill(0); unsigned c = std::min(M, N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _h[_t == AlignRight ? M - 1 - i : i]; }
 
 	/// Convert from the corresponding arithmetic type.
-	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
+	explicit FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
 	/// Convert from unsigned
 	explicit FixedHash(unsigned _u) { toBigEndian(_u, m_data); }
