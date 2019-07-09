@@ -1633,3 +1633,23 @@ void DescriptorScriptPubKeyMan::SetType(OutputType type, bool internal)
     this->m_address_type = type;
     this->m_internal = internal;
 }
+
+void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
+{
+    LOCK(cs_desc_man);
+    m_wallet_descriptor.cache = cache;
+    for (int32_t i = m_wallet_descriptor.range_start; i < m_wallet_descriptor.range_end; ++i) {
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        if (!m_wallet_descriptor.descriptor->ExpandFromCache(i, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
+            throw std::runtime_error("Error: Unable to expand wallet descriptor from cache");
+        }
+        // Add all of the scriptPubKeys to the scriptPubKey set
+        for (const CScript& script : scripts_temp) {
+            if (m_map_script_pub_keys.count(script) != 0) {
+                throw std::runtime_error(strprintf("Error: Already loaded script at index %d as being at index %d", i, m_map_script_pub_keys[script]));
+            }
+            m_map_script_pub_keys[script] = i;
+        }
+    }
+}

@@ -543,6 +543,8 @@ public:
     uint256 GetID() const override;
 
     void SetType(OutputType type, bool internal) override;
+
+    void SetCache(const DescriptorCache& cache);
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
