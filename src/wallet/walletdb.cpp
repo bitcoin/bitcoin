@@ -45,6 +45,8 @@ const std::string TX{"tx"};
 const std::string VERSION{"version"};
 const std::string WALLETDESCRIPTOR{"walletdescriptor"};
 const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
+const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
+const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 } // namespace DBKeys
@@ -202,6 +204,8 @@ public:
     std::map<OutputType, uint256> m_active_external_spks;
     std::map<OutputType, uint256> m_active_internal_spks;
     std::map<uint256, DescriptorCache> m_descriptor_caches;
+    std::map<std::pair<uint256, CKeyID>, CKey> m_descriptor_keys;
+    std::map<std::pair<uint256, CKeyID>, std::pair<CPubKey, std::vector<unsigned char>>> m_descriptor_crypt_keys;
 
     CWalletScanState() {
     }
@@ -467,6 +471,58 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             } else {
                 wss.m_descriptor_caches[desc_id].CacheDerivedExtPubKey(key_exp_index, der_index, xpub);
             }
+        } else if (strType == DBKeys::WALLETDESCRIPTORKEY) {
+            uint256 desc_id;
+            CPubKey pubkey;
+            ssKey >> desc_id;
+            ssKey >> pubkey;
+            if (!pubkey.IsValid())
+            {
+                strErr = "Error reading wallet database: CPubKey corrupt";
+                return false;
+            }
+            CKey key;
+            CPrivKey pkey;
+            uint256 hash;
+
+            wss.nKeys++;
+            ssValue >> pkey;
+            ssValue >> hash;
+
+            // hash pubkey/privkey to accelerate wallet load
+            std::vector<unsigned char> to_hash;
+            to_hash.reserve(pubkey.size() + pkey.size());
+            to_hash.insert(to_hash.end(), pubkey.begin(), pubkey.end());
+            to_hash.insert(to_hash.end(), pkey.begin(), pkey.end());
+
+            if (Hash(to_hash.begin(), to_hash.end()) != hash)
+            {
+                strErr = "Error reading wallet database: CPubKey/CPrivKey corrupt";
+                return false;
+            }
+
+            if (!key.Load(pkey, pubkey, true))
+            {
+                strErr = "Error reading wallet database: CPrivKey corrupt";
+                return false;
+            }
+            wss.m_descriptor_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), key));
+        } else if (strType == DBKeys::WALLETDESCRIPTORCKEY) {
+            uint256 desc_id;
+            CPubKey pubkey;
+            ssKey >> desc_id;
+            ssKey >> pubkey;
+            if (!pubkey.IsValid())
+            {
+                strErr = "Error reading wallet database: CPubKey corrupt";
+                return false;
+            }
+            std::vector<unsigned char> privkey;
+            ssValue >> privkey;
+            wss.nCKeys++;
+
+            wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
+            wss.fIsEncrypted = true;
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
@@ -573,6 +629,16 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         auto spk_man = pwallet->GetScriptPubKeyMan(desc_cache_pair.first);
         assert(spk_man);
         ((DescriptorScriptPubKeyMan*)spk_man)->SetCache(desc_cache_pair.second);
+    }
+
+    // Set the descriptor keys
+    for (auto desc_key_pair : wss.m_descriptor_keys) {
+        auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
+        ((DescriptorScriptPubKeyMan*)spk_man)->AddKey(desc_key_pair.first.second, desc_key_pair.second);
+    }
+    for (auto desc_key_pair : wss.m_descriptor_crypt_keys) {
+        auto spk_man = pwallet->GetScriptPubKeyMan(desc_key_pair.first.first);
+        ((DescriptorScriptPubKeyMan*)spk_man)->AddCryptedKey(desc_key_pair.first.second, desc_key_pair.second.first, desc_key_pair.second.second);
     }
 
     if (fNoncriticalErrors && result == DBErrors::LOAD_OK)
