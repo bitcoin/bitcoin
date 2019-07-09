@@ -448,6 +448,9 @@ int GuiMain(int argc, char* argv[])
 
     // Register meta types used for QMetaObject::invokeMethod
     qRegisterMetaType< bool* >();
+#ifdef ENABLE_WALLET
+    qRegisterMetaType<WalletModel*>();
+#endif
     //   Need to pass name here as CAmount is a typedef (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
