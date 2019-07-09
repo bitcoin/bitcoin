@@ -10,7 +10,6 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "instantsend.h"
 #include "net.h"
 #include "policy/feerate.h"
 #include "policy/fees.h"
@@ -65,15 +64,14 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
     AssertLockHeld(cs_main); // for mapBlockIndex
     int confirms = wtx.GetDepthInMainChain();
-    bool fLocked = instantsend.IsLockedInstantSendTransaction(wtx.GetHash());
-    bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(wtx.GetHash());
+    bool fLocked = llmq::quorumInstantSendManager->IsLocked(wtx.GetHash());
     bool chainlock = false;
     if (confirms > 0) {
         chainlock = llmq::chainLocksHandler->HasChainLock(mapBlockIndex[wtx.hashBlock]->nHeight, wtx.hashBlock);
     }
     entry.push_back(Pair("confirmations", confirms));
-    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked || chainlock));
-    entry.push_back(Pair("instantlock_internal", fLocked || fLLMQLocked));
+    entry.push_back(Pair("instantlock", fLocked || chainlock));
+    entry.push_back(Pair("instantlock_internal", fLocked));
     entry.push_back(Pair("chainlock", chainlock));
     if (wtx.IsCoinBase())
         entry.push_back(Pair("generated", true));
@@ -354,7 +352,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUseInstantSend = false, bool fUsePrivateSend = false)
+static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, bool fUsePrivateSend = false)
 {
     CAmount curBalance = pwallet->GetBalance();
 
@@ -381,18 +379,13 @@ static void SendMoney(CWallet * const pwallet, const CTxDestination &address, CA
     CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
     vecSend.push_back(recipient);
     if (!pwallet->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet,
-                                         strError, NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend)) {
+                                         strError, NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > curBalance)
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     CValidationState state;
-    // the new IX system does not require explicit IX messages
-    std::string strCommand = NetMsgType::TX;
-    if (fUseInstantSend && llmq::IsOldInstantSendEnabled()) {
-        strCommand = NetMsgType::TXLOCKREQUEST;
-    }
-    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state, strCommand)) {
+    if (!pwallet->CommitTransaction(wtxNew, reservekey, g_connman.get(), state)) {
         strError = strprintf("Error: The transaction was rejected! Reason given: %s", state.GetRejectReason());
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
@@ -420,7 +413,7 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
             "                             transaction, just kept in your wallet.\n"
             "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
             "                             The recipient will receive less amount of Dash than you enter in the amount field.\n"
-            "6. \"use_is\"             (bool, optional, default=false) Send this transaction as InstantSend\n"
+            "6. \"use_is\"             (bool, optional, default=false) Deprecated and ignored\n"
             "7. \"use_ps\"             (bool, optional, default=false) Use anonymized funds only\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
@@ -453,77 +446,25 @@ UniValue sendtoaddress(const JSONRPCRequest& request)
     if (request.params.size() > 4)
         fSubtractFeeFromAmount = request.params[4].get_bool();
 
-    bool fUseInstantSend = false;
     bool fUsePrivateSend = false;
-    if (request.params.size() > 5)
-        fUseInstantSend = request.params[5].get_bool();
     if (request.params.size() > 6)
         fUsePrivateSend = request.params[6].get_bool();
 
     EnsureWalletIsUnlocked(pwallet);
 
-    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUseInstantSend, fUsePrivateSend);
+    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, fUsePrivateSend);
 
     return wtx.GetHash().GetHex();
 }
 
+// DEPRECATED
 UniValue instantsendtoaddress(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
-        return NullUniValue;
-
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 5)
-        throw std::runtime_error(
-            "instantsendtoaddress \"address\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
-            "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
-            + HelpRequiringPassphrase(pwallet) +
-            "\nArguments:\n"
-            "1. \"address\"     (string, required) The dash address to send to.\n"
-            "2. \"amount\"      (numeric, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                             This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment_to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                             to which you're sending the transaction. This is not part of the \n"
-            "                             transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                             The recipient will receive less amount of Dash than you enter in the amount field.\n"
-            "\nResult:\n"
-            "\"transactionid\"  (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("instantsendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1")
-            + HelpExampleCli("instantsendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("instantsendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("instantsendtoaddress", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", 0.1, \"donation\", \"seans outpost\"")
-        );
-
-    LOCK2(cs_main, pwallet->cs_wallet);
-
-    CBitcoinAddress address(request.params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
-
-    // Amount
-    CAmount nAmount = AmountFromValue(request.params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-
-    // Wallet comments
-    CWalletTx wtx;
-    if (request.params.size() > 2 && !request.params[2].isNull() && !request.params[2].get_str().empty())
-        wtx.mapValue["comment"] = request.params[2].get_str();
-    if (request.params.size() > 3 && !request.params[3].isNull() && !request.params[3].get_str().empty())
-        wtx.mapValue["to"]      = request.params[3].get_str();
-
-    bool fSubtractFeeFromAmount = false;
-    if (request.params.size() > 4)
-        fSubtractFeeFromAmount = request.params[4].get_bool();
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    SendMoney(pwallet, address.Get(), nAmount, fSubtractFeeFromAmount, wtx, true);
-
-    return wtx.GetHash().GetHex();
+    if (request.fHelp) {
+        throw std::runtime_error("instantsendtoaddress is deprecated and sendtoaddress should be used instead");
+    }
+    LogPrintf("WARNING: Used deprecated RPC method 'instantsendtoaddress'! Please use 'sendtoaddress' instead\n");
+    return sendtoaddress(request);
 }
 
 UniValue listaddressgroupings(const JSONRPCRequest& request)
@@ -1022,7 +963,7 @@ UniValue sendmany(const JSONRPCRequest& request)
             "      \"address\"          (string) Subtract fee from this address\n"
             "      ,...\n"
             "    ]\n"
-            "7. \"use_is\"                (bool, optional, default=false) Send this transaction as InstantSend\n"
+            "7. \"use_is\"                (bool, optional, default=false) Deprecated and ignored\n"
             "8. \"use_ps\"                (bool, optional, default=false) Use anonymized funds only\n"
             "\nResult:\n"
             "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
@@ -1102,24 +1043,16 @@ UniValue sendmany(const JSONRPCRequest& request)
     CAmount nFeeRequired = 0;
     int nChangePosRet = -1;
     std::string strFailReason;
-    bool fUseInstantSend = false;
     bool fUsePrivateSend = false;
-    if (request.params.size() > 6)
-        fUseInstantSend = request.params[6].get_bool();
     if (request.params.size() > 7)
         fUsePrivateSend = request.params[7].get_bool();
 
     bool fCreated = pwallet->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason,
-                                               NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS, fUseInstantSend);
+                                               NULL, true, fUsePrivateSend ? ONLY_DENOMINATED : ALL_COINS);
     if (!fCreated)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
     CValidationState state;
-    // the new IX system does not require explicit IX messages
-    std::string strCommand = NetMsgType::TX;
-    if (fUseInstantSend && llmq::IsOldInstantSendEnabled()) {
-        strCommand = NetMsgType::TXLOCKREQUEST;
-    }
-    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state, strCommand)) {
+    if (!pwallet->CommitTransaction(wtx, keyChange, g_connman.get(), state)) {
         strFailReason = strprintf("Transaction commit failed:: %s", state.GetRejectReason());
         throw JSONRPCError(RPC_WALLET_ERROR, strFailReason);
     }
@@ -3065,7 +2998,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 
     { "wallet",             "keepass",                  &keepass,                  true,   {} },
-    { "wallet",             "instantsendtoaddress",     &instantsendtoaddress,     false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
+    { "hidden",             "instantsendtoaddress",     &instantsendtoaddress,     false,  {"address","amount","comment","comment_to","subtractfeefromamount"} },
     { "wallet",             "dumphdinfo",               &dumphdinfo,               true,   {} },
     { "wallet",             "importelectrumwallet",     &importelectrumwallet,     true,   {"filename", "index"} },
 

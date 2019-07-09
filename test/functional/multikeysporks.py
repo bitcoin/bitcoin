@@ -119,7 +119,7 @@ class MultiKeySporkTest(BitcoinTestFramework):
     def run_test(self):
         # check test spork default state
         for node in self.nodes:
-            assert(self.get_test_spork_state(node) == 0)
+            assert(self.get_test_spork_state(node) == 4070908800)
 
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())

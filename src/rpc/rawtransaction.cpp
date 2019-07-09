@@ -24,7 +24,6 @@
 #include "txmempool.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
-#include "instantsend.h"
 #ifdef ENABLE_WALLET
 #include "wallet/rpcwallet.h"
 #include "wallet/wallet.h"
@@ -94,10 +93,9 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         }
     }
 
-    bool fLocked = instantsend.IsLockedInstantSendTransaction(txid);
-    bool fLLMQLocked = llmq::quorumInstantSendManager->IsLocked(txid);
-    entry.push_back(Pair("instantlock", fLocked || fLLMQLocked || chainLock));
-    entry.push_back(Pair("instantlock_internal", fLocked || fLLMQLocked));
+    bool fLocked = llmq::quorumInstantSendManager->IsLocked(txid);
+    entry.push_back(Pair("instantlock", fLocked || chainLock));
+    entry.push_back(Pair("instantlock_internal", fLocked));
     entry.push_back(Pair("chainlock", chainLock));
 }
 
@@ -855,7 +853,7 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"hexstring\"    (string, required) The hex string of the raw transaction)\n"
             "2. allowhighfees  (boolean, optional, default=false) Allow high fees\n"
-            "3. instantsend    (boolean, optional, default=false) Use InstantSend to send this transaction\n"
+            "3. instantsend    (boolean, optional, default=false) Deprecated and ignored\n"
             "4. bypasslimits   (boolean, optional, default=false) Bypass transaction policy limits\n"
             "\nResult:\n"
             "\"hex\"             (string) The transaction hash in hex\n"
@@ -884,10 +882,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     if (request.params.size() > 1 && request.params[1].get_bool())
         nMaxRawTxFee = 0;
 
-    bool fInstantSend = false;
-    if (request.params.size() > 2)
-        fInstantSend = request.params[2].get_bool();
-
     bool fBypassLimits = false;
     if (request.params.size() > 3)
         fBypassLimits = request.params[3].get_bool();
@@ -901,9 +895,6 @@ UniValue sendrawtransaction(const JSONRPCRequest& request)
     bool fHaveMempool = mempool.exists(hashTx);
     if (!fHaveMempool && !fHaveChain) {
         // push to local node and sync with wallets
-        if (fInstantSend && !instantsend.ProcessTxLockRequest(*tx, *g_connman)) {
-            throw JSONRPCError(RPC_TRANSACTION_ERROR, "Not a valid InstantSend transaction, see debug.log for more info");
-        }
         CValidationState state;
         bool fMissingInputs;
         if (!AcceptToMemoryPool(mempool, state, std::move(tx), !fBypassLimits, &fMissingInputs, false, nMaxRawTxFee)) {

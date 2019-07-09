@@ -672,8 +672,6 @@ public:
     bool existsProviderTxConflict(const CTransaction &tx) const;
 
     size_t DynamicMemoryUsage() const;
-    // returns share of the used memory to maximum allowed memory
-    double UsedMemoryShare() const;
 
     boost::signals2::signal<void (CTransactionRef)> NotifyEntryAdded;
     boost::signals2::signal<void (CTransactionRef, MemPoolRemovalReason)> NotifyEntryRemoved;

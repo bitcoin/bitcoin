@@ -22,8 +22,6 @@
 #include "governance/governance-object.h"
 #include "governance/governance-vote.h"
 
-#include "instantsend.h"
-
 #include "llmq/quorums_chainlocks.h"
 #include "llmq/quorums_instantsend.h"
 

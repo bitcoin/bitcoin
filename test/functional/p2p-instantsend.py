@@ -25,17 +25,10 @@ class InstantSendTest(DashTestFramework):
         self.wait_for_sporks_same()
         self.mine_quorum()
 
-        self.log.info("Test old InstantSend")
-        self.test_block_doublespend()
-
-        # Generate 6 block to avoid retroactive signing overloading Travis
-        self.nodes[0].generate(6)
-        sync_blocks(self.nodes)
-
-        self.nodes[0].spork("SPORK_20_INSTANTSEND_LLMQ_BASED", 0)
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
         self.wait_for_sporks_same()
 
-        self.log.info("Test new InstantSend")
         self.test_mempool_doublespend()
         self.test_block_doublespend()
 
@@ -56,7 +49,7 @@ class InstantSendTest(DashTestFramework):
         isolate_node(isolated)
         # instantsend to receiver
         receiver_addr = receiver.getnewaddress()
-        is_id = sender.instantsendtoaddress(receiver_addr, 0.9)
+        is_id = sender.sendtoaddress(receiver_addr, 0.9)
         for node in self.nodes:
             if node is not isolated:
                 self.wait_for_instantlock(is_id, node)
@@ -112,7 +105,7 @@ class InstantSendTest(DashTestFramework):
         # instantsend to receiver. The previously isolated node should prune the doublespend TX and request the correct
         # TX from other nodes.
         receiver_addr = receiver.getnewaddress()
-        is_id = sender.instantsendtoaddress(receiver_addr, 0.9)
+        is_id = sender.sendtoaddress(receiver_addr, 0.9)
         for node in self.nodes:
             self.wait_for_instantlock(is_id, node)
         assert_raises_jsonrpc(-5, "No such mempool or blockchain transaction", isolated.getrawtransaction, dblspnd_txid)

@@ -23,7 +23,6 @@ class CSporkManager;
 enum SporkId : int32_t {
     SPORK_2_INSTANTSEND_ENABLED                            = 10001,
     SPORK_3_INSTANTSEND_BLOCK_FILTERING                    = 10002,
-    SPORK_5_INSTANTSEND_MAX_VALUE                          = 10004,
     SPORK_6_NEW_SIGS                                       = 10005,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_15_DETERMINISTIC_MNS_ENABLED                     = 10014,

@@ -7,7 +7,6 @@
 
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "instantsend.h"
 #include "validation.h"
 #include "policy/policy.h"
 #include "policy/fees.h"
@@ -1394,16 +1393,6 @@ size_t CTxMemPool::DynamicMemoryUsage() const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 15 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + memusage::DynamicUsage(vTxHashes) + cachedInnerUsage;
 }
 
-double CTxMemPool::UsedMemoryShare() const
-{
-    // use 1000000 instead of real bytes number in megabyte because of
-    // this param is calculated in such way in other places (see AppInit
-    // function in src/init.cpp or mempoolInfoToJSON function in
-    // src/rpc/blockchain.cpp)
-    size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
-    return double(DynamicMemoryUsage()) / maxmempool;
-}
-
 void CTxMemPool::RemoveStaged(setEntries &stage, bool updateDescendants, MemPoolRemovalReason reason) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage, updateDescendants);
@@ -1418,7 +1407,7 @@ int CTxMemPool::Expire(int64_t time) {
     setEntries toremove;
     while (it != mapTx.get<entry_time>().end() && it->GetTime() < time) {
         // locked txes do not expire until mined and have sufficient confirmations
-        if (instantsend.IsLockedInstantSendTransaction(it->GetTx().GetHash()) || llmq::quorumInstantSendManager->IsLocked(it->GetTx().GetHash())) {
+        if (llmq::quorumInstantSendManager->IsLocked(it->GetTx().GetHash())) {
             it++;
             continue;
         }

@@ -32,7 +32,6 @@
 
 #include "spork.h"
 #include "governance/governance.h"
-#include "instantsend.h"
 #include "masternode/masternode-payments.h"
 #include "masternode/masternode-sync.h"
 #include "masternode/masternode-meta.h"
@@ -954,6 +953,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     switch (inv.type)
     {
     case MSG_TX:
+    case MSG_LEGACY_TXLOCK_REQUEST: // we treat legacy IX messages as TX messages
         {
             assert(recentRejects);
             if (chainActive.Tip()->GetBlockHash() != hashRecentRejectsChainTip)
@@ -989,11 +989,6 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         We're going to be asking many nodes upfront for the full inventory list, so we'll get duplicates of these.
         We want to only update the time on new hits, so that we can time out appropriately if needed.
     */
-    case MSG_TXLOCK_REQUEST:
-        return instantsend.AlreadyHave(inv.hash);
-
-    case MSG_TXLOCK_VOTE:
-        return instantsend.AlreadyHave(inv.hash);
 
     case MSG_SPORK:
         {
@@ -1215,8 +1210,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
             // Send stream from relay memory
             bool push = false;
-            // Only serve MSG_TX from mapRelay.
-            // Otherwise we may send out a normal TX instead of a IX
             if (inv.type == MSG_TX) {
                 auto mi = mapRelay.find(inv.hash);
                 if (mi != mapRelay.end()) {
@@ -1230,22 +1223,6 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *txinfo.tx));
                         push = true;
                     }
-                }
-            }
-
-            if (!push && inv.type == MSG_TXLOCK_REQUEST) {
-                CTxLockRequest txLockRequest;
-                if(instantsend.GetTxLockRequest(inv.hash, txLockRequest)) {
-                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::TXLOCKREQUEST, txLockRequest));
-                    push = true;
-                }
-            }
-
-            if (!push && inv.type == MSG_TXLOCK_VOTE) {
-                CTxLockVote vote;
-                if(instantsend.GetTxLockVote(inv.hash, vote)) {
-                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::TXLOCKVOTE, vote));
-                    push = true;
                 }
             }
 
@@ -2087,7 +2064,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
 
-    else if (strCommand == NetMsgType::TX || strCommand == NetMsgType::DSTX || strCommand == NetMsgType::TXLOCKREQUEST)
+    else if (strCommand == NetMsgType::TX || strCommand == NetMsgType::DSTX || strCommand == NetMsgType::LEGACYTXLOCKREQUEST)
     {
         // Stop processing the transaction early if
         // We are in blocks only mode and peer is either not whitelisted or whitelistrelay is off
@@ -2100,25 +2077,15 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         std::deque<COutPoint> vWorkQueue;
         std::vector<uint256> vEraseQueue;
         CTransactionRef ptx;
-        CTxLockRequest txLockRequest;
         CPrivateSendBroadcastTx dstx;
         int nInvType = MSG_TX;
-        bool fCanAutoLock = false;
 
         // Read data and assign inv type
         if(strCommand == NetMsgType::TX) {
             vRecv >> ptx;
-            txLockRequest = CTxLockRequest(ptx);
-            fCanAutoLock = llmq::IsOldInstantSendEnabled() && CInstantSend::CanAutoLock() && txLockRequest.IsSimple();
-        } else if(strCommand == NetMsgType::TXLOCKREQUEST) {
-            vRecv >> txLockRequest;
-            ptx = txLockRequest.tx;
-            nInvType = MSG_TXLOCK_REQUEST;
-            if (llmq::IsNewInstantSendEnabled()) {
-                // the new system does not require explicit lock requests
-                // changing the inv type to MSG_TX also results in re-broadcasting the TX as normal TX
-                nInvType = MSG_TX;
-            }
+        } else if(strCommand == NetMsgType::LEGACYTXLOCKREQUEST) {
+            // we keep processing the legacy IX message here but revert to handling it as a regular TX
+            vRecv >> ptx;
         } else if (strCommand == NetMsgType::DSTX) {
             vRecv >> dstx;
             ptx = dstx.tx;
@@ -2134,18 +2101,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         // Process custom logic, no matter if tx will be accepted to mempool later or not
-        if (nInvType == MSG_TXLOCK_REQUEST || fCanAutoLock) {
-            if(!instantsend.ProcessTxLockRequest(txLockRequest, connman)) {
-                LogPrint(BCLog::INSTANTSEND, "TXLOCKREQUEST -- failed %s\n", txLockRequest.GetHash().ToString());
-                // Should not really happen for "fCanAutoLock == true" but just in case:
-                if (!fCanAutoLock) {
-                    // Fail only for "true" IS here
-                    return false;
-                }
-                // Fallback for normal txes to process as usual
-                fCanAutoLock = false;
-            }
-        } else if (nInvType == MSG_DSTX) {
+        if (nInvType == MSG_DSTX) {
             uint256 hashTx = tx.GetHash();
             if (!dstx.IsValidStructure()) {
                 LogPrint(BCLog::PRIVATESEND, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
@@ -2190,11 +2146,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 LogPrintf("DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->GetId());
                 CPrivateSend::AddDSTX(dstx);
-            } else if (nInvType == MSG_TXLOCK_REQUEST || fCanAutoLock) {
-                LogPrintf("TXLOCKREQUEST -- Transaction Lock Request accepted, txid=%s, peer=%d\n",
-                        tx.GetHash().ToString(), pfrom->GetId());
-                instantsend.AcceptLockRequest(txLockRequest);
-                instantsend.Vote(tx.GetHash(), connman);
             }
 
             mempool.check(pcoinsTip);
@@ -2304,19 +2255,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 if (RecursiveDynamicUsage(*ptx) < 100000) {
                     AddToCompactExtraTransactions(ptx);
                 }
-            }
-
-            if (nInvType == MSG_TXLOCK_REQUEST && !AlreadyHave(inv)) {
-                // i.e. AcceptToMemoryPool failed, probably because it's conflicting
-                // with existing normal tx or tx lock for another tx. For the same tx lock
-                // AlreadyHave would have return "true" already.
-
-                // It's the first time we failed for this tx lock request,
-                // this should switch AlreadyHave to "true".
-                instantsend.RejectLockRequest(txLockRequest);
-                // this lets other nodes to create lock request candidate i.e.
-                // this allows multiple conflicting lock requests to compete for votes
-                connman.RelayTransaction(tx);
             }
 
             if (pfrom->fWhitelisted && gArgs.GetBoolArg("-whitelistforcerelay", DEFAULT_WHITELISTFORCERELAY)) {
@@ -3020,7 +2958,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             privateSendClient.ProcessMessage(pfrom, strCommand, vRecv, connman);
 #endif // ENABLE_WALLET
             privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);
-            instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv, connman);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv, connman);

@@ -19,8 +19,6 @@
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 
-#include "instantsend.h"
-
 #include <stdint.h>
 #include <string>
 
@@ -57,25 +55,9 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
             }
         }
 
-        if (wtx.IsLockedByLLMQInstantSend()) {
+        if (wtx.IsLockedByInstantSend()) {
             strTxStatus += " (" + tr("verified via LLMQ based InstantSend") + ")";
-            return strTxStatus;
         }
-
-        if(!instantsend.HasTxLockRequest(wtx.GetHash())) return strTxStatus; // regular tx
-
-        int nSignatures = instantsend.GetTransactionLockSignatures(wtx.GetHash());
-        int nSignaturesMax = CTxLockRequest(wtx).GetMaxSignatures();
-        // InstantSend
-        strTxStatus += " (";
-        if(instantsend.IsLockedInstantSendTransaction(wtx.GetHash())) {
-            strTxStatus += tr("verified via InstantSend");
-        } else if(!instantsend.IsTxLockCandidateTimedOut(wtx.GetHash())) {
-            strTxStatus += tr("InstantSend verification in progress - %1 of %2 signatures").arg(nSignatures).arg(nSignaturesMax);
-        } else {
-            strTxStatus += tr("InstantSend verification failed");
-        }
-        strTxStatus += ")";
 
         return strTxStatus;
     }

@@ -549,66 +549,6 @@ class DashTestFramework(BitcoinTestFramework):
         for status in mn_info.values():
             assert (status == 'ENABLED')
 
-    def get_autois_bip9_status(self, node):
-        info = node.getblockchaininfo()
-        # we reuse the dip3 deployment
-        return info['bip9_softforks']['dip0003']['status']
-
-    def activate_autois_bip9(self, node):
-        # sync nodes periodically
-        # if we sync them too often, activation takes too many time
-        # if we sync them too rarely, nodes failed to update its state and
-        # bip9 status is not updated
-        # so, in this code nodes are synced once per 20 blocks
-        counter = 0
-        sync_period = 10
-
-        while self.get_autois_bip9_status(node) == 'defined':
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
-            node.generate(1)
-            counter += 1
-            if counter % sync_period == 0:
-                # sync nodes
-                self.sync_all()
-
-        while self.get_autois_bip9_status(node) == 'started':
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
-            node.generate(1)
-            counter += 1
-            if counter % sync_period == 0:
-                # sync nodes
-                self.sync_all()
-
-        while self.get_autois_bip9_status(node) == 'locked_in':
-            set_mocktime(get_mocktime() + 1)
-            set_node_times(self.nodes, get_mocktime())
-            node.generate(1)
-            counter += 1
-            if counter % sync_period == 0:
-                # sync nodes
-                self.sync_all()
-
-        # sync nodes
-        self.sync_all()
-
-        assert(self.get_autois_bip9_status(node) == 'active')
-
-    def get_autois_spork_state(self, node):
-        info = node.spork('active')
-        return info['SPORK_16_INSTANTSEND_AUTOLOCKS']
-
-    def set_autois_spork_state(self, node, state):
-        # Increment mocktime as otherwise nodes will not update sporks
-        set_mocktime(get_mocktime() + 1)
-        set_node_times(self.nodes, get_mocktime())
-        if state:
-            value = 0
-        else:
-            value = 4070908800
-        node.spork('SPORK_16_INSTANTSEND_AUTOLOCKS', value)
-
     def create_raw_tx(self, node_from, node_to, amount, min_inputs, max_inputs):
         assert (min_inputs <= max_inputs)
         # fill inputs
@@ -655,31 +595,6 @@ class DashTestFramework(BitcoinTestFramework):
         decoded = node_from.decoderawtransaction(ret['hex'])
         ret = {**decoded, **ret}
         return ret
-
-    # sends regular instantsend with high fee
-    def send_regular_instantsend(self, sender, receiver, check_fee = True):
-        receiver_addr = receiver.getnewaddress()
-        txid = sender.instantsendtoaddress(receiver_addr, 1.0)
-        if (check_fee):
-            MIN_FEE = satoshi_round(-0.0001)
-            fee = sender.gettransaction(txid)['fee']
-            expected_fee = MIN_FEE * len(sender.getrawtransaction(txid, True)['vin'])
-            assert_equal(fee, expected_fee)
-        return self.wait_for_instantlock(txid, sender)
-
-    # sends simple tx, it should become locked if autolocks are allowed
-    def send_simple_tx(self, sender, receiver):
-        raw_tx = self.create_raw_tx(sender, receiver, 1.0, 1, 4)
-        txid = self.nodes[0].sendrawtransaction(raw_tx['hex'])
-        self.sync_all()
-        return self.wait_for_instantlock(txid, sender)
-
-    # sends complex tx, it should never become locked for old instentsend
-    def send_complex_tx(self, sender, receiver):
-        raw_tx = self.create_raw_tx(sender, receiver, 1.0, 5, 100)
-        txid = sender.sendrawtransaction(raw_tx['hex'])
-        self.sync_all()
-        return self.wait_for_instantlock(txid, sender)
 
     def wait_for_instantlock(self, txid, node):
         # wait for instantsend locks

@@ -127,7 +127,7 @@ void gobject_prepare_help(CWallet* const pwallet)
                 "2. revision      (numeric, required) object revision in the system\n"
                 "3. time          (numeric, required) time this object was created\n"
                 "4. data-hex      (string, required)  data in hex string form\n"
-                "5. use-IS        (boolean, optional, default=false) InstantSend lock the collateral, only requiring one chain confirmation\n"
+                "5. use-IS        (boolean, optional, default=false) Deprecated and ignored\n"
                 "6. outputHash    (string, optional) the single output to submit the proposal fee from\n"
                 "7. outputIndex   (numeric, optional) The output index.\n"
                 );
@@ -160,8 +160,6 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     int nRevision = atoi(strRevision);
     int64_t nTime = atoi64(strTime);
     std::string strDataHex = request.params[4].get_str();
-    bool useIS = false;
-    if (request.params.size() > 5) useIS = request.params[5].getBool();
 
     // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
@@ -206,7 +204,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     }
 
     CWalletTx wtx;
-    if (!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), useIS, outpoint)) {
+    if (!pwallet->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
         if (request.params.size() == 8) err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
@@ -216,7 +214,7 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
     CReserveKey reservekey(pwallet);
     // -- send the tx to the network
     CValidationState state;
-    if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state, NetMsgType::TX)) {
+    if (!pwallet->CommitTransaction(wtx, reservekey, g_connman.get(), state)) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
     }
 

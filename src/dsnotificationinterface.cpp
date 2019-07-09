@@ -4,7 +4,6 @@
 
 #include "chainparams.h"
 #include "dsnotificationinterface.h"
-#include "instantsend.h"
 #include "governance/governance.h"
 #include "masternode/masternode-payments.h"
 #include "masternode/masternode-sync.h"
@@ -50,8 +49,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 
     // Update global DIP0001 activation status
     fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
-    // update instantsend autolock activation flag (we reuse the DIP3 deployment)
-    instantsend.isAutoLockBip9Active = pindexNew->nHeight + 1 >= Params().GetConsensus().DIP0003Height;
 
     if (fInitialDownload)
         return;
@@ -67,7 +64,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
     llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
 
-    instantsend.UpdatedBlockTip(pindexNew);
     governance.UpdatedBlockTip(pindexNew, connman);
     llmq::quorumManager->UpdatedBlockTip(pindexNew, fInitialDownload);
     llmq::quorumDKGSessionManager->UpdatedBlockTip(pindexNew, fInitialDownload);
@@ -78,7 +74,6 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
     llmq::quorumInstantSendManager->TransactionAddedToMempool(ptx);
     llmq::chainLocksHandler->TransactionAddedToMempool(ptx);
     CPrivateSend::TransactionAddedToMempool(ptx);
-    instantsend.SyncTransaction(ptx);
 }
 
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -94,13 +89,6 @@ void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock
     llmq::quorumInstantSendManager->BlockConnected(pblock, pindex, vtxConflicted);
     llmq::chainLocksHandler->BlockConnected(pblock, pindex, vtxConflicted);
     CPrivateSend::BlockConnected(pblock, pindex, vtxConflicted);
-
-    for (const CTransactionRef& ptx : vtxConflicted) {
-        instantsend.SyncTransaction(ptx);
-    }
-    for (size_t i = 0; i < pblock->vtx.size(); i++) {
-        instantsend.SyncTransaction(pblock->vtx[i], pindex, i);
-    }
 }
 
 void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected)
@@ -108,10 +96,6 @@ void CDSNotificationInterface::BlockDisconnected(const std::shared_ptr<const CBl
     llmq::quorumInstantSendManager->BlockDisconnected(pblock, pindexDisconnected);
     llmq::chainLocksHandler->BlockDisconnected(pblock, pindexDisconnected);
     CPrivateSend::BlockDisconnected(pblock, pindexDisconnected);
-
-    for (const CTransactionRef& ptx : pblock->vtx) {
-        instantsend.SyncTransaction(ptx, pindexDisconnected->pprev, -1);
-    }
 }
 
 void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff)

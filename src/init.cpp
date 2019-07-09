@@ -52,7 +52,6 @@
 #include "dsnotificationinterface.h"
 #include "flat-database.h"
 #include "governance/governance.h"
-#include "instantsend.h"
 #ifdef ENABLE_WALLET
 #include "keepass.h"
 #endif
@@ -267,11 +266,6 @@ void PrepareShutdown()
         flatdb3.Dump(governance);
         CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
         flatdb4.Dump(netfulfilledman);
-        if(fEnableInstantSend)
-        {
-            CFlatDB<CInstantSend> flatdb5("instantsend.dat", "magicInstantSendCache");
-            flatdb5.Dump(instantsend);
-        }
         CFlatDB<CSporkManager> flatdb6("sporks.dat", "magicSporkCache");
         flatdb6.Dump(sporkManager);
     }
@@ -616,7 +610,6 @@ std::string HelpMessage(HelpMessageMode mode)
 #endif // ENABLE_WALLET
 
     strUsage += HelpMessageGroup(_("InstantSend options:"));
-    strUsage += HelpMessageOpt("-enableinstantsend", strprintf(_("Enable InstantSend, show confirmations for locked transactions (0-1, default: %u)"), 1));
     strUsage += HelpMessageOpt("-instantsendnotify=<cmd>", _("Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)"));
 
 
@@ -2029,11 +2022,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     CPrivateSend::InitStandardDenominations();
 
-    // ********************************************************* Step 10b: setup InstantSend
-
-    fEnableInstantSend = gArgs.GetBoolArg("-enableinstantsend", 1);
-
-    // ********************************************************* Step 10c: Load cache data
+    // ********************************************************* Step 10b: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
 
@@ -2063,27 +2052,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         if(!flatdb4.Load(netfulfilledman)) {
             return InitError(_("Failed to load fulfilled requests cache from") + "\n" + (pathDB / strDBName).string());
         }
-
-        if(fEnableInstantSend)
-        {
-            strDBName = "instantsend.dat";
-            uiInterface.InitMessage(_("Loading InstantSend data cache..."));
-            CFlatDB<CInstantSend> flatdb5(strDBName, "magicInstantSendCache");
-            if(!flatdb5.Load(instantsend)) {
-                return InitError(_("Failed to load InstantSend data cache from") + "\n" + (pathDB / strDBName).string());
-            }
-        }
     }
 
-    // ********************************************************* Step 10d: schedule Dash-specific tasks
+    // ********************************************************* Step 10c: schedule Dash-specific tasks
 
     if (!fLiteMode) {
         scheduler.scheduleEvery(boost::bind(&CNetFulfilledRequestManager::DoMaintenance, boost::ref(netfulfilledman)), 60 * 1000);
         scheduler.scheduleEvery(boost::bind(&CMasternodeSync::DoMaintenance, boost::ref(masternodeSync), boost::ref(*g_connman)), 1 * 1000);
 
         scheduler.scheduleEvery(boost::bind(&CGovernanceManager::DoMaintenance, boost::ref(governance), boost::ref(*g_connman)), 60 * 5 * 1000);
-
-        scheduler.scheduleEvery(boost::bind(&CInstantSend::DoMaintenance, boost::ref(instantsend)), 60 * 1000);
     }
 
     scheduler.scheduleEvery(boost::bind(&CMasternodeUtils::DoMaintenance, boost::ref(*g_connman)), 1 * 1000);

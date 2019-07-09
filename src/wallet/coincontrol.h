@@ -14,7 +14,6 @@ class CCoinControl
 public:
     CTxDestination destChange;
     bool fUsePrivateSend;
-    bool fUseInstantSend;
     //! If false, allows unselected inputs, but requires all selected inputs be used if fAllowOtherInputs is true (default)
     bool fAllowOtherInputs;
     //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with fAllowOtherInputs
@@ -40,7 +39,6 @@ public:
         fRequireAllInputs = true;
         fAllowWatchOnly = false;
         setSelected.clear();
-        fUseInstantSend = false;
         fUsePrivateSend = true;
         nFeeRate = CFeeRate(0);
         fOverrideFeeRate = false;

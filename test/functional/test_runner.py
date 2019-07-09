@@ -60,8 +60,6 @@ BASE_SCRIPTS= [
     'p2p-fullblocktest.py', # NOTE: needs dash_hash to pass
     'fundrawtransaction.py',
     'fundrawtransaction-hd.py',
-    'p2p-autoinstantsend.py',
-    'autois-mempool.py',
     # vv Tests less than 2m vv
     'p2p-instantsend.py',
     'wallet.py',

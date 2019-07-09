@@ -170,13 +170,6 @@ public:
 
 extern CInstantSendManager* quorumInstantSendManager;
 
-// This involves 2 sporks: SPORK_2_INSTANTSEND_ENABLED and SPORK_20_INSTANTSEND_LLMQ_BASED
-// SPORK_2_INSTANTSEND_ENABLED generally enables/disables InstantSend and SPORK_20_INSTANTSEND_LLMQ_BASED switches
-// between the old and the new (LLMQ based) system
-// TODO When the new system is fully deployed and enabled, we can remove this special handling in a future version
-// and revert to only using SPORK_2_INSTANTSEND_ENABLED.
-bool IsOldInstantSendEnabled();
-bool IsNewInstantSendEnabled();
 bool IsInstantSendEnabled();
 
 }

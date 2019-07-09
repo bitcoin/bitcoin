@@ -40,7 +40,6 @@
 #include "versionbits.h"
 #include "warnings.h"
 
-#include "instantsend.h"
 #include "masternode/masternode-payments.h"
 
 #include "evo/specialtx.h"
@@ -695,21 +694,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
     if (pool.exists(hash))
         return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
 
-    // If this is a Transaction Lock Request check to see if it's valid
-    if(instantsend.HasTxLockRequest(hash) && !CTxLockRequest(tx).IsValid())
-        return state.DoS(10, error("AcceptToMemoryPool : CTxLockRequest %s is invalid", hash.ToString()),
-                            REJECT_INVALID, "bad-txlockrequest");
-
-    // Check for conflicts with a completed Transaction Lock
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        uint256 hashLocked;
-        if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hash != hashLocked)
-            return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with completed Transaction Lock %s",
-                                    hash.ToString(), hashLocked.ToString()),
-                            REJECT_INVALID, "tx-txlock-conflict");
-    }
-
     llmq::CInstantSendLockPtr conflictLock = llmq::quorumInstantSendManager->GetConflictingLock(tx);
     if (conflictLock) {
         CTransactionRef txConflict;
@@ -732,18 +716,6 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         {
             const CTransaction *ptxConflicting = itConflicting->second;
 
-            // InstantSend txes are not replacable
-            if(instantsend.HasTxLockRequest(ptxConflicting->GetHash())) {
-                // this tx conflicts with a Transaction Lock Request candidate
-                return state.DoS(0, error("AcceptToMemoryPool : Transaction %s conflicts with Transaction Lock Request %s",
-                                        hash.ToString(), ptxConflicting->GetHash().ToString()),
-                                REJECT_INVALID, "tx-txlockreq-mempool-conflict");
-            } else if (instantsend.HasTxLockRequest(hash)) {
-                // this tx is a tx lock request and it conflicts with a normal tx
-                return state.DoS(0, error("AcceptToMemoryPool : Transaction Lock Request %s conflicts with transaction %s",
-                                        hash.ToString(), ptxConflicting->GetHash().ToString()),
-                                REJECT_INVALID, "txlockreq-tx-mempool-conflict");
-            }
             // Transaction conflicts with mempool and RBF doesn't exist in Dash
             return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
         }
@@ -1807,10 +1779,6 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
         }
     }
 
-    // make sure the flag is reset in case of a chain reorg
-    // (we reused the DIP3 deployment)
-    instantsend.isAutoLockBip9Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
-
     evoDb->WriteBestBlock(pindex->pprev->GetBlockHash());
 
     return fClean ? DISCONNECT_OK : DISCONNECT_UNCLEAN;
@@ -2251,17 +2219,6 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
         for (const auto& tx : block.vtx) {
             // skip txes that have no inputs
             if (tx->vin.empty()) continue;
-            // LOOK FOR TRANSACTION LOCK IN OUR MAP OF OUTPOINTS
-            for (const auto& txin : tx->vin) {
-                uint256 hashLocked;
-                if (instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hashLocked != tx->GetHash()) {
-                    // The node which relayed this should switch to correct chain.
-                    // TODO: relay instantsend data/proof.
-                    LOCK(cs_main);
-                    return state.DoS(10, error("ConnectBlock(DASH): transaction %s conflicts with transaction lock %s", tx->GetHash().ToString(), hashLocked.ToString()),
-                                     REJECT_INVALID, "conflict-tx-lock");
-                }
-            }
             llmq::CInstantSendLockPtr conflictLock = llmq::quorumInstantSendManager->GetConflictingLock(*tx);
             if (!conflictLock) {
                 continue;

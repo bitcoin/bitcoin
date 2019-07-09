@@ -39,16 +39,16 @@ class SporkTest(BitcoinTestFramework):
 
     def run_test(self):
         # check test spork default state
-        assert(self.get_test_spork_state(self.nodes[0]))
-        assert(self.get_test_spork_state(self.nodes[1]))
-        assert(self.get_test_spork_state(self.nodes[2]))
+        assert(not self.get_test_spork_state(self.nodes[0]))
+        assert(not self.get_test_spork_state(self.nodes[1]))
+        assert(not self.get_test_spork_state(self.nodes[2]))
 
         # check spork propagation for connected nodes
-        self.set_test_spork_state(self.nodes[0], False)
+        self.set_test_spork_state(self.nodes[0], True)
         start = time()
         sent = False
         while True:
-            if not self.get_test_spork_state(self.nodes[1]):
+            if self.get_test_spork_state(self.nodes[1]):
                 sent = True
                 break
             if time() > start + 10:
@@ -61,8 +61,8 @@ class SporkTest(BitcoinTestFramework):
         self.stop_node(1)
         self.nodes[0] = self.start_node(0, self.options.tmpdir)
         self.nodes[1] = self.start_node(1, self.options.tmpdir)
-        assert(not self.get_test_spork_state(self.nodes[0]))
-        assert(not self.get_test_spork_state(self.nodes[1]))
+        assert(self.get_test_spork_state(self.nodes[0]))
+        assert(self.get_test_spork_state(self.nodes[1]))
 
         # Force finish mnsync node as otherwise it will never send out headers to other peers
         wait_to_sync(self.nodes[1], fast_mnsync=True)
@@ -75,7 +75,7 @@ class SporkTest(BitcoinTestFramework):
         start = time()
         sent = False
         while True:
-            if not self.get_test_spork_state(self.nodes[2]):
+            if self.get_test_spork_state(self.nodes[2]):
                 sent = True
                 break
             if time() > start + 10:

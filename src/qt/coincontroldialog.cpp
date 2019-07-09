@@ -21,7 +21,6 @@
 #include "validation.h" // For mempool
 #include "wallet/wallet.h"
 
-#include "instantsend.h"
 #include "privatesend/privatesend-client.h"
 
 #include <QApplication>
@@ -536,10 +535,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
                 nBytesInputs += 148; // in all error cases, simply assume 148 here
         }
         else nBytesInputs += 148;
-
-        // Add inputs to calculate InstantSend Fee later
-        if(coinControl->fUseInstantSend)
-            txDummy.vin.push_back(CTxIn());
     }
 
     // calculation
@@ -555,9 +550,6 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         // Fee
         nPayFee = CWallet::GetMinimumFee(nBytes, nTxConfirmTarget, ::mempool, ::feeEstimator);
-
-        // InstantSend Fee
-        if (coinControl->fUseInstantSend) nPayFee = std::max(nPayFee, CTxLockRequest(txDummy).GetMinFee(true));
 
         if (nPayAmount > 0)
         {

@@ -114,9 +114,6 @@ class DIP3Test(BitcoinTestFramework):
             self.sync_all()
             self.assert_mnlists(mns)
 
-        self.log.info("testing instant send")
-        self.test_instantsend(10, 3)
-
         self.log.info("test that MNs disappear from the list when the ProTx collateral is spent")
         spend_mns_count = 3
         mns_tmp = [] + mns
@@ -190,9 +187,6 @@ class DIP3Test(BitcoinTestFramework):
             self.stop_node(new_mn.idx)
             self.start_mn(new_mn)
             self.sync_all()
-
-        self.log.info("testing instant send with replaced MNs")
-        self.test_instantsend(10, 3, timeout=20)
 
     def prepare_mn(self, node, idx, alias):
         mn = Masternode()
@@ -305,57 +299,6 @@ class DIP3Test(BitcoinTestFramework):
                 self.force_finish_mnsync(node)
                 return
             time.sleep(0.1)
-
-    def test_instantsend(self, tx_count, repeat, timeout=20):
-        self.nodes[0].spork('SPORK_2_INSTANTSEND_ENABLED', 0)
-        self.wait_for_sporks()
-
-        # give all nodes some coins first
-        for i in range(tx_count):
-            outputs = {}
-            for node in self.nodes[1:]:
-                outputs[node.getnewaddress()] = 1
-            rawtx = self.nodes[0].createrawtransaction([], outputs)
-            rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-            rawtx = self.nodes[0].signrawtransaction(rawtx)['hex']
-            self.nodes[0].sendrawtransaction(rawtx)
-            self.nodes[0].generate(1)
-        self.sync_all()
-
-        for j in range(repeat):
-            for i in range(tx_count):
-                while True:
-                    from_node_idx = random.randint(1, len(self.nodes) - 1)
-                    from_node = self.nodes[from_node_idx]
-                    if from_node is not None:
-                        break
-                while True:
-                    to_node_idx = random.randint(0, len(self.nodes) - 1)
-                    to_node = self.nodes[to_node_idx]
-                    if to_node is not None and from_node is not to_node:
-                        break
-                to_address = to_node.getnewaddress()
-                txid = from_node.instantsendtoaddress(to_address, 0.1)
-                for node in self.nodes:
-                    if node is not None:
-                        self.wait_for_instant_lock(node, to_node_idx, txid, timeout=timeout)
-            self.nodes[0].generate(6)
-            self.sync_all()
-
-    def wait_for_instant_lock(self, node, node_idx, txid, timeout=10):
-        st = time.time()
-        while time.time() < st + timeout:
-            try:
-                tx = node.getrawtransaction(txid, 1)
-            except:
-                tx = None
-            if tx is None:
-                time.sleep(0.5)
-                continue
-            if tx['instantlock']:
-                return
-            time.sleep(0.5)
-        raise AssertionError("wait_for_instant_lock timed out for: {} on node {}".format(txid, node_idx))
 
     def assert_mnlists(self, mns):
         for node in self.nodes:

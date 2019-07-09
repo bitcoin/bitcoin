@@ -153,7 +153,6 @@ BITCOIN_CORE_H = \
   httpserver.h \
   indirectmap.h \
   init.h \
-  instantsend.h \
   key.h \
   keepass.h \
   keystore.h \
@@ -273,7 +272,6 @@ libdash_server_a_SOURCES = \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
-  instantsend.cpp \
   dbwrapper.cpp \
   governance/governance.cpp \
   governance/governance-classes.cpp \

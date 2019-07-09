@@ -11,11 +11,6 @@ QWidget#contentWidget { /* The actual content with the text/buttons/etc... */
 
 /* SEND DIALOG */
 
-QDialog#SendCoinsDialog .QCheckBox#checkUseInstantSend { /* InstantSend Checkbox */
-margin-left:10px;
-margin-right:20px;
-}
-
 QDialog#SendCoinsDialog QLabel#labelBalance {
 margin-left:0px;
 padding-left:0px;

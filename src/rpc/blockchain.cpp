@@ -13,7 +13,6 @@
 #include "coins.h"
 #include "core_io.h"
 #include "consensus/validation.h"
-#include "instantsend.h"
 #include "validation.h"
 #include "core_io.h"
 #include "policy/feerate.h"
@@ -368,7 +367,6 @@ std::string EntryDescriptionString()
            "    \"depends\" : [               (array) unconfirmed transactions used as inputs for this transaction\n"
            "        \"transactionid\",        (string) parent transaction id\n"
            "       ... ],\n"
-           "    \"instantsend\" : true|false, (boolean) True if this transaction was sent as an InstantSend one\n"
            "    \"instantlock\" : true|false  (boolean) True if this transaction was locked via InstantSend\n";
 }
 
@@ -402,8 +400,7 @@ void entryToJSON(UniValue &info, const CTxMemPoolEntry &e)
     }
 
     info.push_back(Pair("depends", depends));
-    info.push_back(Pair("instantsend", instantsend.HasTxLockRequest(tx.GetHash())));
-    info.push_back(Pair("instantlock", instantsend.IsLockedInstantSendTransaction(tx.GetHash()) || llmq::quorumInstantSendManager->IsLocked(tx.GetHash())));
+    info.push_back(Pair("instantlock", llmq::quorumInstantSendManager->IsLocked(tx.GetHash())));
 }
 
 UniValue mempoolToJSON(bool fVerbose)
