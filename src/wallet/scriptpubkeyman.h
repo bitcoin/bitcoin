@@ -530,6 +530,8 @@ public:
     uint256 GetID() const override;
 
     void SetType(OutputType type, bool internal) override;
+
+    void SetCache(std::vector<std::vector<unsigned char>> cache);
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H

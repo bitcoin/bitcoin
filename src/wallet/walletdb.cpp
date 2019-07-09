@@ -44,6 +44,7 @@ const std::string SETTINGS{"settings"};
 const std::string TX{"tx"};
 const std::string VERSION{"version"};
 const std::string WALLETDESCRIPTOR{"walletdescriptor"};
+const std::string WALLETDESCRIPTORCACHE{"walletdescriptorcache"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
 } // namespace DBKeys
@@ -203,6 +204,7 @@ public:
     std::vector<uint256> vWalletUpgrade;
     std::map<OutputType, uint256> m_external_spk_managers;
     std::map<OutputType, uint256> m_internal_spk_managers;
+    std::map<uint256, std::vector<std::vector<unsigned char>>> m_descriptor_caches;
 
     CWalletScanState() {
     }
@@ -431,6 +433,18 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             WalletDescriptor desc;
             ssValue >> desc;
             pwallet->LoadDescriptorScriptPubKeyMan(id, desc);
+        } else if (strType == DBKeys::WALLETDESCRIPTORCACHE) {
+            uint256 desc_id;
+            uint32_t index;
+            ssKey >> desc_id;
+            ssKey >> index;
+            std::vector<unsigned char> cache_item;
+            ssValue >> cache_item;
+
+            if (index >= wss.m_descriptor_caches[desc_id].size()) {
+                wss.m_descriptor_caches[desc_id].resize(index + 1);
+            }
+            wss.m_descriptor_caches[desc_id][index] = cache_item;
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {
@@ -530,6 +544,12 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
     }
     for (auto spk_man_pair : wss.m_internal_spk_managers) {
         pwallet->SetActiveScriptPubKeyMan(spk_man_pair.second, spk_man_pair.first, true, true);
+    }
+
+    // Set the descriptor caches
+    for (auto desc_cache_pair : wss.m_descriptor_caches) {
+        auto spk_man = pwallet->GetScriptPubKeyMan(desc_cache_pair.first);
+        ((DescriptorScriptPubKeyMan*)spk_man)->SetCache(desc_cache_pair.second);
     }
 
     if (fNoncriticalErrors && result == DBErrors::LOAD_OK)

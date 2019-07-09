@@ -1560,3 +1560,18 @@ void DescriptorScriptPubKeyMan::SetType(OutputType type, bool internal)
     this->address_type = type;
     this->internal = internal;
 }
+
+void DescriptorScriptPubKeyMan::SetCache(std::vector<std::vector<unsigned char>> cache)
+{
+    LOCK(cs_desc_man);
+    descriptor.cache = cache;
+    for (int32_t i = descriptor.range_start; i < descriptor.range_end; ++i) {
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        descriptor.descriptor->ExpandFromCache(i, descriptor.cache[i - descriptor.range_start], scripts_temp, out_keys);
+        // Add all of the scriptPubKeys to the scriptPubKey set
+        for (const CScript& script : scripts_temp) {
+            m_map_script_pub_keys[script] = i;
+        }
+    }
+}
