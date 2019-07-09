@@ -128,6 +128,12 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_fuzz.sh"
 
     - stage: test
+      name: 'x86_64 Linux [GOAL: install]  [bionic]  [multiprocess]'
+      if: type != pull_request OR commit_message =~ /depends:|multiprocess:/ # Skip on non-depends, non-multiprocess PRs
+      env: >-
+        FILE_ENV="./ci/test/00_setup_env_native_multiprocess.sh"
+
+    - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
       env: >-
         FILE_ENV="./ci/test/00_setup_env_native_nowallet.sh"
