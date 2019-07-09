@@ -4132,6 +4132,54 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     return result;
 }
 
+static UniValue upgradewallet(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            RPCHelpMan{"upgradewallet",
+                "\nUpgrade the wallet to the last version (default) or to a specific version.\n",
+                {
+                    {"version", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "A specific version to which upgrade the wallet."},
+                },
+                RPCResult{
+            "  \"wallet_version\" : version        (numeric) The new wallet version\n"
+                },
+                RPCExamples{
+                    "Upgrade wallet to the latest version: "
+            + HelpExampleCli("upgradewallet", "")
+                },
+            }.ToString());
+
+    EnsureWalletIsUnlocked(pwallet);
+    LOCK(pwallet->cs_wallet);
+
+    int newVersion;
+    newVersion = request.params[0].isNull() ? FEATURE_LATEST : request.params[0].get_int();
+
+    if (!pwallet->CanSupportFeature(FEATURE_LATEST) && newVersion >= FEATURE_HD_SPLIT && newVersion < FEATURE_PRE_SPLIT_KEYPOOL)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot upgrade a non HD split wallet without upgrading to support pre split keypool.");
+    if (pwallet->GetVersion() > newVersion)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot downgrade the wallet.");
+    if (pwallet->GetVersion() == newVersion)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Wallet already at latest version.");
+
+    pwallet->SetMaxVersion(newVersion);
+    if (!pwallet->UpgradeWallet())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Cannot upgrade the wallet. Current version: %i.", pwallet->GetVersion()));
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("wallet_version", pwallet->GetVersion());
+    return result;
+}
+
+
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -4198,6 +4246,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
     { "wallet",             "unloadwallet",                     &unloadwallet,                  {"wallet_name"} },
+    { "wallet",             "upgradewallet",                    &upgradewallet,                 {"wallet_version"} },
     { "wallet",             "walletcreatefundedpsbt",           &walletcreatefundedpsbt,        {"inputs","outputs","locktime","options","bip32derivs"} },
     { "wallet",             "walletlock",                       &walletlock,                    {} },
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
