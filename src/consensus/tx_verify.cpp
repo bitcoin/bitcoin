@@ -14,7 +14,7 @@
 #include <coins.h>
 #include <util/moneystr.h>
 // SYSCOIN
-const int SYSCOIN_TX_VERSION_MINT = 0x7400;
+const int SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN = 0x7400;
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
     if (tx.nLockTime == 0)
@@ -184,7 +184,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
         }
     }
     // SYSCOIN
-    if(tx.nVersion == SYSCOIN_TX_VERSION_MINT){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
         if(tx.vout.size() < 2 || tx.vout.size() > 3)
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-mint-outputs-wrong");
     }

@@ -279,7 +279,7 @@ public:
     // adapting relay policy by bumping MAX_STANDARD_VERSION, and then later date
     // bumping the default CURRENT_VERSION at which point both CURRENT_VERSION and
     // MAX_STANDARD_VERSION will be equal.
-    // SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK(0x7409)
+    // SYSCOIN consensus is driven by version, the highest version is SYSCOIN_TX_VERSION_ALLOCATION_LOCK(0x7409)
     static const int32_t MAX_STANDARD_VERSION=0x7409;
 
     // The local variables are made const to prevent unintended modification

@@ -7,5 +7,4 @@ packages/*
 */Debug
 */Release
 */x64
-*.vcxproj.user
-*.vcxproj
+*/Win32

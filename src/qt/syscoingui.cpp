@@ -312,15 +312,15 @@ void SyscoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(tr(PACKAGE_NAME)), this);
-    aboutAction->setStatusTip(tr("Show information about %1").arg(tr(PACKAGE_NAME)));
+    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&About %1").arg(PACKAGE_NAME), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(PACKAGE_NAME));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr(PACKAGE_NAME)));
+    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(PACKAGE_NAME));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
@@ -355,13 +355,14 @@ void SyscoinGUI::createActions()
     m_open_wallet_action = new QAction(tr("Open Wallet"), this);
     m_open_wallet_action->setEnabled(false);
     m_open_wallet_action->setStatusTip(tr("Open a wallet"));
+    m_open_wallet_menu = new QMenu(this);
 
     m_close_wallet_action = new QAction(tr("Close Wallet..."), this);
     m_close_wallet_action->setStatusTip(tr("Close wallet"));
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Syscoin command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Syscoin command-line options").arg(PACKAGE_NAME));
 
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);
     connect(aboutAction, &QAction::triggered, this, &SyscoinGUI::aboutClicked);
@@ -386,15 +387,14 @@ void SyscoinGUI::createActions()
         connect(usedSendingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedSendingAddresses);
         connect(usedReceivingAddressesAction, &QAction::triggered, walletFrame, &WalletFrame::usedReceivingAddresses);
         connect(openAction, &QAction::triggered, this, &SyscoinGUI::openClicked);
-        connect(m_open_wallet_action->menu(), &QMenu::aboutToShow, [this] {
-            m_open_wallet_action->menu()->clear();
-            std::vector<std::string> available_wallets = m_wallet_controller->getWalletsAvailableToOpen();
-            std::vector<std::string> wallets = m_node.listWalletDir();
-            for (const auto& path : wallets) {
+        connect(m_open_wallet_menu, &QMenu::aboutToShow, [this] {
+            m_open_wallet_menu->clear();
+            for (const std::pair<const std::string, bool>& i : m_wallet_controller->listWalletDir()) {
+                const std::string& path = i.first;
                 QString name = path.empty() ? QString("["+tr("default wallet")+"]") : QString::fromStdString(path);
-                QAction* action = m_open_wallet_action->menu()->addAction(name);
+                QAction* action = m_open_wallet_menu->addAction(name);
 
-                if (std::find(available_wallets.begin(), available_wallets.end(), path) == available_wallets.end()) {
+                if (i.second) {
                     // This wallet is already loaded
                     action->setEnabled(false);
                     continue;
@@ -427,8 +427,8 @@ void SyscoinGUI::createActions()
                     assert(invoked);
                 });
             }
-            if (wallets.empty()) {
-                QAction* action = m_open_wallet_action->menu()->addAction(tr("No wallets available"));
+            if (m_open_wallet_menu->isEmpty()) {
+                QAction* action = m_open_wallet_menu->addAction(tr("No wallets available"));
                 action->setEnabled(false);
             }
         });
@@ -659,12 +659,12 @@ void SyscoinGUI::setWalletController(WalletController* wallet_controller)
     m_wallet_controller = wallet_controller;
 
     m_open_wallet_action->setEnabled(true);
-    m_open_wallet_action->setMenu(new QMenu(this));
+    m_open_wallet_action->setMenu(m_open_wallet_menu);
 
     connect(wallet_controller, &WalletController::walletAdded, this, &SyscoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &SyscoinGUI::removeWallet);
 
-    for (WalletModel* wallet_model : m_wallet_controller->getWallets()) {
+    for (WalletModel* wallet_model : m_wallet_controller->getOpenWallets()) {
         addWallet(wallet_model);
     }
 }
@@ -758,7 +758,7 @@ void SyscoinGUI::createTrayIcon()
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
         trayIcon = new QSystemTrayIcon(m_network_style->getTrayAndWindowIcon(), this);
-        QString toolTip = tr("%1 client").arg(tr(PACKAGE_NAME)) + " " + m_network_style->getTitleAddText();
+        QString toolTip = tr("%1 client").arg(PACKAGE_NAME) + " " + m_network_style->getTitleAddText();
         trayIcon->setToolTip(toolTip);
     }
 #endif
@@ -1086,8 +1086,7 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     // No additional data sync should be happening while blockchain is not synced, nothing to update
     if(!masternodeSync.IsBlockchainSynced())
         return;
-
-    // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
+   // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
     statusBar()->clearMessage();
 
     QString tooltip;
@@ -1128,49 +1127,51 @@ void SyscoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
     progressBarLabel->setToolTip(tooltip);
     progressBar->setToolTip(tooltip);
 }
-void SyscoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
+void SyscoinGUI::message(const QString& title, QString message, unsigned int style, bool* ret)
 {
-    QString strTitle = tr("Syscoin"); // default title
+    // Default title. On macOS, the window title is ignored (as required by the macOS Guidelines).
+    QString strTitle{PACKAGE_NAME};
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
 
-    QString msgType;
+    bool prefix = !(style & CClientUIInterface::MSG_NOPREFIX);
+    style &= ~CClientUIInterface::MSG_NOPREFIX;
 
-    // Prefer supplied title over style based title
+    QString msgType;
     if (!title.isEmpty()) {
         msgType = title;
-    }
-    else {
+    } else {
         switch (style) {
         case CClientUIInterface::MSG_ERROR:
             msgType = tr("Error");
+            if (prefix) message = tr("Error: %1").arg(message);
             break;
         case CClientUIInterface::MSG_WARNING:
             msgType = tr("Warning");
+            if (prefix) message = tr("Warning: %1").arg(message);
             break;
         case CClientUIInterface::MSG_INFORMATION:
             msgType = tr("Information");
+            // No need to prepend the prefix here.
             break;
         default:
             break;
         }
     }
-    // Append title to "Syscoin - "
-    if (!msgType.isEmpty())
-        strTitle += " - " + msgType;
 
-    // Check for error/warning icon
+    if (!msgType.isEmpty()) {
+        strTitle += " - " + msgType;
+    }
+
     if (style & CClientUIInterface::ICON_ERROR) {
         nMBoxIcon = QMessageBox::Critical;
         nNotifyIcon = Notificator::Critical;
-    }
-    else if (style & CClientUIInterface::ICON_WARNING) {
+    } else if (style & CClientUIInterface::ICON_WARNING) {
         nMBoxIcon = QMessageBox::Warning;
         nNotifyIcon = Notificator::Warning;
     }
 
-    // Display message
     if (style & CClientUIInterface::MODAL) {
         // Check for buttons, use OK as default, if none was supplied
         QMessageBox::StandardButton buttons;
@@ -1183,9 +1184,9 @@ void SyscoinGUI::message(const QString &title, const QString &message, unsigned 
         int r = mBox.exec();
         if (ret != nullptr)
             *ret = r == QMessageBox::Ok;
-    }
-    else
+    } else {
         notificator->notify(static_cast<Notificator::Class>(nNotifyIcon), strTitle, message);
+    }
 }
 
 void SyscoinGUI::changeEvent(QEvent *e)
@@ -1379,7 +1380,7 @@ void SyscoinGUI::updateProxyIcon()
 
 void SyscoinGUI::updateWindowTitle()
 {
-    QString window_title = tr(PACKAGE_NAME);
+    QString window_title = PACKAGE_NAME;
 #ifdef ENABLE_WALLET
     if (walletFrame) {
         WalletModel* const wallet_model = walletFrame->currentWalletModel();

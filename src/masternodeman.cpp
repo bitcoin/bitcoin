@@ -409,7 +409,7 @@ CMasternode* CMasternodeMan::Find(const COutPoint &outpoint)
 
 bool CMasternodeMan::Get(const COutPoint& outpoint, CMasternode& masternodeRet)
 {
-    // Theses mutexes are recursive so double locking by the same thread is safe.
+    // These mutexes are recursive so double locking by the same thread is safe.
     LOCK(cs);
     auto it = mapMasternodes.find(outpoint);
     if (it == mapMasternodes.end()) {

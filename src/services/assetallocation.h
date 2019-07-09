@@ -11,7 +11,7 @@
 #include <txmempool.h>
 #include <services/witnessaddress.h>
 #ifdef ENABLE_WALLET
-#include <script/ismine.h>
+#include <wallet/ismine.h>
 #endif
 class CTransaction;
 class CAsset;
@@ -39,7 +39,7 @@ public:
 		nAsset = asset;
 		witnessAddress = witnessAddress_;
 	}
-	CAssetAllocationTuple(const uint32_t &asset) {
+	explicit CAssetAllocationTuple(const uint32_t &asset) {
 		nAsset = asset;
 		witnessAddress.SetNull();
 	}
@@ -81,7 +81,10 @@ static const int ONE_MONTH_IN_BLOCKS = 43800;
 enum {
 	ZDAG_NOT_FOUND = -1,
 	ZDAG_STATUS_OK = 0,
-	ZDAG_MINOR_CONFLICT,
+	ZDAG_WARNING_NO_OUTPUT_LINKING,
+	ZDAG_WARNING_NO_TIME_SEPERATION,
+	ZDAG_WARNING_MIN_LATENCY,
+	ZDAG_WARNING_POTENTIAL_BALANCE_OVERFLOW,
 	ZDAG_MAJOR_CONFLICT
 };
 
@@ -101,7 +104,7 @@ public:
 	CAssetAllocation() {
 		SetNull();
 	}
-	CAssetAllocation(const CTransaction &tx) {
+	explicit CAssetAllocation(const CTransaction &tx) {
 		SetNull();
 		UnserializeFromTx(tx);
 	}
@@ -178,5 +181,5 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry);
 void WriteAssetIndexForAllocation(const CAssetAllocation& assetallocation, const uint256& txid, const UniValue& oName);
 void WriteAssetIndexForAllocation(const CMintSyscoin& mintSyscoin, const uint256& txid, const UniValue& oName);
 void WriteAssetAllocationIndexTXID(const CAssetAllocationTuple& allocationTuple, const uint256& txid);
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash);
+int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds);
 #endif // SYSCOIN_SERVICES_ASSETALLOCATION_H

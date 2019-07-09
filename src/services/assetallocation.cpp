@@ -95,13 +95,17 @@ string assetAllocationFromTx(const int &nVersion) {
     switch (nVersion) {
 	case SYSCOIN_TX_VERSION_ASSET_SEND:
 		return "assetsend";
-	case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_SEND:
+	case SYSCOIN_TX_VERSION_ALLOCATION_SEND:
 		return "assetallocationsend";
-	case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN:
-		return "assetallocationburn"; 
-    case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT:
+	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM:
+		return "assetallocationburntoethereum"; 
+	case SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN:
+		return "assetallocationburntosyscoin";
+	case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
+		return "syscoinburntoassetallocation";            
+    case SYSCOIN_TX_VERSION_ALLOCATION_MINT:
         return "assetallocationmint";   
-	case SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK:
+	case SYSCOIN_TX_VERSION_ALLOCATION_LOCK:
 		return "assetallocationlock";
     default:
         return "<unknown assetallocation op>";
@@ -125,7 +129,7 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
 		SetNull();
 		return false;
 	}
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         std::vector<unsigned char> vchEthAddress;
         if(!GetSyscoinBurnData(tx, this, vchEthAddress))
         {
@@ -278,7 +282,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
 {
     CAssetAllocation assetallocation;
     std::vector<unsigned char> vchEthAddress;
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
         {
             return false;
@@ -331,9 +335,9 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry, CWallet* c
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
-	else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+	else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
 		entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
@@ -342,7 +346,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
 {
     CAssetAllocation assetallocation;
     std::vector<unsigned char> vchEthAddress;
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
         {
             return false;
@@ -390,16 +394,16 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, UniValue &entry)
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
-    else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_LOCK)
+    else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_LOCK)
         entry.__pushKV("locked_outpoint", assetallocation.lockedOutpoint.ToStringShort());
     return true;
 }
 bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, const int& nHeight, const uint256& blockhash, UniValue &entry, CAssetAllocation& assetallocation)
 {
     std::vector<unsigned char> vchEthAddress;
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN){
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
         if(!GetSyscoinBurnData(tx, &assetallocation, vchEthAddress))
         {
             return false;
@@ -433,14 +437,14 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const CAsset& dbAsset, cons
     entry.__pushKV("allocations", oAssetAllocationReceiversArray);
     entry.__pushKV("total", ValueFromAssetAmount(nTotal, dbAsset.nPrecision));
     entry.__pushKV("blockhash", blockhash.GetHex()); 
-    if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_BURN)
+    if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM)
          entry.__pushKV("ethereum_destination", "0x" + HexStr(vchEthAddress));
     return true;
 }
 
 bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     CMintSyscoin mintsyscoin(tx);
-    if (!mintsyscoin.IsNull() && ((tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull()) || tx.nVersion == SYSCOIN_TX_VERSION_MINT)) {
+    if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
         int nHeight = 0;
         const uint256& txHash = tx.GetHash();
         CBlockIndex* blockindex = nullptr;
@@ -453,32 +457,22 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
         {
             nHeight = blockindex->nHeight;
         }
-        entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
-            entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-            CAsset dbAsset;
-            GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-            entry.__pushKV("symbol", dbAsset.strSymbol);
-            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-
-           
-            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-        
-            entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
-            entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        }
-        else{
-            UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, o, true);
-            entry.__pushKV("scriptPubKey", o);
-            entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
-        }
+        entry.__pushKV("txtype", "assetallocationmint");
+      
+        entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+        CAsset dbAsset;
+        GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
+        entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+        entry.__pushKV("symbol", dbAsset.strSymbol);
+        entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+        oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+    
+        entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+        entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         entry.__pushKV("txid", txHash.GetHex());
         entry.__pushKV("height", nHeight);
         entry.__pushKV("blockhash", blockhash.GetHex());
@@ -497,32 +491,23 @@ bool AssetMintTxToJson(const CTransaction& tx, UniValue &entry){
     return false;
 }
 bool AssetMintTxToJson(const CTransaction& tx, const CMintSyscoin& mintsyscoin, const int& nHeight, const uint256& blockhash, UniValue &entry){
-    if (!mintsyscoin.IsNull() && ((tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT && !mintsyscoin.assetAllocationTuple.IsNull()) || tx.nVersion == SYSCOIN_TX_VERSION_MINT)) {
-        entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT)
-            entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
-        if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ALLOCATION_MINT){
-            CAsset dbAsset;
-            GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
-            entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
-            entry.__pushKV("symbol", dbAsset.strSymbol);
-            entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            UniValue oAssetAllocationReceiversArray(UniValue::VARR);
-           
-            UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
-            oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-            oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
-        
-            entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
-            entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
-        }
-        else{
-            UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(tx.vout[0].scriptPubKey, o, true);
-            entry.__pushKV("scriptPubKey", o);
-            entry.__pushKV("total", ValueFromAmount(tx.vout[0].nValue));
-        }
+    if (!mintsyscoin.IsNull() && !mintsyscoin.assetAllocationTuple.IsNull()) {
+        entry.__pushKV("txtype", tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_MINT? "assetallocationmint": "syscoinmint");
+        entry.__pushKV("asset_allocation", mintsyscoin.assetAllocationTuple.ToString());
+       
+        CAsset dbAsset;
+        GetAsset(mintsyscoin.assetAllocationTuple.nAsset, dbAsset);
+        entry.__pushKV("asset_guid", (int)mintsyscoin.assetAllocationTuple.nAsset);
+        entry.__pushKV("symbol", dbAsset.strSymbol);
+        entry.__pushKV("sender", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        UniValue oAssetAllocationReceiversArray(UniValue::VARR);
+        UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
+        oAssetAllocationReceiversObj.__pushKV("address", mintsyscoin.assetAllocationTuple.witnessAddress.ToString());
+        oAssetAllocationReceiversObj.__pushKV("amount", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
+        oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
+    
+        entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
+        entry.__pushKV("total", ValueFromAssetAmount(mintsyscoin.nValueAsset, dbAsset.nPrecision));
         entry.__pushKV("txid", tx.GetHash().GetHex());
         entry.__pushKV("height", nHeight);
         entry.__pushKV("blockhash", blockhash.GetHex());
@@ -591,7 +576,8 @@ bool CAssetAllocationDB::Flush(const AssetAllocationMap &mapAssetAllocations){
     std::vector<uint32_t> emptyVec;
     if(fAssetIndex){
         for (const auto &key : mapAssetAllocations) {
-            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(key.second.assetAllocationTuple.witnessAddress.ToString()),  std::forward_as_tuple(emptyVec));
+            const string& witnessStr = key.second.assetAllocationTuple.witnessAddress.ToString();
+            auto it = mapGuids.emplace(std::piecewise_construct,  std::forward_as_tuple(std::move(witnessStr)),  std::forward_as_tuple(std::move(emptyVec)));
             std::vector<uint32_t> &assetGuids = it.first->second;
             if(!fAssetIndexGuids.empty() && std::find(fAssetIndexGuids.begin(), fAssetIndexGuids.end(), key.second.assetAllocationTuple.nAsset) == fAssetIndexGuids.end())
                 continue;
@@ -663,21 +649,9 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 			const UniValue &ownersArray = owners.get_array();
 			for (unsigned int i = 0; i < ownersArray.size(); i++) {
 				const UniValue &owner = ownersArray[i].get_obj();
-				const UniValue &ownerStr = find_value(owner, "address");
-				if (ownerStr.isStr()) {
-                    UniValue requestParam(UniValue::VARR);
-                    requestParam.push_back(ownerStr.get_str());
-                    JSONRPCRequest jsonRequest;
-                    jsonRequest.params = requestParam;
-                    const UniValue &convertedAddressValue = convertaddress(jsonRequest);
-                    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();
-                    const CTxDestination &dest = DecodeDestination(v4address);                   
-                    UniValue detail = DescribeAddress(dest);
-                    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-                    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-                    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-					vecWitnessAddresses.push_back(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+				const UniValue &ownerValue = find_value(owner, "address");
+				if (ownerValue.isStr()) {
+                    vecWitnessAddresses.push_back(DescribeWitnessAddress(ownerValue.get_str())); 
 				}
 			}
 		}
@@ -733,7 +707,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 	}
 	return true;
 }
-int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash) {
+int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& assetAllocationTupleSender, const uint256& lookForTxHash, const uint32_t& nMinLatencyMilliSeconds) {
     LOCK(cs_assetallocationarrival);
 	CAssetAllocation dbAssetAllocation;
 	// get last POW asset allocation balance to ensure we use POW balance to check for potential conflicts in mempool (real-time balances).
@@ -766,27 +740,49 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 		arrivalTimes.begin(), arrivalTimes.end(), compFunctor);
 
 	// go through arrival times and check that balances don't overrun the POW balance
-	pair<uint256, int64_t> lastArrivalTime;
-	lastArrivalTime.second = GetTimeMillis();
+	const int64_t &nNow = GetTimeMillis();
 	unordered_map<string, CAmount> mapBalances;
 	// init sender balance, track balances by address
 	// this is important because asset allocations can be sent/received within blocks and will overrun balances prematurely if not tracked properly, for example pow balance 3, sender sends 3, gets 2 sends 2 (total send 3+2=5 > balance of 3 from last stored state, this is a valid scenario and shouldn't be flagged)
 	CAmount &senderBalance = mapBalances[assetAllocationTupleSender.witnessAddress.ToString()];
 	senderBalance = dbAssetAllocation.nBalance;
-	int minLatency = ZDAG_MINIMUM_LATENCY_SECONDS * 1000;
+	int minLatency = nMinLatencyMilliSeconds;
 	if (fUnitTest)
 		minLatency = 1000;
+    const CTransaction *prevTx = NULL;
+    int64_t nPrevTime = 0;
 	for (auto& arrivalTime : arrivalTimesSet)
 	{
 		// ensure mempool has this transaction and it is not yet mined, get the transaction in question
-		const CTransactionRef txRef = mempool.get(arrivalTime.first);
+		const CTransactionRef &txRef = mempool.get(arrivalTime.first);
 		if (!txRef)
 			continue;
 		const CTransaction &tx = *txRef;
-
+        // ensure output linking for chain of sender transactions
+        if(prevTx && !prevTx->IsNull()){
+            bool foundLink = false;
+            const uint256& txHashPrev = prevTx->GetHash();
+            for(const auto& vin: tx.vin){
+                for(unsigned i = 0; i< prevTx->vout.size();i++){
+                    if(vin.prevout == COutPoint(txHashPrev, i)){
+                        foundLink = true;
+                    }
+                }
+            }
+            if(!foundLink){
+                return ZDAG_WARNING_NO_OUTPUT_LINKING;
+            }
+        }
+        
+        prevTx = &tx;
+        // ensure that transactions are ordered by some time difference
+        if(nPrevTime >= arrivalTime.second){
+            return ZDAG_WARNING_NO_TIME_SEPERATION;
+        }
+        nPrevTime = arrivalTime.second;
 		// if this tx arrived within the minimum latency period flag it as potentially conflicting
-		if (abs(arrivalTime.second - lastArrivalTime.second) < minLatency) {
-			return ZDAG_MINOR_CONFLICT;
+		if (nNow - arrivalTime.second < minLatency) {
+			return ZDAG_WARNING_MIN_LATENCY;
 		}
 		const uint256& txHash = tx.GetHash();
 		CAssetAllocation assetallocation(tx);
@@ -798,7 +794,7 @@ int DetectPotentialAssetAllocationSenderConflicts(const CAssetAllocationTuple& a
 				mapBalances[amountTuple.first.ToString()] += amountTuple.second;
 				// if running balance overruns the stored balance then we have a potential conflict
 				if (senderBalance < 0) {
-					return ZDAG_MINOR_CONFLICT;
+					return ZDAG_WARNING_POTENTIAL_BALANCE_OVERFLOW;
 				}
 			}
 		}

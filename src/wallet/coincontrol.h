@@ -34,6 +34,8 @@ public:
     boost::optional<bool> m_signal_bip125_rbf;
     //! Avoid partial use of funds sent to a given address
     bool m_avoid_partial_spends;
+    //! Forbids inclusion of dirty (previously used) addresses
+    bool m_avoid_address_reuse;
     //! Fee estimation mode to control arguments to estimateSmartFee
     FeeEstimateMode m_fee_mode;
     //! Minimum chain depth value for coin availability

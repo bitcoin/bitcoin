@@ -34,7 +34,6 @@ Developer Notes
     - [Source code organization](#source-code-organization)
     - [GUI](#gui)
     - [Subtrees](#subtrees)
-    - [Git and GitHub tips](#git-and-github-tips)
     - [Scripted diffs](#scripted-diffs)
     - [Release notes](#release-notes)
     - [RPC interface guidelines](#rpc-interface-guidelines)
@@ -280,7 +279,7 @@ thread](https://askubuntu.com/questions/50145/how-to-install-perf-monitoring-too
 for specific instructions.
 
 Certain kernel parameters may need to be set for perf to be able to inspect the
-running process' stack.
+running process's stack.
 
 ```sh
 $ sudo sysctl -w kernel.perf_event_paranoid=-1

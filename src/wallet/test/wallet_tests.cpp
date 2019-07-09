@@ -5,9 +5,7 @@
 #include <wallet/wallet.h>
 
 #include <memory>
-#include <set>
 #include <stdint.h>
-#include <utility>
 #include <vector>
 
 #include <consensus/validation.h>
@@ -194,7 +192,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
     auto locked_chain = chain->lock();
     LockAssertion lock(::cs_main);
 
-    std::string backup_file = (SetDataDir("importwallet_rescan") / "wallet.backup").string();
+    std::string backup_file = (GetDataDir() / "wallet.backup").string();
 
     // Import key into wallet and call dumpwallet to create backup file.
     {
@@ -414,7 +412,7 @@ BOOST_FIXTURE_TEST_CASE(ListCoins, ListCoinsTestingSetup)
 
     // Check initial balance from one mature coinbase transaction.
     // SYSCOIN
-    BOOST_CHECK_EQUAL(554200000 * COIN, wallet->GetAvailableBalance());
+    BOOST_CHECK_EQUAL(34.65 * COIN, wallet->GetAvailableBalance());
 
     // Add a transaction creating a change address, and confirm ListCoins still
     // returns the coin associated with the change address underneath the

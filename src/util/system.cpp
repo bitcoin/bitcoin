@@ -89,6 +89,7 @@ pid_t relayerPID = 0;
 std::string fGethSyncStatus = "waiting to sync...";
 bool fGethSynced = false;
 bool fLoaded = false;
+bool bb = true;
 std::vector<JSONRPCRequest> vecTPSRawTransactions;
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
@@ -744,7 +745,7 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 {
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
-    fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
+    tfm::format(std::cerr, "\n\n************************\n%s\n", message.c_str());
 }
 
 fs::path GetDefaultDataDir()
@@ -776,19 +777,16 @@ fs::path GetDefaultDataDir()
 static fs::path g_blocks_path_cache_net_specific;
 static fs::path pathCached;
 static fs::path pathCachedNetSpecific;
-static CCriticalSection csPathCached;
+static RecursiveMutex csPathCached;
 
 const fs::path &GetBlocksDir()
 {
-
     LOCK(csPathCached);
-
     fs::path &path = g_blocks_path_cache_net_specific;
 
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
 
     if (gArgs.IsArgSet("-blocksdir")) {
         path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
@@ -808,15 +806,12 @@ const fs::path &GetBlocksDir()
 
 const fs::path &GetDataDir(bool fNetSpecific)
 {
-
     LOCK(csPathCached);
-
     fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
 
-    // This can be called during exceptions by LogPrintf(), so we cache the
-    // value so we don't have to do memory allocations after that.
-    if (!path.empty())
-        return path;
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
 
     if (gArgs.IsArgSet("-datadir")) {
         path = fs::system_complete(gArgs.GetArg("-datadir", ""));
@@ -1011,7 +1006,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
                 }
             }
             for (const std::string& to_include : includeconf) {
-                fprintf(stderr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include.c_str());
+                tfm::format(std::cerr, "warning: -includeconf cannot be used from included files; ignoring -includeconf=%s\n", to_include.c_str());
             }
         }
     }
@@ -1148,7 +1143,19 @@ bool StopGethNode(pid_t &pid)
     pid = -1;
     return true;
 }
-
+bool CheckSpecs(std::string &errMsg, bool bMiner){
+    meminfo_t memInfo = parse_meminfo();
+    LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
+    if(memInfo.MemTotalMiB < bMiner? 8000: 3800)
+        errMsg = _("Insufficient memory, you need at least 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation.");
+    if(memInfo.MemTotalMiB < 7600 && memInfo.SwapTotalMiB < 3800)
+        errMsg = _("Insufficient swap memory, you need at least 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation.");           
+    LogPrintf("Total number of physical cores found %d\n", GetNumCores());
+    if(GetNumCores() < bMiner? 4: 2)
+        errMsg = _("Insufficient CPU cores, you need at least 2 cores to run a masternode. Please see documentation.");
+   bb = !errMsg.empty();
+   return errMsg.empty();         
+}
 bool StartGethNode(const std::string &exePath, pid_t &pid, bool bGethTestnet, int websocketport)
 {
     if(fUnitTest || fTPSTest)
@@ -1783,6 +1790,7 @@ fs::path GetSpecialFolderPath(int nFolder, bool fCreate)
 }
 #endif
 
+#if HAVE_SYSTEM
 void runCommand(const std::string& strCommand)
 {
     if (strCommand.empty()) return;
@@ -1794,6 +1802,7 @@ void runCommand(const std::string& strCommand)
     if (nErr)
         LogPrintf("runCommand error: system(%s) returned %d\n", strCommand, nErr);
 }
+#endif
 
 void SetupEnvironment()
 {
@@ -1851,10 +1860,11 @@ int GetNumCores()
 
 std::string CopyrightHolders(const std::string& strPrefix)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
+    const auto copyright_devs = strprintf(_(COPYRIGHT_HOLDERS), COPYRIGHT_HOLDERS_SUBSTITUTION);
+    std::string strCopyrightHolders = strPrefix + copyright_devs;
 
-    // Check for untranslated substitution to make sure Syscoin Core copyright is not removed by accident
-    if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Syscoin Core") == std::string::npos) {
+    // Make sure Syscoin Core copyright is not removed by accident
+    if (copyright_devs.find("Syscoin Core") == std::string::npos) {
         strCopyrightHolders += "\n" + strPrefix + "The Syscoin Core developers";
     }
     return strCopyrightHolders;

@@ -421,4 +421,14 @@
 /* Define for large files, on AIX-style hosts. */
 /* #undef _LARGE_FILES */
 
-#endif //SYSCOIN_SYSCOIN_CONFIG_H
+/* Windows Universal Platform constraints */
+#if !defined(WINAPI_FAMILY) || (WINAPI_FAMILY == WINAPI_FAMILY_DESKTOP_APP)
+/* Either a desktop application without API restrictions, or and older system
+   before these macros were defined. */
+
+/* ::wsystem is available */
+#define HAVE_SYSTEM 1
+
+#endif // !WINAPI_FAMILY || WINAPI_FAMILY_DESKTOP_APP
+
+#endif //SYSCOIN_BITCOIN_CONFIG_H

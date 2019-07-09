@@ -21,6 +21,7 @@
 #include <timedata.h>
 #include <util/system.h>
 #include <policy/policy.h>
+#include <wallet/ismine.h>
 
 #include <stdint.h>
 #include <string>

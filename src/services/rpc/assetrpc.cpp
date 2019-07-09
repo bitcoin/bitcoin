@@ -79,6 +79,25 @@ UniValue convertaddress(const JSONRPCRequest& request)
     ret.pushKV("v4address", currentV4Address); 
     return ret;
 }
+CWitnessAddress DescribeWitnessAddress(const std::string& strAddress){
+    string witnessProgramHex = "";
+    unsigned char witnessVersion = 0;
+    if(strAddress != "burn"){
+        UniValue requestParam(UniValue::VARR);
+        requestParam.push_back(strAddress);
+        JSONRPCRequest jsonRequest;
+        jsonRequest.params = requestParam;
+        const UniValue &convertedAddressValue = convertaddress(jsonRequest);
+        const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();
+        const CTxDestination &dest = DecodeDestination(v4address);
+        UniValue detail = DescribeAddress(dest);
+        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
+        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
+        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();  
+    }
+    return CWitnessAddress(witnessVersion, strAddress == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex));
+}
 unsigned int addressunspent(const string& strAddressFrom, COutPoint& outpoint)
 {
     UniValue paramsUTXO(UniValue::VARR);
@@ -308,18 +327,8 @@ UniValue assetallocationbalance(const JSONRPCRequest& request) {
 
     const int &nAsset = params[0].get_int();
     string strAddressFrom = params[1].get_str();
-    string witnessProgramHex = "";
-    unsigned char witnessVersion = 0;
-    if(strAddressFrom != "burn"){
-        const CTxDestination &dest = DecodeDestination(strAddressFrom);
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-    }
     UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
+    const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
     CAssetAllocation txPos;
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
@@ -368,20 +377,10 @@ UniValue assetallocationbalances(const JSONRPCRequest& request) {
 
     UniValue oRes(UniValue::VOBJ);
     for(size_t i =0;i<headerArray.size();i++){
-        string strAddressFrom = headerArray[i].get_str();
-        string witnessProgramHex = "";
-        unsigned char witnessVersion = 0;
-        if(strAddressFrom != "burn"){
-            const CTxDestination &dest = DecodeDestination(strAddressFrom);
-            UniValue detail = DescribeAddress(dest);
-            if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-                continue;
-            witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-            witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-        }
-
+        const std::string &strAddressFrom = headerArray[i].get_str();
+       
         UniValue oAssetAllocation(UniValue::VOBJ);
-        const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
+        const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
         CAssetAllocation txPos;
         if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
             continue;
@@ -419,19 +418,9 @@ UniValue assetallocationinfo(const JSONRPCRequest& request) {
             }.ToString());
 
     const int &nAsset = params[0].get_int();
-    string strAddressFrom = params[1].get_str();
-    string witnessProgramHex = "";
-    unsigned char witnessVersion = 0;
-    if(strAddressFrom != "burn"){
-        const CTxDestination &dest = DecodeDestination(strAddressFrom);
-        UniValue detail = DescribeAddress(dest);
-        if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-            throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-        witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-        witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
-    }
+    const std::string &strAddressFrom = params[1].get_str();
     UniValue oAssetAllocation(UniValue::VOBJ);
-    const CAssetAllocationTuple assetAllocationTuple(nAsset, CWitnessAddress(witnessVersion, strAddressFrom == "burn"? vchFromString("burn"): ParseHex(witnessProgramHex)));
+    const CAssetAllocationTuple assetAllocationTuple(nAsset, DescribeWitnessAddress(strAddressFrom));
     CAssetAllocation txPos;
     if (passetallocationdb == nullptr || !passetallocationdb->ReadAssetAllocation(assetAllocationTuple, txPos))
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1507 - " + _("Failed to read from assetallocation DB"));
@@ -477,24 +466,18 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
     }       
-    UniValue requestParam(UniValue::VARR);
-    requestParam.push_back(params[0].get_str());
-    JSONRPCRequest jsonRequest;
-    jsonRequest.params = requestParam;
-    const UniValue &convertedAddressValue = convertaddress(jsonRequest);
-    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();
-    const CTxDestination &dest = DecodeDestination(v4address);
-    UniValue detail = DescribeAddress(dest);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
- 
+
+
+    string strAddressFrom = params[0].get_str();
+
+    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(strAddressFrom);
+
+    UniValue oAssetAllocation(UniValue::VOBJ);
     UniValue oRes(UniValue::VARR);
     std::vector<uint32_t> assetGuids;
-    passetallocationdb->ReadAssetsByAddress(CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)), assetGuids);
+    passetallocationdb->ReadAssetsByAddress(witnessAddress, assetGuids);
     
-    CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
+
     for(const uint32_t& guid: assetGuids){
         UniValue oAssetAllocation(UniValue::VOBJ);
         const CAssetAllocationTuple assetAllocationTuple(guid, witnessAddress);
@@ -514,7 +497,7 @@ UniValue listassetindexallocations(const JSONRPCRequest& request) {
 
 UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	const UniValue &params = request.params;
-	if (request.fHelp || 3 != params.size())
+	if (request.fHelp || request.params.size() < 2 || request.params.size() > 4)
 		throw runtime_error(
             RPCHelpMan{"assetallocationsenderstatus",
                 "\nShow status as it pertains to any current Z-DAG conflicts or warnings related to a sender or sender/txid combination of an asset allocation transfer. Leave txid empty if you are not checking for a specific transfer.\n"
@@ -526,7 +509,8 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
                 {
                     {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset"},
                     {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address of the sender"},
-                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The transaction id of the assetallocationsend"}
+                    {"txid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The transaction id of the assetallocationsend. Default to empty. Skip to check all transactions for this sender, enter txid if checking for specific transaction."},
+                    {"min_latency", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The minimum latency to ensure the sender has not sent a transaction within this time (in milliseconds). Defaults to 10000 for 10 seconds."}
                 },
                 RPCResult{
                     "{\n"
@@ -534,27 +518,21 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
                     "}\n"
                 },
                 RPCExamples{
-                    HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\"")
-                    + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\"")
+                    HelpExampleCli("assetallocationsenderstatus", "\"asset_guid\" \"address\" \"txid\" \"min_latency\"")
+                    + HelpExampleRpc("assetallocationsenderstatus", "\"asset_guid\", \"address\", \"txid\" \"min_latency\"")
                 }
             }.ToString());
 
 	const int &nAsset = params[0].get_int();
 	string strAddressSender = params[1].get_str();
-
-    
-    const CTxDestination &dest = DecodeDestination(strAddressSender);
-    UniValue detail = DescribeAddress(dest);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();
 	uint256 txid;
 	txid.SetNull();
 	if(!params[2].get_str().empty())
 		txid.SetHex(params[2].get_str());
+    // 10 seconds by default
+    uint32_t nMinLatencyMilliSeconds = 10*1000;
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
+	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, DescribeWitnessAddress(strAddressSender));
     {
         LOCK2(cs_main, mempool.cs);
         ResetAssetAllocation(assetAllocationTupleSender.ToString(), txid, false, true);
@@ -563,7 +541,7 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
     	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
     		nStatus = ZDAG_MAJOR_CONFLICT;
     	else
-    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
+    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid, nMinLatencyMilliSeconds);
     	
         oAssetAllocationStatus.__pushKV("status", nStatus);
     }
@@ -1010,18 +988,13 @@ UniValue syscoingetspvproof(const JSONRPCRequest& request)
     }
     catch(const runtime_error& e){
     }
-    if(!assetVal.isNull()) {
-        CAsset asset;
-        if (!GetAsset(assetVal.get_int(), asset))
-             throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
-        if(asset.vchContract.empty())
-            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
-         res.__pushKV("contract", HexStr(asset.vchContract));    
-                   
-    }
-    else{
-        res.__pushKV("contract", HexStr(Params().GetConsensus().vchSYSXContract));
-    }
+    CAsset asset;
+    if (!GetAsset(assetVal.get_int(), asset))
+            throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset not found"));
+    if(asset.vchContract.empty())
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("Asset contract is empty"));
+    res.__pushKV("contract", HexStr(asset.vchContract));    
+                
     return res;
 }
 UniValue listassetindex(const JSONRPCRequest& request) {
@@ -1116,22 +1089,10 @@ UniValue listassetindexassets(const JSONRPCRequest& request) {
     if(!fAssetIndex){
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 1510 - " + _("You must reindex syscoin with -assetindex enabled"));
     }  
-    UniValue requestParam(UniValue::VARR);
-    requestParam.push_back(params[0].get_str());
-    JSONRPCRequest jsonRequest;
-    jsonRequest.params = requestParam;
-    const UniValue &convertedAddressValue = convertaddress(jsonRequest);     
-    const std::string & v4address = find_value(convertedAddressValue.get_obj(), "v4address").get_str();    
-    const CTxDestination &dest = DecodeDestination(v4address);
-    UniValue detail = DescribeAddress(dest);
-    if(find_value(detail.get_obj(), "iswitness").get_bool() == false)
-        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2501 - " + _("Address must be a segwit based address"));
-    string witnessProgramHex = find_value(detail.get_obj(), "witness_program").get_str();
-    unsigned char witnessVersion = (unsigned char)find_value(detail.get_obj(), "witness_version").get_int();   
- 
+
     UniValue oRes(UniValue::VARR);
     std::vector<uint32_t> assetGuids;
-    const CWitnessAddress witnessAddress(witnessVersion, ParseHex(witnessProgramHex));
+    const CWitnessAddress &witnessAddress = DescribeWitnessAddress(params[0].get_str());
     passetdb->ReadAssetsByAddress(witnessAddress, assetGuids);
     
     for(const uint32_t& guid: assetGuids){
@@ -1376,7 +1337,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "assetallocationinfo",              &assetallocationinfo,           {"asset_guid"}},
     { "syscoin",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid"}},
     { "syscoin",            "assetallocationbalances",          &assetallocationbalances,       {"asset_guid","addresses"} },
-    { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid"}},
+    { "syscoin",            "assetallocationsenderstatus",      &assetallocationsenderstatus,   {"asset_guid","address","txid","min_latency"} },
     { "syscoin",            "listassetallocations",             &listassetallocations,          {"count","from","options"} },
     { "syscoin",            "listassetallocationmempoolbalances",             &listassetallocationmempoolbalances,          {"count","from","options"} },
     { "syscoin",            "listassetindex",                   &listassetindex,                {"page","options"} },

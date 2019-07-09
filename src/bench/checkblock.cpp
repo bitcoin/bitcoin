@@ -3,15 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bench/bench.h>
+#include <bench/data.h>
 
 #include <chainparams.h>
 #include <validation.h>
 #include <streams.h>
 #include <consensus/validation.h>
-
-namespace block_bench {
-#include <bench/data/block413567.raw.h>
-} // namespace block_bench
 
 // These are the two major time-sinks which happen after we have fully received
 // a block off the wire, but before we can relay the block on to peers using
@@ -19,25 +16,21 @@ namespace block_bench {
 
 static void DeserializeBlockTest(benchmark::State& state)
 {
-    CDataStream stream((const char*)block_bench::block413567,
-            (const char*)block_bench::block413567 + sizeof(block_bench::block413567),
-            SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
     while (state.KeepRunning()) {
         CBlock block;
         stream >> block;
-        bool rewound = stream.Rewind(sizeof(block_bench::block413567));
+        bool rewound = stream.Rewind(benchmark::data::block413567.size());
         assert(rewound);
     }
 }
 
 static void DeserializeAndCheckBlockTest(benchmark::State& state)
 {
-    CDataStream stream((const char*)block_bench::block413567,
-            (const char*)block_bench::block413567 + sizeof(block_bench::block413567),
-            SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
 
@@ -46,7 +39,7 @@ static void DeserializeAndCheckBlockTest(benchmark::State& state)
     while (state.KeepRunning()) {
         CBlock block; // Note that CBlock caches its checked state, so we need to recreate it here
         stream >> block;
-        bool rewound = stream.Rewind(sizeof(block_bench::block413567));
+        bool rewound = stream.Rewind(benchmark::data::block413567.size());
         assert(rewound);
 
         CValidationState validationState;
