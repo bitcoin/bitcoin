@@ -521,8 +521,6 @@ public:
 
     bool HavePrivateKeys() const override;
 
-    void RewriteDB() override;
-
     int64_t GetOldestKeyPoolTime() override;
     size_t KeypoolCountExternalKeys() override;
     unsigned int GetKeyPoolSize() const override;
