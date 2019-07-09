@@ -290,7 +290,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
     bool bTxRootError = false;
     bOverflow=false;
     good = true;
-    // reset MT mempool failure time during connectblock, ensure atleast 30 seconds or latch on next block
+    // reset MT mempool failure time during connectblock, ensure at least 30 seconds or latch on next block
     if(nLastMultithreadMempoolFailure > 0 && !blockHash.IsNull() && (nTime > (nLastMultithreadMempoolFailure+30)) ){
         nLastMultithreadMempoolFailure = 0;
     }
@@ -1311,7 +1311,7 @@ bool CheckAssetInputs(const CTransaction &tx, const CCoinsViewCache &inputs,
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
             if(!fUnitTest && nHeight >= Params().GetConsensus().nBridgeStartBlock && tx.vout[nDataOut].nValue < 500*COIN)
             {
-                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Insufficient fees included to create asset (You need to pay atleast 500 SYS).");
+                errorMessage = "SYSCOIN_ASSET_CONSENSUS_ERROR: ERRCODE: 2005 - " + _("Insufficient fees included to create asset (You need to pay at least 500 SYS).");
                 return error(errorMessage.c_str());               
             }
             if (theAsset.nAsset <= SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
