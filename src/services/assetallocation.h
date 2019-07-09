@@ -39,7 +39,7 @@ public:
 		nAsset = asset;
 		witnessAddress = witnessAddress_;
 	}
-	CAssetAllocationTuple(const uint32_t &asset) {
+	explicit CAssetAllocationTuple(const uint32_t &asset) {
 		nAsset = asset;
 		witnessAddress.SetNull();
 	}
@@ -104,7 +104,7 @@ public:
 	CAssetAllocation() {
 		SetNull();
 	}
-	CAssetAllocation(const CTransaction &tx) {
+	explicit CAssetAllocation(const CTransaction &tx) {
 		SetNull();
 		UnserializeFromTx(tx);
 	}

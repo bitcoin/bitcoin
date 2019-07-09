@@ -102,7 +102,7 @@ public:
         SetNull();
         nAsset = 0;
     }
-    CAsset(const CTransaction &tx) {
+    explicit CAsset(const CTransaction &tx) {
         SetNull();
         nAsset = 0;
         UnserializeFromTx(tx);
@@ -166,7 +166,7 @@ public:
     CMintSyscoin() {
         SetNull();
     }
-    CMintSyscoin(const CTransaction &tx) {
+    explicit CMintSyscoin(const CTransaction &tx) {
         SetNull();
         UnserializeFromTx(tx);
     }
