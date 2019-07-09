@@ -9,6 +9,7 @@
 #include <outputtype.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
+#include <rpc/request.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/standard.h>
@@ -242,6 +243,15 @@ public:
     std::string ToString() const;
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
+    /**
+     * Check if the given request is valid according to this command or if
+     * the user is asking for help information, and throw help when appropriate.
+     */
+    inline void Check(const JSONRPCRequest& request) const {
+        if (request.fHelp || !IsValidNumArgs(request.params.size())) {
+            throw std::runtime_error(ToString());
+        }
+    }
 
 private:
     const std::string m_name;

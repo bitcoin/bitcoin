@@ -25,8 +25,6 @@
 
 static UniValue validateaddress(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"validateaddress",
                 "\nReturn information about the given bitcoin address.\n",
                 {
@@ -47,7 +45,7 @@ static UniValue validateaddress(const JSONRPCRequest& request)
                     HelpExampleCli("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
             + HelpExampleRpc("validateaddress", "\"1PSSGeFHDnKNxiEyFrD1wcEaHr9hrQDDWc\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     bool isValid = IsValidDestination(dest);
@@ -70,9 +68,6 @@ static UniValue validateaddress(const JSONRPCRequest& request)
 
 static UniValue createmultisig(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
-    {
-        std::string msg =
             RPCHelpMan{"createmultisig",
                 "\nCreates a multi-signature address with n signature of m keys required.\n"
                 "It returns a json object with the address and redeemScript.\n",
@@ -96,9 +91,7 @@ static UniValue createmultisig(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("createmultisig", "2, \"[\\\"03789ed0bb717d88f7d321a368d905e7430207ebbd82bd342cf11ae157a7ace5fd\\\",\\\"03dbc6764b8884a92e871274b87583e6d5c2a58819473e17e107ef3f6aa5a61626\\\"]\"")
                 },
-            }.ToString();
-        throw std::runtime_error(msg);
-    }
+            }.Check(request);
 
     int required = request.params[0].get_int();
 
@@ -135,8 +128,6 @@ static UniValue createmultisig(const JSONRPCRequest& request)
 
 UniValue getdescriptorinfo(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1) {
-        throw std::runtime_error(
             RPCHelpMan{"getdescriptorinfo",
             {"\nAnalyses a descriptor.\n"},
             {
@@ -153,9 +144,7 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
             RPCExamples{
                 "Analyse a descriptor\n" +
                 HelpExampleCli("getdescriptorinfo", "\"wpkh([d34db33f/84h/0h/0h]0279be667ef9dcbbac55a06295Ce870b07029Bfcdb2dce28d959f2815b16f81798)\"")
-            }}.ToString()
-        );
-    }
+            }}.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR});
 
@@ -175,8 +164,6 @@ UniValue getdescriptorinfo(const JSONRPCRequest& request)
 
 UniValue deriveaddresses(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.empty() || request.params.size() > 2) {
-        throw std::runtime_error(
             RPCHelpMan{"deriveaddresses",
             {"\nDerives one or more addresses corresponding to an output descriptor.\n"
             "Examples of output descriptors are:\n"
@@ -197,9 +184,7 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
             RPCExamples{
                 "First three native segwit receive addresses\n" +
                 HelpExampleCli("deriveaddresses", "\"wpkh([d34db33f/84h/0h/0h]xpub6DJ2dNUysrn5Vt36jH2KLBT2i1auw1tTSSomg8PhqNiUtx8QX2SvC9nrHu81fT41fvDUnhMjEzQgXnQjKEu3oaqMSzhSrHMxyyoEAmUHQbY/0/*)#cjjspncu\" \"[0,2]\"")
-            }}.ToString()
-        );
-    }
+            }}.Check(request);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType()}); // Range argument is checked later
     const std::string desc_str = request.params[0].get_str();
@@ -254,8 +239,6 @@ UniValue deriveaddresses(const JSONRPCRequest& request)
 
 static UniValue verifymessage(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 3)
-        throw std::runtime_error(
             RPCHelpMan{"verifymessage",
                 "\nVerify a signed message\n",
                 {
@@ -276,7 +259,7 @@ static UniValue verifymessage(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("verifymessage", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"signature\", \"my message\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     LOCK(cs_main);
 
@@ -313,8 +296,6 @@ static UniValue verifymessage(const JSONRPCRequest& request)
 
 static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
             RPCHelpMan{"signmessagewithprivkey",
                 "\nSign a message with the private key of an address\n",
                 {
@@ -332,7 +313,7 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
             "\nAs a JSON-RPC call\n"
             + HelpExampleRpc("signmessagewithprivkey", "\"privkey\", \"my message\"")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::string strPrivkey = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
@@ -355,8 +336,6 @@ static UniValue signmessagewithprivkey(const JSONRPCRequest& request)
 
 static UniValue setmocktime(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1)
-        throw std::runtime_error(
             RPCHelpMan{"setmocktime",
                 "\nSet the local time to given timestamp (-regtest only)\n",
                 {
@@ -365,8 +344,7 @@ static UniValue setmocktime(const JSONRPCRequest& request)
                 },
                 RPCResults{},
                 RPCExamples{""},
-            }.ToString()
-        );
+            }.Check(request);
 
     if (!Params().MineBlocksOnDemand())
         throw std::runtime_error("setmocktime for regression testing (-regtest mode) only");
@@ -421,8 +399,6 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
     /* Please, avoid using the word "pool" here in the RPC interface or help,
      * as users will undoubtedly confuse it with the other "memory pool"
      */
-    if (request.fHelp || request.params.size() > 1)
-        throw std::runtime_error(
             RPCHelpMan{"getmemoryinfo",
                 "Returns an object containing information about memory usage.\n",
                 {
@@ -451,7 +427,7 @@ static UniValue getmemoryinfo(const JSONRPCRequest& request)
                     HelpExampleCli("getmemoryinfo", "")
             + HelpExampleRpc("getmemoryinfo", "")
                 },
-            }.ToString());
+            }.Check(request);
 
     std::string mode = request.params[0].isNull() ? "stats" : request.params[0].get_str();
     if (mode == "stats") {
@@ -489,8 +465,6 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
 
 UniValue logging(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() > 2) {
-        throw std::runtime_error(
             RPCHelpMan{"logging",
             "Gets and sets the logging configuration.\n"
             "When called without an argument, returns the list of categories with status that are currently being debug logged or not.\n"
@@ -522,8 +496,7 @@ UniValue logging(const JSONRPCRequest& request)
                     HelpExampleCli("logging", "\"[\\\"all\\\"]\" \"[\\\"http\\\"]\"")
             + HelpExampleRpc("logging", "[\"all\"], [\"libevent\"]")
                 },
-            }.ToString());
-    }
+            }.Check(request);
 
     uint32_t original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
