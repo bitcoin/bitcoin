@@ -12,7 +12,7 @@
 #include <util/strencodings.h>
 #include <util/time.h>
 #include <validation.h>
-
+#include <rpc/request.h>
 #include <cassert>
 
 namespace
