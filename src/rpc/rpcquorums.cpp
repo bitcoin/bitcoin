@@ -80,7 +80,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
 {
     UniValue ret(UniValue::VOBJ);
 
-    ret.push_back(Pair("height", quorum->height));
+    ret.push_back(Pair("height", quorum->pindexQuorum->nHeight));
     ret.push_back(Pair("type", quorum->params.name));
     ret.push_back(Pair("quorumHash", quorum->qc.quorumHash.ToString()));
     ret.push_back(Pair("minedBlock", quorum->minedBlockHash.ToString()));
@@ -222,7 +222,7 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
         pindexTip = chainActive.Tip();
     }
 
-    auto mnList = deterministicMNManager->GetListForBlock(pindexTip->GetBlockHash());
+    auto mnList = deterministicMNManager->GetListForBlock(pindexTip);
     auto dmn = mnList.GetMN(protxHash);
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "masternode not found");

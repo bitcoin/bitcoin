@@ -49,7 +49,7 @@ public:
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(nOperatorReward);
-        READWRITE(*(CScriptBase*)(&scriptPayout));
+        READWRITE(scriptPayout);
         READWRITE(inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
@@ -86,7 +86,7 @@ public:
         READWRITE(nVersion);
         READWRITE(proTxHash);
         READWRITE(addr);
-        READWRITE(*(CScriptBase*)(&scriptOperatorPayout));
+        READWRITE(scriptOperatorPayout);
         READWRITE(inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(sig);
@@ -124,7 +124,7 @@ public:
         READWRITE(nMode);
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
-        READWRITE(*(CScriptBase*)(&scriptPayout));
+        READWRITE(scriptPayout);
         READWRITE(inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);

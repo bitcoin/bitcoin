@@ -645,6 +645,15 @@ public:
         // The default std::vector::clear() does not release memory.
         CScriptBase().swap(*this);
     }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const {
+        s << *(CScriptBase*)this;
+    }
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        s >> *(CScriptBase*)this;
+    }
 };
 
 class CReserveScript
