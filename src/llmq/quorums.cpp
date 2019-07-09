@@ -49,10 +49,10 @@ CQuorum::~CQuorum()
     }
 }
 
-void CQuorum::Init(const CFinalCommitment& _qc, int _height, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
+void CQuorum::Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members)
 {
     qc = _qc;
-    height = _height;
+    pindexQuorum = _pindexQuorum;
     members = _members;
     minedBlockHash = _minedBlockHash;
 }
@@ -193,9 +193,9 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
         if (!g_connman->HasMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash)) {
             std::set<uint256> connections;
             if (quorum->IsMember(myProTxHash)) {
-                connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->qc.quorumHash, myProTxHash);
+                connections = CLLMQUtils::GetQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash);
             } else {
-                auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->qc.quorumHash, quorum->members.size(), 1);
+                auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, quorum->pindexQuorum, quorum->members.size(), 1);
                 for (auto idx : cindexes) {
                     connections.emplace(quorum->members[idx]->proTxHash);
                 }
@@ -231,9 +231,9 @@ bool CQuorumManager::BuildQuorumFromCommitment(const CFinalCommitment& qc, const
     assert(pindexQuorum);
     assert(qc.quorumHash == pindexQuorum->GetBlockHash());
 
-    auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, qc.quorumHash);
+    auto members = CLLMQUtils::GetAllQuorumMembers((Consensus::LLMQType)qc.llmqType, pindexQuorum);
 
-    quorum->Init(qc, pindexQuorum->nHeight, minedBlockHash, members);
+    quorum->Init(qc, pindexQuorum, minedBlockHash, members);
 
     bool hasValidVvec = false;
     if (quorum->ReadContributions(evoDb)) {
@@ -262,7 +262,7 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
     std::vector<uint16_t> memberIndexes;
     std::vector<BLSVerificationVectorPtr> vvecs;
     BLSSecretKeyVector skContributions;
-    if (!dkgManager.GetVerifiedContributions((Consensus::LLMQType)fqc.llmqType, fqc.quorumHash, fqc.validMembers, memberIndexes, vvecs, skContributions)) {
+    if (!dkgManager.GetVerifiedContributions((Consensus::LLMQType)fqc.llmqType, quorum->pindexQuorum, fqc.validMembers, memberIndexes, vvecs, skContributions)) {
         return false;
     }
 

@@ -83,8 +83,8 @@ public:
         READWRITE(pubKeyOperator);
         READWRITE(keyIDVoting);
         READWRITE(addr);
-        READWRITE(*(CScriptBase*)(&scriptPayout));
-        READWRITE(*(CScriptBase*)(&scriptOperatorPayout));
+        READWRITE(scriptPayout);
+        READWRITE(scriptOperatorPayout);
     }
 
     void ResetOperatorFields()
@@ -109,35 +109,81 @@ public:
         h.Finalize(confirmedHashWithProRegTxHash.begin());
     }
 
-    bool operator==(const CDeterministicMNState& rhs) const
-    {
-        return nRegisteredHeight == rhs.nRegisteredHeight &&
-               nLastPaidHeight == rhs.nLastPaidHeight &&
-               nPoSePenalty == rhs.nPoSePenalty &&
-               nPoSeRevivedHeight == rhs.nPoSeRevivedHeight &&
-               nPoSeBanHeight == rhs.nPoSeBanHeight &&
-               nRevocationReason == rhs.nRevocationReason &&
-               confirmedHash == rhs.confirmedHash &&
-               confirmedHashWithProRegTxHash == rhs.confirmedHashWithProRegTxHash &&
-               keyIDOwner == rhs.keyIDOwner &&
-               pubKeyOperator == rhs.pubKeyOperator &&
-               keyIDVoting == rhs.keyIDVoting &&
-               addr == rhs.addr &&
-               scriptPayout == rhs.scriptPayout &&
-               scriptOperatorPayout == rhs.scriptOperatorPayout;
-    }
-
-    bool operator!=(const CDeterministicMNState& rhs) const
-    {
-        return !(rhs == *this);
-    }
-
 public:
     std::string ToString() const;
     void ToJson(UniValue& obj) const;
 };
 typedef std::shared_ptr<CDeterministicMNState> CDeterministicMNStatePtr;
 typedef std::shared_ptr<const CDeterministicMNState> CDeterministicMNStateCPtr;
+
+class CDeterministicMNStateDiff
+{
+public:
+    enum Field : uint32_t {
+        Field_nRegisteredHeight                 = 0x0001,
+        Field_nLastPaidHeight                   = 0x0002,
+        Field_nPoSePenalty                      = 0x0004,
+        Field_nPoSeRevivedHeight                = 0x0008,
+        Field_nPoSeBanHeight                    = 0x0010,
+        Field_nRevocationReason                 = 0x0020,
+        Field_confirmedHash                     = 0x0040,
+        Field_confirmedHashWithProRegTxHash     = 0x0080,
+        Field_keyIDOwner                        = 0x0100,
+        Field_pubKeyOperator                    = 0x0200,
+        Field_keyIDVoting                       = 0x0400,
+        Field_addr                              = 0x0800,
+        Field_scriptPayout                      = 0x1000,
+        Field_scriptOperatorPayout              = 0x2000,
+    };
+
+#define DMN_STATE_DIFF_ALL_FIELDS \
+    DMN_STATE_DIFF_LINE(nRegisteredHeight) \
+    DMN_STATE_DIFF_LINE(nLastPaidHeight) \
+    DMN_STATE_DIFF_LINE(nPoSePenalty) \
+    DMN_STATE_DIFF_LINE(nPoSeRevivedHeight) \
+    DMN_STATE_DIFF_LINE(nPoSeBanHeight) \
+    DMN_STATE_DIFF_LINE(nRevocationReason) \
+    DMN_STATE_DIFF_LINE(confirmedHash) \
+    DMN_STATE_DIFF_LINE(confirmedHashWithProRegTxHash) \
+    DMN_STATE_DIFF_LINE(keyIDOwner) \
+    DMN_STATE_DIFF_LINE(pubKeyOperator) \
+    DMN_STATE_DIFF_LINE(keyIDVoting) \
+    DMN_STATE_DIFF_LINE(addr) \
+    DMN_STATE_DIFF_LINE(scriptPayout) \
+    DMN_STATE_DIFF_LINE(scriptOperatorPayout)
+
+public:
+    uint32_t fields{0};
+    // we reuse the state class, but only the members as noted by fields are valid
+    CDeterministicMNState state;
+
+public:
+    CDeterministicMNStateDiff() {}
+    CDeterministicMNStateDiff(const CDeterministicMNState& a, const CDeterministicMNState& b)
+    {
+#define DMN_STATE_DIFF_LINE(f) if (a.f != b.f) { state.f = b.f; fields |= Field_##f; }
+        DMN_STATE_DIFF_ALL_FIELDS
+#undef DMN_STATE_DIFF_LINE
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action)
+    {
+        READWRITE(VARINT(fields));
+#define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) READWRITE(state.f);
+        DMN_STATE_DIFF_ALL_FIELDS
+#undef DMN_STATE_DIFF_LINE
+    }
+
+    void ApplyToState(CDeterministicMNState& target) const
+    {
+#define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) target.f = state.f;
+        DMN_STATE_DIFF_ALL_FIELDS
+#undef DMN_STATE_DIFF_LINE
+    }
+};
 
 class CDeterministicMN
 {
@@ -150,20 +196,34 @@ public:
     }
 
     uint256 proTxHash;
+    uint64_t internalId{std::numeric_limits<uint64_t>::max()};
     COutPoint collateralOutpoint;
     uint16_t nOperatorReward;
     CDeterministicMNStateCPtr pdmnState;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    inline void SerializationOp(Stream& s, Operation ser_action, bool oldFormat)
     {
         READWRITE(proTxHash);
+        if (!oldFormat) {
+            READWRITE(VARINT(internalId));
+        }
         READWRITE(collateralOutpoint);
         READWRITE(nOperatorReward);
         READWRITE(pdmnState);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), false);
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s, bool oldFormat = false)
+    {
+        SerializationOp(s, CSerActionUnserialize(), oldFormat);
     }
 
 public:
@@ -214,35 +274,60 @@ class CDeterministicMNList
 {
 public:
     typedef immer::map<uint256, CDeterministicMNCPtr> MnMap;
+    typedef immer::map<uint64_t, uint256> MnInternalIdMap;
     typedef immer::map<uint256, std::pair<uint256, uint32_t> > MnUniquePropertyMap;
 
 private:
     uint256 blockHash;
     int nHeight{-1};
+    uint32_t nTotalRegisteredCount{0};
     MnMap mnMap;
+    MnInternalIdMap mnInternalIdMap;
 
     // map of unique properties like address and keys
     // we keep track of this as checking for duplicates would otherwise be painfully slow
-    // the entries in the map are ref counted as some properties might appear multiple times per MN (e.g. operator/owner keys)
     MnUniquePropertyMap mnUniquePropertyMap;
 
 public:
     CDeterministicMNList() {}
-    explicit CDeterministicMNList(const uint256& _blockHash, int _height) :
+    explicit CDeterministicMNList(const uint256& _blockHash, int _height, uint32_t _totalRegisteredCount) :
         blockHash(_blockHash),
-        nHeight(_height)
+        nHeight(_height),
+        nTotalRegisteredCount(_totalRegisteredCount)
     {
     }
 
-    ADD_SERIALIZE_METHODS;
-
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    inline void SerializationOpBase(Stream& s, Operation ser_action)
     {
         READWRITE(blockHash);
         READWRITE(nHeight);
-        READWRITE(mnMap);
-        READWRITE(mnUniquePropertyMap);
+        READWRITE(nTotalRegisteredCount);
+    }
+
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        NCONST_PTR(this)->SerializationOpBase(s, CSerActionSerialize());
+        // Serialize the map as a vector
+        WriteCompactSize(s, mnMap.size());
+        for (const auto& p : mnMap) {
+            s << *p.second;
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        mnMap = MnMap();
+        mnUniquePropertyMap = MnUniquePropertyMap();
+        mnInternalIdMap = MnInternalIdMap();
+
+        SerializationOpBase(s, CSerActionUnserialize());
+
+        size_t cnt = ReadCompactSize(s);
+        for (size_t i = 0; i < cnt; i++) {
+            AddMN(std::make_shared<CDeterministicMN>(deserialize, s));
+        }
     }
 
 public:
@@ -289,6 +374,14 @@ public:
     {
         nHeight = _height;
     }
+    uint32_t GetTotalRegisteredCount() const
+    {
+        return nTotalRegisteredCount;
+    }
+    void SetTotalRegisteredCount(uint32_t _count)
+    {
+        nTotalRegisteredCount = _count;
+    }
 
     bool IsMNValid(const uint256& proTxHash) const;
     bool IsMNPoSeBanned(const uint256& proTxHash) const;
@@ -318,6 +411,7 @@ public:
     CDeterministicMNCPtr GetValidMNByCollateral(const COutPoint& collateralOutpoint) const;
     CDeterministicMNCPtr GetMNByService(const CService& service) const;
     CDeterministicMNCPtr GetValidMNByService(const CService& service) const;
+    CDeterministicMNCPtr GetMNByInternalId(uint64_t internalId) const;
     CDeterministicMNCPtr GetMNPayee() const;
 
     /**
@@ -372,10 +466,12 @@ public:
 
     CDeterministicMNListDiff BuildDiff(const CDeterministicMNList& to) const;
     CSimplifiedMNListDiff BuildSimplifiedDiff(const CDeterministicMNList& to) const;
-    CDeterministicMNList ApplyDiff(const CDeterministicMNListDiff& diff) const;
+    CDeterministicMNList ApplyDiff(const CBlockIndex* pindex, const CDeterministicMNListDiff& diff) const;
 
     void AddMN(const CDeterministicMNCPtr& dmn);
+    void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateCPtr& pdmnState);
     void UpdateMN(const uint256& proTxHash, const CDeterministicMNStateCPtr& pdmnState);
+    void UpdateMN(const CDeterministicMNCPtr& oldDmn, const CDeterministicMNStateDiff& stateDiff);
     void RemoveMN(const uint256& proTxHash);
 
     template <typename T>
@@ -445,6 +541,61 @@ private:
 class CDeterministicMNListDiff
 {
 public:
+    std::vector<CDeterministicMNCPtr> addedMNs;
+    // keys are all relating to the internalId of MNs
+    std::map<uint64_t, CDeterministicMNStateDiff> updatedMNs;
+    std::set<uint64_t> removedMns;
+
+public:
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
+        s << addedMNs;
+        WriteCompactSize(s, updatedMNs.size());
+        for (const auto& p : updatedMNs) {
+            WriteVarInt(s, p.first);
+            s << p.second;
+        }
+        WriteCompactSize(s, removedMns.size());
+        for (const auto& p : removedMns) {
+            WriteVarInt(s, p);
+        }
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        updatedMNs.clear();
+        removedMns.clear();
+
+        size_t tmp;
+        uint64_t tmp2;
+        s >> addedMNs;
+        tmp = ReadCompactSize(s);
+        for (size_t i = 0; i < tmp; i++) {
+            CDeterministicMNStateDiff diff;
+            tmp2 = ReadVarInt<Stream, uint64_t>(s);
+            s >> diff;
+            updatedMNs.emplace(tmp2, std::move(diff));
+        }
+        tmp = ReadCompactSize(s);
+        for (size_t i = 0; i < tmp; i++) {
+            tmp2 = ReadVarInt<Stream, uint64_t>(s);
+            removedMns.emplace(tmp2);
+        }
+    }
+
+public:
+    bool HasChanges() const
+    {
+        return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
+    }
+};
+
+// TODO can be removed in a future version
+class CDeterministicMNListDiff_OldFormat
+{
+public:
     uint256 prevBlockHash;
     uint256 blockHash;
     int nHeight{-1};
@@ -453,23 +604,22 @@ public:
     std::set<uint256> removedMns;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
-    {
-        READWRITE(prevBlockHash);
-        READWRITE(blockHash);
-        READWRITE(nHeight);
-        READWRITE(addedMNs);
-        READWRITE(updatedMNs);
-        READWRITE(removedMns);
-    }
-
-public:
-    bool HasChanges() const
-    {
-        return !addedMNs.empty() || !updatedMNs.empty() || !removedMns.empty();
+    template<typename Stream>
+    void Unserialize(Stream& s) {
+        addedMNs.clear();
+        s >> prevBlockHash;
+        s >> blockHash;
+        s >> nHeight;
+        size_t cnt = ReadCompactSize(s);
+        for (size_t i = 0; i < cnt; i++) {
+            uint256 proTxHash;
+            auto dmn = std::make_shared<CDeterministicMN>();
+            s >> proTxHash;
+            dmn->Unserialize(s, true);
+            addedMNs.emplace(proTxHash, dmn);
+        }
+        s >> updatedMNs;
+        s >> removedMns;
     }
 };
 
@@ -485,8 +635,7 @@ private:
     CEvoDB& evoDb;
 
     std::map<uint256, CDeterministicMNList> mnListsCache;
-    int tipHeight{-1};
-    uint256 tipBlockHash;
+    const CBlockIndex* tipIndex{nullptr};
 
 public:
     CDeterministicMNManager(CEvoDB& _evoDb);
@@ -498,16 +647,21 @@ public:
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
     bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs);
-    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, CDeterministicMNList& mnList, bool debugLogs);
+    void HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
     void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
-    CDeterministicMNList GetListForBlock(const uint256& blockHash);
+    CDeterministicMNList GetListForBlock(const CBlockIndex* pindex);
     CDeterministicMNList GetListAtChainTip();
 
     // Test if given TX is a ProRegTx which also contains the collateral at index n
     bool IsProTxWithCollateral(const CTransactionRef& tx, uint32_t n);
 
     bool IsDIP3Enforced(int nHeight = -1);
+
+public:
+    // TODO these can all be removed in a future version
+    bool UpgradeDiff(CDBBatch& batch, const CBlockIndex* pindexNext, const CDeterministicMNList& curMNList, CDeterministicMNList& newMNList);
+    void UpgradeDBIfNeeded();
 
 private:
     void CleanupCache(int nHeight);

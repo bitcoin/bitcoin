@@ -339,7 +339,11 @@ public:
         LOCK(cs);
         std::string strVersion;
         if (ser_action.ForRead()) {
+            Clear();
             READWRITE(strVersion);
+            if (strVersion != SERIALIZATION_VERSION_STRING) {
+                return;
+            }
         } else {
             strVersion = SERIALIZATION_VERSION_STRING;
             READWRITE(strVersion);
@@ -351,10 +355,6 @@ public:
         READWRITE(mapObjects);
         READWRITE(mapLastMasternodeObject);
         READWRITE(lastMNListForVotingKeys);
-        if (ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
-            Clear();
-            return;
-        }
     }
 
     void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman);

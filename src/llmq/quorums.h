@@ -37,7 +37,7 @@ class CQuorum
 public:
     const Consensus::LLMQParams& params;
     CFinalCommitment qc;
-    int height;
+    const CBlockIndex* pindexQuorum;
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
 
@@ -55,7 +55,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) : params(_params), blsCache(_blsWorker), stopCachePopulatorThread(false) {}
     ~CQuorum();
-    void Init(const CFinalCommitment& _qc, int _height, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
+    void Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
