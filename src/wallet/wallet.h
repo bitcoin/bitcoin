@@ -926,6 +926,7 @@ public:
     bool AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment = "");
     bool GetAccountDestination(CTxDestination &dest, std::string strAccount, bool bForceNew = false);
 
+    void WalletUpdateSpent(const CTransactionRef& tx);
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
     bool LoadToWallet(const CWalletTx& wtxIn);

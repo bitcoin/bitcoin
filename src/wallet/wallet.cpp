@@ -37,6 +37,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+#include <boost/foreach.hpp>
 
 std::vector<CWalletRef> vpwallets;
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
@@ -860,6 +861,31 @@ void CWallet::MarkDirty()
     }
 }
 
+void CWallet::WalletUpdateSpent(const CTransactionRef &tx)
+{
+    // Anytime a signature is successfully verified, it's proof the outpoint is spent.
+    // Update the wallet spent flag if it doesn't know due to wallet.dat being
+    // restored from backup or the user making copies of wallet.dat.
+    {
+        LOCK(cs_wallet);
+        BOOST_FOREACH(const CTxIn& txin, tx->vin)
+        {
+            auto mi = mapWallet.find(txin.prevout.hash);
+            if (mi != mapWallet.end())
+            {
+                CWalletTx& wtx = (*mi).second;
+                if (txin.prevout.n >= wtx.tx->vout.size())
+                    LogPrintf("WalletUpdateSpent: bad wtx %s\n", wtx.GetHash().ToString().c_str());
+                else if (IsMine(wtx.tx->vout[txin.prevout.n]))
+                {
+                    LogPrintf("WalletUpdateSpent found spent coin %sppc %s\n", FormatMoney(wtx.GetCredit(ISMINE_SPENDABLE)).c_str(), wtx.GetHash().ToString().c_str());
+                    NotifyTransactionChanged(this, txin.prevout.hash, CT_UPDATED);
+                }
+            }
+        }
+    }
+}
+
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
     LOCK(cs_wallet);
@@ -927,6 +953,9 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 
     // Break debit/credit balance caches:
     wtx.MarkDirty();
+
+    // since AddToWallet is called directly for self-originating transactions, check for consumption of own coins
+    WalletUpdateSpent(wtx.tx);
 
     // Notify UI of new or updated transaction
     NotifyTransactionChanged(this, hash, fInsertedNew ? CT_NEW : CT_UPDATED);
