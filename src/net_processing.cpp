@@ -53,8 +53,6 @@
 #include "llmq/quorums_signing.h"
 #include "llmq/quorums_signing_shares.h"
 
-#include <boost/thread.hpp>
-
 #if defined(NDEBUG)
 # error "Dash Core cannot be compiled without assertions."
 #endif

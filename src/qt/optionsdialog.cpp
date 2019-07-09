@@ -23,8 +23,6 @@
 #include "privatesend/privatesend-client.h"
 #endif // ENABLE_WALLET
 
-#include <boost/thread.hpp>
-
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QIntValidator>
