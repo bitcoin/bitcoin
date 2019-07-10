@@ -972,7 +972,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Geth is not synced, please wait until it syncs up and try again"));
     }
 
-    int nBlocksLeftToEnable = ::ChainActive().Tip()->nHeight - (Params().GetConsensus().nBridgeStartBlock+500);
+    int nBlocksLeftToEnable = (Params().GetConsensus().nBridgeStartBlock+500) - ::ChainActive().Tip()->nHeight;
     if(nBlocksLeftToEnable > 0)
     {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Bridge is not enabled yet. Blocks left to enable: ") + itostr(nBlocksLeftToEnable));
