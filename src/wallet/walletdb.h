@@ -249,6 +249,7 @@ public:
     bool WriteDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const CPrivKey& privkey);
     bool WriteCryptedDescriptorKey(const uint256& desc_id, const CPubKey& pubkey, const std::vector<unsigned char>& secret);
     bool WriteDescriptor(const uint256& desc_id, const WalletDescriptor& descriptor);
+    bool WriteDescriptorCache(const uint256& desc_id, int32_t index, std::vector<unsigned char> cache_item);
 
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);

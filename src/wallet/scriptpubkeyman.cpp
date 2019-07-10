@@ -1466,9 +1466,79 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
 {
 }
 
+std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
+{
+    AssertLockHeld(cs_desc_man);
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
+        KeyMap keys;
+        for (auto key_pair : m_map_crypted_keys) {
+            const CPubKey& pubkey = key_pair.second.first;
+            const std::vector<unsigned char>& crypted_secret = key_pair.second.second;
+            CKey key;
+            DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key);
+            keys[pubkey.GetID()] = key;
+        }
+        return keys;
+    }
+    return m_map_keys;
+}
+
 bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 {
-    return false;
+    if (m_storage.IsLocked()) return false;
+
+    LOCK(cs_desc_man);
+    unsigned int target_size;
+    if (size > 0)
+        target_size = size;
+    else
+        target_size = std::max(gArgs.GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t) 0);
+
+    // Make sure we have everything between range_start and range_end
+    int32_t range_size = descriptor.range_end - descriptor.range_start;
+    int32_t highest_cached_index = descriptor.range_start + descriptor.cache.size();
+    int32_t to_fill = std::max(range_size - (int)descriptor.cache.size(), 0);
+
+    // Fill up the rest of the pool
+    int missing_pool = std::max(std::max((int)target_size, 1) - (descriptor.range_end - descriptor.next_index), 0);
+    to_fill += missing_pool;
+
+    // If the descriptor is not ranged, we actually just want to fill the first cache item
+    if (!descriptor.descriptor->IsRange()) {
+        to_fill = descriptor.cache.size() == 0 ? 1 : 0;
+        missing_pool = 0;
+        descriptor.range_end = 1;
+        descriptor.range_start = 0;
+    }
+
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+
+    WalletBatch batch(m_storage.GetDatabase());
+    uint256 id = GetID();
+    for (int32_t i = highest_cached_index; i < highest_cached_index + to_fill; ++i) {
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        std::vector<unsigned char> cache;
+        if (!descriptor.descriptor->Expand(i, provider, scripts_temp, out_keys, &cache)) return false;
+        // Add all of the scriptPubKeys to the scriptPubKey set
+        for (const CScript& script : scripts_temp) {
+            m_map_script_pub_keys[script] = i;
+        }
+        // Write the cache
+        if (!batch.WriteDescriptorCache(id, i, cache)) {
+            throw std::runtime_error(std::string(__func__) + ": writing cache item failed");
+        }
+        descriptor.cache.push_back(std::move(cache));
+    }
+    descriptor.range_end += missing_pool;
+    batch.WriteDescriptor(GetID(), descriptor);
+
+    // By this point, the cache size should be the size of the entire range
+    assert((uint32_t)descriptor.range_end - (uint32_t)descriptor.range_start == descriptor.cache.size());
+
+    NotifyCanGetAddressesChanged();
+    return true;
 }
 
 void DescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)

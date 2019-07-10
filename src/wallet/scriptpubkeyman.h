@@ -491,6 +491,8 @@ private:
     bool m_decryption_thoroughly_checked = false;
 
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey);
+
+    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
         :   ScriptPubKeyMan(storage),
