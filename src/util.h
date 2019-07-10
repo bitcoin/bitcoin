@@ -298,8 +298,8 @@ public:
     // Forces an arg setting. Called by SoftSetArg() if the arg hasn't already
     // been set. Also called directly in testing.
     void ForceSetArg(const std::string& strArg, const std::string& strValue);
-void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
-void ForceRemoveArg(const std::string& strArg);
+    void ForceSetMultiArgs(const std::string& strArg, const std::vector<std::string>& values);
+    void ForceRemoveArg(const std::string& strArg);
 };
 
 extern ArgsManager gArgs;
