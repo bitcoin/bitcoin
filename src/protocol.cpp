@@ -201,3 +201,30 @@ const std::vector<std::string> &getAllNetMessageTypes()
 {
     return allNetMessageTypesVec;
 }
+
+uint8_t GetShortCommandIDFromCommand(const std::string cmd) {
+    if (cmd == NetMsgType::HEADERS) {
+        return NetMsgType::HEADERS_SHORT_ID;
+    } else if (cmd == NetMsgType::INV) {
+        return NetMsgType::INV_SHORT_ID;
+    } else if (cmd == NetMsgType::PING) {
+        return NetMsgType::PING_SHORT_ID;
+    } else if (cmd == NetMsgType::PONG) {
+       return NetMsgType::PONG_SHORT_ID;;
+    }
+    return 0; //no short command
+}
+bool GetCommandFromShortCommandID(uint8_t shortID, std::string& cmd) {
+    if (shortID == NetMsgType::HEADERS_SHORT_ID) {
+        cmd = NetMsgType::HEADERS;
+    } else if (shortID == NetMsgType::INV_SHORT_ID) {
+        cmd = NetMsgType::INV;
+    } else if (shortID == NetMsgType::PING_SHORT_ID) {
+        cmd = NetMsgType::PING;
+    } else if (shortID == NetMsgType::PONG_SHORT_ID) {
+       cmd = NetMsgType::PONG;
+    } else {
+        return false; //ID not found
+    }
+    return true;
+}

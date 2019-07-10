@@ -14,6 +14,8 @@
 #include <crypto/siphash.h>
 #include <hash.h>
 #include <limitedmap.h>
+#include <net_encryption.h>
+#include <net_message.h>
 #include <netaddress.h>
 #include <policy/feerate.h>
 #include <protocol.h>
@@ -38,6 +40,7 @@
 class CScheduler;
 class CNode;
 class BanMan;
+class EncryptionHandlerInterface;
 
 /** Time between pings automatically sent out for latency probing and keepalive (in seconds). */
 static const int PING_INTERVAL = 2 * 60;
@@ -51,8 +54,6 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_LOCATOR_SZ = 101;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
-/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
-static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** Maximum number of automatic outgoing nodes */
@@ -81,6 +82,8 @@ static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
 static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
+
+static const bool DEFAULT_ALLOW_NET_ENCRYPTION = false;
 
 typedef int64_t NodeId;
 
@@ -196,6 +199,7 @@ public:
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
+    void SendEncryptionHandshakeData(CNode* pnode);
 
     template<typename Callable>
     void ForEachNode(Callable&& func)
@@ -566,54 +570,10 @@ public:
     CAddress addr;
     // Bind address of our side of the connection
     CAddress addrBind;
+    // encryption details
+    bool m_is_encrypted = 0;
+    uint256 m_encryption_session_id;
 };
-
-
-
-
-class CNetMessage {
-private:
-    mutable CHash256 hasher;
-    mutable uint256 data_hash;
-public:
-    bool in_data;                   // parsing header (false) or data (true)
-
-    CDataStream hdrbuf;             // partially received header
-    CMessageHeader hdr;             // complete header
-    unsigned int nHdrPos;
-
-    CDataStream vRecv;              // received message data
-    unsigned int nDataPos;
-
-    int64_t nTime;                  // time (in microseconds) of message receipt.
-
-    CNetMessage(const CMessageHeader::MessageStartChars& pchMessageStartIn, int nTypeIn, int nVersionIn) : hdrbuf(nTypeIn, nVersionIn), hdr(pchMessageStartIn), vRecv(nTypeIn, nVersionIn) {
-        hdrbuf.resize(24);
-        in_data = false;
-        nHdrPos = 0;
-        nDataPos = 0;
-        nTime = 0;
-    }
-
-    bool complete() const
-    {
-        if (!in_data)
-            return false;
-        return (hdr.nMessageSize == nDataPos);
-    }
-
-    const uint256& GetMessageHash() const;
-
-    void SetVersion(int nVersionIn)
-    {
-        hdrbuf.SetVersion(nVersionIn);
-        vRecv.SetVersion(nVersionIn);
-    }
-
-    int readHeader(const char *pch, unsigned int nBytes);
-    int readData(const char *pch, unsigned int nBytes);
-};
-
 
 /** Information about a peer */
 class CNode
@@ -632,7 +592,7 @@ public:
     CCriticalSection cs_vRecv;
 
     CCriticalSection cs_vProcessMsg;
-    std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
+    std::list<NetMessageBaseRef> vProcessMsg GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize{0};
 
     CCriticalSection cs_sendProcessing;
@@ -682,6 +642,7 @@ public:
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv{false};
     std::atomic_bool fPauseSend{false};
+    std::shared_ptr<EncryptionHandlerInterface> m_encryption_handler;
 
 protected:
     mapMsgCmdSize mapSendBytesPerMsgCmd;
@@ -753,7 +714,7 @@ private:
     const ServiceFlags nLocalServices;
     const int nMyStartingHeight;
     int nSendVersion{0};
-    std::list<CNetMessage> vRecvMsg;  // Used only by SocketHandler thread
+    std::list<NetMessageBaseRef> vRecvMsg;  // Used only by SocketHandler thread
 
     mutable CCriticalSection cs_addrName;
     std::string addrName GUARDED_BY(cs_addrName);
@@ -761,6 +722,8 @@ private:
     // Our address, as reported by the peer
     CService addrLocal GUARDED_BY(cs_addrLocal);
     mutable CCriticalSection cs_addrLocal;
+
+    void RecordRecvBytesPerMsgCmd(const std::string& cmd, uint32_t bytes) EXCLUSIVE_LOCKS_REQUIRED(cs_vRecv);
 public:
 
     NodeId GetId() const {

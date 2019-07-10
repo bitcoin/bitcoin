@@ -16,6 +16,7 @@
 #include <crypto/common.h>
 #include <crypto/sha256.h>
 #include <primitives/transaction.h>
+#include <net_encryption.h>
 #include <netbase.h>
 #include <scheduler.h>
 #include <ui_interface.h>
@@ -549,8 +550,25 @@ void CNode::copyStats(CNodeStats &stats)
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
     stats.addrLocal = addrLocalUnlocked.IsValid() ? addrLocalUnlocked.ToString() : "";
+
+    // copy encryption details
+    stats.m_is_encrypted = m_encryption_handler && m_encryption_handler->ShouldCryptMsg();
+    if (stats.m_is_encrypted) {
+        stats.m_encryption_session_id = m_encryption_handler->GetSessionID();
+    }
 }
 #undef X
+
+void CNode::RecordRecvBytesPerMsgCmd(const std::string& cmd, uint32_t bytes)
+{
+    //store received bytes per message command
+    //to prevent a memory DOS, only allow valid commands
+    mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(cmd);
+    if (i == mapRecvBytesPerMsgCmd.end())
+        i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+    assert(i != mapRecvBytesPerMsgCmd.end());
+    i->second += bytes;
+}
 
 bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete)
 {
@@ -560,25 +578,29 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
     nLastRecv = nTimeMicros / 1000000;
     nRecvBytes += nBytes;
     while (nBytes > 0) {
-
         // get current incomplete message, or create a new one
-        if (vRecvMsg.empty() ||
-            vRecvMsg.back().complete())
-            vRecvMsg.push_back(CNetMessage(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
-
-        CNetMessage& msg = vRecvMsg.back();
+        if (vRecvMsg.empty() || vRecvMsg.back()->Complete()) {
+            if (m_encryption_handler && m_encryption_handler->ShouldCryptMsg()) {
+                vRecvMsg.emplace_back(MakeUnique<NetV2Message>(m_encryption_handler, Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            } else if (gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION) && nRecvBytes == nBytes /* first message */) {
+                // first bytes can be a network encryption handshake
+                // use a NetMessageEncryptionHandshake with option to fallback to a standard NetMessage (if valid version message is detected)
+                vRecvMsg.emplace_back(MakeUnique<NetMessageEncryptionHandshake>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            } else {
+                vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+            }
+        }
+        NetMessageBaseRef& msg = vRecvMsg.back();
 
         // absorb network data
-        int handled;
-        if (!msg.in_data)
-            handled = msg.readHeader(pch, nBytes);
-        else
-            handled = msg.readData(pch, nBytes);
+        int handled = msg->Read(pch, nBytes);
 
-        if (handled < 0)
+        if (handled < 0) {
+            LogPrint(BCLog::NET, "Handled no bytes peer=%i, disconnecting\n", GetId());
             return false;
+        }
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        if (msg->GetMessageSize() > MAX_PROTOCOL_MESSAGE_LENGTH) {
             LogPrint(BCLog::NET, "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
@@ -586,16 +608,28 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
         pch += handled;
         nBytes -= handled;
 
-        if (msg.complete()) {
-            //store received bytes per message command
-            //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
-            if (i == mapRecvBytesPerMsgCmd.end())
-                i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
-            assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+        if (msg->Complete()) {
+            RecordRecvBytesPerMsgCmd(msg->GetCommandName(), msg->GetMessageSizeWithHeader());
+            msg->nTime = nTimeMicros;
+            if (msg->m_type == NetMessageType::PLAINTEXT_ENCRYPTION_HANDSHAKE && !msg->VerifyHeader()) {
+                // message contains expected network magic and "version" message command
+                // treat as version message
 
-            msg.nTime = nTimeMicros;
+                // keep old message (unique_ptr) in this scope until the decompose loop is done
+                NetMessageBaseRef oldmsg = std::move(vRecvMsg.back());
+                vRecvMsg.pop_back();
+                vRecvMsg.emplace_back(MakeUnique<NetMessage>(Params().MessageStart(), SER_NETWORK, INIT_PROTO_VERSION));
+
+                // read header and make sure it was valid
+                int read_header_bytes = vRecvMsg.back()->Read(oldmsg->vRecv.data(), oldmsg->vRecv.size());
+                if (read_header_bytes != CMessageHeader::HEADER_SIZE) {
+                    return false;
+                }
+                // read data part
+                if (vRecvMsg.back()->Read(oldmsg->vRecv.data() + read_header_bytes, oldmsg->vRecv.size() - read_header_bytes) != 32 - read_header_bytes) {
+                    return false;
+                }
+            }
             complete = true;
         }
     }
@@ -627,63 +661,6 @@ int CNode::GetSendVersion() const
         return INIT_PROTO_VERSION;
     }
     return nSendVersion;
-}
-
-
-int CNetMessage::readHeader(const char *pch, unsigned int nBytes)
-{
-    // copy data to temporary parsing buffer
-    unsigned int nRemaining = 24 - nHdrPos;
-    unsigned int nCopy = std::min(nRemaining, nBytes);
-
-    memcpy(&hdrbuf[nHdrPos], pch, nCopy);
-    nHdrPos += nCopy;
-
-    // if header incomplete, exit
-    if (nHdrPos < 24)
-        return nCopy;
-
-    // deserialize to CMessageHeader
-    try {
-        hdrbuf >> hdr;
-    }
-    catch (const std::exception&) {
-        return -1;
-    }
-
-    // reject messages larger than MAX_SIZE
-    if (hdr.nMessageSize > MAX_SIZE)
-        return -1;
-
-    // switch state to reading message data
-    in_data = true;
-
-    return nCopy;
-}
-
-int CNetMessage::readData(const char *pch, unsigned int nBytes)
-{
-    unsigned int nRemaining = hdr.nMessageSize - nDataPos;
-    unsigned int nCopy = std::min(nRemaining, nBytes);
-
-    if (vRecv.size() < nDataPos + nCopy) {
-        // Allocate up to 256 KiB ahead, but never more than the total message size.
-        vRecv.resize(std::min(hdr.nMessageSize, nDataPos + nCopy + 256 * 1024));
-    }
-
-    hasher.Write((const unsigned char*)pch, nCopy);
-    memcpy(&vRecv[nDataPos], pch, nCopy);
-    nDataPos += nCopy;
-
-    return nCopy;
-}
-
-const uint256& CNetMessage::GetMessageHash() const
-{
-    assert(complete());
-    if (data_hash.IsNull())
-        hasher.Finalize(data_hash.begin());
-    return data_hash;
 }
 
 size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
@@ -1313,9 +1290,9 @@ void CConnman::SocketHandler()
                     size_t nSizeAdded = 0;
                     auto it(pnode->vRecvMsg.begin());
                     for (; it != pnode->vRecvMsg.end(); ++it) {
-                        if (!it->complete())
+                        if (!it->get()->Complete())
                             break;
-                        nSizeAdded += it->vRecv.size() + CMessageHeader::HEADER_SIZE;
+                        nSizeAdded += it->get()->GetMessageSizeWithHeader();
                     }
                     {
                         LOCK(pnode->cs_vProcessMsg);
@@ -2618,6 +2595,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     addrBind(addrBindIn),
     fInbound(fInboundIn),
     nKeyedNetGroup(nKeyedNetGroupIn),
+    m_encryption_handler(nullptr),
     addrKnown(5000, 0.001),
     filterInventoryKnown(50000, 0.000001),
     id(idIn),
@@ -2655,38 +2633,122 @@ bool CConnman::NodeFullyConnected(const CNode* pnode)
 void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
-    size_t nTotalSize = nMessageSize + CMessageHeader::HEADER_SIZE;
-    LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.command.c_str()), nMessageSize, pnode->GetId());
+    size_t nTotalSize = nMessageSize;
+    size_t serialized_command_size = ::GetSerializeSize(msg.command, PROTOCOL_VERSION);
+    uint8_t cmd_short_id = 0;
+    bool should_crypt = pnode->m_encryption_handler && pnode->m_encryption_handler->ShouldCryptMsg();
+    if (should_crypt) {
+        // the crypted protocol supports short command IDs
+        cmd_short_id = GetShortCommandIDFromCommand(msg.command);
+        if (cmd_short_id != 0) {
+            // if no short ID is available, use a size between 1-12 (always one byte)
+            assert(msg.command.size() <= 12);
+            serialized_command_size = 1;
+        }
 
-    std::vector<unsigned char> serializedHeader;
-    serializedHeader.reserve(CMessageHeader::HEADER_SIZE);
-    uint256 hash = Hash(msg.data.data(), msg.data.data() + nMessageSize);
-    CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), nMessageSize);
-    memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
-
-    CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};
+        // add encrypted header size (AAD + MAC TAG + Varlen-Command + inner-message-size)
+        nTotalSize += pnode->m_encryption_handler->GetAADLen() + pnode->m_encryption_handler->GetTagLen() + serialized_command_size;
+    } else {
+        nTotalSize += CMessageHeader::HEADER_SIZE;
+    }
+    LogPrint(BCLog::NET, "sending%s %s (%d bytes) peer=%d\n", should_crypt ? " encrypted" : "", SanitizeString(msg.command.c_str()), nMessageSize, pnode->GetId());
 
     size_t nBytesSent = 0;
-    {
-        LOCK(pnode->cs_vSend);
-        bool optimisticSend(pnode->vSendMsg.empty());
 
-        //log total amount of bytes per command
-        pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
-        pnode->nSendSize += nTotalSize;
+    if (should_crypt) {
+        std::vector<unsigned char> serialized_envelope;
+        uint32_t envelope_payload_length = serialized_command_size + nMessageSize;
+        serialized_envelope.reserve(3 /* <- packet length */ + serialized_command_size + nMessageSize + pnode->m_encryption_handler->GetTagLen());
 
-        if (pnode->nSendSize > nSendBufferMaxSize)
-            pnode->fPauseSend = true;
-        pnode->vSendMsg.push_back(std::move(serializedHeader));
-        if (nMessageSize)
-            pnode->vSendMsg.push_back(std::move(msg.data));
+        // convert the host 32 bit size into a LE 24bit
+        envelope_payload_length = htole32(envelope_payload_length);
+        uint8_t int24[3];
+        memcpy(int24, &envelope_payload_length, 3);
 
-        // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
+        CVectorWriter vector_writer(SER_NETWORK, INIT_PROTO_VERSION, serialized_envelope, 0, int24[0], int24[1], int24[2]);
+        if (cmd_short_id) {
+            // append the single byte short ID...
+            vector_writer << cmd_short_id;
+        } else {
+            // or the ASCII command string
+            vector_writer << msg.command;
+        }
+        //append the message itself (if there is a message)
+        if (nMessageSize) serialized_envelope.insert(serialized_envelope.end(), msg.data.begin(), msg.data.end());
+
+        //form the AAED (encipher and append tag)
+        if (!pnode->m_encryption_handler->EncryptAppendMAC(serialized_envelope)) {
+            LogPrintf("Encryption failed, peer=%d\n", pnode->GetId());
+            pnode->fDisconnect = true;
+            return;
+        }
+        {
+            LOCK(pnode->cs_vSend);
+            bool optimisticSend(pnode->vSendMsg.empty());
+
+            //log total amount of bytes per command
+            pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+            pnode->nSendSize += nTotalSize;
+
+            if (pnode->nSendSize > nSendBufferMaxSize)
+                pnode->fPauseSend = true;
+            pnode->vSendMsg.push_back(std::move(serialized_envelope));
+
+            // If write queue empty, attempt "optimistic write"
+            if (optimisticSend == true)
+                nBytesSent = SocketSendData(pnode);
+        }
+    } else {
+        std::vector<unsigned char> serializedHeader;
+        serializedHeader.reserve(CMessageHeader::HEADER_SIZE);
+        uint256 hash = Hash(msg.data.data(), msg.data.data() + nMessageSize);
+        CMessageHeader hdr(Params().MessageStart(), msg.command.c_str(), nMessageSize);
+        memcpy(hdr.pchChecksum, hash.begin(), CMessageHeader::CHECKSUM_SIZE);
+
+        CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, serializedHeader, 0, hdr};
+        {
+            LOCK(pnode->cs_vSend);
+            bool optimisticSend(pnode->vSendMsg.empty());
+
+            //log total amount of bytes per command
+            pnode->mapSendBytesPerMsgCmd[msg.command] += nTotalSize;
+            pnode->nSendSize += nTotalSize;
+
+            if (pnode->nSendSize > nSendBufferMaxSize)
+                pnode->fPauseSend = true;
+            pnode->vSendMsg.push_back(std::move(serializedHeader));
+            if (nMessageSize)
+                pnode->vSendMsg.push_back(std::move(msg.data));
+
+            // If write queue empty, attempt "optimistic write"
+            if (optimisticSend == true)
+                nBytesSent = SocketSendData(pnode);
+        }
     }
     if (nBytesSent)
         RecordBytesSent(nBytesSent);
+}
+
+void CConnman::SendEncryptionHandshakeData(CNode* pnode)
+{
+    // initialize encryption, generate ephemeral key
+    assert(pnode->m_encryption_handler == nullptr);
+    pnode->m_encryption_handler = std::make_shared<P2PEncryption>();
+
+    // get encryption handshake data
+    std::vector<unsigned char> handshake_data;
+    pnode->m_encryption_handler->GetHandshakeRequestData(handshake_data);
+
+    // push handshake data
+    LogPrint(BCLog::NET, "Send encryption handshake payload of %d bytes, peer=%d\n", handshake_data.size(), pnode->GetId());
+    {
+        LOCK(pnode->cs_vSend);
+
+        //log total amount of bytes per command
+        pnode->nSendSize += handshake_data.size();
+        pnode->vSendMsg.push_back(std::move(handshake_data));
+        RecordBytesSent(SocketSendData(pnode));
+    }
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)

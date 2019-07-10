@@ -151,6 +151,8 @@ BITCOIN_CORE_H = \
   merkleblock.h \
   miner.h \
   net.h \
+  net_encryption.h \
+  net_message.h \
   net_processing.h \
   netaddress.h \
   netbase.h \
@@ -272,6 +274,8 @@ libbitcoin_server_a_SOURCES = \
   dbwrapper.cpp \
   miner.cpp \
   net.cpp \
+  net_encryption.cpp \
+  net_message.cpp \
   net_processing.cpp \
   node/coin.cpp \
   node/psbt.cpp \
@@ -352,6 +356,8 @@ crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/chacha_poly_aead.h \
+  crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
   crypto/chacha20.cpp \
   crypto/common.h \
@@ -614,7 +620,7 @@ bitcoin_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREAD
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp

@@ -15,6 +15,7 @@
 #include <validation.h>
 #include <merkleblock.h>
 #include <netmessagemaker.h>
+#include <net_encryption.h>
 #include <netbase.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -771,8 +772,19 @@ void PeerLogicValidation::InitializeNode(CNode *pnode) {
         LOCK(cs_main);
         mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, std::move(addrName), pnode->fInbound, pnode->m_manual_connection));
     }
-    if(!pnode->fInbound)
-        PushNodeVersion(pnode, connman, GetTime());
+    if (!pnode->fInbound) {
+        // try to encrypt channels if node has the NODE_P2P_V2 service flag or if it was added manually
+        // TODO: don't try for encryption if it has previously failed
+        LogPrint(BCLog::NET, "Service Flags=%lld peer:%d\n", pnode->nServices, nodeid);
+        LogPrint(BCLog::NET, "Manual Connection=%d peer:%d\n", pnode->m_manual_connection, nodeid);
+        LogPrint(BCLog::NET, "Net encryption=%d peer:%d\n", gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION), nodeid);
+        if (((pnode->nServices & NODE_P2P_V2) || pnode->m_manual_connection) && gArgs.GetBoolArg("-netencryption", DEFAULT_ALLOW_NET_ENCRYPTION)) {
+            // send an encryption request
+            connman->SendEncryptionHandshakeData(pnode);
+        } else {
+            PushNodeVersion(pnode, connman, GetTime());
+        }
+    }
 }
 
 void PeerLogicValidation::FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
@@ -1848,9 +1860,44 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
     }
 }
 
-bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
+bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61, const NetMessageType msg_type)
 {
-    LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+    /* handling encryption handshake */
+    if (pfrom->nVersion == 0 && msg_type == NetMessageType::PLAINTEXT_ENCRYPTION_HANDSHAKE) {
+        LogPrint(BCLog::NET, "Encryption handshake payload received, peer=%i\n", pfrom->GetId());
+
+        std::vector<unsigned char> handshake_msg;
+        handshake_msg.resize(vRecv.size());
+        memcpy(&handshake_msg[0], &vRecv[0], handshake_msg.size());
+
+        if (!pfrom->fInbound && pfrom->m_encryption_handler) {
+            // we have initiated the encryption
+            // the message does now contain the remote pubkey
+            if (!pfrom->m_encryption_handler->ProcessHandshakeRequestData(handshake_msg)) {
+                LogPrint(BCLog::NET, "Invalid handshake received, peer=%d\n", pfrom->GetId());
+                return false;
+            }
+            pfrom->m_encryption_handler->EnableEncryption(false);
+            LogPrint(BCLog::NET, "Enabling encryption as handshake-initiator, sessionID=%s, peer=%d\n", pfrom->m_encryption_handler->GetSessionID().ToString(), pfrom->GetId());
+
+            // set the trigger to send the vesrion
+            PushNodeVersion(pfrom, connman, GetTime());
+        } else {
+            // encryption handshake response
+            connman->SendEncryptionHandshakeData(pfrom);
+            if (!pfrom->m_encryption_handler->ProcessHandshakeRequestData(handshake_msg)) {
+                LogPrint(BCLog::NET, "Invalid handshake received, peer=%d\n", pfrom->GetId());
+                return false;
+            }
+
+            // enable encryption at this point
+            pfrom->m_encryption_handler->EnableEncryption(true);
+            LogPrint(BCLog::NET, "Enabling encryption as handshake-responder, sessionID=%s, peer=%d\n", pfrom->m_encryption_handler->GetSessionID().ToString(), pfrom->GetId());
+        }
+        return true;
+    }
+
+    LogPrint(BCLog::NET, "received%s: %s (%u bytes) peer=%d\n", msg_type == NetMessageType::ENCRYPTED_MSG ? " encrypted" : "", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -2790,7 +2837,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         } // cs_main
 
         if (fProcessBLOCKTXN)
-            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, interruptMsgProc, enable_bip61);
+            return ProcessMessage(pfrom, NetMsgType::BLOCKTXN, blockTxnMsg, nTimeReceived, chainparams, connman, interruptMsgProc, enable_bip61, msg_type);
 
         if (fRevertToHeaderProcessing) {
             // Headers received from HB compact block peers are permitted to be
@@ -3273,48 +3320,44 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     if (pfrom->fPauseSend)
         return false;
 
-    std::list<CNetMessage> msgs;
+    std::list<NetMessageBaseRef> msgs;
     {
         LOCK(pfrom->cs_vProcessMsg);
         if (pfrom->vProcessMsg.empty())
             return false;
         // Just take one message
         msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
-        pfrom->nProcessQueueSize -= msgs.front().vRecv.size() + CMessageHeader::HEADER_SIZE;
+        pfrom->nProcessQueueSize -= msgs.front()->GetMessageSizeWithHeader();
         pfrom->fPauseRecv = pfrom->nProcessQueueSize > connman->GetReceiveFloodSize();
         fMoreWork = !pfrom->vProcessMsg.empty();
     }
-    CNetMessage& msg(msgs.front());
+    NetMessageBaseRef& msg = msgs.front();
+    assert(msg != nullptr);
 
-    msg.SetVersion(pfrom->GetRecvVersion());
+    msg->SetVersion(pfrom->GetRecvVersion());
     // Scan for message start
-    if (memcmp(msg.hdr.pchMessageStart, chainparams.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-        LogPrint(BCLog::NET, "PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg.hdr.GetCommand()), pfrom->GetId());
+    if (!msg->VerifyMessageStart()) {
+        LogPrint(BCLog::NET, "PROCESSMESSAGE: INVALID MESSAGESTART %s peer=%d\n", SanitizeString(msg->GetCommandName()), pfrom->GetId());
         pfrom->fDisconnect = true;
         return false;
     }
 
     // Read header
-    CMessageHeader& hdr = msg.hdr;
-    if (!hdr.IsValid(chainparams.MessageStart()))
-    {
-        LogPrint(BCLog::NET, "PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(hdr.GetCommand()), pfrom->GetId());
+    if (!msg->VerifyHeader()) {
+        LogPrint(BCLog::NET, "PROCESSMESSAGE: ERRORS IN HEADER %s peer=%d\n", SanitizeString(msg->GetCommandName()), pfrom->GetId());
         return fMoreWork;
     }
-    std::string strCommand = hdr.GetCommand();
+    std::string strCommand = msg->GetCommandName();
 
     // Message size
-    unsigned int nMessageSize = hdr.nMessageSize;
+    unsigned int nMessageSize = msg->GetMessageSize();
 
     // Checksum
-    CDataStream& vRecv = msg.vRecv;
-    const uint256& hash = msg.GetMessageHash();
-    if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0)
-    {
-        LogPrint(BCLog::NET, "%s(%s, %u bytes): CHECKSUM ERROR expected %s was %s\n", __func__,
-           SanitizeString(strCommand), nMessageSize,
-           HexStr(hash.begin(), hash.begin()+CMessageHeader::CHECKSUM_SIZE),
-           HexStr(hdr.pchChecksum, hdr.pchChecksum+CMessageHeader::CHECKSUM_SIZE));
+    CDataStream& vRecv = msg->vRecv;
+    std::string possibleError;
+    if (!msg->VerifyChecksum(possibleError)) {
+        LogPrint(BCLog::NET, "%s(%s, %u bytes): %s\n", __func__,
+            SanitizeString(strCommand), nMessageSize, possibleError);
         return fMoreWork;
     }
 
@@ -3322,7 +3365,7 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
     bool fRet = false;
     try
     {
-        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg.nTime, chainparams, connman, interruptMsgProc, m_enable_bip61);
+        fRet = ProcessMessage(pfrom, strCommand, vRecv, msg->nTime, chainparams, connman, interruptMsgProc, m_enable_bip61, msg->m_type);
         if (interruptMsgProc)
             return false;
         if (!pfrom->vRecvGetData.empty())
