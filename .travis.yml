@@ -179,7 +179,7 @@ jobs:
         RUN_FUNCTIONAL_TESTS=false
         RUN_FUZZ_TESTS=true
         GOAL="install"
-        BITCOIN_CONFIG="--disable-wallet --disable-bench --with-utils=no --with-daemon=no --with-libs=no --with-gui=no --enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
+        BITCOIN_CONFIG="--enable-fuzz --with-sanitizers=fuzzer,address CC=clang CXX=clang++"
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
