@@ -1513,7 +1513,69 @@ bool DescriptorScriptPubKeyMan::AddDescriptorKeyWithDB(WalletBatch& batch, const
 
 bool DescriptorScriptPubKeyMan::SetupGeneration(bool force)
 {
-    return false;
+    LOCK(cs_desc_man);
+    assert(m_storage.IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS));
+
+    // Ignore when there is already a descriptor
+    if (descriptor.descriptor || force) {
+        return false;
+    }
+
+    int64_t creation_time = GetTime();
+
+    // Make a seed
+    CKey seed_key;
+    seed_key.MakeNewKey(true);
+    CPubKey seed = seed_key.GetPubKey();
+    assert(seed_key.VerifyPubKey(seed));
+
+    // Get the extended key
+    CExtKey master_key;
+    master_key.SetSeed(seed_key.begin(), seed_key.size());
+    std::string xpub = EncodeExtPubKey(master_key.Neuter());
+    CPubKey master_pubkey = master_key.key.GetPubKey();
+    assert(master_key.key.VerifyPubKey(master_pubkey));
+
+    // Add the seed to the wallet
+    std::string internal_path = internal ? "1" : "0";
+    std::string desc_str;
+    switch (address_type) {
+    case OutputType::LEGACY: {
+        desc_str = "pkh(" + xpub + "/44'/0'/0'/" + internal_path + "/*)";
+        break;
+    }
+    case OutputType::P2SH_SEGWIT: {
+        desc_str = "sh(wpkh(" + xpub + "/49'/0'/0'/" + internal_path + "/*))";
+        break;
+    }
+    case OutputType::BECH32: {
+        desc_str = "wpkh(" + xpub + "/84'/0'/0'/" + internal_path + "/*)";
+        break;
+    }
+    default: assert(false);
+    }
+
+    // Make the descriptor
+    FlatSigningProvider keys;
+    std::string error;
+    std::unique_ptr<Descriptor> desc = Parse(desc_str, keys, error, false);
+    WalletDescriptor w_desc(std::move(desc), creation_time, 0, 0, 0);
+    descriptor = w_desc;
+
+    // Store the master private key and descriptor
+    WalletBatch batch(m_storage.GetDatabase());
+    if (!AddDescriptorKeyWithDB(batch, master_key.key, master_key.key.GetPubKey())) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor private key failed");
+    }
+    if (!batch.WriteDescriptor(GetID(), descriptor)) {
+        throw std::runtime_error(std::string(__func__) + ": writing descriptor failed");
+    }
+
+    // TopUp
+    TopUp();
+
+    m_storage.UnsetBlankWalletFlag(batch);
+    return true;
 }
 
 bool DescriptorScriptPubKeyMan::IsHDEnabled() const
