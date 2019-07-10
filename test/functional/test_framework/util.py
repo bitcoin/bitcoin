@@ -218,8 +218,8 @@ def get_datadir_path(dirname, n):
 def get_auth_cookie(datadir, n):
     user = None
     password = None
-    if os.path.isfile(os.path.join(datadir, "bitcoin.conf")):
-        with open(os.path.join(datadir, "bitcoin.conf"), 'r') as f:
+    if os.path.isfile(os.path.join(datadir, "dash.conf")):
+        with open(os.path.join(datadir, "dash.conf"), 'r') as f:
             for line in f:
                 if line.startswith("rpcuser="):
                     assert user is None # Ensure that there is only one rpcuser line
@@ -268,7 +268,7 @@ def wait_for_bitcoind_start(process, datadir, i, rpchost=None):
         except JSONRPCException as e: # Initialization phase
             if e.error['code'] != -28: # RPC in warmup?
                 raise # unknown JSON RPC exception
-        except ValueError as e: # cookie file not found and no rpcuser or rpcassword. bitcoind still starting
+        except ValueError as e: # cookie file not found and no rpcuser or rpcassword. dashd still starting
             if "No RPC credentials" not in str(e):
                 raise
         time.sleep(0.25)

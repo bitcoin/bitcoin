@@ -28,7 +28,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         with open(os.path.join(self.options.tmpdir+"/node0", "dash.conf"), 'a', encoding='utf8') as f:
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
-        with open(os.path.join(self.options.tmpdir+"/node1", "bitcoin.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(self.options.tmpdir+"/node1", "dash.conf"), 'a', encoding='utf8') as f:
             f.write(rpcuser+"\n")
             f.write(rpcpassword+"\n")
 
