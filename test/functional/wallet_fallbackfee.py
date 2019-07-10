@@ -21,7 +21,6 @@ class WalletRBFTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=["-fallbackfee=0"])
         assert_raises_rpc_error(-4, "Fee estimation failed", lambda: self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         assert_raises_rpc_error(-4, "Fee estimation failed", lambda: self.nodes[0].fundrawtransaction(self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})))
-        assert_raises_rpc_error(-4, "Fee estimation failed", lambda: self.nodes[0].sendfrom("", self.nodes[0].getnewaddress(), 1))
         assert_raises_rpc_error(-6, "Fee estimation failed", lambda: self.nodes[0].sendmany("", {self.nodes[0].getnewaddress(): 1}))
 
 if __name__ == '__main__':
