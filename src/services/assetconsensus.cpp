@@ -814,35 +814,16 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
     }          
     if (tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN)
     {     
-        uint32_t nBurnAsset;
-        CAmount nBurnAmount;
+        const uint32_t &nBurnAsset = theAssetAllocation.assetAllocationTuple.nAsset;
+        const uint32_t &nBurnAmount = theAssetAllocation.listSendingAllocationAmounts[0].second;
         if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN){
-            nBurnAsset = storedSenderAllocationRef.assetAllocationTuple.nAsset;
             if(!fUnitTest && nBurnAsset != Params().GetConsensus().nSYSXAsset)
             {
                 errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid Syscoin Bridge Asset GUID specified");
                 return error(errorMessage.c_str());
-            }
-            nBurnAmount = theAssetAllocation.listSendingAllocationAmounts[0].second;             
+            }         
         }
-        else if(tx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM){
-            std::vector<unsigned char> vchEthAddress;
-            CWitnessAddress burnWitnessAddress;
-            if(!GetSyscoinBurnData(tx, nBurnAsset, burnWitnessAddress, nBurnAmount, vchEthAddress)){
-                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Cannot unserialize data inside of this transaction relating to an assetallocationburn");
-                return error(errorMessage.c_str());
-            }   
-            if(burnWitnessAddress != user1)
-            {
-                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Mismatching deserailized witness address");
-                return error(errorMessage.c_str());
-            }
-            if(storedSenderAllocationRef.assetAllocationTuple.nAsset != nBurnAsset)
-            {
-                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid asset details entered in the script output");
-                return error(errorMessage.c_str());
-            }
-        }
+       
         if(theAssetAllocation.listSendingAllocationAmounts[0].first != CWitnessAddress(0, vchFromString("burn")))
         {
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1010 - " + _("Invalid burn address found in transaction");
