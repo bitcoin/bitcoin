@@ -25,14 +25,9 @@ const std::string ADDRESS_BCRT1_UNSPENDABLE = "sysrt1qa4vdyra69l8j30wg6g83kgksx3
 std::string getnewaddress(CWallet& w)
 {
     constexpr auto output_type = OutputType::BECH32;
-
-    CPubKey new_key;
-    if (!w.GetKeyFromPool(new_key)) assert(false);
-
-    w.LearnRelatedScripts(new_key, output_type);
-    const auto dest = GetDestinationForKey(new_key, output_type);
-
-    w.SetAddressBook(dest, /* label */ "", "receive");
+    CTxDestination dest;
+    std::string error;
+    if (!w.GetNewDestination(output_type, "", dest, error)) assert(false);
 
     return EncodeDestination(dest);
 }
