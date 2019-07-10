@@ -1009,6 +1009,7 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag4)
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "decoderawtransaction" , "\"" + assetHex + "\""));
     string assettxid = find_value(r.get_obj(), "txid").get_str();
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node2","sendrawtransaction" , "\"" + burnHex + "\""));
+    // ensure duplicate input is detected
     MilliSleep(500);
     BOOST_CHECK_NO_THROW(r = CallExtRPC("node3", "sendrawtransaction" , "\"" +  assetHex + "\""));
     MilliSleep(500);
