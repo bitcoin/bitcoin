@@ -14,6 +14,7 @@ Test the following RPCs:
     - getchaintxstats
     - getnetworkhashps
     - verifychain
+    - getblockbyheight
 
 Tests correspond to code in rpc/blockchain.cpp.
 """
@@ -62,6 +63,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getnetworkhashps()
         self._test_stopatheight()
         self._test_waitforblockheight()
+        self._test_getblockbyheight()
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
@@ -306,6 +308,13 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+
+    def _test_getblockbyheight(self):
+        self.log.info("Test getblockbyheight")
+        node = self.nodes[0]
+        node.add_p2p_connection(P2PInterface())
+        assert_equal(node.getblock(node.getblockhash(20)), node.getblockbyheight(20))
+
 
 
 if __name__ == '__main__':
