@@ -1502,7 +1502,44 @@ void LegacyScriptPubKeyMan::SetType(OutputType type, bool internal) {}
 
 bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
-    return false;
+    // Returns true if this descriptor supports getting new addresses. Conditions where we may be unable to fetch them (e.g. locked) are caught later
+    if (!CanGetAddresses(m_internal)) {
+        error = "No addresses available";
+        return false;
+    }
+    {
+        LOCK(cs_desc_man);
+        assert(m_wallet_descriptor.descriptor->IsSingleType()); // This is a combo descriptor which should not be an active descriptor
+        if (type != m_address_type) {
+            throw std::runtime_error(std::string(__func__) + ": Types are inconsistent");
+        }
+
+        TopUp();
+
+        // Get the scriptPubKey from the descriptor
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        if (m_wallet_descriptor.range_end <= m_max_cached_index && !TopUp(1)) {
+            // We can't generate anymore keys
+            error = "Error: Keypool ran out, please call keypoolrefill first";
+            return false;
+        }
+        if (!m_wallet_descriptor.descriptor->ExpandFromCache(m_wallet_descriptor.next_index, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
+            // We can't generate anymore keys
+            error = "Error: Keypool ran out, please call keypoolrefill first";
+            return false;
+        }
+
+        Optional<OutputType> out_script_type = m_wallet_descriptor.descriptor->GetOutputType();
+        if (out_script_type && out_script_type == type) {
+            ExtractDestination(scripts_temp[0], dest);
+        } else {
+            throw std::runtime_error(std::string(__func__) + ": Types are inconsistent. Stored type does not match type of newly generated address");
+        }
+        m_wallet_descriptor.next_index++;
+        WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), m_wallet_descriptor);
+        return true;
+    }
 }
 
 isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
