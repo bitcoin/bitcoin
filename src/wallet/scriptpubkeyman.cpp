@@ -1533,9 +1533,99 @@ void DescriptorScriptPubKeyMan::ReturnDestination(int64_t index, bool internal, 
 {
 }
 
+std::map<CKeyID, CKey> DescriptorScriptPubKeyMan::GetKeys() const
+{
+    AssertLockHeld(cs_desc_man);
+    if (m_storage.HasEncryptionKeys() && !m_storage.IsLocked()) {
+        KeyMap keys;
+        for (auto key_pair : m_map_crypted_keys) {
+            const CPubKey& pubkey = key_pair.second.first;
+            const std::vector<unsigned char>& crypted_secret = key_pair.second.second;
+            CKey key;
+            DecryptKey(m_storage.GetEncryptionKey(), crypted_secret, pubkey, key);
+            keys[pubkey.GetID()] = key;
+        }
+        return keys;
+    }
+    return m_map_keys;
+}
+
 bool DescriptorScriptPubKeyMan::TopUp(unsigned int size)
 {
-    return false;
+    LOCK(cs_desc_man);
+    unsigned int target_size;
+    if (size > 0) {
+        target_size = size;
+    } else {
+        target_size = std::max(gArgs.GetArg("-keypool", DEFAULT_KEYPOOL_SIZE), (int64_t) 1);
+    }
+
+    // Calculate the new range_end
+    int32_t new_range_end = std::max(m_wallet_descriptor.next_index + (int32_t)target_size, m_wallet_descriptor.range_end);
+
+    // If the descriptor is not ranged, we actually just want to fill the first cache item
+    if (!m_wallet_descriptor.descriptor->IsRange()) {
+        new_range_end = 1;
+        m_wallet_descriptor.range_end = 1;
+        m_wallet_descriptor.range_start = 0;
+    }
+
+    FlatSigningProvider provider;
+    provider.keys = GetKeys();
+
+    WalletBatch batch(m_storage.GetDatabase());
+    uint256 id = GetID();
+    for (int32_t i = m_max_cached_index + 1; i < new_range_end; ++i) {
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        DescriptorCache temp_cache;
+        // Maybe we have a cached xpub and we can expand from the cache first
+        if (!m_wallet_descriptor.descriptor->ExpandFromCache(i, m_wallet_descriptor.cache, scripts_temp, out_keys)) {
+            if (!m_wallet_descriptor.descriptor->Expand(i, provider, scripts_temp, out_keys, &temp_cache)) return false;
+        }
+        // Add all of the scriptPubKeys to the scriptPubKey set
+        for (const CScript& script : scripts_temp) {
+            m_map_script_pub_keys[script] = i;
+        }
+        // Write the cache
+        for (const auto& parent_xpub_pair : temp_cache.GetCachedParentExtPubKeys()) {
+            CExtPubKey xpub;
+            if (m_wallet_descriptor.cache.GetCachedParentExtPubKey(parent_xpub_pair.first, xpub)) {
+                if (xpub != parent_xpub_pair.second) {
+                    throw std::runtime_error(std::string(__func__) + ": New cached parent xpub does not match already cached parent xpub");
+                }
+                continue;
+            }
+            if (!batch.WriteDescriptorParentCache(parent_xpub_pair.second, id, parent_xpub_pair.first)) {
+                throw std::runtime_error(std::string(__func__) + ": writing cache item failed");
+            }
+            m_wallet_descriptor.cache.CacheParentExtPubKey(parent_xpub_pair.first, parent_xpub_pair.second);
+        }
+        for (const auto& derived_xpub_map_pair : temp_cache.GetCachedDerivedExtPubKeys()) {
+            for (const auto& derived_xpub_pair : derived_xpub_map_pair.second) {
+                CExtPubKey xpub;
+                if (m_wallet_descriptor.cache.GetCachedDerivedExtPubKey(derived_xpub_map_pair.first, derived_xpub_pair.first, xpub)) {
+                    if (xpub != derived_xpub_pair.second) {
+                        throw std::runtime_error(std::string(__func__) + ": New cached derived xpub does not match already cached derived xpub");
+                    }
+                    continue;
+                }
+                if (!batch.WriteDescriptorDerivedCache(derived_xpub_pair.second, id, derived_xpub_map_pair.first, derived_xpub_pair.first)) {
+                    throw std::runtime_error(std::string(__func__) + ": writing cache item failed");
+                }
+                m_wallet_descriptor.cache.CacheDerivedExtPubKey(derived_xpub_map_pair.first, derived_xpub_pair.first, derived_xpub_pair.second);
+            }
+        }
+        m_max_cached_index++;
+    }
+    m_wallet_descriptor.range_end = new_range_end;
+    batch.WriteDescriptor(GetID(), m_wallet_descriptor);
+
+    // By this point, the cache size should be the size of the entire range
+    assert(m_wallet_descriptor.range_end - 1 == m_max_cached_index);
+
+    NotifyCanGetAddressesChanged();
+    return true;
 }
 
 void DescriptorScriptPubKeyMan::MarkUnusedAddresses(const CScript& script)
@@ -1753,6 +1843,7 @@ void DescriptorScriptPubKeyMan::SetCache(const DescriptorCache& cache)
             }
             m_map_script_pub_keys[script] = i;
         }
+        m_max_cached_index++;
     }
 }
 

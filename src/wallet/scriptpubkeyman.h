@@ -492,6 +492,7 @@ private:
     using KeyMap = std::map<CKeyID, CKey>;
 
     ScriptPubKeyMap m_map_script_pub_keys GUARDED_BY(cs_desc_man);
+    int32_t m_max_cached_index = -1;
 
     OutputType m_address_type;
     bool m_internal;
@@ -505,6 +506,8 @@ private:
     bool m_decryption_thoroughly_checked = false;
 
     bool AddDescriptorKeyWithDB(WalletBatch& batch, const CKey& key, const CPubKey &pubkey);
+
+    KeyMap GetKeys() const EXCLUSIVE_LOCKS_REQUIRED(cs_desc_man);
 public:
     DescriptorScriptPubKeyMan(WalletStorage& storage, WalletDescriptor& descriptor)
         :   ScriptPubKeyMan(storage),
@@ -526,6 +529,10 @@ public:
     bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
+    // Tops up the descriptor cache and m_map_script_pub_keys. The cache is stored in the wallet file
+    // and is used to expand the descriptor in GetNewDestination. DescriptorScriptPubKeyMan relies
+    // more on ephemeral data than LegacyScriptPubKeyMan. For wallets using unhardened derivation
+    // (with or without private keys), the "keypool" is a single xpub.
     bool TopUp(unsigned int size = 0) override;
 
     void MarkUnusedAddresses(const CScript& script) override;
