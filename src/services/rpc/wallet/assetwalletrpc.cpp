@@ -973,7 +973,7 @@ UniValue assetallocationmint(const JSONRPCRequest& request) {
     }
 
     int nBlocksLeftToEnable = (Params().GetConsensus().nBridgeStartBlock+500) - ::ChainActive().Tip()->nHeight;
-    if(nBlocksLeftToEnable > 0)
+    if(!fUnitTest && nBlocksLeftToEnable > 0)
     {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 5502 - " + _("Bridge is not enabled yet. Blocks left to enable: ") + itostr(nBlocksLeftToEnable));
     }
