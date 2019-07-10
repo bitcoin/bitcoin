@@ -1431,7 +1431,61 @@ void LegacyScriptPubKeyMan::SetType(OutputType type, bool internal) {}
 
 bool DescriptorScriptPubKeyMan::GetNewDestination(const OutputType type, CTxDestination& dest, std::string& error)
 {
-    return false;
+    if (!CanGetAddresses(internal)) {
+        error = "No private keys available";
+        return false;
+    }
+    {
+        LOCK(cs_desc_man);
+        if (descriptor.descriptor->IsSingleType() && type != address_type) {
+            throw std::runtime_error(std::string(__func__) + ": Types are inconsistent");
+        }
+
+        TopUp();
+
+        // Get the scriptPubKey from the descriptor
+        FlatSigningProvider out_keys;
+        std::vector<CScript> scripts_temp;
+        if (descriptor.cache.size() <= (unsigned int)(descriptor.next_index - descriptor.range_start) && !TopUp(1)) {
+            // We can't generate anymore keys
+            error = "Error: Keypool ran out, please call keypoolrefill first";
+            return false;
+        }
+        descriptor.descriptor->ExpandFromCache(descriptor.next_index, descriptor.cache[descriptor.next_index - descriptor.range_start], scripts_temp, out_keys);
+
+        if (descriptor.descriptor->IsSingleType()) {
+            Optional<OutputType> out_script_type = DetermineOutputType(scripts_temp[0], out_keys);
+            if (out_script_type && out_script_type == type) {
+                ExtractDestination(scripts_temp[0], dest);
+            } else {
+                throw std::runtime_error(std::string(__func__) + ": Types are inconsistent. Stored type does not match type of newly generated address");
+            }
+        } else {
+            // This is a combo descriptor, get the correct type
+            bool found = false;
+            for (auto script : scripts_temp) {
+                Optional<OutputType> out_script_type = DetermineOutputType(script, out_keys);
+                if (out_script_type) {
+                    if (out_script_type == type) {
+                        found = true;
+                    }
+                } else {
+                    throw std::runtime_error(std::string(__func__) + ": Types are inconsistent. Stored type does not match type of newly generated address");
+                }
+
+                if (found) {
+                    ExtractDestination(script, dest);
+                    break;
+                }
+            }
+            if (!found) {
+                throw std::runtime_error(std::string(__func__) + ": Types are inconsistent. Combo descriptor did not give an address with the expected type");
+            }
+        }
+        descriptor.next_index++;
+        WalletBatch(m_storage.GetDatabase()).WriteDescriptor(GetID(), descriptor);
+        return true;
+    }
 }
 
 isminetype DescriptorScriptPubKeyMan::IsMine(const CScript& script) const
