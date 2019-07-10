@@ -178,7 +178,7 @@ UniValue syscointxfund(CWallet* const pwallet, const JSONRPCRequest& request) {
     CCoinControl coin_control;
     tx = txIn;
     tx.vin.clear();
-    if(!outPointLastSender.IsNull()){
+    if(!outPointLastSender.IsNull() && ::ChainActive().Tip()->nHeight >= Params().GetConsensus().nBridgeStartBlock){
         const Coin& coin = view.AccessCoin(outPointLastSender);
         txIn.vin.push_back(CTxIn(outPointLastSender, coin.out.scriptPubKey));
     }
