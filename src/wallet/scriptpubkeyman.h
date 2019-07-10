@@ -532,6 +532,9 @@ public:
 
     bool IsHDEnabled() const override;
 
+    //! Setup descriptors based on the given CExtkey
+    bool SetupDescriptorGeneration(const CExtKey& master_key);
+
     bool HavePrivateKeys() const override;
 
     int64_t GetOldestKeyPoolTime() const override;
