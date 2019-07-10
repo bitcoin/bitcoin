@@ -23,16 +23,11 @@ const std::string ADDRESS_BCRT1_UNSPENDABLE = "bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqq
 #ifdef ENABLE_WALLET
 std::string getnewaddress(CWallet& w)
 {
-    auto spk_man = w.GetLegacyScriptPubKeyMan();
-    assert(spk_man != nullptr);
+    CTxDestination dest;
+    std::string error;
+    if (!w.GetNewDestination("", dest, error)) assert(false);
 
-    CPubKey new_key;
-    if (!spk_man->GetKeyFromPool(new_key, false)) assert(false);
-
-    CKeyID keyID = new_key.GetID();
-    w.SetAddressBook(keyID, /* label */ "", "receive");
-
-    return EncodeDestination(keyID);
+    return EncodeDestination(dest);
 }
 
 void importaddress(CWallet& wallet, const std::string& address)

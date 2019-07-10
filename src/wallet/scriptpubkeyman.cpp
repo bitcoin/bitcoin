@@ -12,6 +12,25 @@
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/wallet.h>
 
+bool LegacyScriptPubKeyMan::GetNewDestination(const std::string label, CTxDestination& dest, std::string& error)
+{
+    LOCK(cs_wallet);
+    error.clear();
+    TopUpKeyPool();
+
+    // Generate a new key that is added to wallet
+    CPubKey new_key;
+    if (!GetKeyFromPool(new_key, false)) {
+        error = "Error: Keypool ran out, please call keypoolrefill first";
+        return false;
+    }
+    //LearnRelatedScripts(new_key);
+    dest = new_key.GetID();
+
+    m_wallet.SetAddressBook(dest, label, "receive");
+    return true;
+}
+
 typedef std::vector<unsigned char> valtype;
 
 namespace {

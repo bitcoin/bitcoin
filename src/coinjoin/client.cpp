@@ -1509,12 +1509,12 @@ bool CCoinJoinClientSession::CreateCollateralTransaction(CMutableTransaction& tx
     if (txout.nValue >= CCoinJoin::GetCollateralAmount() * 2) {
         // make our change address
         CScript scriptChange;
-        CPubKey vchPubKey;
-        CReserveKey reservekey(&mixingWallet);
-        bool success = reservekey.GetReservedKey(vchPubKey, true);
+        CTxDestination dest;
+        ReserveDestination reserveDest(&mixingWallet);
+        bool success = reserveDest.GetReservedDestination(dest, true);
         assert(success); // should never fail, as we just unlocked
-        scriptChange = GetScriptForDestination(vchPubKey.GetID());
-        reservekey.KeepKey();
+        scriptChange = GetScriptForDestination(dest);
+        reserveDest.KeepDestination();
         // return change
         txCollateral.vout.emplace_back(txout.nValue - CCoinJoin::GetCollateralAmount(), scriptChange);
     } else { // txout.nValue < CCoinJoin::GetCollateralAmount() * 2

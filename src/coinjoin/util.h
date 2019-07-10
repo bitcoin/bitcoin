@@ -13,8 +13,8 @@ struct bilingual_str;
 class CKeyHolder
 {
 private:
-    CReserveKey reserveKey;
-    CPubKey pubKey;
+    ReserveDestination reserveDestination;
+    CTxDestination dest;
 
 public:
     explicit CKeyHolder(CWallet* pwalletIn);
@@ -40,14 +40,14 @@ public:
 
 /**
  * @brief Used by CTransactionBuilder to represent its transaction outputs.
- * It creates a CReserveKey for the given CWallet as destination.
+ * It creates a ReserveDestination for the given CWallet as destination.
  */
 class CTransactionBuilderOutput
 {
     /// Used for amount updates
     CTransactionBuilder* pTxBuilder{nullptr};
     /// Reserve key where the amount of this output will end up
-    CReserveKey key;
+    ReserveDestination dest;
     /// Amount this output will receive
     CAmount nAmount{0};
     /// ScriptPubKey of this output
@@ -64,9 +64,9 @@ public:
     /// Try update the amount of this output. Returns true if it was successful and false if not (e.g. insufficient amount left).
     bool UpdateAmount(CAmount nAmount);
     /// Tell the wallet to remove the key used by this output from the keypool
-    void KeepKey() { key.KeepKey(); }
+    void KeepKey() { dest.KeepDestination(); }
     /// Tell the wallet to return the key used by this output to the keypool
-    void ReturnKey() { key.ReturnKey(); }
+    void ReturnKey() { dest.ReturnDestination(); }
 };
 
 /**
@@ -83,7 +83,7 @@ class CTransactionBuilder
     /// Dummy since we anyway use tallyItem's destination as change destination in coincontrol.
     /// Its a member just to make sure ReturnKey can be called in destructor just in case it gets generated/kept
     /// somewhere in CWallet code.
-    CReserveKey dummyReserveKey;
+    ReserveDestination dummyReserveDestination;
     /// Contains all utxos available to generate this transactions. They are all from the same address.
     CompactTallyItem tallyItem;
     /// Contains the number of bytes required for a transaction with only the inputs of tallyItems, no outputs
