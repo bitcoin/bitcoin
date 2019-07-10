@@ -2685,7 +2685,7 @@ static UniValue createwallet(const JSONRPCRequest& request)
     std::string error;
     std::string warning;
     WalletCreationStatus status;
-    std::shared_ptr<CWallet> wallet = CreateWallet(*g_rpc_interfaces->chain, request.params[0].get_str(), error, warning, status, passphrase, flags);
+    std::shared_ptr<CWallet> wallet = CreateWallet(*g_rpc_interfaces->chain, passphrase, flags, request.params[0].get_str(), error, warning, status);
     if (status == WalletCreationStatus::CREATION_FAILED) {
         throw JSONRPCError(RPC_WALLET_ERROR, error);
     } else if (status == WalletCreationStatus::ENCRYPTION_FAILED) {
