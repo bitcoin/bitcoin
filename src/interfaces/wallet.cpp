@@ -36,7 +36,7 @@ namespace {
 class PendingWalletTxImpl : public PendingWalletTx
 {
 public:
-    explicit PendingWalletTxImpl(CWallet& wallet) : m_wallet(wallet), m_key(&wallet) {}
+    explicit PendingWalletTxImpl(CWallet& wallet) : m_wallet(wallet), m_dest(&wallet) {}
 
     const CTransaction& get() override { return *m_tx; }
 
@@ -47,7 +47,7 @@ public:
         auto locked_chain = m_wallet.chain().lock();
         LOCK(m_wallet.cs_wallet);
         CValidationState state;
-        if (!m_wallet.CommitTransaction(m_tx, std::move(value_map), std::move(order_form), m_key, state)) {
+        if (!m_wallet.CommitTransaction(m_tx, std::move(value_map), std::move(order_form), m_dest, state)) {
             reject_reason = state.GetRejectReason();
             return false;
         }
@@ -56,7 +56,7 @@ public:
 
     CTransactionRef m_tx;
     CWallet& m_wallet;
-    CReserveKey m_key;
+    ReserveDestination m_dest;
 };
 
 //! Construct wallet tx struct.
@@ -140,9 +140,11 @@ public:
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
     std::string getWalletName() override { return m_wallet->GetName(); }
-    bool getKeyFromPool(bool internal, CPubKey& pub_key) override
+    bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) override
     {
-        return m_wallet->GetKeyFromPool(pub_key, internal);
+        LOCK(m_wallet->cs_wallet);
+        std::string error;
+        return m_wallet->GetNewDestination(type, label, dest, error);
     }
     bool getPubKey(const CKeyID& address, CPubKey& pub_key) override { return m_wallet->GetPubKey(address, pub_key); }
     bool getPrivKey(const CKeyID& address, CKey& key) override { return m_wallet->GetKey(address, key); }
@@ -236,7 +238,7 @@ public:
         auto locked_chain = m_wallet->chain().lock();
         LOCK(m_wallet->cs_wallet);
         auto pending = MakeUnique<PendingWalletTxImpl>(*m_wallet);
-        if (!m_wallet->CreateTransaction(*locked_chain, recipients, pending->m_tx, pending->m_key, fee, change_pos,
+        if (!m_wallet->CreateTransaction(*locked_chain, recipients, pending->m_tx, pending->m_dest, fee, change_pos,
                 fail_reason, coin_control, sign)) {
             return {};
         }
