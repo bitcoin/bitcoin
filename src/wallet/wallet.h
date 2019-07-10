@@ -49,7 +49,7 @@ std::vector<std::shared_ptr<CWallet>> GetWallets();
 std::shared_ptr<CWallet> GetWallet(const std::string& name);
 std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const WalletLocation& location, std::string& error, std::string& warning);
 
-enum WalletCreationStatus {
+enum class WalletCreationStatus {
     SUCCESS,
     CREATION_FAILED,
     ENCRYPTION_FAILED
