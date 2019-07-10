@@ -87,11 +87,6 @@ public:
     public:
         virtual ~Lock() {}
 
-        //! Get current chain height, not including genesis block (returns 0 if
-        //! chain only contains genesis block, nullopt if chain does not contain
-        //! any blocks).
-        virtual Optional<int> getHeight() = 0;
-
         //! Get block height above genesis block. Returns 0 for genesis block,
         //! 1 for following block, and so on. Returns nullopt for a block not
         //! included in the current chain.
@@ -134,6 +129,11 @@ public:
     //! Return Lock interface. Chain is locked when this is called, and
     //! unlocked when the returned interface is freed.
     virtual std::unique_ptr<Lock> lock(bool try_lock = false) = 0;
+
+    //! Get current chain height, not including genesis block (returns 0 if
+    //! chain only contains genesis block, nullopt if chain does not contain
+    //! any blocks)
+    virtual Optional<int> getHeight() = 0;
 
     //! Return whether node has the block and optionally return block metadata
     //! or contents.
