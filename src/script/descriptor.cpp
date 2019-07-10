@@ -512,6 +512,7 @@ protected:
 public:
     AddressDescriptor(CTxDestination destination) : DescriptorImpl({}, {}, "addr"), m_destination(std::move(destination)) {}
     bool IsSolvable() const final { return false; }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed raw(H) descriptor. */
@@ -524,6 +525,7 @@ protected:
 public:
     RawDescriptor(CScript script) : DescriptorImpl({}, {}, "raw"), m_script(std::move(script)) {}
     bool IsSolvable() const final { return false; }
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed pk(P) descriptor. */
@@ -533,6 +535,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>& keys, const CScript*, FlatSigningProvider&) const override { return Vector(GetScriptForRawPubKey(keys[0])); }
 public:
     PKDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "pk") {}
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed pkh(P) descriptor. */
@@ -547,6 +550,7 @@ protected:
     }
 public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "pkh") {}
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed wpkh(P) descriptor. */
@@ -561,6 +565,7 @@ protected:
     }
 public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "wpkh") {}
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed combo(P) descriptor. */
@@ -584,6 +589,7 @@ protected:
     }
 public:
     ComboDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "combo") {}
+    bool IsSingleType() const final { return false; }
 };
 
 /** A parsed multi(...) or sortedmulti(...) descriptor */
@@ -603,6 +609,7 @@ protected:
     }
 public:
     MultisigDescriptor(int threshold, std::vector<std::unique_ptr<PubkeyProvider>> providers, bool sorted = false) : DescriptorImpl(std::move(providers), {}, sorted ? "sortedmulti" : "multi"), m_threshold(threshold), m_sorted(sorted) {}
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed sh(...) descriptor. */
@@ -612,6 +619,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Vector(GetScriptForDestination(ScriptHash(*script))); }
 public:
     SHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
+    bool IsSingleType() const final { return true; }
 };
 
 /** A parsed wsh(...) descriptor. */
@@ -621,6 +629,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Vector(GetScriptForDestination(WitnessV0ScriptHash(*script))); }
 public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
+    bool IsSingleType() const final { return true; }
 };
 
 ////////////////////////////////////////////////////////////////////////////
