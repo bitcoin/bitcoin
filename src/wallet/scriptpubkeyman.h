@@ -512,7 +512,6 @@ public:
     bool Encrypt(const CKeyingMaterial& master_key, WalletBatch* batch) override;
 
     bool GetReservedDestination(const OutputType type, bool internal, CTxDestination& address, int64_t& index, CKeyPool& keypool) override;
-    void KeepDestination(int64_t index) override;
     void ReturnDestination(int64_t index, bool internal, const CTxDestination& addr) override;
 
     bool TopUp(unsigned int size = 0) override;
