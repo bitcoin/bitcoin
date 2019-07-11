@@ -33,7 +33,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         outputs = {}
         for i in range(num_outputs):
             outputs[node.getnewaddress()] = send_value
-        rawtx = node.createrawtransaction(inputs, outputs)
+        rawtx = node.createrawtransaction(inputs, outputs, 0, True)
         signedtx = node.signrawtransactionwithwallet(rawtx)
         txid = node.sendrawtransaction(signedtx['hex'])
         fulltx = node.getrawtransaction(txid, 1)
@@ -75,9 +75,15 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # ...especially if its > 40k weight
         assert_raises_rpc_error(-26, "too-long-mempool-chain, too many descendants", self.chain_transaction, self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 350)
         # But not if it chains directly off the first transaction
-        self.chain_transaction(self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 1)
+        (replacable_txid, replacable_orig_value) = self.chain_transaction(self.nodes[0], [chain[0][0]], [1], chain[0][1], fee, 1)
         # and the second chain should work just fine
         self.chain_transaction(self.nodes[0], [second_chain], [0], second_chain_value, fee, 1)
+
+        # Make sure we can RBF the chain which used our carve-out rule
+        second_tx_outputs = {self.nodes[0].getrawtransaction(replacable_txid, True)["vout"][0]['scriptPubKey']['addresses'][0]: replacable_orig_value - (Decimal(1) / Decimal(100))}
+        second_tx = self.nodes[0].createrawtransaction([{'txid': chain[0][0], 'vout': 1}], second_tx_outputs)
+        signed_second_tx = self.nodes[0].signrawtransactionwithwallet(second_tx)
+        self.nodes[0].sendrawtransaction(signed_second_tx['hex'])
 
         # Finally, check that we added two transactions
         assert_equal(len(self.nodes[0].getrawmempool(True)), MAX_ANCESTORS + 3)
