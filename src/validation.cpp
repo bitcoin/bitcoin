@@ -357,12 +357,12 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
         // ignore validation errors in resurrected transactions
         CValidationState stateDummy;
         if (!fAddToMempool || (*it)->IsCoinBase() ||
-            !AcceptToMemoryPool(mempool, stateDummy, *it, nullptr /* pfMissingInputs */,
-                                nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */)) {
+            !AcceptToMemoryPool(::mempool, stateDummy, *it, nullptr /* pfMissingInputs */,
+                nullptr /* plTxnReplaced */, true /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
-            mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
-        } else if (mempool.exists((*it)->GetHash())) {
+            ::mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
+        } else if (::mempool.exists((*it)->GetHash())) {
             vHashUpdate.push_back((*it)->GetHash());
         }
         ++it;
@@ -373,12 +373,12 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
     // previously-confirmed transactions back to the mempool.
     // UpdateTransactionsFromBlock finds descendants of any transactions in
     // the disconnectpool that were added back and cleans up the mempool state.
-    mempool.UpdateTransactionsFromBlock(vHashUpdate);
+    ::mempool.UpdateTransactionsFromBlock(vHashUpdate);
 
     // We also need to remove any now-immature transactions
-    mempool.removeForReorg(pcoinsTip.get(), ::ChainActive().Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
+    ::mempool.removeForReorg(pcoinsTip.get(), ::ChainActive().Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     // Re-limit mempool size, in case we added any transactions
-    LimitMempoolSize(mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+    LimitMempoolSize(::mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 }
 
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
@@ -618,9 +618,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         // that we have the set of all ancestors we can detect this
         // pathological case by making sure setConflicts and setAncestors don't
         // intersect.
-        for (CTxMemPool::txiter ancestorIt : setAncestors)
-        {
-            const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
+        for (const auto& ancestorIt : setAncestors) {
+            const uint256 hashAncestor = pool.GetEntry(ancestorIt).GetTx().GetHash();
             if (setConflicts.count(hashAncestor))
             {
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-spends-conflicting-tx",
@@ -662,7 +661,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                 // mean high feerate children are ignored when deciding whether
                 // or not to replace, we do require the replacement to pay more
                 // overall fees too, mitigating most cases.
-                CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
+                CFeeRate oldFeeRate(pool.GetEntry(mi).GetModifiedFee(), pool.GetEntry(mi).GetTxSize());
                 if (newFeeRate <= oldFeeRate)
                 {
                     return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_INSUFFICIENTFEE, "insufficient fee",
@@ -672,12 +671,11 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                                   oldFeeRate.ToString()));
                 }
 
-                for (const CTxIn &txin : mi->GetTx().vin)
-                {
+                for (const CTxIn& txin : pool.GetEntry(mi).GetTx().vin) {
                     setConflictsParents.insert(txin.prevout.hash);
                 }
 
-                nConflictingCount += mi->GetCountWithDescendants();
+                nConflictingCount += pool.GetEntry(mi).GetCountWithDescendants();
             }
             // This potentially overestimates the number of actual descendants
             // but we just want to be conservative to avoid doing too much
@@ -685,12 +683,12 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             if (nConflictingCount <= maxDescendantsToVisit) {
                 // If not too many to replace, then calculate the set of
                 // transactions that would have to be evicted
-                for (CTxMemPool::txiter it : setIterConflicting) {
+                for (const auto& it : setIterConflicting) {
                     pool.CalculateDescendants(it, allConflicting);
                 }
-                for (CTxMemPool::txiter it : allConflicting) {
-                    nConflictingFees += it->GetModifiedFee();
-                    nConflictingSize += it->GetTxSize();
+                for (const auto& it : allConflicting) {
+                    nConflictingFees += pool.GetEntry(it).GetModifiedFee();
+                    nConflictingSize += pool.GetEntry(it).GetTxSize();
                 }
             } else {
                 return state.Invalid(ValidationInvalidReason::TX_MEMPOOL_POLICY, false, REJECT_NONSTANDARD, "too many potential replacements",
@@ -789,15 +787,14 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         }
 
         // Remove conflicting transactions from the mempool
-        for (CTxMemPool::txiter it : allConflicting)
-        {
+        for (const auto& it : allConflicting) {
             LogPrint(BCLog::MEMPOOL, "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
-                    it->GetTx().GetHash().ToString(),
+                    pool.GetEntry(it).GetTx().GetHash().ToString(),
                     hash.ToString(),
                     FormatMoney(nModifiedFees - nConflictingFees),
                     (int)nSize - (int)nConflictingSize);
             if (plTxnReplaced)
-                plTxnReplaced->push_back(it->GetSharedTx());
+                plTxnReplaced->push_back(pool.GetEntry(it).GetSharedTx());
         }
         pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 

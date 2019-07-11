@@ -148,7 +148,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
 static bool CalculateMemPoolAncestors(const CTxMemPool& pool, CTxMemPool::txiter it, CTxMemPool::setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, const CTxMemPoolEntry* search_parents_for_entry) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     CTxMemPool::setEntries parentHashes;
-    const CTxMemPoolEntry& entry = search_parents_for_entry ? *search_parents_for_entry : *it;
+    const CTxMemPoolEntry& entry = search_parents_for_entry ? *search_parents_for_entry : pool.GetEntry(it);
     const CTransaction &tx = entry.GetTx();
 
     if (search_parents_for_entry) {
@@ -174,17 +174,17 @@ static bool CalculateMemPoolAncestors(const CTxMemPool& pool, CTxMemPool::txiter
     size_t totalSizeWithAncestors = entry.GetTxSize();
 
     while (!parentHashes.empty()) {
-        CTxMemPool::txiter stageit = *parentHashes.begin();
+        auto stageit = *parentHashes.begin();
 
         setAncestors.insert(stageit);
         parentHashes.erase(stageit);
-        totalSizeWithAncestors += stageit->GetTxSize();
+        totalSizeWithAncestors += pool.GetEntry(stageit).GetTxSize();
 
-        if (stageit->GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
-            errString = strprintf("exceeds descendant size limit for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantSize);
+        if (pool.GetEntry(stageit).GetSizeWithDescendants() + entry.GetTxSize() > limitDescendantSize) {
+            errString = strprintf("exceeds descendant size limit for tx %s [limit: %u]", pool.GetEntry(stageit).GetTx().GetHash().ToString(), limitDescendantSize);
             return false;
-        } else if (stageit->GetCountWithDescendants() + 1 > limitDescendantCount) {
-            errString = strprintf("too many descendants for tx %s [limit: %u]", stageit->GetTx().GetHash().ToString(), limitDescendantCount);
+        } else if (pool.GetEntry(stageit).GetCountWithDescendants() + 1 > limitDescendantCount) {
+            errString = strprintf("too many descendants for tx %s [limit: %u]", pool.GetEntry(stageit).GetTx().GetHash().ToString(), limitDescendantCount);
             return false;
         } else if (totalSizeWithAncestors > limitAncestorSize) {
             errString = strprintf("exceeds ancestor size limit [limit: %u]", limitAncestorSize);
@@ -220,9 +220,9 @@ static void UpdateAncestorsOf(CTxMemPool& pool, bool add, CTxMemPool::txiter it,
         pool.UpdateChild(piter, it, add);
     }
     const int64_t updateCount = (add ? 1 : -1);
-    const int64_t updateSize = updateCount * it->GetTxSize();
-    const CAmount updateFee = updateCount * it->GetModifiedFee();
-    for (CTxMemPool::txiter ancestorIt : setAncestors) {
+    const int64_t updateSize = updateCount * pool.GetEntry(it).GetTxSize();
+    const CAmount updateFee = updateCount * pool.GetEntry(it).GetModifiedFee();
+    for (auto& ancestorIt : setAncestors) {
         pool.Modify(ancestorIt, update_descendant_state(updateSize, updateFee, updateCount));
     }
 }
@@ -238,10 +238,10 @@ static void UpdateEntryForAncestors(CTxMemPool& pool, CTxMemPool::txiter it, con
     int64_t updateSize = 0;
     CAmount updateFee = 0;
     int64_t updateSigOpsCost = 0;
-    for (CTxMemPool::txiter ancestorIt : setAncestors) {
-        updateSize += ancestorIt->GetTxSize();
-        updateFee += ancestorIt->GetModifiedFee();
-        updateSigOpsCost += ancestorIt->GetSigOpCost();
+    for (const auto& ancestorIt : setAncestors) {
+        updateSize += pool.GetEntry(ancestorIt).GetTxSize();
+        updateFee += pool.GetEntry(ancestorIt).GetModifiedFee();
+        updateSigOpsCost += pool.GetEntry(ancestorIt).GetSigOpCost();
     }
     pool.Modify(it, update_ancestor_state(updateSize, updateFee, updateCount, updateSigOpsCost));
 }
@@ -254,7 +254,7 @@ void CTxMemPool::UpdateEntryForAncestors(txiter it, const setEntries& setAncesto
 static void UpdateChildrenForRemoval(CTxMemPool& pool, CTxMemPool::txiter it) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     const auto& setMemPoolChildren = pool.GetMemPoolChildren(it);
-    for (CTxMemPool::txiter updateIt : setMemPoolChildren) {
+    for (const auto& updateIt : setMemPoolChildren) {
         pool.UpdateParent(updateIt, it, false);
     }
 }
@@ -276,19 +276,19 @@ static void UpdateForRemoveFromMempool(CTxMemPool& pool, const CTxMemPool::setEn
         // Here we only update statistics and not data in mapLinks (which
         // we need to preserve until we're finished with all operations that
         // need to traverse the mempool).
-        for (CTxMemPool::txiter removeIt : entriesToRemove) {
+        for (const auto& removeIt : entriesToRemove) {
             CTxMemPool::setEntries setDescendants;
             pool.CalculateDescendants(removeIt, setDescendants);
             setDescendants.erase(removeIt); // don't update state for self
-            int64_t modifySize = -((int64_t)removeIt->GetTxSize());
-            CAmount modifyFee = -removeIt->GetModifiedFee();
-            int modifySigOps = -removeIt->GetSigOpCost();
-            for (CTxMemPool::txiter dit : setDescendants) {
+            int64_t modifySize = -((int64_t)pool.GetEntry(removeIt).GetTxSize());
+            CAmount modifyFee = -pool.GetEntry(removeIt).GetModifiedFee();
+            int modifySigOps = -pool.GetEntry(removeIt).GetSigOpCost();
+            for (auto& dit : setDescendants) {
                 pool.Modify(dit, update_ancestor_state(modifySize, modifyFee, -1, modifySigOps));
             }
         }
     }
-    for (CTxMemPool::txiter removeIt : entriesToRemove) {
+    for (auto& removeIt : entriesToRemove) {
         CTxMemPool::setEntries setAncestors;
         std::string dummy;
         // Since this is a tx that is already in the mempool, we can call CMPA
@@ -316,7 +316,7 @@ static void UpdateForRemoveFromMempool(CTxMemPool& pool, const CTxMemPool::setEn
     // After updating all the ancestor sizes, we can now sever the link between each
     // transaction being removed and any mempool children (ie, update setMemPoolParents
     // for each direct child of a transaction being removed).
-    for (CTxMemPool::txiter removeIt : entriesToRemove) {
+    for (const auto& removeIt : entriesToRemove) {
         pool.UpdateChildrenForRemoval(removeIt);
     }
 }
@@ -377,7 +377,7 @@ static CTxMemPool::txiter addUnchecked(CTxMemPool& pool, const CTxMemPoolEntry& 
     // Add to memory pool without checking anything.
     // Used by AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
-    const auto& newit = pool.Insert(entry).first;
+    auto newit = pool.Insert(entry).first;
     pool.InsertLinks(newit);
 
     // Update transaction for any feeDelta created by PrioritiseTransaction
@@ -391,7 +391,7 @@ static CTxMemPool::txiter addUnchecked(CTxMemPool& pool, const CTxMemPoolEntry& 
     // (When we update the entry for in-mempool parents, memory usage will be
     // further updated.)
 
-    const CTransaction& tx = newit->GetTx();
+    const CTransaction& tx = pool.GetEntry(newit).GetTx();
     std::set<uint256> setParentTransactions;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         pool.InsertNextTx(std::make_pair(&tx.vin[i].prevout, &tx));
@@ -434,7 +434,7 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry& entry, const setEntries& se
 
 static void removeUnchecked(CTxMemPool& pool, CTxMemPool::txiter it, MemPoolRemovalReason reason) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
-    for (const CTxIn& txin : it->GetTx().vin)
+    for (const CTxIn& txin : pool.GetEntry(it).GetTx().vin)
         pool.EraseNextTx(txin.prevout);
 
     pool.EraseLinks(it);
@@ -481,7 +481,7 @@ static void CalculateDescendants(const CTxMemPool& pool, const CTxMemPool::txite
     // accounted for in setDescendants already (because those children have either
     // already been walked, or will be walked in this iteration).
     while (!stage.empty()) {
-        CTxMemPool::txiter it = *stage.begin();
+        const auto it = *stage.begin();
         setDescendants.insert(it);
         stage.erase(it);
 
