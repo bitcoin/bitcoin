@@ -24,6 +24,7 @@ bench_bench_bitcoin_SOURCES = \
   bench/examples.cpp \
   bench/rollingbloom.cpp \
   bench/chacha20.cpp \
+  bench/chacha_poly_aead.cpp \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
