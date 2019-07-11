@@ -1344,20 +1344,22 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
 
     CValidationState state;
     CBlockHeader first_invalid_header;
-    if (!ProcessNewBlockHeaders(pfrom->nPoSTemperature, pfrom->lastAcceptedHeader, headers, pfrom->nVersion <= OLD_VERSION, state, chainparams, &pindexLast, &first_invalid_header)) {
+    int32_t& nPoSTemperature = mapPoSTemperature[pfrom->addr];
+
+    if (!ProcessNewBlockHeaders(nPoSTemperature, pfrom->lastAcceptedHeader, headers, pfrom->nVersion <= OLD_VERSION, state, chainparams, &pindexLast, &first_invalid_header)) {
         int nDoS;
         if (state.IsInvalid(nDoS)) {
             LOCK(cs_main);
             if (nDoS > 0) {
-                if (pfrom->nPoSTemperature >= 200) {
+                if (nPoSTemperature >= 200) {
                     // A lot of PoS headers followed by some failed header (most likely PoW).
                     // This situation is very unusual, because normaly you don't get a failed PoW header with a ton of PoS headers.
                     // Probably out of memory attack. Punish peer for a long time.
-                    pfrom->nPoSTemperature = (MAX_CONSECUTIVE_POS_HEADERS*3)/4;
+                    nPoSTemperature = (MAX_CONSECUTIVE_POS_HEADERS*3)/4;
                     if (Params().NetworkIDString() != "test")
                         g_connman->Ban(pfrom->addr, BanReasonNodeMisbehaving, gArgs.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME) * 7);
                 } else {
-                    pfrom->nPoSTemperature *= 3;
+                    nPoSTemperature *= 3;
                     Misbehaving(pfrom->GetId(), nDoS);
                 }
             }
