@@ -9,6 +9,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 
+typedef std::vector<unsigned char> valtype;
 
 bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
 unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;

@@ -75,11 +75,11 @@ UniValue syscointxfund_helper(CWallet* const pwallet, const string& strAddress, 
 
 class CCountSigsVisitor : public boost::static_visitor<void> {
 private:
-    const CKeyStore &keystore;
+    const SigningProvider &keystore;
     int &nNumSigs;
 
 public:
-    CCountSigsVisitor(const CKeyStore &keystoreIn, int &numSigs) : keystore(keystoreIn), nNumSigs(numSigs) {}
+    CCountSigsVisitor(const SigningProvider &keystoreIn, int &numSigs) : keystore(keystoreIn), nNumSigs(numSigs) {}
 
     void Process(const CScript &script) {
         txnouttype type;
